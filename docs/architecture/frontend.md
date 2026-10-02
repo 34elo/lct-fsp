@@ -59,7 +59,7 @@ apps/web/
 - **Серверное состояние** — только TanStack Query. Ключи из orval, `staleTime` 30 с для справочников и 0 для офферов.
 - **Клиентское состояние** — минимально: auth (access-токен в памяти), тема, черновики форм. Zustand при необходимости.
 - **Фильтры поиска** — в URL (`?q=&roles=backend&skills=python:3`), чтобы ссылкой можно было поделиться и вернуться назад.
-- **Генерация клиента:** `pnpm api:gen` берёт `http://localhost:8000/api/v1/openapi.json` → `src/api`. В CI проверяем, что сгенерированный клиент совпадает со схемой.
+- **Генерация клиента:** `pnpm api:gen` (`make api-gen`, нужен Node 22) берёт схему из `OPENAPI_URL` (например, `http://localhost:28080/api/v1/openapi.json`), без неё — заглушку `apps/web/openapi.stub.json` → `src/api` (orval, fetch-мутатор `src/api/mutator.ts`: Bearer, один refresh на 401). В CI проверяем, что сгенерированный клиент совпадает со схемой.
 - **Авторизация:** access в памяти, при 401 один раз `POST /auth/refresh` (cookie), затем повтор запроса. При старте приложения тихий refresh.
 
 ## 4. Realtime (SSE)

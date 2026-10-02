@@ -1,4 +1,4 @@
-.PHONY: up down dev-core compose-config sync lint fmt test test-py test-web test-integration new-service web-install asyncapi
+.PHONY: up down dev-core compose-config sync lint fmt test test-py test-web test-integration new-service web-install asyncapi api-gen
 
 sync:
 	uv sync --all-packages
@@ -56,3 +56,6 @@ dev-core:
 
 compose-config:
 	docker compose --profile core --profile ml --profile llm --profile dev --profile obs config -q
+
+api-gen:
+	cd apps/web && pnpm api:gen
