@@ -68,7 +68,7 @@
 | 3 | E0-5 | Каркас core: конфиг, БД, Alembic, Problem Details, логи, лимитер, локи, S3 | E0-1 | 🤖 | sonnet | 0 | ✅ 7767c23 |
 | 4 | E0-2 | Compose: postgres, rabbitmq, redis, minio, gateway (хост 28080, роутинг по Host — deployment.md §1), профили, `.env.example`; без llm-chat (общий сервер уже есть) | E0-1 | 🤖 | sonnet | 0 | ✅ 14779d6 |
 | 5 | E0-6 | RabbitMQ + FastStream: обменники, очереди, приоритеты, outbox/inbox, ретраи/DLQ, scheduler | E0-5, E0-10 | 🤖 | opus | 0 | ✅ bb25269 |
-| 6 | E0-9 | ML-заглушки `ML_FAKE=true` для всех ml-задач | E0-10 | 🤖 | sonnet | 0 | ⏳ |
+| 6 | E0-9 | ML-заглушки `ML_FAKE=true` для всех ml-задач | E0-10 | 🤖 | sonnet | 0 | ✅ 72c8ffb |
 | 7 | E0-8 | Каркас web: роутер по маршрутам из brief.md §0, layout'ы по ролям, токены и компоненты из `docs/design/handoff`, Tailwind 4 + shadcn, трекер-заготовка | E0-1 | 🤖 | sonnet | 0 | ⏳ |
 | 8 | E2-4 | `data/scoring.yaml` по ml.md, skills.md, matching.md | — | 🤖 | haiku | 0 | ⏳ |
 | 9 | E2-3 | Черновик `data/fsp/discipline_rules.yaml` из fsp.md §5 (для экспертов) | — | 🤝 | haiku | 0 | ⏳ |
