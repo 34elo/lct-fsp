@@ -139,6 +139,7 @@ CREATE TABLE candidates (
   grade_score        real,
   grade_confidence   real,                            -- 0..1, < 0.5 → «предварительно»
   grade_breakdown    jsonb,                           -- [{signal, value, points, evidence_ids}]
+  grade_next         jsonb,                           -- {grade, points_needed, hints[{signal, max_gain, text}]} (ml.md §5)
   primary_role       text,
   roles              jsonb,                           -- [{role, weight}]
   primary_stack      text[],                          -- slug навыков

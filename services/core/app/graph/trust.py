@@ -16,6 +16,7 @@ from pathlib import Path
 import yaml
 
 from app.graph.category import CategoryConfig
+from app.graph.grade import GradeConfig
 
 ROOT = Path(__file__).resolve().parents[4]
 DEFAULT_SCORING_PATH = ROOT / "data" / "scoring.yaml"
@@ -31,6 +32,7 @@ class TrustConfig:
     provisional_cap: float
     test_validity_months: int | None
     category: CategoryConfig = field(default_factory=CategoryConfig)
+    grade: GradeConfig = field(default_factory=GradeConfig)
 
     @classmethod
     def load(cls, path: Path | str | None = None) -> TrustConfig:
@@ -43,6 +45,7 @@ class TrustConfig:
             provisional_cap=float(data["provisional_skill_max_strength"]),
             test_validity_months=sources["test"].get("validity_months"),
             category=CategoryConfig.from_dict(data.get("category")),
+            grade=GradeConfig.from_dict(data),
         )
 
 
