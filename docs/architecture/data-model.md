@@ -223,7 +223,7 @@ CREATE TABLE candidate_skills (            -- агрегат, пересобир
   confidence    real NOT NULL,            -- 0..1
   level         smallint NOT NULL,        -- trust_level 0..4
   sources       text[] NOT NULL,          -- типы источников
-  top_evidence  uuid[] NOT NULL,          -- до 3 сильнейших для объяснений
+  top_evidence  text[] NOT NULL,          -- id до 3 сильнейших доказательств (строками) для объяснений
   claimed_only  boolean NOT NULL,         -- только self/resume
   derived       boolean NOT NULL DEFAULT false,  -- выведено по иерархии (graph.md §5.1)
   derived_from  uuid,                     -- дочерний навык-источник
