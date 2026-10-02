@@ -12,6 +12,7 @@ from fsp_platform.storage import ObjectStorage
 from redis.asyncio import Redis
 from sqlalchemy import text
 
+from app.candidates.router import router as candidates_router
 from app.config import Settings
 from app.consents.router import router as consents_router
 from app.events_stream import UiHub
@@ -54,6 +55,7 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(events_router)
     app.include_router(identity_router)
     app.include_router(consents_router)
+    app.include_router(candidates_router)
 
     @app.get("/readyz", include_in_schema=False)
     async def readyz():
