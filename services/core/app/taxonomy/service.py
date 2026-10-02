@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
 import uuid
@@ -310,3 +311,46 @@ def skill_id_of(after: dict[str, Any], before: dict[str, Any], slug: str) -> uui
             if s["slug"] == slug:
                 return uuid.UUID(s["id"])
     raise KeyError(slug)  # недостижимо: slug взят из одного из снимков
+
+
+@dataclass(frozen=True, slots=True)
+class SkillGraph:
+    """Граф навыков в памяти core (graph.md §3): версия справочника, slug и иерархия «вверх»."""
+
+    version: int
+    slugs: dict[uuid.UUID, str]
+    parents: dict[uuid.UUID, tuple[tuple[uuid.UUID, float], ...]]  # child → ((parent, coef), …)
+
+    def parents_of(self, skill_id: uuid.UUID) -> tuple[tuple[uuid.UUID, float], ...]:
+        return self.parents.get(skill_id, ())
+
+
+async def load_skill_graph(session: AsyncSession) -> SkillGraph:
+    version = await get_version(session)
+    live = await session.scalars(select(Skill).where(Skill.status.in_(_LIVE)))
+    slugs = {s.id: s.slug for s in live}
+    parents: dict[uuid.UUID, list[tuple[uuid.UUID, float]]] = {}
+    for r in await session.scalars(select(SkillRelation).where(SkillRelation.kind == "parent")):
+        if r.skill_a in slugs and r.skill_b in slugs:
+            parents.setdefault(r.skill_a, []).append((r.skill_b, r.weight))
+    return SkillGraph(
+        version, slugs, {k: tuple(sorted(v, key=lambda x: str(x[0]))) for k, v in parents.items()}
+    )
+
+
+class SkillGraphCache:
+    """Держит граф в памяти процесса; сбрасывается по `taxonomy.updated` и сверкой версии."""
+
+    def __init__(self) -> None:
+        self._graph: SkillGraph | None = None
+        self._lock = asyncio.Lock()
+
+    def invalidate(self) -> None:
+        self._graph = None
+
+    async def get(self, session: AsyncSession) -> SkillGraph:
+        async with self._lock:
+            g = self._graph
+            if g is None or g.version != await get_version(session):
+                g = self._graph = await load_skill_graph(session)
+            return g
