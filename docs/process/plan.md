@@ -72,7 +72,7 @@
 | 7 | E0-8 | Каркас web: роутер по маршрутам из brief.md §0, layout'ы по ролям, токены и компоненты из `docs/design/handoff`, Tailwind 4 + shadcn, трекер-заготовка | E0-1 | 🤖 | sonnet | 0 | ✅ 34ae97b |
 | 8 | E2-4 | `data/scoring.yaml` по ml.md, skills.md, matching.md | — | 🤖 | haiku | 0 | ✅ 21522d2 |
 | 9 | E2-3 | Черновик `data/fsp/discipline_rules.yaml` из fsp.md §5 (для экспертов) | — | 🤝 | haiku | 0 | 🔍 e65042f |
-| 10 | E5-1 | fsp-mock: участники, результаты, соревнования, команды, разряды, OAuth+PKCE, коды, вебхук | E0-1 | 🤖 | sonnet | 0 | ⏳ |
+| 10 | E5-1 | fsp-mock: участники, результаты, соревнования, команды, разряды, OAuth+PKCE, коды, вебхук | E0-1 | 🤖 | sonnet | 0 | ✅ 83e8f01 |
 | 11 | E0-7 | SSE через `ui.user.*` | E0-6 | 🤖 | sonnet | 1 | ⏳ |
 | 12 | E1-1 | Пользователи, вход, JWT, ротация refresh, роли | E0-5 | 🤖 | sonnet | 1 | ⏳ |
 | 13 | E1-2 | Согласия (отдельные документы, версии, проверка) | E1-1 | 🤖 | sonnet | 1 | ⏳ |
