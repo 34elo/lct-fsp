@@ -1,0 +1,45 @@
+{
+  "parser_version": "fake-1",
+  "person": {
+    "full_name": "Иван Демонстрационный",
+    "email": "demo@example.test",
+    "phone": null,
+    "telegram": "@demo_candidate",
+    "city": "Москва",
+    "links": ["https://github.com/demo-candidate"]
+  },
+  "summary": "Backend-разработчик на Python, 3 года коммерческого опыта.",
+  "experience": [
+    {
+      "company": "ООО «Вымышленные системы»",
+      "title": "Backend-разработчик",
+      "start": "2022-03",
+      "end": null,
+      "description": "Разрабатывал сервисы на FastAPI и PostgreSQL, настраивал CI в Docker.",
+      "skills": ["python", "fastapi", "postgresql", "docker"],
+      "is_commercial": true
+    },
+    {
+      "company": "ООО «Тестовая лаборатория»",
+      "title": "Стажёр-разработчик",
+      "start": "2021-06",
+      "end": "2022-02",
+      "description": "Писал скрипты на Python, тесты на pytest.",
+      "skills": ["python", "pytest"],
+      "is_commercial": true
+    }
+  ],
+  "education": [
+    {"institution": "Вымышленный технический университет", "degree": "Бакалавр", "field": "Прикладная информатика", "year_end": 2022}
+  ],
+  "skills": [
+    {"raw": "Python", "slug": "python", "quote": "Разрабатывал сервисы на FastAPI", "method": "alias", "confidence": 0.95},
+    {"raw": "FastAPI", "slug": "fastapi", "quote": "Разрабатывал сервисы на FastAPI", "method": "alias", "confidence": 0.95},
+    {"raw": "PostgreSQL", "slug": "postgresql", "quote": "FastAPI и PostgreSQL", "method": "alias", "confidence": 0.9},
+    {"raw": "Docker", "slug": "docker", "quote": "настраивал CI в Docker", "method": "alias", "confidence": 0.9},
+    {"raw": "pytest", "slug": "pytest", "quote": "тесты на pytest", "method": "fuzzy", "confidence": 0.8}
+  ],
+  "unknown_skills": ["Litestar"],
+  "total_experience_months": 42,
+  "warnings": []
+}
