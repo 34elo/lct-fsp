@@ -1,0 +1,372 @@
+---
+# Scoring configuration: trust, grade, matching, limits
+# All values are starting/baseline; calibrated on reference datasets (ml.md §11)
+# Version: 1.0
+
+version: 1
+
+## 1. Trust and confidence (доверие к навыкам)
+
+# Confidence levels and trust dots mapping (ml.md §3.3)
+trust_levels:
+  # confidence → level → dots
+  0: { min: 0.0, max: 0.20, level: 0, label: "○○○○", label_en: "claimed_only" }
+  1: { min: 0.20, max: 0.40, level: 1, label: "●○○○" }
+  2: { min: 0.40, max: 0.60, level: 2, label: "●●○○" }
+  3: { min: 0.60, max: 0.80, level: 3, label: "●●●○" }
+  4: { min: 0.80, max: 1.00, level: 4, label: "●●●●" }
+
+# Evidence source strength and decay (ml.md §3.1)
+evidence_sources:
+  self:
+    base_strength: 0.15
+    decay_half_life_years: null  # no decay
+
+  resume:
+    base_strength: 0.30  # default; can be 0.25 or 0.40 based on experience length
+    decay_half_life_years: null  # no decay
+    # Resume breakdown (ml.md §2.7):
+    experience_breakdown:
+      skills_block: 0.25  # не привязано к опыту
+      experience_0_12_months: 0.30  # < 12 months
+      experience_12_plus_months: 0.40  # >= 12 months
+    # Candidate edits
+    self_edit_strength: 0.15
+
+  github:
+    base_strength: 0.60
+    decay_half_life_years: 2
+    # Formula: 0.6 × authorship × maturity × volume × (0.5 if red_flag)
+    authorship_impact: 0.60
+    maturity_range: [0.6, 1.0]
+    volume_power: 0.5  # min(1, loc_authored / 2000) ^ 0.5
+    volume_threshold: 2000  # lines of code threshold
+    suspicious_flag_multiplier: 0.5
+
+  test:
+    base_formula: "clip(0.45 + 0.12·θ, 0.30, 0.80)"  # θ is difficulty 0..3
+    min_strength: 0.30
+    max_strength: 0.80
+    decay_half_life_years: 1.5
+    # Test validity and retake
+    validity_months: 12  # test result is valid for 12 months
+    retake_minimum_days: 30
+
+  ai_interview:
+    base_formula: "0.45 + 0.10 · avg_score(0…3)"
+    min_strength: 0.45
+    max_strength: 0.75
+    decay_half_life_years: 1.5
+
+  fsp:
+    base_formula: "min(0.95, w_rule × k_level × k_result × k_stage)"
+    max_strength: 0.95
+    decay_half_life_years: 3
+    # Level coefficients (ml.md §3.2)
+    level_coefficients:
+      regional: 0.60
+      interregional: 0.75
+      national: 0.90
+      international: 1.00
+    # Result coefficients (by place %)
+    result_coefficients:
+      1_to_3: 1.00  # 1–3 place
+      top_10: 0.90  # top 10%
+      top_25: 0.80  # top 25%
+      top_50: 0.70  # top 50%
+      participated: 0.55  # участие
+    # Stage coefficients
+    stage_coefficients:
+      final: 1.00
+      qualifying: 0.85
+
+  codeforces:
+    decay_half_life_years: 2
+    # Rating brackets
+    rating_strength:
+      under_1200: 0.35
+      1200_to_1599: 0.50
+      1600_to_1899: 0.65
+      1900_and_above: 0.80
+    # Only for specific skills
+    allowed_skills: ["algorithms", "data_structures", "cpp", "python"]
+
+# FSP rank bonus (soft signal)
+fsp_rank_bonus:
+  youth_divisions: 0.5  # youth_1, youth_2, youth_3
+  rank_3: 1.0
+  rank_2: 1.0
+  rank_1: 1.0
+  cms: 2.5  # КМС
+  ms: 3.5  # МС
+  msic: 3.5  # МСМК
+
+# Provisional skill penalty
+provisional_skill_max_strength: 0.25  # new skills capped at 0.25 until active
+
+## 2. Grade (грейд)
+
+# Grade thresholds by points (ml.md §5)
+grade_thresholds:
+  intern: { min: 0, max: 2.0 }
+  junior: { min: 2.0, max: 4.0 }
+  junior_plus: { min: 4.0, max: 6.0 }
+  middle: { min: 6.0, max: 8.5 }
+  middle_plus: { min: 8.5, max: 10.5 }
+  senior: { min: 10.5, max: 13.0 }
+  lead: { min: 13.0, max: null, requires_leadership: true }
+
+# Grade signal definitions (ml.md §5)
+grade_signals:
+  # Commercial experience (стаж)
+  experience:
+    under_12m: 1  # < 12 months
+    12_35m: 3  # 12–35 months
+    36_59m: 5  # 36–59 months
+    60_95m: 7  # 60–95 months
+    96_plus: 8  # >= 96 months
+
+  # FSP achievement (максимальное достижение)
+  fsp_achievement:
+    national_international_medalist: 3.0  # всероссийский/международный призёр
+    national_finalist: 2.0  # всероссийский финал
+    interregional_medalist: 1.5  # межрегиональный призёр
+    regional_medalist: 1.0  # региональный призёр
+    participant: 0.5  # участие
+
+  # FSP rank (разряд)
+  fsp_rank:
+    youth_3: 0.5
+    youth_2: 0.5
+    youth_1: 0.5
+    rank_3: 1.0
+    rank_2: 1.0
+    rank_1: 1.0
+    cms: 2.5  # КМС
+    ms: 3.5  # МС
+    msic: 3.5  # МСМК
+
+  # Tests (тесты по навыкам роли)
+  test_score:
+    formula: "θ ranges from 0–3; bucket: <0 → 0, 0–1 → +1, 1–2 → +2, >2 → +3"
+    points:
+      negative: 0
+      0_to_1: 1
+      1_to_2: 2
+      over_2: 3
+
+  # Code maturity (зрелость кода / ДНК)
+  code_maturity:
+    range: [0, 2]  # 0…2
+
+  # AI interview (ИИ-интервью)
+  ai_interview:
+    requires_score: 2.0  # >= 2
+    points: 1.0
+
+  # Leadership signal
+  leadership:
+    multiplier: 1.5  # +1.5 · L (where L is 0…1)
+
+  # Experience complexity (опционально)
+  experience_complexity:
+    range: [0, 1.5]  # 0…1.5
+
+# Grade confidence breakdown
+# grade_confidence = доля непустых групп сигналов
+# If < 0.5 → "preliminary" + hints
+required_signal_groups:
+  - experience
+  - fsp_or_test_or_code  # at least one
+  - code_or_github
+
+# Lead grade special requirement
+lead_requirements:
+  min_leadership_signal: 0.5
+  or_confirmed_management_experience: true
+
+## 3. Matching (матчинг вакансия ↔ кандидат)
+
+# Base matching score weights (ml.md §6.2)
+matching_weights:
+  skills_coverage: 0.45  # покрытие навыков (доверие + смежность)
+  semantic_similarity: 0.20  # смысловая близость (косинус)
+  grade_fit: 0.15  # попадание в грейд
+  salary_fit: 0.10  # попадание в вилку
+  fsp_strength: 0.10  # сила подтверждения ФСП
+  team_signals: 0.03  # максимум вклад связей
+
+# Grade fit scoring
+grade_fit_scoring:
+  within_range: 1.0
+  one_step_adjacent: 0.5
+  further: 0.0
+
+# Salary fit scoring
+salary_fit_scoring:
+  formula: "linear from 1 (if salary_min ≤ mid) to 0 (if salary_min = salary_to)"
+
+# Semantic similarity scoring
+semantic_similarity_scoring:
+  clip_formula: "clip((cos(emb_vac, emb_cand) − 0.30) / 0.55, 0, 1)"
+
+# Skills coverage component
+skills_coverage:
+  adjacency_weight: 1.0  # adj(s,a) when using smежный
+  formula: "Σ_s W_s · min(1, eff_conf_s / target(min_level_s)) / Σ W_s"
+  # W = 2 for required skills, 1 for desired
+  required_weight_multiplier: 2
+  desired_weight_multiplier: 1
+  top_k_skills: 8  # нормируем на 8 самых весомых навыков роли
+
+# Hard filters (sql-like, ml.md §6.1)
+hard_filters:
+  salary_grace: 1.10  # salary_min ≤ salary_to × 1.10
+  grade_margin: 1  # грейд в [grade_min − 1, grade_max + 1]
+  adjacent_skill_confidence: "conf(a) × adj(s,a) ≥ порог уровня"
+  max_failed_required_skills: 2  # более 2 обязательных → отсеивается
+
+# Team signals in matching (ml.md §8.3)
+team_signal_weights:
+  # By vacancy grade; updated with employer emphasis
+  intern_junior:
+    alpha_leadership: 0.01
+    alpha_teamwork: 0.03
+    alpha_results: 0.02
+    alpha_growth: 0.03
+    beta_ceiling: 0.06
+
+  middle:
+    alpha_leadership: 0.02
+    alpha_teamwork: 0.03
+    alpha_results: 0.02
+    alpha_growth: 0.02
+    beta_ceiling: 0.06
+
+  senior:
+    alpha_leadership: 0.04
+    alpha_teamwork: 0.03
+    alpha_results: 0.02
+    alpha_growth: 0.01
+    beta_ceiling: 0.08
+
+  lead:
+    alpha_leadership: 0.08
+    alpha_teamwork: 0.03
+    alpha_results: 0.02
+    alpha_growth: 0.01
+    beta_ceiling: 0.12
+
+# Employer emphasis on team qualities
+employer_emphasis:
+  multiplier: 2.0  # doubles the alpha_k
+  ceiling_bonus: 0.02  # adds to beta
+
+# Mutual matching: candidate acceptance probability (ml.md §4.1)
+p_accept:
+  formula: "σ(b0 + b1·salary_gap + b2·format_match + b3·stack_interest + b4·company_rating + b5·active)"
+  coefficients:
+    intercept: -0.5
+    salary_gap: 4.0
+    format_match: 1.0
+    stack_interest: 1.5
+    company_rating: 0.5
+    active_seeking: 0.5
+  # Interpretation
+  thresholds:
+    low: 0.35
+    medium_min: 0.35
+    medium_max: 0.65
+    high: 0.65
+
+## 4. Limits and operational parameters
+
+limits:
+  # Response times
+  search_p95_ms: 300  # на 500 кандидатах
+  embedding_p95_ms: 1000
+  matching_p95_ms: 500
+
+  # Candidate loads
+  max_unanswered_offers: 3  # ≥ 3 уже полученных офферов
+  max_shown_same_company: 5  # без действий
+  shown_count_decay: 0.95  # × 0.95
+
+  # Analytics clustering
+  min_cluster_size: 5  # ячейки < 5 человек скрыты
+
+  # Offer-related
+  offer_per_day_limit: 10  # лимит офферов в сутки (from E8-1)
+  offer_validity_days: 14  # стандартный срок жизни оффера
+
+  # Profile freshness
+  profile_fresh_days: 7  # профиль обновлён за 7 дней → × 1.01
+  active_seeking_days: 7  # статус «активно ищу» даёт × 1.03
+
+  # Query parsing
+  query_parse_success_rate: 0.70  # >= 70% запросов разобраны полностью
+
+  # Skill resolution
+  skill_fuzzy_match_threshold: 0.92  # rapidfuzz partial_ratio
+  skill_embedding_top_k: 10  # top-10 по эмбеддингу для судьи
+  skill_judge_confidence_threshold: 0.3  # cosine > 0.3 → судья решает
+
+  # Skill lifecycle
+  provisional_skill_activation_support: 5  # meet >= 5 different candidates
+  skip_admin_confirmation: true  # or admin decision
+
+  # Rate limiting
+  api_rate_limit_per_minute: 100  # per user
+  ml_llm_queue_priority_levels: 5
+  ml_llm_prefetch_count: 1
+
+  # Evaluation
+  eval_seed_sets:
+    resumes: 30  # 30–50 reference resumes
+    repositories: 20  # 20–30 reference repos, 5–10 fake
+    queries: 30  # 30–50 employer queries
+    relevance_pairs: 300  # ~300 pairs for evaluation
+
+  # Match explanation
+  top_explanations: 3  # top-3 pros and top-3 cons/warnings
+
+  # Uplift simulation
+  uplift_relevant_vacancies:
+    salary_threshold: 0.90  # salary_to >= 0.90 * salary_min
+    grade_margin: 1  # within ± 1 from candidate
+  uplift_top_skills: 30  # top-30 по спросу
+  uplift_combinations_max: 3  # жадно добавляем до 3 навыков
+  uplift_simulation_timeout_ms: 50  # < 50ms for ~3000 evaluations
+
+  # Cache
+  cache_profile_version_ttl_minutes: 10  # cache on (profile_version, vacancies_version)
+
+  # Matching
+  matching_candidate_limit_sql: 300  # до ~300 candidates after SQL filter
+  matching_reranking_top_k: 20  # MMR on top-20
+  matching_mmr_lambda: 0.8  # diversity parameter
+
+  # FSP
+  fsp_unverified_bind_penalty: 0.5  # × 0.5
+
+  # GitHub
+  github_repo_size_limit_mb: 200
+  github_repos_to_analyze: 8
+  github_clone_timeout_sec: 60
+  github_suspicious_commit_share_threshold: 0.70  # > 70% own commits in one
+  github_overnight_threshold_hours: 24  # all history in < 24h
+  github_giant_commit_threshold: 0.70  # > 70% of code in one commit
+
+  # Code maturity
+  code_radar_axes: 6  # backend, frontend, devops, data, quality, open_source
+
+  # Interview
+  adaptive_test_min_questions: 5
+  adaptive_test_max_questions: 8
+  adaptive_test_se_threshold: 0.45  # SE < 0.45 → can stop
+  adaptive_test_exposure_limit_top_k: 3  # random from top-3
+
+  # Interview kit
+  interview_kit_questions_count: 5  # 5–7 questions
+  interview_kit_confirmation_questions: 2  # >= 2 for strengths
+  interview_kit_cache_key: "(vacancy_version, profile_version)"
