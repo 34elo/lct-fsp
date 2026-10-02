@@ -1,17 +1,57 @@
-/* Заглушка токенов; настоящие токены ФСП — из docs/design/handoff (задача фронта). */
+/* Токены ФСП из docs/design/handoff/globals.css. Светлая тема в :root, тёмная в .dark. */
 :root {
-  --bg: #ffffff;
-  --fg: #111111;
+  --brand: #402fff;
+  --brand-deep: #201880;
+  --brand-mid: #a9a1ff;
+  --tint-50: #f4f3ff;
+  --tint-100: #e6e4ff;
+  --tint-200: #cdc9ff;
+  --signal: #d4152d;
+  --ink: #1b1c21;
+  --muted: #5b5d66;
+  --hairline: #e1e1e5;
+  --page: #fafafc;
+  --card: #fff;
+  --success: #15803d;
+  --success-bg: #ecfdf3;
+  --warning: #f59e0b;
+  --warning-bg: #fff7e6;
+  --warning-border: #f5d28a;
+  --warning-fg: #5c3a00;
+  --error: #b91c2d;
+  --error-bg: #fdecee;
+  --on-brand: #fff;
+  --font-sans: "Onest Variable", "Onest", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, monospace;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+  --radius-2xl: 20px;
+  --shadow-card: 0 20px 50px rgba(0, 0, 0, 0.35);
+  --shadow-sheet: 0 -8px 24px rgba(27, 28, 33, 0.12);
+  --focus: 2px solid var(--brand);
+  color-scheme: light;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0b0b0c;
-    --fg: #f2f2f2;
-  }
-}
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--fg);
-  font-family: system-ui, sans-serif;
+
+.dark {
+  --brand-deep: #201880;
+  --tint-50: #201880;
+  --tint-100: #2a2a55;
+  --tint-200: #34353d;
+  --signal: #ff6b7a;
+  --ink: #ededed;
+  --muted: #b5b6bf;
+  --hairline: #34353d;
+  --page: #1b1c21;
+  --card: #22232a;
+  --success: #4ade80;
+  --success-bg: #0f2a1b;
+  --warning: #f5b63c;
+  --warning-bg: #2b2410;
+  --warning-border: #6b5415;
+  --warning-fg: #f5d28a;
+  --error: #ff6b7a;
+  --error-bg: #2e1418;
+  color-scheme: dark;
 }
