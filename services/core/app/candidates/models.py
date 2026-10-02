@@ -21,7 +21,7 @@ DEFAULT_VISIBILITY = {
 
 
 class Candidate(Base):
-    """Анкета кандидата (data-model.md §3.2). Вычисляемые движком доверия поля добавит E4."""
+    """Анкета кандидата (data-model.md §3.2). Вычисляемое: категория (E4-3), грейд — E4-4."""
 
     __tablename__ = "candidates"
 
@@ -40,6 +40,10 @@ class Candidate(Base):
     visibility: Mapped[dict] = mapped_column(sa.JSON, default=lambda: dict(DEFAULT_VISIBILITY))
     stoplist_company_ids: Mapped[list[str]] = mapped_column(TextArray, default=list)
     profile_version: Mapped[int] = mapped_column(default=0, server_default="0")
+    # категория (ml.md §4), считает recompute_profile
+    primary_role: Mapped[str | None] = mapped_column(Text, default=None)
+    roles: Mapped[list | None] = mapped_column(sa.JSON, default=None)  # [{role, weight}]
+    primary_stack: Mapped[list[str] | None] = mapped_column(TextArray, default=None)
     # слияние пересчётов (graph.md §4.4)
     recompute_requested_at: Mapped[datetime | None] = mapped_column(
         sa.DateTime(timezone=True), default=None

@@ -9,11 +9,13 @@ from __future__ import annotations
 import math
 import uuid
 from collections.abc import Callable, Iterable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 
 import yaml
+
+from app.graph.category import CategoryConfig
 
 ROOT = Path(__file__).resolve().parents[4]
 DEFAULT_SCORING_PATH = ROOT / "data" / "scoring.yaml"
@@ -28,6 +30,7 @@ class TrustConfig:
     level_min: tuple[float, ...]  # нижние границы уровней 0..4
     provisional_cap: float
     test_validity_months: int | None
+    category: CategoryConfig = field(default_factory=CategoryConfig)
 
     @classmethod
     def load(cls, path: Path | str | None = None) -> TrustConfig:
@@ -39,6 +42,7 @@ class TrustConfig:
             level_min=tuple(float(levels[i]["min"]) for i in range(5)),
             provisional_cap=float(data["provisional_skill_max_strength"]),
             test_validity_months=sources["test"].get("validity_months"),
+            category=CategoryConfig.from_dict(data.get("category")),
         )
 
 
