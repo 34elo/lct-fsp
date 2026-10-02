@@ -7,6 +7,7 @@ members = [
     "fsp-bot",
     "fsp-contracts",
     "fsp-core",
+    "fsp-fsp-connector",
     "fsp-fsp-mock",
     "fsp-ml",
     "fsp-platform",
@@ -611,6 +612,29 @@ requires-dist = [
     { name = "fsp-contracts", editable = "packages/contracts" },
     { name = "fsp-platform", editable = "packages/platform" },
     { name = "pyyaml", specifier = ">=6" },
+    { name = "uvicorn", specifier = ">=0.32" },
+]
+
+[[package]]
+name = "fsp-fsp-connector"
+version = "0.1.0"
+source = { editable = "services/fsp-connector" }
+dependencies = [
+    { name = "alembic" },
+    { name = "fsp-contracts" },
+    { name = "fsp-platform" },
+    { name = "httpx" },
+    { name = "redis" },
+    { name = "uvicorn" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "alembic", specifier = ">=1.13" },
+    { name = "fsp-contracts", editable = "packages/contracts" },
+    { name = "fsp-platform", editable = "packages/platform" },
+    { name = "httpx", specifier = ">=0.28.1" },
+    { name = "redis", specifier = ">=5" },
     { name = "uvicorn", specifier = ">=0.32" },
 ]
 
