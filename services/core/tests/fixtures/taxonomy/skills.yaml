@@ -1,0 +1,9 @@
+skills:
+  - {slug: python, name: Python, kind: hard, group: language, testable: true, aliases: [py, питон]}
+  - {slug: fastapi, name: FastAPI, kind: hard, group: backend, aliases: [fast api]}
+  - {slug: django, name: Django, kind: hard, group: backend}
+  - {slug: java, name: Java, kind: hard, group: language, aliases: [джава]}
+  - {slug: javascript, name: JavaScript, kind: hard, group: language, aliases: [js, джаваскрипт]}
+  - {slug: postgresql, name: PostgreSQL, kind: hard, group: storage, aliases: [postgres, постгрес, pg]}
+  - {slug: algorithms, name: Алгоритмы, kind: domain, group: fundamentals, aliases: [алгоритмы и структуры данных]}
+  - {slug: teamwork, name: Работа в команде, kind: soft, aliases: [командная работа]}

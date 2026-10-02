@@ -298,6 +298,8 @@ CREATE TABLE scoring_config (key text PRIMARY KEY, value jsonb NOT NULL, version
 
 Ядро графа навыков на старте — YAML в `data/taxonomy/*.yaml` (ревью в git), собирается из тегов Stack Overflow, карты пакетов и русских названий. `make taxonomy-load` загружает его в БД. Дальше граф растёт через конвейер ([skills.md](skills.md)), правки идут через админку, есть экспорт в YAML.
 
+Формат YAML (читает `services/core/app/taxonomy/loader.py`; ключи верхнего уровня всех `data/taxonomy/*.yaml` сливаются, незнакомые файлы, например `package_map.yaml`, игнорируются): `skills` (`slug, name, kind, group?, testable?, description?, aliases?`), `adjacent` (`a, b, weight`), `parent` (`child, parent, weight`), `distinct` (пары), `blocklist` (`norm, reason?`), `roles` (`slug, name, skills: {slug: вес}`). Роли — из `RoleSlug`. Правила дисциплин берутся из `data/fsp/discipline_rules.yaml` (навык, которого нет в ядре, пропускается с предупреждением). Загрузка идемпотентна: id вершин ядра — `uuid5(slug)`, правятся только строки с `source=seed` (то, что сделали админ или конвейер, остаётся), `adjacent` пишется в обе стороны, `skill_distinct` — одна строка на пару (`skill_a < skill_b`). Версия справочника — `scoring_config` ключ `taxonomy` (`version` + хеш снимка в `value`); при изменении содержимого версия растёт и в outbox пишется `taxonomy.updated`. Колонки `skills.embedding` и таблицы `skill_mentions`, `skill_merges` появятся с задачами E3-4 и E16-5.
+
 ### 3.5. ФСП
 
 ```sql

@@ -1,4 +1,4 @@
-.PHONY: up down dev-core compose-config sync lint fmt test test-py test-web test-integration new-service web-install asyncapi api-gen
+.PHONY: taxonomy-load up down dev-core compose-config sync lint fmt test test-py test-web test-integration new-service web-install asyncapi api-gen
 
 sync:
 	uv sync --all-packages
@@ -59,3 +59,7 @@ compose-config:
 
 api-gen:
 	cd apps/web && pnpm api:gen
+
+# Загрузить data/taxonomy/*.yaml и data/fsp/discipline_rules.yaml в БД core (идемпотентно, версия растёт при изменениях)
+taxonomy-load:
+	cd services/core && uv run python -m app.taxonomy

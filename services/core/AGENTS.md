@@ -20,6 +20,7 @@
 - `app/identity/` — users, refresh-семьи, `/auth/*`, `/me`; зависимости `get_current_user`, `require_roles`
 - `app/consents/` — согласия, `/me/consents`; зависимость `require_consent(type)` → 403 `consent_required`
 - `app/candidates/` — анкета: `/candidates/me/{profile,preferences,visibility,stoplist}`, `pseudo_id`, псевдоним
+- `app/taxonomy/` — граф навыков: `loader.py` (YAML → проверка), `service.py` (sync в БД, версия, снимок, `taxonomy.updated`), `router.py` (`GET /taxonomy`, `/internal/taxonomy/snapshot`); `make taxonomy-load`
 - `app/worker.py` — `Worker.consumers[<очередь>].on(type)` + `idempotent()` для обработчиков
 - `app/scheduler.py` — `SCHEDULE` (messaging.md §4)
 - `migrations/` — Alembic (async), `versions/`
