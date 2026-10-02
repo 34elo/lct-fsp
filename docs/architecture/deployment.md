@@ -107,7 +107,7 @@ api.fsp.patissons.tech {
 | `fsp-mock` | `services/fsp-mock` | 8200 | 256 МБ | core |
 | `postgres` | pgvector/pgvector:pg16 | 5432 | 2 ГБ, volume `pgdata` | core |
 | `redis` | redis:7 (+ `redis.conf`: `allkeys-lru`) | 6379 | 1 ГБ maxmemory, без персистентности | core |
-| `minio` | minio/minio | 9000, 9001 | volume `minio` | core |
+| `minio` | quay.io/minio/minio (на Docker Hub образа нет) | 9000, 9001 | volume `minio` | core |
 | `ml-api` | `services/ml` (+ модель эмбеддингов в volume) | 8100 | 2 CPU, 4 ГБ | ml |
 | `ml-worker-llm` | `services/ml` (очередь `ml.llm`, `prefetch=1`) | — | 1 CPU, 2 ГБ | ml |
 | `ml-worker-code` | `services/ml` (очередь `ml.code`, tmpfs 1 ГБ, ограничения из security §6) | — | 2 CPU, 2 ГБ | ml |
@@ -124,6 +124,8 @@ api.fsp.patissons.tech {
 1. На хосте: Mesa с RADV (`mesa-vulkan-drivers`), проверка `vulkaninfo --summary` — видна `AMD Radeon RX 5700 XT (RADV NAVI10)`.
 2. **Вариант A (контейнер):** `ghcr.io/ggml-org/llama.cpp:server-vulkan`, `devices: ["/dev/dri:/dev/dri"]`, `group_add: [video, render]`.
    **Вариант B (нативно, если контейнер капризничает):** собрать llama.cpp с `-DGGML_VULKAN=ON`, systemd-юнит, слушает `0.0.0.0:8080` в docker-сети через `host.docker.internal`.
+**Состояние (E0-2):** `docker-compose.yml` в корне содержит инфраструктуру профиля `core` (gateway, postgres, redis, rabbitmq, minio) и `dozzle` (`dev`); сервисы приложения добавляются своими задачами. Разовая инициализация: `infra/postgres/init.sh` (роли `core`, `fspc`, базы `core`, `fsp_connector`, расширения `vector`, `pg_trgm`), `rabbitmq-init` (vhost `fsp`, пользователи `core`, `ml`, `fspc`, `bot`), `minio-init` (бакет). Порты на хосте: gateway 28080, RabbitMQ UI 28672, Postgres 28432, Redis 28379 (последние три только на 127.0.0.1). Маршруты gateway — `infra/caddy/Caddyfile`. Первый запуск: `cp .env.example .env`, заменить `CHANGE_ME`, `make up`.
+
 3. Команда запуска (ориентир):
    ```
    llama-server -m /models/<chat-model>-Q4_K_M.gguf -ngl 99 -c 16384 --parallel 2 \

@@ -1,4 +1,4 @@
-.PHONY: sync lint fmt test test-py test-web new-service web-install asyncapi
+.PHONY: up down dev-core compose-config sync lint fmt test test-py test-web new-service web-install asyncapi
 
 sync:
 	uv sync --all-packages
@@ -31,3 +31,19 @@ new-service:
 # Каталог AsyncAPI всех событий и команд из packages/contracts
 asyncapi:
 	uv run python -m fsp_contracts.asyncapi > asyncapi.json
+
+# --- compose ---
+COMPOSE = docker compose --profile core --profile ml --profile llm
+
+up:
+	$(COMPOSE) up -d
+
+down:
+	$(COMPOSE) down
+
+# Только core-профиль, ML заглушкой
+dev-core:
+	ML_FAKE=true docker compose --profile core up -d
+
+compose-config:
+	docker compose --profile core --profile ml --profile llm --profile dev --profile obs config -q
