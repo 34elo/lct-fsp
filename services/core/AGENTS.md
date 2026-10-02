@@ -23,6 +23,7 @@
 - `app/taxonomy/` — граф навыков: `loader.py` (YAML → проверка), `service.py` (sync в БД, версия, снимок, `taxonomy.updated`), `router.py` (`GET /taxonomy`, `/internal/taxonomy/snapshot`); `make taxonomy-load`
 - `app/graph/` — evidence: `models.py`, `service.py` (`upsert_evidence` идемпотентно, `deactivate`, `list_active`, `candidates_by_skills`; изменение → `evidence.changed` + команда `core.recompute` в outbox), `trust.py` (формулы доверия по scoring.yaml), `category.py` (роли, мульти-метки, `primary_stack`, объяснение; ml.md §4), `grade.py` (сигналы, пороги, ограничения, уверенность, `next_grade`; ml.md §5), `team_signals.py` (L/T/R/G из фактов, `k_soft`; skills.md §8), `recompute.py` (`recompute_profile` → `candidate_skills`, категория, грейд, `profile_version`, `skills.profile.updated`), `handlers.py` (`core.recompute`, `taxonomy.updated`)
 - `app/companies/` — компании: `/companies`, `/companies/me[/members]`, модерация `/admin/companies/*` (pending → verified|rejected)
+- `app/vacancies/` — вакансии: `/vacancies[/{id}]`, `publish`, `close`; публиковать может только `verified` компания; события `vacancy.published|updated|closed`
 - `app/worker.py` — `Worker.consumers[<очередь>].on(type)` + `idempotent()` для обработчиков
 - `app/scheduler.py` — `SCHEDULE` (messaging.md §4)
 - `migrations/` — Alembic (async), `versions/`
