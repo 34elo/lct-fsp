@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from fastapi import FastAPI
+from fastapi.concurrency import run_in_threadpool
 from fsp_contracts.ml import (
     EmbeddingsRequest,
     EmbeddingsResponse,
@@ -17,12 +18,20 @@ from fsp_platform.logging import configure_logging
 
 from fsp_ml import fake
 from fsp_ml.config import Settings
+from fsp_ml.embedder import Embedder, embed, load_embedder
+from fsp_ml.taxonomy import TaxonomyProvider
 
 
-def build_app(settings: Settings | None = None) -> FastAPI:
+def build_app(
+    settings: Settings | None = None,
+    embedder: Embedder | None = None,
+    taxonomy: TaxonomyProvider | None = None,
+) -> FastAPI:
     settings = settings or Settings()
     configure_logging(settings.service_name, settings.log_level)
     app = create_app(settings.service_name)
+    real = embedder or load_embedder(settings.embedding_model_path)
+    taxonomy = taxonomy or TaxonomyProvider(settings.core_url, settings.service_token_ml)
     # у ml-api свой формат /healthz (api.md §2.10), вместо базового {"status": "ok"}
     app.router.routes[:] = [r for r in app.router.routes if getattr(r, "path", "") != "/healthz"]
 
@@ -37,18 +46,31 @@ def build_app(settings: Settings | None = None) -> FastAPI:
 
     @app.post("/v1/embeddings")
     async def embeddings(req: EmbeddingsRequest) -> EmbeddingsResponse:
-        require_fake()
-        return fake.embeddings(req, settings.embedding_dim)
+        if real is None:
+            require_fake()
+        if len(req.texts) > settings.embedding_max_texts:
+            raise ProblemError(422, "too_many_texts", "Слишком много текстов в одном запросе")
+        return await run_in_threadpool(embed, req, real, settings.embedding_dim)
 
     @app.post("/v1/skills/resolve")
     async def skills_resolve(req: SkillsResolveRequest) -> list[SkillResolveItem]:
-        require_fake()
-        return fake.resolve_skills(req)
+        index = await taxonomy.get(req.taxonomy_version)
+        if index is None:
+            require_fake()
+        out: list[SkillResolveItem] = []
+        for m in req.mentions:
+            hit = index.resolve(m) if index else None
+            # остальной конвейер (модерация, судья) — E16-4; до него заглушка
+            out.append(hit or fake.resolve_skill(m.raw))
+        return out
 
     @app.get("/healthz")
     async def healthz() -> MlHealth:
         up = "up" if settings.ml_fake else "down"
-        return MlHealth(llm=up, embedder=up, model=fake.FAKE_MODEL, queue_depth=0)
+        emb = "up" if (real is not None or settings.ml_fake) else "down"
+        return MlHealth(
+            llm=up, embedder=emb, model=real.model if real else fake.FAKE_MODEL, queue_depth=0
+        )
 
     return app
 
