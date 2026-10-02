@@ -119,7 +119,8 @@ CREATE TABLE consents (
 ```sql
 CREATE TABLE candidates (
   user_id            uuid PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-  pseudonym          text NOT NULL UNIQUE,            -- «Backend #4821», стабилен
+  pseudonym          text NOT NULL UNIQUE,            -- «Backend #4821», стабилен (пока «Candidate #4821»: роль при создании неизвестна)
+  pseudo_id          text NOT NULL UNIQUE,            -- HMAC(PSEUDO_ID_SECRET, user_id)[:12], ключ для работодателя
   public_slug        text UNIQUE,                     -- для публичного профиля и бейджа (по желанию)
   full_name_enc      bytea,                           -- ПДн шифруются Fernet
   contacts_enc       bytea,                           -- {email, phone, telegram}

@@ -1,0 +1,169 @@
+from __future__ import annotations
+
+from datetime import datetime
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, Request
+from fsp_contracts.enums import ConsentType, EmploymentType, SearchStatus, WorkFormat
+from fsp_platform.app import ProblemError
+from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.candidates import service
+from app.candidates.models import Candidate
+from app.consents import service as consents
+from app.consents.deps import require_consent
+from app.deps import get_session
+from app.identity.deps import require_roles
+from app.identity.models import User
+
+router = APIRouter(prefix="/candidates/me", tags=["candidates"])
+
+_owner = require_roles("candidate")
+_writer = require_consent(ConsentType.pd_processing)
+
+
+async def owner(user: User = Depends(_owner)) -> User:
+    return user
+
+
+async def writer(user: User = Depends(owner), _: User = Depends(_writer)) -> User:
+    return user
+
+
+class Preferences(BaseModel):
+    salary_min: int | None
+    formats: list[WorkFormat]
+    employment_types: list[EmploymentType]
+    city: str | None
+    relocation: bool
+
+
+class Visibility(BaseModel):
+    companies: bool
+    education: bool
+    repos: bool
+    public_profile: bool
+    teams: bool
+
+
+class CandidateProfile(BaseModel):
+    """Заготовка `CandidateProfile` (api.md §3): поля движка доверия добавят E3-2…E4-x."""
+
+    pseudonym: str
+    profile_version: int
+    search_status: SearchStatus
+    active_until: datetime | None
+    preferences: Preferences
+    visibility: Visibility
+    category: None = None
+    grade: None = None
+    skills: list = []
+    team_signals: list = []
+    claimed_soft: list[str] = []
+    experience: list = []
+
+
+class PreferencesIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    salary_min: int | None = Field(default=None, ge=0, le=100_000_000)
+    formats: list[WorkFormat] | None = None
+    employment_types: list[EmploymentType] | None = None
+    city: str | None = Field(default=None, max_length=100)
+    relocation: bool | None = None
+    search_status: SearchStatus | None = None
+
+
+class VisibilityIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    companies: bool | None = None
+    education: bool | None = None
+    repos: bool | None = None
+    public_profile: bool | None = None
+    teams: bool | None = None
+
+
+class StoplistIO(BaseModel):
+    company_ids: list[UUID] = Field(max_length=service.STOPLIST_MAX)
+
+
+def profile_out(c: Candidate) -> CandidateProfile:
+    vis = {**{"teams": True}, **c.visibility}
+    return CandidateProfile(
+        pseudonym=c.pseudonym,
+        profile_version=c.profile_version,
+        search_status=service.effective_status(c),
+        active_until=c.active_until,
+        preferences=Preferences(
+            salary_min=c.salary_min,
+            formats=c.formats or [],
+            employment_types=c.employment_types or [],
+            city=c.city,
+            relocation=c.relocation,
+        ),
+        visibility=Visibility(**{k: bool(vis.get(k, False)) for k in Visibility.model_fields}),
+    )
+
+
+async def _cand(request: Request, session: AsyncSession, user: User) -> Candidate:
+    return await service.get_or_create(
+        session, user.id, request.app.state.settings.pseudo_id_secret
+    )
+
+
+@router.get("/profile", response_model=CandidateProfile)
+async def get_profile(
+    request: Request,
+    user: User = Depends(owner),
+    session: AsyncSession = Depends(get_session),
+):
+    return profile_out(await _cand(request, session, user))
+
+
+@router.patch("/preferences", response_model=CandidateProfile)
+async def patch_preferences(
+    body: PreferencesIn,
+    request: Request,
+    user: User = Depends(writer),
+    session: AsyncSession = Depends(get_session),
+):
+    cand = await _cand(request, session, user)
+    await service.update_preferences(session, cand, body.model_dump(exclude_unset=True))
+    return profile_out(cand)
+
+
+@router.patch("/visibility", response_model=CandidateProfile)
+async def patch_visibility(
+    body: VisibilityIn,
+    request: Request,
+    user: User = Depends(writer),
+    session: AsyncSession = Depends(get_session),
+):
+    changes = {k: v for k, v in body.model_dump(exclude_unset=True).items() if v is not None}
+    if changes.get("public_profile") and not await consents.has_consent(
+        session, user.id, ConsentType.public_profile
+    ):
+        raise ProblemError(
+            403,
+            "consent_required",
+            "Нужно согласие",
+            "Выдайте согласие public_profile",
+            errors=[{"field": "consent", "message": "public_profile"}],
+        )
+    cand = await _cand(request, session, user)
+    await service.update_visibility(session, cand, changes)
+    return profile_out(cand)
+
+
+@router.put("/stoplist", response_model=StoplistIO)
+async def put_stoplist(
+    body: StoplistIO,
+    request: Request,
+    user: User = Depends(writer),
+    session: AsyncSession = Depends(get_session),
+):
+    cand = await _cand(request, session, user)
+    await service.set_stoplist(session, cand, body.company_ids)
+    return StoplistIO(company_ids=[UUID(c) for c in cand.stoplist_company_ids])
