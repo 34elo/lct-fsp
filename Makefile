@@ -1,4 +1,4 @@
-.PHONY: up down dev-core compose-config sync lint fmt test test-py test-web new-service web-install asyncapi
+.PHONY: up down dev-core compose-config sync lint fmt test test-py test-web test-integration new-service web-install asyncapi
 
 sync:
 	uv sync --all-packages
@@ -17,6 +17,15 @@ test: test-py test-web
 
 test-py:
 	uv run pytest -q
+
+# Интеграция outbox → RabbitMQ → inbox на временных контейнерах (project fsp-test, порты 285xx)
+TEST_COMPOSE = docker compose -f infra/test/docker-compose.yml
+test-integration:
+	$(TEST_COMPOSE) up -d --wait
+	FSP_TEST_PG_URL=postgresql+asyncpg://test:test@127.0.0.1:28532/test \
+	FSP_TEST_AMQP_URL=amqp://guest:guest@127.0.0.1:28572/ \
+	uv run pytest -q packages/platform/tests/test_messaging_integration.py; \
+	rc=$$?; $(TEST_COMPOSE) down -v; exit $$rc
 
 test-web:
 	cd apps/web && pnpm test

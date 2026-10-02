@@ -1,0 +1,82 @@
+"""core-worker: подписчики очередей core + relay outbox.
+
+Запуск: `python -m app.worker`. Обработчики регистрируют модули через `Worker.consumers`.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import contextlib
+
+import structlog
+from fsp_platform.db import make_engine, make_session_factory
+from fsp_platform.logging import configure_logging
+from fsp_platform.messaging import (
+    QUEUES,
+    Consumer,
+    declare_topology,
+    make_broker,
+    publish_envelope,
+)
+from fsp_platform.outbox import OutboxRelay
+
+from app.config import Settings
+
+log = structlog.get_logger()
+
+CORE_QUEUES = (
+    "core.ingest",
+    "core.handlers",
+    "core.recompute",
+    "core.match",
+    "core.jobs",
+    "core.analytics",
+)
+
+
+class Worker:
+    def __init__(self, settings: Settings | None = None):
+        self.settings = settings or Settings()
+        self.broker = make_broker(self.settings.rabbitmq_url)
+        self.engine = make_engine(self.settings.database_url)
+        self.session_factory = make_session_factory(self.engine)
+        self.consumers = {name: Consumer(QUEUES[name]) for name in CORE_QUEUES}
+        self.relay = OutboxRelay(
+            self.session_factory,
+            lambda env: publish_envelope(self.broker, env),
+            listen_dsn=self.settings.database_url,
+        )
+        self._relay_task: asyncio.Task | None = None
+
+    async def start(self) -> None:
+        for consumer in self.consumers.values():
+            consumer.attach(self.broker)
+        await self.broker.connect()
+        await declare_topology(self.broker)
+        await self.broker.start()
+        self._relay_task = asyncio.create_task(self.relay.run(), name="outbox-relay")
+        log.info("core_worker_started", queues=list(self.consumers))
+
+    async def stop(self) -> None:
+        if self._relay_task:
+            self._relay_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await self._relay_task
+        await self.broker.stop()
+        await self.engine.dispose()
+
+
+async def main() -> None:
+    settings = Settings(service_name="core-worker")
+    configure_logging(settings.service_name, settings.log_level)
+    worker = Worker(settings)
+    await worker.start()
+    try:
+        await asyncio.Event().wait()
+    finally:
+        await worker.stop()
+
+
+if __name__ == "__main__":
+    with contextlib.suppress(KeyboardInterrupt):
+        asyncio.run(main())
