@@ -18,10 +18,11 @@
 - `fsp_connector/factory.py` — выбор по `FSP_ADAPTER` (`organizers`/`real` — E5-8)
 - `fsp_connector/models.py`, `migrations/` — `fsp_links`, `fsp_link_conflicts`, `raw_responses`, `webhook_log`, outbox/inbox
 - `fsp_connector/linking.py` — `LinkService`: OAuth / код / ручной ID, `fsp_link_conflicts`; `api.py` — `/internal/*` (`Service <SERVICE_TOKEN_CORE>`)
+- `fsp_connector/sync.py` — `SyncService`: `fsp.sync` / `fsp.sync_all` → `fsp.competitions.updated` + `fsp.results.imported` (полная при `new=true`); `handlers.py` — подписчик очереди `fsp.sync` (замок, inbox); запуск в `worker.py`
 - `fsp_connector/publisher.py` — `fsp.linked`, `fsp.results.imported`, `fsp.competitions.updated` в outbox
 
 ## Правила
 - Пакет `fsp_connector` (не `app`). ПДн участников не логируем и не кладём в события.
 - Событие пишется в outbox в той же транзакции, что и данные; обработчики идемпотентны (inbox).
-- `fsp_sync` и вебхук — задачи E5-5…E5-6.
+- Вебхук и `fsp_sync_all` по расписанию — E5-6.
 - Документы: fsp.md, messaging.md §2 и §6, data-model.md §3.10.

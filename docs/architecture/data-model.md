@@ -321,11 +321,13 @@ CREATE TABLE fsp_results (                      -- вершина-факт «р�
   id uuid PRIMARY KEY,
   candidate_id uuid REFERENCES candidates(user_id) ON DELETE CASCADE,
   participant_id text NOT NULL,
-  competition_id text REFERENCES fsp_competitions(id),
+  competition_id text NOT NULL,   -- без FK: результат может прийти раньше календаря
+  discipline text,                -- нужна, пока нет строки соревнования
   stage text,                     -- qualifier | final
   team_id text, team_role text,   -- captain | member | individual
   place int, participants_total int, score real, track text,
   date date, raw jsonb,
+  is_active boolean NOT NULL DEFAULT true,   -- false: пропал из полной выгрузки (строку не удаляем, аудит)
   UNIQUE (participant_id, competition_id, stage)
 );
 CREATE TABLE fsp_ranks (candidate_id uuid REFERENCES candidates(user_id) ON DELETE CASCADE, discipline text, rank text, assigned_at date, PRIMARY KEY (candidate_id, discipline));

@@ -45,7 +45,7 @@ ml-worker ─────► │ ui.user.<user_id> (прогресс задач)
 | `offer.sent` / `offer.viewed` / `offer.accepted` / `offer.declined` / `offer.expired` / `offer.withdrawn` / `offer.message` / `offer.status_changed` | core | `{offer_id, candidate_id, company_id, …}` |
 | `matches.ready` | core | `{vacancy_id, count}` |
 | `fsp.linked` | fsp-connector | `{candidate_id, participant_id, verified, method}` |
-| `fsp.results.imported` | fsp-connector | `{candidate_id, participant_id, results: FspResult[], ranks: FspRank[], teams: FspTeam[], new: bool}` |
+| `fsp.results.imported` | fsp-connector | `{candidate_id, participant_id, results: FspResult[], ranks: FspRank[], teams: FspTeam[], new: bool}`. `new=true` — полная выгрузка: результаты, которых в ней нет, core деактивирует; иначе инкремент (`since`), ничего не гасим |
 | `fsp.competitions.updated` | fsp-connector | `{competitions: FspCompetition[]}` |
 | `ml.resume.completed` / `ml.resume.failed` | ml | `{resume_id, candidate_id, parsed?, error?}` |
 | `ml.code.completed` / `ml.code.failed` | ml | `{analysis_id, candidate_id, result?, error?}` |

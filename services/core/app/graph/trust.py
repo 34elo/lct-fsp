@@ -16,6 +16,7 @@ from pathlib import Path
 import yaml
 
 from app.graph.category import CategoryConfig
+from app.graph.fsp_strength import FspStrengthConfig
 from app.graph.grade import GradeConfig
 from app.graph.team_signals import TeamConfig
 
@@ -35,6 +36,7 @@ class TrustConfig:
     category: CategoryConfig = field(default_factory=CategoryConfig)
     grade: GradeConfig = field(default_factory=GradeConfig)
     team: TeamConfig = field(default_factory=TeamConfig)
+    fsp: FspStrengthConfig = field(default_factory=FspStrengthConfig)
 
     @classmethod
     def load(cls, path: Path | str | None = None) -> TrustConfig:
@@ -49,6 +51,7 @@ class TrustConfig:
             category=CategoryConfig.from_dict(data.get("category")),
             grade=GradeConfig.from_dict(data),
             team=TeamConfig.from_dict(data),
+            fsp=FspStrengthConfig.from_dict(data),
         )
 
 
