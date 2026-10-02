@@ -29,6 +29,7 @@ from app.candidates.models import Candidate
 from app.graph.category import SkillConf, category_for
 from app.graph.grade import FspResult, GradeInputs, compute_grade
 from app.graph.models import CandidateSkill, Evidence
+from app.graph.team_signals import FspPerformance, RepoFact, compute_team_signals
 from app.graph.trust import EvidenceView, SkillTrust, TrustConfig, combine, inherit
 from app.taxonomy.models import Skill
 from app.taxonomy.service import SkillGraph
@@ -104,6 +105,51 @@ def grade_inputs(
         has_github=has_github,
         has_fsp_link=has_fsp,
     )
+
+
+def _int(v: object, default: int = 0) -> int:
+    n = _num(v)
+    return int(n) if n is not None else default
+
+
+def team_facts(
+    rows: list[tuple[Evidence, Skill]],
+) -> tuple[list[FspPerformance], list[RepoFact]]:
+    """Выступления ФСП и репозитории из evidence: одно событие на `fact_id` (навыков несколько)."""
+    perfs: dict[uuid.UUID, FspPerformance] = {}
+    repos: dict[uuid.UUID, RepoFact] = {}
+    for ev, _ in sorted(rows, key=lambda r: str(r[0].id)):
+        d = ev.details or {}
+        if (
+            ev.source == "fsp"
+            and ev.verified
+            and ev.fact_type != "fsp_rank"
+            and isinstance(d.get("level"), str)
+        ):
+            if ev.fact_id in perfs:
+                continue
+            place, total = _num(d.get("place")), _num(d.get("participants"))
+            role = d.get("team_role")
+            mates = d.get("teammates")
+            perfs[ev.fact_id] = FspPerformance(
+                fact_id=ev.fact_id,
+                observed_at=ev.observed_at,
+                level=d["level"],
+                place=int(place) if place else None,
+                participants=int(total) if total else None,
+                final=bool(d.get("final")) or d.get("stage") == "final",
+                team_role=role if role in ("captain", "member") else "individual",
+                team_size=_int(d.get("team_size"), 1),
+                teammates=tuple(str(m) for m in mates) if isinstance(mates, list) else (),
+            )
+        elif ev.source == "github" and ev.fact_type == "code_repo" and ev.fact_id not in repos:
+            repos[ev.fact_id] = RepoFact(
+                ev.fact_id,
+                maintainer=bool(d.get("maintainer")),
+                external_authors_merged=_int(d.get("external_authors_merged")),
+                active_authors=_int(d.get("active_authors"), 1),
+            )
+    return list(perfs.values()), list(repos.values())
 
 
 async def recompute_profile(
@@ -238,6 +284,15 @@ async def recompute_profile(
                 )
             cand.primary_role, cand.roles, cand.primary_stack = cat.primary_role, roles_json, stack
             changed = True
+
+    # командные сигналы L/T/R/G — только из фактов; management_confirmed хранится рядом
+    perfs, repos = team_facts(rows)
+    signals = compute_team_signals(perfs, repos, today, cfg.team).as_json(
+        management_confirmed=bool((cand.team_signals or {}).get("management_confirmed"))
+    )
+    if (cand.team_signals or None) != signals:
+        cand.team_signals = signals
+        changed = True
 
     grade_diff = None
     role_ids = graph.roles.get(cand.primary_role or "") if graph is not None else None
