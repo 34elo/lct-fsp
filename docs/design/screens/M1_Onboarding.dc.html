@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Онбординг кандидата</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0}
+.fsp{font-family:'Onest',system-ui,sans-serif;color:#1B1C21;font-size:15px;line-height:1.5;background:#EDEDF1;width:1840px;padding:48px 40px 64px}
+.fsp p,.fsp ul{margin:0;padding:0}
+.fsp li{list-style:none}
+.fsp h1,.fsp h2,.fsp h3{font-family:'JetBrains Mono',ui-monospace,monospace;margin:0;font-weight:600;letter-spacing:-.01em}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+.fsp button,.fsp input{font:inherit}
+.fsp button{cursor:pointer}
+.fsp a{color:#402FFF;text-decoration:underline}
+.fsp :focus-visible{outline:2px solid #402FFF;outline-offset:2px}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.dots{display:inline-flex;gap:3px;align-items:center;vertical-align:middle}
+.dots i{display:block;width:8px;height:8px;border-radius:50%;border:1.5px solid #A9A1FF;background:transparent}
+.dots i.f{background:#402FFF;border-color:#402FFF}
+.chip{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 11px 0 10px;border:1px solid #CDC9FF;background:#F4F3FF;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;color:#201880;white-space:nowrap}
+.chip .nw{font-size:10px;font-weight:700;line-height:1;background:#D4152D;color:#fff;padding:2px 4px;border-radius:3px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 20px;border-radius:8px;border:1px solid transparent;font-weight:600;font-size:15px;white-space:nowrap;width:100%}
+.btn.p{background:#402FFF;color:#fff}
+.btn.g{background:transparent;color:#402FFF;height:44px}
+.lbl{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#5B5D66}
+.cap{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:#201880;margin-bottom:10px}
+.ph{width:390px;min-height:900px;background:#fff;border:1px solid #C8C9CA;border-radius:22px;padding:22px 20px 24px;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.rw{position:relative;padding-left:38px;min-height:48px;display:flex;flex-direction:column;justify-content:center}
+.rw::before{content:'';position:absolute;left:13px;top:0;bottom:0;border-left:1.5px solid #402FFF}
+.rw.fut::before{border-left:1.5px dashed #C8C9CA}
+.rw.first::before{top:26px}
+.rw.last::before{bottom:auto;height:26px}
+.rw.cur::before{bottom:0}
+.nd{position:absolute;left:6px;top:19px;width:16px;height:16px;border-radius:50%;background:#402FFF;border:3px solid #fff;box-shadow:0 0 0 1.5px #402FFF}
+.rw.cur .nd{background:#EC1D35;box-shadow:0 0 0 1.5px #EC1D35}
+.rw.fut .nd{background:#fff;box-shadow:0 0 0 1.5px #C8C9CA}
+.rh{display:flex;justify-content:space-between;align-items:center;min-height:48px;font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600}
+.rh.d{color:#402FFF}
+.rh.f{color:#8A8C95}
+.rs{font-size:12px;font-weight:500;color:#5B5D66;font-family:'Onest',sans-serif}
+.bd{padding:2px 0 22px;display:flex;flex-direction:column;gap:14px}
+.cs{display:grid;grid-template-columns:28px 1fr;gap:12px;padding:12px;border:1px solid #E1E1E5;border-radius:10px;align-items:start}
+.cs input{width:22px;height:22px;accent-color:#402FFF;margin:2px 0 0}
+.cs b{font-weight:600}
+.cs small{color:#4B4D55;font-size:13px;line-height:1.4;display:block;margin:2px 0}
+.cs a{display:inline-flex;align-items:center;min-height:32px;font-size:13px}
+.tag{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px}
+.med{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 5px;border-radius:12px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;flex:none}
+.log{background:#1B1C21;border-radius:10px;padding:14px 16px;font-family:'JetBrains Mono',monospace;font-size:12.5px;line-height:1.85;color:#EDEDED}
+.wr{display:grid;grid-template-columns:20px 1fr;gap:10px;padding:10px 12px;background:#FFF7E6;border:1px solid #F5D28A;border-radius:8px;font-size:13px;color:#5C3A00;line-height:1.4}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{display:inline-block;animation:spin 1.4s linear infinite}
+</style>
+</helmet>
+<div class="fsp">
+<div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 32px"><span class="lbl" style="color: #402FFF">Кандидат · мобильный 390 px</span><h1 style="font-size: 32px">Онбординг: профиль за пять шагов</h1><p style="color: #4B4D55; max-width: 760px">Шаги стоят на вертикальной схемной линии: пройденные подписаны, текущий — красная точка, будущие — пунктир. Каждый шаг можно пропустить и вернуться позже.</p></div>
+
+<div style="display: grid; grid-template-columns: repeat(4, 390px); gap: 48px 48px">
+
+<div><div class="cap">1 · Согласия</div>
+<div class="ph">
+<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px"><img src="/_blob/08d667adc70922d472fb2822da982112" alt="ФСП" style="height: 36px; width: auto"><div><div class="mono" style="font-weight: 700">Соберём ваш профиль</div><div style="font-size: 12px; color: #5B5D66">Шаг 1 из 5 · около 3 минут</div></div></div>
+<div class="rw first cur"><i class="nd"></i><div class="rh"><span>1 · Согласия</span></div>
+<div class="bd">
+<p style="font-size: 13px; color: #4B4D55">Каждое согласие даётся отдельно. Полный текст открывается по ссылке.</p>
+<label class="cs"><input type="checkbox" checked><span><b>Обработка персональных данных</b> <span class="tag" style="background: #E6E4FF; color: #201880">обязательно</span><small>Имя, контакты и резюме нужны, чтобы создать профиль.</small><a href="#">Полный текст согласия</a></span></label>
+<label class="cs"><input type="checkbox" checked><span><b>Анонимный показ работодателям</b> <span class="tag" style="background: #E6E4FF; color: #201880">обязательно</span><small>Компании видят профиль без имени и контактов.</small><a href="#">Полный текст согласия</a></span></label>
+<label class="cs"><input type="checkbox" checked><span><b>Раскрытие контактов после «да»</b> <span class="tag" style="background: #E6E4FF; color: #201880">обязательно</span><small>Контакты уходят компании только когда вы приняли оффер.</small><a href="#">Полный текст согласия</a></span></label>
+<label class="cs"><input type="checkbox"><span><b>Уведомления в Telegram</b> <span class="tag" style="background: #EDEDED; color: #4B4D55">по желанию</span><small>Офферы и новые результаты ФСП.</small><a href="#">Полный текст согласия</a></span></label>
+<button class="btn p" type="button">Продолжить</button><button class="btn g" type="button">Пропустить необязательные</button>
+</div></div>
+<div class="rw fut"><i class="nd"></i><div class="rh f"><span>2 · Резюме</span></div></div>
+<div class="rw fut"><i class="nd"></i><div class="rh f"><span>3 · ФСП</span></div></div>
+<div class="rw fut"><i class="nd"></i><div class="rh f"><span>4 · GitHub</span></div></div>
+<div class="rw fut last"><i class="nd"></i><div class="rh f"><span>5 · Готово</span></div></div>
+</div></div>
+
+<div><div class="cap">2 · Резюме · лог сборки</div>
+<div class="ph">
+<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px"><img src="/_blob/08d667adc70922d472fb2822da982112" alt="ФСП" style="height: 36px; width: auto"><div><div class="mono" style="font-weight: 700">Соберём ваш профиль</div><div style="font-size: 12px; color: #5B5D66">Шаг 2 из 5</div></div></div>
+<div class="rw first"><i class="nd"></i><div class="rh d"><span>1 · Согласия</span><span class="rs">готово</span></div></div>
+<div class="rw cur"><i class="nd"></i><div class="rh"><span>2 · Резюме</span></div>
+<div class="bd">
+<div style="display: flex; gap: 12px; align-items: center; padding: 14px; border: 1px dashed #796DFF; border-radius: 10px; background: #F4F3FF"><svg class="ic" viewBox="0 0 24 24" style="color: #402FFF"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M8 13h8M8 17h5"></path></svg><div style="flex: 1; min-width: 0"><div style="font-weight: 600; font-size: 14px">resume_anya.pdf</div><div class="mono" style="font-size: 12px; color: #5B5D66">2 стр. · 184 КБ</div></div></div>
+<div class="log" role="log" aria-label="Лог сборки">
+<div style="color: #8A8C95; font-size: 11px; letter-spacing: 0.06em; margin-bottom: 4px">$ разбор резюме</div>
+<div><span style="color: #A9A1FF">✓</span> Извлёк текст (2 стр.)</div>
+<div><span style="color: #A9A1FF">✓</span> Нашёл 2 места работы</div>
+<div><span style="color: #A9A1FF">✓</span> Нашёл образование: 1</div>
+<div><span style="color: #A9A1FF">✓</span> Нашёл 7 навыков</div>
+<div><span class="spin" style="color: #796DFF">◌</span> Сверяю навыки со справочником…</div>
+<div style="color: #8A8C95">· Ищу предупреждения</div>
+</div>
+<div style="height: 8px; border-radius: 4px; background: #E6E4FF; overflow: hidden" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" aria-label="Разбор резюме"><div style="width: 60%; height: 100%; background: #402FFF"></div></div>
+<button class="btn g" type="button">Пропустить, заполню вручную</button>
+</div></div>
+<div class="rw fut"><i class="nd"></i><div class="rh f"><span>3 · ФСП</span></div></div>
+<div class="rw fut"><i class="nd"></i><div class="rh f"><span>4 · GitHub</span></div></div>
+<div class="rw fut last"><i class="nd"></i><div class="rh f"><span>5 · Готово</span></div></div>
+</div></div>
+
+<div><div class="cap">2 · Резюме · «Вот что я понял»</div>
+<div class="ph">
+<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px"><img src="/_blob/08d667adc70922d472fb2822da982112" alt="ФСП" style="height: 36px; width: auto"><div><div class="mono" style="font-weight: 700">Соберём ваш профиль</div><div style="font-size: 12px; color: #5B5D66">Шаг 2 из 5</div></div></div>
+<div class="rw first"><i class="nd"></i><div class="rh d"><span>1 · Согласия</span><span class="rs">готово</span></div></div>
+<div class="rw cur"><i class="nd"></i><div class="rh"><span>2 · Вот что я понял</span></div>
+<div class="bd">
+<p style="font-size: 14px">Проверьте, всё ли верно. Нажмите на строку, чтобы поправить.</p>
+<div><span class="lbl">Опыт</span>
+<div style="border: 1px solid #402FFF; border-radius: 10px; padding: 12px; margin-top: 6px; display: flex; flex-direction: column; gap: 8px"><label for="j1" style="font-size: 12px; color: #5B5D66">Должность</label><input id="j1" type="text" value="Backend-разработчик" style="height: 44px; border: 1px solid #C8C9CA; border-radius: 8px; padding: 0 12px"><div style="display: flex; gap: 8px"><button type="button" class="btn p" style="height: 44px; width: auto; flex: 1">Сохранить</button><button type="button" class="btn g" style="width: auto">Отмена</button></div></div>
+<div style="display: flex; justify-content: space-between; align-items: center; min-height: 52px; border-bottom: 1px solid #E1E1E5"><div><div style="font-weight: 600; font-size: 14px">Стажёр-разработчик</div><div class="mono" style="font-size: 12px; color: #5B5D66">6 мес · Python, Django</div></div><button type="button" aria-label="Править: Стажёр-разработчик" style="width: 44px; height: 44px; border: 0; background: transparent; color: #402FFF"><svg class="ic" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg></button></div></div>
+<div><span class="lbl">Образование</span><div style="display: flex; justify-content: space-between; align-items: center; min-height: 52px"><div><div style="font-weight: 600; font-size: 14px">Прикладная информатика</div><div class="mono" style="font-size: 12px; color: #5B5D66">3 курс · с 2023</div></div><button type="button" aria-label="Править образование" style="width: 44px; height: 44px; border: 0; background: transparent; color: #402FFF"><svg class="ic" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg></button></div></div>
+<div><span class="lbl">Навыки · из резюме, доверие слабое</span><div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px">
+<span class="chip"><span class="dots" role="img" aria-label="Доверие: 1 из 4"><i class="f"></i><i></i><i></i><i></i></span>Python</span><span class="chip"><span class="dots" role="img" aria-label="Доверие: 1 из 4"><i class="f"></i><i></i><i></i><i></i></span>FastAPI</span><span class="chip"><span class="dots" role="img" aria-label="Доверие: 1 из 4"><i class="f"></i><i></i><i></i><i></i></span>PostgreSQL</span><span class="chip"><span class="dots" role="img" aria-label="Доверие: 1 из 4"><i class="f"></i><i></i><i></i><i></i></span>Docker</span><span class="chip"><span class="dots" role="img" aria-label="Доверие: 1 из 4"><i class="f"></i><i></i><i></i><i></i></span>Pydantic<span class="nw">новый</span></span><span class="chip"><span class="dots" role="img" aria-label="Доверие: 1 из 4"><i class="f"></i><i></i><i></i><i></i></span>Git</span></div>
+<p style="font-size: 12px; color: #5B5D66; margin-top: 8px">Pydantic раньше не встречался в справочнике: мы добавили его и связали с FastAPI. Следующие шаги поднимут точки.</p></div>
+<div class="wr"><svg class="ic" viewBox="0 0 24 24" style="color: #F59E0B; width: 18px; height: 18px"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4M12 17h.01"></path></svg><span>Не нашёл даты окончания на последнем месте работы.</span></div>
+<div class="wr"><svg class="ic" viewBox="0 0 24 24" style="color: #F59E0B; width: 18px; height: 18px"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4M12 17h.01"></path></svg><span>Redis упомянут один раз, засчитаю как заявленный.</span></div>
+<button class="btn p" type="button">Всё верно</button><button class="btn g" type="button">Пропустить</button>
+</div></div>
+<div class="rw fut"><i class="nd"></i><div class="rh f"><span>3 · ФСП</span></div></div>
+<div class="rw fut"><i class="nd"></i><div class="rh f"><span>4 · GitHub</span></div></div>
+<div class="rw fut last"><i class="nd"></i><div class="rh f"><span>5 · Готово</span></div></div>
+</div></div>
+
+<div><div class="cap">3 · ФСП · вход</div>
+<div class="ph">
+<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px"><img src="/_blob/08d667adc70922d472fb2822da982112" alt="ФСП" style="height: 36px; width: auto"><div><div class="mono" style="font-weight: 700">Соберём ваш профиль</div><div style="font-size: 12px; color: #5B5D66">Шаг 3 из 5</div></div></div>
+<div class="rw first"><i class="nd"></i><div class="rh d"><span>1 · Согласия</span><span class="rs">готово</span></div></div>
+<div class="rw"><i class="nd"></i><div class="rh d"><span>2 · Резюме</span><span class="rs">7 навыков</span></div></div>
+<div class="rw cur"><i class="nd"></i><div class="rh"><span>3 · ФСП</span></div>
+<div class="bd" style="gap: 18px">
+<p style="font-size: 15px; line-height: 1.5">Результаты соревнований ФСП — самое сильное подтверждение. Они поднимут навыки и грейд.</p>
+<button type="button" style="display: flex; align-items: center; gap: 14px; width: 100%; height: 72px; border: 0; border-radius: 12px; background: #402FFF; color: #fff; padding: 0 18px; font-weight: 700; font-size: 18px; text-align: left"><span style="width: 44px; height: 44px; border-radius: 10px; background: #fff; display: flex; align-items: center; justify-content: center; flex: none"><img src="/_blob/08d667adc70922d472fb2822da982112" alt="" style="height: 34px; width: auto"></span><span style="flex: 1">Войти через ФСП</span><svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14m-7-7 7 7-7 7"></path></svg></button>
+<button type="button" style="border: 0; background: transparent; color: #4B4D55; font-size: 13px; min-height: 44px; text-decoration: underline; align-self: center">или ввести ID участника</button>
+<div style="display: flex; flex-direction: column; gap: 8px; padding: 14px; background: #F4F3FF; border-radius: 10px; font-size: 13px; color: #201880"><span class="mono" style="font-weight: 700">Что подтянется</span><span>Протоколы соревнований, место, роль в команде, разряд.</span><span>Данные берём из реестра ФСП, их нельзя отредактировать вручную.</span></div>
+<button class="btn g" type="button">Пропустить, у меня нет результатов</button>
+</div></div>
+<div class="rw fut"><i class="nd"></i><div class="rh f"><span>4 · GitHub</span></div></div>
+<div class="rw fut last"><i class="nd"></i><div class="rh f"><span>5 · Готово</span></div></div>
+</div></div>
+
+<div><div class="cap">3 · ФСП · после импорта</div>
+<div class="ph">
+<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px"><img src="/_blob/08d667adc70922d472fb2822da982112" alt="ФСП" style="height: 36px; width: auto"><div><div class="mono" style="font-weight: 700">Соберём ваш профиль</div><div style="font-size: 12px; color: #5B5D66">Шаг 3 из 5</div></div></div>
+<div class="rw first"><i class="nd"></i><div class="rh d"><span>1 · Согласия</span><span class="rs">готово</span></div></div>
+<div class="rw"><i class="nd"></i><div class="rh d"><span>2 · Резюме</span><span class="rs">7 навыков</span></div></div>
+<div class="rw cur"><i class="nd"></i><div class="rh"><span>3 · ФСП · импортировано</span></div>
+<div class="bd">
+<span class="lbl">Достижения</span>
+<div style="display: flex; flex-direction: column; border: 1px solid #E1E1E5; border-radius: 10px"><div style="display: flex; gap: 10px; align-items: flex-start; padding: 12px"><span class="med" style="background: #A9A1FF; color: #1B1C21" role="img" aria-label="2 место">2</span><span class="mono" style="font-size: 12px; line-height: 1.55">Продуктовое программирование · Кубок России · финал · <b>2 из 40</b> · капитан · 2025</span></div><div style="display: flex; gap: 10px; align-items: flex-start; padding: 12px; border-top: 1px solid #E1E1E5"><span class="med" style="background: #402FFF; color: #fff" role="img" aria-label="1 место">1</span><span class="mono" style="font-size: 12px; line-height: 1.55">Алгоритмы · региональный этап · <b>1 из 112</b> · 2024</span></div><div style="display: flex; gap: 10px; align-items: flex-start; padding: 12px; border-top: 1px solid #E1E1E5"><span class="med" style="background: #fff; color: #201880; border: 1px solid #402FFF" role="img" aria-label="Разряд">КМС</span><span class="mono" style="font-size: 12px; line-height: 1.55">Кандидат в мастера спорта · 2025</span></div></div>
+<span class="lbl">Навыки засветились</span>
+<div style="display: flex; gap: 8px; flex-wrap: wrap"><span class="chip"><span class="dots" role="img" aria-label="Доверие: 4 из 4"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></span>Алгоритмы</span><span class="chip"><span class="dots" role="img" aria-label="Доверие: 4 из 4"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></span>Python</span><span class="chip"><span class="dots" role="img" aria-label="Доверие: 3 из 4"><i class="f"></i><i class="f"></i><i class="f"></i><i></i></span>FastAPI</span><span class="chip"><span class="dots" role="img" aria-label="Доверие: 2 из 4"><i class="f"></i><i class="f"></i><i></i><i></i></span>PostgreSQL</span></div>
+<div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap"><span class="mono" style="font-size: 13px; color: #5B5D66; text-decoration: line-through">Junior</span><svg class="ic" viewBox="0 0 24 24" style="color: #402FFF"><path d="M5 12h14m-7-7 7 7-7 7"></path></svg><span style="display: inline-flex; align-items: center; height: 32px; padding: 0 12px; border-radius: 6px; border: 1px dashed #402FFF; color: #402FFF; font-family: 'JetBrains Mono', monospace; font-weight: 700">Junior+</span><span style="font-size: 12px; color: #5B5D66">предварительно</span></div>
+<div><div style="font-weight: 600">Лидерство <span class="mono" style="font-size: 12px; color: #402FFF">— сильное подтверждение</span></div><div style="font-size: 13px; color: #4B4D55">капитан на 2 соревнованиях ФСП</div></div>
+<button class="btn p" type="button">Дальше: GitHub</button>
+</div></div>
+<div class="rw fut"><i class="nd"></i><div class="rh f"><span>4 · GitHub</span></div></div>
+<div class="rw fut last"><i class="nd"></i><div class="rh f"><span>5 · Готово</span></div></div>
+<div role="status" style="position: absolute; left: 14px; right: 14px; bottom: 16px; background: #1B1C21; color: #fff; border-radius: 10px; padding: 12px 14px; display: flex; gap: 10px; align-items: center; font-size: 13px; box-shadow: 0 8px 24px rgb(27 28 33 / 24%)"><svg class="ic" viewBox="0 0 24 24" style="color: #A9A1FF"><path d="M20 6 9 17l-5-5"></path></svg><span>Твои победы засчитаны: <b class="mono">6</b> навыков подтверждены ФСП</span></div>
+</div></div>
+
+<div><div class="cap">4 · GitHub · чтение репозиториев</div>
+<div class="ph">
+<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px"><img src="/_blob/08d667adc70922d472fb2822da982112" alt="ФСП" style="height: 36px; width: auto"><div><div class="mono" style="font-weight: 700">Соберём ваш профиль</div><div style="font-size: 12px; color: #5B5D66">Шаг 4 из 5</div></div></div>
+<div class="rw first"><i class="nd"></i><div class="rh d"><span>1 · Согласия</span><span class="rs">готово</span></div></div>
+<div class="rw"><i class="nd"></i><div class="rh d"><span>2 · Резюме</span><span class="rs">7 навыков</span></div></div>
+<div class="rw"><i class="nd"></i><div class="rh d"><span>3 · ФСП</span><span class="rs">3 протокола</span></div></div>
+<div class="rw cur"><i class="nd"></i><div class="rh"><span>4 · GitHub</span></div>
+<div class="bd">
+<div style="display: flex; flex-direction: column; gap: 6px"><label for="gh" style="font-size: 13px; font-weight: 600">Ник на GitHub</label><div style="display: flex; gap: 8px"><input id="gh" type="text" value="anya-codes" style="flex: 1; height: 48px; border: 1px solid #402FFF; border-radius: 8px; padding: 0 14px; font-family: 'JetBrains Mono', monospace"><button type="button" class="btn p" style="width: auto; padding: 0 16px">Читать</button></div><span style="font-size: 12px; color: #5B5D66">Только публичные репозитории. Токен не нужен.</span></div>
+<div class="log" role="log" aria-label="Чтение репозиториев">
+<div style="color: #A9A1FF; font-weight: 700; margin-bottom: 2px">Репозитории · 3/7</div>
+<div><span style="color: #A9A1FF">✓</span> fastapi-shop <span style="color: #8A8C95">· 3/7</span></div>
+<div><span style="color: #A9A1FF">✓</span> algo-lab</div>
+<div><span style="color: #A9A1FF">✓</span> tg-helper-bot</div>
+<div><span class="spin" style="color: #796DFF">◌</span> pet-api…</div>
+<div style="color: #8A8C95">· dotfiles</div>
+<div style="color: #8A8C95">· uni-labs</div>
+<div style="color: #8A8C95">· notes</div>
+</div>
+<div style="height: 8px; border-radius: 4px; background: #E6E4FF; overflow: hidden" role="progressbar" aria-valuenow="43" aria-valuemin="0" aria-valuemax="100" aria-label="Репозитории"><div style="width: 43%; height: 100%; background: #402FFF"></div></div>
+<div style="height: 120px; border: 1px dashed #C8C9CA; border-radius: 10px; display: flex; align-items: center; justify-content: center; text-align: center; color: #5B5D66; font-size: 13px; padding: 0 20px">Радар «ДНК кода» появится, когда прочитаем все репозитории</div>
+<button class="btn g" type="button">Пропустить GitHub</button>
+</div></div>
+<div class="rw fut last"><i class="nd"></i><div class="rh f"><span>5 · Готово</span></div></div>
+</div></div>
+
+<div><div class="cap">5 · Готово · радар ДНК кода</div>
+<div class="ph">
+<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px"><img src="/_blob/08d667adc70922d472fb2822da982112" alt="ФСП" style="height: 36px; width: auto"><div><div class="mono" style="font-weight: 700">Профиль готов</div><div style="font-size: 12px; color: #5B5D66">Шаг 5 из 5</div></div></div>
+<div class="rw first"><i class="nd"></i><div class="rh d"><span>1 · Согласия</span><span class="rs">готово</span></div></div>
+<div class="rw"><i class="nd"></i><div class="rh d"><span>2 · Резюме</span><span class="rs">7 навыков</span></div></div>
+<div class="rw"><i class="nd"></i><div class="rh d"><span>3 · ФСП</span><span class="rs">3 протокола</span></div></div>
+<div class="rw"><i class="nd"></i><div class="rh d"><span>4 · GitHub</span><span class="rs">7 репозиториев</span></div></div>
+<div class="rw cur last"><i class="nd"></i><div class="rh"><span>5 · Готово</span></div>
+<div class="bd">
+<div><span class="lbl">ДНК кода</span>
+<svg viewBox="-60 0 400 290" width="100%" role="img" aria-label="Радар: бэкенд 3.6 из 4, фронтенд 1.4, DevOps 2, данные 3, качество кода 3.2, open source 1.6" style="display: block"><g fill="none" stroke="#E1E1E5" stroke-width="1"><path d="M140 40L226.6 90L226.6 190L140 240L53.4 190L53.4 90Z"></path><path d="M140 90L183.3 115L183.3 165L140 190L96.7 165L96.7 115Z"></path><path d="M140 140L140 40M140 140L226.6 90M140 140L226.6 190M140 140L140 240M140 140L53.4 190M140 140L53.4 90"></path></g><path d="M140 50L170.3 122.5L183.3 165L140 215L70.7 180L105.4 120Z" fill="#402FFF" fill-opacity="0.2" stroke="#402FFF" stroke-width="2" stroke-linejoin="round"></path><g fill="#402FFF"><circle cx="140" cy="50" r="4"></circle><circle cx="170.3" cy="122.5" r="3.5"></circle><circle cx="183.3" cy="165" r="3.5"></circle><circle cx="140" cy="215" r="3.5"></circle><circle cx="70.7" cy="180" r="3.5"></circle><circle cx="105.4" cy="120" r="3.5"></circle></g><g font-family="JetBrains Mono, monospace" font-size="12" fill="#1B1C21"><text x="140" y="26" text-anchor="middle" font-weight="700">Бэкенд</text><text x="238" y="86">Фронтенд</text><text x="238" y="206">DevOps</text><text x="140" y="262" text-anchor="middle" font-weight="700">Данные</text><text x="42" y="206" text-anchor="end">Качество</text><text x="42" y="86" text-anchor="end">Open source</text></g></svg></div>
+<div style="display: flex; justify-content: space-between; align-items: baseline; padding: 12px 0; border-top: 1px solid #E1E1E5"><span style="font-weight: 600">Сила профиля</span><span class="mono" style="font-size: 26px; font-weight: 700; color: #402FFF">70%</span></div>
+<div style="display: flex; justify-content: space-between; align-items: center"><span style="font-weight: 600">Грейд</span><span style="display: inline-flex; align-items: center; height: 30px; padding: 0 12px; border-radius: 6px; border: 1px dashed #402FFF; color: #402FFF; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 13px">Junior+ · Backend · Python</span></div>
+<a class="btn p" href="D_Profile.dc.html" style="text-decoration: none; color: #fff">Смотреть мой профиль</a>
+</div></div>
+</div></div>
+
+<div><div class="cap">3 · ФСП · анимация импорта, 3 кадра</div>
+<div class="ph" style="min-height: 0; gap: 14px; background: #FAFAFC">
+<div style="border: 1px solid #E1E1E5; border-radius: 12px; background: #fff; padding: 16px; display: flex; flex-direction: column; gap: 10px"><span class="lbl">Кадр 1 · 0,0 с · данные пришли</span>
+<div style="display: flex; gap: 8px; flex-wrap: wrap"><span class="chip"><span class="dots" role="img" aria-label="Доверие: 1 из 4"><i class="f"></i><i></i><i></i><i></i></span>Python</span><span class="chip"><span class="dots" role="img" aria-label="Доверие: 1 из 4"><i class="f"></i><i></i><i></i><i></i></span>Алгоритмы</span><span class="chip"><span class="dots" role="img" aria-label="Доверие: 1 из 4"><i class="f"></i><i></i><i></i><i></i></span>FastAPI</span></div>
+<div class="mono" style="font-size: 13px; display: flex; justify-content: space-between"><span>Грейд: Junior</span><span style="color: #5B5D66">протоколов: 0</span></div></div>
+<div style="border: 1px solid #CDC9FF; border-radius: 12px; background: #fff; padding: 16px; display: flex; flex-direction: column; gap: 10px"><span class="lbl">Кадр 2 · 0,8 с · протоколы вылетают по линии</span>
+<div style="display: flex; gap: 8px; flex-wrap: wrap"><span class="chip"><span class="dots" role="img" aria-label="Доверие: 2 из 4"><i class="f"></i><i class="f"></i><i></i><i></i></span>Python</span><span class="chip"><span class="dots" role="img" aria-label="Доверие: 2 из 4"><i class="f"></i><i class="f"></i><i></i><i></i></span>Алгоритмы</span><span class="chip"><span class="dots" role="img" aria-label="Доверие: 1 из 4"><i class="f"></i><i></i><i></i><i></i></span>FastAPI</span></div>
+<div class="mono" style="font-size: 13px; display: flex; justify-content: space-between"><span>Грейд: Junior</span><span style="color: #402FFF; font-weight: 700">протоколов: 2</span></div></div>
+<div style="border: 1px solid #402FFF; border-radius: 12px; background: #fff; padding: 16px; display: flex; flex-direction: column; gap: 10px"><span class="lbl" style="color: #402FFF">Кадр 3 · 1,6 с · навыки загорелись</span>
+<div style="display: flex; gap: 8px; flex-wrap: wrap"><span class="chip"><span class="dots" role="img" aria-label="Доверие: 4 из 4"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></span>Python</span><span class="chip"><span class="dots" role="img" aria-label="Доверие: 4 из 4"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></span>Алгоритмы</span><span class="chip"><span class="dots" role="img" aria-label="Доверие: 3 из 4"><i class="f"></i><i class="f"></i><i class="f"></i><i></i></span>FastAPI</span></div>
+<div class="mono" style="font-size: 13px; display: flex; justify-content: space-between; align-items: center"><span><s style="color: #8A8C95">Junior</s> → <b style="color: #402FFF">Junior+</b></span><span style="color: #402FFF; font-weight: 700">протоколов: 3</span></div>
+<div style="font-size: 13px"><b>Лидерство</b> <span class="mono" style="font-size: 12px; color: #402FFF">— сильное подтверждение</span></div></div>
+<p style="font-size: 12px; color: #5B5D66">Между кадрами 240 мс, точки загораются по одной. Затем тост «Твои победы засчитаны: 6 навыков подтверждены ФСП». При «уменьшить движение» — сразу кадр 3.</p>
+</div></div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1840,"height":2160}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

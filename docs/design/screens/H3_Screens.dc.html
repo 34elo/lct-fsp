@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Экраны и адаптив</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0}
+.fsp p,.fsp ul{margin:0;padding:0}.fsp li{list-style:none}
+.fsp h1,.fsp h2,.fsp h3{font-family:'JetBrains Mono',ui-monospace,monospace;margin:0;font-weight:600;letter-spacing:-.01em}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+.fsp button,.fsp input,.fsp select{font:inherit}.fsp button{cursor:pointer}
+.fsp a{color:inherit;text-decoration:none}
+.fsp :focus-visible{outline:2px solid #402FFF;outline-offset:2px}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.lbl{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#5B5D66}
+.adm{display:grid;grid-template-columns:240px 1fr;min-height:100%;background:#FAFAFC;font-family:'Onest',system-ui,sans-serif;color:#1B1C21;font-size:15px;line-height:1.5;width:100%}
+.sb{background:#1B1C21;color:#EDEDED;padding:24px 12px;display:flex;flex-direction:column;gap:2px}
+.sb a{display:flex;align-items:center;min-height:44px;padding:0 12px;border-radius:8px;font-size:14px;color:#C9CAD1}
+.sb a.on{background:#201880;color:#fff;font-weight:600}
+.sb .g{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#9A9CA6;padding:16px 12px 6px}
+.mn{padding:36px 44px 56px;display:flex;flex-direction:column;gap:24px;min-width:0}
+.card{background:#fff;border:1px solid #E1E1E5;border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.kpi{background:#fff;border:1px solid #E1E1E5;border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:4px}
+.kpi b{font-family:'JetBrains Mono',monospace;font-size:30px;line-height:1.1;letter-spacing:-.03em}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.g3{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+.tbl{width:100%;border-collapse:collapse}.tbl th{font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#5B5D66;text-align:left;padding:8px 12px;border-bottom:1px solid #E1E1E5;font-weight:500}.tbl td{padding:0 12px;height:48px;border-bottom:1px solid #E1E1E5;font-size:14px}
+.bd{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px;border-radius:12px;font-size:12px;font-weight:600;white-space:nowrap}
+.ok{background:#ECFDF3;color:#15803D;border:1px solid #A7E3BE}.wn{background:#FFF7E6;color:#5C3A00;border:1px solid #F5D28A}.er{background:#FDECEE;color:#B91C2D;border:1px solid #F4B4BA}.nu{background:#F4F3FF;color:#201880;border:1px solid #CDC9FF}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 18px;border-radius:8px;border:1px solid transparent;font-weight:600;font-size:14px;white-space:nowrap}
+.btn.p{background:#402FFF;color:#fff}.btn.s{background:#fff;color:#402FFF;border-color:#402FFF}
+.bar{height:12px;border-radius:6px;background:#E6E4FF;overflow:hidden;position:relative}.bar b{display:block;height:100%;background:#402FFF}
+.hd{font-family:'Onest',system-ui,sans-serif;color:#1B1C21;font-size:15px;line-height:1.5;background:#FAFAFC;width:100%;padding:48px 56px;display:flex;flex-direction:column;gap:28px}
+.sw{display:grid;grid-template-columns:44px 1fr 1fr;gap:12px;align-items:center;min-height:48px;border-top:1px solid #E1E1E5;font-size:13px}
+.sw i{width:44px;height:32px;border-radius:6px;border:1px solid #C8C9CA;display:block}
+code,.cd{font-family:'JetBrains Mono',monospace;font-size:12px}
+pre.cd{margin:0;background:#1B1C21;color:#EDEDED;border-radius:10px;padding:16px;overflow:auto;line-height:1.6;white-space:pre}
+.demo{display:flex;align-items:center;gap:6px;min-height:56px}
+.b1{height:40px;padding:0 16px;border-radius:8px;border:1px solid #402FFF;background:#402FFF;color:#fff;font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.in1{height:40px;width:130px;border-radius:8px;border:1px solid #C8C9CA;background:#fff;padding:0 10px;font-size:13px;display:flex;align-items:center;color:#5B5D66}
+
+</style>
+</helmet>
+<div class="fsp hd"><div><span class="lbl" style="color:#402FFF">Передача во фронтенд · 3/4</span><h1 style="font-size:30px">Список экранов и адаптив</h1><p style="color:#4B4D55;max-width:760px">Точки: 1440 (десктоп), 1024 (планшет), 390 (телефон). Минимальная цель касания 44 px на телефоне.</p></div><section class="card" style="overflow:auto"><table class="tbl"><thead><tr><th>ID</th><th>Экран</th><th>Маршрут</th><th>Точки адаптива</th><th>Заметки</th></tr></thead><tbody><tr><td><b class="mono">DS1–DS3</b></td><td>Дизайн-система</td><td><span class="cd">—</span></td><td>1440</td><td>—</td></tr><tr><td><b class="mono">A</b></td><td>Поиск (работодатель)</td><td><span class="cd">/employer/search</span></td><td>1440, 1024 → фильтры в Sheet, 390 → список</td><td>карточки в 1 колонку</td></tr><tr><td><b class="mono">B</b></td><td>Карточка кандидата</td><td><span class="cd">/employer/candidates/:id</span></td><td>1440 тёмная, 1024, 390 → граф как G2</td><td>вкладки вместо колонок</td></tr><tr><td><b class="mono">C</b></td><td>Модалка оффера</td><td><span class="cd">/employer/offers/new</span></td><td>1440 Dialog, 390 → полноэкранный Sheet</td><td>подсказки под полем</td></tr><tr><td><b class="mono">D</b></td><td>Мой профиль</td><td><span class="cd">/me</span></td><td>390 (основной), 1440 → две колонки</td><td>нижняя навигация только до 768</td></tr><tr><td><b class="mono">E1</b></td><td>Рынок талантов</td><td><span class="cd">/employer/market</span></td><td>1440, 1024 → скролл тепловой карты, 390 → список ролей</td><td>таблица вместо heatmap</td></tr><tr><td><b class="mono">E2</b></td><td>Анимация «текст → чипсы»</td><td><span class="cd">/employer/search</span></td><td>1440, 390</td><td>prefers-reduced-motion: статичный кадр 3</td></tr><tr><td><b class="mono">E3</b></td><td>Редактор вакансии</td><td><span class="cd">/employer/vacancies/:id</span></td><td>1440, 1024 → превью под формой, 390 → шаги</td><td>—</td></tr><tr><td><b class="mono">E4</b></td><td>Подборка по вакансии</td><td><span class="cd">/employer/vacancies/:id/shortlist</span></td><td>1440, 1024, 390 → карточки</td><td>обоснование раскрывается</td></tr><tr><td><b class="mono">E5</b></td><td>Мои офферы</td><td><span class="cd">/employer/offers</span></td><td>1440 канбан, 1024 → скролл колонок, 390 → вкладки статусов</td><td>—</td></tr><tr><td><b class="mono">M1</b></td><td>Онбординг кандидата</td><td><span class="cd">/onboarding</span></td><td>390 (основной), 1440 → колонка 480</td><td>вертикальная схема шагов</td></tr><tr><td><b class="mono">M2</b></td><td>Офферы кандидата</td><td><span class="cd">/me/offers</span></td><td>390, 1440 → список + детали</td><td>Sheet для отказа</td></tr><tr><td><b class="mono">M3</b></td><td>Рост и тест</td><td><span class="cd">/me/growth</span></td><td>390, 1440 → две колонки</td><td>трасса листается горизонтально</td></tr><tr><td><b class="mono">G1–G2</b></td><td>Граф доказательств</td><td><span class="cd">/…/graph</span></td><td>1440 hover, 390 радиальный + Sheet</td><td>список вместо графа для скринридеров</td></tr><tr><td><b class="mono">G3</b></td><td>Админка: граф навыков</td><td><span class="cd">/admin/skills</span></td><td>1440, 1024 → панель свойств в Drawer</td><td>—</td></tr><tr><td><b class="mono">Q1–Q6</b></td><td>Админка качества</td><td><span class="cd">/admin/quality/*</span></td><td>1440, 1024 → сетка 2 колонки, 390 не поддерживается</td><td>—</td></tr><tr><td><b class="mono">F1–F4</b></td><td>Админка ФСП</td><td><span class="cd">/federation/*</span></td><td>1440, 1024</td><td>F3: очередь в одну колонку на 1024</td></tr><tr><td><b class="mono">L1–L2</b></td><td>Лендинг</td><td><span class="cd">/</span></td><td>1440, 1024, 390</td><td>hero тёмный</td></tr><tr><td><b class="mono">P1</b></td><td>Публичная карточка и OG</td><td><span class="cd">/athlete/:id</span></td><td>760 колонка, OG 1200×630</td><td>—</td></tr><tr><td><b class="mono">P2</b></td><td>Значки GitHub</td><td><span class="cd">/badge/:id.svg</span></td><td>SVG</td><td>—</td></tr><tr><td><b class="mono">P3</b></td><td>Telegram-бот</td><td><span class="cd">бот</span></td><td>360</td><td>—</td></tr></tbody></table></section></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1700}}'>
+class Component extends DCLogic {
+renderVals(){
+return {};
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+# секреты
+.env
+**/.env
+!.env.example
+
+# модели, снапшоты, приватные данные
+infra/llm/models/
+infra/snapshots/
+data/gold/private/
+reports/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# IDE и ОС
+.idea/
+.vscode/
+.DS_Store
+
+# Claude Code: локальные настройки участника
+.claude/settings.local.json
