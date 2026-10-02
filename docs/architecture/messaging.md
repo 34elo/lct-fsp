@@ -47,10 +47,13 @@ ml-worker ─────► │ ui.user.<user_id> (прогресс задач)
 | `fsp.linked` | fsp-connector | `{candidate_id, participant_id, verified, method}` |
 | `fsp.results.imported` | fsp-connector | `{candidate_id, participant_id, results: FspResult[], ranks: FspRank[], teams: FspTeam[], new: bool}` |
 | `fsp.competitions.updated` | fsp-connector | `{competitions: FspCompetition[]}` |
-| `ml.resume.completed` / `ml.resume.failed` | ml | `{resume_id, parsed? , error?}` |
-| `ml.code.completed` / `ml.code.failed` | ml | `{analysis_id, result?, error?}` |
-| `ml.interview.generated` / `ml.interview.graded` | ml | `{interview_id, payload}` |
+| `ml.resume.completed` / `ml.resume.failed` | ml | `{resume_id, candidate_id, parsed?, error?}` |
+| `ml.code.completed` / `ml.code.failed` | ml | `{analysis_id, candidate_id, result?, error?}` |
+| `ml.interview.generated` / `ml.interview.graded` | ml | `{interview_id, candidate_id, questions[] | grades[] + total, error?}` |
 | `ml.matches.explained` | ml | `{vacancy_id, vacancy_version, items[]}` |
+| `ml.interview_kit.generated` | ml | `{kit_id, vacancy_id, vacancy_version, candidate_id, profile_version, questions[], error?}` |
+| `ml.skills.resolved` | ml | `{request_id, taxonomy_version, items[]}` (ответ на `ml.skills.resolve`) |
+| `ml.questions.generated` | ml | `{skill_slug, questions[]}` — черновики, `status=draft` |
 
 ### 2.2. Очереди
 
@@ -95,6 +98,8 @@ ml-worker ─────► │ ui.user.<user_id> (прогресс задач)
 }
 ```
 `correlation_id` = `X-Request-ID` исходного HTTP-запроса: по нему цепочка ищется в логах всех сервисов.
+
+Команды идут в обменник `commands` с routing key = имя очереди (`ml.llm`, `fsp.sync`, `bot.telegram`, …), `type` = имя команды, приоритет AMQP — из реестра. Реестры `EVENTS` / `COMMANDS` / `UI_EVENTS` и сборка конвертов (`new_event`, `new_command`, `parse_payload`) — в `packages/contracts`. Общий каталог AsyncAPI 3.0 всех сообщений: `make asyncapi` → `asyncapi.json`.
 
 ## 3. Цепочки (как это работает вместе)
 

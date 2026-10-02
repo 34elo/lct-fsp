@@ -1,4 +1,4 @@
-.PHONY: sync lint fmt test test-py test-web new-service web-install
+.PHONY: sync lint fmt test test-py test-web new-service web-install asyncapi
 
 sync:
 	uv sync --all-packages
@@ -27,3 +27,7 @@ web-install:
 # make new-service NAME=core
 new-service:
 	uv run python tools/new_service.py $(NAME)
+
+# Каталог AsyncAPI всех событий и команд из packages/contracts
+asyncapi:
+	uv run python -m fsp_contracts.asyncapi > asyncapi.json
