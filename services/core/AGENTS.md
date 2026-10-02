@@ -22,6 +22,7 @@
 - `app/candidates/` — анкета: `/candidates/me/{profile,preferences,visibility,stoplist}`, `pseudo_id`, псевдоним
 - `app/taxonomy/` — граф навыков: `loader.py` (YAML → проверка), `service.py` (sync в БД, версия, снимок, `taxonomy.updated`), `router.py` (`GET /taxonomy`, `/internal/taxonomy/snapshot`); `make taxonomy-load`
 - `app/graph/` — evidence: `models.py`, `service.py` (`upsert_evidence` идемпотентно, `deactivate`, `list_active`, `candidates_by_skills`; изменение → `evidence.changed` + команда `core.recompute` в outbox), `trust.py` (формулы доверия по scoring.yaml), `recompute.py` (`recompute_profile` → `candidate_skills`, `profile_version`, `skills.profile.updated`), `handlers.py` (`core.recompute`, `taxonomy.updated`)
+- `app/companies/` — компании: `/companies`, `/companies/me[/members]`, модерация `/admin/companies/*` (pending → verified|rejected)
 - `app/worker.py` — `Worker.consumers[<очередь>].on(type)` + `idempotent()` для обработчиков
 - `app/scheduler.py` — `SCHEDULE` (messaging.md §4)
 - `migrations/` — Alembic (async), `versions/`
