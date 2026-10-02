@@ -14,3 +14,5 @@ class Settings(BaseServiceSettings):
     pseudo_id_secret: str = "dev-only-pseudo-secret"
     # сервисные токены internal API (security.md §1); пусто = эндпоинт закрыт
     service_token_ml: str = ""
+    # data/scoring.yaml (доверие, грейд, матчинг); пусто — файл из корня репозитория
+    scoring_config_path: str = ""

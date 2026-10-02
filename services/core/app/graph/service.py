@@ -2,22 +2,25 @@
 
 Upsert идемпотентен по (candidate_id, skill_id, source, fact_type, fact_id): повтор с теми же
 данными ничего не меняет и не порождает событие. Реальное изменение → `evidence.changed`
-в outbox в той же транзакции (messaging.md); пересчёт профиля запускает обработчик (E4-2).
+в outbox в той же транзакции (messaging.md); пересчёт запрашивается там же командой
+`core.recompute` (`request_recompute`).
 """
 
 from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
-from datetime import date
+from datetime import UTC, date, datetime
 
 from fsp_contracts import new_envelope
+from fsp_contracts.commands import CoreRecompute
 from fsp_contracts.enums import EvidenceSource
 from fsp_contracts.events import EvidenceChanged
 from fsp_platform.outbox import add_to_outbox
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.candidates.models import Candidate
 from app.graph.models import Evidence
 
 
@@ -51,9 +54,25 @@ def _key(candidate_id: uuid.UUID, i: EvidenceIn) -> tuple:
     return (candidate_id, i.skill_id, str(i.source), i.fact_type, i.fact_id)
 
 
+async def request_recompute(
+    session: AsyncSession, candidate_id: uuid.UUID, requested_at: datetime | None = None
+) -> None:
+    """Слияние пересчётов (graph.md §4.4): поставить `recompute_requested_at` и отправить команду.
+
+    Обработчик `core.recompute` пропустит её, если `recomputed_at >= requested_at`.
+    """
+    at = requested_at or datetime.now(UTC)
+    await session.execute(
+        update(Candidate).where(Candidate.user_id == candidate_id).values(recompute_requested_at=at)
+    )
+    cmd = CoreRecompute(candidate_id=candidate_id, requested_at=at)
+    await add_to_outbox(session, new_envelope("core.recompute", "core", cmd), candidate_id)
+
+
 async def _publish(session: AsyncSession, candidate_id: uuid.UUID, sources: set[str]) -> None:
     event = EvidenceChanged(candidate_id=candidate_id, sources=sorted(sources))
     await add_to_outbox(session, new_envelope("evidence.changed", "core", event), candidate_id)
+    await request_recompute(session, candidate_id)
 
 
 async def upsert_evidence(

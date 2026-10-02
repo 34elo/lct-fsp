@@ -40,6 +40,11 @@ class Candidate(Base):
     visibility: Mapped[dict] = mapped_column(sa.JSON, default=lambda: dict(DEFAULT_VISIBILITY))
     stoplist_company_ids: Mapped[list[str]] = mapped_column(TextArray, default=list)
     profile_version: Mapped[int] = mapped_column(default=0, server_default="0")
+    # слияние пересчётов (graph.md §4.4)
+    recompute_requested_at: Mapped[datetime | None] = mapped_column(
+        sa.DateTime(timezone=True), default=None
+    )
+    recomputed_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), default=None)
     updated_at: Mapped[datetime] = mapped_column(
         sa.DateTime(timezone=True), default=utcnow, onupdate=utcnow
     )
