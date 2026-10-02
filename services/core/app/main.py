@@ -13,6 +13,8 @@ from redis.asyncio import Redis
 from sqlalchemy import text
 
 from app.candidates.router import router as candidates_router
+from app.companies.router import admin_router as admin_companies_router
+from app.companies.router import router as companies_router
 from app.config import Settings
 from app.consents.router import router as consents_router
 from app.events_stream import UiHub
@@ -58,6 +60,8 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(consents_router)
     app.include_router(candidates_router)
     app.include_router(taxonomy_router)
+    app.include_router(companies_router)
+    app.include_router(admin_companies_router)
 
     @app.get("/readyz", include_in_schema=False)
     async def readyz():

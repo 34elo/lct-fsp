@@ -9,6 +9,7 @@ from fsp_platform.ratelimit import RateLimiter
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.companies import service as companies
 from app.consents import service as consents
 from app.deps import get_limiter, get_session
 from app.identity import service
@@ -144,13 +145,28 @@ async def logout(request: Request, session: AsyncSession = Depends(get_session))
     return resp
 
 
+class MeCompany(BaseModel):
+    id: UUID
+    name: str
+    status: str
+    role: str
+
+
 class MeOut(UserOut):
     consents: list[str]
+    company: MeCompany | None = None
 
 
 @router.get("/me", response_model=MeOut)
 async def me(user: User = Depends(get_current_user), session: AsyncSession = Depends(get_session)):
-    """consents — действующие типы; candidate, company, telegram_linked — в E3-1, E6-1, E1-3."""
+    """consents — действующие типы; company — E6-1; candidate, telegram_linked — E3-1, E1-3."""
+    found = await companies.my_company(session, user.id) if user.role == "employer" else None
     return MeOut(
-        **UserOut.of(user).model_dump(), consents=sorted(await consents.active(session, user.id))
+        **UserOut.of(user).model_dump(),
+        consents=sorted(await consents.active(session, user.id)),
+        company=MeCompany(
+            id=found[0].id, name=found[0].name, status=found[0].status, role=found[1].role
+        )
+        if found
+        else None,
     )

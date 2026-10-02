@@ -128,6 +128,8 @@
 | `GET /teams?discipline=&min_place=` | E | 🚀 Команды ФСП, где есть кандидаты платформы |
 | `GET|POST|DELETE /saved-searches` | E | Подписки на категорию |
 
+Реализовано (E6-1): `POST /companies` (роль `employer`, одна компания на пользователя, иначе 409 `company_exists`; создатель — `admin`, статус `pending`), `GET|PATCH /companies/me` (PATCH только `admin` компании, 403 иначе; поля `name`, `inn`, `site`, `description`; `status` и `responsibility_score` через PATCH не меняются), `POST /companies/me/members` `{email, role}` (только `admin`; пользователь с ролью `employer` должен быть уже зарегистрирован, иначе 404 `user_not_found`; состоит в другой компании — 409 `already_member`). Модерация: `GET /admin/companies?status=`, `POST /admin/companies/{id}/verify|reject` (роль `fsp_admin`; verify из `pending|rejected`, reject из `pending|verified`, повтор того же решения идемпотентен, `blocked` через эти эндпоинты не меняется — 409 `invalid_status`). `GET /me` для работодателя возвращает `company: {id, name, status, role}`. Ограничение по `verified` для офферов и вакансий добавят E6-2 и E9-x; `company_id` в JWT пока не кладётся, компания определяется по `company_members`.
+
 ### 2.6. Администратор ФСП
 
 | Метод и путь | Назначение |
