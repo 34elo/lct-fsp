@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import math
 import uuid
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
@@ -115,3 +115,37 @@ def combine(
         top_evidence=[ev.id for _, (_, ev) in ranked[:3]],
         claimed_only=set(best) <= CLAIMED_SOURCES,
     )
+
+
+MAX_INHERIT_LEVELS = 2  # graph.md §5.1: наследуем вверх не больше двух уровней
+
+
+def inherit(
+    direct: Mapping[uuid.UUID, SkillTrust],
+    parents_of: Callable[[uuid.UUID], Iterable[tuple[uuid.UUID, float]]],
+    cfg: TrustConfig,
+) -> dict[uuid.UUID, tuple[SkillTrust, uuid.UUID]]:
+    """Наследование по иерархии (graph.md §5.1).
+
+    Родитель получает `max(child_conf × coef(child→parent))`, если это выше его собственного
+    доверия. Возвращает {родитель: (доверие, непосредственный дочерний навык-источник)}.
+    """
+    derived: dict[uuid.UUID, tuple[SkillTrust, uuid.UUID]] = {}
+    frontier = dict(direct)
+    for _ in range(MAX_INHERIT_LEVELS):
+        nxt: dict[uuid.UUID, SkillTrust] = {}
+        for child in sorted(frontier, key=str):
+            src = frontier[child]
+            for parent, coef in parents_of(child):
+                val = round(src.confidence * coef, 6)
+                own = direct.get(parent)
+                cur = derived.get(parent)
+                if val <= max(own.confidence if own else 0.0, cur[0].confidence if cur else 0.0):
+                    continue
+                t = SkillTrust(
+                    val, level_for(val, cfg), src.sources, src.top_evidence, src.claimed_only
+                )
+                derived[parent] = (t, child)
+                nxt[parent] = t
+        frontier = nxt
+    return derived

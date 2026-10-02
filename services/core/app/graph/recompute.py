@@ -20,8 +20,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.candidates.models import Candidate
 from app.graph.models import CandidateSkill, Evidence
-from app.graph.trust import EvidenceView, TrustConfig, combine
+from app.graph.trust import EvidenceView, SkillTrust, TrustConfig, combine, inherit
 from app.taxonomy.models import Skill
+from app.taxonomy.service import SkillGraph
 
 
 @dataclass(frozen=True, slots=True)
@@ -40,6 +41,7 @@ async def recompute_profile(
     candidate_id: uuid.UUID,
     requested_at: datetime | None,
     cfg: TrustConfig,
+    graph: SkillGraph | None = None,
     *,
     now: datetime | None = None,
 ) -> RecomputeResult:
@@ -75,18 +77,25 @@ async def recompute_profile(
         if trust is not None:
             computed[sid] = trust
 
+    # (доверие, выведено из навыка | None); выведенное заменяет прямое, только если выше его
+    entries: dict[uuid.UUID, tuple[SkillTrust, uuid.UUID | None]] = {
+        sid: (t, None) for sid, t in computed.items()
+    }
+    slugs = {sid: sk.slug for sid, sk in skills.items()}
+    if graph is not None:
+        slugs.update(graph.slugs)
+        entries.update(inherit(computed, graph.parents_of, cfg))
+
     existing = {
         r.skill_id: r
         for r in await session.scalars(
-            select(CandidateSkill).where(
-                CandidateSkill.candidate_id == candidate_id, CandidateSkill.derived.is_(False)
-            )
+            select(CandidateSkill).where(CandidateSkill.candidate_id == candidate_id)
         )
     }
     up, new = [], []
     changed = False
-    for sid, t in computed.items():
-        slug = skills[sid].slug
+    for sid, (t, src) in entries.items():
+        slug = slugs[sid]
         top = [str(i) for i in t.top_evidence]
         row = existing.get(sid)
         if row is None:
@@ -99,6 +108,8 @@ async def recompute_profile(
                     sources=t.sources,
                     top_evidence=top,
                     claimed_only=t.claimed_only,
+                    derived=src is not None,
+                    derived_from=src,
                     updated_at=now,
                 )
             )
@@ -111,21 +122,26 @@ async def recompute_profile(
             list(row.sources),
             list(row.top_evidence),
             row.claimed_only,
+            row.derived,
+            row.derived_from,
         ) == (
             t.confidence,
             t.level,
             t.sources,
             top,
             t.claimed_only,
+            src is not None,
+            src,
         ):
             continue
         if t.level > row.level:
             up.append(SkillLevelChange(slug=slug, from_=row.level, to=t.level))
         row.confidence, row.level, row.sources = t.confidence, t.level, t.sources
         row.top_evidence, row.claimed_only, row.updated_at = top, t.claimed_only, now
+        row.derived, row.derived_from = src is not None, src
         changed = True
     for sid, row in existing.items():
-        if sid not in computed:
+        if sid not in entries:
             await session.delete(row)
             changed = True
 
