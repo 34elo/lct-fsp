@@ -1,0 +1,13 @@
+[project]
+name = "fsp-fsp-mock"
+version = "0.1.0"
+description = "fsp-mock"
+requires-python = ">=3.12"
+dependencies = ["fsp-contracts", "fsp-platform", "uvicorn>=0.32", "python-multipart>=0.0.12"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["fsp_mock"]
