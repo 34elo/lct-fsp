@@ -70,7 +70,7 @@
 | 5 | E0-6 | RabbitMQ + FastStream: обменники, очереди, приоритеты, outbox/inbox, ретраи/DLQ, scheduler | E0-5, E0-10 | 🤖 | opus | 0 | ✅ bb25269 |
 | 6 | E0-9 | ML-заглушки `ML_FAKE=true` для всех ml-задач | E0-10 | 🤖 | sonnet | 0 | ✅ 72c8ffb |
 | 7 | E0-8 | Каркас web: роутер по маршрутам из brief.md §0, layout'ы по ролям, токены и компоненты из `docs/design/handoff`, Tailwind 4 + shadcn, трекер-заготовка | E0-1 | 🤖 | sonnet | 0 | ✅ 34ae97b |
-| 8 | E2-4 | `data/scoring.yaml` по ml.md, skills.md, matching.md | — | 🤖 | haiku | 0 | ⏳ |
+| 8 | E2-4 | `data/scoring.yaml` по ml.md, skills.md, matching.md | — | 🤖 | haiku | 0 | ✅ 21522d2 |
 | 9 | E2-3 | Черновик `data/fsp/discipline_rules.yaml` из fsp.md §5 (для экспертов) | — | 🤝 | haiku | 0 | ⏳ |
 | 10 | E5-1 | fsp-mock: участники, результаты, соревнования, команды, разряды, OAuth+PKCE, коды, вебхук | E0-1 | 🤖 | sonnet | 0 | ⏳ |
 | 11 | E0-7 | SSE через `ui.user.*` | E0-6 | 🤖 | sonnet | 1 | ⏳ |
