@@ -13,6 +13,7 @@ from redis.asyncio import Redis
 from sqlalchemy import text
 
 from app.config import Settings
+from app.consents.router import router as consents_router
 from app.events_stream import UiHub
 from app.events_stream import router as events_router
 from app.identity.router import router as identity_router
@@ -52,6 +53,7 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.state.ui_hub = UiHub()  # без брокера, пока не стартовал lifespan
     app.include_router(events_router)
     app.include_router(identity_router)
+    app.include_router(consents_router)
 
     @app.get("/readyz", include_in_schema=False)
     async def readyz():
