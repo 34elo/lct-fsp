@@ -16,11 +16,12 @@
 - `fsp_connector/resilience.py` — экспоненциальные ретраи, `CircuitBreaker` (5 сбоев → 30 с)
 - `fsp_connector/cache.py` — `CachedFspAdapter`: `c:fsp:part:{id}`, `c:fsp:res:{id}`, TTL 10 мин, `invalidate()`
 - `fsp_connector/factory.py` — выбор по `FSP_ADAPTER` (`organizers`/`real` — E5-8)
-- `fsp_connector/models.py`, `migrations/` — `fsp_links`, `raw_responses`, `webhook_log`, outbox/inbox
+- `fsp_connector/models.py`, `migrations/` — `fsp_links`, `fsp_link_conflicts`, `raw_responses`, `webhook_log`, outbox/inbox
+- `fsp_connector/linking.py` — `LinkService`: OAuth / код / ручной ID, `fsp_link_conflicts`; `api.py` — `/internal/*` (`Service <SERVICE_TOKEN_CORE>`)
 - `fsp_connector/publisher.py` — `fsp.linked`, `fsp.results.imported`, `fsp.competitions.updated` в outbox
 
 ## Правила
 - Пакет `fsp_connector` (не `app`). ПДн участников не логируем и не кладём в события.
 - Событие пишется в outbox в той же транзакции, что и данные; обработчики идемпотентны (inbox).
-- Привязка, `fsp_sync`, вебхук — задачи E5-4…E5-6.
+- `fsp_sync` и вебхук — задачи E5-5…E5-6.
 - Документы: fsp.md, messaging.md §2 и §6, data-model.md §3.10.

@@ -199,10 +199,10 @@
 
 | Метод и путь | Назначение |
 |---|---|
-| `GET /internal/oauth/authorize-url?state=&code_challenge=` | URL страницы «Войти через ФСП» |
-| `POST /internal/oauth/exchange` | `{code, code_verifier, candidate_id}` → `{participant_id, verified}` + событие `fsp.linked` |
-| `POST /internal/links` | `{candidate_id, participant_id?, email?}` → `{method: code|manual, masked_contact?}` |
-| `POST /internal/links/verify` | `{candidate_id, code}` → `{verified}` |
+| `GET /internal/oauth/authorize-url?state=&code_challenge=` | `{url}` — страница «Войти через ФСП» (PKCE S256; state и verifier хранит core) |
+| `POST /internal/oauth/exchange` | `{code, code_verifier, candidate_id}` → `{participant_id, verified: true}` + событие `fsp.linked` (`method=oauth`); код одноразовый, повтор → 502 `fsp_auth_error` |
+| `POST /internal/links` | `{candidate_id, participant_id?, email?, manual?}` → `{method: code|manual, masked_contact?}`. Есть контакт в ФСП → отправляет код (`s:fspcode:{cid}`, TTL 10 мин), привязки ещё нет; контакта нет или `manual=true` → сразу `fsp_links(manual, verified=false)` + `fsp.linked`. Ошибки: 404 `fsp_not_found`, 409 `fsp_already_linked` (+ запись в `fsp_link_conflicts`), 409 `candidate_already_linked`, 409 `fsp_ambiguous` |
+| `POST /internal/links/verify` | `{candidate_id, code}` → `{verified}`; верный код → `fsp_links(code, verified=true)` + `fsp.linked`; 5 неверных попыток → 429 `too_many_attempts`, нет ожидающего кода → 410 `code_expired` |
 | `GET /internal/competitions?from=&to=` | Календарь (для навигатора, если копия в core устарела) |
 | `POST /integrations/fsp/webhook` | Публичный, вебхук ФСП/мока (HMAC) — маршрутизируется edge'ем сюда |
 
