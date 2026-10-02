@@ -16,3 +16,8 @@ class BaseServiceSettings(BaseSettings):
     rabbitmq_url: str = "amqp://guest:guest@localhost:5672/fsp"
     jwt_secret: str = "dev-only-change-me"
     ml_fake: bool = False
+    s3_endpoint: str = "http://localhost:9000"
+    s3_access_key: str = "minio"
+    s3_secret_key: str = "minio-dev-secret"
+    s3_bucket: str = "fsp"
+    s3_public_url: str | None = None  # хост presigned-ссылок для браузера
