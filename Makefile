@@ -24,7 +24,7 @@ test-integration:
 	$(TEST_COMPOSE) up -d --wait
 	FSP_TEST_PG_URL=postgresql+asyncpg://test:test@127.0.0.1:28532/test \
 	FSP_TEST_AMQP_URL=amqp://guest:guest@127.0.0.1:28572/ \
-	uv run pytest -q packages/platform/tests/test_messaging_integration.py; \
+	uv run pytest -q packages/platform/tests/test_messaging_integration.py services/core/tests/test_events_stream_integration.py; \
 	rc=$$?; $(TEST_COMPOSE) down -v; exit $$rc
 
 test-web:
