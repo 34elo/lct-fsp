@@ -63,7 +63,7 @@
 
 | # | ID | Задача | Зависит от | Режим | Модель | Ночь | Статус |
 |---|---|---|---|---|---|---|---|
-| 1 | E0-1 | Монорепо: uv workspace, `packages/contracts`, `packages/platform`, шаблон сервиса, Makefile, CI | P1 | 🤖 | sonnet | 0 | ⏳ |
+| 1 | E0-1 | Монорепо: uv workspace, `packages/contracts`, `packages/platform`, шаблон сервиса, Makefile, CI | P1 | 🤖 | sonnet | 0 | ✅ aaf40b8 |
 | 2 | E0-10 | Контракты v1: enums, события, команды, DTO, fsp, analytics | E0-1 | 🤖 | opus | 0 | ⏳ |
 | 3 | E0-5 | Каркас core: конфиг, БД, Alembic, Problem Details, логи, лимитер, локи, S3 | E0-1 | 🤖 | sonnet | 0 | ⏳ |
 | 4 | E0-2 | Compose: postgres, rabbitmq, redis, minio, gateway (хост 28080, роутинг по Host — deployment.md §1), профили, `.env.example`; без llm-chat (общий сервер уже есть) | E0-1 | 🤖 | sonnet | 0 | ⏳ |
