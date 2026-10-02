@@ -38,3 +38,28 @@ async def test_publish_envelope_reaches_subscriber():
     async with TestRabbitBroker(broker):
         await publish_envelope(broker, new_envelope("offer.sent", "core", {"k": 1}))
     assert got and got[0]["payload"] == {"k": 1}
+
+
+def test_validation_and_unhandled_are_problem_details():
+    from pydantic import BaseModel
+
+    app = create_app("t")
+
+    class Body(BaseModel):
+        n: int
+
+    @app.post("/v")
+    async def v(b: Body):
+        return b
+
+    @app.get("/boom")
+    async def boom():
+        raise RuntimeError("secret pii")
+
+    c = TestClient(app, raise_server_exceptions=False)
+    r = c.post("/v", json={"n": "x"})
+    assert r.status_code == 422 and r.json()["code"] == "validation_error"
+    assert r.json()["errors"][0]["field"] == "n"
+    r = c.get("/boom")
+    assert r.status_code == 500 and r.json()["code"] == "internal_error"
+    assert "secret" not in r.text
