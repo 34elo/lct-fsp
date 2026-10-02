@@ -1,0 +1,8 @@
+algorithmic:
+  algorithms: 1.0
+  python: 0.4
+product:
+  teamwork: 0.8
+  ghost_skill: 0.5
+  tracks:
+    web: { javascript: 0.7, python: 0.7 }

@@ -12,3 +12,5 @@ class Settings(BaseServiceSettings):
     allowed_origins: list[str] = []
     # pseudo_id = HMAC(secret, user_id)[:12] (security.md §3); в проде секрет из PSEUDO_ID_SECRET
     pseudo_id_secret: str = "dev-only-pseudo-secret"
+    # сервисные токены internal API (security.md §1); пусто = эндпоинт закрыт
+    service_token_ml: str = ""

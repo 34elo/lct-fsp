@@ -459,6 +459,7 @@ dependencies = [
     { name = "argon2-cffi" },
     { name = "fsp-contracts" },
     { name = "fsp-platform" },
+    { name = "pyyaml" },
     { name = "uvicorn" },
 ]
 
@@ -469,6 +470,7 @@ requires-dist = [
     { name = "argon2-cffi", specifier = ">=23.1" },
     { name = "fsp-contracts", editable = "packages/contracts" },
     { name = "fsp-platform", editable = "packages/platform" },
+    { name = "pyyaml", specifier = ">=6" },
     { name = "uvicorn", specifier = ">=0.32" },
 ]
 

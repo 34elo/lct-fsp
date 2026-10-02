@@ -164,7 +164,7 @@
 | `POST /track` | Батч событий интерфейса (до 50), см. [metrics.md](metrics.md) |
 | `GET /public/profiles/{slug}` | Публичный профиль (если кандидат включил) |
 | `GET /athlete/{slug}` | Краулерам (Telegram, VK, Slack по User-Agent) — HTML с OG-тегами, людям — редирект на `dashboard.fsp…/athlete/{slug}` |
-| `GET /taxonomy` | Навыки, роли, грейды, форматы, дисциплины (ETag, кеш) |
+| `GET /taxonomy` | `{version, skills[{slug,name,kind,group,testable}], roles[{slug,name}], disciplines[{slug,name}], grades[], formats[], employment_types[]}` (только `active` навыки). `ETag` `W/"tax-<version>-<хеш статики>"`, `If-None-Match` → 304, `Cache-Control: public, max-age=300` |
 | `POST /integrations/fsp/webhook` | Вебхук ФСП/мока (HMAC `X-Signature`) |
 | `GET /healthz`, `GET /readyz` | Проверки живости и готовности |
 
@@ -189,7 +189,7 @@
 | `POST /internal/tg/tests`, `…/{id}/answer` | bot | Адаптивный тест |
 | `GET /internal/tg/navigator?tg_user_id=` | bot | Навигатор кратко |
 | `PATCH /internal/tg/status` | bot | Статус поиска |
-| `GET /internal/taxonomy/snapshot` | ml | Граф навыков (вершины, синонимы, связи, «точно разные») + `version` |
+| `GET /internal/taxonomy/snapshot` | ml | `Authorization: Service <SERVICE_TOKEN_ML>` (пустой токен = закрыто, иначе 401). `{version, skills[{id,slug,name,kind,group,status,testable,description,aliases[]}], adjacent[{a,b,weight}], parent[{child,parent,weight}], distinct[[a,b]], roles[{slug,name,skills{}}], disciplines[{slug,name,rules[{skill,weight,track}]}]}`; вершины `active` и `provisional`, кеш Redis `c:tax:{version}` |
 
 **Internal fsp-connector** (вызывает core-api):
 

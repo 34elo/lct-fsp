@@ -1,0 +1,7 @@
+roles:
+  - slug: backend
+    name: Backend-разработчик
+    skills: {python: 1.0, fastapi: 0.8, postgresql: 0.7}
+  - slug: frontend
+    name: Frontend-разработчик
+    skills: {javascript: 1.0}
