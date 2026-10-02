@@ -1,0 +1,9 @@
+adjacent:
+  - {a: fastapi, b: django, weight: 0.6}
+parent:
+  - {child: fastapi, parent: python, weight: 0.6}
+  - {child: django, parent: python, weight: 0.6}
+distinct:
+  - [java, javascript]
+blocklist:
+  - {norm: рога и копыта, reason: мусор}

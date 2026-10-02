@@ -18,6 +18,7 @@ from app.consents.router import router as consents_router
 from app.events_stream import UiHub
 from app.events_stream import router as events_router
 from app.identity.router import router as identity_router
+from app.taxonomy.router import router as taxonomy_router
 
 
 def build_app(settings: Settings | None = None) -> FastAPI:
@@ -56,6 +57,7 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(identity_router)
     app.include_router(consents_router)
     app.include_router(candidates_router)
+    app.include_router(taxonomy_router)
 
     @app.get("/readyz", include_in_schema=False)
     async def readyz():
