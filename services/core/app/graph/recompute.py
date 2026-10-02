@@ -13,9 +13,10 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime
 
 from fsp_contracts import new_envelope
-from fsp_contracts.enums import RoleSlug
+from fsp_contracts.enums import Grade, RoleSlug
 from fsp_contracts.events import (
     CategoryChange,
+    GradeChange,
     ProfileDiff,
     SkillLevelChange,
     SkillsProfileUpdated,
@@ -26,6 +27,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.candidates.models import Candidate
 from app.graph.category import SkillConf, category_for
+from app.graph.grade import FspResult, GradeInputs, compute_grade
 from app.graph.models import CandidateSkill, Evidence
 from app.graph.trust import EvidenceView, SkillTrust, TrustConfig, combine, inherit
 from app.taxonomy.models import Skill
@@ -41,6 +43,67 @@ class RecomputeResult:
 
 def _utc(dt: datetime) -> datetime:
     return dt.replace(tzinfo=UTC) if dt.tzinfo is None else dt.astimezone(UTC)
+
+
+def _num(v: object) -> float | None:
+    return float(v) if isinstance(v, int | float) and not isinstance(v, bool) else None
+
+
+def grade_inputs(
+    cand: Candidate,
+    rows: list[tuple[Evidence, Skill]],
+    role_skill_ids: set[uuid.UUID] | None,
+) -> GradeInputs:
+    """Сигналы грейда из активных доказательств (соглашения по `details` — ml.md §5)."""
+    fsp: list[FspResult] = []
+    rank, rank_ev = None, None
+    theta: tuple[float, str] | None = None
+    tests: list[uuid.UUID] = []
+    code: list[tuple[float, uuid.UUID]] = []
+    interview: list[tuple[float, uuid.UUID]] = []
+    has_github = has_fsp = False
+    for ev, sk in sorted(rows, key=lambda r: str(r[0].id)):
+        d = ev.details or {}
+        if ev.source == "fsp":
+            has_fsp = True
+            if ev.fact_type == "fsp_rank":
+                if isinstance(d.get("rank"), str):
+                    rank, rank_ev = d["rank"], ev.id
+            elif isinstance(d.get("level"), str):
+                place = _num(d.get("place"))
+                final = bool(d.get("final")) or d.get("stage") == "final"
+                fsp.append(FspResult(d["level"], int(place) if place else None, final, ev.id))
+        elif ev.source == "test" and (th := _num(d.get("theta"))) is not None:
+            if role_skill_ids is None or sk.id in role_skill_ids:
+                tests.append(ev.id)
+                if theta is None or th > theta[0]:
+                    theta = (th, sk.slug)
+        elif ev.source == "github":
+            has_github = True
+            if (m := _num(d.get("code_maturity"))) is not None:
+                code.append((m, ev.id))
+        elif ev.source == "ai_interview" and (a := _num(d.get("avg_score"))) is not None:
+            interview.append((a, ev.id))
+    ts = cand.team_signals or {}
+    lead = ts.get("leadership")
+    lead_v = _num(lead.get("value") if isinstance(lead, dict) else lead) or 0.0
+    return GradeInputs(
+        experience_months=cand.experience_months,
+        fsp_results=fsp,
+        fsp_rank=rank,
+        fsp_rank_evidence=rank_ev,
+        test_theta=theta[0] if theta else None,
+        test_evidence=tuple(tests),
+        test_skill=theta[1] if theta else None,
+        code_maturity=max((m for m, _ in code), default=None),
+        code_evidence=tuple(i for _, i in code),
+        interview_avg=max((a for a, _ in interview), default=None),
+        interview_evidence=tuple(i for _, i in interview),
+        leadership=lead_v,
+        management_confirmed=bool(ts.get("management_confirmed")),
+        has_github=has_github,
+        has_fsp_link=has_fsp,
+    )
 
 
 async def recompute_profile(
@@ -176,13 +239,49 @@ async def recompute_profile(
             cand.primary_role, cand.roles, cand.primary_stack = cat.primary_role, roles_json, stack
             changed = True
 
+    grade_diff = None
+    role_ids = graph.roles.get(cand.primary_role or "") if graph is not None else None
+    gres = compute_grade(
+        grade_inputs(cand, rows, set(role_ids) if role_ids else None),
+        cfg.grade,
+        role_skill=(cand.primary_stack or [None])[0],
+    )
+    new_grade = (
+        gres.grade,
+        gres.score,
+        gres.confidence,
+        gres.breakdown_json(),
+        gres.next_json(),
+    )
+    if (
+        cand.grade,
+        cand.grade_score,
+        cand.grade_confidence,
+        cand.grade_breakdown,
+        cand.grade_next,
+    ) != new_grade:
+        if gres.grade != cand.grade:
+            grade_diff = GradeChange(
+                from_=Grade(cand.grade) if cand.grade else None, to=Grade(gres.grade)
+            )
+        (
+            cand.grade,
+            cand.grade_score,
+            cand.grade_confidence,
+            cand.grade_breakdown,
+            cand.grade_next,
+        ) = new_grade
+        changed = True
+
     cand.recomputed_at = now
     if changed:
         cand.profile_version += 1
         event = SkillsProfileUpdated(
             candidate_id=candidate_id,
             profile_version=cand.profile_version,
-            diff=ProfileDiff(skills_up=up, skills_new=new, category=category_diff),
+            diff=ProfileDiff(
+                skills_up=up, skills_new=new, grade=grade_diff, category=category_diff
+            ),
         )
         await add_to_outbox(
             session, new_envelope("skills.profile.updated", "core", event), candidate_id

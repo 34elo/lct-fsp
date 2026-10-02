@@ -158,6 +158,13 @@
 - `grade_confidence` = доля непустых групп сигналов (стаж, ФСП, тесты, код). Если < 0.5 → «предварительно» + подсказка, что подключить;
 - `next_grade.points_needed` и `hints` («пройди тест по Python: до +2», «подключи GitHub: до +2») питают навигатор.
 
+Реализация (`graph/grade.py`, `recompute_profile` после категории; параметры — `grade_signals`, `grade_thresholds`, `lead_requirements` в `data/scoring.yaml`):
+- **Откуда сигналы.** Стаж — `candidates.experience_months` (заполняет модуль опыта). Остальное — из активных `evidence` по `details`: ФСП (`source=fsp`, `fact_type=fsp_result`): `{level: regional|interregional|national|international, place, final|stage}`, берётся лучшее достижение; разряд — `fact_type=fsp_rank`: `{rank: youth_1…msic}`; тест (`source=test`): `{theta}`, максимум по навыкам основной роли; ДНК (`source=github`): `{code_maturity: 0…1}` → баллы `2 · maturity`; ИИ-интервью: `{avg_score}`. Лидерство `L` и `management_confirmed` — `candidates.team_signals`. «Сложность опыта» пока не считается (0).
+- **Разбивка.** `grade_breakdown` — список `{signal, value, points, evidence_ids}` по присутствующим сигналам (стаж пишется всегда), плюс строки без баллов `constraint_no_commercial_cap` (грейд обрезан до Middle) и `constraint_lead_requires_leadership` (баллов на Lead хватало, но нет `L ≥ 0.5`).
+- **Уверенность.** Группы: стаж, ФСП, тесты (тест или интервью), код. `grade_confidence` = доля непустых групп; `< 0.5` — «предварительно».
+- **`next_grade`.** Хранится в `candidates.grade_next` как `{grade, points_needed, hints[{signal, max_gain, text}]}`, подсказки по убыванию возможного прироста; у Lead `null`.
+- Смена грейда попадает в `diff.grade` события `skills.profile.updated`.
+
 ## 6. Матчинг вакансия ↔ кандидат
 
 ### 6.1. Жёсткие фильтры (SQL)
