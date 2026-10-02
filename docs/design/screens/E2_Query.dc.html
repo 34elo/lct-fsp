@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Анимация: текст в чипсы</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0}
+.fsp{font-family:'Onest',system-ui,sans-serif;color:#1B1C21;font-size:14px;line-height:1.5;background:#FAFAFC;width:100%;min-height:900px;padding:48px 64px}
+.fsp p{margin:0}
+.fsp h1,.fsp h2{font-family:'JetBrains Mono',ui-monospace,monospace;margin:0;font-weight:600;letter-spacing:-.01em}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+.lbl{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#5B5D66}
+.card{border:1px solid #E1E1E5;border-radius:10px;background:#fff}
+@keyframes a1{0%,28%{opacity:1}33%,95%{opacity:0}100%{opacity:1}}
+@keyframes a2{0%,28%{opacity:0}33%,61%{opacity:1}66%,100%{opacity:0}}
+@keyframes a3{0%,61%{opacity:0}66%,95%{opacity:1}100%{opacity:0}}
+.p1{animation:a1 9s infinite}
+.p2{animation:a2 9s infinite}
+.p3{animation:a3 9s infinite}
+@media (prefers-reduced-motion: reduce){.p1,.p2{animation:none;opacity:0}.p3{animation:none;opacity:1}}
+</style>
+</helmet>
+<div class="fsp">
+<div style="max-width: 1312px; margin: 0 auto; display: flex; flex-direction: column; gap: 36px">
+<div style="display: flex; flex-direction: column; gap: 8px"><span class="lbl" style="color: #402FFF">Работодатель · поиск</span><h1 style="font-size: 32px">Анимация «текст → чипсы»</h1><p style="color: #5B5D66; max-width: 720px">Человек пишет как говорит, система показывает, как она его поняла. Каждое условие можно убрать крестиком, а «~» означает, что понято приблизительно.</p></div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px">
+<div style="display: flex; flex-direction: column; gap: 10px"><dc-import name="QueryFrame" frame="1" hint-size="100%,240px"></dc-import><p style="font-size: 13px; color: #4B4D55">Запрос набран свободным текстом. Курсор мигает, поле в фокусе, синяя рамка.</p></div>
+<div style="display: flex; flex-direction: column; gap: 10px"><dc-import name="QueryFrame" frame="2" hint-size="100%,240px"></dc-import><p style="font-size: 13px; color: #4B4D55">Слова подсвечиваются по очереди слева направо. Пунктир у «высоконагруженный API»: понято приблизительно.</p></div>
+<div style="display: flex; flex-direction: column; gap: 10px"><dc-import name="QueryFrame" frame="3" hint-size="100%,240px"></dc-import><p style="font-size: 13px; color: #4B4D55">Слова по схемной линии превращаются в чипсы. Исходный текст остаётся зачёркнутым серым.</p></div>
+</div>
+<div style="display: grid; grid-template-columns: 640px minmax(0, 1fr); gap: 32px; align-items: start">
+<div style="display: flex; flex-direction: column; gap: 10px"><span class="lbl">Живой цикл · 9 с</span>
+<div style="position: relative; height: 250px" role="img" aria-label="Анимация: запрос набирается, слова подсвечиваются, превращаются в чипсы">
+<div class="p1" style="position: absolute; inset: 0"><dc-import name="QueryFrame" frame="1" hint-size="100%,240px"></dc-import></div>
+<div class="p2" style="position: absolute; inset: 0"><dc-import name="QueryFrame" frame="2" hint-size="100%,240px"></dc-import></div>
+<div class="p3" style="position: absolute; inset: 0"><dc-import name="QueryFrame" frame="3" hint-size="100%,240px"></dc-import></div>
+</div></div>
+<div class="card" style="padding: 24px"><span class="lbl">Тайминги</span>
+<div style="display: grid; grid-template-columns: 90px 140px 1fr; gap: 12px 16px; margin-top: 14px; font-size: 13px; align-items: baseline">
+<b class="mono">Кадр 1</b><span class="mono">0 – 1.2 с</span><span>Печать по символам, шаг 18 мс. Реальный ввод пользователя, без имитации.</span>
+<b class="mono">Кадр 2</b><span class="mono">после паузы 400 мс</span><span>Подсветка слов по очереди, шаг 80 мс. Фон синий 100, линия снизу синий 500.</span>
+<b class="mono">Кадр 3</b><span class="mono">240 мс</span><span>Слова уходят по схемной линии в строку чипсов, ease-out. Красная точка — конец пути.</span>
+<b class="mono">Всегда</b><span class="mono">prefers-reduced-motion</span><span>Показывается кадр 3 без перехода. Распознанное объявляется скринридеру одной строкой.</span>
+</div></div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

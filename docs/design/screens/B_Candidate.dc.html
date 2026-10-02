@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Карточка кандидата Backend 4821</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#1B1C21}
+.fsp{font-family:'Onest',system-ui,sans-serif;color:#EDEDED;font-size:14px;line-height:1.5;background:#1B1C21;width:100%;min-height:2800px}
+.fsp p,.fsp ul{margin:0;padding:0}
+.fsp li{list-style:none}
+.fsp h1,.fsp h2,.fsp h3,.fsp h4{font-family:'JetBrains Mono',ui-monospace,monospace;margin:0;font-weight:600;letter-spacing:-.01em;color:#fff}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+.fsp button,.fsp input,.fsp select{font:inherit}
+.fsp button{cursor:pointer}
+.fsp a{color:inherit;text-decoration:none}
+.fsp :focus-visible{outline:2px solid #A9A1FF;outline-offset:2px}
+.ic{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.dots{display:inline-flex;gap:3px;align-items:center;vertical-align:middle}
+.dots i{display:block;width:8px;height:8px;border-radius:50%;border:1.5px solid #5B54C4;background:transparent}
+.dots i.f{background:#A9A1FF;border-color:#A9A1FF}
+.dots.inf i{border-style:dashed;border-color:#796DFF}
+.dots.inf i.f{background:#796DFF}
+.chip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px 0 9px;border:1px solid #3A3299;background:#201880;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;color:#E6E4FF;white-space:nowrap}
+.chip.cl{border-style:dashed;background:transparent;color:#C8C9CA;border-color:#5B54C4}
+.chip.in{border-style:dashed;border-color:#796DFF;background:transparent}
+.chip.adj{border-color:#34353D;color:#9A9CA5;background:transparent}
+.chip .nw{font-size:10px;font-weight:700;line-height:1;background:#EC1D35;color:#fff;padding:2px 4px;border-radius:3px}
+.grade{display:inline-flex;align-items:center;height:28px;padding:0 12px;border-radius:6px;background:#402FFF;color:#fff;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;white-space:nowrap}
+.grade.pre{background:transparent;color:#CDC9FF;border:1px dashed #A9A1FF}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 18px;border-radius:8px;border:1px solid transparent;font-weight:600;font-size:14px;white-space:nowrap}
+.btn.p{background:#402FFF;color:#fff}
+.btn.p:hover{background:#5547FF}
+.btn.s{background:transparent;color:#CDC9FF;border-color:#5B54C4}
+.btn.s:hover{background:#201880}
+.btn.g{background:transparent;color:#CDC9FF}
+.btn.g:hover{background:#201880}
+.lbl{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#9A9CA5}
+.card{border:1px solid #34353D;border-radius:10px;background:#22232A}
+.card h2{font-size:18px}
+.ring{position:relative;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;background:conic-gradient(#402FFF calc(var(--p) * 1%),#2C20AD 0)}
+.ring b{display:flex;align-items:center;justify-content:center;border-radius:50%;background:#22232A;font-family:'JetBrains Mono',monospace;font-weight:700;color:#fff;letter-spacing:-.02em}
+.med{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 4px;border-radius:11px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;flex:none}
+.row{display:grid;grid-template-columns:150px 1fr;gap:16px;padding:14px 0;border-top:1px solid #34353D;align-items:start}
+.pt{display:grid;grid-template-columns:20px 1fr;gap:10px;font-size:14px;line-height:1.5;align-items:start}
+.seg{display:flex;gap:4px;width:100%}
+.seg i{display:block;height:8px;flex:1;border-radius:2px;background:#2C20AD}
+.seg i.f{background:#402FFF}
+.nav a{display:inline-flex;align-items:center;gap:8px;height:64px;padding:0 4px;color:#C8C9CA;font-weight:500;border-bottom:2px solid transparent}
+.nav a.on{color:#fff;border-bottom-color:#A9A1FF;font-weight:600}
+.nav .n{font-family:'JetBrains Mono',monospace;font-size:11px;background:#34353D;color:#EDEDED;padding:1px 6px;border-radius:8px}
+details>summary{list-style:none;cursor:pointer}
+details>summary::-webkit-details-marker{display:none}
+details[open] .chev{transform:rotate(180deg)}
+</style>
+</helmet>
+<div class="fsp">
+
+<header style="border-bottom: 1px solid #34353D; height: 64px; padding: 0 40px; display: flex; align-items: center; justify-content: space-between; gap: 24px">
+<div style="display: flex; align-items: center; gap: 48px">
+<img src="/_blob/538ca0f9cf926cdc1dc94431a2a7e356" alt="ФСП Карьера" style="height: 36px; width: auto">
+<nav class="nav" style="display: flex; gap: 28px" aria-label="Основная навигация">
+<a class="on" href="A_Search.dc.html" aria-current="page">Поиск</a>
+<a href="A_Search.dc.html">Шорт-лист<span class="n">3</span></a>
+<a href="C_Offer.dc.html">Офферы<span class="n">8</span></a>
+<a href="A_Search.dc.html">Вакансии</a>
+</nav>
+</div>
+<div style="display: flex; align-items: center; gap: 14px"><div style="text-align: right; line-height: 1.3"><div style="font-weight: 600; font-size: 14px; color: #fff">Северный код</div><div style="font-size: 12px; color: #9A9CA5">Ольга · HR</div></div><div style="width: 40px; height: 40px; border-radius: 8px; background: #402FFF; color: #fff; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 14px" aria-hidden="true">СК</div></div>
+</header>
+
+<section aria-label="Шапка кандидата" style="position: relative; overflow: hidden; border-bottom: 1px solid #34353D">
+<svg width="620" height="260" viewBox="0 0 620 260" fill="none" aria-hidden="true" style="position: absolute; right: 0; top: 0; opacity: 0.9">
+<path d="M0 40H400a28 28 0 0 1 28 28V150a28 28 0 0 0 28 28H620" stroke="#2C20AD" stroke-width="1.5"></path>
+<circle cx="428" cy="110" r="4" fill="#402FFF"></circle>
+<circle cx="600" cy="178" r="4" fill="#EC1D35"></circle>
+</svg>
+<div style="position: relative; max-width: 1440px; margin: 0 auto; padding: 24px 40px 40px; display: flex; flex-direction: column; gap: 24px">
+<a href="A_Search.dc.html" style="display: inline-flex; align-items: center; gap: 6px; color: #CDC9FF; font-size: 13px; align-self: flex-start"><svg class="ic" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"></path></svg>К результатам поиска</a>
+<div style="display: flex; align-items: center; gap: 32px; flex-wrap: wrap">
+<dc-import name="Avatar" seed="0" size="104" tone="dark" hint-size="104px,104px"></dc-import>
+<div style="display: flex; flex-direction: column; gap: 14px; flex: 1; min-width: 360px">
+<div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap"><h1 style="font-size: 36px; line-height: 1.1">Backend #4821</h1><span class="grade pre">Junior+ · Backend · Python</span>
+<span style="display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px; border-radius: 6px; background: #201880; border: 1px solid #3A3299; color: #E6E4FF; font-size: 13px; font-weight: 600"><svg class="ic" viewBox="0 0 24 24" style="color: #A9A1FF"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg>Профиль подтверждён ФСП</span></div>
+<div style="display: flex; gap: 28px; flex-wrap: wrap; color: #C8C9CA; font-size: 14px"><span>Ожидания <b class="mono" style="color: #fff">от 150 000 ₽</b></span><span>Удалёнка или гибрид</span><span>Студентка, Россия</span><span style="color: #CDC9FF"><b class="mono">Активно ищет</b> · ещё 5 дней</span></div>
+</div>
+<div style="display: flex; align-items: center; gap: 20px; padding: 18px 22px; background: #22232A; border: 1px solid #34353D; border-radius: 10px">
+<div class="ring" style="--p: 92; width: 84px; height: 84px" role="img" aria-label="Совпадение 92 процента"><b style="width: 68px; height: 68px; font-size: 22px">92%</b></div>
+<div style="display: flex; flex-direction: column; gap: 8px; width: 200px"><span class="lbl">Интерес кандидата</span><div class="seg" role="meter" aria-valuemin="1" aria-valuemax="3" aria-valuenow="3" aria-valuetext="высокий"><i class="f"></i><i class="f"></i><i class="f"></i></div><span class="mono" style="font-size: 14px; font-weight: 700; color: #A9A1FF">высокий</span></div>
+</div>
+</div>
+</div>
+</section>
+
+<div style="max-width: 1440px; margin: 0 auto; padding: 32px 40px 80px; display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 32px; align-items: start">
+
+<main style="display: flex; flex-direction: column; gap: 24px; min-width: 0">
+
+<section class="card" style="padding: 28px" aria-label="Навыки">
+<div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px"><h2>Навыки</h2><span class="mono" style="font-size: 12px; color: #9A9CA5">нажмите на навык — откуда он</span></div>
+<div class="row" style="border-top: 0"><span class="lbl" style="padding-top: 6px">Язык и алгоритмы</span><div style="display: flex; gap: 8px; flex-wrap: wrap"><span class="chip"><span class="dots" role="img" aria-label="Доверие: 3 из 4"><i class="f"></i><i class="f"></i><i class="f"></i><i></i></span>Python</span><span class="chip"><span class="dots" role="img" aria-label="Доверие: 4 из 4"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></span>Алгоритмы</span><span class="chip"><span class="dots" role="img" aria-label="Доверие: 2 из 4"><i class="f"></i><i class="f"></i><i></i><i></i></span>SQL</span></div></div>
+<div class="row"><span class="lbl" style="padding-top: 6px">Веб и API</span><div style="display: flex; gap: 8px; flex-wrap: wrap"><span class="chip"><span class="dots" role="img" aria-label="Доверие: 3 из 4"><i class="f"></i><i class="f"></i><i class="f"></i><i></i></span>FastAPI</span><span class="chip in"><span class="dots inf" role="img" aria-label="Выведено из FastAPI, доверие: 2 из 4"><i class="f"></i><i class="f"></i><i></i><i></i></span>asyncio</span><span class="chip"><span class="dots" role="img" aria-label="Доверие: 1 из 4"><i class="f"></i><i></i><i></i><i></i></span>Pydantic<span class="nw">новый</span></span></div></div>
+<div class="row"><span class="lbl" style="padding-top: 6px">Данные и очереди</span><div style="display: flex; gap: 8px; flex-wrap: wrap"><span class="chip"><span class="dots" role="img" aria-label="Доверие: 2 из 4"><i class="f"></i><i class="f"></i><i></i><i></i></span>PostgreSQL</span><span class="chip"><span class="dots" role="img" aria-label="Доверие: 2 из 4"><i class="f"></i><i class="f"></i><i></i><i></i></span>RabbitMQ</span><span class="chip cl"><span class="dots" role="img" aria-label="Только заявлено"><i></i><i></i><i></i><i></i></span>Redis</span><span class="chip adj" title="Нет подтверждения, есть смежный RabbitMQ">Kafka</span></div></div>
+<div class="row"><span class="lbl" style="padding-top: 6px">Инфраструктура</span><div style="display: flex; gap: 8px; flex-wrap: wrap"><span class="chip"><span class="dots" role="img" aria-label="Доверие: 3 из 4"><i class="f"></i><i class="f"></i><i class="f"></i><i></i></span>Git</span><span class="chip"><span class="dots" role="img" aria-label="Доверие: 1 из 4"><i class="f"></i><i></i><i></i><i></i></span>Docker</span><span class="chip cl"><span class="dots" role="img" aria-label="Только заявлено"><i></i><i></i><i></i><i></i></span>Linux</span></div></div>
+<div style="display: flex; gap: 20px; flex-wrap: wrap; padding-top: 14px; border-top: 1px solid #34353D; font-size: 12px; color: #9A9CA5"><span>Сплошной контур — подтверждено</span><span>Пунктир — заявлено или выведено</span><span>Серый контур — смежный навык без подтверждения</span></div>
+</section>
+
+<section class="card" style="padding: 28px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px" aria-label="Командные сигналы и достижения">
+<div style="display: flex; flex-direction: column; gap: 16px"><h2>Командные сигналы</h2>
+<div style="display: flex; flex-direction: column; gap: 2px"><div style="display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap"><span style="font-weight: 600; color: #fff">Лидерство</span><span class="mono" style="font-size: 12px; color: #A9A1FF; font-weight: 600">— сильное подтверждение</span></div><span style="font-size: 13px; color: #C8C9CA">капитан на 2 соревнованиях ФСП</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><div style="display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap"><span style="font-weight: 600; color: #fff">Работа в команде</span><span class="mono" style="font-size: 12px; color: #A9A1FF; font-weight: 600">— среднее подтверждение</span></div><span style="font-size: 13px; color: #C8C9CA">3 командных соревнования, общий репозиторий с 4 участниками</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px; padding-top: 14px; border-top: 1px dashed #4B4D55"><span style="font-size: 13px; color: #9A9CA5"><b style="font-weight: 600">Указано в резюме:</b> коммуникабельный</span><span class="mono" style="font-size: 11px; color: #9A9CA5">не влияет на грейд</span></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 14px"><h2>Достижения ФСП</h2>
+<div style="display: flex; flex-direction: column">
+<div style="display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid #34353D"><span class="med" style="background: #A9A1FF; color: #1B1C21; margin-top: 1px" role="img" aria-label="2 место">2</span><span class="mono" style="font-size: 12px; line-height: 1.6; color: #EDEDED">Продуктовое программирование · Кубок России · всероссийский финал · <b>2 из 40</b> · капитан · 2025</span></div>
+<div style="display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid #34353D"><span class="med" style="background: #402FFF; color: #fff; margin-top: 1px" role="img" aria-label="1 место">1</span><span class="mono" style="font-size: 12px; line-height: 1.6; color: #EDEDED">Алгоритмы · Кубок России · региональный этап · <b>1 из 112</b> · 2024</span></div>
+<div style="display: flex; gap: 12px; align-items: flex-start; padding: 10px 0"><span class="med" style="background: transparent; color: #CDC9FF; border: 1px solid #796DFF; margin-top: 1px" role="img" aria-label="Разряд">КМС</span><span class="mono" style="font-size: 12px; line-height: 1.6; color: #EDEDED">Спортивное программирование · кандидат в мастера спорта · присвоен 2025</span></div>
+</div></div>
+</section>
+
+<section class="card" style="padding: 28px" aria-label="ДНК кода">
+<div style="display: flex; justify-content: space-between; align-items: baseline"><h2>ДНК кода</h2><span class="mono" style="font-size: 12px; color: #9A9CA5">по 14 репозиториям GitHub</span></div>
+<div style="display: grid; grid-template-columns: 380px minmax(0, 1fr); gap: 36px; align-items: center; margin-top: 12px">
+<svg viewBox="-40 0 380 290" width="100%" role="img" aria-label="Радар: бэкенд 3.6 из 4, фронтенд 1.4, DevOps 2, данные 3, качество кода 3.2, open source 1.6" style="display: block">
+<g fill="none" stroke="#34353D" stroke-width="1">
+<path d="M140 40L226.6 90L226.6 190L140 240L53.4 190L53.4 90Z"></path>
+<path d="M140 65L204.95 102.5L204.95 177.5L140 215L75.05 177.5L75.05 102.5Z"></path>
+<path d="M140 90L183.3 115L183.3 165L140 190L96.7 165L96.7 115Z"></path>
+<path d="M140 115L161.65 127.5L161.65 152.5L140 165L118.35 152.5L118.35 127.5Z"></path>
+<path d="M140 140L140 40M140 140L226.6 90M140 140L226.6 190M140 140L140 240M140 140L53.4 190M140 140L53.4 90"></path>
+</g>
+<path d="M140 50L170.3 122.5L183.3 165L140 215L70.7 180L105.4 120Z" fill="#402FFF" fill-opacity="0.35" stroke="#A9A1FF" stroke-width="2" stroke-linejoin="round"></path>
+<g fill="#A9A1FF"><circle cx="140" cy="50" r="4"></circle><circle cx="170.3" cy="122.5" r="3.5"></circle><circle cx="183.3" cy="165" r="3.5"></circle><circle cx="140" cy="215" r="3.5"></circle><circle cx="70.7" cy="180" r="3.5"></circle><circle cx="105.4" cy="120" r="3.5"></circle></g>
+<g font-family="JetBrains Mono, monospace" font-size="12" fill="#EDEDED">
+<text x="140" y="26" text-anchor="middle" font-weight="700">Бэкенд</text>
+<text x="238" y="86">Фронтенд</text>
+<text x="238" y="206">DevOps</text>
+<text x="140" y="262" text-anchor="middle" font-weight="700">Данные</text>
+<text x="42" y="206" text-anchor="end">Качество кода</text>
+<text x="42" y="86" text-anchor="end">Open source</text>
+</g>
+</svg>
+<div style="display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-direction: column; gap: 10px"><span class="lbl">Языки по объёму кода</span>
+<div style="display: flex; height: 14px; border-radius: 4px; overflow: hidden; gap: 2px" role="img" aria-label="Python 62%, SQL 14%, TypeScript 9%, Shell 8%, другое 7%"><div style="flex: 62; background: #402FFF"></div><div style="flex: 14; background: #796DFF"></div><div style="flex: 9; background: #A9A1FF"></div><div style="flex: 8; background: #CDC9FF"></div><div style="flex: 7; background: #5B5D66"></div></div>
+<div class="mono" style="display: flex; gap: 18px; flex-wrap: wrap; font-size: 12px; color: #EDEDED"><span>Python 62%</span><span>SQL 14%</span><span>TypeScript 9%</span><span>Shell 8%</span><span style="color: #9A9CA5">Другое 7%</span></div></div>
+<p style="font-size: 13px; color: #C8C9CA">Профиль кода — сильный бэкенд и работа с данными, слабее инфраструктура и фронтенд. Чистота кода выше среднего для Junior+: есть тесты, типизация, линтеры в 5 из 14 репозиториев.</p>
+<div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: #1B1C21; border: 1px solid #34353D; border-radius: 8px; font-size: 12px; color: #C8C9CA"><img src="/_blob/0a5ce4f4a4d3beb1e7faf5bd22d21dd6" alt="" style="width: 36px; height: 36px; border-radius: 6px; object-fit: cover; object-position: 50% 30%"><span>Разбор кода выполнен ИИ и сверен с результатами тестов.</span></div>
+</div>
+</div>
+</section>
+
+<section class="card" style="padding: 28px" aria-label="Граф доказательств">
+<details open>
+<summary style="display: flex; justify-content: space-between; align-items: center; gap: 16px"><div style="display: flex; flex-direction: column; gap: 2px"><h2>Граф доказательств</h2><span style="font-size: 13px; color: #C8C9CA">Какие факты подтверждают какие навыки и насколько сильно</span></div><span style="display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border: 1px solid #5B54C4; border-radius: 8px; color: #CDC9FF"><svg class="ic chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></svg></span></summary>
+<div style="margin-top: 20px; background: #fff; border-radius: 8px; padding: 20px; border: 1px solid #402FFF; outline: 6px solid #22232A; outline-offset: 0">
+<dc-import name="Graph" selected="0" hint-size="100%,640px"></dc-import>
+</div>
+</details>
+</section>
+
+<section class="card" style="padding: 28px" aria-label="Опыт">
+<h2>Опыт</h2>
+<p style="font-size: 12px; color: #9A9CA5; margin: 4px 0 8px">Названия компаний скрыты до раскрытия контактов</p>
+<div class="row" style="grid-template-columns: 1fr auto; border-top: 1px solid #34353D"><div><div style="font-weight: 600; color: #fff">Backend-разработчик</div><div class="mono" style="font-size: 12px; color: #C8C9CA; margin-top: 2px">Python, FastAPI, PostgreSQL</div></div><span class="mono" style="font-size: 13px; color: #EDEDED">1 г 8 мес</span></div>
+<div class="row" style="grid-template-columns: 1fr auto"><div><div style="font-weight: 600; color: #fff">Стажёр-разработчик</div><div class="mono" style="font-size: 12px; color: #C8C9CA; margin-top: 2px">Python, Django</div></div><span class="mono" style="font-size: 13px; color: #EDEDED">6 мес</span></div>
+<div class="row" style="grid-template-columns: 1fr auto; padding-bottom: 0"><div><div style="font-weight: 600; color: #fff">Студентка, прикладная информатика</div><div class="mono" style="font-size: 12px; color: #C8C9CA; margin-top: 2px">3 курс</div></div><span class="mono" style="font-size: 13px; color: #EDEDED">с 2023</span></div>
+</section>
+
+<section class="card" style="padding: 28px; border-color: #402FFF" aria-label="Совпадение с вакансией">
+<div style="display: flex; align-items: center; gap: 20px; margin-bottom: 18px"><div class="ring" style="--p: 92; width: 72px; height: 72px" role="img" aria-label="Совпадение 92 процента"><b style="width: 58px; height: 58px; font-size: 18px">92%</b></div>
+<div><h2>Почему подходит</h2><span style="font-size: 13px; color: #C8C9CA">Вакансия «Middle Backend-разработчик (Python)», до 220 000 ₽, удалёнка</span></div></div>
+<ul style="display: flex; flex-direction: column; gap: 14px">
+<li class="pt"><svg class="ic" viewBox="0 0 24 24" style="color: #A9A1FF; margin-top: 3px" aria-label="Подтверждено"><path d="M20 6 9 17l-5-5"></path></svg><span><b style="color: #fff">FastAPI, PostgreSQL</b> — подтверждено кодом <span class="mono" style="color: #A9A1FF">●●●○</span> и тестом. Требование «высоконагруженный API» закрыто частично.</span></li>
+<li class="pt"><svg class="ic" viewBox="0 0 24 24" style="color: #A9A1FF; margin-top: 3px" aria-label="Подтверждено"><path d="M20 6 9 17l-5-5"></path></svg><span>Призёр всероссийского финала Кубка России по продуктовому программированию, капитан. Лидерство — сильное подтверждение.</span></li>
+<li class="pt"><svg class="ic" viewBox="0 0 24 24" style="color: #F59E0B; margin-top: 3px" aria-label="Частично"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4M12 17h.01"></path></svg><span style="color: #F5D28A">Нет подтверждения <b>Kafka</b>. Есть смежное: RabbitMQ <span class="mono">●●○○</span>. Можно <b>попросить подтвердить</b>.</span></li>
+<li class="pt"><svg class="ic" viewBox="0 0 24 24" style="color: #A9A1FF; margin-top: 3px" aria-label="Подтверждено"><path d="M20 6 9 17l-5-5"></path></svg><span>Ожидания <b class="mono" style="color: #fff">от 150 000 ₽</b> ниже вашего бюджета. Формат совпадает: удалёнка.</span></li>
+</ul>
+</section>
+</main>
+
+<aside aria-label="Действия" style="position: sticky; top: 16px; display: flex; flex-direction: column; gap: 14px">
+<div class="card" style="padding: 22px; display: flex; flex-direction: column; gap: 12px; border-color: #402FFF">
+<span class="lbl">Следующий шаг</span>
+<a class="btn p" href="C_Offer.dc.html" style="width: 100%"><svg class="ic" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>Сделать оффер</a>
+<button class="btn s" type="button" style="width: 100%"><svg class="ic" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path></svg>Вопросы для интервью</button>
+<button class="btn g" type="button" style="width: 100%; justify-content: flex-start"><svg class="ic" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg>Попросить подтвердить навык</button>
+<p style="font-size: 12px; color: #9A9CA5">Контакты откроются только после согласия кандидата.</p>
+</div>
+<div class="card" style="padding: 22px; display: flex; flex-direction: column; gap: 12px">
+<span class="lbl">Оценка</span>
+<div style="display: flex; gap: 10px"><button class="btn s" type="button" style="flex: 1; height: 40px"><svg class="ic" viewBox="0 0 24 24"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path></svg>В шорт-лист</button><button class="btn g" type="button" style="flex: 1; height: 40px; color: #C8C9CA"><svg class="ic" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"></path></svg>Не подходит</button></div>
+</div>
+<div class="card" style="padding: 22px; display: flex; flex-direction: column; gap: 14px">
+<span class="lbl">Сравнение с вашим оффером</span>
+<div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 13px; color: #C8C9CA">Ожидания кандидата</span><b class="mono" style="color: #fff">от 150 000 ₽</b></div>
+<div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 13px; color: #C8C9CA">Бюджет вакансии</span><b class="mono" style="color: #fff">до 220 000 ₽</b></div>
+<div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 13px; color: #C8C9CA">Медиана категории</span><b class="mono" style="color: #fff">150 000 ₽</b></div>
+<div style="display: flex; flex-direction: column; gap: 6px; padding-top: 12px; border-top: 1px solid #34353D"><div style="display: flex; justify-content: space-between"><span class="lbl">Вероятность принятия</span><b class="mono" style="font-size: 12px; color: #A9A1FF">высокая</b></div><div class="seg" role="meter" aria-valuemin="1" aria-valuemax="3" aria-valuenow="3" aria-valuetext="высокая"><i class="f"></i><i class="f"></i><i class="f"></i></div></div>
+</div>
+</aside>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2900}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
