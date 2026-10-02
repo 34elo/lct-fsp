@@ -1,0 +1,23 @@
+# Временные PostgreSQL и RabbitMQ для интеграционных тестов: `make test-integration`.
+# Отдельный project name (fsp-test), порты только 28xxx на 127.0.0.1, без томов.
+name: fsp-test
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: test
+    ports: ["127.0.0.1:28532:5432"]
+    tmpfs: [/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test -d test"]
+      interval: 1s
+      retries: 30
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    ports: ["127.0.0.1:28572:5672"]
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_port_connectivity"]
+      interval: 2s
+      retries: 30

@@ -60,7 +60,7 @@ ml-worker ─────► │ ui.user.<user_id> (прогресс задач)
 | Очередь | Потребитель | Привязки / команды | prefetch | Особенности |
 |---|---|---|---|---|
 | `core.ingest` | core-worker | `fsp.results.imported`, `fsp.competitions.updated`, `fsp.linked`, `ml.#` | 8 | Внешние факты → узлы и рёбра графа |
-| `core.handlers` | core-worker | `evidence.changed`, `skills.profile.updated`, `vacancy.*`, `offer.*`, `candidate.*`, `taxonomy.updated`, `matches.ready` | 8 | Реакции на свои события: пересчёт, матчинг, уведомления |
+| `core.handlers` | core-worker | `evidence.changed`, `skills.profile.updated`, `vacancy.#`, `offer.#`, `candidate.#`, `taxonomy.updated`, `matches.ready` | 8 | Реакции на свои события: пересчёт, матчинг, уведомления |
 | `core.recompute` | core-worker | команда `core.recompute {candidate_id, requested_at}` | 4 | Слияние пересчётов по `recomputed_at ≥ requested_at` ([graph.md §4.4](graph.md#44-целостность-и-версии)) |
 | `core.match` | core-worker | команды `core.match.vacancy`, `core.match.candidate` | 4 | Пропуск устаревших версий |
 | `core.jobs` | core-worker | cron-команды и фоновые задачи (удаление, `recompute_all`) | 2 | — |
@@ -77,10 +77,10 @@ ml-worker ─────► │ ui.user.<user_id> (прогресс задач)
 
 | Механизм | Как |
 |---|---|
-| **Outbox** (у сервисов с БД: core, fsp-connector) | Событие пишется в таблицу `outbox` в той же транзакции, что и данные. Relay (LISTEN/NOTIFY + опрос раз в 500 мс) публикует его с **publisher confirms** и только после подтверждения ставит `published_at` |
+| **Outbox** (у сервисов с БД: core, fsp-connector) | Событие или команда пишется в таблицу `outbox` в той же транзакции, что и данные. Relay в core-worker (триггер `outbox_notify` → LISTEN + опрос раз в 500 мс, `FOR UPDATE SKIP LOCKED`) публикует его с **publisher confirms** и только после подтверждения ставит `published_at`. Маршрут по реестру: команда → `commands` (ключ = очередь, приоритет), иначе → `events` (ключ = `type`) |
 | **Inbox** (идемпотентность у core) | Перед обработкой `INSERT INTO inbox(event_id, handler) ON CONFLICT DO NOTHING`. Если строка уже была — сообщение пропускается. Повторная доставка не шлёт второй push и не дублирует факты |
-| **Ретраи** | При ошибке сообщение уходит в очередь задержки `<queue>.retry.<5s|30s|2m>` (TTL + dead-letter обратно в основную), счётчик в заголовке `x-retry` |
-| **DLQ** | После 3 попыток → `<queue>.dlq` через обменник `dlx`. Видно в веб-интерфейсе RabbitMQ, можно переотправить руками |
+| **Ретраи** | При ошибке копия сообщения уходит в очередь задержки `<queue>.retry.<5s|30s|2m>` (TTL + dead-letter обратно в основную), счётчик в заголовке `x-retry`, оригинал подтверждается. Обработчик с эффектом в БД оборачивается в `idempotent()`: эффект и строка inbox в одной транзакции, при ошибке откатываются вместе |
+| **DLQ** | После 3 повторов (4-я неудача) или при битом конверте — `nack` → обменник `dlx` → `<queue>.dlq`. Видно в веб-интерфейсе RabbitMQ, можно переотправить руками |
 | **Устойчивость** | durable-обменники и очереди, persistent-сообщения, `quorum`-очереди не нужны (один узел) |
 | **Порядок** | Гарантии порядка не нужны: обработчики идемпотентны и сверяют версии (`profile_version`, `vacancy.version`) |
 
@@ -99,7 +99,7 @@ ml-worker ─────► │ ui.user.<user_id> (прогресс задач)
 ```
 `correlation_id` = `X-Request-ID` исходного HTTP-запроса: по нему цепочка ищется в логах всех сервисов.
 
-Команды идут в обменник `commands` с routing key = имя очереди (`ml.llm`, `fsp.sync`, `bot.telegram`, …), `type` = имя команды, приоритет AMQP — из реестра. Реестры `EVENTS` / `COMMANDS` / `UI_EVENTS` и сборка конвертов (`new_event`, `new_command`, `parse_payload`) — в `packages/contracts`. Общий каталог AsyncAPI 3.0 всех сообщений: `make asyncapi` → `asyncapi.json`.
+Команды идут в обменник `commands` с routing key = имя очереди (`ml.llm`, `fsp.sync`, `bot.telegram`, …), `type` = имя команды, приоритет AMQP — из реестра. Реестры `EVENTS` / `COMMANDS` / `UI_EVENTS` и сборка конвертов (`new_event`, `new_command`, `parse_payload`) — в `packages/contracts`. Топология (`QUEUES`, `declare_topology`), публикация (`publish_envelope`), подписчик с ретраями (`Consumer`) и `idempotent` — в `fsp_platform.messaging`; интеграционный тест — `make test-integration`. Общий каталог AsyncAPI 3.0 всех сообщений: `make asyncapi` → `asyncapi.json`.
 
 ## 3. Цепочки (как это работает вместе)
 
