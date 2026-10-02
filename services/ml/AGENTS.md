@@ -10,6 +10,7 @@
 
 ## Ключевые файлы
 - `fsp_ml/main.py` — ml-api: `/v1/query/parse`, `/v1/embeddings`, `/v1/skills/resolve`, `/healthz`
+- `fsp_ml/normalize.py`, `taxonomy.py` — нормализация и быстрый путь resolve (снимок графа из core); `embedder.py` — bge-m3 или фейк
 - `fsp_ml/fake.py` — детерминированные ответы по контрактам `fsp_contracts.ml`
 - `fsp_ml/handlers.py` — команда → события `ml.*.completed/failed` (`HANDLERS`, `handle`)
 - `fsp_ml/worker.py` — подписка на `ml.llm` / `ml.code`, публикация результатов
@@ -19,5 +20,5 @@
 ## Правила
 - Пакет называется `fsp_ml` (не `app`): в воркспейсе несколько сервисов, имена `app` конфликтуют.
 - `message_id` результата = uuid5(команда, тип): повторная доставка даёт тот же дубль, inbox отбрасывает.
-- При `ML_FAKE=false` ml-api отвечает 503 `ml_unavailable`, воркеры не стартуют.
+- При `ML_FAKE=false` без модели/снимка графа ml-api отвечает 503 `ml_unavailable`, воркеры не стартуют. `EMBEDDING_MODEL_PATH` включает реальный bge-m3.
 - Документы: docs/architecture/ml.md, messaging.md §2–3, api.md §2.10.
