@@ -104,6 +104,16 @@ fsp_rank_bonus:
 # Provisional skill penalty
 provisional_skill_max_strength: 0.25  # new skills capped at 0.25 until active
 
+## 1b. Category (категория, ml.md §4)
+category:
+  top_k: 8  # нормировка role_score на k самых весомых навыков роли
+  label_ratio: 0.6  # роль становится меткой при score >= ratio * max
+  min_score: 0.05  # ниже — категория не определена
+  fullstack_min: 0.5  # backend и frontend оба >= этого
+  fullstack_gap: 0.15  # и разница между ними < этого → метка fullstack
+  stack_size: 3  # длина primary_stack
+  explain_top: 5  # навыков в объяснении
+
 ## 2. Grade (грейд)
 
 # Grade thresholds by points (ml.md §5)

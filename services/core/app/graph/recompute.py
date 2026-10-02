@@ -13,12 +13,19 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime
 
 from fsp_contracts import new_envelope
-from fsp_contracts.events import ProfileDiff, SkillLevelChange, SkillsProfileUpdated
+from fsp_contracts.enums import RoleSlug
+from fsp_contracts.events import (
+    CategoryChange,
+    ProfileDiff,
+    SkillLevelChange,
+    SkillsProfileUpdated,
+)
 from fsp_platform.outbox import add_to_outbox
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.candidates.models import Candidate
+from app.graph.category import SkillConf, category_for
 from app.graph.models import CandidateSkill, Evidence
 from app.graph.trust import EvidenceView, SkillTrust, TrustConfig, combine, inherit
 from app.taxonomy.models import Skill
@@ -145,13 +152,37 @@ async def recompute_profile(
             await session.delete(row)
             changed = True
 
+    category_diff = None
+    if graph is not None:
+        cat = category_for(
+            {
+                slugs[sid]: SkillConf(t.confidence, t.level, tuple(t.sources))
+                for sid, (t, _) in entries.items()
+            },
+            graph,
+            cfg.category,
+        )
+        roles_json, stack = cat.roles_json(), cat.primary_stack
+        if (cand.primary_role, cand.roles or [], cand.primary_stack or []) != (
+            cat.primary_role,
+            roles_json,
+            stack,
+        ):
+            if cat.primary_role is not None and cat.primary_role != cand.primary_role:
+                category_diff = CategoryChange(
+                    from_=RoleSlug(cand.primary_role) if cand.primary_role else None,
+                    to=RoleSlug(cat.primary_role),
+                )
+            cand.primary_role, cand.roles, cand.primary_stack = cat.primary_role, roles_json, stack
+            changed = True
+
     cand.recomputed_at = now
     if changed:
         cand.profile_version += 1
         event = SkillsProfileUpdated(
             candidate_id=candidate_id,
             profile_version=cand.profile_version,
-            diff=ProfileDiff(skills_up=up, skills_new=new),
+            diff=ProfileDiff(skills_up=up, skills_new=new, category=category_diff),
         )
         await add_to_outbox(
             session, new_envelope("skills.profile.updated", "core", event), candidate_id

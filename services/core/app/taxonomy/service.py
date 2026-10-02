@@ -320,6 +320,8 @@ class SkillGraph:
     version: int
     slugs: dict[uuid.UUID, str]
     parents: dict[uuid.UUID, tuple[tuple[uuid.UUID, float], ...]]  # child → ((parent, coef), …)
+    roles: dict[str, dict[uuid.UUID, float]] = field(default_factory=dict)  # role → {skill: вес}
+    stack_ids: frozenset[uuid.UUID] = frozenset()  # языки и их фреймворки (ml.md §4)
 
     def parents_of(self, skill_id: uuid.UUID) -> tuple[tuple[uuid.UUID, float], ...]:
         return self.parents.get(skill_id, ())
@@ -327,14 +329,26 @@ class SkillGraph:
 
 async def load_skill_graph(session: AsyncSession) -> SkillGraph:
     version = await get_version(session)
-    live = await session.scalars(select(Skill).where(Skill.status.in_(_LIVE)))
+    live = list(await session.scalars(select(Skill).where(Skill.status.in_(_LIVE))))
     slugs = {s.id: s.slug for s in live}
     parents: dict[uuid.UUID, list[tuple[uuid.UUID, float]]] = {}
     for r in await session.scalars(select(SkillRelation).where(SkillRelation.kind == "parent")):
         if r.skill_a in slugs and r.skill_b in slugs:
             parents.setdefault(r.skill_a, []).append((r.skill_b, r.weight))
+    roles: dict[str, dict[uuid.UUID, float]] = {}
+    for rs in await session.scalars(select(RoleSkill)):
+        if rs.skill_id in slugs:
+            roles.setdefault(rs.role, {})[rs.skill_id] = rs.weight
+    langs = {s.id for s in live if s.grp == "language"}
+    stack_ids = frozenset(
+        langs | {c for c, ps in parents.items() if any(p in langs for p, _ in ps)}
+    )
     return SkillGraph(
-        version, slugs, {k: tuple(sorted(v, key=lambda x: str(x[0]))) for k, v in parents.items()}
+        version,
+        slugs,
+        {k: tuple(sorted(v, key=lambda x: str(x[0]))) for k, v in parents.items()},
+        roles,
+        stack_ids,
     )
 
 
