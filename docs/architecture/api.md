@@ -164,7 +164,7 @@
 
 ### 2.8. Realtime
 
-`GET /events/stream` — SSE. Внутри: core-worker и ml-worker публикуют в RabbitMQ `ui.user.<id>`, core-api держит соединения и раздаёт ([messaging.md](messaging.md)). Аутентификация: access-токен в query (`?access_token=`, короткоживущий) или cookie. Сервер шлёт `event: <type>\ndata: <json>\nid: <seq>`, heartbeat — каждые 20 с. Типы событий: [§4](#4-sse-события).
+`GET /events/stream` — SSE. Внутри: core-worker и ml-worker публикуют в RabbitMQ `ui.user.<id>`, core-api держит соединения и раздаёт ([messaging.md](messaging.md)). Аутентификация: access-токен в query (`?access_token=`, короткоживущий), заголовок `Authorization: Bearer` или cookie `access_token`; токен проверяется при подключении (нет или недействителен → 401 `unauthorized`). Соединение получает только сообщения своего `user_id`; повторной отправки пропущенного по `Last-Event-ID` нет — после переподключения фронт перечитывает данные запросами. Очередь соединения — 100 сообщений, при переполнении вытесняется старое. Сервер шлёт `event: <type>\ndata: <json>\nid: <seq>`, heartbeat — каждые 20 с. Типы событий: [§4](#4-sse-события).
 
 ### 2.9. Internal (для bot и сервисов)
 

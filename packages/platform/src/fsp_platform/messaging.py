@@ -18,6 +18,7 @@ from faststream.rabbit import Channel, ExchangeType, RabbitBroker, RabbitExchang
 from faststream.rabbit.annotations import RabbitMessage
 from fsp_contracts import Envelope
 from fsp_contracts.commands import COMMANDS, LLM_MAX_PRIORITY
+from fsp_contracts.ui import UiMessage, ui_routing_key
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -157,6 +158,15 @@ async def publish_envelope(broker: RabbitBroker, envelope: Envelope) -> None:
         message_id=str(envelope.message_id),
         message_type=envelope.type,
         correlation_id=envelope.correlation_id,
+    )
+
+
+async def publish_ui(broker: RabbitBroker, message: UiMessage) -> None:
+    """Сообщение для SSE: обменник `ui`, ключ `ui.user.<id>`, без персистентности."""
+    await broker.publish(
+        message.model_dump(mode="json"),
+        exchange=UI_EXCHANGE,
+        routing_key=ui_routing_key(message.user_id),
     )
 
 
