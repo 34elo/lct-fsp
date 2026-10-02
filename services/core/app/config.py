@@ -6,3 +6,7 @@ class Settings(BaseServiceSettings):
     # SSE (api.md §2.8): heartbeat каждые 20 с; шина ui отключается в тестах без брокера
     sse_heartbeat_seconds: float = 20.0
     ui_bus_enabled: bool = True
+    # refresh-cookie `rt` (api.md §1); за gateway путь включает префикс /api/v1
+    auth_cookie_path: str = "/api/v1/auth"
+    # CORS/Origin: SPA (security.md §1, CSRF). Пусто — проверка отключена
+    allowed_origins: list[str] = []
