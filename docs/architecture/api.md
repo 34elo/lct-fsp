@@ -73,6 +73,8 @@
 | `GET /candidates/me/offers` | `OfferForCandidate[]` |
 | `DELETE /candidates/me` | Удаление профиля (F13) |
 
+Реализовано (E3-1): `GET /candidates/me/profile`, `PATCH /candidates/me/preferences`, `PATCH /candidates/me/visibility`, `PUT /candidates/me/stoplist`. Только роль `candidate` (иначе 403). Анкета создаётся лениво при первом обращении. Запись требует согласие `pd_processing` (403 `consent_required`); `visibility.public_profile=true` — ещё и `public_profile`. `PATCH` частичный (`null` очищает `salary_min`/`city`), `visibility` дополнительно содержит `teams` (по умолчанию `true`). Ответ `PATCH` и `GET profile` — пока заготовка `CandidateProfile` без категории, грейда и навыков (`skills: []`, `category/grade: null`); их добавляют E3-2, E4-x. `PUT stoplist` `{company_ids[]}` (до 200 UUID, дубли схлопываются) возвращает сохранённый список; существование компаний пока не проверяется (появится с E6-1). `active` без продления через 7 дней отдаётся как `open`.
+
 ### 2.3. Проверка навыков
 
 | Метод и путь | Роль | Назначение |

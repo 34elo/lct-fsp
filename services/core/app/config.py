@@ -10,3 +10,5 @@ class Settings(BaseServiceSettings):
     auth_cookie_path: str = "/api/v1/auth"
     # CORS/Origin: SPA (security.md §1, CSRF). Пусто — проверка отключена
     allowed_origins: list[str] = []
+    # pseudo_id = HMAC(secret, user_id)[:12] (security.md §3); в проде секрет из PSEUDO_ID_SECRET
+    pseudo_id_secret: str = "dev-only-pseudo-secret"
