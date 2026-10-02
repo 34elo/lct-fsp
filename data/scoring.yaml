@@ -267,6 +267,28 @@ team_signal_weights:
     alpha_growth: 0.01
     beta_ceiling: 0.12
 
+# Параметры формул сигналов L/T/R/G (skills.md §8.2); ключи совпадают с полями TeamConfig
+team_signal_formulas:
+  captain_base: 0.5
+  captain_min_result: 0.6
+  captain_team_size_full: 5  # k_size = min(1, (n-1)/4)
+  maintainer_base: 0.3
+  maintainer_authors_full: 10
+  team_tau: 0.25
+  mate_bonus: 0.05
+  mate_bonus_max_mates: 4
+  repo_bonus: 0.05
+  b_cap: 0.15
+  repo_min_active_authors: 2
+  results_min_attempts: 2
+  growth_min_performances: 3
+  growth_min_seasons: 2
+  growth_min_value: 0.6
+  growth_slope_k: 2.0
+
+# Жёсткий потолок β с учётом акцента работодателя (skills.md §8.6)
+team_signal_beta_hard_cap: 0.12
+
 # Employer emphasis on team qualities
 employer_emphasis:
   multiplier: 2.0  # doubles the alpha_k
