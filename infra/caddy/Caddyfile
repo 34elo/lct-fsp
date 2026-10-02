@@ -1,0 +1,41 @@
+# Gateway: роутинг по Host. TLS терминируется на VPS, здесь только HTTP.
+{
+	auto_https off
+	admin off
+}
+
+:80 {
+	handle /healthz {
+		respond "ok" 200
+	}
+}
+
+http://dashboard.fsp.patissons.tech {
+	root * /srv/web
+	try_files {path} /index.html
+	file_server
+}
+
+http://api.fsp.patissons.tech {
+	handle /integrations/fsp/* {
+		reverse_proxy fsp-connector:8300
+	}
+	handle {
+		# flush_interval -1: иначе SSE буферизуется
+		reverse_proxy core-api:8000 {
+			flush_interval -1
+		}
+	}
+}
+
+http://mock.fsp.patissons.tech {
+	reverse_proxy fsp-mock:8200
+}
+
+http://s3.fsp.patissons.tech {
+	reverse_proxy minio:9000
+}
+
+http://fsp.patissons.tech {
+	redir http://dashboard.fsp.patissons.tech{uri} permanent
+}
