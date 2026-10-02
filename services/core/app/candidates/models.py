@@ -21,7 +21,7 @@ DEFAULT_VISIBILITY = {
 
 
 class Candidate(Base):
-    """Анкета кандидата (data-model.md §3.2). Вычисляемое: категория (E4-3), грейд — E4-4."""
+    """Анкета кандидата (data-model.md §3.2). Вычисляемое: категория (E4-3), грейд (E4-4)."""
 
     __tablename__ = "candidates"
 
@@ -44,6 +44,14 @@ class Candidate(Base):
     primary_role: Mapped[str | None] = mapped_column(Text, default=None)
     roles: Mapped[list | None] = mapped_column(sa.JSON, default=None)  # [{role, weight}]
     primary_stack: Mapped[list[str] | None] = mapped_column(TextArray, default=None)
+    # грейд (ml.md §5), считает recompute_profile
+    grade: Mapped[str | None] = mapped_column(Text, default=None)
+    grade_score: Mapped[float | None] = mapped_column(sa.Float, default=None)
+    grade_confidence: Mapped[float | None] = mapped_column(sa.Float, default=None)
+    grade_breakdown: Mapped[list | None] = mapped_column(sa.JSON, default=None)
+    grade_next: Mapped[dict | None] = mapped_column(sa.JSON, default=None)  # next_grade + hints
+    experience_months: Mapped[int | None] = mapped_column(default=None)
+    team_signals: Mapped[dict | None] = mapped_column(sa.JSON, default=None)
     # слияние пересчётов (graph.md §4.4)
     recompute_requested_at: Mapped[datetime | None] = mapped_column(
         sa.DateTime(timezone=True), default=None
