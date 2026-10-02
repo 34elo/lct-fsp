@@ -18,6 +18,7 @@
 - `app/models.py` — реестр моделей для Alembic
 - `app/events_stream.py` — SSE `/events/stream`, `UiHub` (очередь `ui.<instance>`, `ui.user.*`); публикация — `fsp_platform.messaging.publish_ui`
 - `app/identity/` — users, refresh-семьи, `/auth/*`, `/me`; зависимости `get_current_user`, `require_roles`
+- `app/consents/` — согласия, `/me/consents`; зависимость `require_consent(type)` → 403 `consent_required`
 - `app/worker.py` — `Worker.consumers[<очередь>].on(type)` + `idempotent()` для обработчиков
 - `app/scheduler.py` — `SCHEDULE` (messaging.md §4)
 - `migrations/` — Alembic (async), `versions/`
