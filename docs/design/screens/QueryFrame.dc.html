@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Кадр запроса</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.qf{font-family:'Onest',system-ui,sans-serif;color:#1B1C21;box-sizing:border-box}
+.qf *{box-sizing:border-box}
+.qf .mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+.qf .chip{display:inline-flex;align-items:center;height:30px;padding:0 12px;border:1px solid #CDC9FF;background:#F4F3FF;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;color:#201880;white-space:nowrap}
+.qf .mk{display:inline-flex;flex-direction:column;align-items:flex-start;vertical-align:top;background:#E6E4FF;border-bottom:2px solid #402FFF;border-radius:3px 3px 0 0;padding:0 3px}
+.qf .mk.d{border-bottom-style:dashed}
+.qf .mk small{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:#201880;line-height:1.4;margin-top:-2px;margin-bottom:2px}
+@keyframes cur{0%,49%{opacity:1}50%,100%{opacity:0}}
+.qf .cur{display:inline-block;width:2px;height:22px;background:#402FFF;vertical-align:-4px;animation:cur 1s steps(1) infinite}
+</style>
+</helmet>
+<div class="qf" style="width: 100%; min-height: 220px; background: #fff; border: 1px solid #E1E1E5; border-radius: 10px; padding: 20px 22px; display: flex; flex-direction: column; gap: 14px">
+<span class="mono" style="font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: #5B5D66">{{caption}}</span>
+<sc-if value="{{f1}}" hint-placeholder-val="{{ true }}">
+<div style="border: 1px solid #402FFF; border-radius: 10px; padding: 16px 18px; font-size: 19px; line-height: 1.5; min-height: 96px">бэкендер на Python, высоконагруженный API, удалёнка, до 220 тыс<span class="cur"></span></div>
+</sc-if>
+<sc-if value="{{f2}}" hint-placeholder-val="{{ false }}">
+<div style="border: 1px solid #C8C9CA; border-radius: 10px; padding: 12px 18px 14px; font-size: 19px; line-height: 2.5; min-height: 96px"><span class="mk">бэкендер<small>Backend</small></span> на <span class="mk">Python<small>Python</small></span>, <span class="mk d">высоконагруженный API<small>highload ~</small></span>, <span class="mk">удалёнка<small>Удалёнка</small></span>, <span class="mk">до 220 тыс<small>до 220 000 ₽</small></span></div>
+</sc-if>
+<sc-if value="{{f3}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 10px; min-height: 96px">
+<div style="font-size: 13px; color: #5B5D66; text-decoration: line-through; text-decoration-color: #C8C9CA">бэкендер на Python, высоконагруженный API, удалёнка, до 220 тыс</div>
+<svg width="100%" height="28" viewBox="0 0 520 28" preserveAspectRatio="none" fill="none" aria-hidden="true"><path d="M4 2V12a8 8 0 0 0 8 8H508a8 8 0 0 0 8-8V2" stroke="#402FFF" stroke-width="1.5" vector-effect="non-scaling-stroke"></path><circle cx="4" cy="3" r="3" fill="#402FFF"></circle><circle cx="516" cy="3" r="3" fill="#EC1D35"></circle></svg>
+<div style="display: flex; gap: 8px; flex-wrap: wrap"><span class="chip">Backend</span><span class="chip">Python</span><span class="chip" style="border-style: dashed; background: #fff">highload ~</span><span class="chip">Удалёнка</span><span class="chip">до 220 000 ₽</span></div>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"frame":{"editor":"int","default":1,"min":1,"max":3},"$preview":{"width":520,"height":240}}'>
+class Component extends DCLogic {
+renderVals() {
+const f = Number(this.props.frame ?? 1);
+const caps = ['Кадр 1 · запрос набран', 'Кадр 2 · слова распознаны', 'Кадр 3 · готовые чипсы'];
+return { f1: f === 1, f2: f === 2, f3: f === 3, caption: caps[f - 1] || caps[0] };
+}
+}
+</script>
+</body>
+</html>
