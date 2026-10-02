@@ -24,7 +24,7 @@ infra/                    compose, Caddy, Prometheus/Grafana, скрипты
 docs/                     документация (карта — docs/README.md)
 ```
 
-Код ещё не создан: структуру создаёт задача E0-1 из [backlog](docs/process/backlog.md).
+Каркас монорепо создан (E0-1): uv workspace, `packages/contracts`, `packages/platform`, `apps/web`. Новый сервис: `make new-service NAME=<имя>` (шаблон `tools/service-template`).
 
 ## Что читать под задачу
 
@@ -88,7 +88,7 @@ docs/                     документация (карта — docs/README.m
 
 ## Команды
 
-Появятся с E0-1. Целевые: `make up`, `make dev-core`, `make lint`, `make test`, `make migrate`, `make seed`, `make demo-reset`, `make eval`, `make api-gen`.
+Уже работают: `make sync`, `make lint`, `make test`, `make new-service`. Целевые остальные: `make up`, `make dev-core`, `make lint`, `make test`, `make migrate`, `make seed`, `make demo-reset`, `make eval`, `make api-gen`.
 Вывод сокращай: `pytest -q`, `docker compose logs --tail 50 <svc>`.
 
 ## Ловушки
