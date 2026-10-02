@@ -21,6 +21,8 @@ from fsp_platform.messaging import (
 from fsp_platform.outbox import OutboxRelay
 
 from app.config import Settings
+from app.graph import handlers as graph_handlers
+from app.graph.trust import TrustConfig
 
 log = structlog.get_logger()
 
@@ -41,6 +43,11 @@ class Worker:
         self.engine = make_engine(self.settings.database_url)
         self.session_factory = make_session_factory(self.engine)
         self.consumers = {name: Consumer(QUEUES[name]) for name in CORE_QUEUES}
+        graph_handlers.register(
+            self.consumers,
+            self.session_factory,
+            TrustConfig.load(self.settings.scoring_config_path or None),
+        )
         self.relay = OutboxRelay(
             self.session_factory,
             lambda env: publish_envelope(self.broker, env),
