@@ -13,6 +13,7 @@ from app.taxonomy import service
 from app.taxonomy.loader import TaxonomyError, load_taxonomy
 from app.taxonomy.models import Skill, SkillAlias, SkillRelation
 from fastapi.testclient import TestClient
+from fsp_contracts.enums import RoleSlug
 from fsp_platform.db import make_engine, make_session_factory, session_scope
 from fsp_platform.outbox import OutboxRecord
 from fsp_platform.ratelimit import RateLimiter
@@ -215,3 +216,14 @@ def test_cli_missing_dir_fails(tmp_path):
         text=True,
     )
     assert r.returncode == 1 and "Ошибка справочника" in r.stderr
+
+
+def test_real_core_data_valid():
+    root = CORE.parents[1] / "data"
+    data = load_taxonomy(root / "taxonomy", root / "fsp" / "discipline_rules.yaml")
+    slugs = {s.slug for s in data.skills}
+    assert 150 <= len(slugs) <= 250
+    assert {r.slug for r in data.roles} == {r.value for r in RoleSlug}
+    # навыки правил дисциплин ФСП присутствуют в ядре
+    assert {s for rules in data.discipline_rules.values() for s, _, _ in rules} <= slugs
+    assert ("java", "javascript") in data.distinct

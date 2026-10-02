@@ -1,0 +1,262 @@
+# Ядро графа навыков ФСП Карьера (E2-1). Формат — services/core/app/taxonomy/loader.py.
+# Источники: теги Stack Overflow (с их синонимами), русские названия и сленг, правила ФСП.
+# Синоним уникален на весь справочник (проверяет загрузчик). Версии («python 3», «postgres 15») снимает нормализация ml.
+skills:
+  # --- Языки программирования ---
+  - {slug: python, name: Python, kind: hard, group: language, testable: true, aliases: [py, питон, пайтон, python3, python 3, cpython]}
+  - {slug: java, name: Java, kind: hard, group: language, testable: true, aliases: [джава, java se, java core, jdk]}
+  - {slug: javascript, name: JavaScript, kind: hard, group: language, testable: true, aliases: [js, джаваскрипт, ecmascript, es6, es2015, ванильный js, vanilla js]}
+  - {slug: typescript, name: TypeScript, kind: hard, group: language, testable: true, aliases: [ts, тайпскрипт, тайпскрипт]}
+  - {slug: cpp, name: "C++", kind: hard, group: language, testable: true, aliases: ["c++", cpp, плюсы, си плюс плюс, "c plus plus", "c++17", "c++20", "c++11", "c++14", "с++"]}
+  - {slug: c, name: C, kind: hard, group: language, testable: true, aliases: [си, "язык c", "язык си", "c language", "ansi c"]}
+  - {slug: csharp, name: "C#", kind: hard, group: language, testable: true, aliases: ["c#", си шарп, шарп, c sharp, csharp, "с#"]}
+  - {slug: go, name: Go, kind: hard, group: language, testable: true, aliases: [golang, го, голанг, go lang, "go-lang"]}
+  - {slug: rust, name: Rust, kind: hard, group: language, aliases: [раст, rust lang]}
+  - {slug: kotlin, name: Kotlin, kind: hard, group: language, aliases: [котлин]}
+  - {slug: swift, name: Swift, kind: hard, group: language, aliases: [свифт]}
+  - {slug: php, name: PHP, kind: hard, group: language, aliases: [пхп, php7, php8]}
+  - {slug: ruby, name: Ruby, kind: hard, group: language, aliases: [руби]}
+  - {slug: scala, name: Scala, kind: hard, group: language, aliases: [скала]}
+  - {slug: dart, name: Dart, kind: hard, group: language, aliases: [дарт]}
+  - {slug: lua, name: Lua, kind: hard, group: language, aliases: [луа]}
+  - {slug: r_lang, name: R, kind: hard, group: language, aliases: [r language, язык r, r lang, rstats]}
+  - {slug: matlab, name: MATLAB, kind: hard, group: language, aliases: [матлаб, matlab simulink]}
+  - {slug: bash, name: Bash, kind: hard, group: language, aliases: [баш, shell, shell scripting, bash scripting, шелл, zsh]}
+  - {slug: powershell, name: PowerShell, kind: hard, group: language, aliases: [повершелл, pwsh]}
+  - {slug: sql, name: SQL, kind: hard, group: storage, testable: true, aliases: [эскюэль, эс кю эль, sql запросы, язык sql, t-sql, pl/sql, ansi sql]}
+  - {slug: assembly, name: Ассемблер, kind: hard, group: language, aliases: [assembler, asm, x86 assembly, ассемблер x86]}
+  - {slug: haskell, name: Haskell, kind: hard, group: language, aliases: [хаскель]}
+  - {slug: elixir, name: Elixir, kind: hard, group: language, aliases: [эликсир]}
+  - {slug: objective-c, name: Objective-C, kind: hard, group: language, aliases: [objc, obj-c, objective c]}
+  - {slug: html, name: HTML, kind: hard, group: frontend, aliases: [html5, хтмл, верстка html]}
+  - {slug: css, name: CSS, kind: hard, group: frontend, aliases: [css3, ксс, каскадные таблицы стилей]}
+  - {slug: 1c, name: "1С", kind: hard, group: language, aliases: [1c, "1с", "1с предприятие", "1c enterprise", 1с:предприятие, программирование 1с]}
+  - {slug: verilog, name: Verilog, kind: hard, group: embedded, aliases: [verilog hdl, system verilog, systemverilog, vhdl]}
+
+  # --- Backend ---
+  - {slug: backend, name: Backend-разработка, kind: domain, group: backend, aliases: [бэкенд, бекенд, бэк, серверная разработка, серверная часть, back-end, backend development, серверное программирование]}
+  - {slug: fastapi, name: FastAPI, kind: hard, group: backend, aliases: [fast api, фастапи, fastapi-users]}
+  - {slug: django, name: Django, kind: hard, group: backend, aliases: [джанго, django framework]}
+  - {slug: drf, name: Django REST Framework, kind: hard, group: backend, aliases: [django rest framework, django-rest-framework, rest framework]}
+  - {slug: flask, name: Flask, kind: hard, group: backend, aliases: [фласк]}
+  - {slug: aiohttp, name: aiohttp, kind: hard, group: backend, aliases: [аиохттп]}
+  - {slug: spring, name: Spring, kind: hard, group: backend, aliases: [спринг, spring framework, spring mvc, spring core]}
+  - {slug: spring-boot, name: Spring Boot, kind: hard, group: backend, aliases: [springboot, спринг бут, spring-boot]}
+  - {slug: hibernate, name: Hibernate, kind: hard, group: backend, aliases: [хибернейт, jpa, jpa hibernate]}
+  - {slug: nodejs, name: Node.js, kind: hard, group: backend, aliases: [node, node js, nodejs, нода, ноде, ноду, node.js]}
+  - {slug: express, name: Express, kind: hard, group: backend, aliases: [expressjs, express.js, express js]}
+  - {slug: nestjs, name: NestJS, kind: hard, group: backend, aliases: [nest.js, nest js, нест]}
+  - {slug: aspnet, name: ASP.NET, kind: hard, group: backend, aliases: [asp.net core, asp net, asp.net mvc, aspnet core, asp.net]}
+  - {slug: dotnet, name: .NET, kind: hard, group: backend, aliases: [dotnet, ".net core", дотнет, net framework, ".net framework", .net 6]}
+  - {slug: laravel, name: Laravel, kind: hard, group: backend, aliases: [ларавель]}
+  - {slug: symfony, name: Symfony, kind: hard, group: backend, aliases: [симфони]}
+  - {slug: rails, name: Ruby on Rails, kind: hard, group: backend, aliases: [ror, ruby on rails, rails framework, рельсы]}
+  - {slug: gin, name: Gin, kind: hard, group: backend, aliases: [gin-gonic, gin gonic, gin framework]}
+  - {slug: rest, name: REST API, kind: hard, group: backend, testable: true, aliases: [rest, restful, restful api, рест, рест апи, rest-api, веб api, web api, http api]}
+  - {slug: graphql, name: GraphQL, kind: hard, group: backend, aliases: [граф кью эль, graph ql, gql]}
+  - {slug: grpc, name: gRPC, kind: hard, group: backend, aliases: [грпс, protobuf, protocol buffers, protobuf grpc]}
+  - {slug: websockets, name: WebSocket, kind: hard, group: backend, aliases: [websocket, веб сокеты, вебсокеты, socket.io, socketio]}
+  - {slug: microservices, name: Микросервисы, kind: domain, group: backend, aliases: [микросервисная архитектура, microservice, microservices architecture, микросервис]}
+  - {slug: system_design, name: Проектирование систем, kind: domain, group: backend, aliases: [system design, проектирование архитектуры, архитектура приложений, software architecture, архитектура по, highload, высоконагруженные системы]}
+  - {slug: celery, name: Celery, kind: hard, group: backend, aliases: [селери, celery worker]}
+  - {slug: sqlalchemy, name: SQLAlchemy, kind: hard, group: backend, aliases: [алхимия, sql alchemy, sqlalchemy orm]}
+  - {slug: pydantic, name: Pydantic, kind: hard, group: backend, aliases: [пидантик]}
+  - {slug: orm, name: ORM, kind: hard, group: backend, aliases: [object relational mapping, орм]}
+  - {slug: oauth, name: OAuth и JWT, kind: hard, group: backend, aliases: [oauth2, oauth 2.0, jwt, json web token, openid connect, oidc, авторизация, аутентификация, auth]}
+
+  # --- Frontend ---
+  - {slug: frontend, name: Frontend-разработка, kind: domain, group: frontend, aliases: [фронтенд, фронт, фронтэнд, front-end, frontend development, клиентская разработка, веб-разработка, web development, верстка]}
+  - {slug: react, name: React, kind: hard, group: frontend, testable: true, aliases: [реакт, reactjs, react.js, react js, react hooks]}
+  - {slug: nextjs, name: Next.js, kind: hard, group: frontend, aliases: [next js, nextjs, некст]}
+  - {slug: vue, name: Vue.js, kind: hard, group: frontend, aliases: [vue, vuejs, vue js, вью, vue 3, vue.js]}
+  - {slug: nuxt, name: Nuxt, kind: hard, group: frontend, aliases: [nuxtjs, nuxt.js, нукст]}
+  - {slug: angular, name: Angular, kind: hard, group: frontend, aliases: [ангуляр, angularjs, angular 2]}
+  - {slug: svelte, name: Svelte, kind: hard, group: frontend, aliases: [свелт, sveltekit]}
+  - {slug: redux, name: Redux, kind: hard, group: frontend, aliases: [редакс, redux toolkit, rtk]}
+  - {slug: jquery, name: jQuery, kind: hard, group: frontend, aliases: [джейквери, жквери]}
+  - {slug: tailwind, name: Tailwind CSS, kind: hard, group: frontend, aliases: [tailwindcss, tailwind css, тейлвинд]}
+  - {slug: sass, name: Sass, kind: hard, group: frontend, aliases: [scss, less]}
+  - {slug: bootstrap, name: Bootstrap, kind: hard, group: frontend, aliases: [бутстрап, twitter bootstrap]}
+  - {slug: webpack, name: Webpack, kind: hard, group: frontend, aliases: [вебпак]}
+  - {slug: vite, name: Vite, kind: hard, group: frontend, aliases: [vitejs]}
+  - {slug: npm, name: npm, kind: hard, group: frontend, aliases: [yarn, pnpm, npm yarn, менеджер пакетов npm]}
+  - {slug: web_performance, name: Производительность веба, kind: domain, group: frontend, aliases: [web performance, оптимизация фронтенда, core web vitals, lighthouse]}
+  - {slug: accessibility, name: Доступность (a11y), kind: domain, group: frontend, aliases: [a11y, доступность интерфейсов, wcag, accessibility a11y]}
+  - {slug: responsive_design, name: Адаптивная верстка, kind: hard, group: frontend, aliases: [адаптивная верстка, responsive, адаптив, mobile first, кроссбраузерная верстка]}
+  - {slug: threejs, name: Three.js, kind: hard, group: frontend, aliases: [three js, three.js, webgl, canvas api]}
+
+  # --- Мобильная разработка ---
+  - {slug: mobile, name: Мобильная разработка, kind: domain, group: mobile, aliases: [мобильная разработка, мобилки, mobile development, мобильные приложения, mobile dev, мобайл]}
+  - {slug: android, name: Android, kind: hard, group: mobile, aliases: [андроид, android sdk, android development, android studio]}
+  - {slug: ios, name: iOS, kind: hard, group: mobile, aliases: [айос, ios development, ios sdk, xcode]}
+  - {slug: swiftui, name: SwiftUI, kind: hard, group: mobile, aliases: [свифт юай, swift ui, uikit]}
+  - {slug: jetpack-compose, name: Jetpack Compose, kind: hard, group: mobile, aliases: [jetpack compose, джетпак компоуз]}
+  - {slug: react-native, name: React Native, kind: hard, group: mobile, aliases: [реакт нейтив, react-native, expo]}
+  - {slug: flutter, name: Flutter, kind: hard, group: mobile, aliases: [флаттер]}
+
+  # --- Хранилища данных ---
+  - {slug: postgresql, name: PostgreSQL, kind: hard, group: storage, testable: true, aliases: [postgres, постгрес, постгресс, pg, psql, постгре, pgsql]}
+  - {slug: mysql, name: MySQL, kind: hard, group: storage, aliases: [мускул, майсиквел, mariadb, мариядб]}
+  - {slug: sqlite, name: SQLite, kind: hard, group: storage, aliases: [эскюлайт, sqlite3]}
+  - {slug: mssql, name: Microsoft SQL Server, kind: hard, group: storage, aliases: [ms sql, mssql, sql server, мс скл, microsoft sql]}
+  - {slug: oracle, name: Oracle Database, kind: hard, group: storage, aliases: [oracle, оракл, oracle db, oracle sql]}
+  - {slug: mongodb, name: MongoDB, kind: hard, group: storage, aliases: [mongo, монго, монгодб]}
+  - {slug: redis, name: Redis, kind: hard, group: storage, aliases: [редис, редиска]}
+  - {slug: elasticsearch, name: Elasticsearch, kind: hard, group: storage, aliases: [elastic, эластик, elk, opensearch, elastic search, эластиксерч]}
+  - {slug: clickhouse, name: ClickHouse, kind: hard, group: storage, aliases: [кликхаус, click house]}
+  - {slug: cassandra, name: Cassandra, kind: hard, group: storage, aliases: [кассандра, apache cassandra, scylladb]}
+  - {slug: neo4j, name: Neo4j, kind: hard, group: storage, aliases: [нео4j, графовая бд, графовые базы данных, graph database]}
+  - {slug: s3, name: S3 и объектные хранилища, kind: hard, group: storage, aliases: [aws s3, minio, миньо, объектное хранилище, s3 storage]}
+  - {slug: pgvector, name: pgvector, kind: hard, group: storage, aliases: [векторная бд, vector database, qdrant, faiss, векторный поиск, milvus]}
+  - {slug: databases, name: Базы данных, kind: domain, group: storage, testable: true, aliases: [бд, субд, реляционные базы данных, rdbms, database design, проектирование баз данных, базы данных, нормализация бд]}
+  - {slug: nosql, name: NoSQL, kind: hard, group: storage, aliases: [нереляционные бд, nosql базы]}
+  - {slug: db_migrations, name: Миграции БД, kind: hard, group: storage, aliases: [alembic, алембик, flyway, liquibase, миграции, database migrations]}
+  - {slug: query_optimization, name: Оптимизация запросов, kind: domain, group: storage, aliases: [sql optimization, оптимизация sql, индексы бд, explain analyze, оптимизация запросов бд]}
+
+  # --- Очереди и потоки ---
+  - {slug: rabbitmq, name: RabbitMQ, kind: hard, group: backend, aliases: [рэббит, кролик, rabbit mq, rabbit, amqp]}
+  - {slug: kafka, name: Apache Kafka, kind: hard, group: backend, aliases: [кафка, apache kafka, kafka streams]}
+  - {slug: message_queues, name: Очереди сообщений, kind: domain, group: backend, aliases: [брокеры сообщений, message broker, очереди, message queue, event driven, event-driven architecture, pub/sub]}
+  - {slug: nginx, name: Nginx, kind: hard, group: devops, aliases: [энджинкс, нгинкс, нжинкс, nginx proxy, reverse proxy]}
+
+  # --- DevOps и инфраструктура ---
+  - {slug: devops, name: DevOps, kind: domain, group: devops, aliases: [девопс, девопс-инженер, sre, site reliability, эксплуатация, sysadmin, сисадмин, системное администрирование]}
+  - {slug: docker, name: Docker, kind: hard, group: devops, testable: true, aliases: [докер, dockerfile, docker compose, docker-compose, контейнеры, docker engine, containerization, контейнеризация]}
+  - {slug: kubernetes, name: Kubernetes, kind: hard, group: devops, testable: true, aliases: [k8s, кубернетес, кубер, k8, helm, хельм]}
+  - {slug: ci_cd, name: CI/CD, kind: hard, group: devops, testable: true, aliases: [ci/cd, cicd, ci cd, непрерывная интеграция, gitlab ci, github actions, jenkins, дженкинс, teamcity, пайплайны, gitlab-ci]}
+  - {slug: terraform, name: Terraform, kind: hard, group: devops, aliases: [терраформ, iac, infrastructure as code, инфраструктура как код, pulumi]}
+  - {slug: ansible, name: Ansible, kind: hard, group: devops, aliases: [ансибл, ansible playbook, chef, puppet, saltstack]}
+  - {slug: linux, name: Linux, kind: hard, group: devops, testable: true, aliases: [линукс, линух, ubuntu, убунту, debian, дебиан, centos, unix, unix/linux, gnu/linux, red hat]}
+  - {slug: aws, name: AWS, kind: hard, group: devops, aliases: [amazon web services, амазон веб сервисы, aws lambda, aws cloud]}
+  - {slug: gcp, name: Google Cloud, kind: hard, group: devops, aliases: [google cloud platform, gcp cloud, bigquery, gke]}
+  - {slug: azure, name: Microsoft Azure, kind: hard, group: devops, aliases: [азюр, azure cloud, azure devops]}
+  - {slug: yandex_cloud, name: Yandex Cloud, kind: hard, group: devops, aliases: [яндекс облако, yandex.cloud, облако яндекс, selectel, vk cloud]}
+  - {slug: cloud, name: Облачные технологии, kind: domain, group: devops, aliases: [облака, cloud computing, cloud infrastructure, облачные сервисы, облачная инфраструктура]}
+  - {slug: prometheus, name: Prometheus, kind: hard, group: devops, aliases: [прометей, promql, victoriametrics]}
+  - {slug: grafana, name: Grafana, kind: hard, group: devops, aliases: [графана, loki, tempo]}
+  - {slug: monitoring, name: Мониторинг и логирование, kind: domain, group: devops, aliases: [мониторинг, observability, наблюдаемость, логирование, logging, алертинг, opentelemetry, otel, sentry, сентри]}
+  - {slug: git, name: Git, kind: hard, group: devops, testable: true, aliases: [гит, github, гитхаб, gitlab, гитлаб, bitbucket, version control, система контроля версий, vcs, git flow, gitflow]}
+  - {slug: networks, name: Сети, kind: domain, group: devops, testable: true, aliases: [компьютерные сети, networking, tcp/ip, tcp ip, сетевые технологии, сетевое администрирование, osi, сетевые протоколы, http, dns, routing, маршрутизация, cisco, vpn]}
+  - {slug: caching, name: Кеширование, kind: domain, group: backend, aliases: [cache, кэширование, кэш, кеш, memcached, мемкеш]}
+  - {slug: load_balancing, name: Балансировка нагрузки, kind: domain, group: devops, aliases: [load balancer, балансировщик, haproxy, хапрокси, масштабирование, scalability]}
+
+  # --- Данные и ML ---
+  - {slug: ml, name: Машинное обучение, kind: domain, group: data_ml, testable: true, aliases: [machine learning, мл, ml engineering, машинное обучение, классический ml, классическое машинное обучение, data science, датасайенс, дата сайенс]}
+  - {slug: deep_learning, name: Глубокое обучение, kind: domain, group: data_ml, aliases: [deep learning, нейросети, нейронные сети, neural networks, глубокое обучение, нейронки]}
+  - {slug: nlp, name: NLP, kind: domain, group: data_ml, aliases: [natural language processing, обработка естественного языка, обработка текстов, обработка языка, компьютерная лингвистика, text mining]}
+  - {slug: computer_vision, name: Компьютерное зрение, kind: domain, group: data_ml, aliases: [computer vision, зрение, обработка изображений, image processing, распознавание образов, object detection, детекция объектов, yolo, segmentation, сегментация]}
+  - {slug: llm, name: LLM и генеративный ИИ, kind: domain, group: data_ml, aliases: [large language models, большие языковые модели, llm, генеративный ии, gen ai, genai, generative ai, gpt, чатгпт, chatgpt, промпт-инжиниринг, prompt engineering, fine-tuning, дообучение, llama, langchain, rag, retrieval augmented generation]}
+  - {slug: recsys, name: Рекомендательные системы, kind: domain, group: data_ml, aliases: [recommender systems, рекомендательные системы, рекомендации, recommendation systems, recsys, collaborative filtering, ранжирование, ranking, learning to rank]}
+  - {slug: reinforcement_learning, name: Обучение с подкреплением, kind: domain, group: data_ml, aliases: [reinforcement learning, rl-агенты, q-learning, обучение с подкреплением]}
+  - {slug: time_series, name: Временные ряды, kind: domain, group: data_ml, aliases: [time series, временные ряды, прогнозирование, forecasting, arima, prophet]}
+  - {slug: pytorch, name: PyTorch, kind: hard, group: data_ml, testable: true, aliases: [торч, пайторч, torch, pytorch lightning]}
+  - {slug: tensorflow, name: TensorFlow, kind: hard, group: data_ml, aliases: [тензорфлоу, keras, керас]}
+  - {slug: scikit-learn, name: scikit-learn, kind: hard, group: data_ml, aliases: [sklearn, сайкит лёрн, scikit learn, склерн, scikit]}
+  - {slug: xgboost, name: Градиентный бустинг, kind: hard, group: data_ml, aliases: [бустинг, gradient boosting, catboost, lightgbm, xgboost, lgbm, градиентный бустинг, градиентный бустинг над деревьями]}
+  - {slug: transformers, name: Hugging Face Transformers, kind: hard, group: data_ml, aliases: [hugging face, huggingface, хаггингфейс, transformers library, bert, берт, трансформеры, attention]}
+  - {slug: opencv, name: OpenCV, kind: hard, group: data_ml, aliases: [опенсв, open cv, cv2]}
+  - {slug: pandas, name: pandas, kind: hard, group: data_ml, testable: true, aliases: [пандас, dataframe, датафрейм, датафреймы]}
+  - {slug: numpy, name: NumPy, kind: hard, group: data_ml, aliases: [нампай, numpy, scipy, сайпай]}
+  - {slug: matplotlib, name: Matplotlib, kind: hard, group: data_ml, aliases: [матплотлиб, seaborn, сиборн, plotly, плотли]}
+  - {slug: jupyter, name: Jupyter, kind: hard, group: data_ml, aliases: [jupyter notebook, юпитер, jupyterlab, ноутбуки, colab, google colab]}
+  - {slug: statistics, name: Статистика, kind: domain, group: data_ml, testable: true, aliases: [статистический анализ, stats, математическая статистика, теория вероятностей, теорвер, статистика и теория вероятностей, statistical analysis, статистические тесты, hypothesis testing, проверка гипотез]}
+  - {slug: ab_testing, name: A/B-тестирование, kind: domain, group: data_ml, aliases: [ab testing, a/b тесты, аб тесты, a/b testing, аб-тестирование, эксперименты, экспериментирование]}
+  - {slug: mlops, name: MLOps, kind: domain, group: data_ml, aliases: [ml ops, mlflow, мл опс, model deployment, деплой моделей, kubeflow, dvc, model serving]}
+  - {slug: feature_engineering, name: Feature engineering, kind: domain, group: data_ml, aliases: [фичеинжиниринг, генерация признаков, feature extraction, инженерия признаков]}
+  - {slug: data_analysis, name: Анализ данных, kind: domain, group: data_ml, testable: true, aliases: [data analysis, аналитика данных, data analytics, дата-аналитика, eda, анализ данных, исследовательский анализ данных]}
+  - {slug: data_visualization, name: Визуализация данных, kind: domain, group: data_ml, aliases: [data visualization, дашборды, dashboards, дашборд, dataviz, визуализация, tableau, табло, power bi, powerbi, пауэр би, superset, metabase, datalens, redash]}
+  - {slug: data_engineering, name: Data Engineering, kind: domain, group: data_ml, aliases: [data engineer, дата-инженерия, инженерия данных, дата инжиниринг, data pipelines, пайплайны данных, data engineering]}
+  - {slug: etl, name: ETL, kind: hard, group: data_ml, aliases: [elt, etl/elt, etl процессы, извлечение преобразование загрузка, data integration]}
+  - {slug: airflow, name: Apache Airflow, kind: hard, group: data_ml, aliases: [эйрфлоу, airflow dag, prefect, dagster, оркестрация]}
+  - {slug: spark, name: Apache Spark, kind: hard, group: data_ml, aliases: [спарк, pyspark, пайспарк, apache spark, spark sql, databricks]}
+  - {slug: hadoop, name: Hadoop, kind: hard, group: data_ml, aliases: [хадуп, hdfs, hive, хайв, mapreduce, hbase, big data, бигдата, большие данные]}
+  - {slug: dbt, name: dbt, kind: hard, group: data_ml, aliases: [data build tool, дбт]}
+  - {slug: dwh, name: Хранилища данных (DWH), kind: domain, group: data_ml, aliases: [dwh, data warehouse, хранилище данных, data lake, озеро данных, data lakehouse, olap, снежинка, star schema, greenplum, гринплам, vertica]}
+  - {slug: web_scraping, name: Парсинг и скрейпинг, kind: hard, group: data_ml, aliases: [парсинг, web scraping, scraping, скрейпинг, beautifulsoup, bs4, scrapy, скрапи, selenium parsing, парсеры, parsing websites]}
+
+  # --- Тестирование ---
+  - {slug: qa, name: Тестирование ПО, kind: domain, group: testing, testable: true, aliases: [тестирование, qa engineer, quality assurance, тестировщик, software testing, контроль качества, ручное тестирование, manual testing, manual qa, qc, тест-дизайн, тест дизайн, тест-кейсы, тест кейсы, test cases]}
+  - {slug: test_automation, name: Автоматизация тестирования, kind: domain, group: testing, aliases: [автотесты, автоматизация тестирования, test automation, qa automation, aqa, sdet, автоматизированное тестирование, авто тесты]}
+  - {slug: pytest, name: pytest, kind: hard, group: testing, aliases: [пайтест, unittest, юнит тесты на python, py.test]}
+  - {slug: unit_testing, name: Юнит-тестирование, kind: domain, group: testing, aliases: [unit tests, юнит-тесты, unit testing, модульное тестирование, tdd, тдд, junit, юнит тесты, mocking]}
+  - {slug: selenium, name: Selenium, kind: hard, group: testing, aliases: [селениум, selenium webdriver, webdriver, selenide]}
+  - {slug: playwright, name: Playwright, kind: hard, group: testing, aliases: [плейрайт, cypress, сайпресс, puppeteer, паппитир, e2e, e2e тесты, end to end testing]}
+  - {slug: api_testing, name: Тестирование API, kind: hard, group: testing, aliases: [postman, постман, swagger, свагер, openapi, api tests, rest assured, тестирование api, soapui]}
+  - {slug: load_testing, name: Нагрузочное тестирование, kind: hard, group: testing, aliases: [jmeter, джиметр, locust, локаст, performance testing, нагрузочные тесты, k6, gatling, стресс-тестирование]}
+  - {slug: bug_tracking, name: Баг-трекинг, kind: hard, group: testing, aliases: [jira, джира, баг-репорты, bug reports, баг репорты, bugzilla, youtrack, ютрек, баг трекер, bug tracker, testrail, allure]}
+
+  # --- Безопасность ---
+  - {slug: security, name: Информационная безопасность, kind: domain, group: security, testable: true, aliases: [иб, кибербезопасность, cybersecurity, infosec, information security, безопасность, appsec, application security, защита информации, security engineering, ctf, цтф, захват флага]}
+  - {slug: pentest, name: Пентест, kind: domain, group: security, aliases: [penetration testing, тестирование на проникновение, pentesting, пен тест, ethical hacking, этичный хакинг, red team, redteam, bug bounty, burp suite, burp, metasploit, nmap, kali linux]}
+  - {slug: web_security, name: Веб-безопасность, kind: domain, group: security, aliases: [web security, owasp, owasp top 10, xss, sql injection, sql-инъекции, csrf, веб безопасность, уязвимости веб-приложений]}
+  - {slug: reverse_engineering, name: Реверс-инжиниринг, kind: domain, group: security, aliases: [reverse engineering, реверс, обратная разработка, ida pro, ghidra, дизассемблирование, disassembly, декомпиляция, debugging binaries]}
+  - {slug: cryptography, name: Криптография, kind: domain, group: security, aliases: [криптография, crypto, шифрование, encryption, tls, ssl, pki, rsa, aes, криптографические протоколы]}
+  - {slug: forensics, name: Криминалистика и форензика, kind: domain, group: security, aliases: [форензика, digital forensics, цифровая криминалистика, forensic, dfir, incident response, реагирование на инциденты, malware analysis, анализ вредоносного по]}
+  - {slug: siem, name: SIEM и SOC, kind: hard, group: security, aliases: [soc, splunk, сплаунк, qradar, ELK siem, security operations, мониторинг безопасности, blue team, bluetream, edr, ids/ips]}
+  - {slug: network_security, name: Сетевая безопасность, kind: domain, group: security, aliases: [network security, firewall, файрвол, межсетевой экран, iptables, waf, защита сетей]}
+
+  # --- Встраиваемые системы, робототехника, БПЛА ---
+  - {slug: embedded, name: Встраиваемые системы, kind: domain, group: embedded, testable: true, aliases: [embedded systems, embedded, встройка, прошивки, firmware, микроконтроллеры, microcontrollers, mcu, программирование микроконтроллеров, rtos, freertos, встраиваемое по, embedded software]}
+  - {slug: stm32, name: STM32, kind: hard, group: embedded, aliases: [stm32cube, hal stm32, arm cortex, cortex-m]}
+  - {slug: arduino, name: Arduino, kind: hard, group: embedded, aliases: [ардуино, arduino ide, esp32, esp8266, ардуинка, raspberry pi, raspberry, распберри, малинка]}
+  - {slug: fpga, name: FPGA, kind: hard, group: embedded, aliases: [пзис, плис, xilinx, vivado, altera, quartus, прошивка fpga]}
+  - {slug: electronics, name: Электроника, kind: domain, group: embedded, aliases: [схемотехника, circuit design, цифровая электроника, analog electronics, аналоговая электроника, pcb, печатные платы, altium, kicad, разводка плат, радиоэлектроника]}
+  - {slug: control_systems, name: Системы управления, kind: domain, group: embedded, aliases: [control theory, теория управления, pid, пид-регулятор, pid controller, автоматическое управление, control systems, simulink, state space, фильтр калмана, kalman filter]}
+  - {slug: ros, name: ROS, kind: hard, group: embedded, aliases: [ros2, ros 2, robot operating system, роботизированная операционная система, gazebo, газебо, rviz, moveit]}
+  - {slug: robotics, name: Робототехника, kind: domain, group: embedded, aliases: [robotics, роботы, робототехника, манипуляторы, mobile robotics, slam, навигация роботов, path planning, планирование траектории]}
+  - {slug: uav, name: БПЛА и дроны, kind: domain, group: embedded, aliases: [дроны, uav, беспилотники, бпла, quadcopter, квадрокоптер, ardupilot, px4, mavlink, мавлинк, мультикоптеры, drone, аэродинамика дронов]}
+  - {slug: iot, name: IoT, kind: domain, group: embedded, aliases: [internet of things, интернет вещей, mqtt, мктт, умный дом, smart home, lorawan, zigbee]}
+  - {slug: protocols, name: Интерфейсы и протоколы, kind: hard, group: embedded, aliases: [i2c, spi, uart, can bus, can, modbus, модбас, rs-485, rs485, шины данных, ethernet protocols]}
+  - {slug: signal_processing, name: Обработка сигналов, kind: domain, group: embedded, aliases: [dsp, цос, цифровая обработка сигналов, digital signal processing, фурье, fft, фильтрация сигналов, sdr, радио]}
+
+  # --- Геймдев ---
+  - {slug: gamedev, name: Разработка игр, kind: domain, group: gamedev, aliases: [game development, game dev, геймдев, игровая разработка, разработка игр, game programming, game design, гейм дизайн, геймдизайн]}
+  - {slug: unity, name: Unity, kind: hard, group: gamedev, aliases: [юнити, unity3d, unity 3d, unity engine, юнити 3д]}
+  - {slug: unreal, name: Unreal Engine, kind: hard, group: gamedev, aliases: [unreal engine, ue4, ue5, анриал, unreal engine 5, анрил, blueprints]}
+  - {slug: godot, name: Godot, kind: hard, group: gamedev, aliases: [годот, gdscript, godot engine]}
+  - {slug: opengl, name: Графическое программирование, kind: hard, group: gamedev, aliases: [opengl, vulkan, вулкан, directx, директикс, шейдеры, shaders, glsl, hlsl, компьютерная графика, computer graphics, рендеринг, rendering, ray tracing, трассировка лучей]}
+  - {slug: game_physics, name: Игровая физика и ИИ, kind: domain, group: gamedev, aliases: [физика в играх, game physics, game ai, игровой ии, pathfinding, поиск пути, a*, ai для игр, behavior trees]}
+  - {slug: modeling_3d, name: 3D-моделирование, kind: hard, group: gamedev, aliases: [blender, блендер, 3d modeling, 3д моделирование, 3d моделирование, maya, 3ds max, cad, автокад, autocad, компас-3d, solidworks, fusion 360]}
+
+  # --- Фундамент: алгоритмы и CS ---
+  - {slug: algorithms, name: Алгоритмы, kind: domain, group: fundamentals, testable: true, aliases: [алгоритмы и структуры данных, алгоритмы и структуры, алго, алгосы, спортивное программирование, competitive programming, олимпиадное программирование, олимпиадное, олимпиады по программированию, icpc, acm icpc, leetcode, литкод, codeforces, кодфорсес, атcoder, atcoder, динамическое программирование, dynamic programming, жадные алгоритмы, поиск в ширину, bfs, dfs, дейкстра, алгоритмы на графах, graph algorithms, сортировки, sorting algorithms, бинарный поиск, complexity analysis, сложность алгоритмов, big o]}
+  - {slug: data_structures, name: Структуры данных, kind: domain, group: fundamentals, testable: true, aliases: [data structures, структуры данных, trees, хеш-таблицы, hash tables, hashmap, heap, стек и очередь, линейные структуры данных, префиксное дерево, trie, дерево отрезков, segment tree, graphs, массивы и списки, связные списки, linked list]}
+  - {slug: math, name: Математика, kind: domain, group: fundamentals, testable: true, aliases: [mathematics, maths, матан, математический анализ, calculus, линейная алгебра, linear algebra, линал, дискретная математика, дискра, discrete mathematics, теория чисел, number theory, комбинаторика, combinatorics, математическая логика, оптимизация, optimization, численные методы, numerical methods, математическое моделирование, теория графов]}
+  - {slug: oop, name: ООП, kind: domain, group: fundamentals, testable: true, aliases: [oop, объектно-ориентированное программирование, объектно ориентированное программирование, object-oriented programming, объектная модель, наследование и полиморфизм, ооп и паттерны]}
+  - {slug: design_patterns, name: Паттерны проектирования, kind: domain, group: fundamentals, aliases: [design patterns, паттерны, gof, паттерны gof, solid, принципы solid, clean architecture, чистая архитектура, ddd, domain-driven design, предметно-ориентированное проектирование, hexagonal architecture, cqrs, event sourcing]}
+  - {slug: operating_systems, name: Операционные системы, kind: domain, group: fundamentals, testable: true, aliases: [ос, операционные системы, operating systems, процессы и потоки, системное программирование, system programming, ядро linux, linux kernel, драйверы, device drivers, syscalls, posix]}
+  - {slug: concurrency, name: Многопоточность и асинхронность, kind: domain, group: fundamentals, testable: true, aliases: [multithreading, многопоточность, параллельное программирование, parallel programming, асинхронное программирование, asyncio, асинкио, async/await, конкурентность, concurrency, goroutines, горутины, потоки и процессы, openmp, mpi, distributed computing, распределённые вычисления, распределенные системы, distributed systems]}
+  - {slug: functional_programming, name: Функциональное программирование, kind: domain, group: fundamentals, aliases: [functional programming, фп, функциональщина, лямбда исчисление, монады, immutability, pure functions]}
+  - {slug: compilers, name: Компиляторы, kind: domain, group: fundamentals, aliases: [compiler design, построение компиляторов, парсеры и лексеры, llvm, лвм, интерпретаторы, interpreters, транслятор, трансляторы, формальные языки, антлр, antlr]}
+  - {slug: refactoring, name: Рефакторинг и чистый код, kind: domain, group: fundamentals, aliases: [clean code, чистый код, code quality, качество кода, code review, кодревью, ревью кода, технический долг, tech debt, лучшие практики, best practices]}
+  - {slug: ide_tools, name: Инструменты разработчика, kind: hard, group: fundamentals, aliases: [vscode, vs code, visual studio code, intellij idea, pycharm, пайчарм, vim, вим, neovim, clion, devtools, отладка, debugging, gdb, дебаггер, профилирование, profiling, valgrind, cmake, makefile, gradle, maven, мавен, пакетный менеджер]}
+  - {slug: cryptocurrency_blockchain, name: Блокчейн, kind: domain, group: fundamentals, aliases: [blockchain, блокчейн, смарт-контракты, smart contracts, solidity, солидити, ethereum, эфириум, web3, веб3, defi, ton, bitcoin, биткоин]}
+  - {slug: xml_json, name: Форматы данных, kind: hard, group: backend, aliases: [json, xml, yaml, ямл, csv, протобаф форматы, сериализация, serialization, форматы данных, парсинг json]}
+  - {slug: regex, name: Регулярные выражения, kind: hard, group: fundamentals, aliases: [regular expressions, регулярки, regexp, регэксп, регулярные выражения]}
+
+  # --- Продукт, аналитика, дизайн ---
+  - {slug: analyst, name: Системный и бизнес-анализ, kind: domain, group: analysis, aliases: [системный анализ, бизнес-анализ, business analysis, системный аналитик, бизнес-аналитик, system analysis, requirements engineering, сбор требований, requirements, анализ требований, user stories, пользовательские истории, use case, юзкейсы, bpmn, uml, диаграммы uml, idef0, моделирование процессов]}
+  - {slug: product_thinking, name: Продуктовое мышление, kind: domain, group: product, aliases: [product thinking, продуктовый подход, продуктовое мышление, product sense, customdev, custdev, кастдев, jobs to be done, jtbd, исследование пользователей, user research, гипотезы, проверка гипотез продукта, unit-экономика, unit economics, unit экономика]}
+  - {slug: product_management, name: Управление продуктом, kind: domain, group: product, aliases: [product management, продакт-менеджмент, продакт менеджер, product manager, продакт, управление продуктом, roadmap, роадмап, дорожная карта, mvp, приоритизация, backlog grooming, rice, ice scoring, метрики продукта, product metrics, воронки, funnel, retention, когортный анализ]}
+  - {slug: project_management, name: Управление проектами, kind: domain, group: product, aliases: [project management, управление проектами, проджект-менеджмент, проджект менеджер, project manager, pmp, delivery, управление рисками, управление сроками, планирование проектов, водопад, waterfall, стейкхолдеры, stakeholder management]}
+  - {slug: agile, name: Agile и Scrum, kind: domain, group: product, aliases: [agile, scrum, скрам, kanban, канбан, аджайл, гибкие методологии, спринты, sprint planning, scrum master, скрам-мастер, scaled agile, extreme programming, ретроспектива, daily standup, стендап]}
+  - {slug: sql_analytics, name: Продуктовая аналитика, kind: domain, group: analysis, aliases: [product analytics, продуктовая аналитика, amplitude, амплитуд, mixpanel, google analytics, яндекс метрика, yandex metrica, appmetrica, веб-аналитика, web analytics, когорты, cohort analysis, аналитика продукта, growth, growth hacking]}
+  - {slug: excel, name: Excel и таблицы, kind: hard, group: analysis, aliases: [excel, эксель, ms excel, microsoft excel, google sheets, гугл таблицы, spreadsheets, электронные таблицы, vba, впа, сводные таблицы, pivot tables, power query, vlookup, впр]}
+  - {slug: ux_design, name: UX-дизайн, kind: domain, group: design, aliases: [ux, ux design, юх, user experience, ux/ui, ux ui, ux-исследования, юзабилити, usability, юзабилити-тестирование, прототипирование, prototyping, user flow, customer journey map, cjm, информационная архитектура, information architecture, wireframes, вайрфреймы, дизайн интерфейсов, проектирование интерфейсов]}
+  - {slug: ui_design, name: UI-дизайн, kind: domain, group: design, aliases: [ui, ui design, юай, user interface, визуальный дизайн, интерфейсный дизайн, веб-дизайн, web design, веб дизайн, дизайн-системы, design systems, дизайн система, ui kit, ui-kit, типографика, typography, motion design, моушен дизайн, анимация интерфейсов]}
+  - {slug: figma, name: Figma, kind: hard, group: design, aliases: [фигма, figma design, sketch, скетч, adobe xd, invision, zeplin, зеплин, auto layout, figjam]}
+  - {slug: adobe_suite, name: Adobe Creative Suite, kind: hard, group: design, aliases: [photoshop, фотошоп, illustrator, иллюстратор, adobe illustrator, adobe photoshop, after effects, афтер эффектс, premiere pro, премьер, indesign, индизайн, lightroom, coreldraw, графический дизайн, graphic design]}
+  - {slug: technical_writing, name: Техническое письмо, kind: domain, group: analysis, aliases: [technical writing, техническая документация, документирование, документация, writing docs, документирование кода, tech writer, технический писатель, technical documentation, confluence, конфлюенс, notion, markdown, маркдаун, latex, латех]}
+
+  # --- Soft skills ---
+  - {slug: teamwork, name: Работа в команде, kind: soft, aliases: [командная работа, team work, teamwork, team player, командный игрок, работа в коллективе, умение работать в команде, коллаборация, collaboration, кооперация, сотрудничество, work in team]}
+  - {slug: communication, name: Коммуникация, kind: soft, aliases: [коммуникабельность, коммуникабельный, коммуникативные навыки, communication skills, умение общаться, общительность, общительный, навыки общения, переговоры, negotiation, soft skills коммуникация, деловое общение, публичные выступления, public speaking, презентации, presentation skills, ораторское искусство]}
+  - {slug: leadership, name: Лидерство, kind: soft, aliases: [лидер, лидерские качества, leadership skills, team lead skills, управление командой, team management, наставничество, mentoring, ментор, менторинг, mentorship, тимлидинг, tech lead, техлид, капитан команды, team captain, руководство командой, people management, лидерство и управление]}
+  - {slug: problem_solving, name: Решение задач, kind: soft, aliases: [problem solving, решение проблем, аналитическое мышление, analytical thinking, логическое мышление, logical thinking, критическое мышление, critical thinking, системное мышление, systems thinking, умение решать задачи, нестандартное мышление, креативность, creativity, креативное мышление, инженерное мышление]}
+  - {slug: self_learning, name: Самообучение, kind: soft, aliases: [self-learning, быстро учусь, быстрообучаемый, обучаемость, готовность учиться, самообразование, self-education, умение учиться, learning agility, любознательность, curiosity, стремление к развитию, саморазвитие, быстро обучаюсь]}
+  - {slug: time_management, name: Тайм-менеджмент, kind: soft, aliases: [time management, тайм менеджмент, управление временем, организованность, self-management, самоорганизация, самодисциплина, ответственность, responsibility, исполнительность, пунктуальность, соблюдение дедлайнов, meeting deadlines, многозадачность, multitasking, расстановка приоритетов, planning skills]}
+  - {slug: stress_resistance, name: Стрессоустойчивость, kind: soft, aliases: [stress resistance, стрессоустойчивый, работа под давлением, work under pressure, устойчивость к стрессу, стрессоустойчивость и работа в режиме многозадачности, адаптивность, adaptability, гибкость, flexibility]}
+  - {slug: english, name: Английский язык, kind: soft, aliases: [english, английский, английский язык, upper-intermediate, intermediate english, чтение технической документации на английском, fluent english, technical english, технический английский, ielts, toefl, спикинг, знание английского]}
+  - {slug: initiative, name: Инициативность, kind: soft, aliases: [инициатива, proactive, проактивность, проактивный, самостоятельность, independence, ownership, владение задачей, ответственность за результат, предприимчивость, entrepreneurship, предпринимательство, startup, hackathons, хакатоны, хакатон, участие в хакатонах]}
+  - {slug: attention_to_detail, name: Внимательность к деталям, kind: soft, aliases: [attention to detail, внимательность, внимание к деталям, аккуратность, педантичность, тщательность, перфекционизм, perfectionism, детальность, scrupulousness]}
+  - {slug: teaching, name: Преподавание, kind: soft, aliases: [teaching, преподавание, обучение других, тренерство, coaching, коучинг, тренер, куратор, curator, ассистент преподавателя, teaching assistant, репетиторство, tutoring, объяснение сложного простым языком, mentor students, наставник студентов]}
