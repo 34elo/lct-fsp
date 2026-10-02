@@ -1,4 +1,4 @@
-"""Обработчики core-worker для графа: `core.recompute` и `taxonomy.updated` (messaging.md §4)."""
+"""Обработчики core-worker для графа: recompute, taxonomy.updated, fsp.* (messaging.md §4)."""
 
 from __future__ import annotations
 
@@ -9,11 +9,16 @@ from datetime import UTC, datetime
 import structlog
 from fsp_contracts import Envelope
 from fsp_contracts.commands import CoreRecompute
-from fsp_contracts.events import TaxonomyUpdated
+from fsp_contracts.events import (
+    FspCompetitionsUpdated,
+    FspLinked,
+    FspResultsImported,
+    TaxonomyUpdated,
+)
 from fsp_platform.messaging import Consumer, idempotent
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from app.graph import service
+from app.graph import fsp_ingest, service
 from app.graph.recompute import recompute_profile
 from app.graph.trust import TrustConfig
 from app.taxonomy.service import SkillGraphCache
@@ -57,3 +62,21 @@ def register(
         ids: list[uuid.UUID] = await service.candidates_by_skills(session, evt.changed_skill_ids)
         for cid in ids:
             await service.request_recompute(session, cid, now)
+
+    # ФСП (fsp.md §6): факты и доказательства из событий fsp-connector
+    @consumers["core.ingest"].on("fsp.linked")
+    @idempotent(session_factory, "graph.fsp_linked")
+    async def on_fsp_linked(envelope: Envelope, session: AsyncSession) -> None:
+        await fsp_ingest.on_linked(session, FspLinked.model_validate(envelope.payload), cfg.fsp)
+
+    @consumers["core.ingest"].on("fsp.competitions.updated")
+    @idempotent(session_factory, "graph.fsp_competitions")
+    async def on_fsp_competitions(envelope: Envelope, session: AsyncSession) -> None:
+        evt = FspCompetitionsUpdated.model_validate(envelope.payload)
+        await fsp_ingest.on_competitions(session, evt, cfg.fsp)
+
+    @consumers["core.ingest"].on("fsp.results.imported")
+    @idempotent(session_factory, "graph.fsp_results")
+    async def on_fsp_results(envelope: Envelope, session: AsyncSession) -> None:
+        evt = FspResultsImported.model_validate(envelope.payload)
+        await fsp_ingest.on_results(session, evt, cfg.fsp)

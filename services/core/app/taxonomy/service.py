@@ -368,3 +368,28 @@ class SkillGraphCache:
             if g is None or g.version != await get_version(session):
                 g = self._graph = await load_skill_graph(session)
             return g
+
+
+@dataclass(frozen=True, slots=True)
+class DisciplineRule:
+    skill_id: uuid.UUID
+    slug: str
+    kind: str
+    weight: float
+    track: str | None
+
+
+async def discipline_rules(session: AsyncSession) -> dict[str, list[DisciplineRule]]:
+    """Правила «дисциплина (+трек) → навык» (fsp.md §5). Отклонённые и слитые навыки пропущены."""
+    rows = await session.execute(
+        select(DisciplineSkillRule, Skill)
+        .join(Skill, Skill.id == DisciplineSkillRule.skill_id)
+        .where(Skill.status.notin_(("merged", "rejected")))
+        .order_by(DisciplineSkillRule.discipline, Skill.slug)
+    )
+    out: dict[str, list[DisciplineRule]] = {}
+    for rule, sk in rows:
+        out.setdefault(rule.discipline, []).append(
+            DisciplineRule(sk.id, sk.slug, sk.kind, rule.weight, rule.track)
+        )
+    return out

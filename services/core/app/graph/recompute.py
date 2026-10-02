@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime
 
 from fsp_contracts import new_envelope
-from fsp_contracts.enums import Grade, RoleSlug
+from fsp_contracts.enums import FspRankCode, Grade, RoleSlug
 from fsp_contracts.events import (
     CategoryChange,
     GradeChange,
@@ -46,6 +46,13 @@ def _utc(dt: datetime) -> datetime:
     return dt.replace(tzinfo=UTC) if dt.tzinfo is None else dt.astimezone(UTC)
 
 
+_RANKS = [r.value for r in FspRankCode]  # по возрастанию: youth_3 … msic
+
+
+def _rank_order(rank: str | None) -> int:
+    return _RANKS.index(rank) if rank in _RANKS else -1
+
+
 def _num(v: object) -> float | None:
     return float(v) if isinstance(v, int | float) and not isinstance(v, bool) else None
 
@@ -68,8 +75,8 @@ def grade_inputs(
         if ev.source == "fsp":
             has_fsp = True
             if ev.fact_type == "fsp_rank":
-                if isinstance(d.get("rank"), str):
-                    rank, rank_ev = d["rank"], ev.id
+                if isinstance(d.get("rank"), str) and _rank_order(d["rank"]) >= _rank_order(rank):
+                    rank, rank_ev = d["rank"], ev.id  # разрядов несколько (по дисциплинам): лучший
             elif isinstance(d.get("level"), str):
                 place = _num(d.get("place"))
                 final = bool(d.get("final")) or d.get("stage") == "final"
