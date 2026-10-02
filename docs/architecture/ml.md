@@ -43,6 +43,10 @@
 - **Промпты** лежат в `services/ml/prompts/<task>/v<N>.j2`, версия попадает в `parser_version` / `analyzer_version` и в ключи кешей. Изменение промпта означает новую версию.
 - У Qwen3 режим размышлений выключен (`enable_thinking=false` в шаблоне или `/no_think`), иначе латентность вырастет в разы.
 
+### 1.4. Заглушки `ML_FAKE=true`
+
+`services/ml` (пакет `fsp_ml`) при `ML_FAKE=true` отвечает фикстурами по контрактам `fsp_contracts.ml`, без GPU и сети: ml-api (`/v1/query/parse`, `/v1/embeddings` на 1024 измерения, `/v1/skills/resolve`, `/healthz`) и оба воркера (`python -m fsp_ml.worker llm|code`) для всех команд `ml.*`. Ответ детерминирован входом, `message_id` результата выводится из `message_id` команды, поэтому повторная доставка безвредна. Сценарии ошибок для фронта: `object_key` с суффиксом `.scanned` → `ml.resume.failed` (`scanned_pdf`), `github_login=not-found` → `ml.code.failed`. При `ML_FAKE=false` до подключения моделей ml-api отвечает 503 `ml_unavailable`. Фикстуры — `services/ml/fixtures/`.
+
 ## 2. Разбор резюме (`ml.parse_resume`)
 
 ```
