@@ -395,7 +395,8 @@ CREATE TABLE vacancies (
   salary_from int NOT NULL, salary_to int NOT NULL CHECK (salary_to >= salary_from),
   description text, status text NOT NULL DEFAULT 'draft',   -- draft | published | closed
   important_qualities text[] NOT NULL DEFAULT '{}',          -- team_signal[]: удваивают α в K_soft (skills.md §8.3)
-  embedding vector(1024), version int NOT NULL DEFAULT 1,
+  embedding vector(1024),                                    -- добавит матчинг (E7-x); в E6-2 колонки нет
+  version int NOT NULL DEFAULT 1,
   created_by uuid REFERENCES users(id), created_at timestamptz DEFAULT now(), published_at timestamptz
 );
 CREATE TABLE vacancy_skills (
