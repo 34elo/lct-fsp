@@ -531,6 +531,7 @@ CREATE TABLE fsp_links (
   last_synced_at  timestamptz,
   sync_cursor     text
 );
+CREATE TABLE fsp_link_conflicts (id bigserial PRIMARY KEY, candidate_id uuid NOT NULL, participant_id text NOT NULL, method text NOT NULL, created_at timestamptz NOT NULL DEFAULT now());  -- попытки привязать занятый ID, для модерации
 CREATE TABLE raw_responses (id bigserial PRIMARY KEY, participant_id text, endpoint text, body jsonb, fetched_at timestamptz DEFAULT now());  -- аудит
 CREATE TABLE webhook_log (event_id text PRIMARY KEY, type text, payload jsonb, received_at timestamptz DEFAULT now(), processed_at timestamptz);
 CREATE TABLE outbox (LIKE core.outbox);         -- та же структура, свой relay

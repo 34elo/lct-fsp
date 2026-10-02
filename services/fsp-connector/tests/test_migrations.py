@@ -21,6 +21,13 @@ def test_upgrade_and_downgrade(tmp_path):
     url = f"sqlite+aiosqlite:///{db}"
     _alembic(url, "upgrade", "head")
     tables = set(inspect(create_engine(f"sqlite:///{db}")).get_table_names())
-    assert {"outbox", "inbox", "fsp_links", "raw_responses", "webhook_log"} <= tables
+    assert {
+        "outbox",
+        "inbox",
+        "fsp_links",
+        "raw_responses",
+        "webhook_log",
+        "fsp_link_conflicts",
+    } <= tables
     _alembic(url, "downgrade", "base")
     assert "fsp_links" not in set(inspect(create_engine(f"sqlite:///{db}")).get_table_names())
