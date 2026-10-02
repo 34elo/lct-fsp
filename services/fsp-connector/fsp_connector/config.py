@@ -22,3 +22,8 @@ class Settings(BaseServiceSettings):
     fsp_breaker_open_seconds: float = 30.0
     # кеш ответов (messaging.md §6)
     fsp_cache_ttl_seconds: int = 600
+    # сервисный токен core-api для /internal/* (security.md §1); пустой = закрыто
+    service_token_core: str = ""
+    # привязка по коду (fsp.md §4)
+    fsp_code_ttl_seconds: int = 600
+    fsp_code_max_attempts: int = 5

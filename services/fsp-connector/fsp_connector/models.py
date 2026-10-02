@@ -32,6 +32,20 @@ class FspLink(Base):
     sync_cursor: Mapped[str | None] = mapped_column(String, default=None)
 
 
+class FspLinkConflict(Base):
+    """Попытка привязать уже занятый participant_id: запись для модерации (fsp.md §4)."""
+
+    __tablename__ = "fsp_link_conflicts"
+
+    id: Mapped[int] = mapped_column(
+        BigInteger().with_variant(Integer(), "sqlite"), primary_key=True, autoincrement=True
+    )
+    candidate_id: Mapped[UUID] = mapped_column()  # кто пытался привязать
+    participant_id: Mapped[str] = mapped_column(String)
+    method: Mapped[str] = mapped_column(String)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+
+
 class RawResponse(Base):
     """Аудит: сырые ответы источника."""
 
