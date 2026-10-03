@@ -286,7 +286,9 @@ async def test_pseudonym_collision_retries(tmp_path, monkeypatch):
     url = f"sqlite+aiosqlite:///{tmp_path / 'p.db'}"
     subprocess.run(  # noqa: ASYNC221
         [sys.executable, "-m", "alembic", "-x", f"url={url}", "upgrade", "head"],
-        cwd=CORE, check=True, capture_output=True,
+        cwd=CORE,
+        check=True,
+        capture_output=True,
     )
     factory = make_session_factory(make_engine(url))
     names = iter(["Candidate #1111", "Candidate #1111", "Candidate #2222"])
@@ -294,8 +296,10 @@ async def test_pseudonym_collision_retries(tmp_path, monkeypatch):
     async with session_scope(factory) as s:
         u1, u2 = uuid.uuid4(), uuid.uuid4()
         s.add_all(
-            [User(id=u, email=f"{u.hex[:6]}@x.io", password_hash="x", role="candidate")
-             for u in (u1, u2)]
+            [
+                User(id=u, email=f"{u.hex[:6]}@x.io", password_hash="x", role="candidate")
+                for u in (u1, u2)
+            ]
         )
         await s.flush()
         a = await service.get_or_create(s, u1, "secret")
