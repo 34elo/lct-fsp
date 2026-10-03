@@ -393,3 +393,32 @@ async def discipline_rules(session: AsyncSession) -> dict[str, list[DisciplineRu
             DisciplineRule(sk.id, sk.slug, sk.kind, rule.weight, rule.track)
         )
     return out
+
+
+async def adjacency(
+    session: AsyncSession, skill_ids: list[uuid.UUID]
+) -> dict[uuid.UUID, list[tuple[uuid.UUID, float]]]:
+    """Смежные навыки (1 шаг, `kind=adjacent`) для каждого из `skill_ids`, только живые."""
+    out: dict[uuid.UUID, list[tuple[uuid.UUID, float]]] = {i: [] for i in skill_ids}
+    if not skill_ids:
+        return out
+    stmt = (
+        select(SkillRelation.skill_a, SkillRelation.skill_b, SkillRelation.weight)
+        .join(Skill, Skill.id == SkillRelation.skill_b)
+        .where(
+            SkillRelation.kind == "adjacent",
+            SkillRelation.skill_a.in_(skill_ids),
+            Skill.status.in_(_LIVE),
+        )
+        .order_by(SkillRelation.skill_a, SkillRelation.skill_b)
+    )
+    for a, b, w in (await session.execute(stmt)).all():
+        out[a].append((b, w))
+    return out
+
+
+async def skill_names(session: AsyncSession, skill_ids: list[uuid.UUID]) -> dict[uuid.UUID, str]:
+    if not skill_ids:
+        return {}
+    rows = await session.execute(select(Skill.id, Skill.name).where(Skill.id.in_(skill_ids)))
+    return {sid: name for sid, name in rows.all()}
