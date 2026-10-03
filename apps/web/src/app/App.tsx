@@ -6,6 +6,7 @@ import { ROUTES, SECTION_ROLE } from "@/app/routes";
 import Consents from "@/pages/Consents";
 import Login from "@/pages/Login";
 import MagicLogin from "@/pages/MagicLogin";
+import Onboarding from "@/pages/Onboarding";
 import NotFound from "@/pages/NotFound";
 import Register from "@/pages/Register";
 import { Stub } from "@/pages/Stub";
@@ -17,7 +18,7 @@ const EmployerLayout = lazy(() => import("@/app/layouts/EmployerLayout"));
 const AdminLayout = lazy(() => import("@/app/layouts/AdminLayout"));
 
 // Эти пути уже реализованы настоящими страницами (E1-4).
-const IMPLEMENTED = new Set(["/login", "/register", "/auth/magic", "/consents"]);
+const IMPLEMENTED = new Set(["/login", "/register", "/auth/magic", "/consents", "/onboarding"]);
 
 const stubs = (section: string) =>
   ROUTES.filter((r) => r.section === section && !IMPLEMENTED.has(r.path)).map((r) => (
@@ -27,7 +28,10 @@ const stubs = (section: string) =>
 function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentType) {
   return (
     <Route element={<RequireRole role={SECTION_ROLE[section]!} />}>
-      <Route element={<Layout />}>{stubs(section)}</Route>
+      <Route element={<Layout />}>
+        {stubs(section)}
+        {section === "candidate" && <Route path="/onboarding" element={<Onboarding />} />}
+      </Route>
     </Route>
   );
 }

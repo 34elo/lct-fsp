@@ -26,6 +26,7 @@ import type {
 import type {
   CandidateProfile,
   HTTPValidationError,
+  MyViewsCandidatesMeViewsGet200,
   PreferencesIn,
   StoplistIO,
   VisibilityIn
@@ -484,3 +485,116 @@ export const usePutStoplistCandidatesMeStoplistPut = <TError = ErrorType<HTTPVal
       > => {
       return useMutation(getPutStoplistCandidatesMeStoplistPutMutationOptions(options), queryClient);
     }
+    export type myViewsCandidatesMeViewsGetResponse200 = {
+  data: MyViewsCandidatesMeViewsGet200
+  status: 200
+}
+
+export type myViewsCandidatesMeViewsGetResponseSuccess = (myViewsCandidatesMeViewsGetResponse200) & {
+  headers: Headers;
+};
+;
+
+export type myViewsCandidatesMeViewsGetResponse = (myViewsCandidatesMeViewsGetResponseSuccess)
+
+export const getMyViewsCandidatesMeViewsGetUrl = () => {
+
+
+
+
+  return `/candidates/me/views`
+}
+
+/**
+ * «Вас смотрели N компаний» — только агрегаты, без названий (security.md §3).
+ * @summary My Views
+ */
+export const myViewsCandidatesMeViewsGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<myViewsCandidatesMeViewsGetResponse> => {
+
+  return apiFetch<myViewsCandidatesMeViewsGetResponse>(getMyViewsCandidatesMeViewsGetUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getMyViewsCandidatesMeViewsGetQueryKey = () => {
+    return [
+    `/candidates/me/views`
+    ] as const;
+    }
+
+
+export const getMyViewsCandidatesMeViewsGetQueryOptions = <TData = Awaited<ReturnType<typeof myViewsCandidatesMeViewsGet>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myViewsCandidatesMeViewsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMyViewsCandidatesMeViewsGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof myViewsCandidatesMeViewsGet>>> = ({ signal }) => myViewsCandidatesMeViewsGet({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof myViewsCandidatesMeViewsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type MyViewsCandidatesMeViewsGetQueryResult = NonNullable<Awaited<ReturnType<typeof myViewsCandidatesMeViewsGet>>>
+export type MyViewsCandidatesMeViewsGetQueryError = ErrorType<unknown>
+
+
+export function useMyViewsCandidatesMeViewsGet<TData = Awaited<ReturnType<typeof myViewsCandidatesMeViewsGet>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof myViewsCandidatesMeViewsGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof myViewsCandidatesMeViewsGet>>,
+          TError,
+          Awaited<ReturnType<typeof myViewsCandidatesMeViewsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMyViewsCandidatesMeViewsGet<TData = Awaited<ReturnType<typeof myViewsCandidatesMeViewsGet>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myViewsCandidatesMeViewsGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof myViewsCandidatesMeViewsGet>>,
+          TError,
+          Awaited<ReturnType<typeof myViewsCandidatesMeViewsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMyViewsCandidatesMeViewsGet<TData = Awaited<ReturnType<typeof myViewsCandidatesMeViewsGet>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myViewsCandidatesMeViewsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary My Views
+ */
+
+export function useMyViewsCandidatesMeViewsGet<TData = Awaited<ReturnType<typeof myViewsCandidatesMeViewsGet>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myViewsCandidatesMeViewsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMyViewsCandidatesMeViewsGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
