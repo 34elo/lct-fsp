@@ -28,6 +28,7 @@ from app.graph.embedding import MlEmbedder
 from app.graph.trust import TrustConfig
 from app.matching import handlers as matching_handlers
 from app.matching.scoring import MatchConfig
+from app.notifications import handlers as notification_handlers
 from app.resumes import handlers as resume_handlers
 
 log = structlog.get_logger()
@@ -74,6 +75,9 @@ class Worker:
             trust,
         )
         resume_handlers.register(
+            self.consumers, self.session_factory, lambda m: publish_ui(self.broker, m)
+        )
+        notification_handlers.register(
             self.consumers, self.session_factory, lambda m: publish_ui(self.broker, m)
         )
         self.relay = OutboxRelay(
