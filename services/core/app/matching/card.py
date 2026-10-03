@@ -357,7 +357,7 @@ class OwnerFsp(BaseModel):
 
 
 async def owner_fsp(session: AsyncSession, c: Candidate) -> OwnerFsp | None:
-    """Достижения и разряды ФСП владельца (факт с несколькими навыками схлопывается по `fact_id`)."""
+    """Достижения и разряды ФСП владельца; факт с несколькими навыками схлопывается."""
     achievements: dict[str, FspAchievement] = {}
     ranks: dict[str, FspRankBrief] = {}
     verified = False
