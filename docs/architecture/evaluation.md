@@ -57,6 +57,8 @@
 ### 3.5. Воспроизводимость
 `SEED`, параметры в `tools/synth/config.yaml`. Разбиение на `dev` (настройка весов) и `test` (итоговые цифры) по разным seed'ам. Параметры генератора выводятся на страницу качества.
 
+`make synth SPLIT=dev|test` → `reports/synth/<split>/`: `candidates.jsonl` (у кандидата `truth` — скрытое, только для метрик, и `observed` — то, что видит продукт), `vacancies.jsonl`, `employers.jsonl`, `competitions.jsonl`, `relevance.jsonl` (ненулевые `rel`), `item_bank.json`, `meta.json` (seed, хеш и параметры). Из кода — `generate_market()`, `relevance()`, `simulate_session()` в `tools/synth/synth.py`. Банка вопросов в `data/` пока нет: параметры 3PL генерируются заглушкой по навыкам с `testable: true`.
+
 ## 4. Демо-витрина (`tools/seed`)
 
 | Сущность | Объём | Детали |
