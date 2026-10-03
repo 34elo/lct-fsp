@@ -12,7 +12,7 @@
 - `fsp_bot/sender.py` — `notify.telegram` → сообщение: лимиты, `edit_of` (ключ → message_id в Redis `bot:msg:*`), RetryAfter, дедуп по `message_id` (`bot:sent:*`)
 - `fsp_bot/limiter.py` — token bucket 25/с глобально и 1/с на чат
 - `fsp_bot/core_client.py` — httpx-клиент core с `Authorization: Service <SERVICE_TOKEN_BOT>`
-- `fsp_bot/handlers.py` — `/start`, согласия (`c:ok`/`c:no`); остальные сценарии — E9-2 и далее
+- `fsp_bot/handlers.py` — `/start`, согласия (`c:ok`/`c:no`), меню, резюме файлом (сигнатура и 10 МБ в боте и в core, опрос статуса, `r:ok:<id>`), профиль; остальное — E9-3 и далее
 - `fsp_bot/templates/` — HTML-шаблоны по `TgTemplate`, клавиатуры; `fsp_bot/states.py` — FSM
 
 ## Правила
