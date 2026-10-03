@@ -226,7 +226,7 @@ CREATE TABLE rec_feedback (
 |---|---|
 | `GET /vacancies/{id}/matches` | Подборка; пишет `impressions`, возвращает `session_id` |
 | `POST /search/candidates` | Поиск; пишет `impressions`, возвращает `session_id` |
-| `GET /candidates/{pseudo_id}/similar` | Похожие кандидаты |
+| `GET /candidates/{pseudo_id}/similar?limit=` | Похожие: `{items: [CandidateCard + similarity, common_skills[]], session_id}`; `sim = 0.7·J + 0.3·cos⁺` (J — взвешенный Жаккар навыков по доверию без `claimed_only`; нет вектора — только J); пишет показы (`context_type=similar`); скрытый/несуществующий — 404 |
 | `POST /recs/feedback` | `{session_id, candidate_pseudo_id, event, reason?}` |
 | `GET /recs/sessions/{id}` / `DELETE /recs/sessions/{id}` | Учтённые подстройки (для чипсов «Учли: …») / сброс |
 | `GET /candidates/me/uplift` | `{relevant_total, base, items: [{skill, current_level, extra, pct, median_salary_delta, how_to_confirm[]}], combo: {skills[], extra, pct}}` |
