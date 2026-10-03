@@ -6,6 +6,7 @@ import uuid
 from datetime import datetime
 from typing import Any
 
+import structlog
 from fastapi import APIRouter, Depends, Header, Response
 from fsp_contracts.enums import (
     DeclineReason,
@@ -17,12 +18,13 @@ from fsp_contracts.enums import (
 )
 from fsp_contracts.ml import ExplanationItem
 from fsp_platform.app import ProblemError
+from fsp_platform.ratelimit import RateLimiter
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.candidates import service as candidates
 from app.companies import service as companies
-from app.deps import get_session
+from app.deps import get_limiter, get_session
 from app.graph.trust import TrustConfig
 from app.identity.deps import require_roles
 from app.identity.models import User
@@ -30,10 +32,12 @@ from app.matching import card
 from app.matching.scoring import MatchConfig
 from app.matching.search import CandidateCard
 from app.offers import service
-from app.offers.models import Offer
+from app.offers.models import Offer, OfferMessage
+from app.telegram import service as telegram
 from app.vacancies import service as vacancies
 
 router = APIRouter(tags=["offers"])
+log = structlog.get_logger()
 
 _employer = require_roles("employer")
 _candidate = require_roles("candidate")
@@ -114,8 +118,45 @@ class OfferForCandidate(OfferOut):
     company: CompanyBrief
 
 
+class Contacts(BaseModel):
+    name: str
+    email: str | None = None
+    phone: str | None = None
+    telegram: str | None = None
+
+
 class OfferForCompany(OfferOut):
     candidate: CandidateCard | None = None
+    contacts: Contacts | None = None  # только после accepted, см. GET /offers/{id}/contacts
+
+
+class MessageIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    text: str = Field(min_length=1, max_length=2000)
+
+
+class MessageOut(BaseModel):
+    id: uuid.UUID
+    author_side: str
+    text: str
+    created_at: datetime
+    channel: str | None = None
+
+
+class ComplaintIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    reason: str = Field(min_length=1, max_length=40)
+    comment: str | None = Field(default=None, max_length=2000)
+
+
+class ComplaintOut(BaseModel):
+    id: uuid.UUID
+    offer_id: uuid.UUID
+    reason: str
+    status: str
+    created_at: datetime
 
 
 async def _base(session: AsyncSession, o: Offer) -> dict[str, Any]:
@@ -212,7 +253,10 @@ async def get_offer(
         return await for_candidate(session, offer)
     company, _ = await companies.require_company(session, user.id)
     offer = await service.get_for_company(session, company.id, offer_id)
-    return await for_company(session, offer)
+    out = await for_company(session, offer)
+    if offer.status in service.REVEALED and await service.is_revealed(session, offer):
+        out.contacts = await _contacts(session, offer, user)
+    return out
 
 
 @router.post("/offers/{offer_id}/accept", response_model=OfferForCandidate)
@@ -255,3 +299,76 @@ async def set_offer_status(
     offer = await service.get_for_company(session, company.id, offer_id, lock=True)
     await service.set_status(session, offer, body.status)
     return await for_company(session, offer)
+
+
+async def _contacts(session: AsyncSession, offer: Offer, viewer: User) -> Contacts:
+    """Контакты кандидата. Источник пока — учётная запись и привязанный Telegram (анкета не хранит
+    `full_name_enc`/`contacts_enc`), имя — псевдоним. Аудит без ПДн: кто, какой оффер."""
+    assert offer.candidate_id is not None
+    cand = await candidates.get(session, offer.candidate_id)
+    u = await session.get(User, offer.candidate_id)
+    tg = await telegram.account_of_user(session, offer.candidate_id)
+    log.info("contacts.viewed", offer_id=str(offer.id), company_id=str(offer.company_id),
+             viewer_user_id=str(viewer.id))  # fmt: skip
+    return Contacts(
+        name=cand.pseudonym if cand else "Кандидат",
+        email=u.email if u else None,
+        telegram=f"@{tg.username}" if tg and tg.username else None,
+    )
+
+
+@router.get("/offers/{offer_id}/contacts", response_model=Contacts)
+async def offer_contacts(
+    offer_id: uuid.UUID, user: User = Depends(_employer),
+    session: AsyncSession = Depends(get_session),
+) -> Any:  # fmt: skip
+    company, _ = await companies.require_company(session, user.id)
+    offer = await service.get_for_company(session, company.id, offer_id)
+    await service.require_revealed(session, offer)
+    return await _contacts(session, offer, user)
+
+
+async def _side_offer(
+    session: AsyncSession, user: User, offer_id: uuid.UUID, *, lock: bool = False
+) -> tuple[Offer, str]:  # fmt: skip
+    if user.role == "candidate":
+        return await service.get_for_candidate(session, user.id, offer_id, lock=lock), "candidate"
+    company, _ = await companies.require_company(session, user.id)
+    return await service.get_for_company(session, company.id, offer_id, lock=lock), "company"
+
+
+def _msg(m: OfferMessage) -> MessageOut:
+    return MessageOut.model_validate(m, from_attributes=True)
+
+
+@router.get("/offers/{offer_id}/messages", response_model=list[MessageOut])
+async def list_messages(
+    offer_id: uuid.UUID, user: User = Depends(_both), session: AsyncSession = Depends(get_session)
+) -> Any:
+    offer, _ = await _side_offer(session, user, offer_id)
+    return [_msg(m) for m in await service.list_messages(session, offer)]
+
+
+@router.post("/offers/{offer_id}/messages", response_model=MessageOut, status_code=201)
+async def post_message(
+    offer_id: uuid.UUID, body: MessageIn, user: User = Depends(_both),
+    session: AsyncSession = Depends(get_session),
+    limiter: RateLimiter = Depends(get_limiter),
+) -> Any:  # fmt: skip
+    offer, side = await _side_offer(session, user, offer_id, lock=True)
+    await limiter.check(f"offer_msg:{offer.id}:{user.id}", service.MESSAGES_PER_HOUR, 3600)
+    return _msg(
+        await service.add_message(session, offer, side=side, user_id=user.id, text=body.text)
+    )
+
+
+@router.post("/offers/{offer_id}/complaint", response_model=ComplaintOut, status_code=201)
+async def complain(
+    offer_id: uuid.UUID, body: ComplaintIn, user: User = Depends(_candidate),
+    session: AsyncSession = Depends(get_session),
+) -> Any:  # fmt: skip
+    offer = await service.get_for_candidate(session, user.id, offer_id)
+    row = await service.add_complaint(
+        session, offer, user_id=user.id, reason=body.reason, comment=body.comment
+    )
+    return ComplaintOut.model_validate(row, from_attributes=True)

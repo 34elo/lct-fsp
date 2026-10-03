@@ -65,3 +65,52 @@ class OfferEvent(Base):
     created_at: Mapped[datetime] = mapped_column(
         sa.DateTime(timezone=True), default=utcnow, server_default=sa.func.now()
     )
+
+
+class OfferMessage(Base):
+    """Сообщение в переписке по офферу (`author_side`: candidate | company)."""
+
+    __tablename__ = "offer_messages"
+    __table_args__ = (sa.Index("ix_offer_messages_offer_created", "offer_id", "created_at"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    offer_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("offers.id", ondelete="CASCADE"))
+    author_side: Mapped[str] = mapped_column(Text)
+    author_user_id: Mapped[uuid.UUID | None] = mapped_column(default=None)
+    text: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), default=utcnow, server_default=sa.func.now()
+    )
+    channel: Mapped[str | None] = mapped_column(Text, default=None)  # web | telegram
+
+
+class ContactReveal(Base):
+    """Факт раскрытия контактов; одна строка на оффер, создаётся при `accepted`."""
+
+    __tablename__ = "contact_reveals"
+
+    offer_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("offers.id"), primary_key=True)
+    candidate_id: Mapped[uuid.UUID | None] = mapped_column(default=None)
+    company_id: Mapped[uuid.UUID | None] = mapped_column(default=None)
+    revealed_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), default=utcnow, server_default=sa.func.now()
+    )
+
+
+class Complaint(Base):
+    """Жалоба кандидата на оффер/компанию; разбирает админ (E12)."""
+
+    __tablename__ = "complaints"
+    __table_args__ = (
+        sa.UniqueConstraint("offer_id", "reporter_user_id", name="uq_complaints_offer_reporter"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    offer_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("offers.id"))
+    reporter_user_id: Mapped[uuid.UUID] = mapped_column()
+    reason: Mapped[str] = mapped_column(Text)
+    comment: Mapped[str | None] = mapped_column(Text, default=None)
+    status: Mapped[str] = mapped_column(Text, default="open", server_default="open")
+    created_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), default=utcnow, server_default=sa.func.now()
+    )
