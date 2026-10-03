@@ -4,13 +4,17 @@
  * core
  * OpenAPI spec version: 0.1.0
  */
+import type { Category } from './category';
 import type { ExperienceItem } from './experienceItem';
+import type { GradeInfo } from './gradeInfo';
 import type { Preferences } from './preferences';
 import type { SearchStatus } from './searchStatus';
+import type { SkillWithTrust } from './skillWithTrust';
+import type { TeamSignal } from './teamSignal';
 import type { Visibility } from './visibility';
 
 /**
- * Заготовка `CandidateProfile` (api.md §3): поля движка доверия добавят E3-2…E4-x.
+ * `CandidateProfile` (api.md §3). Пока без `fsp`, `code`, `completeness`.
  */
 export interface CandidateProfile {
   pseudonym: string;
@@ -19,12 +23,10 @@ export interface CandidateProfile {
   active_until: string | null;
   preferences: Preferences;
   visibility: Visibility;
-  /** @nullable */
-  category?: null;
-  /** @nullable */
-  grade?: null;
-  skills?: unknown[];
-  team_signals?: unknown[];
+  category?: Category | null;
+  grade: GradeInfo;
+  skills?: SkillWithTrust[];
+  team_signals?: TeamSignal[];
   claimed_soft?: string[];
   experience?: ExperienceItem[];
 }
