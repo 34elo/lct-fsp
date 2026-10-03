@@ -20,6 +20,7 @@ from app.graph.trust import EvidenceView, TrustConfig, effective_strength
 from app.matching import search
 from app.matching.scoring import MatchConfig
 from app.matching.service import build_views, load_vacancy
+from app.offers import service as offers
 from app.resumes import service as resumes
 from app.taxonomy import service as taxonomy
 
@@ -165,6 +166,7 @@ async def build_card(
     vacancy_id: uuid.UUID | None,
     cfg: MatchConfig,
     trust: TrustConfig,
+    company_id: uuid.UUID | None = None,
     today: date | None = None,
 ) -> CandidateCardFull:
     day = today or datetime.now(UTC).date()
@@ -219,5 +221,7 @@ async def build_card(
         skills=skills,
         grade_info=_grade_info(c),
         experience=experience,
-        offers_from_you=[],  # офферы — E8-1
+        offers_from_you=(
+            await offers.briefs_for(session, company_id, c.user_id) if company_id else []
+        ),
     )

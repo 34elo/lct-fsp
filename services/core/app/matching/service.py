@@ -348,3 +348,11 @@ async def request_match_candidate(
 ) -> None:
     cmd = CoreMatchCandidate(candidate_id=candidate_id, profile_version=profile_version)
     await add_to_outbox(session, new_envelope("core.match.candidate", "core", cmd), candidate_id)
+
+
+async def snapshot(
+    session: AsyncSession, vacancy_id: uuid.UUID, candidate_id: uuid.UUID
+) -> dict | None:
+    """`{score, explanation}` подборки на сейчас — для `offers.match_snapshot`."""
+    m = await session.get(Match, (vacancy_id, candidate_id))
+    return None if m is None else {"score": m.score, "explanation": m.explanation}
