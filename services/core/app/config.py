@@ -22,3 +22,8 @@ class Settings(BaseServiceSettings):
     web_base_url: str = "http://localhost:5173"
     # data/scoring.yaml (доверие, грейд, матчинг); пусто — файл из корня репозитория
     scoring_config_path: str = ""
+    # ml-api (api.md §2.10): эмбеддинг профиля; пусто — эмбеддинги не считаются
+    ml_api_url: str = ""
+    embed_model: str = "BAAI/bge-m3"
+    embed_dim: int = 1024
+    embed_timeout_seconds: float = 10.0

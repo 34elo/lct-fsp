@@ -12,6 +12,7 @@ import uuid
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 
+import structlog
 from fsp_contracts import new_envelope
 from fsp_contracts.enums import FspRankCode, Grade, RoleSlug
 from fsp_contracts.events import (
@@ -27,12 +28,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.candidates.models import Candidate
 from app.graph.category import SkillConf, category_for
+from app.graph.embedding import (
+    Embedder,
+    EmbeddingError,
+    SkillLine,
+    build_profile_text,
+    text_sha,
+)
 from app.graph.grade import FspResult, GradeInputs, compute_grade
 from app.graph.models import CandidateSkill, Evidence
 from app.graph.team_signals import FspPerformance, RepoFact, compute_team_signals
 from app.graph.trust import EvidenceView, SkillTrust, TrustConfig, combine, inherit
 from app.taxonomy.models import Skill
 from app.taxonomy.service import SkillGraph
+
+log = structlog.get_logger()
 
 
 @dataclass(frozen=True, slots=True)
@@ -159,6 +169,36 @@ def team_facts(
     return list(perfs.values()), list(repos.values())
 
 
+async def _refresh_embedding(
+    cand: Candidate, skills: list[SkillLine], embedder: Embedder | None
+) -> None:
+    """`profile_text` из графа; вектор пересчитывается, только если sha текста изменился.
+
+    Сбой ml-api не валит пересчёт: текст сохраняется, вектор остаётся прежним, sha не
+    обновляется, поэтому следующий пересчёт повторит попытку.
+    """
+    text = build_profile_text(
+        primary_role=cand.primary_role,
+        roles=[(r["role"], r["weight"]) for r in cand.roles or []],
+        grade=cand.grade,
+        experience_months=cand.experience_months,
+        skills=skills,
+    )
+    cand.profile_text = text or None
+    if not text:
+        cand.embedding = cand.embedding_model = cand.profile_text_sha = None
+        return
+    sha = text_sha(text)
+    if embedder is None or (sha == cand.profile_text_sha and cand.embedding is not None):
+        return
+    try:
+        emb = await embedder.embed_passage(text)
+    except EmbeddingError as exc:
+        log.warning("embedding_failed", candidate_id=str(cand.user_id), error=str(exc))
+        return
+    cand.embedding, cand.embedding_model, cand.profile_text_sha = emb.vector, emb.model, sha
+
+
 async def recompute_profile(
     session: AsyncSession,
     candidate_id: uuid.UUID,
@@ -167,6 +207,7 @@ async def recompute_profile(
     graph: SkillGraph | None = None,
     *,
     now: datetime | None = None,
+    embedder: Embedder | None = None,
 ) -> RecomputeResult:
     now = _utc(now or datetime.now(UTC))
     cand = await session.get(Candidate, candidate_id, with_for_update=True)
@@ -334,6 +375,15 @@ async def recompute_profile(
             cand.grade_next,
         ) = new_grade
         changed = True
+
+    await _refresh_embedding(
+        cand,
+        [
+            SkillLine(slugs[sid], t.level, t.confidence, t.claimed_only)
+            for sid, (t, _) in entries.items()
+        ],
+        embedder,
+    )
 
     cand.recomputed_at = now
     if changed:

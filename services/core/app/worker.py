@@ -8,6 +8,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 
+import redis.asyncio
 import structlog
 from fsp_platform.db import make_engine, make_session_factory
 from fsp_platform.logging import configure_logging
@@ -23,6 +24,7 @@ from fsp_platform.outbox import OutboxRelay
 
 from app.config import Settings
 from app.graph import handlers as graph_handlers
+from app.graph.embedding import MlEmbedder
 from app.graph.trust import TrustConfig
 from app.resumes import handlers as resume_handlers
 
@@ -45,10 +47,22 @@ class Worker:
         self.engine = make_engine(self.settings.database_url)
         self.session_factory = make_session_factory(self.engine)
         self.consumers = {name: Consumer(QUEUES[name]) for name in CORE_QUEUES}
+        self.embedder = (
+            MlEmbedder(
+                self.settings.ml_api_url,
+                model=self.settings.embed_model,
+                dim=self.settings.embed_dim,
+                timeout=self.settings.embed_timeout_seconds,
+                redis=redis.asyncio.from_url(self.settings.redis_url),
+            )
+            if self.settings.ml_api_url
+            else None
+        )
         graph_handlers.register(
             self.consumers,
             self.session_factory,
             TrustConfig.load(self.settings.scoring_config_path or None),
+            embedder=self.embedder,
         )
         resume_handlers.register(
             self.consumers, self.session_factory, lambda m: publish_ui(self.broker, m)
@@ -75,6 +89,8 @@ class Worker:
             with contextlib.suppress(asyncio.CancelledError):
                 await self._relay_task
         await self.broker.stop()
+        if self.embedder is not None:
+            await self.embedder.aclose()
         await self.engine.dispose()
 
 
