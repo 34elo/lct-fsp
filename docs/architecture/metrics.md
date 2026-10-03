@@ -123,6 +123,9 @@ CREATE INDEX ON analytics_events (run_id) WHERE run_id IS NOT NULL;
 ```
 
 - Отдельная схема `analytics` в базе core: та же база, другие права. Пишет только core-worker и `/track`.
+- **Как сделано (E18-1):** пока таблица `analytics_events` лежит в основной схеме базы core (отдельную схему `analytics` и права не вводили). Партиции по месяцам: миграция 0022 создаёт предыдущий, текущий и два следующих месяца, дальше `analytics.service.ensure_partition` создаёт партицию месяца при записи, отдельной cron-команды нет. В SQLite (тесты) таблица без партиций.
+- **Серверные события** (`services/core/app/analytics/mapper.py`): `candidate.registered`, `resume.confirmed`, `ml.resume.completed|failed`, `fsp.linked`, `ml.code.*`, `skills.profile.updated`, `ml.interview.graded`, `offer.sent|viewed|accepted|declined|message`, `vacancy.published`, `matches.ready`. Остальные события трекинг-плана (согласия, тесты, поиск и др.) подключаются, когда соответствующий модуль публикует доменное событие или `/track`. Свойств, которых нет в доменном событии (например `duration_ms`, `time_to_respond_s`), в `props` нет.
+- `candidate.deleted` удаляет сырые события по псевдониму `HMAC(candidate_id, ANALYTICS_SALT)`. События работодателя получают псевдоним от `company_id` / `vacancy_id`.
 - **ClickHouse не нужен:** на хакатоне это десятки тысяч событий, у пилота — миллионы, PostgreSQL с партициями справится.
 - **Агрегаты** — материализованные представления, обновляются core-scheduler раз в 5 минут: `mv_candidate_funnel_daily`, `mv_employer_funnel_daily`, `mv_offer_outcomes`, `mv_fsp_dashboard`, `mv_search_quality_daily`, `mv_skills_graph_daily`.
 - **Хранение:** сырые события — 180 дней, агрегаты — бессрочно. При удалении профиля сырые события по псевдониму удаляются (соль известна только серверу).
