@@ -10,6 +10,7 @@
 |---|---|---|
 | `/` | все | Лендинг (L1, L2) |
 | `/login`, `/register`, `/auth/magic`, `/auth/fsp/callback` | — | Вход |
+| `/consents` | любая | Согласия после входа или регистрации, пока не выдан `pd_processing` (шаг 1 из M1) |
 | `/onboarding` | C | Онбординг: согласия → резюме → ФСП → GitHub (M1) |
 | `/me` | C | Мой профиль: категория, грейд, навыки с доверием, командные сигналы, «Быстрый рост» (D) |
 | `/me/graph` | C | Граф доказательств (G1, G2) |
@@ -59,8 +60,9 @@ apps/web/
 - **Серверное состояние** — только TanStack Query. Ключи из orval, `staleTime` 30 с для справочников и 0 для офферов.
 - **Клиентское состояние** — минимально: auth (access-токен в памяти), тема, черновики форм. Zustand при необходимости.
 - **Фильтры поиска** — в URL (`?q=&roles=backend&skills=python:3`), чтобы ссылкой можно было поделиться и вернуться назад.
-- **Генерация клиента:** `pnpm api:gen` (`make api-gen`, нужен Node 22) берёт схему из `OPENAPI_URL` (например, `http://localhost:28080/api/v1/openapi.json`), без неё — заглушку `apps/web/openapi.stub.json` → `src/api` (orval, fetch-мутатор `src/api/mutator.ts`: Bearer, один refresh на 401). В CI проверяем, что сгенерированный клиент совпадает со схемой.
+- **Генерация клиента:** `pnpm api:gen` (`make api-gen`, нужен Node 22) берёт схему из `OPENAPI_URL` (например, `http://localhost:28080/api/v1/openapi.json`), без неё — снимок схемы core `apps/web/openapi.json` (без `/internal/*`; обновляется выгрузкой `app.openapi()`) → `src/api` (orval, fetch-мутатор `src/api/mutator.ts`: Bearer, один refresh на 401). В CI проверяем, что сгенерированный клиент совпадает со схемой.
 - **Авторизация:** access в памяти, при 401 один раз `POST /auth/refresh` (cookie), затем повтор запроса. При старте приложения тихий refresh.
+- **Вход (E1-4):** `/login`, `/register`, `/auth/magic?token=&redirect=` (одноразовый токен, `redirect` — только путь SPA) и `/consents` (отдельный чекбокс на каждое согласие, список и `current_version` из `GET /me/consents`). После любого входа, если в `GET /me` нет `pd_processing`, ведём на `/consents`; `RequireRole` делает то же для кабинетов. Telegram Login Widget пока не подключён.
 
 ## 4. Realtime (SSE)
 

@@ -3,8 +3,11 @@ import { Route, Routes } from "react-router-dom";
 
 import { RequireRole } from "@/app/RequireRole";
 import { ROUTES, SECTION_ROLE } from "@/app/routes";
+import Consents from "@/pages/Consents";
 import Login from "@/pages/Login";
+import MagicLogin from "@/pages/MagicLogin";
 import NotFound from "@/pages/NotFound";
+import Register from "@/pages/Register";
 import { Stub } from "@/pages/Stub";
 
 // Разделы по ролям грузятся лениво (frontend.md: «ленивые разделы»).
@@ -13,8 +16,11 @@ const CandidateLayout = lazy(() => import("@/app/layouts/CandidateLayout"));
 const EmployerLayout = lazy(() => import("@/app/layouts/EmployerLayout"));
 const AdminLayout = lazy(() => import("@/app/layouts/AdminLayout"));
 
+// Эти пути уже реализованы настоящими страницами (E1-4).
+const IMPLEMENTED = new Set(["/login", "/register", "/auth/magic", "/consents"]);
+
 const stubs = (section: string) =>
-  ROUTES.filter((r) => r.section === section && r.path !== "/login").map((r) => (
+  ROUTES.filter((r) => r.section === section && !IMPLEMENTED.has(r.path)).map((r) => (
     <Route key={r.path} path={r.path} element={<Stub routePath={r.path} />} />
   ));
 
@@ -33,6 +39,9 @@ export function App() {
         <Route element={<PublicLayout />}>
           {stubs("public")}
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/auth/magic" element={<MagicLogin />} />
+          <Route path="/consents" element={<Consents />} />
           {stubs("auth")}
         </Route>
         {guarded("candidate", CandidateLayout)}

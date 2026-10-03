@@ -1,7 +1,7 @@
 import { defineConfig } from "orval";
 
-// `pnpm api:gen` берёт живую схему core; без неё — заглушка openapi.stub.json (E0-8).
-const input = process.env.OPENAPI_URL ?? "./openapi.stub.json";
+// `pnpm api:gen` берёт живую схему core; без неё — снимок схемы core (apps/web/openapi.json, без /internal).
+const input = process.env.OPENAPI_URL ?? "./openapi.json";
 
 export default defineConfig({
   fsp: {
