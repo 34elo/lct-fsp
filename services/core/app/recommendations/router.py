@@ -45,11 +45,10 @@ async def record_feedback(
     """
     # Проверить, что impression существует и принадлежит компании пользователя
     impression = await service.get_impression_by_id(session, body.impression_id)
-    if impression is None:
+    company_id = await _get_company_id(session, user)
+    # чужой показ неотличим от несуществующего → 404
+    if impression is None or impression.company_id != company_id:
         raise ProblemError(404, "impression_not_found", "Показ не найден")
-
-    if impression.company_id != (await _get_company_id(session, user)):
-        raise ProblemError(403, "forbidden", "Показ не принадлежит вашей компании")
 
     feedback = await service.record_feedback(
         session,
