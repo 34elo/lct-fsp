@@ -77,3 +77,22 @@ class CoreClient:
         await self.request(
             "PATCH", "/internal/tg/status", json={"tg_user_id": tg_user_id, "status": status}
         )
+
+    async def upload_resume(self, tg_user_id: int, filename: str, data: bytes) -> dict:
+        """Файл не сохраняется в боте: байты уходят в core как multipart и забываются."""
+        return await self.request(
+            "POST",
+            "/internal/tg/resumes",
+            data={"tg_user_id": str(tg_user_id)},
+            files={"file": (filename, data)},
+        )
+
+    async def resume_status(self, tg_user_id: int, resume_id: str) -> dict:
+        return await self.request(
+            "GET", f"/internal/tg/resumes/{resume_id}", params={"tg_user_id": tg_user_id}
+        )
+
+    async def confirm_resume(self, tg_user_id: int, resume_id: str) -> dict:
+        return await self.request(
+            "POST", f"/internal/tg/resumes/{resume_id}/confirm", json={"tg_user_id": tg_user_id}
+        )

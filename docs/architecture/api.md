@@ -192,9 +192,10 @@
 | `POST /internal/tg/consents` | bot | `{tg_user_id, types[]}` → `204`; неизвестный тип `422 invalid_consent`, неизвестный Telegram `404 telegram_unknown` |
 | `POST /internal/tg/link` | bot | `{tg_user_id, token}` — привязка по deep link → `{user_id, linked}`. Заготовка бота (без email и пароля) вливается в аккаунт сайта: согласия переносятся, заготовка деактивируется. Повтор для того же аккаунта безвреден. Ошибки: `410 link_token_invalid`, `404 telegram_unknown` (не было `/start`), `409 telegram_already_linked` (Telegram привязан к другому аккаунту сайта или у аккаунта уже есть другой Telegram) |
 | `POST /internal/auth/magic-link` | bot | `{tg_user_id, redirect}` → `{url}` вида `<WEB_BASE_URL>/auth/magic?token=…&redirect=…`. `redirect` — только путь SPA (`/…`), иначе `422 invalid_redirect`; 5 ссылок в минуту на Telegram |
-| `POST /internal/tg/resumes` | bot | multipart `file` + `tg_user_id` → `202` |
-| `POST /internal/tg/resumes/{id}/confirm` | bot | Подтверждение без правок |
-| `GET /internal/tg/profile?tg_user_id=` | bot | Краткий профиль для сообщения |
+| `POST /internal/tg/resumes` | bot | multipart `file` + `tg_user_id` → `202 {resume_id, job_id}`. Проверки как у сайта: PDF/DOCX по сигнатуре, до 10 МБ, 10 в сутки; без `pd_processing` — `403 consent_required`. Ошибки: `413`, `415`, `422 empty_file`, `429` |
+| `GET /internal/tg/resumes/{id}?tg_user_id=` | bot | `{status, error, experience_months, skills[], unknown_skills}` — компактный итог разбора для сообщения «Вот что я понял»; чужое → 404 |
+| `POST /internal/tg/resumes/{id}/confirm` | bot | `{tg_user_id}` — подтверждение без правок; повтор безвреден; до разбора `409 resume_not_parsed` |
+| `GET /internal/tg/profile?tg_user_id=` | bot | Краткий профиль для сообщения: `{primary_role, grade, grade_preliminary, skills[≤6]: {name, level, claimed_only}, fsp[≤3]}` |
 | `POST /internal/tg/fsp/link`, `…/verify` | bot | Привязка ФСП из бота |
 | `POST /internal/tg/github` | bot | `{tg_user_id, login}` |
 | `POST /internal/tg/offers/{id}/view|accept|decline|messages` | bot | Действия по офферу от имени `tg_user_id` |
