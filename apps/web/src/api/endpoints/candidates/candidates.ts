@@ -25,6 +25,9 @@ import type {
 
 import type {
   CandidateProfile,
+  CategoryExplanation,
+  DisputeIn,
+  DisputeOut,
   EvidenceBrief,
   HTTPValidationError,
   MyViewsCandidatesMeViewsGet200,
@@ -719,3 +722,221 @@ export function useMyViewsCandidatesMeViewsGet<TData = Awaited<ReturnType<typeof
 
 
 
+export type getCategoryCandidatesMeCategoryGetResponse200 = {
+  data: CategoryExplanation
+  status: 200
+}
+
+export type getCategoryCandidatesMeCategoryGetResponseSuccess = (getCategoryCandidatesMeCategoryGetResponse200) & {
+  headers: Headers;
+};
+;
+
+export type getCategoryCandidatesMeCategoryGetResponse = (getCategoryCandidatesMeCategoryGetResponseSuccess)
+
+export const getGetCategoryCandidatesMeCategoryGetUrl = () => {
+
+
+
+
+  return `/candidates/me/category`
+}
+
+/**
+ * @summary Get Category
+ */
+export const getCategoryCandidatesMeCategoryGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getCategoryCandidatesMeCategoryGetResponse> => {
+
+  return apiFetch<getCategoryCandidatesMeCategoryGetResponse>(getGetCategoryCandidatesMeCategoryGetUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCategoryCandidatesMeCategoryGetQueryKey = () => {
+    return [
+    `/candidates/me/category`
+    ] as const;
+    }
+
+
+export const getGetCategoryCandidatesMeCategoryGetQueryOptions = <TData = Awaited<ReturnType<typeof getCategoryCandidatesMeCategoryGet>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCategoryCandidatesMeCategoryGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCategoryCandidatesMeCategoryGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCategoryCandidatesMeCategoryGet>>> = ({ signal }) => getCategoryCandidatesMeCategoryGet({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCategoryCandidatesMeCategoryGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetCategoryCandidatesMeCategoryGetQueryResult = NonNullable<Awaited<ReturnType<typeof getCategoryCandidatesMeCategoryGet>>>
+export type GetCategoryCandidatesMeCategoryGetQueryError = ErrorType<unknown>
+
+
+export function useGetCategoryCandidatesMeCategoryGet<TData = Awaited<ReturnType<typeof getCategoryCandidatesMeCategoryGet>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCategoryCandidatesMeCategoryGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCategoryCandidatesMeCategoryGet>>,
+          TError,
+          Awaited<ReturnType<typeof getCategoryCandidatesMeCategoryGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCategoryCandidatesMeCategoryGet<TData = Awaited<ReturnType<typeof getCategoryCandidatesMeCategoryGet>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCategoryCandidatesMeCategoryGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCategoryCandidatesMeCategoryGet>>,
+          TError,
+          Awaited<ReturnType<typeof getCategoryCandidatesMeCategoryGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCategoryCandidatesMeCategoryGet<TData = Awaited<ReturnType<typeof getCategoryCandidatesMeCategoryGet>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCategoryCandidatesMeCategoryGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Category
+ */
+
+export function useGetCategoryCandidatesMeCategoryGet<TData = Awaited<ReturnType<typeof getCategoryCandidatesMeCategoryGet>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCategoryCandidatesMeCategoryGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetCategoryCandidatesMeCategoryGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type disputeCategoryCandidatesMeCategoryDisputePostResponse201 = {
+  data: DisputeOut
+  status: 201
+}
+
+export type disputeCategoryCandidatesMeCategoryDisputePostResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type disputeCategoryCandidatesMeCategoryDisputePostResponseSuccess = (disputeCategoryCandidatesMeCategoryDisputePostResponse201) & {
+  headers: Headers;
+};
+export type disputeCategoryCandidatesMeCategoryDisputePostResponseError = (disputeCategoryCandidatesMeCategoryDisputePostResponse422) & {
+  headers: Headers;
+};
+
+export type disputeCategoryCandidatesMeCategoryDisputePostResponse = (disputeCategoryCandidatesMeCategoryDisputePostResponseSuccess | disputeCategoryCandidatesMeCategoryDisputePostResponseError)
+
+export const getDisputeCategoryCandidatesMeCategoryDisputePostUrl = () => {
+
+
+
+
+  return `/candidates/me/category/dispute`
+}
+
+/**
+ * @summary Dispute Category
+ */
+export const disputeCategoryCandidatesMeCategoryDisputePost = async (disputeIn: DisputeIn, options?: Parameters<typeof apiFetch>[1]): Promise<disputeCategoryCandidatesMeCategoryDisputePostResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<disputeCategoryCandidatesMeCategoryDisputePostResponse>(getDisputeCategoryCandidatesMeCategoryDisputePostUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(disputeIn)
+  }
+);}
+
+
+
+
+
+export const getDisputeCategoryCandidatesMeCategoryDisputePostMutationKey = () => ['disputeCategoryCandidatesMeCategoryDisputePost'] as const;
+
+export const getDisputeCategoryCandidatesMeCategoryDisputePostMutationOptions = <TError = ErrorType<HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof disputeCategoryCandidatesMeCategoryDisputePost>>, TError,DisputeCategoryCandidatesMeCategoryDisputePostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof disputeCategoryCandidatesMeCategoryDisputePost>>, TError,DisputeCategoryCandidatesMeCategoryDisputePostMutationVariables, TContext> => {
+
+const mutationKey = getDisputeCategoryCandidatesMeCategoryDisputePostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof disputeCategoryCandidatesMeCategoryDisputePost>>, DisputeCategoryCandidatesMeCategoryDisputePostMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  disputeCategoryCandidatesMeCategoryDisputePost(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DisputeCategoryCandidatesMeCategoryDisputePostMutationResult = NonNullable<Awaited<ReturnType<typeof disputeCategoryCandidatesMeCategoryDisputePost>>>
+    export type DisputeCategoryCandidatesMeCategoryDisputePostMutationBody = DisputeIn
+    export type DisputeCategoryCandidatesMeCategoryDisputePostMutationError = ErrorType<HTTPValidationError>
+    export type DisputeCategoryCandidatesMeCategoryDisputePostMutationVariables = {data: DisputeIn}
+
+    /**
+ * @summary Dispute Category
+ */
+export const useDisputeCategoryCandidatesMeCategoryDisputePost = <TError = ErrorType<HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof disputeCategoryCandidatesMeCategoryDisputePost>>, TError,DisputeCategoryCandidatesMeCategoryDisputePostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof disputeCategoryCandidatesMeCategoryDisputePost>>,
+        TError,
+        DisputeCategoryCandidatesMeCategoryDisputePostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDisputeCategoryCandidatesMeCategoryDisputePostMutationOptions(options), queryClient);
+    }

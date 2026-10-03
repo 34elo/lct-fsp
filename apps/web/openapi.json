@@ -553,6 +553,330 @@
         }
       }
     },
+    "/candidates/me/category": {
+      "get": {
+        "tags": [
+          "candidates"
+        ],
+        "summary": "Get Category",
+        "operationId": "get_category_candidates_me_category_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryExplanation"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/candidates/me/category/dispute": {
+      "post": {
+        "tags": [
+          "candidates"
+        ],
+        "summary": "Dispute Category",
+        "operationId": "dispute_category_candidates_me_category_dispute_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DisputeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisputeOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/fsp/start": {
+      "get": {
+        "tags": [
+          "fsp"
+        ],
+        "summary": "Fsp Start",
+        "description": "Для вошедшего кандидата — привязка ФСП. Анонимный вход через ФСП пока не поддержан.",
+        "operationId": "fsp_start_auth_fsp_start_get",
+        "parameters": [
+          {
+            "name": "redirect",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "true — 302 на ФСП вместо JSON",
+              "default": false,
+              "title": "Redirect"
+            },
+            "description": "true — 302 на ФСП вместо JSON"
+          },
+          {
+            "name": "next",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 200,
+              "default": "/me",
+              "title": "Next"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/app__fsp__router__StartOut"
+                }
+              }
+            }
+          },
+          "302": {
+            "description": "redirect"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/fsp/callback": {
+      "get": {
+        "tags": [
+          "fsp"
+        ],
+        "summary": "Fsp Callback",
+        "description": "Возврат из ФСП: обмен кода и привязка; всегда 302 обратно в SPA.",
+        "operationId": "fsp_callback_auth_fsp_callback_get",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Code"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "State"
+            }
+          },
+          {
+            "name": "error",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Error"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/candidates/me/fsp/link": {
+      "post": {
+        "tags": [
+          "fsp"
+        ],
+        "summary": "Fsp Link",
+        "operationId": "fsp_link_candidates_me_fsp_link_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/app__fsp__router__LinkIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/app__fsp__router__LinkOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/candidates/me/fsp/verify": {
+      "post": {
+        "tags": [
+          "fsp"
+        ],
+        "summary": "Fsp Verify",
+        "operationId": "fsp_verify_candidates_me_fsp_verify_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/candidates/me/fsp/sync": {
+      "post": {
+        "tags": [
+          "fsp"
+        ],
+        "summary": "Fsp Sync",
+        "operationId": "fsp_sync_candidates_me_fsp_sync_post",
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/candidates/me/fsp": {
+      "get": {
+        "tags": [
+          "fsp"
+        ],
+        "summary": "Fsp Overview",
+        "operationId": "fsp_overview_candidates_me_fsp_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FspOverview"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/candidates/me/resumes": {
       "post": {
         "tags": [
@@ -1331,6 +1655,48 @@
         }
       }
     },
+    "/search/parse": {
+      "post": {
+        "tags": [
+          "search"
+        ],
+        "summary": "Search Parse",
+        "description": "Правиловый разбор текста в чипсы-фильтры (E7-5); LLM-уточнение добавит E7-6.",
+        "operationId": "search_parse_search_parse_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ParseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParsedQuery"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/search/candidates": {
       "post": {
         "tags": [
@@ -1440,6 +1806,83 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/candidates/{pseudo_id}/similar": {
+      "get": {
+        "tags": [
+          "search"
+        ],
+        "summary": "Candidate Similar",
+        "description": "Похожие на открытого кандидата (matching.md §1); скрытый или несуществующий → 404.",
+        "operationId": "candidate_similar_candidates__pseudo_id__similar_get",
+        "parameters": [
+          {
+            "name": "pseudo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pseudo Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 20,
+              "minimum": 1,
+              "default": 10,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimilarPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/candidates/me/uplift": {
+      "get": {
+        "tags": [
+          "search"
+        ],
+        "summary": "My Uplift",
+        "description": "Какой навык подтвердить, чтобы подойти под больше вакансий (matching.md §6).",
+        "operationId": "my_uplift_candidates_me_uplift_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpliftOut"
                 }
               }
             }
@@ -2633,6 +3076,17 @@
             },
             "type": "array",
             "title": "Explanation"
+          },
+          "interest": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interest"
           }
         },
         "type": "object",
@@ -2670,6 +3124,129 @@
           "primary_stack"
         ],
         "title": "Category"
+      },
+      "CategoryContribution": {
+        "properties": {
+          "skill": {
+            "type": "string",
+            "title": "Skill"
+          },
+          "weight": {
+            "type": "number",
+            "title": "Weight"
+          },
+          "confidence": {
+            "type": "number",
+            "title": "Confidence"
+          },
+          "level": {
+            "type": "integer",
+            "title": "Level"
+          },
+          "sources": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sources"
+          },
+          "contribution": {
+            "type": "number",
+            "title": "Contribution"
+          }
+        },
+        "type": "object",
+        "required": [
+          "skill",
+          "weight",
+          "confidence",
+          "level",
+          "sources",
+          "contribution"
+        ],
+        "title": "CategoryContribution"
+      },
+      "CategoryExplanation": {
+        "properties": {
+          "primary_role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primary Role"
+          },
+          "roles": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryRole"
+            },
+            "type": "array",
+            "title": "Roles"
+          },
+          "primary_stack": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Primary Stack"
+          },
+          "explanation": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryContribution"
+            },
+            "type": "array",
+            "title": "Explanation"
+          },
+          "grade": {
+            "$ref": "#/components/schemas/GradeInfo"
+          },
+          "dispute": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DisputeOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "primary_role",
+          "roles",
+          "primary_stack",
+          "explanation",
+          "grade"
+        ],
+        "title": "CategoryExplanation",
+        "description": "`CategoryExplanation` (api.md §3): почему такая категория и как подняться."
+      },
+      "CategoryRole": {
+        "properties": {
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "weight": {
+            "type": "number",
+            "title": "Weight"
+          },
+          "score": {
+            "type": "number",
+            "title": "Score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "role",
+          "weight",
+          "score"
+        ],
+        "title": "CategoryRole"
       },
       "CompanyBrief": {
         "properties": {
@@ -3287,6 +3864,82 @@
         ],
         "title": "DeepLinkOut"
       },
+      "DisputeIn": {
+        "properties": {
+          "claimed_role": {
+            "$ref": "#/components/schemas/RoleSlug"
+          },
+          "claimed_grade": {
+            "$ref": "#/components/schemas/Grade"
+          },
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "claimed_role",
+          "claimed_grade"
+        ],
+        "title": "DisputeIn"
+      },
+      "DisputeOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "claimed_role": {
+            "type": "string",
+            "title": "Claimed Role"
+          },
+          "claimed_grade": {
+            "type": "string",
+            "title": "Claimed Grade"
+          },
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "claimed_role",
+          "claimed_grade",
+          "comment",
+          "status",
+          "created_at"
+        ],
+        "title": "DisputeOut"
+      },
       "EmploymentType": {
         "type": "string",
         "enum": [
@@ -3546,6 +4199,44 @@
         "title": "FeedbackRequest",
         "description": "Реакция на показ кандидата."
       },
+      "FilterChip": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "value": {
+            "title": "Value"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "rule",
+              "llm"
+            ],
+            "title": "Source"
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "value",
+          "label",
+          "source",
+          "confidence"
+        ],
+        "title": "FilterChip"
+      },
       "FspAchievement": {
         "properties": {
           "fact_id": {
@@ -3652,6 +4343,71 @@
         ],
         "title": "FspHighlight"
       },
+      "FspLink": {
+        "properties": {
+          "linked": {
+            "type": "boolean",
+            "title": "Linked"
+          },
+          "verified": {
+            "type": "boolean",
+            "title": "Verified"
+          },
+          "participant_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Participant Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "linked",
+          "verified"
+        ],
+        "title": "FspLink"
+      },
+      "FspOverview": {
+        "properties": {
+          "link": {
+            "$ref": "#/components/schemas/FspLink"
+          },
+          "achievements": {
+            "items": {
+              "$ref": "#/components/schemas/FspAchievement"
+            },
+            "type": "array",
+            "title": "Achievements"
+          },
+          "ranks": {
+            "items": {
+              "$ref": "#/components/schemas/FspRankBrief"
+            },
+            "type": "array",
+            "title": "Ranks"
+          },
+          "teams": {
+            "items": {
+              "$ref": "#/components/schemas/FspTeam"
+            },
+            "type": "array",
+            "title": "Teams"
+          }
+        },
+        "type": "object",
+        "required": [
+          "link",
+          "achievements",
+          "ranks",
+          "teams"
+        ],
+        "title": "FspOverview"
+      },
       "FspRankBrief": {
         "properties": {
           "discipline": {
@@ -3669,6 +4425,35 @@
           "rank"
         ],
         "title": "FspRankBrief"
+      },
+      "FspTeam": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "FspTeam"
       },
       "Grade": {
         "type": "string",
@@ -3793,45 +4578,6 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
-      },
-      "LinkIn": {
-        "properties": {
-          "tg_user_id": {
-            "type": "integer",
-            "title": "Tg User Id"
-          },
-          "token": {
-            "type": "string",
-            "maxLength": 256,
-            "minLength": 1,
-            "title": "Token"
-          }
-        },
-        "type": "object",
-        "required": [
-          "tg_user_id",
-          "token"
-        ],
-        "title": "LinkIn"
-      },
-      "LinkOut": {
-        "properties": {
-          "user_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "User Id"
-          },
-          "linked": {
-            "type": "boolean",
-            "title": "Linked",
-            "default": true
-          }
-        },
-        "type": "object",
-        "required": [
-          "user_id"
-        ],
-        "title": "LinkOut"
       },
       "LoginIn": {
         "properties": {
@@ -4417,6 +5163,53 @@
           "ranks"
         ],
         "title": "OwnerFsp"
+      },
+      "ParseRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Text"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "ParseRequest"
+      },
+      "ParsedQuery": {
+        "properties": {
+          "filters": {
+            "$ref": "#/components/schemas/SearchFilters"
+          },
+          "chips": {
+            "items": {
+              "$ref": "#/components/schemas/FilterChip"
+            },
+            "type": "array",
+            "title": "Chips"
+          },
+          "unparsed": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Unparsed"
+          },
+          "refining": {
+            "type": "boolean",
+            "title": "Refining",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "filters"
+        ],
+        "title": "ParsedQuery"
       },
       "ParsedResume": {
         "properties": {
@@ -5399,14 +6192,21 @@
             "$ref": "#/components/schemas/SearchFilters"
           },
           "sort": {
-            "type": "string",
-            "enum": [
-              "match",
-              "trust",
-              "fresh"
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "match",
+                  "trust",
+                  "fresh",
+                  "mutual"
+                ]
+              },
+              {
+                "type": "null"
+              }
             ],
-            "title": "Sort",
-            "default": "match"
+            "title": "Sort"
           },
           "cursor": {
             "anyOf": [
@@ -5464,6 +6264,175 @@
           "dnd"
         ],
         "title": "SearchStatus"
+      },
+      "SimilarCard": {
+        "properties": {
+          "pseudo_id": {
+            "type": "string",
+            "title": "Pseudo Id"
+          },
+          "pseudonym": {
+            "type": "string",
+            "title": "Pseudonym"
+          },
+          "avatar_seed": {
+            "type": "string",
+            "title": "Avatar Seed"
+          },
+          "primary_role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primary Role"
+          },
+          "grade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade"
+          },
+          "grade_preliminary": {
+            "type": "boolean",
+            "title": "Grade Preliminary"
+          },
+          "primary_stack": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Primary Stack"
+          },
+          "top_skills": {
+            "items": {
+              "$ref": "#/components/schemas/SkillBrief"
+            },
+            "type": "array",
+            "title": "Top Skills"
+          },
+          "fsp_highlights": {
+            "items": {
+              "$ref": "#/components/schemas/FspHighlight"
+            },
+            "type": "array",
+            "title": "Fsp Highlights"
+          },
+          "salary_min": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary Min"
+          },
+          "formats": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Formats"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "relocation": {
+            "type": "boolean",
+            "title": "Relocation"
+          },
+          "search_status": {
+            "type": "string",
+            "title": "Search Status"
+          },
+          "match": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CardMatch"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "similarity": {
+            "type": "number",
+            "title": "Similarity"
+          },
+          "common_skills": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Common Skills"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pseudo_id",
+          "pseudonym",
+          "avatar_seed",
+          "primary_role",
+          "grade",
+          "grade_preliminary",
+          "primary_stack",
+          "top_skills",
+          "fsp_highlights",
+          "salary_min",
+          "formats",
+          "city",
+          "relocation",
+          "search_status",
+          "updated_at",
+          "similarity",
+          "common_skills"
+        ],
+        "title": "SimilarCard"
+      },
+      "SimilarPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SimilarCard"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "session_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Session Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "session_id"
+        ],
+        "title": "SimilarPage"
       },
       "SkillBrief": {
         "properties": {
@@ -5705,38 +6674,6 @@
           "chat_id"
         ],
         "title": "StartIn"
-      },
-      "StartOut": {
-        "properties": {
-          "user_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "User Id"
-          },
-          "role": {
-            "type": "string",
-            "title": "Role"
-          },
-          "missing_consents": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Missing Consents"
-          },
-          "linked": {
-            "type": "boolean",
-            "title": "Linked"
-          }
-        },
-        "type": "object",
-        "required": [
-          "user_id",
-          "role",
-          "missing_consents",
-          "linked"
-        ],
-        "title": "StartOut"
       },
       "StatusIn": {
         "properties": {
@@ -6173,6 +7110,187 @@
         ],
         "title": "TrustLevel",
         "description": "○○○○ … ●●●●"
+      },
+      "UpliftCombo": {
+        "properties": {
+          "skills": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Skills"
+          },
+          "extra": {
+            "type": "integer",
+            "title": "Extra"
+          },
+          "pct": {
+            "type": "number",
+            "title": "Pct"
+          }
+        },
+        "type": "object",
+        "required": [
+          "skills",
+          "extra",
+          "pct"
+        ],
+        "title": "UpliftCombo"
+      },
+      "UpliftConfirm": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "test",
+              "github",
+              "fsp_competition"
+            ],
+            "title": "Kind"
+          },
+          "minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minutes"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "registration_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Registration Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind"
+        ],
+        "title": "UpliftConfirm"
+      },
+      "UpliftItem": {
+        "properties": {
+          "skill": {
+            "type": "string",
+            "title": "Skill"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "current_level": {
+            "type": "integer",
+            "title": "Current Level"
+          },
+          "extra": {
+            "type": "integer",
+            "title": "Extra"
+          },
+          "pct": {
+            "type": "number",
+            "title": "Pct"
+          },
+          "median_salary_delta": {
+            "type": "integer",
+            "title": "Median Salary Delta"
+          },
+          "how_to_confirm": {
+            "items": {
+              "$ref": "#/components/schemas/UpliftConfirm"
+            },
+            "type": "array",
+            "title": "How To Confirm"
+          }
+        },
+        "type": "object",
+        "required": [
+          "skill",
+          "name",
+          "current_level",
+          "extra",
+          "pct",
+          "median_salary_delta",
+          "how_to_confirm"
+        ],
+        "title": "UpliftItem"
+      },
+      "UpliftOut": {
+        "properties": {
+          "relevant_total": {
+            "type": "integer",
+            "title": "Relevant Total"
+          },
+          "base": {
+            "type": "integer",
+            "title": "Base"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/UpliftItem"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "combo": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UpliftCombo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "relevant_total",
+          "base",
+          "items"
+        ],
+        "title": "UpliftOut"
       },
       "UserOut": {
         "properties": {
@@ -6681,6 +7799,34 @@
         ],
         "title": "ValidationError"
       },
+      "VerifyIn": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 16,
+            "minLength": 1,
+            "title": "Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code"
+        ],
+        "title": "VerifyIn"
+      },
+      "VerifyOut": {
+        "properties": {
+          "verified": {
+            "type": "boolean",
+            "title": "Verified"
+          }
+        },
+        "type": "object",
+        "required": [
+          "verified"
+        ],
+        "title": "VerifyOut"
+      },
       "Visibility": {
         "properties": {
           "companies": {
@@ -6803,6 +7949,82 @@
         ],
         "title": "ConsentsIn"
       },
+      "app__fsp__router__LinkIn": {
+        "properties": {
+          "participant_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Participant Id"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 254
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "manual": {
+            "type": "boolean",
+            "title": "Manual",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "LinkIn"
+      },
+      "app__fsp__router__LinkOut": {
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": [
+              "code",
+              "manual"
+            ],
+            "title": "Method"
+          },
+          "masked_contact": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Masked Contact"
+          }
+        },
+        "type": "object",
+        "required": [
+          "method"
+        ],
+        "title": "LinkOut"
+      },
+      "app__fsp__router__StartOut": {
+        "properties": {
+          "url": {
+            "type": "string",
+            "title": "Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "url"
+        ],
+        "title": "StartOut"
+      },
       "app__telegram__router__ConsentsIn": {
         "properties": {
           "tg_user_id": {
@@ -6824,6 +8046,77 @@
           "types"
         ],
         "title": "ConsentsIn"
+      },
+      "app__telegram__router__LinkIn": {
+        "properties": {
+          "tg_user_id": {
+            "type": "integer",
+            "title": "Tg User Id"
+          },
+          "token": {
+            "type": "string",
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tg_user_id",
+          "token"
+        ],
+        "title": "LinkIn"
+      },
+      "app__telegram__router__LinkOut": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "linked": {
+            "type": "boolean",
+            "title": "Linked",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id"
+        ],
+        "title": "LinkOut"
+      },
+      "app__telegram__router__StartOut": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "missing_consents": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing Consents"
+          },
+          "linked": {
+            "type": "boolean",
+            "title": "Linked"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "role",
+          "missing_consents",
+          "linked"
+        ],
+        "title": "StartOut"
       }
     }
   }

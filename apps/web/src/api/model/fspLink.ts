@@ -5,7 +5,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface LinkOut {
-  user_id: string;
-  linked?: boolean;
+export interface FspLink {
+  linked: boolean;
+  verified: boolean;
+  participant_id?: string | null;
 }

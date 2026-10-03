@@ -26,9 +26,14 @@ import type {
 import type {
   CandidateCardCandidatesPseudoIdCardGetParams,
   CandidateCardFull,
+  CandidateSimilarCandidatesPseudoIdSimilarGetParams,
   HTTPValidationError,
+  ParseRequest,
+  ParsedQuery,
   SearchPage,
-  SearchRequest
+  SearchRequest,
+  SimilarPage,
+  UpliftOut
 } from '../../model';
 
 import { apiFetch } from '../../mutator';
@@ -54,7 +59,114 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result;
 };
 
-export type searchCandidatesSearchCandidatesPostResponse200 = {
+export type searchParseSearchParsePostResponse200 = {
+  data: ParsedQuery
+  status: 200
+}
+
+export type searchParseSearchParsePostResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type searchParseSearchParsePostResponseSuccess = (searchParseSearchParsePostResponse200) & {
+  headers: Headers;
+};
+export type searchParseSearchParsePostResponseError = (searchParseSearchParsePostResponse422) & {
+  headers: Headers;
+};
+
+export type searchParseSearchParsePostResponse = (searchParseSearchParsePostResponseSuccess | searchParseSearchParsePostResponseError)
+
+export const getSearchParseSearchParsePostUrl = () => {
+
+
+
+
+  return `/search/parse`
+}
+
+/**
+ * Правиловый разбор текста в чипсы-фильтры (E7-5); LLM-уточнение добавит E7-6.
+ * @summary Search Parse
+ */
+export const searchParseSearchParsePost = async (parseRequest: ParseRequest, options?: Parameters<typeof apiFetch>[1]): Promise<searchParseSearchParsePostResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<searchParseSearchParsePostResponse>(getSearchParseSearchParsePostUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(parseRequest)
+  }
+);}
+
+
+
+
+
+export const getSearchParseSearchParsePostMutationKey = () => ['searchParseSearchParsePost'] as const;
+
+export const getSearchParseSearchParsePostMutationOptions = <TError = ErrorType<HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof searchParseSearchParsePost>>, TError,SearchParseSearchParsePostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof searchParseSearchParsePost>>, TError,SearchParseSearchParsePostMutationVariables, TContext> => {
+
+const mutationKey = getSearchParseSearchParsePostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof searchParseSearchParsePost>>, SearchParseSearchParsePostMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  searchParseSearchParsePost(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SearchParseSearchParsePostMutationResult = NonNullable<Awaited<ReturnType<typeof searchParseSearchParsePost>>>
+    export type SearchParseSearchParsePostMutationBody = ParseRequest
+    export type SearchParseSearchParsePostMutationError = ErrorType<HTTPValidationError>
+    export type SearchParseSearchParsePostMutationVariables = {data: ParseRequest}
+
+    /**
+ * @summary Search Parse
+ */
+export const useSearchParseSearchParsePost = <TError = ErrorType<HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof searchParseSearchParsePost>>, TError,SearchParseSearchParsePostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof searchParseSearchParsePost>>,
+        TError,
+        SearchParseSearchParsePostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSearchParseSearchParsePostMutationOptions(options), queryClient);
+    }
+    export type searchCandidatesSearchCandidatesPostResponse200 = {
   data: SearchPage
   status: 200
 }
@@ -283,6 +395,254 @@ export function useCandidateCardCandidatesPseudoIdCardGet<TData = Awaited<Return
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getCandidateCardCandidatesPseudoIdCardGetQueryOptions(pseudoId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type candidateSimilarCandidatesPseudoIdSimilarGetResponse200 = {
+  data: SimilarPage
+  status: 200
+}
+
+export type candidateSimilarCandidatesPseudoIdSimilarGetResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type candidateSimilarCandidatesPseudoIdSimilarGetResponseSuccess = (candidateSimilarCandidatesPseudoIdSimilarGetResponse200) & {
+  headers: Headers;
+};
+export type candidateSimilarCandidatesPseudoIdSimilarGetResponseError = (candidateSimilarCandidatesPseudoIdSimilarGetResponse422) & {
+  headers: Headers;
+};
+
+export type candidateSimilarCandidatesPseudoIdSimilarGetResponse = (candidateSimilarCandidatesPseudoIdSimilarGetResponseSuccess | candidateSimilarCandidatesPseudoIdSimilarGetResponseError)
+
+export const getCandidateSimilarCandidatesPseudoIdSimilarGetUrl = (pseudoId: string,
+    params?: CandidateSimilarCandidatesPseudoIdSimilarGetParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/candidates/${pseudoId}/similar?${stringifiedParams}` : `/candidates/${pseudoId}/similar`
+}
+
+/**
+ * Похожие на открытого кандидата (matching.md §1); скрытый или несуществующий → 404.
+ * @summary Candidate Similar
+ */
+export const candidateSimilarCandidatesPseudoIdSimilarGet = async (pseudoId: string,
+    params?: CandidateSimilarCandidatesPseudoIdSimilarGetParams, options?: Parameters<typeof apiFetch>[1]): Promise<candidateSimilarCandidatesPseudoIdSimilarGetResponse> => {
+
+  return apiFetch<candidateSimilarCandidatesPseudoIdSimilarGetResponse>(getCandidateSimilarCandidatesPseudoIdSimilarGetUrl(pseudoId,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getCandidateSimilarCandidatesPseudoIdSimilarGetQueryKey = (pseudoId: string,
+    params?: CandidateSimilarCandidatesPseudoIdSimilarGetParams,) => {
+    return [
+    `/candidates/${pseudoId}/similar`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getCandidateSimilarCandidatesPseudoIdSimilarGetQueryOptions = <TData = Awaited<ReturnType<typeof candidateSimilarCandidatesPseudoIdSimilarGet>>, TError = ErrorType<HTTPValidationError>>(pseudoId: string,
+    params?: CandidateSimilarCandidatesPseudoIdSimilarGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof candidateSimilarCandidatesPseudoIdSimilarGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getCandidateSimilarCandidatesPseudoIdSimilarGetQueryKey(pseudoId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof candidateSimilarCandidatesPseudoIdSimilarGet>>> = ({ signal }) => candidateSimilarCandidatesPseudoIdSimilarGet(pseudoId,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: pseudoId !== null && pseudoId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof candidateSimilarCandidatesPseudoIdSimilarGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type CandidateSimilarCandidatesPseudoIdSimilarGetQueryResult = NonNullable<Awaited<ReturnType<typeof candidateSimilarCandidatesPseudoIdSimilarGet>>>
+export type CandidateSimilarCandidatesPseudoIdSimilarGetQueryError = ErrorType<HTTPValidationError>
+
+
+export function useCandidateSimilarCandidatesPseudoIdSimilarGet<TData = Awaited<ReturnType<typeof candidateSimilarCandidatesPseudoIdSimilarGet>>, TError = ErrorType<HTTPValidationError>>(
+ pseudoId: string,
+    params: undefined |  CandidateSimilarCandidatesPseudoIdSimilarGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof candidateSimilarCandidatesPseudoIdSimilarGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof candidateSimilarCandidatesPseudoIdSimilarGet>>,
+          TError,
+          Awaited<ReturnType<typeof candidateSimilarCandidatesPseudoIdSimilarGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useCandidateSimilarCandidatesPseudoIdSimilarGet<TData = Awaited<ReturnType<typeof candidateSimilarCandidatesPseudoIdSimilarGet>>, TError = ErrorType<HTTPValidationError>>(
+ pseudoId: string,
+    params?: CandidateSimilarCandidatesPseudoIdSimilarGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof candidateSimilarCandidatesPseudoIdSimilarGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof candidateSimilarCandidatesPseudoIdSimilarGet>>,
+          TError,
+          Awaited<ReturnType<typeof candidateSimilarCandidatesPseudoIdSimilarGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useCandidateSimilarCandidatesPseudoIdSimilarGet<TData = Awaited<ReturnType<typeof candidateSimilarCandidatesPseudoIdSimilarGet>>, TError = ErrorType<HTTPValidationError>>(
+ pseudoId: string,
+    params?: CandidateSimilarCandidatesPseudoIdSimilarGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof candidateSimilarCandidatesPseudoIdSimilarGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Candidate Similar
+ */
+
+export function useCandidateSimilarCandidatesPseudoIdSimilarGet<TData = Awaited<ReturnType<typeof candidateSimilarCandidatesPseudoIdSimilarGet>>, TError = ErrorType<HTTPValidationError>>(
+ pseudoId: string,
+    params?: CandidateSimilarCandidatesPseudoIdSimilarGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof candidateSimilarCandidatesPseudoIdSimilarGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getCandidateSimilarCandidatesPseudoIdSimilarGetQueryOptions(pseudoId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type myUpliftCandidatesMeUpliftGetResponse200 = {
+  data: UpliftOut
+  status: 200
+}
+
+export type myUpliftCandidatesMeUpliftGetResponseSuccess = (myUpliftCandidatesMeUpliftGetResponse200) & {
+  headers: Headers;
+};
+;
+
+export type myUpliftCandidatesMeUpliftGetResponse = (myUpliftCandidatesMeUpliftGetResponseSuccess)
+
+export const getMyUpliftCandidatesMeUpliftGetUrl = () => {
+
+
+
+
+  return `/candidates/me/uplift`
+}
+
+/**
+ * Какой навык подтвердить, чтобы подойти под больше вакансий (matching.md §6).
+ * @summary My Uplift
+ */
+export const myUpliftCandidatesMeUpliftGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<myUpliftCandidatesMeUpliftGetResponse> => {
+
+  return apiFetch<myUpliftCandidatesMeUpliftGetResponse>(getMyUpliftCandidatesMeUpliftGetUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getMyUpliftCandidatesMeUpliftGetQueryKey = () => {
+    return [
+    `/candidates/me/uplift`
+    ] as const;
+    }
+
+
+export const getMyUpliftCandidatesMeUpliftGetQueryOptions = <TData = Awaited<ReturnType<typeof myUpliftCandidatesMeUpliftGet>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myUpliftCandidatesMeUpliftGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMyUpliftCandidatesMeUpliftGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof myUpliftCandidatesMeUpliftGet>>> = ({ signal }) => myUpliftCandidatesMeUpliftGet({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof myUpliftCandidatesMeUpliftGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type MyUpliftCandidatesMeUpliftGetQueryResult = NonNullable<Awaited<ReturnType<typeof myUpliftCandidatesMeUpliftGet>>>
+export type MyUpliftCandidatesMeUpliftGetQueryError = ErrorType<unknown>
+
+
+export function useMyUpliftCandidatesMeUpliftGet<TData = Awaited<ReturnType<typeof myUpliftCandidatesMeUpliftGet>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof myUpliftCandidatesMeUpliftGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof myUpliftCandidatesMeUpliftGet>>,
+          TError,
+          Awaited<ReturnType<typeof myUpliftCandidatesMeUpliftGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMyUpliftCandidatesMeUpliftGet<TData = Awaited<ReturnType<typeof myUpliftCandidatesMeUpliftGet>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myUpliftCandidatesMeUpliftGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof myUpliftCandidatesMeUpliftGet>>,
+          TError,
+          Awaited<ReturnType<typeof myUpliftCandidatesMeUpliftGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMyUpliftCandidatesMeUpliftGet<TData = Awaited<ReturnType<typeof myUpliftCandidatesMeUpliftGet>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myUpliftCandidatesMeUpliftGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary My Uplift
+ */
+
+export function useMyUpliftCandidatesMeUpliftGet<TData = Awaited<ReturnType<typeof myUpliftCandidatesMeUpliftGet>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myUpliftCandidatesMeUpliftGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMyUpliftCandidatesMeUpliftGetQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

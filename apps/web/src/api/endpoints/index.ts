@@ -4,6 +4,7 @@ export * from './candidates/candidates';
 export * from './companies/companies';
 export * from './consents/consents';
 export * from './events/events';
+export * from './fsp/fsp';
 export * from './offers/offers';
 export * from './recommendations/recommendations';
 export * from './resumes/resumes';
