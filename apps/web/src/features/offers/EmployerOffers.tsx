@@ -40,9 +40,9 @@ function Row({ o }: { o: OfferForCompany }) {
       <p className="flex flex-wrap gap-x-3 text-xs text-muted">
         <span>Отправлен {dateOnly(o.created_at)}</span>
         {o.decline && <span>Причина: {DECLINE_LABEL[o.decline.reason] ?? o.decline.reason}</span>}
-        {o.awaiting_reply_from === "company" && <b className="text-brand">Ждёт вашего ответа</b>}
+        {o.awaiting_reply_from === "company" && <b className="text-brand-fg">Ждёт вашего ответа</b>}
       </p>
-      <Link to={`/employer/offers/${o.id}`} className="inline-flex h-9 items-center self-start rounded-lg border border-brand px-3 text-sm font-semibold text-brand hover:bg-tint-50">Открыть</Link>
+      <Link to={`/employer/offers/${o.id}`} className="inline-flex h-9 items-center self-start rounded-lg border border-brand-fg px-3 text-sm font-semibold text-brand-fg hover:bg-tint-50">Открыть</Link>
     </li>
   );
 }
@@ -66,7 +66,7 @@ export function EmployerOffers() {
       {q.isError && <ErrorNote>Не удалось загрузить офферы.</ErrorNote>}
       {q.isSuccess && list.length === 0 && (
         <p className="rounded-xl border border-hairline bg-card p-5 text-sm">
-          Офферов здесь пока нет. Найдите кандидата в <Link className="font-semibold text-brand" to="/employer/search">поиске</Link> и отправьте первый.
+          Офферов здесь пока нет. Найдите кандидата в <Link className="font-semibold text-brand-fg" to="/employer/search">поиске</Link> и отправьте первый.
         </p>
       )}
       <ul className="grid gap-3 md:grid-cols-2">{list.map((o) => <Row key={o.id} o={o} />)}</ul>
@@ -90,7 +90,7 @@ export function EmployerOfferDetail() {
   const err = withdraw.error ?? setStatus.error;
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4 md:p-6">
-      <Link to="/employer/offers" className="text-sm font-semibold text-brand hover:underline">← Все офферы</Link>
+      <Link to="/employer/offers" className="text-sm font-semibold text-brand-fg hover:underline">← Все офферы</Link>
       {q.isPending && <p role="status" className="text-muted">Загрузка…</p>}
       {q.isError && <ErrorNote>Оффер не найден.</ErrorNote>}
       {o && (
@@ -135,7 +135,7 @@ export function EmployerOfferDetail() {
               <p className="text-xs text-muted">Кандидат принял оффер и раскрыл контакты.</p>
               <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
                 <dt className="text-muted">Имя</dt><dd>{o.contacts.name}</dd>
-                {o.contacts.email && (<><dt className="text-muted">Почта</dt><dd className="break-all"><a className="text-brand" href={`mailto:${o.contacts.email}`}>{o.contacts.email}</a></dd></>)}
+                {o.contacts.email && (<><dt className="text-muted">Почта</dt><dd className="break-all"><a className="text-brand-fg" href={`mailto:${o.contacts.email}`}>{o.contacts.email}</a></dd></>)}
                 {o.contacts.telegram && (<><dt className="text-muted">Telegram</dt><dd>{o.contacts.telegram}</dd></>)}
                 {o.contacts.phone && (<><dt className="text-muted">Телефон</dt><dd>{o.contacts.phone}</dd></>)}
               </dl>

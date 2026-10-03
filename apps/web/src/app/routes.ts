@@ -63,13 +63,21 @@ export const SECTION_ROLE: Partial<Record<Section, Role>> = {
   admin: "fsp_admin",
 };
 
-export const NAV: Record<"candidate" | "employer" | "admin", { to: string; label: string }[]> = {
+export interface NavItem {
+  to: string;
+  label: string;
+  /** Не помещается в нижнюю панель на 375 px: только в верхнем меню. */
+  desktopOnly?: boolean;
+}
+
+export const NAV: Record<"candidate" | "employer" | "admin", NavItem[]> = {
   candidate: [
     { to: "/me", label: "Профиль" },
-    { to: "/me/graph", label: "Граф" },
     { to: "/me/offers", label: "Офферы" },
+    { to: "/onboarding", label: "Резюме" },
+    { to: "/me/graph", label: "Граф" },
     { to: "/me/growth", label: "Рост" },
-    { to: "/me/settings", label: "Настройки" },
+    { to: "/me/settings", label: "Настройки", desktopOnly: true },
   ],
   employer: [
     { to: "/employer/market", label: "Рынок" },

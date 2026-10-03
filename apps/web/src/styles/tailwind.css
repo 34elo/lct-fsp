@@ -7,6 +7,7 @@
 @theme inline {
   --color-brand: var(--brand);
   --color-brand-deep: var(--brand-deep);
+  --color-brand-fg: var(--brand-fg);
   --color-brand-mid: var(--brand-mid);
   --color-on-brand: var(--on-brand);
   --color-tint-50: var(--tint-50);

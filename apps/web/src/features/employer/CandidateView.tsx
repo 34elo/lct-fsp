@@ -167,7 +167,7 @@ export default function CandidateView() {
   const back = vacancyId ? `/employer/vacancies/${vacancyId}/shortlist` : "/employer/search";
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4 md:p-6">
-      <Link to={back} className="text-sm font-semibold text-brand hover:underline">← К выдаче</Link>
+      <Link to={back} className="text-sm font-semibold text-brand-fg hover:underline">← К выдаче</Link>
       {q.isPending && <p role="status" className="text-muted">Загрузка…</p>}
       {q.isError && <ErrorNote>Кандидат не найден или скрыт.</ErrorNote>}
       {q.data?.status === 200 && <Body c={q.data.data} vacancyId={vacancyId} />}

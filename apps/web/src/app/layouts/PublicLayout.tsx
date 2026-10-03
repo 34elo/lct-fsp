@@ -15,7 +15,7 @@ export default function PublicLayout() {
         <div className="ml-auto flex items-center gap-3">
           <ThemeToggle />
           {status === "anonymous" && (
-            <Link to="/login" className="font-semibold text-brand">
+            <Link to="/login" className="font-semibold text-brand-fg">
               Войти
             </Link>
           )}
