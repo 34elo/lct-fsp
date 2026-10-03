@@ -1,0 +1,21 @@
+# Герой «Ольга»: HR компании «Северный код» (вымышленная, продуктовая, 200 человек).
+key: olga
+role: employer
+email: olga@demo.fsp.test
+company: "Северный код"        # первая компания из config.yaml; верифицирована
+company_role: admin
+responsibility_score: 4.6
+vacancy:
+  title: "Backend-разработчик (Python) в команду API"
+  role: backend
+  grade_min: junior
+  grade_max: middle_plus
+  formats: [remote]
+  employment_type: full
+  city: null
+  salary_from: 150000
+  salary_to: 220000
+  description: "Высоконагруженный API для платформы онлайн-записи. Удалённо, вилка до 220 тыс."
+  skills:
+    required: [python, rest, sql, git, docker]
+    nice: [postgresql, redis]

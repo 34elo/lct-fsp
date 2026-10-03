@@ -284,6 +284,9 @@ services:
       FSP_MOCK_API_KEY: ${FSP_API_KEY}
       FSP_WEBHOOK_URL: http://fsp-connector:8300/integrations/fsp/webhook
       FSP_WEBHOOK_SECRET: ${FSP_WEBHOOK_SECRET}
+      FSP_MOCK_DATA: /seed/fsp-mock.json  # витрина make seed; нет файла — минимальный набор
+    volumes:
+      - ./reports/seed:/seed:ro
     command: ["uvicorn", "fsp_mock.main:app", "--host", "0.0.0.0", "--port", "8200"]
     healthcheck:
       <<: *pyhealth
