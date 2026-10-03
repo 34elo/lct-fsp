@@ -65,6 +65,11 @@ class CoreClient:
             "POST", "/internal/tg/link", json={"tg_user_id": tg_user_id, "token": token}
         )
 
+    async def magic_link(self, tg_user_id: int, redirect: str = "/") -> str:
+        """Одноразовая ссылка для входа на сайт (кнопка «Открыть на сайте»)."""
+        body = {"tg_user_id": tg_user_id, "redirect": redirect}
+        return (await self.request("POST", "/internal/auth/magic-link", json=body))["url"]
+
     async def profile(self, tg_user_id: int) -> dict:
         return await self.request("GET", "/internal/tg/profile", params={"tg_user_id": tg_user_id})
 

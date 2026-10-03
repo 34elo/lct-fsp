@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Request, Response
@@ -15,6 +15,7 @@ from app.deps import get_limiter, get_session
 from app.identity import service
 from app.identity.deps import get_current_user
 from app.identity.models import User
+from app.telegram import service as telegram
 
 router = APIRouter(tags=["auth"])
 REFRESH_COOKIE = "rt"
@@ -71,7 +72,7 @@ def _check_origin(request: Request) -> None:
         raise ProblemError(403, "forbidden_origin", "Недопустимый источник запроса")
 
 
-def _tokens_out(request: Request, response: Response, issued: service.IssuedTokens) -> AuthOut:
+def tokens_out(request: Request, response: Response, issued: service.IssuedTokens) -> AuthOut:
     _set_cookie(request, response, issued.refresh_token)
     return AuthOut(access_token=issued.access_token, user=UserOut.of(issued.user))
 
@@ -94,7 +95,7 @@ async def register(
     issued = await service.issue_tokens(
         session, request.app.state.settings.jwt_secret, user, request.headers.get("user-agent")
     )
-    return _tokens_out(request, response, issued)
+    return tokens_out(request, response, issued)
 
 
 @router.post("/auth/login", response_model=AuthOut)
@@ -112,7 +113,49 @@ async def login(
     issued = await service.issue_tokens(
         session, request.app.state.settings.jwt_secret, user, request.headers.get("user-agent")
     )
-    return _tokens_out(request, response, issued)
+    return tokens_out(request, response, issued)
+
+
+class MagicIn(BaseModel):
+    token: str = Field(min_length=1, max_length=256)
+
+
+@router.post("/auth/telegram", response_model=AuthOut)
+async def auth_telegram(
+    body: dict[str, Any],
+    request: Request,
+    response: Response,
+    session: AsyncSession = Depends(get_session),
+    limiter: RateLimiter = Depends(get_limiter),
+):
+    """Telegram Login Widget → вход или регистрация кандидата (security.md §1)."""
+    await limiter.check(f"tglogin:ip:{_client_ip(request)}", 10, 60)
+    s = request.app.state.settings
+    user = await telegram.login_widget(session, body, s.tg_bot_token)
+    issued = await service.issue_tokens(
+        session, s.jwt_secret, user, request.headers.get("user-agent")
+    )
+    return tokens_out(request, response, issued)
+
+
+@router.post("/auth/magic", response_model=AuthOut)
+async def auth_magic(
+    body: MagicIn,
+    request: Request,
+    response: Response,
+    session: AsyncSession = Depends(get_session),
+    limiter: RateLimiter = Depends(get_limiter),
+):
+    """Одноразовая ссылка из бота (Redis GETDEL, 5 мин) → вход."""
+    await limiter.check(f"magic:ip:{_client_ip(request)}", 10, 60)
+    user = await telegram.consume_magic(session, request.app.state.redis, body.token)
+    issued = await service.issue_tokens(
+        session,
+        request.app.state.settings.jwt_secret,
+        user,
+        request.headers.get("user-agent"),
+    )
+    return tokens_out(request, response, issued)
 
 
 @router.post("/auth/refresh", response_model=AuthOut)
@@ -133,7 +176,7 @@ async def refresh(
         resp = problem_response(401, "refresh_reused", "Сессия недействительна", "Войдите заново")
         _clear_cookie(request, resp)
         return resp
-    return _tokens_out(request, response, issued)
+    return tokens_out(request, response, issued)
 
 
 @router.post("/auth/logout", status_code=204)
@@ -154,16 +197,18 @@ class MeCompany(BaseModel):
 
 class MeOut(UserOut):
     consents: list[str]
+    telegram_linked: bool = False
     company: MeCompany | None = None
 
 
 @router.get("/me", response_model=MeOut)
 async def me(user: User = Depends(get_current_user), session: AsyncSession = Depends(get_session)):
-    """consents — действующие типы; company — E6-1; candidate, telegram_linked — E3-1, E1-3."""
+    """consents — действующие типы; company — E6-1; candidate — E3-1."""
     found = await companies.my_company(session, user.id) if user.role == "employer" else None
     return MeOut(
         **UserOut.of(user).model_dump(),
         consents=sorted(await consents.active(session, user.id)),
+        telegram_linked=await telegram.is_linked(session, user.id),
         company=MeCompany(
             id=found[0].id, name=found[0].name, status=found[0].status, role=found[1].role
         )
