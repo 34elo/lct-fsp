@@ -220,7 +220,7 @@ K_soft = 1 + min(β(v), Σ_k α_k(v) · s_k)        командные сигн�
 - **Оценка θ:** EAP на сетке θ ∈ [−3, 3] с шагом 0.1, априорное N(0, 1). SE — апостериорное стандартное отклонение.
 - **Выбор вопроса:** максимум информации Фишера в θ̂ среди неиспользованных. Плюс ограничение экспозиции: из топ-3 по информации выбираем случайно.
 - **Остановка:** ≥ 5 вопросов и SE < 0.45, или 8 вопросов.
-- **Банк:** ~10 навыков × 15–20 вопросов (python, javascript, sql, algorithms, data_structures, git, docker, linux, networks, react). Вопросы пишет команда. LLM (`ml.generate_questions`) только предлагает черновики, каждый проверяет человек (`status=draft → approved`).
+- **Банк:** ~10 навыков × 15–20 вопросов (python, javascript, sql, algorithms, data_structures, git, docker, linux, networks, react). Черновик: `data/questions/<skill>.yaml` (`id`, `d` 1–5, `text`, `code?`, `options` ×4, `correct` A–D, `explanation`; `status: draft`, `source: llm_draft`). Вопросы пишет команда. LLM (`ml.generate_questions`) только предлагает черновики, каждый проверяет человек (`status=draft → approved`).
 - **Метрики на синтетике:** корреляция θ̂ с настоящим уровнем; адаптивный тест примерно в 2 раза короче фиксированного при той же точности (симуляция в `tools/eval`).
 
 ## 9. ДНК кода (`ml.analyze_code`)
