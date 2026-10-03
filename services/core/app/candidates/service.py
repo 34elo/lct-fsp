@@ -51,7 +51,8 @@ async def get_or_create(session: AsyncSession, user_id: uuid.UUID, secret: str) 
                 await session.flush()
             return cand
         except IntegrityError:
-            session.expunge(cand)
+            if cand in session:  # откат savepoint уже мог убрать объект из сессии
+                session.expunge(cand)
             existing = await session.get(Candidate, user_id)
             if existing is not None:  # параллельный запрос успел раньше
                 return existing
