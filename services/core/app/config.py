@@ -29,3 +29,6 @@ class Settings(BaseServiceSettings):
     embed_timeout_seconds: float = 10.0
     # соль псевдонимов аналитики HMAC(id, ANALYTICS_SALT) (metrics.md §7); в проде из .env
     analytics_salt: str = "dev-only-analytics-salt"
+    # fsp-connector (api.md §2.9): OAuth и привязка ФСП; пусто — эндпоинты отвечают 503
+    fsp_connector_url: str = ""
+    service_token_core: str = ""

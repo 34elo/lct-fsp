@@ -19,6 +19,7 @@ from app.config import Settings
 from app.consents.router import router as consents_router
 from app.events_stream import UiHub
 from app.events_stream import router as events_router
+from app.fsp.router import router as fsp_router
 from app.identity.router import router as identity_router
 from app.matching.router import router as search_router
 from app.offers.router import router as offers_router
@@ -68,6 +69,7 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(telegram_router)
     app.include_router(telegram_internal_router)
     app.include_router(candidates_router)
+    app.include_router(fsp_router)
     app.include_router(resumes_router)
     app.include_router(taxonomy_router)
     app.include_router(companies_router)
