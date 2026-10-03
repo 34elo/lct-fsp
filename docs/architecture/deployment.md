@@ -119,6 +119,8 @@ api.fsp.patissons.tech {
 
 **Профили:** `docker compose --profile core --profile ml --profile llm up -d`. Фронтендер может запускать только `core` + мок ML (`ML_FAKE=true` отдаёт заготовленные ответы), чтобы не зависеть от GPU.
 
+**Запуск одной командой (проверено 2026-10-03).** `make up` собирает образы (`infra/docker/python.Dockerfile` для python-сервисов воркспейса: multi-stage, uv, `uv sync --frozen`, пользователь без root; `apps/web/Dockerfile`: сборка Vite, статика в Caddy), прогоняет `rabbitmq-init`, `minio-init`, `core-migrate` (Alembic + справочник навыков), `fsp-connector-migrate` и поднимает профили `core`, `ml`, `llm` с `--wait`. Окружение: `.env`, если в нём задан `JWT_SECRET`, иначе `.env.demo`, который `infra/scripts/gen-demo-env.sh` создаёт со случайными тестовыми секретами (если его нет; в `.gitignore`). Профиль `bot` добавляется, только если в env-файле задан `TG_BOT_TOKEN`. `ML_FAKE=true` по умолчанию. Образ `fsp-core` общий для `core-api`, `core-worker`, `core-scheduler`. `core-api` запускается с `--root-path /api/v1`, gateway срезает префикс `/api/v1`. Снаружи доступен только gateway `:28080` (плюс UI RabbitMQ, Postgres и Redis на `127.0.0.1`). Проверено на поднятом стеке: все контейнеры healthy, `GET /healthz` и маршруты по Host (`dashboard.`, `api.`, `mock.`, `s3.fsp.patissons.tech`), регистрация → логин → `GET /me` и соединение SSE `/events/stream` через gateway. Не проверялось: профиль `bot` (нужен токен), реальный llama-server (`ML_FAKE=true`), сборка с нуля на чистой машине без кеша слоёв.
+
 ## 3. GPU: RX 5700 XT + Vulkan
 
 1. На хосте: Mesa с RADV (`mesa-vulkan-drivers`), проверка `vulkaninfo --summary` — видна `AMD Radeon RX 5700 XT (RADV NAVI10)`.
