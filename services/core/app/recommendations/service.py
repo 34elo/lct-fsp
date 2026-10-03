@@ -7,7 +7,7 @@
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.recommendations.models import Impression, RecFeedback
@@ -106,3 +106,29 @@ async def get_session_feedback(session: AsyncSession, session_id: str) -> list[R
         .order_by(RecFeedback.created_at)
     )
     return result.scalars().all()
+
+
+async def shown_without_action(
+    session: AsyncSession, company_id: UUID, candidate_ids: list[UUID]
+) -> dict[UUID, int]:
+    """Сколько раз кандидат показан компании без единой реакции (rec_feedback) на него."""
+    if not candidate_ids:
+        return {}
+    acted = (
+        select(RecFeedback.id)
+        .where(
+            RecFeedback.company_id == Impression.company_id,
+            RecFeedback.candidate_id == Impression.candidate_id,
+        )
+        .exists()
+    )
+    q = (
+        select(Impression.candidate_id, func.count())
+        .where(
+            Impression.company_id == company_id,
+            Impression.candidate_id.in_(candidate_ids),
+            ~acted,
+        )
+        .group_by(Impression.candidate_id)
+    )
+    return {cid: n for cid, n in (await session.execute(q)).all()}

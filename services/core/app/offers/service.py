@@ -112,6 +112,24 @@ async def _count_since(session: AsyncSession, column: Any, value: uuid.UUID, sin
     return count, oldest
 
 
+async def open_counts(
+    session: AsyncSession, candidate_ids: list[uuid.UUID]
+) -> dict[uuid.UUID, int]:
+    """Сколько офферов кандидат получил и ещё не ответил (sent/viewed, срок не вышел)."""
+    if not candidate_ids:
+        return {}
+    q = (
+        select(Offer.candidate_id, func.count())
+        .where(
+            Offer.candidate_id.in_(candidate_ids),
+            Offer.status.in_(OPEN),
+            Offer.expires_at > datetime.now(UTC),
+        )
+        .group_by(Offer.candidate_id)
+    )
+    return {cid: n for cid, n in (await session.execute(q)).all()}
+
+
 def _retry_after(oldest: datetime | None, now: datetime) -> dict[str, str]:
     if oldest is None:
         return {"Retry-After": str(int(WINDOW.total_seconds()))}
