@@ -166,3 +166,113 @@ def test_distinct_pseudonyms_and_pseudo_ids(c):
     hs = [_user(c, f"u{i}@x.io") for i in range(5)]
     names = {c.get("/candidates/me/profile", headers=h).json()["pseudonym"] for h in hs}
     assert len(names) == 5
+
+
+def _seed_graph(c, uid, h_slug="python"):
+    """Рёбра графа и результаты пересчёта, как их оставляет `recompute_profile`."""
+    import json
+    import sqlite3
+
+    sid, ev_id, fact = uuid.uuid4().hex, uuid.uuid4().hex, uuid.uuid4().hex
+    with sqlite3.connect(c.db_path) as con:
+        con.execute(
+            "insert into skills (id, slug, name, kind, grp, status, source, support_candidates,"
+            " support_vacancies, testable) values (?,?,?,?,?,?,?,0,0,0)",
+            (sid, h_slug, "Python", "hard", "language", "active", "seed"),
+        )
+        con.execute(
+            "insert into evidence (id, candidate_id, skill_id, source, strength, observed_at,"
+            " fact_type, fact_id, details, verified, is_active) values (?,?,?,?,?,?,?,?,?,1,1)",
+            (ev_id, uid, sid, "fsp", 0.9, "2026-01-10", "fsp_result", fact,
+             json.dumps({"label": "Кубок ФСП, финал, 2 место из 120"})),
+        )  # fmt: skip
+        con.execute(
+            "insert into candidate_skills (candidate_id, skill_id, confidence, level, sources,"
+            " top_evidence, claimed_only, derived) values (?,?,?,?,?,?,0,0)",
+            (uid, sid, 0.8, 3, json.dumps(["fsp"]), json.dumps([ev_id])),
+        )
+        con.execute(
+            "update candidates set primary_role=?, roles=?, primary_stack=?, grade=?,"
+            " grade_score=?, grade_confidence=?, grade_breakdown=?, grade_next=?, team_signals=?"
+            " where user_id=?",
+            (
+                "backend",
+                json.dumps([{"role": "backend", "weight": 0.9}]),
+                json.dumps(["python"]),
+                "junior_plus",
+                4.5,
+                0.5,
+                json.dumps([{"signal": "experience", "value": 12, "points": 3.0,
+                             "evidence_ids": []},
+                            {"signal": "fsp_achievement", "value": "national_finalist",
+                             "points": 2.0, "evidence_ids": [ev_id]}]),
+                json.dumps({"grade": "middle", "points_needed": 1.5,
+                            "hints": [{"signal": "tests", "max_gain": 3, "text": "Пройдите тест"}],
+                            }),
+                json.dumps({
+                    "leadership": {"value": 0.7, "facts": [
+                        {"kind": "captain", "fact_id": fact, "contribution": 0.7,
+                         "level": "national", "place": 2, "year": 2026}]},
+                    "growth": {"value": 0.1, "facts": []},
+                }),
+                uid,
+            ),
+        )  # fmt: skip
+    return sid, ev_id
+
+
+def _uid(c, h):
+    me = c.get("/me", headers=h)
+    assert me.status_code == 200, me.text
+    return me.json()["id"].replace("-", "")
+
+
+def test_profile_has_category_grade_skills_team_signals(c):
+    h = _user(c, "a@x.io")
+    c.get("/candidates/me/profile", headers=h)
+    c.db_path = Path(c.app_.state.settings.database_url.split("///")[1])
+    _seed_graph(c, _uid(c, h))
+    p = c.get("/candidates/me/profile", headers=h).json()
+    assert p["category"]["primary_role"] == "backend"
+    assert p["category"]["primary_stack"] == ["python"]
+    g = p["grade"]
+    assert (g["grade"], g["preliminary"], g["confidence"]) == ("junior_plus", False, 0.5)
+    assert [b["label"] for b in g["breakdown"]][:2] == [
+        "Стаж",
+        "Достижение на соревнованиях ФСП",
+    ]
+    assert g["next_grade"] == {"grade": "middle", "points_needed": 1.5, "hints": ["Пройдите тест"]}
+    (s,) = p["skills"]
+    assert s["skill"]["slug"] == "python" and s["level"] == 3 and s["sources"] == ["fsp"]
+    assert s["top_evidence"][0]["title"] == "Кубок ФСП, финал, 2 место из 120"
+    (t,) = p["team_signals"]  # growth 0.1 < 0.3 не показываем
+    assert (t["signal"], t["label"]) == ("leadership", "present" if t["value"] < 0.6 else "strong")
+    assert t["facts"][0]["title"] == "Капитан команды, всероссийский уровень, 2 место, 2026"
+
+
+def test_empty_profile_has_null_category_and_no_skills(c):
+    h = _user(c, "a@x.io")
+    p = c.get("/candidates/me/profile", headers=h).json()
+    assert p["category"] is None and p["skills"] == [] and p["team_signals"] == []
+    assert p["grade"]["grade"] is None and p["grade"]["preliminary"] is True
+
+
+def test_skill_evidence_by_slug_and_id_and_ownership(c):
+    h = _user(c, "a@x.io")
+    c.get("/candidates/me/profile", headers=h)
+    c.db_path = Path(c.app_.state.settings.database_url.split("///")[1])
+    sid, ev_id = _seed_graph(c, _uid(c, h))
+    for ref in ("python", str(uuid.UUID(sid))):
+        r = c.get(f"/candidates/me/skills/{ref}/evidence", headers=h)
+        assert r.status_code == 200, r.text
+        (e,) = r.json()
+        assert e["id"] == str(uuid.UUID(ev_id)) and e["source"] == "fsp" and e["verified"]
+        assert e["title"] == "Кубок ФСП, финал, 2 место из 120"
+    # другой кандидат: навык есть в таксономии, но не его — 404
+    other = _user(c, "b@x.io")
+    r = c.get("/candidates/me/skills/python/evidence", headers=other)
+    assert r.status_code == 404 and r.json()["code"] == "skill_not_found"
+    assert c.get("/candidates/me/skills/nope/evidence", headers=h).status_code == 404
+    assert c.get("/candidates/me/skills/python/evidence").status_code == 401
+    e = _user(c, "e@x.io", role="employer")
+    assert c.get("/candidates/me/skills/python/evidence", headers=e).status_code == 403

@@ -14,13 +14,16 @@ from app.candidates.models import Candidate
 from app.consents import service as consents
 from app.consents.deps import require_consent
 from app.deps import get_session
+from app.graph.trust import TrustConfig
 from app.identity.deps import require_roles
 from app.identity.models import User
+from app.matching import card
 from app.resumes import service as resumes
 from app.views import service as views
 
 router = APIRouter(prefix="/candidates/me", tags=["candidates"])
 
+_TRUST = TrustConfig.load()
 _owner = require_roles("candidate")
 _writer = require_consent(ConsentType.pd_processing)
 
@@ -58,7 +61,7 @@ class ExperienceItem(BaseModel):
 
 
 class CandidateProfile(BaseModel):
-    """Заготовка `CandidateProfile` (api.md §3): поля движка доверия добавят E3-2…E4-x."""
+    """`CandidateProfile` (api.md §3). Пока без `fsp`, `code`, `completeness`."""
 
     pseudonym: str
     profile_version: int
@@ -66,10 +69,10 @@ class CandidateProfile(BaseModel):
     active_until: datetime | None
     preferences: Preferences
     visibility: Visibility
-    category: None = None
-    grade: None = None
-    skills: list = []
-    team_signals: list = []
+    category: card.Category | None = None
+    grade: card.GradeInfo
+    skills: list[card.SkillWithTrust] = []
+    team_signals: list[card.TeamSignal] = []
     claimed_soft: list[str] = []
     experience: list[ExperienceItem] = []
 
@@ -101,6 +104,7 @@ class StoplistIO(BaseModel):
 
 async def profile_out(session: AsyncSession, c: Candidate) -> CandidateProfile:
     vis = {**{"teams": True}, **c.visibility}
+    parts = await card.build_owner_parts(session, c, _TRUST)
     return CandidateProfile(
         pseudonym=c.pseudonym,
         profile_version=c.profile_version,
@@ -114,6 +118,10 @@ async def profile_out(session: AsyncSession, c: Candidate) -> CandidateProfile:
             relocation=c.relocation,
         ),
         visibility=Visibility(**{k: bool(vis.get(k, False)) for k in Visibility.model_fields}),
+        category=parts.category,
+        grade=parts.grade,
+        skills=parts.skills,
+        team_signals=parts.team_signals,
         claimed_soft=list(c.claimed_soft or []),
         experience=await resumes.experience_for_profile(session, c.user_id),
     )
@@ -132,6 +140,21 @@ async def get_profile(
     session: AsyncSession = Depends(get_session),
 ):
     return await profile_out(session, await _cand(request, session, user))
+
+
+@router.get("/skills/{skill_id}/evidence", response_model=list[card.EvidenceBrief])
+async def skill_evidence(
+    skill_id: str,
+    request: Request,
+    user: User = Depends(owner),
+    session: AsyncSession = Depends(get_session),
+):
+    """«Откуда взялся навык»: `skill_id` — id или slug; чужого/отсутствующего навыка нет — 404."""
+    cand = await _cand(request, session, user)
+    items = await card.skill_evidence(session, cand, skill_id, _TRUST)
+    if items is None:
+        raise ProblemError(404, "skill_not_found", "Навык не найден")
+    return items
 
 
 @router.patch("/preferences", response_model=CandidateProfile)
