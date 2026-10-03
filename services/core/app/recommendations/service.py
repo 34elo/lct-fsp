@@ -51,7 +51,7 @@ async def record_feedback(
     user_id: UUID,
     session_id: str,
     candidate_id: UUID,
-    event: str,  # open | dwell | shortlist | dismiss | offer
+    event: str,  # open | dwell | shortlist | dismiss
     reason: str | None = None,
 ) -> RecFeedback:
     """Записать реакцию на показ."""
@@ -72,6 +72,22 @@ async def record_feedback(
 async def get_impression_by_id(session: AsyncSession, impression_id: int) -> Impression | None:
     """Получить impression по ID."""
     return await session.get(Impression, impression_id)
+
+
+async def find_last_impression(
+    session: AsyncSession, company_id: UUID, session_id: str, candidate_id: UUID
+) -> Impression | None:
+    """Последний показ кандидата в сессии для компании."""
+    return await session.scalar(
+        select(Impression)
+        .where(
+            Impression.company_id == company_id,
+            Impression.session_id == session_id,
+            Impression.candidate_id == candidate_id,
+        )
+        .order_by(Impression.id.desc())
+        .limit(1)
+    )
 
 
 async def get_session_impressions(session: AsyncSession, session_id: str) -> list[Impression]:
