@@ -3,6 +3,7 @@
 from fsp_platform.db import Base
 from fsp_platform.outbox import InboxRecord, OutboxRecord  # noqa: F401
 
+from app.analytics.models import AnalyticsEventRow  # noqa: F401
 from app.candidates.models import Candidate  # noqa: F401
 from app.companies.models import Company, CompanyMember  # noqa: F401
 from app.consents.models import Consent  # noqa: F401

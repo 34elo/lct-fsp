@@ -181,3 +181,47 @@ def test_asyncapi_complete_and_refs_resolve():
 
 def _now():
     return datetime.now(UTC)
+
+
+def test_analytics_events_validate_and_reject_pii():
+    from fsp_contracts.analytics import (
+        ANALYTICS_EVENTS,
+        AnalyticsEvent,
+        UnknownAnalyticsEvent,
+        validate_event,
+    )
+
+    def ev(name, props, **kw):
+        return AnalyticsEvent(
+            event=name, ts=datetime(2026, 10, 5, 12, tzinfo=UTC), props=props, **kw
+        )
+
+    ok = validate_event(
+        ev("search_submitted", {"query_len": 54, "chips": 4, "parse_source": "llm"})
+    )
+    assert ok.props["refining"] is False
+    # лишнее поле (в т.ч. свободный текст) отклоняется
+    with pytest.raises(ValidationError):
+        validate_event(
+            ev(
+                "search_submitted",
+                {"query_len": 5, "chips": 1, "parse_source": "rule", "query": "ищу Васю"},
+            )
+        )
+    # свободный текст в slug-поле отклоняется
+    with pytest.raises(ValidationError):
+        validate_event(ev("uplift_shown", {"skill": "Иван Петров"}), source="web")
+    # неизвестное событие и чужой источник
+    with pytest.raises(UnknownAnalyticsEvent):
+        validate_event(ev("hack", {}))
+    with pytest.raises(UnknownAnalyticsEvent):
+        validate_event(ev("offer_accepted", {"offer_id": str(uuid4())}), source="web")
+    # actor только псевдоним, не email/uuid
+    with pytest.raises(ValidationError):
+        ev("signup_completed", {"channel": "web"}, actor="user@example.com")
+    with pytest.raises(ValidationError):
+        AnalyticsEvent(event="x", ts=datetime(2026, 1, 1), props={})  # naive ts
+    # alias `from` у graph_opened
+    g = validate_event(ev("graph_opened", {"nodes": 12, "from": "card"}), source="web")
+    assert g.props == {"nodes": 12, "from": "card"}
+    assert len(ANALYTICS_EVENTS) >= 45

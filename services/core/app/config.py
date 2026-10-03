@@ -27,3 +27,5 @@ class Settings(BaseServiceSettings):
     embed_model: str = "BAAI/bge-m3"
     embed_dim: int = 1024
     embed_timeout_seconds: float = 10.0
+    # соль псевдонимов аналитики HMAC(id, ANALYTICS_SALT) (metrics.md §7); в проде из .env
+    analytics_salt: str = "dev-only-analytics-salt"
