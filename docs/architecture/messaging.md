@@ -40,6 +40,7 @@ ml-worker ─────► │ ui.user.<user_id> (прогресс задач)
 | `resume.parsed` / `resume.confirmed` | core | `{resume_id, candidate_id}` |
 | `evidence.changed` | core | `{candidate_id, sources[]}` |
 | `skills.profile.updated` | core | `{candidate_id, profile_version, diff: {skills_up, skills_new, grade, category}}` |
+| `category.disputed` | core | `{dispute_id, candidate_id, claimed_role, claimed_grade}` (комментарий кандидата в событие не попадает) |
 | `taxonomy.updated` | core | `{version, changed_skill_ids[]}` |
 | `vacancy.published` / `vacancy.updated` / `vacancy.closed` | core | `{vacancy_id, version}` |
 | `offer.sent` / `offer.viewed` / `offer.accepted` / `offer.declined` / `offer.expired` / `offer.withdrawn` / `offer.message` / `offer.status_changed` | core | `{offer_id, candidate_id, company_id, …}` |

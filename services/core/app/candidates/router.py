@@ -4,7 +4,14 @@ from datetime import datetime
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Request
-from fsp_contracts.enums import ConsentType, EmploymentType, SearchStatus, WorkFormat
+from fsp_contracts.enums import (
+    ConsentType,
+    EmploymentType,
+    Grade,
+    RoleSlug,
+    SearchStatus,
+    WorkFormat,
+)
 from fsp_platform.app import ProblemError
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,16 +21,19 @@ from app.candidates.models import Candidate
 from app.consents import service as consents
 from app.consents.deps import require_consent
 from app.deps import get_session
+from app.graph.category import load_category
 from app.graph.trust import TrustConfig
 from app.identity.deps import require_roles
 from app.identity.models import User
 from app.matching import card
 from app.resumes import service as resumes
+from app.taxonomy.service import SkillGraphCache
 from app.views import service as views
 
 router = APIRouter(prefix="/candidates/me", tags=["candidates"])
 
 _TRUST = TrustConfig.load()
+_GRAPH = SkillGraphCache()
 _owner = require_roles("candidate")
 _writer = require_consent(ConsentType.pd_processing)
 
@@ -212,3 +222,91 @@ async def my_views(
 ) -> dict:
     """«Вас смотрели N компаний» — только агрегаты, без названий (security.md §3)."""
     return await views.stats(session, user.id)
+
+
+class CategoryRole(BaseModel):
+    role: str
+    weight: float  # доля метки среди выбранных
+    score: float  # role_score (ml.md §4)
+
+
+class CategoryContribution(BaseModel):
+    skill: str
+    weight: float
+    confidence: float
+    level: int
+    sources: list[str]
+    contribution: float
+
+
+class DisputeOut(BaseModel):
+    id: UUID
+    claimed_role: str
+    claimed_grade: str
+    comment: str | None
+    status: str  # open | resolved
+    created_at: datetime
+
+
+class CategoryExplanation(BaseModel):
+    """`CategoryExplanation` (api.md §3): почему такая категория и как подняться."""
+
+    primary_role: str | None
+    roles: list[CategoryRole]
+    primary_stack: list[str]
+    explanation: list[CategoryContribution]  # топ-навыки основной роли по вкладу w·conf
+    grade: card.GradeInfo  # разбивка, уверенность, next_grade с подсказками
+    dispute: DisputeOut | None = None
+
+
+class DisputeIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    claimed_role: RoleSlug
+    claimed_grade: Grade
+    comment: str | None = Field(default=None, max_length=2000)
+
+
+def _dispute_out(d) -> DisputeOut:
+    return DisputeOut(
+        id=d.id, claimed_role=d.claimed_role, claimed_grade=d.claimed_grade, comment=d.comment,
+        status="resolved" if d.resolved_at else "open", created_at=d.created_at,
+    )  # fmt: skip
+
+
+@router.get("/category", response_model=CategoryExplanation)
+async def get_category(
+    request: Request,
+    user: User = Depends(owner),
+    session: AsyncSession = Depends(get_session),
+):
+    cand = await _cand(request, session, user)
+    cat = await load_category(session, cand.user_id, await _GRAPH.get(session), _TRUST.category)
+    d = await service.open_dispute(session, cand.user_id)
+    return CategoryExplanation(
+        primary_role=cat.primary_role,
+        roles=[CategoryRole(role=r.role, weight=r.weight, score=cat.scores.get(r.role, 0.0))
+               for r in cat.roles],
+        primary_stack=cat.primary_stack,
+        explanation=[CategoryContribution(skill=e.slug, weight=e.weight, confidence=e.confidence,
+                                          level=e.level, sources=list(e.sources),
+                                          contribution=e.contribution)
+                     for e in cat.explanation],
+        grade=card._grade_info(cand),
+        dispute=_dispute_out(d) if d else None,
+    )  # fmt: skip
+
+
+@router.post("/category/dispute", response_model=DisputeOut, status_code=201)
+async def dispute_category(
+    body: DisputeIn,
+    request: Request,
+    user: User = Depends(writer),
+    session: AsyncSession = Depends(get_session),
+):
+    cand = await _cand(request, session, user)
+    row = await service.add_dispute(
+        session, cand, role=body.claimed_role.value, grade=body.claimed_grade.value,
+        comment=body.comment,
+    )  # fmt: skip
+    return _dispute_out(row)
