@@ -359,6 +359,53 @@
         }
       }
     },
+    "/candidates/me/skills/{skill_id}/evidence": {
+      "get": {
+        "tags": [
+          "candidates"
+        ],
+        "summary": "Skill Evidence",
+        "description": "«Откуда взялся навык»: `skill_id` — id или slug; чужого/отсутствующего навыка нет — 404.",
+        "operationId": "skill_evidence_candidates_me_skills__skill_id__evidence_get",
+        "parameters": [
+          {
+            "name": "skill_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Skill Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EvidenceBrief"
+                  },
+                  "title": "Response Skill Evidence Candidates Me Skills  Skill Id  Evidence Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/candidates/me/preferences": {
       "patch": {
         "tags": [
@@ -2417,21 +2464,30 @@
             "$ref": "#/components/schemas/Visibility"
           },
           "category": {
-            "type": "null",
-            "title": "Category"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Category"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "grade": {
-            "type": "null",
-            "title": "Grade"
+            "$ref": "#/components/schemas/GradeInfo"
           },
           "skills": {
-            "items": {},
+            "items": {
+              "$ref": "#/components/schemas/SkillWithTrust"
+            },
             "type": "array",
             "title": "Skills",
             "default": []
           },
           "team_signals": {
-            "items": {},
+            "items": {
+              "$ref": "#/components/schemas/TeamSignal"
+            },
             "type": "array",
             "title": "Team Signals",
             "default": []
@@ -2460,10 +2516,11 @@
           "search_status",
           "active_until",
           "preferences",
-          "visibility"
+          "visibility",
+          "grade"
         ],
         "title": "CandidateProfile",
-        "description": "Заготовка `CandidateProfile` (api.md §3): поля движка доверия добавят E3-2…E4-x."
+        "description": "`CandidateProfile` (api.md §3). Пока без `fsp`, `code`, `completeness`."
       },
       "CardMatch": {
         "properties": {
@@ -2485,6 +2542,35 @@
           "explanation"
         ],
         "title": "CardMatch"
+      },
+      "Category": {
+        "properties": {
+          "primary_role": {
+            "type": "string",
+            "title": "Primary Role"
+          },
+          "roles": {
+            "items": {
+              "$ref": "#/components/schemas/RoleWeight"
+            },
+            "type": "array",
+            "title": "Roles"
+          },
+          "primary_stack": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Primary Stack"
+          }
+        },
+        "type": "object",
+        "required": [
+          "primary_role",
+          "roles",
+          "primary_stack"
+        ],
+        "title": "Category"
       },
       "CompanyBrief": {
         "properties": {
@@ -4707,6 +4793,24 @@
         ],
         "title": "RoleSlug"
       },
+      "RoleWeight": {
+        "properties": {
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "weight": {
+            "type": "number",
+            "title": "Weight"
+          }
+        },
+        "type": "object",
+        "required": [
+          "role",
+          "weight"
+        ],
+        "title": "RoleWeight"
+      },
       "SearchFilters": {
         "properties": {
           "roles": {
@@ -5311,6 +5415,61 @@
           "company_ids"
         ],
         "title": "StoplistIO"
+      },
+      "TeamFactBrief": {
+        "properties": {
+          "fact_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fact Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "title": "TeamFactBrief"
+      },
+      "TeamSignal": {
+        "properties": {
+          "signal": {
+            "type": "string",
+            "title": "Signal"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "facts": {
+            "items": {
+              "$ref": "#/components/schemas/TeamFactBrief"
+            },
+            "type": "array",
+            "title": "Facts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "signal",
+          "value",
+          "label",
+          "facts"
+        ],
+        "title": "TeamSignal"
       },
       "TeamSignalKind": {
         "type": "string",

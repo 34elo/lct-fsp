@@ -25,6 +25,7 @@ import type {
 
 import type {
   CandidateProfile,
+  EvidenceBrief,
   HTTPValidationError,
   MyViewsCandidatesMeViewsGet200,
   PreferencesIn,
@@ -156,6 +157,126 @@ export function useGetProfileCandidatesMeProfileGet<TData = Awaited<ReturnType<t
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetProfileCandidatesMeProfileGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type skillEvidenceCandidatesMeSkillsSkillIdEvidenceGetResponse200 = {
+  data: EvidenceBrief[]
+  status: 200
+}
+
+export type skillEvidenceCandidatesMeSkillsSkillIdEvidenceGetResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type skillEvidenceCandidatesMeSkillsSkillIdEvidenceGetResponseSuccess = (skillEvidenceCandidatesMeSkillsSkillIdEvidenceGetResponse200) & {
+  headers: Headers;
+};
+export type skillEvidenceCandidatesMeSkillsSkillIdEvidenceGetResponseError = (skillEvidenceCandidatesMeSkillsSkillIdEvidenceGetResponse422) & {
+  headers: Headers;
+};
+
+export type skillEvidenceCandidatesMeSkillsSkillIdEvidenceGetResponse = (skillEvidenceCandidatesMeSkillsSkillIdEvidenceGetResponseSuccess | skillEvidenceCandidatesMeSkillsSkillIdEvidenceGetResponseError)
+
+export const getSkillEvidenceCandidatesMeSkillsSkillIdEvidenceGetUrl = (skillId: string,) => {
+
+
+
+
+  return `/candidates/me/skills/${skillId}/evidence`
+}
+
+/**
+ * «Откуда взялся навык»: `skill_id` — id или slug; чужого/отсутствующего навыка нет — 404.
+ * @summary Skill Evidence
+ */
+export const skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet = async (skillId: string, options?: Parameters<typeof apiFetch>[1]): Promise<skillEvidenceCandidatesMeSkillsSkillIdEvidenceGetResponse> => {
+
+  return apiFetch<skillEvidenceCandidatesMeSkillsSkillIdEvidenceGetResponse>(getSkillEvidenceCandidatesMeSkillsSkillIdEvidenceGetUrl(skillId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getSkillEvidenceCandidatesMeSkillsSkillIdEvidenceGetQueryKey = (skillId: string,) => {
+    return [
+    `/candidates/me/skills/${skillId}/evidence`
+    ] as const;
+    }
+
+
+export const getSkillEvidenceCandidatesMeSkillsSkillIdEvidenceGetQueryOptions = <TData = Awaited<ReturnType<typeof skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet>>, TError = ErrorType<HTTPValidationError>>(skillId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSkillEvidenceCandidatesMeSkillsSkillIdEvidenceGetQueryKey(skillId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet>>> = ({ signal }) => skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet(skillId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: skillId !== null && skillId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SkillEvidenceCandidatesMeSkillsSkillIdEvidenceGetQueryResult = NonNullable<Awaited<ReturnType<typeof skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet>>>
+export type SkillEvidenceCandidatesMeSkillsSkillIdEvidenceGetQueryError = ErrorType<HTTPValidationError>
+
+
+export function useSkillEvidenceCandidatesMeSkillsSkillIdEvidenceGet<TData = Awaited<ReturnType<typeof skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet>>, TError = ErrorType<HTTPValidationError>>(
+ skillId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet>>,
+          TError,
+          Awaited<ReturnType<typeof skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSkillEvidenceCandidatesMeSkillsSkillIdEvidenceGet<TData = Awaited<ReturnType<typeof skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet>>, TError = ErrorType<HTTPValidationError>>(
+ skillId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet>>,
+          TError,
+          Awaited<ReturnType<typeof skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSkillEvidenceCandidatesMeSkillsSkillIdEvidenceGet<TData = Awaited<ReturnType<typeof skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet>>, TError = ErrorType<HTTPValidationError>>(
+ skillId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Skill Evidence
+ */
+
+export function useSkillEvidenceCandidatesMeSkillsSkillIdEvidenceGet<TData = Awaited<ReturnType<typeof skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet>>, TError = ErrorType<HTTPValidationError>>(
+ skillId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSkillEvidenceCandidatesMeSkillsSkillIdEvidenceGetQueryOptions(skillId,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

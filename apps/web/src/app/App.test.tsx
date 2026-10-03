@@ -40,7 +40,9 @@ const asUser = (role: string) =>
   mockFetch((url) =>
     url.endsWith("/auth/refresh")
       ? { status: 200, body: { access_token: "t" } }
-      : { status: 200, body: { id: "u1", email: "a@b.ru", role, consents: ["pd_processing"] } },
+      : url.endsWith("/candidates/me/profile")
+        ? { status: 404 }
+        : { status: 200, body: { id: "u1", email: "a@b.ru", role, consents: ["pd_processing"] } },
   );
 
 beforeEach(() => {
