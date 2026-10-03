@@ -124,3 +124,11 @@ async def reject(session: AsyncSession, company_id: uuid.UUID) -> Company:
 async def get_company(session: AsyncSession, company_id: uuid.UUID) -> Company | None:
     """Компания без проверки доступа — для публичных блоков (оффер кандидату)."""
     return await session.get(Company, company_id)
+
+
+async def member_user_ids(session: AsyncSession, company_id: uuid.UUID) -> list[uuid.UUID]:
+    """Все участники компании — адресаты уведомлений по офферам."""
+    rows = await session.scalars(
+        select(CompanyMember.user_id).where(CompanyMember.company_id == company_id)
+    )
+    return list(rows)

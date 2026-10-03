@@ -1,0 +1,291 @@
+"""Обработчики `core.handlers`: `offer.*`, `skills.profile.updated` → уведомления (E8-3).
+
+Цепочка (messaging.md §3): запись в `notifications` + `ui.user.<id>` + команда `notify.telegram`.
+Идемпотентность — inbox; команда боту идёт через outbox в той же транзакции.
+"""
+
+from __future__ import annotations
+
+import uuid
+from collections.abc import Mapping
+
+import structlog
+from fsp_contracts import Envelope
+from fsp_contracts.enums import OfferStatus
+from fsp_contracts.events import OfferEvent, SkillsProfileUpdated
+from fsp_contracts.notify import TgButton, TgTemplate
+from fsp_contracts.ui import (
+    OfferCreated,
+    OfferMessage,
+    OfferUpdated,
+    ProfileUpdated,
+    UiMessage,
+    new_ui_message,
+)
+from fsp_platform.messaging import Consumer, idempotent
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+
+from app.companies import service as companies
+from app.notifications import service
+from app.notifications.service import UiPublish
+from app.offers import service as offers
+from app.vacancies import service as vacancies
+
+log = structlog.get_logger()
+
+OFFER_EVENTS = (
+    "offer.sent",
+    "offer.viewed",
+    "offer.accepted",
+    "offer.declined",
+    "offer.expired",
+    "offer.withdrawn",
+    "offer.message",
+    "offer.status_changed",
+)
+
+S = OfferStatus
+_CLOSED_BY_SYSTEM_TEXT = {
+    S.expired: "Срок оффера истёк",
+    S.withdrawn: "Оффер отозван",
+}
+_STATUS_TITLE = {
+    S.interview: "Приглашение на интервью",
+    S.hired: "Вас взяли на работу",
+    S.not_hired: "Работодатель принял решение по офферу",
+}
+
+
+def _buttons(offer_id: uuid.UUID) -> list[list[TgButton]]:
+    return [
+        [
+            TgButton(text="✅ Принять", callback_data=f"o:a:{offer_id}"),
+            TgButton(text="❌ Отклонить", callback_data=f"o:d:{offer_id}"),
+        ],
+        [
+            TgButton(text="❓ Задать вопрос", callback_data=f"o:q:{offer_id}"),
+            TgButton(text="📄 Подробнее", callback_data=f"o:v:{offer_id}"),
+        ],
+    ]
+
+
+def _updated(user_id: uuid.UUID, ev: OfferEvent, awaiting: str | None) -> UiMessage:
+    return new_ui_message(
+        user_id,
+        "offer.updated",
+        OfferUpdated(offer_id=ev.offer_id, status=ev.status, awaiting_reply_from=awaiting),
+    )
+
+
+async def _offer_sent(session: AsyncSession, ev: OfferEvent, out: list[UiMessage]) -> None:
+    offer = await offers.get(session, ev.offer_id)
+    if offer is None or offer.candidate_id is None:
+        return
+    company = await companies.get_company(session, offer.company_id)
+    vacancy = await vacancies.get(session, offer.vacancy_id)
+    snap = offer.match_snapshot or {}
+    data = {
+        "offer_id": str(offer.id),
+        "company_name": company.name if company else None,
+        "company_responsibility": company.responsibility_score if company else None,
+        "vacancy_title": vacancy.title if vacancy else None,
+        "formats": list(vacancy.formats) if vacancy else [],
+        "employment_type": vacancy.employment_type if vacancy else None,
+        "salary_from": offer.salary_from,
+        "salary_to": offer.salary_to,
+        "message": offer.message,
+        "match_score": snap.get("score"),
+        "explanation": snap.get("explanation") or [],
+        "below_candidate_min": offer.below_candidate_min,
+        "expires_at": offer.expires_at.isoformat(),
+    }
+    await service.notify(
+        session,
+        offer.candidate_id,
+        type="offer_new",
+        title=f"Новый оффер от «{data['company_name']}»",
+        payload={"offer_id": str(offer.id), "vacancy_title": data["vacancy_title"]},
+        out=out,
+        extra_ui=[
+            new_ui_message(offer.candidate_id, "offer.created", OfferCreated(offer_id=offer.id))
+        ],
+        tg=TgTemplate.offer_new,
+        tg_data=data,
+        buttons=_buttons(offer.id),
+        edit_of=f"offer:{offer.id}",
+    )
+
+
+async def _to_company(
+    session: AsyncSession,
+    ev: OfferEvent,
+    out: list[UiMessage],
+    *,
+    type: str,
+    title: str,
+    extra: dict | None = None,
+    template: TgTemplate = TgTemplate.offer_updated,
+) -> None:
+    """Всем участникам компании. Без ПДн кандидата: id оффера, вакансия, статус."""
+    vacancy = await vacancies.get(session, ev.vacancy_id) if ev.vacancy_id else None
+    vacancy_title = vacancy.title if vacancy else None
+    data = {
+        "offer_id": str(ev.offer_id),
+        "status": ev.status.value,
+        "vacancy_title": vacancy_title,
+        **(extra or {}),
+    }
+    for user_id in await companies.member_user_ids(session, ev.company_id):
+        await service.notify(
+            session,
+            user_id,
+            type=type,
+            title=title,
+            payload={"offer_id": str(ev.offer_id), "status": ev.status.value, **(extra or {})},
+            out=out,
+            extra_ui=[_updated(user_id, ev, _awaiting(ev))],
+            tg=template,
+            tg_data=data,
+        )
+
+
+def _awaiting(ev: OfferEvent) -> str | None:
+    if ev.status in (S.sent, S.viewed):
+        return "candidate"
+    return None
+
+
+async def _to_candidate(
+    session: AsyncSession,
+    ev: OfferEvent,
+    out: list[UiMessage],
+    *,
+    type: str,
+    title: str,
+    template: TgTemplate = TgTemplate.offer_updated,
+) -> None:
+    data = {"offer_id": str(ev.offer_id), "status": ev.status.value}
+    await service.notify(
+        session,
+        ev.candidate_id,
+        type=type,
+        title=title,
+        payload=data,
+        out=out,
+        extra_ui=[_updated(ev.candidate_id, ev, _awaiting(ev))],
+        tg=template,
+        tg_data=data,
+        edit_of=f"offer:{ev.offer_id}",
+    )
+
+
+async def _offer_event(session: AsyncSession, envelope: Envelope, out: list[UiMessage]) -> None:
+    ev = OfferEvent.model_validate(envelope.payload)
+    st = ev.status
+    match envelope.type:
+        case "offer.sent":
+            await _offer_sent(session, ev, out)
+        case "offer.viewed":
+            out.extend(_updated(u, ev, "candidate") for u in await _members(session, ev))
+        case "offer.accepted":
+            await _to_company(
+                session, ev, out, type="offer_accepted",
+                title="Оффер принят, контакты кандидата открыты",
+            )  # fmt: skip
+            if ev.actor == "candidate":  # правим сообщение с кнопками в боте
+                await service.send_tg(
+                    session, ev.candidate_id, TgTemplate.offer_accepted,
+                    {"offer_id": str(ev.offer_id)}, edit_of=f"offer:{ev.offer_id}",
+                )  # fmt: skip
+        case "offer.declined":
+            extra = {"decline_reason": ev.decline_reason.value} if ev.decline_reason else None
+            await _to_company(
+                session, ev, out, type="offer_declined", title="Кандидат отклонил оффер",
+                extra=extra,
+            )  # fmt: skip
+        case "offer.expired":
+            await _to_company(
+                session, ev, out, type="offer_expired", title=_CLOSED_BY_SYSTEM_TEXT[S.expired]
+            )
+            await _to_candidate(
+                session, ev, out, type="offer_expired", title=_CLOSED_BY_SYSTEM_TEXT[S.expired]
+            )
+        case "offer.withdrawn":
+            await _to_candidate(
+                session, ev, out, type="offer_withdrawn", title=_CLOSED_BY_SYSTEM_TEXT[S.withdrawn]
+            )
+        case "offer.message":
+            await _message(session, ev, out)
+        case "offer.status_changed":
+            title = _STATUS_TITLE.get(st, "Статус оффера изменился")
+            if ev.actor == "company":
+                await _to_candidate(session, ev, out, type="offer_status", title=title)
+            else:
+                out.extend(_updated(u, ev, None) for u in await _members(session, ev))
+
+
+async def _members(session: AsyncSession, ev: OfferEvent) -> list[uuid.UUID]:
+    return await companies.member_user_ids(session, ev.company_id)
+
+
+async def _message(session: AsyncSession, ev: OfferEvent, out: list[UiMessage]) -> None:
+    """Адресат — противоположная сторона. Текст в уведомление не кладём (он может быть ПДн)."""
+    if ev.message_id is None:
+        return
+    title = "Новое сообщение по офферу"
+
+    def msg_ui(u: uuid.UUID) -> UiMessage:
+        body = OfferMessage(offer_id=ev.offer_id, message_id=ev.message_id)
+        return new_ui_message(u, "offer.message", body)
+
+    if ev.actor == "candidate":
+        await _to_company(
+            session, ev, out, type="offer_message", title=title,
+            extra={"message_id": str(ev.message_id)}, template=TgTemplate.offer_message,
+        )  # fmt: skip
+        out.extend(msg_ui(u) for u in await _members(session, ev))
+    else:
+        data = {"offer_id": str(ev.offer_id), "message_id": str(ev.message_id)}
+        await service.notify(
+            session, ev.candidate_id, type="offer_message", title=title, payload=data, out=out,
+            extra_ui=[msg_ui(ev.candidate_id)], tg=TgTemplate.offer_message, tg_data=data,
+        )  # fmt: skip
+
+
+def _significant(ev: SkillsProfileUpdated) -> bool:
+    d = ev.diff
+    return bool(d.skills_up or d.skills_new or d.grade or d.category)
+
+
+def register(
+    consumers: Mapping[str, Consumer],
+    session_factory: async_sessionmaker[AsyncSession],
+    ui_publish: UiPublish | None = None,
+) -> None:
+    @consumers["core.handlers"].on(*OFFER_EVENTS)
+    @idempotent(session_factory, "notifications.offer")
+    async def on_offer(envelope: Envelope, session: AsyncSession) -> None:
+        out: list[UiMessage] = []
+        await _offer_event(session, envelope, out)
+        await service.push(ui_publish, out)
+
+    @consumers["core.handlers"].on("skills.profile.updated")
+    @idempotent(session_factory, "notifications.profile")
+    async def on_profile(envelope: Envelope, session: AsyncSession) -> None:
+        ev = SkillsProfileUpdated.model_validate(envelope.payload)
+        if not _significant(ev):  # telegram.md §5: только при значимом diff
+            return
+        diff = ev.diff.model_dump(mode="json")
+        out: list[UiMessage] = []
+        await service.notify(
+            session, ev.candidate_id, type="profile_updated", title="Профиль обновился",
+            payload={"profile_version": ev.profile_version, "diff": diff}, out=out,
+            extra_ui=[
+                new_ui_message(
+                    ev.candidate_id, "profile.updated",
+                    ProfileUpdated(profile_version=ev.profile_version, diff=ev.diff),
+                )
+            ],
+            tg=TgTemplate.profile_updated, tg_data={"diff": diff},
+        )  # fmt: skip
+        await service.push(ui_publish, out)

@@ -229,6 +229,11 @@ def _replay(existing: Offer, vacancy: Vacancy, candidate: Candidate) -> Offer:
     return existing
 
 
+async def get(session: AsyncSession, offer_id: uuid.UUID) -> Offer | None:
+    """Оффер без проверки доступа — для внутренних обработчиков событий."""
+    return await session.get(Offer, offer_id)
+
+
 async def get_for_company(
     session: AsyncSession, company_id: uuid.UUID, offer_id: uuid.UUID, *, lock: bool = False
 ) -> Offer:

@@ -119,6 +119,8 @@ bot: отправка → кандидат жмёт «Принять» → HTTP 
 core-api: accepted + contact_reveal + outbox → evt offer.accepted → ui.user.<hr> «принято, контакты открыты»
 ```
 
+Реализовано (E8-3), модуль `core/notifications`, обработчики в `core.handlers` (inbox `notifications.offer`, `notifications.profile`): `offer.sent` → кандидату `offer_new` (+ `offer.created`, кнопки `o:a|d|q|v:<id>`, `edit_of=offer:<id>`); `offer.accepted` / `declined` / `expired` → всем участникам компании (`offer_updated`; при отказе в `payload` причина); `offer.withdrawn` / `expired` → кандидату; `offer.message` → противоположной стороне (текст сообщения в уведомление не кладётся); `offer.status_changed` от компании → кандидату; `offer.viewed` → только `offer.updated` в SSE; `skills.profile.updated` → `profile_updated` только при значимом diff. Каждое уведомление пишет `notifications` (`channels`: `web` всегда, `tg` — если чат привязан и есть согласие `telegram_notifications`), шлёт `notification.new` в `ui.user.<id>`, а команду `notify.telegram` кладёт в outbox в той же транзакции. SSE публикуется из обработчика, сбой публикации его не роняет. Работодателю до accept уходят только `offer_id`, статус и название вакансии, без данных кандидата. Замер «≤ 3 с от Отправить» на живом брокере не проводился.
+
 **Резюме → разбор**
 ```
 core-api: файл в MinIO → cmd ml.resume.parse (приоритет 9) → 202
