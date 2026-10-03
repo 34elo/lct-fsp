@@ -19,6 +19,7 @@ from fsp_platform.messaging import Consumer, idempotent
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.graph import fsp_ingest, service
+from app.graph.embedding import Embedder
 from app.graph.recompute import recompute_profile
 from app.graph.trust import TrustConfig
 from app.taxonomy.service import SkillGraphCache
@@ -31,6 +32,7 @@ def register(
     session_factory: async_sessionmaker[AsyncSession],
     cfg: TrustConfig,
     graph_cache: SkillGraphCache | None = None,
+    embedder: Embedder | None = None,
 ) -> None:
     graph_cache = graph_cache or SkillGraphCache()
 
@@ -44,6 +46,7 @@ def register(
             cmd.requested_at,
             cfg,
             await graph_cache.get(session),
+            embedder=embedder,
         )
         log.info(
             "recompute_done",

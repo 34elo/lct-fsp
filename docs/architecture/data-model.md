@@ -147,7 +147,9 @@ CREATE TABLE candidates (
   claimed_soft       text[],                          -- софт-навыки «указано в резюме», в расчётах не участвуют
   has_fsp            boolean NOT NULL DEFAULT false,
   verified_skills_cnt int NOT NULL DEFAULT 0,         -- навыков с уровнем ≥ 3
-  profile_text       text,                            -- текст для эмбеддинга
+  profile_text       text,                            -- текст для эмбеддинга (из графа, без ПДн; E4-5)
+  profile_text_sha   text,                            -- sha256 текста, по которому посчитан embedding
+  embedding_model    text,
   embedding          vector(1024),
   experience_months  int,
   recompute_requested_at timestamptz,               -- слияние пересчётов (graph.md §4.4)

@@ -11,6 +11,50 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.identity.models import utcnow
 
 TextArray = sa.ARRAY(Text()).with_variant(sa.JSON(), "sqlite")
+EMBEDDING_DIM = 1024
+
+
+class _PgVector(sa.types.UserDefinedType):
+    """`vector(N)` из pgvector без отдельной зависимости: значение передаём и читаем текстом."""
+
+    cache_ok = True
+
+    def __init__(self, dim: int) -> None:
+        self.dim = dim
+
+    def get_col_spec(self, **kw: object) -> str:
+        return f"vector({self.dim})"
+
+    def bind_expression(self, bindvalue):
+        return sa.cast(sa.cast(bindvalue, sa.Text), self)  # текст → vector на стороне PostgreSQL
+
+    def bind_processor(self, dialect):
+        return lambda v: None if v is None else "[" + ",".join(repr(float(x)) for x in v) + "]"
+
+
+class Vector(sa.types.TypeDecorator):
+    """Вектор эмбеддинга: pgvector в PostgreSQL, JSON-список в SQLite (тесты)."""
+
+    impl = sa.JSON
+    cache_ok = True
+
+    def __init__(self, dim: int = EMBEDDING_DIM) -> None:
+        super().__init__()
+        self.dim = dim
+
+    def load_dialect_impl(self, dialect):
+        if dialect.name == "postgresql":
+            return dialect.type_descriptor(_PgVector(self.dim))
+        return dialect.type_descriptor(sa.JSON())
+
+    def process_result_value(self, value, dialect):
+        if isinstance(
+            value, str
+        ):  # pgvector отдаёт «[0.1,0.2]» (asyncpg без кодека отдаёт vector текстом)
+            return [float(x) for x in value.strip("[]").split(",") if x]
+        return value
+
+
 DEFAULT_VISIBILITY = {
     "companies": False,
     "education": False,
@@ -51,6 +95,13 @@ class Candidate(Base):
     grade_breakdown: Mapped[list | None] = mapped_column(sa.JSON, default=None)
     grade_next: Mapped[dict | None] = mapped_column(sa.JSON, default=None)  # next_grade + hints
     experience_months: Mapped[int | None] = mapped_column(default=None)
+    # смысловой слой (graph.md §4.3): вектор пересчитывается, если sha(profile_text) сменился
+    profile_text: Mapped[str | None] = mapped_column(Text, default=None)
+    profile_text_sha: Mapped[str | None] = mapped_column(
+        Text, default=None
+    )  # sha256 текста embedding
+    embedding: Mapped[list[float] | None] = mapped_column(Vector(), default=None)
+    embedding_model: Mapped[str | None] = mapped_column(Text, default=None)
     team_signals: Mapped[dict | None] = mapped_column(sa.JSON, default=None)
     claimed_soft: Mapped[list[str] | None] = mapped_column(TextArray, default=None)
     # слияние пересчётов (graph.md §4.4)
