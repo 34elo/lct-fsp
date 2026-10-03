@@ -397,3 +397,50 @@ def test_my_views_aggregates_without_company_names(c, market):
     assert sum(d["count"] for d in body["by_day"]) == 3
     assert "Acme" not in json.dumps(body)
     assert c.get("/candidates/me/views", headers=_hdr(market)).status_code == 403
+
+
+def _similar(c, h, pid, **q):
+    return c.get(f"/candidates/{pid}/similar", params=q, headers=_hdr(h))
+
+
+def test_similar_ranks_by_overlap_and_is_anonymous(c, market):
+    _cand(c, 10, [("python", 0.9, 4, ["github"]), ("fastapi", 0.6, 3, ["github"])])
+    r = _similar(c, market, "pid0001")
+    assert r.status_code == 200, r.text
+    items = r.json()["items"]
+    pids = [i["pseudo_id"] for i in items]
+    assert pids[0] == "pid0010" and items[0]["similarity"] == pytest.approx(1.0)
+    assert "pid0001" not in pids  # сам кандидат исключён
+    assert "pid0004" not in pids  # dnd скрыт
+    assert items[0]["common_skills"] == ["Fastapi", "Python"]
+    assert set(items[0]) == CARD_FIELDS | {"similarity", "common_skills"}
+    assert [i["similarity"] for i in items] == sorted(
+        (i["similarity"] for i in items), reverse=True
+    )
+    assert _similar(c, market, "pid0001", limit=1).json()["items"][0]["pseudo_id"] == "pid0010"
+
+
+def test_similar_hidden_foreign_and_role_404_403(c, market):
+    _cand(c, 42, [("python", 0.5, 2, ["github"])], stoplist_company_ids=[market["company_id"]])
+    assert _similar(c, market, "pid0004").status_code == 404  # dnd
+    assert _similar(c, market, "pid0042").status_code == 404  # стоп-лист
+    assert _similar(c, market, "nope").status_code == 404
+    other = _employer(c, "o3@x.ru", name="Other")
+    _cand(c, 43, [("python", 0.9, 4, ["github"])], stoplist_company_ids=[market["company_id"]])
+    pids = [i["pseudo_id"] for i in _similar(c, other, "pid0001").json()["items"]]
+    assert "pid0043" in pids  # у другой компании не скрыт
+    assert "pid0043" not in [i["pseudo_id"] for i in _similar(c, market, "pid0001").json()["items"]]
+    reg = c.post("/auth/register", json={"email": "cs@x.ru", "password": PWD, "role": "candidate"})
+    ch = {"Authorization": f"Bearer {reg.json()['access_token']}"}
+    assert c.get("/candidates/pid0001/similar", headers=ch).status_code == 403
+
+
+def test_similarity_formula():
+    from app.matching.similar import similarity, skill_overlap
+
+    a, b = {"x": 0.8, "y": 0.4}, {"x": 0.4, "z": 0.4}
+    assert skill_overlap(a, b) == pytest.approx(0.4 / 1.6)
+    assert skill_overlap({}, {}) == 0.0
+    assert similarity(a, b, None, [1.0]) == pytest.approx(0.25)  # нет вектора → только навыки
+    assert similarity(a, a, [1.0, 0.0], [1.0, 0.0]) == pytest.approx(1.0)
+    assert similarity(a, a, [1.0, 0.0], [-1.0, 0.0]) == pytest.approx(0.7)
