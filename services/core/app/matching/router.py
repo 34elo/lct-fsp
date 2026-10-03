@@ -56,6 +56,8 @@ async def search_candidates(
     session: AsyncSession = Depends(get_session),
     redis: Redis = Depends(get_redis),
 ) -> Any:
+    from app.recommendations import service as rec_service
+
     company, _ = await companies.require_company(session, user.id)
     version = None
     if body.vacancy_id is not None:  # чужая или несуществующая вакансия → 404
@@ -65,7 +67,35 @@ async def search_candidates(
         cursor=body.cursor, limit=body.limit, vacancy_id=body.vacancy_id,
         vacancy_version=version, cfg=_CFG, trust=_TRUST,
     )  # fmt: skip
-    return {**page, "session_id": body.session_id or uuid.uuid4()}
+
+    session_id = body.session_id or uuid.uuid4()
+    context_type = "vacancy" if body.vacancy_id else "search"
+    context_id = str(body.vacancy_id) if body.vacancy_id else ""
+
+    # Логировать impressions для каждого кандидата в выдаче (E17-1)
+    for position, item in enumerate(page["items"], 1):
+        candidate_id = await _get_candidate_id_by_pseudo_id(session, item["pseudo_id"])
+        if candidate_id:
+            match = item.get("match") or {}
+            await rec_service.record_impression(
+                session,
+                company_id=company.id,
+                user_id=user.id,
+                session_id=str(session_id),
+                context_type=context_type,
+                context_id=context_id,
+                candidate_id=candidate_id,
+                position=position,
+                score=match.get("score", 0.0),
+                features={
+                    "search_filters": body.filters.model_dump(mode="json"),
+                    "sort": body.sort,
+                },
+            )
+
+    await session.commit()
+
+    return {**page, "session_id": session_id}
 
 
 @router.get("/candidates/{pseudo_id}/card", response_model=CandidateCardFull)
@@ -90,3 +120,13 @@ async def candidate_card(
         source=source, vacancy_id=vacancy_id,
     )  # fmt: skip
     return out
+
+
+async def _get_candidate_id_by_pseudo_id(session: AsyncSession, pseudo_id: str) -> uuid.UUID | None:
+    """Получить ID кандидата по его pseudo_id."""
+    from sqlalchemy import select
+
+    from app.candidates.models import Candidate
+
+    result = await session.execute(select(Candidate.user_id).where(Candidate.pseudo_id == pseudo_id))
+    return result.scalar_one_or_none()
