@@ -76,3 +76,8 @@ def p_accept(
 def hint(p: float, cfg: PAcceptConfig) -> str:
     """`low` < 0.35 ≤ `medium` ≤ 0.65 < `high`."""
     return "low" if p < cfg.low else "high" if p > cfg.high else "medium"
+
+
+def mutual(score: float, p: float) -> float:
+    """H = 2·score·p / (score + p) — гармоническое среднее (matching.md §4.1)."""
+    return 0.0 if score + p <= 0 else 2.0 * score * p / (score + p)

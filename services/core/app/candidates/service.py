@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import secrets
+import statistics
 import uuid
 from datetime import UTC, timedelta
 
@@ -234,3 +235,18 @@ async def search_pool(
             continue
         out.append(c)
     return out
+
+
+MEDIAN_MIN_SAMPLE = 3
+
+
+async def category_median(session: AsyncSession, role: str | None, grade: str | None) -> int | None:
+    """Медиана `salary_min` по ячейке role×grade (ml.md §6.5); мало данных — None."""
+    if not role or not grade:
+        return None
+    stmt = select(Candidate.salary_min).where(
+        Candidate.deleted_at.is_(None), Candidate.primary_role == role,
+        Candidate.grade == grade, Candidate.salary_min.is_not(None),
+    )  # fmt: skip
+    vals = list((await session.execute(stmt)).scalars())
+    return int(statistics.median(vals)) if len(vals) >= MEDIAN_MIN_SAMPLE else None

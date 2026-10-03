@@ -219,6 +219,27 @@ def test_vacancy_match_attached_and_foreign_vacancy_404(c, market):
     assert _search(c, other, vacancy_id=str(uuid.uuid4())).status_code == 404
 
 
+def test_mutual_sort_is_default_with_vacancy_and_shows_interest(c, market):
+    body = {
+        "title": "Backend", "role": "backend", "grade_min": "middle", "grade_max": "senior",
+        "formats": ["remote"], "employment_type": "full", "salary_from": 200000,
+        "salary_to": 300000, "skills": [{"slug": "python", "required": True, "min_level": 3}],
+    }  # fmt: skip
+    vid = c.post("/vacancies", json=body, headers=_hdr(market)).json()["id"]
+    default = _search(c, market, vacancy_id=vid).json()["items"]
+    mutual_ = _search(c, market, vacancy_id=vid, sort="mutual").json()["items"]
+    assert [i["pseudo_id"] for i in default] == [i["pseudo_id"] for i in mutual_]
+    matched = [i for i in mutual_ if i["match"]]
+    assert matched and all(i["match"]["interest"] in ("low", "medium", "high") for i in matched)
+    assert mutual_[-1]["match"] is None  # не прошёл жёсткие фильтры — после подходящих
+    only = _search(c, market, vacancy_id=vid, sort="match").json()["items"]
+    assert all(i["match"]["interest"] for i in only if i["match"])
+    # без вакансии mutual = match
+    a = _pids(_search(c, market, filters={"skills_must": [{"slug": "python"}]}, sort="mutual"))
+    b = _pids(_search(c, market, filters={"skills_must": [{"slug": "python"}]}, sort="match"))
+    assert a == b
+
+
 def test_permissions(c, market):
     assert c.post("/search/candidates", json={}).status_code == 401
     r = c.post("/auth/register", json={"email": "k@x.ru", "password": PWD, "role": "candidate"})
