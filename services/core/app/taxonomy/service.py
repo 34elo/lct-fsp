@@ -422,3 +422,23 @@ async def skill_names(session: AsyncSession, skill_ids: list[uuid.UUID]) -> dict
         return {}
     rows = await session.execute(select(Skill.id, Skill.name).where(Skill.id.in_(skill_ids)))
     return {sid: name for sid, name in rows.all()}
+
+
+async def resolve_slugs(session: AsyncSession, slugs: list[str]) -> dict[str, uuid.UUID]:
+    """slug → id живого навыка (слитый ведёт в целевой); неизвестные и `rejected` пропускаем."""
+    if not slugs:
+        return {}
+    out: dict[str, uuid.UUID] = {}
+    for s in await session.scalars(select(Skill).where(Skill.slug.in_(slugs))):
+        if s.status == "merged" and s.merged_into:
+            out[s.slug] = s.merged_into
+        elif s.status != "rejected":
+            out[s.slug] = s.id
+    return out
+
+
+async def skill_slugs(session: AsyncSession, skill_ids: list[uuid.UUID]) -> dict[uuid.UUID, str]:
+    if not skill_ids:
+        return {}
+    rows = await session.execute(select(Skill.id, Skill.slug).where(Skill.id.in_(skill_ids)))
+    return {sid: slug for sid, slug in rows.all()}

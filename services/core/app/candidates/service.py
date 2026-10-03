@@ -169,3 +169,67 @@ async def nearest_by_embedding(
         salary_cap=salary_cap, formats=formats, company_id=company_id, pg=True,
     ).order_by(dist).limit(limit)  # fmt: skip
     return list(await session.scalars(stmt))
+
+
+# --- каталог для поиска работодателя (E7-3) ----------------------------------------------
+
+GRADE_ORDER = ("intern", "junior", "junior_plus", "middle", "middle_plus", "senior", "lead")
+
+
+async def catalog_version(session: AsyncSession) -> str:
+    """Версия каталога для ключа кеша выдачи: меняется при любой правке анкеты и пересчёте."""
+    n, last = (
+        await session.execute(
+            select(sa.func.count(), sa.func.max(Candidate.updated_at)).where(
+                Candidate.deleted_at.is_(None)
+            )
+        )
+    ).one()
+    return hashlib.sha1(f"{n}:{last}".encode()).hexdigest()[:10]
+
+
+async def search_pool(
+    session: AsyncSession,
+    *,
+    company_id: uuid.UUID,
+    roles: list[str] | None = None,
+    grades: list[str] | None = None,
+    salary_max: int | None = None,
+    formats: list[str] | None = None,
+    employment_types: list[str] | None = None,
+    cities: list[str] | None = None,
+    relocation_ok: bool | None = None,
+    active_only: bool = False,
+) -> list[Candidate]:
+    """Каталог: видимые анкеты по фильтрам анкеты (скаляры — SQL, массивы — в памяти)."""
+    stmt = select(Candidate).where(
+        Candidate.deleted_at.is_(None),
+        Candidate.search_status != "dnd",
+        Candidate.primary_role.is_not(None),
+    )
+    if roles:
+        stmt = stmt.where(Candidate.primary_role.in_(roles))
+    if grades is not None:
+        stmt = stmt.where(Candidate.grade.in_(grades))
+    if salary_max is not None:  # без указанной вилки кандидат подходит под любой бюджет
+        stmt = stmt.where(
+            sa.or_(Candidate.salary_min.is_(None), Candidate.salary_min <= salary_max)
+        )
+    if relocation_ok:
+        stmt = stmt.where(Candidate.relocation.is_(True))
+    lowered = {c.casefold() for c in cities or ()}
+    me = str(company_id)
+    out: list[Candidate] = []
+    for c in await session.scalars(stmt.order_by(Candidate.user_id)):
+        if me in (c.stoplist_company_ids or ()):
+            continue
+        if formats and not set(formats) & set(c.formats or ()):
+            continue
+        if employment_types and not set(employment_types) & set(c.employment_types or ()):
+            continue
+        if lowered and (c.city or "").casefold() not in lowered and not c.relocation:
+            continue
+        if active_only and effective_status(c) != "active":
+            continue
+        out.append(c)
+    return out
