@@ -14,5 +14,6 @@ from app.resumes.models import Education, Experience, Resume  # noqa: F401
 from app.taxonomy import models as _taxonomy  # noqa: F401
 from app.telegram.models import TelegramAccount  # noqa: F401
 from app.vacancies.models import Vacancy, VacancySkill  # noqa: F401
+from app.views.models import ProfileView  # noqa: F401
 
 metadata = Base.metadata
