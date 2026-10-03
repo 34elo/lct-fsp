@@ -163,6 +163,7 @@ core.ingest: resumes.parsed → ui.user.<id> «вот что я понял»
 | Снимок справочника для ml | `c:tax:{version}` | 24 ч | версия в ключе |
 | Разбор текстового запроса | `c:qparse:{tax_v}:{sha}` | 24 ч | версия справочника |
 | Эмбеддинг запроса | `c:emb:q:{model}:{sha}` | 7 д | модель в ключе |
+| Эмбеддинг профиля | `c:emb:p:{model}:{sha}` | 7 д | модель в ключе (E4-5; основной «кеш» — `candidates.profile_text_sha`) |
 | Страница выдачи | `c:search:{catalog_v}:{sha(filters)}:{cursor}` | 60 с | `catalog_version` растёт при пересчёте профилей |
 | Карточка / подграф кандидата | `c:card:{cid}:{profile_v}`, `c:graph:{cid}:{profile_v}:{view}` | 10 мин | версия в ключе |
 | Uplift и навигатор | `c:uplift:{cid}:{profile_v}:{vac_v}` | 10 мин | версии в ключе |
