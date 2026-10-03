@@ -29,6 +29,8 @@ from app.graph.trust import TrustConfig
 from app.identity.deps import require_roles
 from app.identity.models import User
 from app.matching import card
+from app.matching.p_accept import PAcceptConfig, p_accept
+from app.matching.p_accept import hint as p_hint
 from app.matching.scoring import MatchConfig
 from app.matching.search import CandidateCard
 from app.offers import service
@@ -45,6 +47,7 @@ _both = require_roles("employer", "candidate")
 _LIMITS = service.OfferLimits.load()
 _CFG = MatchConfig.load()
 _TRUST = TrustConfig.load()
+_PACCEPT = PAcceptConfig.load()
 
 
 class CreateOffer(BaseModel):
@@ -130,6 +133,34 @@ class OfferForCompany(OfferOut):
     contacts: Contacts | None = None  # только после accepted, см. GET /offers/{id}/contacts
 
 
+class SalaryHintIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    vacancy_id: uuid.UUID
+    candidate_pseudo_id: str = Field(min_length=1, max_length=64)
+    salary_from: int | None = Field(default=None, le=100_000_000)
+    salary_to: int | None = Field(default=None, le=100_000_000)
+
+
+class SalaryHint(BaseModel):
+    candidate_min: int | None = None
+    below_candidate_min: bool
+    category_median: int | None = None
+    vs_category_median: float = 0.0
+    p_accept: float
+    acceptance_hint: str  # low | medium | high
+    range_too_wide: bool
+    message: str
+
+
+class OfferEventOut(BaseModel):
+    id: int
+    from_status: str | None = None
+    to_status: str
+    actor: str  # candidate | company | system
+    created_at: datetime
+
+
 class MessageIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -191,6 +222,39 @@ async def for_company(session: AsyncSession, o: Offer) -> OfferForCompany:
             full = await card.build_card(session, c, vacancy_id=None, cfg=_CFG, trust=_TRUST)
             cand = CandidateCard.model_validate(full.model_dump())
     return OfferForCompany(**await _base(session, o), candidate=cand)
+
+
+@router.post("/offers/salary-hint", response_model=SalaryHint)
+async def salary_hint(
+    body: SalaryHintIn,
+    user: User = Depends(_employer),
+    session: AsyncSession = Depends(get_session),
+) -> Any:
+    """Подсказка по вилке до отправки: `p_accept`, «ниже ожиданий», «слишком широкая»."""
+    company, _ = await companies.require_company(session, user.id)
+    vacancy = await vacancies.get_owned(session, user, body.vacancy_id)
+    cand = await card.get_visible(session, body.candidate_pseudo_id, company.id)
+    if cand is None:
+        raise ProblemError(404, "candidate_not_found", "Кандидат не найден")
+    lo, hi = service.validate_range(body.salary_from, body.salary_to)
+    slugs = [slug for _, slug in (await vacancies.skills_of(session, [vacancy.id]))[vacancy.id]]
+    p = p_accept(
+        salary_to=hi, salary_min=cand.salary_min, vacancy_formats=vacancy.formats,
+        candidate_formats=cand.formats or (), vacancy_skills=slugs,
+        primary_stack=cand.primary_stack or (), responsibility_score=company.responsibility_score,
+        active=cand.search_status == "active", cfg=_PACCEPT,
+    )  # fmt: skip
+    below = cand.salary_min is not None and hi < cand.salary_min
+    wide = vacancies.range_too_wide(lo, hi)
+    notes = []
+    if below:
+        notes.append("Верх вилки ниже ожиданий кандидата.")
+    if wide:
+        notes.append("Вилка слишком широкая: сузьте её, так оффер выглядит честнее.")
+    return SalaryHint(
+        candidate_min=cand.salary_min, below_candidate_min=below, p_accept=round(p, 3),
+        acceptance_hint=p_hint(p, _PACCEPT), range_too_wide=wide, message=" ".join(notes),
+    )  # fmt: skip
 
 
 @router.post("/offers", response_model=OfferForCompany, status_code=201)
@@ -339,6 +403,17 @@ async def _side_offer(
 
 def _msg(m: OfferMessage) -> MessageOut:
     return MessageOut.model_validate(m, from_attributes=True)
+
+
+@router.get("/offers/{offer_id}/events", response_model=list[OfferEventOut])
+async def list_events(
+    offer_id: uuid.UUID, user: User = Depends(_both), session: AsyncSession = Depends(get_session)
+) -> Any:
+    offer, _ = await _side_offer(session, user, offer_id)
+    return [
+        OfferEventOut.model_validate(e, from_attributes=True)
+        for e in await service.list_events(session, offer)
+    ]
 
 
 @router.get("/offers/{offer_id}/messages", response_model=list[MessageOut])

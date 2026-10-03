@@ -351,6 +351,12 @@ MESSAGES_PER_HOUR = 30
 COMPLAINT_REASONS = ("spam", "discrimination", "fake_company", "salary_mismatch", "abuse", "other")
 
 
+async def list_events(session: AsyncSession, offer: Offer) -> list[OfferEvent]:
+    """Журнал переходов оффера по времени (таймлайн для обеих сторон)."""
+    q = select(OfferEvent).where(OfferEvent.offer_id == offer.id).order_by(OfferEvent.id)
+    return list((await session.scalars(q)).all())
+
+
 async def list_messages(
     session: AsyncSession, offer: Offer, limit: int = 200
 ) -> list[OfferMessage]:
