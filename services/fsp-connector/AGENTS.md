@@ -26,3 +26,6 @@
 - Событие пишется в outbox в той же транзакции, что и данные; обработчики идемпотентны (inbox).
 - Вебхук и `fsp_sync_all` по расписанию — E5-6.
 - Документы: fsp.md, messaging.md §2 и §6, data-model.md §3.10.
+
+## Docker
+Образ: `infra/docker/python.Dockerfile` (`PACKAGE=fsp-fsp-connector`, `SERVICE_DIR=services/fsp-connector`), в compose — сервисы `fsp-connector-migrate` (one-shot), `fsp-connector` (api, :8300), `fsp-connector-worker`; профиль `core`. Запуск стека: `make up`.

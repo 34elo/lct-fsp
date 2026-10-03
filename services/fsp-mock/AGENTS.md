@@ -18,3 +18,6 @@
 - Код верификации: 6 цифр, 5 попыток, TTL 10 мин, одноразовый. OAuth-код одноразовый, PKCE только S256.
 - Вебхук ставит подпись `X-Signature`, сбой доставки не роняет `/mock/results`.
 - Документы: docs/architecture/fsp.md §3–4.
+
+## Docker
+Образ: `infra/docker/python.Dockerfile` (`PACKAGE=fsp-fsp-mock`, `SERVICE_DIR=services/fsp-mock`), в compose — сервис `fsp-mock` (:8200), gateway отдаёт его на `mock.fsp.patissons.tech` и `/oauth/*`; профиль `core`. Запуск стека: `make up`.

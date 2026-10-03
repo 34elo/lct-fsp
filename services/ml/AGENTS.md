@@ -23,3 +23,6 @@
 - `message_id` результата = uuid5(команда, тип): повторная доставка даёт тот же дубль, inbox отбрасывает.
 - При `ML_FAKE=false` без модели/снимка графа ml-api отвечает 503 `ml_unavailable`, воркеры не стартуют. `EMBEDDING_MODEL_PATH` включает реальный bge-m3.
 - Документы: docs/architecture/ml.md, messaging.md §2–3, api.md §2.10.
+
+## Docker
+Образ: `infra/docker/python.Dockerfile` (`PACKAGE=fsp-ml`, `SERVICE_DIR=services/ml`), в compose — сервисы `ml-api`, `ml-worker-llm`, `ml-worker-code`; профиль `ml`, `ML_FAKE=true` по умолчанию. Запуск стека: `make up`.
