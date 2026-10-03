@@ -22,6 +22,7 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.candidates.models import Candidate
+from app.graph.fsp_models import FspRankRow, FspResultRow
 from app.graph.models import CandidateSkill, Evidence
 
 
@@ -274,3 +275,33 @@ async def evidence_of(
     if source is not None:
         stmt = stmt.where(Evidence.source == source)
     return list(await session.scalars(stmt.order_by(Evidence.id)))
+
+
+async def all_skills_of(
+    session: AsyncSession, candidate_ids: list[uuid.UUID]
+) -> dict[uuid.UUID, list[CandidateSkill]]:
+    """Все рёбра «владеет» кандидатов (витрина поиска)."""
+    out: dict[uuid.UUID, list[CandidateSkill]] = {i: [] for i in candidate_ids}
+    if not candidate_ids:
+        return out
+    stmt = select(CandidateSkill).where(CandidateSkill.candidate_id.in_(candidate_ids))
+    for cs in await session.scalars(stmt.order_by(CandidateSkill.skill_id)):
+        out[cs.candidate_id].append(cs)
+    return out
+
+
+async def fsp_disciplines_of(
+    session: AsyncSession, candidate_ids: list[uuid.UUID]
+) -> dict[uuid.UUID, set[str]]:
+    """Дисциплины ФСП, где у кандидата есть результат или разряд."""
+    out: dict[uuid.UUID, set[str]] = {}
+    if not candidate_ids:
+        return out
+    for model in (FspResultRow, FspRankRow):
+        stmt = select(model.candidate_id, model.discipline).where(
+            model.candidate_id.in_(candidate_ids)
+        )
+        for cid, disc in (await session.execute(stmt)).all():
+            if disc:
+                out.setdefault(cid, set()).add(disc)
+    return out
