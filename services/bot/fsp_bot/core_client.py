@@ -96,3 +96,24 @@ class CoreClient:
         return await self.request(
             "POST", f"/internal/tg/resumes/{resume_id}/confirm", json={"tg_user_id": tg_user_id}
         )
+
+    async def offers(self, tg_user_id: int) -> list[dict]:
+        return await self.request("GET", "/internal/tg/offers", params={"tg_user_id": tg_user_id})
+
+    async def offer_view(self, tg_user_id: int, offer_id: str) -> dict:
+        return await self.request(
+            "POST", f"/internal/tg/offers/{offer_id}/view", json={"tg_user_id": tg_user_id}
+        )
+
+    async def offer_accept(self, tg_user_id: int, offer_id: str) -> dict:
+        return await self.request(
+            "POST", f"/internal/tg/offers/{offer_id}/accept", json={"tg_user_id": tg_user_id}
+        )
+
+    async def offer_decline(self, tg_user_id: int, offer_id: str, reason: str) -> dict:
+        body = {"tg_user_id": tg_user_id, "reason": reason}
+        return await self.request("POST", f"/internal/tg/offers/{offer_id}/decline", json=body)
+
+    async def offer_message(self, tg_user_id: int, offer_id: str, text: str) -> dict:
+        body = {"tg_user_id": tg_user_id, "text": text}
+        return await self.request("POST", f"/internal/tg/offers/{offer_id}/messages", json=body)
