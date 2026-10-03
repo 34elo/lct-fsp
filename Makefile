@@ -1,4 +1,4 @@
-.PHONY: synth taxonomy-load up down dev-core compose-config sync lint fmt test test-py test-web test-integration new-service web-install asyncapi api-gen
+.PHONY: demo-env logs ps synth taxonomy-load up down dev-core compose-config sync lint fmt test test-py test-web test-integration new-service web-install asyncapi api-gen
 
 sync:
 	uv sync --all-packages
@@ -42,20 +42,34 @@ asyncapi:
 	uv run python -m fsp_contracts.asyncapi > asyncapi.json
 
 # --- compose ---
-COMPOSE = docker compose --profile core --profile ml --profile llm
+# Окружение: .env, если в нём задан JWT_SECRET (то есть он полный); иначе .env.demo (создаётся infra/scripts/gen-demo-env.sh со случайными секретами)
+ENV_FILE := $(if $(shell grep -s -E '^JWT_SECRET=.+' .env),.env,.env.demo)
+# Профиль bot включается только если в env-файле задан TG_BOT_TOKEN
+BOT_PROFILE = $(if $(shell grep -s -E '^TG_BOT_TOKEN=.+' $(ENV_FILE)),--profile bot)
+COMPOSE = docker compose --env-file $(ENV_FILE) --profile core --profile ml --profile llm $(BOT_PROFILE)
 
-up:
-	$(COMPOSE) up -d
+demo-env:
+	sh infra/scripts/gen-demo-env.sh
+
+# Весь стек одной командой: сборка образов, миграции, запуск; gateway на :28080
+up: demo-env
+	$(COMPOSE) up -d --build --wait
 
 down:
 	$(COMPOSE) down
 
+logs:
+	$(COMPOSE) logs -f --tail 50
+
+ps:
+	$(COMPOSE) ps
+
 # Только core-профиль, ML заглушкой
 dev-core:
-	ML_FAKE=true docker compose --profile core up -d
+	ML_FAKE=true docker compose --env-file $(ENV_FILE) --profile core up -d --build
 
 compose-config:
-	docker compose --profile core --profile ml --profile llm --profile dev --profile obs config -q
+	docker compose --env-file $(ENV_FILE) --profile core --profile ml --profile bot --profile llm --profile dev --profile obs config -q
 
 api-gen:
 	cd apps/web && pnpm api:gen
