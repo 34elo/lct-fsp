@@ -107,7 +107,7 @@
 | 42 | E8-2 | Раскрытие контактов, переписка, жалобы | E8-1 | 🤖 | sonnet | 3 | ✅ 6d7588b |
 | 43 | E8-3 | Уведомления → `ui.user.*` + `notify.telegram` | E8-1, E0-7 | 🤖 | sonnet | 3 | ✅ 3af363f |
 | 44 | E9-2 | Бот: онбординг, согласия, резюме файлом, профиль | E9-1, E3-2, E1-3 | 🤖 | sonnet | 3 | ✅ deb236a |
-| 45 | E18-1 | Аналитика: схемы событий, очередь `core.analytics`, `analytics_events` | E0-6 | 🤖 | sonnet | 3 | ⏳ |
+| 45 | E18-1 | Аналитика: схемы событий, очередь `core.analytics`, `analytics_events` | E0-6 | 🤖 | sonnet | 3 | ✅ eca09fb |
 | 46 | E17-1 | Показы и реакции: `impressions`, `rec_feedback`, `session_id` | E7-3 | 🤖 | haiku | 3 | ⏳ |
 | 47 | E2-6 | `data/taxonomy/package_map.yaml` | E2-1 | 🤖 | haiku | 3 | ⏳ |
 | 48 | E3-5 | web: онбординг, лог сборки, «вот что я понял» | E3-2, P5 | 🤝 | sonnet | 3 | ⏳ |
