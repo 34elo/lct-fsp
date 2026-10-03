@@ -29,7 +29,7 @@ function UserMenu() {
 }
 
 const link = ({ isActive }: { isActive: boolean }) =>
-  cn("rounded-md px-3 py-2 text-sm font-semibold", isActive ? "bg-tint-100 text-brand-deep" : "text-muted hover:text-ink");
+  cn("rounded-md px-3 py-2 text-sm font-semibold", isActive ? "bg-tint-100 text-brand-deep dark:text-brand-mid" : "text-muted hover:text-ink");
 
 /**
  * Каркас по ролям. `bottom` — мобильная нижняя навигация (кабинет кандидата mobile-first),

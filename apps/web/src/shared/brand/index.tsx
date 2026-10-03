@@ -46,11 +46,11 @@ const chip = cva(
   {
     variants: {
       variant: {
-        verified: "border-tint-200 bg-tint-50 text-brand-deep",
-        claimed: "border-dashed border-tint-200 bg-card text-brand-deep",
-        inferred: "border-dashed border-brand-mid bg-tint-50 text-brand-deep",
+        verified: "border-tint-200 bg-tint-50 text-brand-deep dark:text-brand-mid",
+        claimed: "border-dashed border-tint-200 bg-card text-brand-deep dark:text-brand-mid",
+        inferred: "border-dashed border-brand-mid bg-tint-50 text-brand-deep dark:text-brand-mid",
         adjacent: "border-tint-100 bg-tint-50/50 text-muted",
-        provisional: "border-tint-200 bg-card text-brand-deep",
+        provisional: "border-tint-200 bg-card text-brand-deep dark:text-brand-mid",
       },
     },
     defaultVariants: { variant: "verified" },
@@ -129,7 +129,7 @@ export function MatchRing({ value, size = 60 }: { value: number; size?: number }
       className="relative grid place-items-center rounded-full"
     >
       <b
-        className="grid place-items-center rounded-full bg-card font-mono font-bold text-brand-deep"
+        className="grid place-items-center rounded-full bg-card font-mono font-bold text-brand-deep dark:text-brand-mid"
         style={{ width: size * 0.78, height: size * 0.78, fontSize: size * 0.23 }}
       >
         {v}%

@@ -9,6 +9,9 @@ import MagicLogin from "@/pages/MagicLogin";
 import Onboarding from "@/pages/Onboarding";
 import Profile from "@/features/profile/Profile";
 import SkillEvidence from "@/features/profile/SkillEvidence";
+import CandidateView from "@/features/employer/CandidateView";
+import EmployerSearch from "@/features/employer/Search";
+import Vacancies from "@/features/employer/Vacancies";
 import NotFound from "@/pages/NotFound";
 import Register from "@/pages/Register";
 import { Stub } from "@/pages/Stub";
@@ -20,7 +23,7 @@ const EmployerLayout = lazy(() => import("@/app/layouts/EmployerLayout"));
 const AdminLayout = lazy(() => import("@/app/layouts/AdminLayout"));
 
 // Эти пути уже реализованы настоящими страницами (E1-4).
-const IMPLEMENTED = new Set(["/login", "/register", "/auth/magic", "/consents", "/onboarding", "/me", "/me/skills/:slug"]);
+const IMPLEMENTED = new Set(["/login", "/register", "/auth/magic", "/consents", "/onboarding", "/me", "/me/skills/:slug", "/employer/search", "/employer/candidates/:id", "/employer/vacancies", "/employer/vacancies/:id/shortlist"]);
 
 const stubs = (section: string) =>
   ROUTES.filter((r) => r.section === section && !IMPLEMENTED.has(r.path)).map((r) => (
@@ -37,6 +40,14 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/me" element={<Profile />} />
             <Route path="/me/skills/:slug" element={<SkillEvidence />} />
+          </>
+        )}
+        {section === "employer" && (
+          <>
+            <Route path="/employer/search" element={<EmployerSearch />} />
+            <Route path="/employer/candidates/:id" element={<CandidateView />} />
+            <Route path="/employer/vacancies" element={<Vacancies />} />
+            <Route path="/employer/vacancies/:id/shortlist" element={<EmployerSearch />} />
           </>
         )}
       </Route>
