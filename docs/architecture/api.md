@@ -122,7 +122,7 @@
 | `POST /vacancies/{id}/publish`, `POST /vacancies/{id}/close` | E | Публикация и закрытие |
 | `POST /vacancies/from-query` | E | `{parsed_query}` → черновик вакансии |
 | `GET /vacancies/{id}/matches?min_trust=&fsp_only=&cursor=` | E | `Page<MatchItem>` + `session_id`; пишет показы |
-| `GET /candidates/{pseudo_id}/similar` | E | Похожие кандидаты |
+| `GET /candidates/{pseudo_id}/similar?limit=` | E | `{items: CandidateCard + similarity, common_skills[], session_id}` (формула — matching.md §11); скрытая анкета — 404 `candidate_not_found`; пишет показы |
 | `GET /candidates/{pseudo_id}/graph?vacancy_id=` | E | Анонимный подграф, подсветка путей под требования вакансии |
 | `POST /recs/feedback` | E | `{session_id, candidate_pseudo_id, event: open|dwell|shortlist|dismiss, reason?}` |
 | `GET /recs/sessions/{id}`, `DELETE /recs/sessions/{id}` | E | Учтённые подстройки (чипсы «Учли: …») / сброс |

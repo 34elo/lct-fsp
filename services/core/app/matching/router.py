@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from typing import Any, Literal
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Query, Request
 from fsp_contracts.ml import SearchFilters
 from fsp_platform.app import ProblemError
 from pydantic import BaseModel, ConfigDict, Field
@@ -18,7 +18,7 @@ from app.deps import get_redis, get_session
 from app.graph.trust import TrustConfig
 from app.identity.deps import require_roles
 from app.identity.models import User
-from app.matching import card, search, uplift_service
+from app.matching import card, search, similar, uplift_service
 from app.matching.card import CandidateCardFull
 from app.matching.scoring import MatchConfig
 from app.matching.uplift import UpliftConfig
@@ -132,6 +132,41 @@ async def candidate_card(
         source=source, vacancy_id=vacancy_id,
     )  # fmt: skip
     return out
+
+
+class SimilarPage(BaseModel):
+    items: list[similar.SimilarCard]
+    session_id: uuid.UUID
+
+
+@router.get("/candidates/{pseudo_id}/similar", response_model=SimilarPage)
+async def candidate_similar(
+    pseudo_id: str,
+    limit: int = Query(default=10, ge=1, le=similar.MAX_LIMIT),
+    user: User = Depends(_employer),
+    session: AsyncSession = Depends(get_session),
+) -> Any:
+    """Похожие на открытого кандидата (matching.md §1); скрытый или несуществующий → 404."""
+    from app.recommendations import service as rec_service
+
+    company, _ = await companies.require_company(session, user.id)
+    cand = await card.get_visible(session, pseudo_id, company.id)
+    if cand is None:
+        raise ProblemError(404, "candidate_not_found", "Кандидат не найден")
+    items = await similar.find_similar(
+        session, cand, company_id=company.id, trust=_TRUST, limit=limit
+    )
+    session_id = uuid.uuid4()
+    for position, item in enumerate(items, 1):
+        cid = await _get_candidate_id_by_pseudo_id(session, item["pseudo_id"])
+        if cid:
+            await rec_service.record_impression(
+                session, company_id=company.id, user_id=user.id, session_id=str(session_id),
+                context_type="similar", context_id=pseudo_id, candidate_id=cid,
+                position=position, score=item["similarity"], features={"sort": "similar"},
+            )  # fmt: skip
+    await session.commit()
+    return {"items": items, "session_id": session_id}
 
 
 async def _get_candidate_id_by_pseudo_id(session: AsyncSession, pseudo_id: str) -> uuid.UUID | None:
