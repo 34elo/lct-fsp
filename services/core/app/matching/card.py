@@ -16,6 +16,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.candidates import service as candidates
 from app.candidates.models import Candidate
 from app.graph import service as graph
+from app.graph.grade import PRELIMINARY_BELOW
+from app.graph.team_signals import strength_label
 from app.graph.trust import EvidenceView, TrustConfig, effective_strength
 from app.matching import search
 from app.matching.scoring import MatchConfig
@@ -34,6 +36,25 @@ SOURCE_TITLES = {
     "codeforces": "Рейтинг Codeforces",
 }
 TOP_EVIDENCE = 3
+
+GRADE_SIGNAL_LABELS = {
+    "experience": "Стаж",
+    "fsp_achievement": "Достижение на соревнованиях ФСП",
+    "fsp_rank": "Спортивный разряд ФСП",
+    "tests": "Тесты навыков",
+    "code_maturity": "Зрелость кода",
+    "ai_interview": "ИИ-интервью",
+    "leadership": "Лидерство",
+    "constraint_lead_requires_leadership": "Для уровня Lead нужно подтверждённое лидерство",
+    "constraint_no_commercial_cap": "Без коммерческого опыта грейд ограничен",
+}
+TEAM_LEVELS = {
+    "regional": "региональный уровень",
+    "interregional": "межрегиональный уровень",
+    "national": "всероссийский уровень",
+    "international": "международный уровень",
+}
+TEAM_SIGNALS = ("leadership", "teamwork", "results", "growth")
 
 
 class SkillInfo(BaseModel):
@@ -119,9 +140,10 @@ def _grade_info(c: Candidate) -> GradeInfo:
         grade=c.grade,
         score=c.grade_score,
         confidence=c.grade_confidence,
-        preliminary=c.grade_confidence is None or c.grade_confidence < 0.5,
+        preliminary=c.grade_confidence is None or c.grade_confidence < PRELIMINARY_BELOW,
         breakdown=[
-            GradeSignal(signal=b["signal"], label=b["signal"], points=b["points"],
+            GradeSignal(signal=b["signal"], points=b["points"],
+                        label=GRADE_SIGNAL_LABELS.get(b["signal"], b["signal"]),
                         evidence_ids=list(b.get("evidence_ids") or []))
             for b in c.grade_breakdown or ()
         ],
@@ -225,3 +247,150 @@ async def build_card(
             await offers.briefs_for(session, company_id, c.user_id) if company_id else []
         ),
     )
+
+
+# --- профиль владельца (`GET /candidates/me/profile`, E4-7) -------------------------------
+
+
+class RoleWeight(BaseModel):
+    role: str
+    weight: float
+
+
+class Category(BaseModel):
+    primary_role: str
+    roles: list[RoleWeight]
+    primary_stack: list[str]
+
+
+class TeamFactBrief(BaseModel):
+    fact_id: str | None = None
+    title: str
+
+
+class TeamSignal(BaseModel):
+    signal: str
+    value: float
+    label: str  # strong | present
+    facts: list[TeamFactBrief]
+
+
+class OwnerProfileParts(BaseModel):
+    category: Category | None
+    grade: GradeInfo
+    skills: list[SkillWithTrust]
+    team_signals: list[TeamSignal]
+
+
+def _team_fact_title(f: dict[str, Any]) -> str:
+    kind = f.get("kind")
+    head = {
+        "captain": "Капитан команды",
+        "maintainer": "Мейнтейнер репозитория",
+        "team_competition": "Командное соревнование",
+        "performance": "Результат на соревновании",
+        "trend": "Рост результатов",
+    }.get(str(kind), "Подтверждённый факт")
+    parts = [head]
+    if f.get("level") in TEAM_LEVELS:
+        parts.append(TEAM_LEVELS[f["level"]])
+    if f.get("place") is not None:
+        parts.append(f"{f['place']} место")
+    if f.get("year") is not None:
+        parts.append(str(f["year"]))
+    return ", ".join(parts)
+
+
+def _team_signals(c: Candidate) -> list[TeamSignal]:
+    raw = c.team_signals or {}
+    out = []
+    for key in TEAM_SIGNALS:
+        item = raw.get(key)
+        if not isinstance(item, dict):
+            continue
+        label = strength_label(float(item.get("value", 0)))
+        if label is None:
+            continue
+        out.append(
+            TeamSignal(
+                signal=key,
+                value=float(item["value"]),
+                label=label,
+                facts=[
+                    TeamFactBrief(fact_id=f.get("fact_id"), title=_team_fact_title(f))
+                    for f in item.get("facts") or ()
+                ],
+            )
+        )
+    return out
+
+
+def _category(c: Candidate) -> Category | None:
+    if c.primary_role is None:
+        return None
+    return Category(
+        primary_role=c.primary_role,
+        roles=[RoleWeight(**r) for r in c.roles or ()],
+        primary_stack=list(c.primary_stack or ()),
+    )
+
+
+async def build_owner_parts(
+    session: AsyncSession, c: Candidate, trust: TrustConfig, today: date | None = None
+) -> OwnerProfileParts:
+    """Категория, грейд, навыки с доверием и командные сигналы владельца (без анонимизации)."""
+    day = today or datetime.now(UTC).date()
+    owned = (await graph.all_skills_of(session, [c.user_id]))[c.user_id]
+    briefs = await taxonomy.skill_briefs(session, [s.skill_id for s in owned])
+    ev_ids = [uuid.UUID(e) for s in owned for e in (s.top_evidence or ())[:TOP_EVIDENCE]]
+    evidence = {e.id: e for e in await graph.evidence_by_ids(session, ev_ids)}
+    skills = []
+    for s in sorted(owned, key=lambda s: (s.claimed_only, -s.confidence, str(s.skill_id))):
+        if s.skill_id not in briefs:
+            continue
+        slug, name, group, status = briefs[s.skill_id]
+        skills.append(
+            SkillWithTrust(
+                skill=SkillInfo(slug=slug, name=name, group=group),
+                confidence=s.confidence, level=s.level, sources=list(s.sources or ()),
+                claimed_only=s.claimed_only,
+                status="provisional" if status == "provisional" else "active",
+                derived_from=briefs[s.derived_from][0] if s.derived_from in briefs else None,
+                top_evidence=[
+                    _brief(evidence[uuid.UUID(e)], trust, day)
+                    for e in (s.top_evidence or ())[:TOP_EVIDENCE]
+                    if uuid.UUID(e) in evidence
+                ],
+            )
+        )  # fmt: skip
+    return OwnerProfileParts(
+        category=_category(c),
+        grade=_grade_info(c),
+        skills=skills,
+        team_signals=_team_signals(c),
+    )
+
+
+async def skill_evidence(
+    session: AsyncSession,
+    c: Candidate,
+    skill_ref: str,
+    trust: TrustConfig,
+    today: date | None = None,
+) -> list[EvidenceBrief] | None:
+    """Доказательства навыка владельца; `None` — навыка нет в профиле. `skill_ref` — id или slug."""
+    day = today or datetime.now(UTC).date()
+    try:
+        sid: uuid.UUID | None = uuid.UUID(skill_ref)
+    except ValueError:
+        sid = (await taxonomy.resolve_slugs(session, [skill_ref])).get(skill_ref)
+    if sid is None:
+        return None
+    owned = {s.skill_id: s for s in (await graph.all_skills_of(session, [c.user_id]))[c.user_id]}
+    edge = owned.get(sid)
+    if edge is None:
+        return None
+    rows = await graph.list_active(session, c.user_id, sid)
+    if not rows and edge.derived_from is not None:  # выведено по иерархии: берём основание
+        rows = await graph.list_active(session, c.user_id, edge.derived_from)
+    return [_brief(e, trust, day) for e in rows]
