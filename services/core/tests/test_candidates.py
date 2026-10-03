@@ -248,7 +248,12 @@ def test_profile_has_category_grade_skills_team_signals(c):
     assert s["top_evidence"][0]["title"] == "Кубок ФСП, финал, 2 место из 120"
     (a,) = p["fsp"]["achievements"]  # один факт — одно достижение
     assert (a["title"], a["level"], a["place"], a["of"], a["year"], a["team_role"]) == (
-        "Кубок ФСП, финал, 2 место из 120", "national", 2, 120, 2026, "captain"
+        "Кубок ФСП, финал, 2 место из 120",
+        "national",
+        2,
+        120,
+        2026,
+        "captain",
     )
     assert p["fsp"]["verified"] is True and p["fsp"]["ranks"] == []
     (t,) = p["team_signals"]  # growth 0.1 < 0.3 не показываем
