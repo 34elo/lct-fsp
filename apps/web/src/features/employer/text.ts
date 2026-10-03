@@ -44,3 +44,55 @@ export function splitExplanation(items: ExplanationItem[]) {
     others: items.filter((i) => i.kind !== "plus"),
   };
 }
+
+export const COMPANY_STATUS_LABEL: Record<string, string> = {
+  pending: "На модерации",
+  verified: "Проверена",
+  rejected: "Отклонена",
+  blocked: "Заблокирована",
+};
+
+export const COMPANY_STATUS_HINT: Record<string, string> = {
+  pending: "Публиковать вакансии и отправлять офферы можно после проверки компании администратором ФСП.",
+  verified: "Компания проверена: можно публиковать вакансии и отправлять офферы.",
+  rejected: "Проверка не пройдена. Исправьте данные компании и обратитесь к администратору.",
+  blocked: "Компания заблокирована.",
+};
+
+export const QUALITY_HINT: Record<string, string> = {
+  leadership: "подтверждается капитанством и руководством командами",
+  teamwork: "командные соревнования, общие репозитории",
+  results: "призовые места и измеримые результаты",
+  growth: "заметный рост навыков за последние месяцы",
+};
+
+export const LEVEL_WORD = ["", "базовый", "рабочий", "уверенный", "эксперт"] as const;
+
+/** Понятный текст по `code` Problem Details для компаний и вакансий. */
+export function vacancyErrorText(err: unknown, fallback = "Не удалось выполнить действие. Попробуйте ещё раз."): string {
+  const code = (err as { code?: string } | null)?.code;
+  switch (code) {
+    case "company_exists":
+      return "Компания уже зарегистрирована.";
+    case "company_not_found":
+      return "Сначала зарегистрируйте компанию.";
+    case "company_not_verified":
+      return "Компания ещё не прошла проверку: опубликовать вакансию пока нельзя. Черновик сохранён.";
+    case "no_required_skills":
+      return "Добавьте хотя бы один обязательный навык.";
+    case "invalid_grade_range":
+      return "Минимальный грейд не может быть выше максимального.";
+    case "invalid_salary_range":
+      return "Верхняя граница вилки не может быть меньше нижней.";
+    case "unknown_skill":
+      return "Один из навыков не найден в справочнике.";
+    case "duplicate_skill":
+      return "Навык указан дважды.";
+    case "invalid_status":
+      return "В текущем статусе вакансию изменить нельзя.";
+    case "vacancy_not_found":
+      return "Вакансия не найдена.";
+    default:
+      return fallback;
+  }
+}
