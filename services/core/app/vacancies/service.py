@@ -92,6 +92,11 @@ async def get(session: AsyncSession, vacancy_id: uuid.UUID) -> Vacancy | None:
     return await session.get(Vacancy, vacancy_id)
 
 
+async def list_published(session: AsyncSession) -> list[Vacancy]:
+    """Все опубликованные вакансии — для подбора под кандидата."""
+    return list(await session.scalars(select(Vacancy).where(Vacancy.status == "published")))
+
+
 async def skills_of(session: AsyncSession, vacancy_ids: list[uuid.UUID]) -> dict:
     """{vacancy_id: [(VacancySkill, slug)]} — навыки по порядку весов."""
     out: dict[uuid.UUID, list[tuple[VacancySkill, str]]] = {i: [] for i in vacancy_ids}

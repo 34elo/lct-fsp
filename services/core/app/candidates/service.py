@@ -58,6 +58,11 @@ async def get_or_create(session: AsyncSession, user_id: uuid.UUID, secret: str) 
     raise RuntimeError("pseudonym_exhausted")
 
 
+async def get(session: AsyncSession, user_id: uuid.UUID) -> Candidate | None:
+    """Анкета без проверок — для внутренних модулей (подбор)."""
+    return await session.get(Candidate, user_id)
+
+
 async def get_by_pseudo_id(session: AsyncSession, pseudo_id: str) -> Candidate | None:
     return await session.scalar(
         select(Candidate).where(Candidate.pseudo_id == pseudo_id, Candidate.deleted_at.is_(None))

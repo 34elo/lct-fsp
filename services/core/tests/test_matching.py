@@ -10,10 +10,12 @@ from pathlib import Path
 import pytest
 from app.candidates.models import Candidate
 from app.companies.models import Company
+from app.config import Settings
 from app.graph.models import CandidateSkill, Evidence
 from app.graph.team_signals import TeamConfig, k_soft
 from app.graph.trust import TrustConfig
 from app.identity.models import User
+from app.matching.models import Match
 from app.matching.scoring import (
     EVIDENCE_REQUIRED,
     CandidateView,
@@ -27,14 +29,19 @@ from app.matching.scoring import (
     score_candidate,
     semantic_component,
 )
-from app.matching.service import match_vacancy_candidates
+from app.matching.service import match_candidate, match_vacancy, match_vacancy_candidates
 from app.taxonomy.models import Skill, SkillRelation
 from app.vacancies.models import Vacancy, VacancySkill
+from app.worker import Worker
+from fsp_contracts import new_envelope
+from fsp_contracts.commands import CoreMatchCandidate, CoreMatchVacancy
 from fsp_platform.db import make_engine, make_session_factory, session_scope
-from sqlalchemy import select
+from fsp_platform.outbox import OutboxRecord
+from sqlalchemy import func, select
 
 CORE = Path(__file__).resolve().parents[1]
 CFG = MatchConfig.load()
+TRUST = TrustConfig.load()
 TODAY = date(2026, 6, 1)
 
 PY, FASTAPI, KAFKA, RABBIT, DOCKER = (uuid.uuid4() for _ in range(5))
@@ -253,7 +260,7 @@ def test_claimed_only_is_warning():
 
 
 @pytest.fixture
-def factory(tmp_path):
+def db(tmp_path):
     url = f"sqlite+aiosqlite:///{tmp_path / 'm.db'}"
     subprocess.run(
         [sys.executable, "-m", "alembic", "-x", f"url={url}", "upgrade", "head"],
@@ -261,7 +268,12 @@ def factory(tmp_path):
         check=True,
         capture_output=True,
     )
-    return make_session_factory(make_engine(url))
+    return url
+
+
+@pytest.fixture
+def factory(db):
+    return make_session_factory(make_engine(db))
 
 
 async def _seed(factory):
@@ -354,3 +366,129 @@ async def test_match_vacancy_end_to_end(factory):
 async def test_unknown_vacancy_empty(factory):
     async with session_scope(factory) as s:
         assert await match_vacancy_candidates(s, uuid.uuid4(), CFG, TrustConfig.load()) == []
+
+
+# --- таблица matches (E7-2) ----------------------------------------------------------------
+
+
+async def _rows(s, vid) -> dict:
+    return {
+        m.candidate_id: m for m in await s.scalars(select(Match).where(Match.vacancy_id == vid))
+    }
+
+
+async def _count(s, type_) -> int:
+    return await s.scalar(select(func.count()).select_from(OutboxRecord).where(
+        OutboxRecord.type == type_))  # fmt: skip
+
+
+async def test_match_vacancy_writes_rows_and_is_stable(factory):
+    vid, ids = await _seed(factory)
+    async with session_scope(factory) as s:
+        assert await match_vacancy(s, vid, CFG, TRUST, today=TODAY) == 3
+    async with session_scope(factory) as s:
+        rows = await _rows(s, vid)
+        assert set(rows) == {ids["strong"], ids["adjacent"], ids["one_missing"]}
+        top = rows[ids["strong"]]
+        assert top.score == max(m.score for m in rows.values())
+        assert top.explanation and all(i["text"] for i in top.explanation)
+        assert (top.vacancy_version, top.candidate_version) == (1, 0)
+        first = {k: m.score for k, m in rows.items()}
+        assert await _count(s, "matches.ready") == 1
+    async with session_scope(factory) as s:  # повторный пересчёт не плодит строки
+        await match_vacancy(s, vid, CFG, TRUST, today=TODAY)
+    async with session_scope(factory) as s:
+        rows = await _rows(s, vid)
+        assert {k: m.score for k, m in rows.items()} == first
+
+
+async def test_recompute_drops_candidates_that_no_longer_fit_and_resets_rationale(factory):
+    vid, ids = await _seed(factory)
+    async with session_scope(factory) as s:
+        await match_vacancy(s, vid, CFG, TRUST, today=TODAY)
+        (await _rows(s, vid))[ids["strong"]].rationale = "обоснование"
+    async with session_scope(factory) as s:
+        (await s.get(Candidate, ids["adjacent"])).search_status = "dnd"
+        (await s.get(Vacancy, vid)).version = 2
+    async with session_scope(factory) as s:
+        assert await match_vacancy(s, vid, CFG, TRUST, version=2, today=TODAY) == 2
+    async with session_scope(factory) as s:
+        rows = await _rows(s, vid)
+        assert ids["adjacent"] not in rows
+        assert rows[ids["strong"]].rationale is None  # версия вакансии сменилась
+        assert rows[ids["strong"]].vacancy_version == 2
+
+
+async def test_stale_unpublished_and_unknown_are_skipped(factory):
+    vid, _ = await _seed(factory)
+    async with session_scope(factory) as s:
+        (await s.get(Vacancy, vid)).version = 3
+    async with session_scope(factory) as s:
+        assert await match_vacancy(s, vid, CFG, TRUST, version=2, today=TODAY) is None
+        assert await match_vacancy(s, uuid.uuid4(), CFG, TRUST) is None
+        assert await _rows(s, vid) == {}
+        (await s.get(Vacancy, vid)).status = "closed"
+    async with session_scope(factory) as s:
+        assert await match_vacancy(s, vid, CFG, TRUST, version=3, today=TODAY) is None
+
+
+async def test_match_candidate_upserts_and_removes(factory):
+    vid, ids = await _seed(factory)
+    async with session_scope(factory) as s:
+        assert await match_candidate(s, ids["strong"], CFG, TRUST, today=TODAY) == 1
+        assert await match_candidate(s, ids["none"], CFG, TRUST, today=TODAY) == 0
+        assert await match_candidate(s, uuid.uuid4(), CFG, TRUST) is None
+    async with session_scope(factory) as s:
+        rows = await _rows(s, vid)
+        assert set(rows) == {ids["strong"]}
+        by_vacancy = rows[ids["strong"]].score
+    async with session_scope(factory) as s:  # тот же скор, что и в подборке по вакансии
+        await match_vacancy(s, vid, CFG, TRUST, today=TODAY)
+    async with session_scope(factory) as s:
+        assert (await _rows(s, vid))[ids["strong"]].score == by_vacancy
+        (await s.get(Candidate, ids["strong"])).search_status = "dnd"
+    async with session_scope(factory) as s:
+        assert await match_candidate(s, ids["strong"], CFG, TRUST, today=TODAY) == 0
+    async with session_scope(factory) as s:
+        assert ids["strong"] not in await _rows(s, vid)
+    async with session_scope(factory) as s:
+        (await s.get(Candidate, ids["adjacent"])).profile_version = 5
+    async with session_scope(factory) as s:  # устаревшая команда
+        assert await match_candidate(s, ids["adjacent"], CFG, TRUST, version=4) is None
+
+
+async def test_handlers_chain_and_redelivery(db, factory):
+    vid, ids = await _seed(factory)
+    worker = Worker(Settings(database_url=db))
+    pub = new_envelope("vacancy.published", "core", {"vacancy_id": str(vid), "version": 1})
+    await worker.consumers["core.handlers"].dispatch(pub)
+    await worker.consumers["core.handlers"].dispatch(pub)  # повторная доставка
+    async with session_scope(factory) as s:
+        assert await _count(s, "core.match.vacancy") == 1
+    cmd = new_envelope("core.match.vacancy", "core", CoreMatchVacancy(vacancy_id=vid, version=1))
+    await worker.consumers["core.match"].dispatch(cmd)
+    await worker.consumers["core.match"].dispatch(cmd)
+    async with session_scope(factory) as s:
+        assert len(await _rows(s, vid)) == 3
+        assert await _count(s, "matches.ready") == 1
+
+    prof = new_envelope(
+        "skills.profile.updated", "core",
+        {"candidate_id": str(ids["strong"]), "profile_version": 1},
+    )  # fmt: skip
+    await worker.consumers["core.handlers"].dispatch(prof)
+    await worker.consumers["core.handlers"].dispatch(prof)
+    async with session_scope(factory) as s:
+        assert await _count(s, "core.match.candidate") == 1
+        (await s.get(Candidate, ids["strong"])).profile_version = 1
+    one = CoreMatchCandidate(candidate_id=ids["strong"], profile_version=1)
+    ccmd = new_envelope("core.match.candidate", "core", one)
+    await worker.consumers["core.match"].dispatch(ccmd)
+    async with session_scope(factory) as s:
+        assert ids["strong"] in await _rows(s, vid)
+
+    closed = new_envelope("vacancy.closed", "core", {"vacancy_id": str(vid), "version": 2})
+    await worker.consumers["core.handlers"].dispatch(closed)
+    async with session_scope(factory) as s:
+        assert await _rows(s, vid) == {}
+    await worker.engine.dispose()
