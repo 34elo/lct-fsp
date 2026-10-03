@@ -39,3 +39,6 @@
 - Общий код только из `packages/platform` и `packages/contracts`.
 - В чужую БД не ходим: события, команды, internal API.
 - Документы: docs/architecture/services.md, messaging.md.
+
+## Docker
+Образ: `infra/docker/python.Dockerfile` (`PACKAGE=fsp-core`, `SERVICE_DIR=services/core`), в compose — сервисы `core-migrate` (Alembic + справочник навыков, one-shot), `core-api` (`--root-path /api/v1`), `core-worker`, `core-scheduler`; профиль `core`. Запуск стека: `make up`.

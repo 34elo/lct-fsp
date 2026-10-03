@@ -20,3 +20,6 @@
 - Заблокировавший бота пользователь (`Forbidden`) — сообщение снимается с очереди без ретраев.
 - Файлы пользователя не сохраняем, стримим в core.
 - Документы: telegram.md, messaging.md §2, api.md §2.10 и §5.
+
+## Docker
+Образ: `infra/docker/python.Dockerfile` (`PACKAGE=fsp-bot`, `SERVICE_DIR=services/bot`), в compose — сервис `bot`; профиль `bot` включается `make up` только при заданном `TG_BOT_TOKEN` (в сборке не проверялся). Запуск стека: `make up`.
