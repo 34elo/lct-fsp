@@ -26,6 +26,8 @@ from app.config import Settings
 from app.graph import handlers as graph_handlers
 from app.graph.embedding import MlEmbedder
 from app.graph.trust import TrustConfig
+from app.matching import handlers as matching_handlers
+from app.matching.scoring import MatchConfig
 from app.resumes import handlers as resume_handlers
 
 log = structlog.get_logger()
@@ -58,11 +60,18 @@ class Worker:
             if self.settings.ml_api_url
             else None
         )
+        trust = TrustConfig.load(self.settings.scoring_config_path or None)
         graph_handlers.register(
             self.consumers,
             self.session_factory,
-            TrustConfig.load(self.settings.scoring_config_path or None),
+            trust,
             embedder=self.embedder,
+        )
+        matching_handlers.register(
+            self.consumers,
+            self.session_factory,
+            MatchConfig.load(self.settings.scoring_config_path or None),
+            trust,
         )
         resume_handlers.register(
             self.consumers, self.session_factory, lambda m: publish_ui(self.broker, m)
