@@ -26,8 +26,11 @@ from app.candidates.models import Candidate
 from app.graph import service as graph
 from app.graph.trust import EvidenceView, TrustConfig, effective_strength
 from app.matching.p_accept import PAcceptConfig, hint, mutual, p_accept
+from app.matching.rerank import RerankConfig, mmr, multiplier
 from app.matching.scoring import MatchConfig, MatchResult, score_candidate
 from app.matching.service import build_views, load_vacancy
+from app.offers import service as offers
+from app.recommendations import service as recs
 from app.taxonomy import service as taxonomy
 
 CACHE_TTL = 60
@@ -90,6 +93,7 @@ class Row:
     skills: list[Any]
     result: MatchResult | None = None
     p_accept: float | None = None
+    mult: float = 1.0  # множитель переранжирования (matching.md §5)
 
     def key(self, sort: Sort) -> float:
         if sort == "fresh":
@@ -98,9 +102,9 @@ class Row:
             return self.trust
         if self.result is not None:
             if sort == "mutual" and self.p_accept is not None:
-                return mutual(self.result.score, self.p_accept)
-            return self.result.score
-        return self.relevance
+                return mutual(self.result.score, self.p_accept) * self.mult
+            return self.result.score * self.mult
+        return self.relevance * self.mult
 
 
 def _ts(d: datetime) -> float:
@@ -230,6 +234,36 @@ def p_accept_for(
     )  # fmt: skip
 
 
+async def _rerank(
+    session: AsyncSession,
+    rows: list[Row],
+    company_id: uuid.UUID,
+    cfg: RerankConfig,
+    sort: Sort,
+    order: Any,
+) -> None:
+    """Множители (нагрузка офферами, показы без действий, готовность) и MMR по топ-K, на месте."""
+    ids = [r.cand.user_id for r in rows]
+    unanswered = await offers.open_counts(session, ids)
+    shown = await recs.shown_without_action(session, company_id, ids)
+    now = datetime.now(UTC)
+    for r in rows:
+        age = (
+            now
+            - (
+                r.cand.updated_at
+                if r.cand.updated_at.tzinfo
+                else r.cand.updated_at.replace(tzinfo=UTC)
+            )
+        ).total_seconds() / 86400
+        r.mult = multiplier(
+            unanswered=unanswered.get(r.cand.user_id, 0), shown=shown.get(r.cand.user_id, 0),
+            active=candidates.effective_status(r.cand) == "active", updated_days=age, cfg=cfg,
+        )  # fmt: skip
+    rows.sort(key=order)
+    rows[:] = mmr(rows, lambda r: -order(r)[0], lambda r: r.cand.embedding, cfg)
+
+
 async def search_candidates(
     session: AsyncSession,
     redis: Redis | None,
@@ -246,12 +280,14 @@ async def search_candidates(
     today: date | None = None,
     responsibility_score: float | None = None,
     pa_cfg: PAcceptConfig | None = None,
+    rr_cfg: RerankConfig | None = None,
 ) -> dict[str, Any]:
     """Страница выдачи `{items, next_cursor, total}`; `items` — JSON-словари `CandidateCard`."""
     limit = max(1, min(limit, MAX_LIMIT))
     if sort == "mutual" and vacancy_id is None:
         sort = "match"  # H считается под вакансию; без неё — обычное соответствие
     pa_cfg = pa_cfg or PAcceptConfig.load()
+    rr_cfg = rr_cfg or RerankConfig.load()
     after = decode_cursor(cursor, sort) if cursor else None
     key = cache_key(
         await candidates.catalog_version(session),
@@ -329,10 +365,16 @@ async def search_candidates(
         return (-sortkey(r), r.cand.pseudo_id)
 
     rows.sort(key=order)
+    if sort in ("match", "mutual") and rows:
+        await _rerank(session, rows, company_id, rr_cfg, sort, order)
     total = len(rows)
     if after is not None:
         akey, apid = after
-        rows = [r for r in rows if order(r) > (-akey, apid)]
+        pos = next((i for i, r in enumerate(rows) if r.cand.pseudo_id == apid), None)
+        if pos is not None:  # курсор — по месту последнего показанного в итоговом порядке
+            rows = rows[pos + 1 :]
+        else:
+            rows = [r for r in rows if order(r) > (-akey, apid)]
     page = rows[:limit]
     next_cursor = (
         encode_cursor(sort, sortkey(page[-1]), page[-1].cand.pseudo_id)

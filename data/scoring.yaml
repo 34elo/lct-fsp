@@ -384,6 +384,9 @@ limits:
   matching_candidate_limit_sql: 300  # до ~300 candidates after SQL filter
   matching_reranking_top_k: 20  # MMR on top-20
   matching_mmr_lambda: 0.8  # diversity parameter
+  matching_overload_penalty: 0.9  # ≥ max_unanswered_offers открытых офферов → × 0.9
+  matching_active_boost: 1.03  # «активно ищу» → × 1.03
+  matching_fresh_boost: 1.01  # профиль обновлён за profile_fresh_days → × 1.01
 
   # FSP
   fsp_unverified_bind_penalty: 0.5  # × 0.5
