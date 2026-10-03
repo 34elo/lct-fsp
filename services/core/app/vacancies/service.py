@@ -87,6 +87,11 @@ async def get_owned(session: AsyncSession, user: User, vacancy_id: uuid.UUID) ->
     return v
 
 
+async def get(session: AsyncSession, vacancy_id: uuid.UUID) -> Vacancy | None:
+    """Вакансия без проверки владельца — для внутренних модулей (подбор)."""
+    return await session.get(Vacancy, vacancy_id)
+
+
 async def skills_of(session: AsyncSession, vacancy_ids: list[uuid.UUID]) -> dict:
     """{vacancy_id: [(VacancySkill, slug)]} — навыки по порядку весов."""
     out: dict[uuid.UUID, list[tuple[VacancySkill, str]]] = {i: [] for i in vacancy_ids}
