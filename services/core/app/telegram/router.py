@@ -3,18 +3,25 @@
 from __future__ import annotations
 
 import hmac
+from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Header, Request
+from fastapi import APIRouter, Depends, File, Form, Header, Request, UploadFile
+from fsp_contracts.enums import ConsentType
 from fsp_platform.app import ProblemError
 from fsp_platform.ratelimit import RateLimiter
 from pydantic import BaseModel, Field
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.deps import get_limiter, get_redis, get_session
+from app.candidates import service as candidates
+from app.consents import service as consents
+from app.deps import get_limiter, get_redis, get_session, get_storage
+from app.graph import service as graph
 from app.identity.deps import get_current_user
 from app.identity.models import User
+from app.resumes import service as resumes
+from app.taxonomy import service as taxonomy
 from app.telegram import service
 
 router = APIRouter(tags=["telegram"])
@@ -137,3 +144,149 @@ async def magic_link(
         session, redis, request.app.state.settings.web_base_url, body.tg_user_id, body.redirect
     )
     return MagicLinkOut(url=url)
+
+
+# --- Резюме и профиль из бота (api.md §2.10) --------------------------------------------------
+
+PROFILE_SKILLS = 6
+FSP_LINES = 3
+
+
+async def _candidate_by_tg(session: AsyncSession, tg_user_id: int) -> User:
+    user = await _user_by_tg(session, tg_user_id)
+    if user.role != "candidate":
+        raise ProblemError(403, "forbidden", "Действие доступно кандидату")
+    return user
+
+
+class ResumeAcceptedOut(BaseModel):
+    resume_id: UUID
+    job_id: UUID
+
+
+@internal.post(
+    "/tg/resumes",
+    status_code=202,
+    response_model=ResumeAcceptedOut,
+    dependencies=[Depends(require_bot)],
+)
+async def tg_resume_upload(
+    request: Request,
+    file: Annotated[UploadFile, File()],
+    tg_user_id: Annotated[int, Form()],
+    session: AsyncSession = Depends(get_session),
+    storage=Depends(get_storage),
+    limiter: RateLimiter = Depends(get_limiter),
+):
+    """Те же проверки, что у сайта: сигнатура PDF/DOCX, до 10 МБ, 10 в сутки, согласие ПДн."""
+    user = await _candidate_by_tg(session, tg_user_id)
+    if not await consents.has_consent(session, user.id, ConsentType.pd_processing):
+        raise ProblemError(
+            403, "consent_required", "Нужно согласие", "Выдайте согласие pd_processing"
+        )
+    await limiter.check(f"resume:{user.id}", resumes.UPLOAD_LIMIT, resumes.UPLOAD_WINDOW)
+    data = await file.read(resumes.MAX_BYTES + 1)
+    if not getattr(request.app.state, "bucket_ready", False):
+        await storage.ensure_bucket()
+        request.app.state.bucket_ready = True
+    await candidates.get_or_create(session, user.id, request.app.state.settings.pseudo_id_secret)
+    resume, job_id = await resumes.upload(session, storage, user.id, data)
+    return ResumeAcceptedOut(resume_id=resume.id, job_id=job_id)
+
+
+class TgResumeOut(BaseModel):
+    status: str
+    error: str | None = None
+    experience_months: int | None = None
+    skills: list[str] = []
+    unknown_skills: int = 0
+
+
+def _resume_out(resume) -> TgResumeOut:
+    out = TgResumeOut(status=resume.status, error=resume.error)
+    if resume.parsed:
+        parsed = resumes.ParsedResume.model_validate(resume.parsed)
+        out.experience_months = parsed.total_experience_months
+        out.skills = [s.raw for s in parsed.skills if s.slug][:12]
+        out.unknown_skills = len(parsed.unknown_skills)
+    return out
+
+
+@internal.get(
+    "/tg/resumes/{resume_id}", response_model=TgResumeOut, dependencies=[Depends(require_bot)]
+)
+async def tg_resume_status(
+    resume_id: UUID, tg_user_id: int, session: AsyncSession = Depends(get_session)
+):
+    user = await _candidate_by_tg(session, tg_user_id)
+    return _resume_out(await resumes.get_owned(session, user.id, resume_id))
+
+
+class TgConfirmIn(BaseModel):
+    tg_user_id: int
+
+
+@internal.post(
+    "/tg/resumes/{resume_id}/confirm",
+    response_model=TgResumeOut,
+    dependencies=[Depends(require_bot)],
+)
+async def tg_resume_confirm(
+    resume_id: UUID, body: TgConfirmIn, session: AsyncSession = Depends(get_session)
+):
+    """Подтверждение без правок; правки — на сайте."""
+    user = await _candidate_by_tg(session, body.tg_user_id)
+    resume = await resumes.get_owned(session, user.id, resume_id)
+    await resumes.confirm(session, resume, resumes.ParsedResumeEdits())
+    return _resume_out(resume)
+
+
+class TgSkill(BaseModel):
+    name: str
+    level: int
+    claimed_only: bool
+
+
+class TgProfileOut(BaseModel):
+    primary_role: str | None
+    grade: str | None
+    grade_preliminary: bool
+    skills: list[TgSkill]
+    fsp: list[str]
+
+
+@internal.get("/tg/profile", response_model=TgProfileOut, dependencies=[Depends(require_bot)])
+async def tg_profile(
+    request: Request, tg_user_id: int, session: AsyncSession = Depends(get_session)
+):
+    """Краткий профиль для сообщения: свой, поэтому названия навыков и ФСП-результаты можно."""
+    user = await _candidate_by_tg(session, tg_user_id)
+    cand = await candidates.get_or_create(
+        session, user.id, request.app.state.settings.pseudo_id_secret
+    )
+    edges = (await graph.all_skills_of(session, [user.id])).get(user.id, [])
+    edges = sorted(edges, key=lambda s: (s.claimed_only, -s.confidence, str(s.skill_id)))
+    top = edges[:PROFILE_SKILLS]
+    names = await taxonomy.skill_names(session, [e.skill_id for e in top])
+    slugs = await taxonomy.skill_slugs(session, [e.skill_id for e in top])
+    skills = [
+        TgSkill(
+            name=names.get(e.skill_id) or slugs.get(e.skill_id, ""),
+            level=e.level,
+            claimed_only=e.claimed_only,
+        )
+        for e in top
+        if e.skill_id in slugs
+    ]
+    fsp: dict[UUID, str] = {}
+    for ev in await graph.evidence_of(session, [user.id], source="fsp"):
+        label = (ev.details or {}).get("label")
+        if ev.fact_type == "fsp_result" and isinstance(label, str):
+            fsp.setdefault(ev.fact_id, label)
+    return TgProfileOut(
+        primary_role=cand.primary_role,
+        grade=cand.grade,
+        grade_preliminary=cand.grade_confidence is None or cand.grade_confidence < 0.5,
+        skills=skills,
+        fsp=list(fsp.values())[:FSP_LINES],
+    )

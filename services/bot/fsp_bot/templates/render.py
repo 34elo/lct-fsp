@@ -152,3 +152,33 @@ def render_keyboard(buttons: list[list[TgButton]]) -> InlineKeyboardMarkup | Non
         for row in buttons
     ]
     return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+_GRADES = {
+    "intern": "Intern",
+    "junior": "Junior",
+    "middle": "Middle",
+    "senior": "Senior",
+    "lead": "Lead",
+}
+
+
+def profile_summary(d: dict) -> str:
+    """Краткий профиль (telegram.md §2): категория, грейд, топ-6 навыков, ФСП."""
+    lines = ["👤 <b>Твой профиль</b>"]
+    if d.get("primary_role"):
+        lines.append(f"Категория: {_e(d['primary_role'])}")
+    if d.get("grade"):
+        tail = " (предварительно)" if d.get("grade_preliminary", True) else ""
+        lines.append(f"Грейд: {_e(_GRADES.get(d['grade'], d['grade']))}{tail}")
+    skills = d.get("skills") or []
+    if skills:
+        lines.append("")
+        for s in skills:
+            mark = " <i>(заявлено)</i>" if s.get("claimed_only") else ""
+            lines.append(f"• {_e(s['name'])} {_dots(s.get('level', 0))}{mark}")
+    for label in d.get("fsp") or []:
+        lines.append(f"🏆 {_e(label)}")
+    if not (skills or d.get("grade")):
+        lines.append("Пока пусто. Пришли резюме: 📄 Резюме.")
+    return "\n".join(lines)
