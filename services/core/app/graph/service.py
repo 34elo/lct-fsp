@@ -305,3 +305,11 @@ async def fsp_disciplines_of(
             if disc:
                 out.setdefault(cid, set()).add(disc)
     return out
+
+
+async def evidence_by_ids(session: AsyncSession, ids: list[uuid.UUID]) -> list[Evidence]:
+    """Активные доказательства по id (для краткой выписки «откуда навык»)."""
+    if not ids:
+        return []
+    stmt = select(Evidence).where(Evidence.id.in_(ids), Evidence.is_active)
+    return list(await session.scalars(stmt.order_by(Evidence.id)))

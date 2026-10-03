@@ -17,6 +17,7 @@ from app.deps import get_session
 from app.identity.deps import require_roles
 from app.identity.models import User
 from app.resumes import service as resumes
+from app.views import service as views
 
 router = APIRouter(prefix="/candidates/me", tags=["candidates"])
 
@@ -178,3 +179,11 @@ async def put_stoplist(
     cand = await _cand(request, session, user)
     await service.set_stoplist(session, cand, body.company_ids)
     return StoplistIO(company_ids=[UUID(c) for c in cand.stoplist_company_ids])
+
+
+@router.get("/views")
+async def my_views(
+    user: User = Depends(owner), session: AsyncSession = Depends(get_session)
+) -> dict:
+    """«Вас смотрели N компаний» — только агрегаты, без названий (security.md §3)."""
+    return await views.stats(session, user.id)

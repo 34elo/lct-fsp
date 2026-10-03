@@ -271,3 +271,108 @@ def test_speed_on_500_candidates(c, market):
     r = _search(c, market, sort="trust", filters={"skills_must": [{"slug": "python"}]})
     assert r.status_code == 200 and r.json()["total"] >= 500
     assert time.perf_counter() - t < 0.3
+
+
+# --- E7-4: карточка и журнал просмотров -------------------------------------------------
+
+
+def _card(c, h, pid, **q):
+    return c.get(f"/candidates/{pid}/card", params=q, headers=_hdr(h))
+
+
+def _views(c):
+    with sqlite3.connect(c.db) as con:
+        return con.execute("select company_id, source, vacancy_id from profile_views").fetchall()
+
+
+def test_card_full_is_anonymous_and_logs_view(c, market):
+    uid = _cand(c, 40, [("python", 0.8, 3, ["github"]), ("fastapi", 0.3, 1, ["resume"])])
+    with sqlite3.connect(c.db) as con:
+        con.execute("update users set id=id where 0")  # no-op: user row не нужен для карточки
+        con.execute(
+            "insert into experience (id, candidate_id, company, title, start_date, end_date,"
+            " skill_ids, is_commercial, source) values (?,?,?,?,?,?,?,1,'resume')",
+            (uuid.uuid4().hex, uid, "Секретная Компания", "Разработчик", "2020-01-01",
+             "2021-01-01", json.dumps([c.skills["python"]])),
+        )  # fmt: skip
+    r = _card(c, market, "pid0040")
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert set(body) == CARD_FIELDS | {"skills", "grade_info", "experience", "offers_from_you"}
+    assert body["pseudonym"] == "Backend #40" and body["offers_from_you"] == []
+    assert [s["skill"]["slug"] for s in body["skills"]] == ["python", "fastapi"]
+    assert body["skills"][1]["claimed_only"] is False or body["skills"][1]["level"] == 1
+    (e,) = body["experience"]
+    assert e["company"] is None and e["months"] == 12 and e["skills"] == ["python"]
+    text = json.dumps(body, ensure_ascii=False)
+    assert "Секретная" not in text and "user_id" not in text
+    assert uid not in text and uid.replace("-", "") not in text
+    assert len(_views(c)) == 1 and _views(c)[0][1] == "direct"
+    _card(c, market, "pid0040", source="search")
+    assert len(_views(c)) == 2
+
+
+def test_card_shows_company_only_when_allowed(c, market):
+    uid = _cand(c, 41, [("python", 0.8, 3, ["github"])])
+    with sqlite3.connect(c.db) as con:
+        con.execute("update candidates set visibility=? where user_id=?",
+                    (json.dumps({"companies": True}), uid))  # fmt: skip
+        con.execute(
+            "insert into experience (id, candidate_id, company, title, start_date, skill_ids,"
+            " is_commercial, source) values (?,?,?,?,?,'[]',1,'resume')",
+            (uuid.uuid4().hex, uid, "Открытая Компания", "Dev", "2023-01-01"),
+        )
+    assert _card(c, market, "pid0041").json()["experience"][0]["company"] == "Открытая Компания"
+
+
+def test_card_hidden_and_foreign_resources_404(c, market):
+    _cand(c, 42, [("python", 0.5, 2, ["github"])], stoplist_company_ids=[market["company_id"]])
+    assert _card(c, market, "pid0004").status_code == 404  # dnd
+    assert _card(c, market, "pid0042").status_code == 404  # стоп-лист компании
+    assert _card(c, market, "nope").status_code == 404
+    other = _employer(c, "o2@x.ru", name="Other")
+    vac = c.post("/vacancies", json={
+        "title": "Dev", "role": "backend", "grade_min": "middle", "grade_max": "senior",
+        "formats": ["remote"], "employment_type": "full", "salary_from": 200000,
+        "salary_to": 300000, "skills": [{"slug": "python"}],
+    }, headers=_hdr(other)).json()  # fmt: skip
+    assert _card(c, market, "pid0001", vacancy_id=vac["id"]).status_code == 404
+    assert _card(c, market, "pid0001", vacancy_id=str(uuid.uuid4())).status_code == 404
+    assert _views(c) == []  # неудачные запросы просмотр не пишут
+    reg = c.post("/auth/register", json={"email": "cc@x.ru", "password": PWD, "role": "candidate"})
+    cand_h = {"Authorization": f"Bearer {reg.json()['access_token']}"}
+    assert c.get("/candidates/pid0001/card", headers=cand_h).status_code == 403
+
+
+def test_card_with_vacancy_has_match_and_candidate_sees_aggregates(c, market):
+    vac = c.post("/vacancies", json={
+        "title": "Dev", "role": "backend", "grade_min": "junior", "grade_max": "senior",
+        "formats": ["remote"], "employment_type": "full", "salary_from": 200000,
+        "salary_to": 300000, "skills": [{"slug": "python"}],
+    }, headers=_hdr(market)).json()  # fmt: skip
+    r = _card(c, market, "pid0001", vacancy_id=vac["id"], source="match")
+    assert r.status_code == 200 and r.json()["match"]["score"] > 0
+    assert _views(c)[0][1:] == ("match", vac["id"].replace("-", ""))
+
+
+def test_my_views_aggregates_without_company_names(c, market):
+    reg = c.post("/auth/register", json={"email": "cv@x.ru", "password": PWD,
+                                         "role": "candidate"}).json()  # fmt: skip
+    h = {"Authorization": f"Bearer {reg['access_token']}"}
+    me = c.get("/me", headers=h).json()
+    uid = me.get("id") or me.get("user_id")
+    with sqlite3.connect(c.db) as con:
+        pid = c.get("/candidates/me/profile", headers=h)  # создаёт анкету
+        con.execute("update candidates set primary_role='backend', pseudo_id='pidself' "
+                    "where user_id=?", (uid.replace("-", ""),))  # fmt: skip
+    for _ in range(2):
+        assert _card(c, market, "pidself").status_code == 200
+    other = _employer(c, "o3@x.ru", name="Other3")
+    assert _card(c, other, "pidself").status_code == 200
+    r = c.get("/candidates/me/views", headers=h)
+    assert r.status_code == 200 and pid.status_code == 200
+    body = r.json()
+    assert body["total_30d"] == 3 and body["companies_30d"] == 2
+    assert sum(d["count"] for d in body["by_day"]) == 3
+    assert "Acme" not in json.dumps(body)
+    assert c.get("/candidates/me/views", headers=_hdr(market)).status_code == 403

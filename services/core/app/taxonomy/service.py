@@ -442,3 +442,17 @@ async def skill_slugs(session: AsyncSession, skill_ids: list[uuid.UUID]) -> dict
         return {}
     rows = await session.execute(select(Skill.id, Skill.slug).where(Skill.id.in_(skill_ids)))
     return {sid: slug for sid, slug in rows.all()}
+
+
+async def skill_briefs(
+    session: AsyncSession, skill_ids: list[uuid.UUID]
+) -> dict[uuid.UUID, tuple[str, str, str, str]]:
+    """id → (slug, name, group, status) для витрин навыков."""
+    if not skill_ids:
+        return {}
+    rows = await session.execute(
+        select(Skill.id, Skill.slug, Skill.name, Skill.grp, Skill.status).where(
+            Skill.id.in_(skill_ids)
+        )
+    )
+    return {sid: (slug, name, grp or "", status) for sid, slug, name, grp, status in rows.all()}
