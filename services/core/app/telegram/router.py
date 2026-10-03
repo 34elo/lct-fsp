@@ -7,7 +7,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, Form, Header, Request, UploadFile
-from fsp_contracts.enums import ConsentType
+from fsp_contracts.enums import ConsentType, DeclineReason, OfferStatus
 from fsp_platform.app import ProblemError
 from fsp_platform.ratelimit import RateLimiter
 from pydantic import BaseModel, Field
@@ -20,6 +20,8 @@ from app.deps import get_limiter, get_redis, get_session, get_storage
 from app.graph import service as graph
 from app.identity.deps import get_current_user
 from app.identity.models import User
+from app.notifications.handlers import offer_card_data
+from app.offers import service as offers
 from app.resumes import service as resumes
 from app.taxonomy import service as taxonomy
 from app.telegram import service
@@ -290,3 +292,122 @@ async def tg_profile(
         skills=skills,
         fsp=list(fsp.values())[:FSP_LINES],
     )
+
+
+# --- Офферы из бота (api.md §2.10) --------------------------------------------------------------
+
+ACTIVE_OFFERS = (
+    OfferStatus.sent.value,
+    OfferStatus.viewed.value,
+    OfferStatus.accepted.value,
+    OfferStatus.interview.value,
+)
+TG_OFFERS_LIMIT = 10
+
+
+class TgOfferOut(BaseModel):
+    """Данные карточки оффера: те же поля, что у `notify.telegram` `offer_new`, плюс статус."""
+
+    offer_id: str
+    status: str
+    company_name: str | None
+    company_responsibility: float | None
+    vacancy_title: str | None
+    formats: list[str]
+    employment_type: str | None
+    salary_from: int
+    salary_to: int
+    message: str | None
+    match_score: float | None
+    explanation: list[dict]
+    below_candidate_min: bool
+    expires_at: str
+
+
+async def _offer_out(session: AsyncSession, offer) -> TgOfferOut:
+    data = await offer_card_data(session, offer)
+    return TgOfferOut(status=offer.status, **data)
+
+
+@internal.get("/tg/offers", response_model=list[TgOfferOut], dependencies=[Depends(require_bot)])
+async def tg_offers(tg_user_id: int, session: AsyncSession = Depends(get_session)):
+    """Активные офферы кандидата (меню «Офферы»): новые первыми, не больше 10."""
+    user = await _candidate_by_tg(session, tg_user_id)
+    rows = [
+        o for o in await offers.list_for_candidate(session, user.id) if o.status in ACTIVE_OFFERS
+    ]
+    return [await _offer_out(session, o) for o in rows[:TG_OFFERS_LIMIT]]
+
+
+@internal.post(
+    "/tg/offers/{offer_id}/view", response_model=TgOfferOut, dependencies=[Depends(require_bot)]
+)
+async def tg_offer_view(
+    offer_id: UUID, body: TgConfirmIn, session: AsyncSession = Depends(get_session)
+):
+    """«Подробнее»: первое открытие переводит `sent → viewed`."""
+    user = await _candidate_by_tg(session, body.tg_user_id)
+    offer = await offers.get_for_candidate(session, user.id, offer_id, lock=True)
+    await offers.mark_viewed(session, offer)
+    return await _offer_out(session, offer)
+
+
+@internal.post(
+    "/tg/offers/{offer_id}/accept", response_model=TgOfferOut, dependencies=[Depends(require_bot)]
+)
+async def tg_offer_accept(
+    offer_id: UUID, body: TgConfirmIn, session: AsyncSession = Depends(get_session)
+):
+    user = await _candidate_by_tg(session, body.tg_user_id)
+    offer = await offers.get_for_candidate(session, user.id, offer_id, lock=True)
+    await offers.accept(session, offer)
+    return await _offer_out(session, offer)
+
+
+class TgDeclineIn(BaseModel):
+    tg_user_id: int
+    reason: DeclineReason
+    comment: str | None = Field(default=None, max_length=1000)
+
+
+@internal.post(
+    "/tg/offers/{offer_id}/decline", response_model=TgOfferOut, dependencies=[Depends(require_bot)]
+)
+async def tg_offer_decline(
+    offer_id: UUID, body: TgDeclineIn, session: AsyncSession = Depends(get_session)
+):
+    user = await _candidate_by_tg(session, body.tg_user_id)
+    offer = await offers.get_for_candidate(session, user.id, offer_id, lock=True)
+    await offers.decline(session, offer, body.reason, body.comment)
+    return await _offer_out(session, offer)
+
+
+class TgMessageIn(BaseModel):
+    tg_user_id: int
+    text: str = Field(min_length=1, max_length=2000)
+
+
+class TgMessageOut(BaseModel):
+    id: UUID
+
+
+@internal.post(
+    "/tg/offers/{offer_id}/messages",
+    response_model=TgMessageOut,
+    status_code=201,
+    dependencies=[Depends(require_bot)],
+)
+async def tg_offer_message(
+    offer_id: UUID,
+    body: TgMessageIn,
+    session: AsyncSession = Depends(get_session),
+    limiter: RateLimiter = Depends(get_limiter),
+):
+    """Вопрос работодателю из бота: те же правила и лимит, что у сайта, канал `tg`."""
+    user = await _candidate_by_tg(session, body.tg_user_id)
+    offer = await offers.get_for_candidate(session, user.id, offer_id, lock=True)
+    await limiter.check(f"offer_msg:{offer.id}:{user.id}", offers.MESSAGES_PER_HOUR, 3600)
+    msg = await offers.add_message(
+        session, offer, side="candidate", user_id=user.id, text=body.text, channel="tg"
+    )
+    return TgMessageOut(id=msg.id)

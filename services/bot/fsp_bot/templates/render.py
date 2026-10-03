@@ -23,27 +23,69 @@ def _dots(level: int) -> str:
     return "●" * level + "○" * (4 - level)
 
 
+_FORMATS = {"remote": "удалёнка", "office": "офис", "hybrid": "гибрид"}
+_EMPLOYMENT = {
+    "full": "полная занятость",
+    "part": "частичная занятость",
+    "internship": "стажировка",
+    "project": "проект",
+}
+_MONTHS = (
+    "января февраля марта апреля мая июня июля августа сентября октября ноября декабря".split()
+)
+_STATUS_TEXT = {
+    "sent": "отправлен",
+    "viewed": "просмотрен",
+    "accepted": "принят",
+    "declined": "отклонён",
+    "expired": "срок истёк",
+    "withdrawn": "отозван работодателем",
+    "interview": "приглашение на интервью",
+    "hired": "вас взяли на работу",
+    "not_hired": "работодатель принял решение: без найма",
+}
+_MARK = {"plus": "✓", "minus": "⚠", "warn": "⚠"}
+
+
+def _date_ru(iso: str) -> str:
+    """`2026-10-12T09:00:00+00:00` → `12 октября`; не разобрали — как есть."""
+    try:
+        day, month = int(iso[8:10]), int(iso[5:7])
+        return f"{day} {_MONTHS[month - 1]}"
+    except (ValueError, IndexError):
+        return iso
+
+
 def offer_new(d: dict) -> str:
-    company = _e(d.get("company", "Компания"))
-    mark = " ✔︎" if d.get("verified") else ""
-    rating = f" (ответственность {d['rating']}/5)" if d.get("rating") is not None else ""
+    """Поля — как в `notifications.offer_card_data` (core): company_name, vacancy_title, formats…"""
+    mark = " ✔︎" if d.get("verified", True) else ""
+    rating = (
+        f" (ответственность {_e(d['company_responsibility'])}/5)"
+        if d.get("company_responsibility") is not None
+        else ""
+    )
     lines = [
-        f"💼 <b>Новый оффер</b> · Компания «{company}»{mark}{rating}",
-        f"<b>{_e(d.get('title', ''))}</b>",
+        f"💼 <b>Новый оффер</b> · Компания «{_e(d.get('company_name') or 'без названия')}»"
+        f"{mark}{rating}",
+        f"<b>{_e(d.get('vacancy_title') or '')}</b>",
     ]
     money = f"💰 <b>{_money(d['salary_from'])} – {_money(d['salary_to'])} ₽</b> на руки"
-    extra = [x for x in (d.get("format"), d.get("employment")) if x]
+    extra = [_FORMATS.get(f, f) for f in d.get("formats") or []]
+    if d.get("employment_type"):
+        extra.append(_EMPLOYMENT.get(d["employment_type"], d["employment_type"]))
     lines.append(" · ".join([money, *map(_e, extra)]))
-    if d.get("below_min") is not None:
-        lines.append(f"⚠ Ниже ваших ожиданий (от {_money(d['below_min'])} ₽)")
-    if d.get("match") is not None:
-        lines += ["", f"Совпадение <b>{_e(d['match'])}%</b>"]
-    for r in d.get("reasons", []):
-        lines.append(f"{'✓' if r.get('ok', True) else '⚠'} {_e(r.get('text', ''))}")
+    if d.get("below_candidate_min"):
+        lines.append("⚠ Ниже ваших ожиданий")
+    if d.get("match_score") is not None:
+        score = float(d["match_score"])
+        pct = round(score * 100) if score <= 1 else round(score)
+        lines += ["", f"Совпадение <b>{pct}%</b>"]
+    for r in d.get("explanation") or []:
+        lines.append(f"{_MARK.get(r.get('kind'), '✓')} {_e(r.get('text', ''))}")
     if d.get("message"):
         lines += ["", f"«{_e(d['message'])}»"]
-    if d.get("deadline"):
-        lines.append(f"⏳ Ответить до {_e(d['deadline'])}")
+    if d.get("expires_at"):
+        lines.append(f"⏳ Ответить до {_e(_date_ru(d['expires_at']))}")
     return "\n".join(lines)
 
 
@@ -58,12 +100,18 @@ def offer_accepted(d: dict) -> str:
 
 
 def offer_updated(d: dict) -> str:
-    return f"💼 Оффер «{_e(d.get('title', ''))}»: {_e(d.get('status_text', 'статус изменился'))}"
+    """У кандидата данные — `{offer_id, status}`; у участника компании ещё `vacancy_title`."""
+    status = _STATUS_TEXT.get(str(d.get("status")), d.get("status_text") or "статус изменился")
+    title = d.get("vacancy_title") or d.get("title")
+    head = f"💼 Оффер «{_e(title)}»" if title else "💼 Оффер"
+    return f"{head}: {_e(status)}"
 
 
 def offer_message(d: dict) -> str:
-    who = _e(d.get("from", "Собеседник"))
-    return f"✉️ <b>{who}</b> по офферу «{_e(d.get('title', ''))}»:\n{_e(d.get('text', ''))}"
+    """Текста сообщения в уведомлении нет (может быть ПДн): только факт и куда идти."""
+    title = d.get("vacancy_title") or d.get("title")
+    where = f" по офферу «{_e(title)}»" if title else " по офферу"
+    return f"✉️ Новое сообщение{where}. Ответ — на сайте или в разделе «💼 Офферы»."
 
 
 def profile_updated(d: dict) -> str:
@@ -182,3 +230,53 @@ def profile_summary(d: dict) -> str:
     if not (skills or d.get("grade")):
         lines.append("Пока пусто. Пришли резюме: 📄 Резюме.")
     return "\n".join(lines)
+
+
+# callback_data причин отказа (api.md §5) → DeclineReason core
+DECLINE_CODES = {
+    "ls": "low_salary",
+    "ws": "wrong_stack",
+    "wf": "wrong_format",
+    "wg": "wrong_grade",
+    "nl": "not_looking",
+    "ot": "other",
+}
+_DECLINE_LABELS = (
+    ("ls", "💸 Мало денег"),
+    ("ws", "🧱 Не тот стек"),
+    ("wf", "🏠 Не подходит формат"),
+    ("wg", "📊 Не тот уровень"),
+    ("nl", "😴 Не ищу сейчас"),
+    ("ot", "✍️ Другое"),
+)
+
+
+def offer_keyboard(offer_id: str, status: str) -> InlineKeyboardMarkup | None:
+    """Ответить можно, пока оффер `sent|viewed`; после принятия — только вопрос."""
+    ask = InlineKeyboardButton(text="❓ Задать вопрос", callback_data=f"o:q:{offer_id}")
+    if status in ("sent", "viewed"):
+        rows = [
+            [
+                InlineKeyboardButton(text="✅ Принять", callback_data=f"o:a:{offer_id}"),
+                InlineKeyboardButton(text="❌ Отклонить", callback_data=f"o:d:{offer_id}"),
+            ],
+            [
+                ask,
+                InlineKeyboardButton(text="📄 Подробнее", callback_data=f"o:v:{offer_id}"),
+            ],
+        ]
+    elif status in ("accepted", "interview"):
+        rows = [[ask]]
+    else:
+        return None
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def decline_keyboard(offer_id: str) -> InlineKeyboardMarkup:
+    buttons = [
+        InlineKeyboardButton(text=label, callback_data=f"o:r:{offer_id}:{code}")
+        for code, label in _DECLINE_LABELS
+    ]
+    rows = [buttons[i : i + 2] for i in range(0, len(buttons), 2)]
+    rows.append([InlineKeyboardButton(text="↩️ Назад", callback_data=f"o:b:{offer_id}")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
