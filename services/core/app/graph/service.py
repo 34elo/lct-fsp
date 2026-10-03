@@ -12,6 +12,7 @@ import uuid
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 
+import sqlalchemy as sa
 from fsp_contracts import new_envelope
 from fsp_contracts.commands import CoreRecompute
 from fsp_contracts.enums import EvidenceSource
@@ -21,7 +22,7 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.candidates.models import Candidate
-from app.graph.models import Evidence
+from app.graph.models import CandidateSkill, Evidence
 
 
 @dataclass(frozen=True, slots=True)
@@ -180,3 +181,96 @@ async def candidates_by_skills(
         .distinct()
     )
     return list(rows)
+
+
+# --- чтение для подбора (matching) -------------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class CoverReq:
+    """Строка требования для отбора: навык `skill_id` закрывается навыком `via` с коэф. `adj`."""
+
+    skill_id: uuid.UUID
+    via: uuid.UUID
+    adj: float
+    floor: float  # нижняя граница требуемого уровня
+
+
+async def covering_candidates(
+    session: AsyncSession,
+    reqs: list[CoverReq],
+    *,
+    required_count: int,
+    max_failed: int,
+    limit: int,
+) -> list[uuid.UUID]:
+    """Отбор по графу (matching.md §3, A): закрыто ≥ `required_count − (max_failed − 1)` требований.
+
+    `cover = max(conf(via) · adj)` по каждому требованию; порядок — число закрытых, затем сумма.
+    """
+    if not reqs:
+        return []
+    req = sa.union_all(
+        *(
+            sa.select(
+                sa.literal(r.skill_id, sa.Uuid).label("skill_id"),
+                sa.literal(r.via, sa.Uuid).label("via"),
+                sa.literal(r.adj, sa.Float).label("adj"),
+                sa.literal(r.floor, sa.Float).label("floor"),
+            )
+            for r in reqs
+        )
+    ).subquery("req")
+    cover = (
+        sa.select(
+            CandidateSkill.candidate_id.label("cid"),
+            req.c.skill_id,
+            sa.func.max(CandidateSkill.confidence * req.c.adj).label("eff"),
+            sa.func.max(req.c.floor).label("floor"),
+        )
+        .join(req, CandidateSkill.skill_id == req.c.via)
+        .group_by(CandidateSkill.candidate_id, req.c.skill_id)
+        .subquery("cover")
+    )
+    met = sa.func.count().filter(cover.c.eff >= cover.c.floor - 1e-9)
+    stmt = (
+        sa.select(cover.c.cid)
+        .group_by(cover.c.cid)
+        .having(met >= required_count - (max_failed - 1))
+        .order_by(met.desc(), sa.func.sum(cover.c.eff).desc(), cover.c.cid)
+        .limit(limit)
+    )
+    return list(await session.scalars(stmt))
+
+
+async def skills_of_candidates(
+    session: AsyncSession, candidate_ids: list[uuid.UUID], skill_ids: list[uuid.UUID]
+) -> list[CandidateSkill]:
+    """Рёбра «владеет» кандидатов по нужным навыкам."""
+    if not candidate_ids or not skill_ids:
+        return []
+    stmt = select(CandidateSkill).where(
+        CandidateSkill.candidate_id.in_(candidate_ids), CandidateSkill.skill_id.in_(skill_ids)
+    )
+    return list(await session.scalars(stmt))
+
+
+async def evidence_of(
+    session: AsyncSession,
+    candidate_ids: list[uuid.UUID],
+    *,
+    skill_ids: list[uuid.UUID] | None = None,
+    fact_ids: list[uuid.UUID] | None = None,
+    source: str | None = None,
+) -> list[Evidence]:
+    """Активные доказательства кандидатов с фильтрами по навыкам, фактам, источнику."""
+    if not candidate_ids:
+        return []
+    stmt = select(Evidence).where(Evidence.candidate_id.in_(candidate_ids), Evidence.is_active)
+    if skill_ids is not None:
+        stmt = stmt.where(Evidence.skill_id.in_(skill_ids))
+    if fact_ids is not None:
+        stmt = stmt.where(Evidence.fact_id.in_(fact_ids))
+    if source is not None:
+        stmt = stmt.where(Evidence.source == source)
+    return list(await session.scalars(stmt.order_by(Evidence.id)))

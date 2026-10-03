@@ -26,6 +26,7 @@
 - `app/telegram/` — Telegram: `telegram_accounts`, `service.py` (проверка Login Widget, magic-ссылки и deep link через Redis `GETDEL`, привязка с вливанием заготовки бота), `router.py` (`/me/telegram/link`, `/internal/tg/{start,consents,link}`, `/internal/auth/magic-link`; `Service`-токен бота); `/auth/telegram` и `/auth/magic` — в `identity/router.py`
 - `app/companies/` — компании: `/companies`, `/companies/me[/members]`, модерация `/admin/companies/*` (pending → verified|rejected)
 - `app/vacancies/` — вакансии: `/vacancies[/{id}]`, `publish`, `close`; публиковать может только `verified` компания; события `vacancy.published|updated|closed`
+- `app/matching/` — подбор (ml.md §6, matching.md §3–4): `scoring.py` (жёсткие фильтры, скоринг, `K_soft`, объяснения шаблонами со ссылками на доказательства), `service.py` (`match_vacancy_candidates`: отбор SQL → скоринг)
 - `app/worker.py` — `Worker.consumers[<очередь>].on(type)` + `idempotent()` для обработчиков
 - `app/scheduler.py` — `SCHEDULE` (messaging.md §4)
 - `migrations/` — Alembic (async), `versions/`

@@ -59,6 +59,8 @@ GROUP BY c.user_id
 HAVING count(*) FILTER (WHERE cover.eff >= level_floor(cover.min_level)) >= :required_count - 1;
 ```
 
+Реализация (E7-1): запрос разбит по владельцам таблиц — покрытие требований по `candidate_skills` (`graph.service.covering_candidates`, тот же `HAVING`, лимит `matching_candidate_limit_sql`), затем фильтры по анкете (`candidates.service.eligible`; `formats &&` и стоп-лист — в SQL только на PostgreSQL). Все жёсткие фильтры повторно проверяются при скоринге (`matching.scoring.hard_filter`).
+
 **B. По смыслу** — `ORDER BY embedding <=> :vacancy_vec LIMIT 100` с теми же жёсткими фильтрами по атрибутам. Добирает тех, у кого нужные навыки не легли в справочник. Такие кандидаты идут с пометкой «совпадение только по смыслу».
 
 Для **поиска без вакансии** чипсы-фильтры собираются в «виртуальную вакансию» (роли, грейд, навыки, формат, бюджет), смысловой остаток запроса даёт вектор.

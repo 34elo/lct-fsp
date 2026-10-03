@@ -8,7 +8,9 @@ import secrets
 import uuid
 from datetime import UTC, timedelta
 
+import sqlalchemy as sa
 from sqlalchemy import select
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -100,3 +102,65 @@ def effective_status(cand: Candidate) -> str:
     if until is not None and until.tzinfo is None:
         until = until.replace(tzinfo=UTC)
     return "active" if until is not None and until > utcnow() else "open"
+
+
+# --- чтение для подбора (matching) -------------------------------------------------------
+
+
+def _attr_filters(
+    stmt: sa.Select, *, salary_cap: float, formats: list[str], company_id: uuid.UUID, pg: bool
+) -> sa.Select:
+    """Жёсткие фильтры по анкете (ml.md §6.1); массивы — только в PostgreSQL (в SQLite JSON)."""
+    stmt = stmt.where(
+        Candidate.deleted_at.is_(None),
+        Candidate.search_status != "dnd",
+        sa.or_(Candidate.salary_min.is_(None), Candidate.salary_min <= salary_cap),
+    )
+    if pg:
+        arr = postgresql.ARRAY(sa.Text)
+        stmt = stmt.where(
+            Candidate.formats.op("&&")(sa.cast(formats, arr)),
+            sa.not_(
+                sa.cast(str(company_id), sa.Text) == sa.func.any(Candidate.stoplist_company_ids)
+            ),
+        )
+    return stmt
+
+
+async def eligible(
+    session: AsyncSession,
+    candidate_ids: list[uuid.UUID],
+    *,
+    salary_cap: float,
+    formats: list[str],
+    company_id: uuid.UUID,
+) -> list[Candidate]:
+    """Анкеты из `candidate_ids`, прошедшие жёсткие фильтры по атрибутам."""
+    if not candidate_ids:
+        return []
+    pg = session.bind.dialect.name == "postgresql"
+    stmt = _attr_filters(
+        select(Candidate).where(Candidate.user_id.in_(candidate_ids)),
+        salary_cap=salary_cap, formats=formats, company_id=company_id, pg=pg,
+    )  # fmt: skip
+    return list(await session.scalars(stmt))
+
+
+async def nearest_by_embedding(
+    session: AsyncSession,
+    vector: list[float],
+    *,
+    limit: int,
+    salary_cap: float,
+    formats: list[str],
+    company_id: uuid.UUID,
+) -> list[Candidate]:
+    """Отбор по смыслу (matching.md §3, B): `embedding <=> :vec`; только PostgreSQL + pgvector."""
+    if session.bind.dialect.name != "postgresql":
+        return []
+    dist = Candidate.embedding.op("<=>")(vector)
+    stmt = _attr_filters(
+        select(Candidate).where(Candidate.embedding.is_not(None)),
+        salary_cap=salary_cap, formats=formats, company_id=company_id, pg=True,
+    ).order_by(dist).limit(limit)  # fmt: skip
+    return list(await session.scalars(stmt))
