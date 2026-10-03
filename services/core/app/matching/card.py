@@ -20,6 +20,7 @@ from app.graph.grade import PRELIMINARY_BELOW
 from app.graph.team_signals import strength_label
 from app.graph.trust import EvidenceView, TrustConfig, effective_strength
 from app.matching import search
+from app.matching.p_accept import PAcceptConfig, hint
 from app.matching.scoring import MatchConfig
 from app.matching.service import build_views, load_vacancy
 from app.offers import service as offers
@@ -190,6 +191,7 @@ async def build_card(
     trust: TrustConfig,
     company_id: uuid.UUID | None = None,
     today: date | None = None,
+    responsibility_score: float | None = None,
 ) -> CandidateCardFull:
     day = today or datetime.now(UTC).date()
     owned = (await graph.all_skills_of(session, [c.user_id]))[c.user_id]
@@ -199,13 +201,17 @@ async def build_card(
     highlights = (await search._fsp_highlights(session, [c.user_id], trust, day)).get(c.user_id, [])
 
     result = None
+    interest = None
     if vacancy_id is not None:
         loaded = await load_vacancy(session, vacancy_id)
         if loaded is not None:
             v, adj = loaded
             (view,) = await build_views(session, [c], v, adj, trust, day)
             result = search.score_candidate(v, view, adj, cfg)
-    base = search._card(c, owned, names, highlights, result)
+            if result is not None:
+                pa = PAcceptConfig.load()
+                interest = hint(search.p_accept_for(v, c, responsibility_score, pa), pa)
+    base = search._card(c, owned, names, highlights, result, interest)
 
     ev_ids = [uuid.UUID(e) for s in owned for e in (s.top_evidence or ())[:TOP_EVIDENCE]]
     evidence = {e.id: e for e in await graph.evidence_by_ids(session, ev_ids)}
