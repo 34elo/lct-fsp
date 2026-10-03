@@ -370,6 +370,12 @@ limits:
   uplift_top_skills: 30  # top-30 по спросу
   uplift_combinations_max: 3  # жадно добавляем до 3 навыков
   uplift_simulation_timeout_ms: 50  # < 50ms for ~3000 evaluations
+  uplift_score_threshold: 0.6  # вакансия «подходит», если score >= 0.6
+  uplift_target_confidence: 0.65  # симуляция: conf(s) = max(conf(s), 0.65), уровень ●●●○
+  uplift_items_max: 10  # сколько навыков отдаём в ответе
+  uplift_test_minutes: 10  # длительность теста по навыку (how_to_confirm)
+  uplift_competition_days: 120  # соревнования ФСП в ближайшие N дней
+  uplift_competition_min_weight: 0.5  # вес навыка в правиле дисциплины
 
   # Cache
   cache_profile_version_ttl_minutes: 10  # cache on (profile_version, vacancies_version)
