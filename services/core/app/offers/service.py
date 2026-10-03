@@ -32,7 +32,7 @@ from app.candidates.models import Candidate
 from app.companies.models import Company
 from app.matching import service as matching
 from app.matching.scoring import DEFAULT_SCORING_PATH
-from app.offers.models import Offer, OfferEvent
+from app.offers.models import Complaint, ContactReveal, Offer, OfferEvent, OfferMessage
 from app.vacancies.models import Vacancy
 from app.vacancies.service import VacancyStatus
 
@@ -305,8 +305,106 @@ async def transition(
     offer.awaiting_reply_from = "candidate" if to in (S.sent, S.viewed) else None
     await session.flush()
     await _log(session, offer, prev, to, actor, payload)
+    if to == S.accepted:
+        await _reveal(session, offer, now)
     await _emit(session, offer, to, prev=prev, actor=actor, **extra)
     return offer
+
+
+async def _reveal(session: AsyncSession, offer: Offer, now: datetime) -> None:
+    """Контакты раскрываются только здесь, в транзакции перехода в `accepted` (security.md §3)."""
+    if await session.get(ContactReveal, offer.id) is None:
+        session.add(
+            ContactReveal(
+                offer_id=offer.id, candidate_id=offer.candidate_id,
+                company_id=offer.company_id, revealed_at=now,
+            )
+        )  # fmt: skip
+        await session.flush()
+
+
+REVEALED = (S.accepted.value, S.interview.value, S.hired.value, S.not_hired.value)
+
+
+async def is_revealed(session: AsyncSession, offer: Offer) -> bool:
+    return await session.get(ContactReveal, offer.id) is not None
+
+
+async def require_revealed(session: AsyncSession, offer: Offer) -> ContactReveal:
+    reveal = await session.get(ContactReveal, offer.id)
+    if reveal is None:
+        raise ProblemError(
+            409, "contacts_not_revealed", "Контакты откроются после принятия оффера кандидатом"
+        )
+    return reveal
+
+
+# --- переписка ---------------------------------------------------------------------------
+
+CHAT_OPEN = (S.sent.value, S.viewed.value, S.accepted.value, S.interview.value)
+MESSAGES_PER_HOUR = 30
+COMPLAINT_REASONS = ("spam", "discrimination", "fake_company", "salary_mismatch", "abuse", "other")
+
+
+async def list_messages(
+    session: AsyncSession, offer: Offer, limit: int = 200
+) -> list[OfferMessage]:
+    q = (
+        select(OfferMessage).where(OfferMessage.offer_id == offer.id)
+        .order_by(OfferMessage.created_at, OfferMessage.id).limit(limit)
+    )  # fmt: skip
+    return list(await session.scalars(q))
+
+
+async def add_message(
+    session: AsyncSession, offer: Offer, *, side: str, user_id: uuid.UUID, text: str,
+    channel: str = "web", now: datetime | None = None,
+) -> OfferMessage:  # fmt: skip
+    """Сообщение от стороны оффера; пока оффер не закрыт (отказ, отзыв, срок, итог) — можно."""
+    now = now or datetime.now(UTC)
+    text = text.strip()
+    if not text:
+        raise ProblemError(422, "empty_message", "Пустое сообщение")
+    if offer.status not in CHAT_OPEN:
+        raise ProblemError(409, "offer_closed", "Переписка по этому офферу закрыта")
+    if _is_expired(offer, now):
+        raise ProblemError(409, "offer_expired", "Срок действия оффера истёк")
+    msg = OfferMessage(
+        id=uuid.uuid4(), offer_id=offer.id, author_side=side, author_user_id=user_id,
+        text=text, channel=channel, created_at=now,
+    )  # fmt: skip
+    session.add(msg)
+    if offer.status in (S.accepted.value, S.interview.value):
+        offer.awaiting_reply_from = "company" if side == "candidate" else "candidate"
+    await session.flush()
+    payload = OfferEventPayload(
+        offer_id=offer.id, candidate_id=offer.candidate_id, company_id=offer.company_id,
+        vacancy_id=offer.vacancy_id, status=OfferStatus(offer.status), actor=side,
+        message_id=msg.id,
+    )  # fmt: skip
+    await add_to_outbox(session, new_envelope("offer.message", "core", payload), offer.id)
+    return msg
+
+
+async def add_complaint(
+    session: AsyncSession, offer: Offer, *, user_id: uuid.UUID, reason: str, comment: str | None
+) -> Complaint:  # fmt: skip
+    if reason not in COMPLAINT_REASONS:
+        raise ProblemError(422, "invalid_reason", "Неизвестная причина жалобы")
+    dup = await session.scalar(
+        select(Complaint.id).where(
+            Complaint.offer_id == offer.id, Complaint.reporter_user_id == user_id
+        )
+    )
+    if dup is not None:
+        raise ProblemError(409, "complaint_exists", "Жалоба на этот оффер уже подана")
+    row = Complaint(
+        id=uuid.uuid4(), offer_id=offer.id, reporter_user_id=user_id, reason=reason,
+        comment=(comment or "").strip() or None,
+    )  # fmt: skip
+    session.add(row)
+    await session.flush()
+    return row
 
 
 async def mark_viewed(session: AsyncSession, offer: Offer, now: datetime | None = None) -> Offer:
@@ -360,7 +458,31 @@ async def expire_due(session: AsyncSession, now: datetime | None = None, batch: 
 
 
 __all__ = [
-    "COMPANY_SET", "OPEN", "TRANSITIONS", "OfferLimits", "accept", "briefs_for", "create",
-    "decline", "expire_due", "get_for_candidate", "get_for_company", "list_for_candidate",
-    "list_for_company", "mark_viewed", "set_status", "transition", "validate_range", "withdraw",
-]  # fmt: skip
+    "CHAT_OPEN",
+    "COMPANY_SET",
+    "COMPLAINT_REASONS",
+    "MESSAGES_PER_HOUR",
+    "OPEN",
+    "REVEALED",
+    "TRANSITIONS",
+    "OfferLimits",
+    "accept",
+    "add_complaint",
+    "add_message",
+    "briefs_for",
+    "create",
+    "decline",
+    "expire_due",
+    "get_for_candidate",
+    "get_for_company",
+    "is_revealed",
+    "list_for_candidate",
+    "list_for_company",
+    "list_messages",
+    "mark_viewed",
+    "require_revealed",
+    "set_status",
+    "transition",
+    "validate_range",
+    "withdraw",
+]
