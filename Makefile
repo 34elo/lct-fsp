@@ -1,4 +1,4 @@
-.PHONY: taxonomy-load up down dev-core compose-config sync lint fmt test test-py test-web test-integration new-service web-install asyncapi api-gen
+.PHONY: synth taxonomy-load up down dev-core compose-config sync lint fmt test test-py test-web test-integration new-service web-install asyncapi api-gen
 
 sync:
 	uv sync --all-packages
@@ -63,3 +63,8 @@ api-gen:
 # Загрузить data/taxonomy/*.yaml и data/fsp/discipline_rules.yaml в БД core (идемпотентно, версия растёт при изменениях)
 taxonomy-load:
 	cd services/core && uv run python -m app.taxonomy
+
+# Синтетический рынок (evaluation.md §3): make synth SPLIT=test → reports/synth/test
+SPLIT ?= dev
+synth:
+	uv run python tools/synth/synth.py --split $(SPLIT) --out reports/synth/$(SPLIT)
