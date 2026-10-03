@@ -10,7 +10,13 @@ from app.graph import fsp_models as _fsp  # noqa: F401
 from app.graph.models import CandidateSkill, Evidence  # noqa: F401
 from app.identity.models import RefreshToken, User  # noqa: F401
 from app.matching.models import Match  # noqa: F401
-from app.offers.models import Offer, OfferEvent  # noqa: F401
+from app.offers.models import (  # noqa: F401
+    Complaint,
+    ContactReveal,
+    Offer,
+    OfferEvent,
+    OfferMessage,
+)
 from app.resumes.models import Education, Experience, Resume  # noqa: F401
 from app.taxonomy import models as _taxonomy  # noqa: F401
 from app.telegram.models import TelegramAccount  # noqa: F401

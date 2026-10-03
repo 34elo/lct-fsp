@@ -470,3 +470,118 @@ def test_lists_and_card_offers_from_you(world):
         (o1, "accepted"), (o2, "sent")}  # fmt: skip
     other = _employer(c, "o@x.ru", name="Other")
     assert c.get(f"/candidates/{pid}/card", headers=other).json()["offers_from_you"] == []
+
+
+# --- E8-2: контакты, переписка, жалобы -------------------------------------------------
+
+
+def test_contacts_revealed_only_after_accept(world):
+    c, e, vid, ch, pid, uid = world
+    oid = _offer(c, e, vid, pid).json()["id"]
+    r = c.get(f"/offers/{oid}/contacts", headers=e)
+    assert r.status_code == 409 and r.json()["code"] == "contacts_not_revealed"
+    assert _db(c, "select count(*) from contact_reveals") == [(0,)]
+    assert "contacts" not in json.dumps(c.get(f"/offers/{oid}", headers=e).json()) or (
+        c.get(f"/offers/{oid}", headers=e).json()["contacts"] is None
+    )
+    c.post(f"/offers/{oid}/decline", json={"reason": "other"}, headers=ch)
+    assert c.get(f"/offers/{oid}/contacts", headers=e).status_code == 409
+    assert _db(c, "select count(*) from contact_reveals") == [(0,)]
+
+
+def test_accept_creates_reveal_and_contacts(world):
+    c, e, vid, ch, pid, uid = world
+    oid = _offer(c, e, vid, pid).json()["id"]
+    assert c.post(f"/offers/{oid}/accept", headers=ch).status_code == 200
+    c.post(f"/offers/{oid}/accept", headers=ch)  # повтор: строка одна
+    assert _db(c, "select count(*) from contact_reveals") == [(1,)]
+    r = c.get(f"/offers/{oid}/contacts", headers=e)
+    assert r.status_code == 200 and r.json()["email"] == "c@x.ru" and r.json()["name"]
+    full = c.get(f"/offers/{oid}", headers=e).json()
+    assert full["contacts"]["email"] == "c@x.ru"
+    assert c.get("/offers", headers=e).json()[0]["contacts"] is None  # в списке контактов нет
+    c.post(f"/offers/{oid}/status", json={"status": "interview"}, headers=e)
+    assert c.get(f"/offers/{oid}/contacts", headers=e).status_code == 200
+
+
+def test_contacts_permissions(world):
+    c, e, vid, ch, pid, uid = world
+    oid = _offer(c, e, vid, pid).json()["id"]
+    c.post(f"/offers/{oid}/accept", headers=ch)
+    other = _employer(c, "o@x.ru", name="Other", inn="7736050003")
+    assert c.get(f"/offers/{oid}/contacts", headers=other).status_code == 404
+    assert c.get(f"/offers/{oid}/contacts", headers=ch).status_code == 403
+    ghost = str(uuid.uuid4())
+    assert c.get(f"/offers/{ghost}/contacts", headers=e).status_code == 404
+
+
+def test_messages_flow_and_privacy(world):
+    c, e, vid, ch, pid, uid = world
+    oid = _offer(c, e, vid, pid).json()["id"]
+    r = c.post(f"/offers/{oid}/messages", json={"text": "  Вопрос по стеку  "}, headers=ch)
+    assert r.status_code == 201 and r.json()["author_side"] == "candidate"
+    assert r.json()["text"] == "Вопрос по стеку"
+    assert c.post(f"/offers/{oid}/messages", json={"text": "Ответ"}, headers=e).status_code == 201
+    for h in (e, ch):
+        msgs = c.get(f"/offers/{oid}/messages", headers=h).json()
+        assert [m["author_side"] for m in msgs] == ["candidate", "company"]
+        assert "author_user_id" not in msgs[0]
+    ev = _db(c, "select payload from outbox where type='offer.message'")
+    assert len(ev) == 2
+    assert c.post(f"/offers/{oid}/messages", json={"text": "  "}, headers=e).status_code == 422
+    other = _employer(c, "o@x.ru", name="Other", inn="7736050003")
+    assert c.get(f"/offers/{oid}/messages", headers=other).status_code == 404
+    assert c.post(f"/offers/{oid}/messages", json={"text": "x"}, headers=other).status_code == 404
+    ch2, *_ = _candidate(c, "c2@x.ru", 2)
+    assert c.get(f"/offers/{oid}/messages", headers=ch2).status_code == 404
+    assert c.post(f"/offers/{oid}/messages", json={"text": "x"}, headers=ch2).status_code == 404
+
+
+def test_messages_awaiting_and_closed(world):
+    c, e, vid, ch, pid, uid = world
+    oid = _offer(c, e, vid, pid).json()["id"]
+    c.post(f"/offers/{oid}/accept", headers=ch)
+    c.post(f"/offers/{oid}/messages", json={"text": "Привет"}, headers=ch)
+    assert c.get(f"/offers/{oid}", headers=e).json()["awaiting_reply_from"] == "company"
+    c.post(f"/offers/{oid}/messages", json={"text": "Здравствуйте"}, headers=e)
+    assert c.get(f"/offers/{oid}", headers=e).json()["awaiting_reply_from"] == "candidate"
+    c.post(f"/offers/{oid}/status", json={"status": "not_hired"}, headers=e)
+    r = c.post(f"/offers/{oid}/messages", json={"text": "Ещё"}, headers=ch)
+    assert r.status_code == 409 and r.json()["code"] == "offer_closed"
+    assert len(c.get(f"/offers/{oid}/messages", headers=ch).json()) == 2  # история читается
+
+
+def test_messages_closed_for_declined_and_expired(world):
+    c, e, vid, ch, pid, uid = world
+    oid = _offer(c, e, vid, pid).json()["id"]
+    _db(c, "update offers set expires_at=? where id=?", _past(hours=1), oid.replace("-", ""))
+    r = c.post(f"/offers/{oid}/messages", json={"text": "Поздно"}, headers=e)
+    assert r.status_code == 409 and r.json()["code"] == "offer_expired"
+    c2 = _offer(c, e, _vacancy(c, e), pid).json()["id"]
+    c.post(f"/offers/{c2}/decline", json={"reason": "other"}, headers=ch)
+    r = c.post(f"/offers/{c2}/messages", json={"text": "?"}, headers=e)
+    assert r.status_code == 409 and r.json()["code"] == "offer_closed"
+
+
+def test_messages_rate_limit(world):
+    c, e, vid, ch, pid, uid = world
+    oid = _offer(c, e, vid, pid).json()["id"]
+    for _ in range(service.MESSAGES_PER_HOUR):
+        assert c.post(f"/offers/{oid}/messages", json={"text": "a"}, headers=ch).status_code == 201
+    r = c.post(f"/offers/{oid}/messages", json={"text": "a"}, headers=ch)
+    assert r.status_code == 429 and "Retry-After" in r.headers
+
+
+def test_complaint(world):
+    c, e, vid, ch, pid, uid = world
+    oid = _offer(c, e, vid, pid).json()["id"]
+    body = {"reason": "spam", "comment": "Рассылка"}
+    r = c.post(f"/offers/{oid}/complaint", json=body, headers=ch)
+    assert r.status_code == 201 and r.json()["status"] == "open"
+    again = c.post(f"/offers/{oid}/complaint", json=body, headers=ch)
+    assert again.status_code == 409 and again.json()["code"] == "complaint_exists"
+    assert c.post(f"/offers/{oid}/complaint", json={"reason": "zzz"}, headers=ch).status_code == 422
+    assert c.post(f"/offers/{oid}/complaint", json=body, headers=e).status_code == 403
+    ch2, *_ = _candidate(c, "c2@x.ru", 2)
+    assert c.post(f"/offers/{oid}/complaint", json=body, headers=ch2).status_code == 404
+    assert _db(c, "select reason, status from complaints") == [("spam", "open")]
