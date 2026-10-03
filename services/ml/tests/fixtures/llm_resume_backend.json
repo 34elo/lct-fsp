@@ -1,0 +1,44 @@
+{
+  "full_name": "Пётр Вымыслов",
+  "city": "Казань",
+  "summary": "Backend-разработчик на Python: микросервисы, очереди, кеширование.",
+  "experience": [
+    {
+      "company": "ООО «Вымышленная логистика»",
+      "title": "Backend-разработчик",
+      "start": "03.2021",
+      "end": "н.в.",
+      "description": "Микросервисы на Python и FastAPI, PostgreSQL, RabbitMQ, Redis, Docker.",
+      "skills": ["Python", "FastAPI", "Postgres 15", "RabbitMQ", "Redis", "Docker", "Kubernetes"],
+      "is_commercial": true
+    },
+    {
+      "company": "ООО «Учебные системы»",
+      "title": "Стажёр-разработчик",
+      "start": "июн 2020",
+      "end": "фев 2021",
+      "description": "Автотесты на pytest, скрипты отчётов.",
+      "skills": ["pytest"],
+      "is_commercial": true
+    }
+  ],
+  "education": [
+    {"institution": "Вымышленный государственный университет", "degree": "бакалавр", "field": "Прикладная математика", "year_end": 2021}
+  ],
+  "skills": [
+    {"name": "Python", "quote": "Разрабатываю микросервисы на Python и FastAPI"},
+    {"name": "FastAPI", "quote": "микросервисы на Python и FastAPI"},
+    {"name": "Postgres 15", "quote": "храню данные в Postgres 15"},
+    {"name": "RabbitMQ", "quote": "Очереди задач на RabbitMQ, кеширование в Redis"},
+    {"name": "Redis", "quote": "кеширование в   Redis."},
+    {"name": "Docker", "quote": "Сервисы упаковываю в Docker"},
+    {"name": "pytest", "quote": "Писал автотесты на pytest"},
+    {"name": "Git", "quote": "PostgreSQL, Redis, RabbitMQ, Docker, Git, Litestar"},
+    {"name": "Litestar", "quote": "Docker, Git, Litestar"},
+    {"name": "JavaScript", "quote": "Немного писал на JavaScript для внутренних админок."},
+    {"name": "Python", "quote": "Python, FastAPI, PostgreSQL"},
+    {"name": "Kubernetes", "quote": "Разворачивал сервисы в Kubernetes"},
+    {"name": "Java", "quote": "Немного писал на JavaScript для внутренних админок."},
+    {"name": "Go", "quote": "Сервисы упаковываю в Docker"}
+  ]
+}

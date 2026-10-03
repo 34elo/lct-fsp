@@ -7,15 +7,23 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
+from datetime import date
 from uuid import NAMESPACE_URL, uuid5
 
+import structlog
 from fsp_contracts import Envelope, new_event, parse_payload
 from fsp_contracts import commands as cmd
 from fsp_contracts import events as evt
 from pydantic import BaseModel
 
-from fsp_ml import fake
+from fsp_ml import fake, resume_parser
+from fsp_ml.llm import LlmClient, LlmError
+from fsp_ml.resume_parser import Progress
+from fsp_ml.resume_text import ResumeFileError
+from fsp_ml.taxonomy import TaxonomyProvider
+
+log = structlog.get_logger()
 
 PRODUCER = "ml"
 
@@ -125,3 +133,42 @@ def handle(command: Envelope) -> list[Envelope]:
     """Команда → события-результаты (заглушка). Тип без обработчика — ошибка."""
     fn = HANDLERS[command.type]
     return fn(command, parse_payload(command))
+
+
+# --- реальные обработчики (ML_FAKE=false) ---
+
+
+async def resume_parse_llm(
+    c: Envelope,
+    p: cmd.MlResumeParse,
+    *,
+    load: Callable[[str], Awaitable[bytes]],
+    llm: LlmClient,
+    taxonomy: TaxonomyProvider,
+    model: str,
+    today: date,
+    progress: Progress | None = None,
+) -> list[Envelope]:
+    """`ml.resume.parse` через LLM (ml.md §2). Ошибки файла и LLM → `ml.resume.failed`."""
+
+    def failed(code: str) -> list[Envelope]:
+        r = evt.MlResumeResult(resume_id=p.resume_id, candidate_id=p.candidate_id, error=code)
+        return [_result(c, "ml.resume.failed", r)]
+
+    try:
+        data = await load(p.object_key)
+    except Exception:  # нет объекта или MinIO недоступен — повторять бессмысленно
+        log.warning("resume_file_unavailable", resume_id=str(p.resume_id))
+        return failed("file_unavailable")
+    index = await taxonomy.get(p.taxonomy_version)
+    try:
+        parsed = await resume_parser.parse_resume(
+            data, llm=llm, index=index, model=model, today=today, progress=progress
+        )
+    except ResumeFileError as e:
+        return failed(e.code)
+    except LlmError as e:
+        log.warning("resume_llm_failed", resume_id=str(p.resume_id), code=e.code)
+        return failed(e.code)
+    r = evt.MlResumeResult(resume_id=p.resume_id, candidate_id=p.candidate_id, parsed=parsed)
+    return [_result(c, "ml.resume.completed", r)]
