@@ -1,9 +1,56 @@
-# Профили: core (инфраструктура + gateway), ml, llm, dev, obs.
-# Сервисы приложения (core-api, web, ...) добавляются своими задачами со своими Dockerfile.
+# Профили: core (инфраструктура, gateway, web, core-*, fsp-*), ml, bot (нужен TG_BOT_TOKEN), llm, dev, obs.
+# Запуск: make up (берёт .env, иначе .env.demo из infra/scripts/gen-demo-env.sh).
 name: fsp
 
 x-restart: &restart
   restart: unless-stopped
+
+# --- сборка python-сервисов: общий Dockerfile, контекст — корень репозитория ---
+x-py-build: &py-build
+  context: .
+  dockerfile: infra/docker/python.Dockerfile
+
+# --- общее окружение python-сервисов (BaseServiceSettings) ---
+x-env-common: &env-common
+  ENV: ${ENV:-dev}
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+  REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+  JWT_SECRET: ${JWT_SECRET:?задай JWT_SECRET в .env}
+  ML_FAKE: ${ML_FAKE:-true}
+
+x-env-core: &env-core
+  <<: *env-common
+  DATABASE_URL: postgresql+asyncpg://core:${CORE_DB_PASSWORD}@postgres:5432/core
+  RABBITMQ_URL: amqp://core:${RABBITMQ_CORE_PASSWORD}@rabbitmq:5672/fsp
+  S3_ENDPOINT: ${S3_ENDPOINT:-http://minio:9000}
+  S3_PUBLIC_URL: ${S3_PUBLIC_URL:-}
+  S3_ACCESS_KEY: ${S3_ACCESS_KEY:-fsp}
+  S3_SECRET_KEY: ${S3_SECRET_KEY}
+  S3_BUCKET: ${S3_BUCKET:-fsp}
+  PII_KEY: ${PII_KEY:?задай PII_KEY в .env}
+  PSEUDO_ID_SECRET: ${PSEUDO_ID_SECRET:?задай PSEUDO_ID_SECRET в .env}
+  ANALYTICS_SALT: ${ANALYTICS_SALT:?задай ANALYTICS_SALT в .env}
+  SERVICE_TOKEN_ML: ${SERVICE_TOKEN_ML:?задай SERVICE_TOKEN_ML в .env}
+  SERVICE_TOKEN_BOT: ${SERVICE_TOKEN_BOT:?задай SERVICE_TOKEN_BOT в .env}
+  ML_API_URL: ${ML_API_URL:-http://ml-api:8100}
+  ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-[]}
+  AUTH_COOKIE_PATH: ${AUTH_COOKIE_PATH:-/api/v1/auth}
+  WEB_BASE_URL: ${WEB_BASE_URL:-http://localhost:28080}
+  TG_BOT_TOKEN: ${TG_BOT_TOKEN:-}
+  TG_BOT_USERNAME: ${TG_BOT_USERNAME:-}
+
+x-core-deps: &core-deps
+  postgres: {condition: service_healthy}
+  redis: {condition: service_healthy}
+  rabbitmq-init: {condition: service_completed_successfully}
+  minio-init: {condition: service_completed_successfully}
+  core-migrate: {condition: service_completed_successfully}
+
+x-pyhealth: &pyhealth
+  interval: 10s
+  timeout: 5s
+  retries: 12
+  start_period: 15s
 
 services:
   gateway:
@@ -14,12 +61,17 @@ services:
       - "${GATEWAY_PORT:-28080}:80"
     volumes:
       - ./infra/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
-      - webstatic:/srv/web:ro
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1/healthz"]
       interval: 10s
       timeout: 3s
       retries: 5
+    depends_on:
+      web: {condition: service_healthy}
+      core-api: {condition: service_healthy}
+      fsp-mock: {condition: service_healthy}
+      fsp-connector: {condition: service_healthy}
+      minio: {condition: service_healthy}
 
   postgres:
     <<: *restart
@@ -36,7 +88,7 @@ services:
     ports:
       - "127.0.0.1:${POSTGRES_HOST_PORT:-28432}:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d core"]
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U ${POSTGRES_USER:-postgres} -d core"]
       interval: 5s
       timeout: 3s
       retries: 20
@@ -121,6 +173,190 @@ services:
     entrypoint: ["/bin/sh", "-c", "mc alias set l http://minio:9000 \"$$S3_ACCESS_KEY\" \"$$S3_SECRET_KEY\" && mc mb --ignore-existing \"l/$$S3_BUCKET\""]
     restart: "no"
 
+  # ---------------- приложение ----------------
+  web:
+    <<: *restart
+    profiles: [core]
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  core-migrate:
+    profiles: [core]
+    build:
+      <<: *py-build
+      args: {PACKAGE: fsp-core, SERVICE_DIR: services/core}
+    image: fsp-core
+    restart: "no"
+    environment: *env-core
+    # миграции Alembic + справочник навыков (идемпотентно)
+    command: ["sh", "-c", "alembic upgrade head && python -m app.taxonomy"]
+    depends_on:
+      postgres: {condition: service_healthy}
+
+  core-api:
+    <<: *restart
+    profiles: [core]
+    image: fsp-core
+    environment: *env-core
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--root-path", "/api/v1", "--proxy-headers", "--forwarded-allow-ips", "*"]
+    depends_on: *core-deps
+    healthcheck:
+      <<: *pyhealth
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://127.0.0.1:8000/readyz', timeout=3)"]
+
+  core-worker:
+    <<: *restart
+    profiles: [core]
+    image: fsp-core
+    environment: *env-core
+    command: ["python", "-m", "app.worker"]
+    depends_on: *core-deps
+
+  core-scheduler:
+    <<: *restart
+    profiles: [core]
+    image: fsp-core
+    environment: *env-core
+    command: ["python", "-m", "app.scheduler"]
+    depends_on: *core-deps
+
+  fsp-connector-migrate:
+    profiles: [core]
+    build:
+      <<: *py-build
+      args: {PACKAGE: fsp-fsp-connector, SERVICE_DIR: services/fsp-connector}
+    image: fsp-fsp-connector
+    restart: "no"
+    environment: &env-fspc
+      <<: *env-common
+      DATABASE_URL: postgresql+asyncpg://fspc:${FSPC_DB_PASSWORD}@postgres:5432/fsp_connector
+      RABBITMQ_URL: amqp://fspc:${RABBITMQ_FSPC_PASSWORD}@rabbitmq:5672/fsp
+      FSP_ADAPTER: ${FSP_ADAPTER:-mock}
+      FSP_BASE_URL: ${FSP_BASE_URL:-http://fsp-mock:8200}
+      FSP_PUBLIC_URL: ${FSP_PUBLIC_URL:-}
+      FSP_API_KEY: ${FSP_API_KEY:?задай FSP_API_KEY в .env}
+      FSP_WEBHOOK_SECRET: ${FSP_WEBHOOK_SECRET:?задай FSP_WEBHOOK_SECRET в .env}
+      FSP_OAUTH_CLIENT_ID: ${FSP_OAUTH_CLIENT_ID:-platform}
+      FSP_OAUTH_REDIRECT_URI: ${FSP_OAUTH_REDIRECT_URI:-http://localhost:28080/api/v1/auth/fsp/callback}
+      SERVICE_TOKEN_CORE: ${SERVICE_TOKEN_CORE:?задай SERVICE_TOKEN_CORE в .env}
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      postgres: {condition: service_healthy}
+
+  fsp-connector:
+    <<: *restart
+    profiles: [core]
+    image: fsp-fsp-connector
+    environment: *env-fspc
+    command: ["uvicorn", "fsp_connector.main:app", "--host", "0.0.0.0", "--port", "8300"]
+    depends_on: &fspc-deps
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      rabbitmq-init: {condition: service_completed_successfully}
+      fsp-connector-migrate: {condition: service_completed_successfully}
+    healthcheck:
+      <<: *pyhealth
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://127.0.0.1:8300/healthz', timeout=3)"]
+
+  fsp-connector-worker:
+    <<: *restart
+    profiles: [core]
+    image: fsp-fsp-connector
+    environment: *env-fspc
+    command: ["python", "-m", "fsp_connector.worker"]
+    depends_on: *fspc-deps
+
+  fsp-mock:
+    <<: *restart
+    profiles: [core]
+    build:
+      <<: *py-build
+      args: {PACKAGE: fsp-fsp-mock, SERVICE_DIR: services/fsp-mock}
+    image: fsp-fsp-mock
+    environment:
+      <<: *env-common
+      FSP_MOCK_API_KEY: ${FSP_API_KEY}
+      FSP_WEBHOOK_URL: http://fsp-connector:8300/integrations/fsp/webhook
+      FSP_WEBHOOK_SECRET: ${FSP_WEBHOOK_SECRET}
+    command: ["uvicorn", "fsp_mock.main:app", "--host", "0.0.0.0", "--port", "8200"]
+    healthcheck:
+      <<: *pyhealth
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://127.0.0.1:8200/healthz', timeout=3)"]
+
+  ml-api:
+    <<: *restart
+    profiles: [ml]
+    build:
+      <<: *py-build
+      args: {PACKAGE: fsp-ml, SERVICE_DIR: services/ml}
+    image: fsp-ml
+    environment: &env-ml
+      <<: *env-common
+      RABBITMQ_URL: amqp://ml:${RABBITMQ_ML_PASSWORD}@rabbitmq:5672/fsp
+      CORE_URL: ${CORE_URL:-http://core-api:8000}
+      SERVICE_TOKEN_ML: ${SERVICE_TOKEN_ML}
+      LLM_PROFILE: ${LLM_PROFILE:-gpu}
+      LLM_BASE_URL: ${LLM_BASE_URL:-}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-qwen3-vl-4b}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: ["uvicorn", "fsp_ml.main:app", "--host", "0.0.0.0", "--port", "8100"]
+    depends_on:
+      redis: {condition: service_healthy}
+    healthcheck:
+      <<: *pyhealth
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://127.0.0.1:8100/healthz', timeout=3)"]
+
+  ml-worker-llm:
+    <<: *restart
+    profiles: [ml]
+    image: fsp-ml
+    environment: *env-ml
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: ["python", "-m", "fsp_ml.worker", "llm"]
+    depends_on: &ml-deps
+      rabbitmq-init: {condition: service_completed_successfully}
+      ml-api: {condition: service_healthy}
+
+  ml-worker-code:
+    <<: *restart
+    profiles: [ml]
+    image: fsp-ml
+    environment: *env-ml
+    command: ["python", "-m", "fsp_ml.worker", "code"]
+    depends_on: *ml-deps
+    tmpfs:
+      - /tmp:size=1g
+
+  bot:
+    <<: *restart
+    # включается только при заданном TG_BOT_TOKEN (make up добавляет --profile bot)
+    profiles: [bot]
+    build:
+      <<: *py-build
+      args: {PACKAGE: fsp-bot, SERVICE_DIR: services/bot}
+    image: fsp-bot
+    environment:
+      <<: *env-common
+      RABBITMQ_URL: amqp://bot:${RABBITMQ_BOT_PASSWORD}@rabbitmq:5672/fsp
+      CORE_URL: ${CORE_URL:-http://core-api:8000}
+      SERVICE_TOKEN_BOT: ${SERVICE_TOKEN_BOT}
+      TG_BOT_TOKEN: ${TG_BOT_TOKEN:-}
+    command: ["python", "-m", "fsp_bot.main"]
+    depends_on:
+      redis: {condition: service_healthy}
+      rabbitmq-init: {condition: service_completed_successfully}
+      core-api: {condition: service_healthy}
+
   dozzle:
     <<: *restart
     image: amir20/dozzle:latest
@@ -134,4 +370,3 @@ volumes:
   pgdata:
   rabbitdata:
   minio:
-  webstatic:
