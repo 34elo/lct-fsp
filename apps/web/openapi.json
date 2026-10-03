@@ -1491,6 +1491,48 @@
         }
       }
     },
+    "/offers/salary-hint": {
+      "post": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Salary Hint",
+        "description": "Подсказка по вилке до отправки: `p_accept`, «ниже ожиданий», «слишком широкая».",
+        "operationId": "salary_hint_offers_salary_hint_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SalaryHintIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalaryHint"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/offers": {
       "post": {
         "tags": [
@@ -1913,6 +1955,53 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Contacts"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/offers/{offer_id}/events": {
+      "get": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "List Events",
+        "operationId": "list_events_offers__offer_id__events_get",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OfferEventOut"
+                  },
+                  "title": "Response List Events Offers  Offer Id  Events Get"
                 }
               }
             }
@@ -3950,6 +4039,46 @@
         ],
         "title": "NextGrade"
       },
+      "OfferEventOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "from_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Status"
+          },
+          "to_status": {
+            "type": "string",
+            "title": "To Status"
+          },
+          "actor": {
+            "type": "string",
+            "title": "Actor"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "to_status",
+          "actor",
+          "created_at"
+        ],
+        "title": "OfferEventOut"
+      },
       "OfferForCandidate": {
         "properties": {
           "id": {
@@ -4811,6 +4940,112 @@
         ],
         "title": "RoleWeight"
       },
+      "SalaryHint": {
+        "properties": {
+          "candidate_min": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidate Min"
+          },
+          "below_candidate_min": {
+            "type": "boolean",
+            "title": "Below Candidate Min"
+          },
+          "category_median": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Median"
+          },
+          "vs_category_median": {
+            "type": "number",
+            "title": "Vs Category Median",
+            "default": 0.0
+          },
+          "p_accept": {
+            "type": "number",
+            "title": "P Accept"
+          },
+          "acceptance_hint": {
+            "type": "string",
+            "title": "Acceptance Hint"
+          },
+          "range_too_wide": {
+            "type": "boolean",
+            "title": "Range Too Wide"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "below_candidate_min",
+          "p_accept",
+          "acceptance_hint",
+          "range_too_wide",
+          "message"
+        ],
+        "title": "SalaryHint"
+      },
+      "SalaryHintIn": {
+        "properties": {
+          "vacancy_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Vacancy Id"
+          },
+          "candidate_pseudo_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Candidate Pseudo Id"
+          },
+          "salary_from": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100000000.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary From"
+          },
+          "salary_to": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100000000.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary To"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "vacancy_id",
+          "candidate_pseudo_id"
+        ],
+        "title": "SalaryHintIn"
+      },
       "SearchFilters": {
         "properties": {
           "roles": {
@@ -5493,6 +5728,197 @@
           "tg_user_id"
         ],
         "title": "TgConfirmIn"
+      },
+      "TgDeclineIn": {
+        "properties": {
+          "tg_user_id": {
+            "type": "integer",
+            "title": "Tg User Id"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/DeclineReason"
+          },
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tg_user_id",
+          "reason"
+        ],
+        "title": "TgDeclineIn"
+      },
+      "TgMessageIn": {
+        "properties": {
+          "tg_user_id": {
+            "type": "integer",
+            "title": "Tg User Id"
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tg_user_id",
+          "text"
+        ],
+        "title": "TgMessageIn"
+      },
+      "TgMessageOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "title": "TgMessageOut"
+      },
+      "TgOfferOut": {
+        "properties": {
+          "offer_id": {
+            "type": "string",
+            "title": "Offer Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "company_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Name"
+          },
+          "company_responsibility": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Responsibility"
+          },
+          "vacancy_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vacancy Title"
+          },
+          "formats": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Formats"
+          },
+          "employment_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Employment Type"
+          },
+          "salary_from": {
+            "type": "integer",
+            "title": "Salary From"
+          },
+          "salary_to": {
+            "type": "integer",
+            "title": "Salary To"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "match_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Match Score"
+          },
+          "explanation": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Explanation"
+          },
+          "below_candidate_min": {
+            "type": "boolean",
+            "title": "Below Candidate Min"
+          },
+          "expires_at": {
+            "type": "string",
+            "title": "Expires At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "offer_id",
+          "status",
+          "company_name",
+          "company_responsibility",
+          "vacancy_title",
+          "formats",
+          "employment_type",
+          "salary_from",
+          "salary_to",
+          "message",
+          "match_score",
+          "explanation",
+          "below_candidate_min",
+          "expires_at"
+        ],
+        "title": "TgOfferOut",
+        "description": "Данные карточки оффера: те же поля, что у `notify.telegram` `offer_new`, плюс статус."
       },
       "TgProfileOut": {
         "properties": {

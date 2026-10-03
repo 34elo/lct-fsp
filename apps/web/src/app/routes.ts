@@ -43,6 +43,7 @@ export const ROUTES: RouteDef[] = [
   { path: "/employer/vacancies/:id", title: "Вакансия", screen: "E3", section: "employer" },
   { path: "/employer/vacancies/:id/shortlist", title: "Подборка", screen: "E4", section: "employer" },
   { path: "/employer/offers", title: "Мои офферы", screen: "E5", section: "employer" },
+  { path: "/employer/offers/:id", title: "Оффер", screen: "E5", section: "employer" },
   { path: "/employer/company", title: "Компания", section: "employer" },
 
   { path: "/federation", title: "Дашборд ФСП", screen: "F1", section: "admin" },
