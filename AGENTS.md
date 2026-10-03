@@ -42,6 +42,7 @@ docs/                     документация (карта — docs/README.m
 | ФСП | [fsp.md](docs/architecture/fsp.md) |
 | Бот | [telegram.md](docs/architecture/telegram.md) |
 | Фронт | [frontend.md](docs/architecture/frontend.md), [design/brief.md](docs/design/brief.md) §0 (экран → файл → маршрут), нужный макет из `docs/design/screens/`, компоненты и токены из `docs/design/handoff/` |
+| Редизайн, вид экранов, `packages/ui` | [backlog.md §E19](docs/process/backlog.md#e19-редизайн-по-пакету-дизайна), эталоны в [docs/design/pack/](docs/design/pack/) |
 | Метрики, события аналитики | [metrics.md](docs/architecture/metrics.md) |
 | Эталоны, синтетика, seed, eval | [evaluation.md](docs/architecture/evaluation.md) |
 | Инфраструктура | [deployment.md](docs/architecture/deployment.md), [security.md](docs/architecture/security.md) |
