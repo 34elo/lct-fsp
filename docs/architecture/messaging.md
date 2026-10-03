@@ -168,7 +168,7 @@ core.ingest: resumes.parsed → ui.user.<id> «вот что я понял»
 | Эмбеддинг профиля | `c:emb:p:{model}:{sha}` | 7 д | модель в ключе (E4-5; основной «кеш» — `candidates.profile_text_sha`) |
 | Страница выдачи | `c:search:{catalog_v}:{sha(filters)}:{cursor}` | 60 с | `catalog_version` растёт при пересчёте профилей |
 | Карточка / подграф кандидата | `c:card:{cid}:{profile_v}`, `c:graph:{cid}:{profile_v}:{view}` | 10 мин | версия в ключе |
-| Uplift и навигатор | `c:uplift:{cid}:{profile_v}:{vac_v}` | 10 мин | версии в ключе |
+| Uplift и навигатор | `c:uplift:{cid}:{profile_v}:{хеш версий вакансий}:{дата}` | 10 мин | версии в ключе; дата — для окна соревнований |
 | Карта рынка | `c:market:{metric}:{sha}` | 2 мин | `market.refresh` |
 | Разбор резюме | `c:resume:{sha256}:{parser_v}` | 30 д | версия парсера |
 | GitHub API | `c:gh:etag:{url}`, `c:gh:body:{url}` | 6 ч | условные запросы |

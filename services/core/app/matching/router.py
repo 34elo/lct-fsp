@@ -12,22 +12,26 @@ from pydantic import BaseModel, ConfigDict, Field
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.candidates import service as candidates
 from app.companies import service as companies
 from app.deps import get_redis, get_session
 from app.graph.trust import TrustConfig
 from app.identity.deps import require_roles
 from app.identity.models import User
-from app.matching import card, search
+from app.matching import card, search, uplift_service
 from app.matching.card import CandidateCardFull
 from app.matching.scoring import MatchConfig
+from app.matching.uplift import UpliftConfig
 from app.vacancies import service as vacancies
 from app.views import service as views
 
 router = APIRouter(tags=["search"])
 
 _employer = require_roles("employer")
+_candidate = require_roles("candidate")
 _CFG = MatchConfig.load()
 _TRUST = TrustConfig.load()
+_UPLIFT = UpliftConfig.load()
 
 
 class SearchRequest(BaseModel):
@@ -132,3 +136,50 @@ async def _get_candidate_id_by_pseudo_id(session: AsyncSession, pseudo_id: str) 
         select(Candidate.user_id).where(Candidate.pseudo_id == pseudo_id)
     )
     return result.scalar_one_or_none()
+
+
+class UpliftConfirm(BaseModel):
+    kind: Literal["test", "github", "fsp_competition"]
+    minutes: int | None = None
+    id: str | None = None
+    title: str | None = None
+    start_date: str | None = None
+    registration_url: str | None = None
+
+
+class UpliftItem(BaseModel):
+    skill: str
+    name: str
+    current_level: int
+    extra: int
+    pct: float
+    median_salary_delta: int
+    how_to_confirm: list[UpliftConfirm]
+
+
+class UpliftCombo(BaseModel):
+    skills: list[str]
+    extra: int
+    pct: float
+
+
+class UpliftOut(BaseModel):
+    relevant_total: int
+    base: int
+    items: list[UpliftItem]
+    combo: UpliftCombo | None = None
+
+
+@router.get("/candidates/me/uplift", response_model=UpliftOut, response_model_exclude_none=True)
+async def my_uplift(
+    user: User = Depends(_candidate),
+    session: AsyncSession = Depends(get_session),
+    redis: Redis = Depends(get_redis),
+) -> Any:
+    """Какой навык подтвердить, чтобы подойти под больше вакансий (matching.md §6)."""
+    cand = await candidates.get(session, user.id)
+    if cand is None:
+        return uplift_service.empty()
+    out = await uplift_service.compute(session, redis, cand, _CFG, _TRUST, _UPLIFT)
+    out.setdefault("combo", None)
+    return out
