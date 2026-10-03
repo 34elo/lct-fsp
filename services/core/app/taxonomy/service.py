@@ -456,3 +456,13 @@ async def skill_briefs(
         )
     )
     return {sid: (slug, name, grp or "", status) for sid, slug, name, grp, status in rows.all()}
+
+
+async def testable_ids(session: AsyncSession, skill_ids: list[uuid.UUID]) -> set[uuid.UUID]:
+    """Навыки, по которым есть тест на платформе (`skills.testable`)."""
+    if not skill_ids:
+        return set()
+    rows = await session.scalars(
+        select(Skill.id).where(Skill.id.in_(skill_ids), Skill.testable.is_(True))
+    )
+    return set(rows)

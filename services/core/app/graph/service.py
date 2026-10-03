@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 
 import sqlalchemy as sa
 from fsp_contracts import new_envelope
@@ -22,7 +22,7 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.candidates.models import Candidate
-from app.graph.fsp_models import FspRankRow, FspResultRow
+from app.graph.fsp_models import FspCompetitionRow, FspRankRow, FspResultRow
 from app.graph.models import CandidateSkill, Evidence
 
 
@@ -313,3 +313,30 @@ async def evidence_by_ids(session: AsyncSession, ids: list[uuid.UUID]) -> list[E
         return []
     stmt = select(Evidence).where(Evidence.id.in_(ids), Evidence.is_active)
     return list(await session.scalars(stmt.order_by(Evidence.id)))
+
+
+async def has_source(session: AsyncSession, candidate_id: uuid.UUID, source: str) -> bool:
+    """Есть ли у кандидата действующие доказательства из источника (например, `github`)."""
+    stmt = (
+        select(Evidence.id)
+        .where(Evidence.candidate_id == candidate_id, Evidence.source == source)
+        .where(Evidence.is_active.is_(True))
+        .limit(1)
+    )
+    return (await session.scalar(stmt)) is not None
+
+
+async def upcoming_competitions(
+    session: AsyncSession, today: date, days: int
+) -> list[FspCompetitionRow]:
+    """Будущие соревнования ФСП (объявлены или идёт регистрация) в ближайшие `days` дней."""
+    stmt = (
+        select(FspCompetitionRow)
+        .where(
+            FspCompetitionRow.status.in_(("announced", "registration")),
+            FspCompetitionRow.start_date >= today,
+            FspCompetitionRow.start_date <= today + timedelta(days=days),
+        )
+        .order_by(FspCompetitionRow.start_date, FspCompetitionRow.id)
+    )
+    return list(await session.scalars(stmt))
