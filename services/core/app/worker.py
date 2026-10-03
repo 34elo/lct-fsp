@@ -17,12 +17,14 @@ from fsp_platform.messaging import (
     declare_topology,
     make_broker,
     publish_envelope,
+    publish_ui,
 )
 from fsp_platform.outbox import OutboxRelay
 
 from app.config import Settings
 from app.graph import handlers as graph_handlers
 from app.graph.trust import TrustConfig
+from app.resumes import handlers as resume_handlers
 
 log = structlog.get_logger()
 
@@ -47,6 +49,9 @@ class Worker:
             self.consumers,
             self.session_factory,
             TrustConfig.load(self.settings.scoring_config_path or None),
+        )
+        resume_handlers.register(
+            self.consumers, self.session_factory, lambda m: publish_ui(self.broker, m)
         )
         self.relay = OutboxRelay(
             self.session_factory,

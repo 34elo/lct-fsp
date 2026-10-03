@@ -50,9 +50,9 @@
 | `PATCH /candidates/me/preferences` | `{salary_min, formats, employment_types, city, relocation, search_status}`. `search_status=active` выставляет `active_until=+7д` |
 | `PATCH /candidates/me/visibility` | `{companies, education, repos, public_profile}` |
 | `PUT /candidates/me/stoplist` | `{company_ids[]}` |
-| `POST /candidates/me/resumes` | multipart `file` → `202 {resume_id, job_id}` |
-| `GET /candidates/me/resumes/{id}` | `{status, parsed: ParsedResume, error}` |
-| `POST /candidates/me/resumes/{id}/confirm` | `{edits: ParsedResumeEdits}` → профиль пересчитывается |
+| `POST /candidates/me/resumes` | multipart `file` (PDF/DOCX по сигнатуре, до 10 МБ; 10 в сутки) → `202 {resume_id, job_id}`. Ошибки: `413 file_too_large`, `415 unsupported_file_type`, `422 empty_file`, `429` |
+| `GET /candidates/me/resumes/{id}` | `{status: queued|parsing|parsed|confirmed|failed, parsed: ParsedResume, error}`; чужое → 404 |
+| `POST /candidates/me/resumes/{id}/confirm` | `{edits: ParsedResumeEdits}` → профиль пересчитывается. Повтор безвреден; до разбора `409 resume_not_parsed`; неизвестный `add_skills` → `422 unknown_skill` |
 | `GET /candidates/me/skills` | `SkillWithTrust[]` |
 | `POST /candidates/me/skills` | `{skill_id}` — заявить навык самому (`source=self`) |
 | `DELETE /candidates/me/skills/{skill_id}` | Убрать свой `self`/`resume` навык (доказательства ФСП/кода/тестов не удаляются) |
@@ -392,6 +392,12 @@ interface ParsedResume {
   unknown_skills: string[];
   total_experience_months: number;
   warnings: string[];              // «не нашёл даты в опыте №2»
+}
+
+// Правки при подтверждении: убрать навык из разбора (slug), добавить свой (source=self, 0.15), заменить опыт/образование целиком
+interface ParsedResumeEdits {
+  remove_skills: string[]; add_skills: string[];
+  experience?: ParsedResume["experience"]; education?: ParsedResume["education"];
 }
 ```
 

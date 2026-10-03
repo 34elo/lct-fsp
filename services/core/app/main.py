@@ -20,6 +20,7 @@ from app.consents.router import router as consents_router
 from app.events_stream import UiHub
 from app.events_stream import router as events_router
 from app.identity.router import router as identity_router
+from app.resumes.router import router as resumes_router
 from app.taxonomy.router import router as taxonomy_router
 from app.vacancies.router import router as vacancies_router
 
@@ -60,6 +61,7 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(identity_router)
     app.include_router(consents_router)
     app.include_router(candidates_router)
+    app.include_router(resumes_router)
     app.include_router(taxonomy_router)
     app.include_router(companies_router)
     app.include_router(admin_companies_router)

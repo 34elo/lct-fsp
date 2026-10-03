@@ -16,6 +16,7 @@ from app.consents.deps import require_consent
 from app.deps import get_session
 from app.identity.deps import require_roles
 from app.identity.models import User
+from app.resumes import service as resumes
 
 router = APIRouter(prefix="/candidates/me", tags=["candidates"])
 
@@ -47,6 +48,14 @@ class Visibility(BaseModel):
     teams: bool
 
 
+class ExperienceItem(BaseModel):
+    title: str | None
+    company: str | None
+    start: str | None
+    end: str | None
+    skills: list[str]
+
+
 class CandidateProfile(BaseModel):
     """Заготовка `CandidateProfile` (api.md §3): поля движка доверия добавят E3-2…E4-x."""
 
@@ -61,7 +70,7 @@ class CandidateProfile(BaseModel):
     skills: list = []
     team_signals: list = []
     claimed_soft: list[str] = []
-    experience: list = []
+    experience: list[ExperienceItem] = []
 
 
 class PreferencesIn(BaseModel):
@@ -89,7 +98,7 @@ class StoplistIO(BaseModel):
     company_ids: list[UUID] = Field(max_length=service.STOPLIST_MAX)
 
 
-def profile_out(c: Candidate) -> CandidateProfile:
+async def profile_out(session: AsyncSession, c: Candidate) -> CandidateProfile:
     vis = {**{"teams": True}, **c.visibility}
     return CandidateProfile(
         pseudonym=c.pseudonym,
@@ -104,6 +113,8 @@ def profile_out(c: Candidate) -> CandidateProfile:
             relocation=c.relocation,
         ),
         visibility=Visibility(**{k: bool(vis.get(k, False)) for k in Visibility.model_fields}),
+        claimed_soft=list(c.claimed_soft or []),
+        experience=await resumes.experience_for_profile(session, c.user_id),
     )
 
 
@@ -119,7 +130,7 @@ async def get_profile(
     user: User = Depends(owner),
     session: AsyncSession = Depends(get_session),
 ):
-    return profile_out(await _cand(request, session, user))
+    return await profile_out(session, await _cand(request, session, user))
 
 
 @router.patch("/preferences", response_model=CandidateProfile)
@@ -131,7 +142,7 @@ async def patch_preferences(
 ):
     cand = await _cand(request, session, user)
     await service.update_preferences(session, cand, body.model_dump(exclude_unset=True))
-    return profile_out(cand)
+    return await profile_out(session, cand)
 
 
 @router.patch("/visibility", response_model=CandidateProfile)
@@ -154,7 +165,7 @@ async def patch_visibility(
         )
     cand = await _cand(request, session, user)
     await service.update_visibility(session, cand, changes)
-    return profile_out(cand)
+    return await profile_out(session, cand)
 
 
 @router.put("/stoplist", response_model=StoplistIO)
