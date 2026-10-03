@@ -24,9 +24,9 @@ def test_worker_queues_and_prefetch():
     assert set(MlWorker("code", Settings(ml_fake=True)).consumer.handlers) == {"ml.code.analyze"}
 
 
-def test_worker_refuses_to_start_without_fake():
+def test_worker_refuses_to_start_without_fake_or_llm():
     with pytest.raises(RuntimeError):
-        MlWorker("llm", Settings(ml_fake=False))
+        MlWorker("llm", Settings(ml_fake=False, llm_base_url=""))
 
 
 async def test_command_to_published_event():

@@ -1,0 +1,380 @@
+"""Разбор резюме `ml.parse_resume` (ml.md §2).
+
+файл → текст → правила → LLM (JSON-схема) → проверка цитат → нормализация → ParsedResume.
+
+LLM только извлекает. Навык попадает в результат, только если его цитата найдена в тексте
+и сам навык упомянут в цитате (AGENTS.md п. 4); иначе отбрасывается с записью в `warnings`.
+Сопоставление с графом — быстрый путь `TaxonomyIndex` (как `/v1/skills/resolve`).
+"""
+
+from __future__ import annotations
+
+import asyncio
+import re
+import time
+from collections.abc import Awaitable, Callable
+from datetime import date
+from functools import cache
+from pathlib import Path
+from typing import Any
+
+import jinja2
+import structlog
+from fsp_contracts.ml import (
+    ParsedResume,
+    ResumeEducation,
+    ResumeExperience,
+    ResumePerson,
+    ResumeSkill,
+    SkillMention,
+)
+from pydantic import BaseModel, Field, ValidationError
+from rapidfuzz import fuzz
+
+from fsp_ml import resume_rules
+from fsp_ml.llm import LlmClient, LlmError
+from fsp_ml.normalize import light, normalize
+from fsp_ml.resume_text import extract_text
+from fsp_ml.taxonomy import TaxonomyIndex
+
+log = structlog.get_logger()
+
+PROMPT_VERSION = "v1"
+PROMPTS_DIR = Path(__file__).resolve().parents[1] / "prompts"
+MAX_TEXT_CHARS = 12_000  # ≈ 4–5 тыс. токенов: влезает в слот llama-server 8k вместе с ответом
+QUOTE_THRESHOLD = 90.0  # rapidfuzz.partial_ratio цитаты к тексту (ml.md §2, шаг 4)
+MENTION_THRESHOLD = 80.0  # навык должен быть упомянут в своей цитате (fuzz.ratio по словам)
+CONFIDENCE = {"alias": 0.95, "fuzzy": 0.85}
+DROP_WARNINGS = ("quote_not_found:", "skill_not_in_quote:")  # навык отброшен
+
+Progress = Callable[[str, int, str], Awaitable[None]]
+
+
+# --- схема ответа LLM (внутренняя; наружу уходит ParsedResume из контрактов) ---
+
+
+class LlmSkill(BaseModel):
+    name: str = Field(min_length=1, max_length=80)
+    quote: str = Field(min_length=1, max_length=400)
+
+
+class LlmExperience(BaseModel):
+    company: str | None = Field(default=None, max_length=200)
+    title: str | None = Field(default=None, max_length=200)
+    start: str | None = Field(default=None, max_length=40)
+    end: str | None = Field(default=None, max_length=40)
+    description: str | None = Field(default=None, max_length=2000)
+    skills: list[str] = Field(default_factory=list, max_length=40)
+    is_commercial: bool = True
+
+
+class LlmEducation(BaseModel):
+    institution: str | None = Field(default=None, max_length=300)
+    degree: str | None = Field(default=None, max_length=100)
+    field: str | None = Field(default=None, max_length=200)
+    year_end: int | None = Field(default=None, ge=1950, le=2100)
+
+
+class LlmResume(BaseModel):
+    full_name: str | None = Field(default=None, max_length=120)
+    city: str | None = Field(default=None, max_length=80)
+    summary: str | None = Field(default=None, max_length=500)
+    experience: list[LlmExperience] = Field(default_factory=list, max_length=30)
+    education: list[LlmEducation] = Field(default_factory=list, max_length=10)
+    skills: list[LlmSkill] = Field(default_factory=list, max_length=80)
+
+
+@cache
+def _template() -> jinja2.Template:
+    env = jinja2.Environment(
+        loader=jinja2.FileSystemLoader(PROMPTS_DIR), autoescape=False, keep_trailing_newline=False
+    )
+    return env.get_template(f"parse_resume/{PROMPT_VERSION}.j2")
+
+
+def build_messages(text: str) -> list[dict[str, Any]]:
+    t = _template()
+    return [
+        {"role": "system", "content": t.render(part="system").strip()},
+        {"role": "user", "content": t.render(part="user", text=text).strip()},
+    ]
+
+
+def parser_version(model: str) -> str:
+    return f"resume-{PROMPT_VERSION}:{model}"
+
+
+async def extract_llm(llm: LlmClient, text: str) -> LlmResume:
+    """Одна генерация по схеме; при невалидном ответе — один повтор с ошибкой (ml.md §1.3)."""
+    messages = build_messages(text)
+    schema = LlmResume.model_json_schema()
+    last_error = ""
+    for attempt in range(2):
+        data = await llm.complete_json(messages, schema, schema_name="resume", temperature=0.1)
+        try:
+            return LlmResume.model_validate(data)
+        except ValidationError as e:
+            last_error = "; ".join(
+                f"{'.'.join(map(str, err['loc']))}: {err['msg']}" for err in e.errors()[:10]
+            )
+            log.warning("resume_llm_invalid", attempt=attempt, errors=len(e.errors()))
+            messages = [
+                *messages,
+                {"role": "assistant", "content": str(data)[:4000]},
+                {
+                    "role": "user",
+                    "content": f"Ответ не прошёл проверку схемы: {last_error}. "
+                    "Исправь и верни JSON.",
+                },
+            ]
+    raise LlmError("llm_invalid", last_error)
+
+
+# --- проверка цитат ---
+
+_SPACES = re.compile(r"\s+")
+_QUOTES = str.maketrans({"«": '"', "»": '"', "“": '"', "”": '"', "„": '"', "’": "'", "–": "-",
+                         "—": "-"})  # fmt: skip
+
+
+def norm_text(s: str) -> str:
+    return _SPACES.sub(" ", light(s).translate(_QUOTES)).strip()
+
+
+def quote_in_text(quote: str, text_norm: str) -> bool:
+    q = norm_text(quote)
+    if len(q) < 3:
+        return False
+    if q in text_norm:
+        return True
+    return fuzz.partial_ratio(q, text_norm) >= QUOTE_THRESHOLD
+
+
+_TOKEN = re.compile(r"[\w+#]+(?:[./-][\w+#]+)*")
+
+
+def _word_in(word: str, text: str) -> bool:
+    return re.search(rf"(?<![\w+#]){re.escape(word)}(?![\w+#])", text) is not None
+
+
+def mention_in_quote(raw: str, quote_norm: str, aliases: list[str]) -> bool:
+    """Навык упомянут в своей цитате: по названию из ответа или по синониму из графа.
+
+    Сравниваем целыми словами, а не подстрокой: «java» не находится в «javascript».
+    Нечёткое сравнение (окна слов, `fuzz.ratio ≥ 80`) ловит падежи («питоне») и опечатки;
+    для коротких названий («c», «go», «c++») — только точное слово.
+    """
+    tokens = _TOKEN.findall(quote_norm)
+    for name in dict.fromkeys((light(raw), normalize(raw), *aliases)):
+        if not name:
+            continue
+        if _word_in(name, quote_norm):
+            return True
+        if len(name) <= 3:
+            continue
+        n = len(_TOKEN.findall(name)) or 1
+        for k in (n, n + 1):
+            for i in range(len(tokens) - k + 1):
+                if fuzz.ratio(name, " ".join(tokens[i : i + k])) >= MENTION_THRESHOLD:
+                    return True
+    return False
+
+
+def _aliases_by_slug(index: TaxonomyIndex | None) -> dict[str, list[str]]:
+    out: dict[str, list[str]] = {}
+    if index is not None:
+        for key, slug in index.exact.items():
+            out.setdefault(slug, []).append(key)
+    return out
+
+
+# --- сборка результата ---
+
+
+def assemble(
+    text: str,
+    llm_out: LlmResume,
+    index: TaxonomyIndex | None,
+    *,
+    version: str,
+    today: date,
+    warnings: list[str] | None = None,
+) -> ParsedResume:
+    """Детерминированная часть: цитаты, нормализация, контакты, периоды, стаж."""
+    warnings = list(warnings or [])
+    text_norm = norm_text(text)
+    aliases = _aliases_by_slug(index)
+    if index is None:
+        warnings.append("taxonomy_unavailable")
+
+    skills: list[ResumeSkill] = []
+    unknown: list[str] = []
+    seen_slugs: set[str] = set()
+    seen_unknown: set[str] = set()
+    for s in llm_out.skills:
+        raw = s.name.strip()
+        if not quote_in_text(s.quote, text_norm):
+            warnings.append(f"quote_not_found:{raw}")
+            continue
+        hit = index.resolve(SkillMention(raw=raw, context=s.quote)) if index else None
+        slug = hit.skill_slug if hit else None
+        if not mention_in_quote(raw, norm_text(s.quote), aliases.get(slug or "", [])):
+            warnings.append(f"skill_not_in_quote:{raw}")
+            continue
+        if hit is None or slug is None:
+            key = normalize(raw)
+            if key not in seen_unknown:
+                seen_unknown.add(key)
+                unknown.append(raw)
+            continue
+        if slug in seen_slugs:
+            continue
+        seen_slugs.add(slug)
+        skills.append(
+            ResumeSkill(
+                raw=raw,
+                slug=slug,
+                quote=s.quote.strip(),
+                method=hit.decision,
+                confidence=CONFIDENCE.get(hit.decision, 0.7),
+            )
+        )
+
+    experience: list[ResumeExperience] = []
+    for e in llm_out.experience:
+        exp_slugs: list[str] = []
+        for m in e.skills:
+            hit = index.resolve(SkillMention(raw=m)) if index else None
+            # в опыт идут только навыки с подтверждённой цитатой
+            if hit and hit.skill_slug in seen_slugs and hit.skill_slug not in exp_slugs:
+                exp_slugs.append(hit.skill_slug)
+        start = resume_rules.parse_month(e.start)
+        end = resume_rules.parse_end(e.end)
+        if start and end and end < start:
+            warnings.append("experience_period_invalid")
+            start = end = None
+        experience.append(
+            ResumeExperience(
+                company=e.company,
+                title=e.title,
+                start=start,
+                end=end,
+                description=e.description,
+                skills=exp_slugs,
+                is_commercial=e.is_commercial,
+            )
+        )
+
+    c = resume_rules.contacts(text)
+    full_name = llm_out.full_name
+    if full_name and not quote_in_text(full_name, text_norm):
+        full_name = None
+    person = ResumePerson(
+        full_name=full_name,
+        email=c.email,
+        phone=c.phone,
+        telegram=c.telegram,
+        city=llm_out.city,
+        links=c.links,
+    )
+    return ParsedResume(
+        parser_version=version,
+        person=person,
+        summary=llm_out.summary,
+        experience=experience,
+        education=[ResumeEducation(**e.model_dump()) for e in llm_out.education],
+        skills=skills,
+        unknown_skills=unknown,
+        total_experience_months=resume_rules.total_experience_months(experience, today),
+        warnings=warnings,
+    )
+
+
+async def _noop(stage: str, pct: int, message: str) -> None:
+    return None
+
+
+async def parse_resume(
+    data: bytes,
+    *,
+    llm: LlmClient,
+    index: TaxonomyIndex | None,
+    model: str,
+    today: date,
+    progress: Progress | None = None,
+) -> ParsedResume:
+    """Полный конвейер. Ошибки: `ResumeFileError` (bad_file, scanned_pdf), `LlmError`."""
+    report = progress or _noop
+    t0 = time.monotonic()
+    await report("text", 10, "Извлекаем текст")
+    text = await asyncio.to_thread(extract_text, data)  # PyMuPDF блокирует цикл
+    warnings: list[str] = []
+    if len(text) > MAX_TEXT_CHARS:
+        text = text[:MAX_TEXT_CHARS]
+        warnings.append("text_truncated")
+    await report("llm", 30, "Разбираем опыт и навыки")
+    llm_out = await extract_llm(llm, text)
+    await report("verify", 85, "Проверяем навыки по тексту")
+    parsed = assemble(
+        text, llm_out, index, version=parser_version(model), today=today, warnings=warnings
+    )
+    # без ПДн: только размеры и счётчики
+    log.info(
+        "resume_parsed",
+        chars=len(text),
+        skills=len(parsed.skills),
+        unknown=len(parsed.unknown_skills),
+        dropped=sum(w.startswith(DROP_WARNINGS) for w in parsed.warnings),
+        seconds=round(time.monotonic() - t0, 2),
+    )
+    await report("done", 100, "Готово")
+    return parsed
+
+
+async def _cli(data: bytes, skills: list[dict] | None) -> None:
+    """Ручная проверка на реальной модели: LLM_BASE_URL / LLM_API_KEY / LLM_MODEL из окружения."""
+    import json
+    import sys
+
+    from fsp_ml.config import Settings
+    from fsp_ml.llm import OpenAiLlm
+
+    s = Settings()
+    if not s.llm_base_url:
+        sys.exit("LLM_BASE_URL не задан")
+    index = TaxonomyIndex.from_snapshot({"version": 0, "skills": skills}) if skills else None
+    llm = OpenAiLlm(
+        s.llm_base_url,
+        s.llm_api_key,
+        s.llm_model,
+        timeout=s.llm_timeout,
+        max_tokens=s.llm_max_tokens,
+    )
+
+    async def progress(stage: str, pct: int, message: str) -> None:
+        print(f"[{pct:3d}%] {message}", file=sys.stderr)
+
+    t0 = time.monotonic()
+    parsed = await parse_resume(
+        data,
+        llm=llm,
+        index=index,
+        model=s.llm_model,
+        today=date.today(),
+        progress=progress,
+    )
+    print(json.dumps(parsed.model_dump(mode="json"), ensure_ascii=False, indent=2))
+    print(f"{time.monotonic() - t0:.1f} с", file=sys.stderr)
+
+
+if __name__ == "__main__":
+    import sys
+
+    if len(sys.argv) < 2:
+        sys.exit("python -m fsp_ml.resume_parser <resume.pdf|docx> [data/taxonomy/skills.yaml]")
+    skills = None
+    if len(sys.argv) > 2:
+        import yaml  # только для ручного запуска
+
+        skills = yaml.safe_load(Path(sys.argv[2]).read_text())["skills"]
+    asyncio.run(_cli(Path(sys.argv[1]).read_bytes(), skills))
