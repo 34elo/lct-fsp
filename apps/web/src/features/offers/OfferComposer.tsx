@@ -96,7 +96,7 @@ export default function OfferComposer() {
   const grade = card?.grade ? (GRADE_LABEL[card.grade] ?? card.grade) : null;
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4 md:p-6">
-      <Link to={`/employer/candidates/${pseudoId}${vacancyId ? `?vacancy=${vacancyId}` : ""}`} className="text-sm font-semibold text-brand hover:underline">← К карточке кандидата</Link>
+      <Link to={`/employer/candidates/${pseudoId}${vacancyId ? `?vacancy=${vacancyId}` : ""}`} className="text-sm font-semibold text-brand-fg hover:underline">← К карточке кандидата</Link>
       <h1 className="font-mono text-2xl font-semibold">Оффер кандидату {card?.pseudonym ?? ""}</h1>
       {card && (
         <p className="text-sm text-muted">

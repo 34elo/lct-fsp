@@ -1,11 +1,17 @@
 import { Link } from "react-router-dom";
 
 import { useGetProfileCandidatesMeProfileGet } from "@/api/endpoints/candidates/candidates";
-import type { CandidateProfile, GradeInfo, SkillWithTrust, TeamSignal } from "@/api/model";
+import type { CandidateProfile, ExperienceItem, GradeInfo, OwnerFsp, SkillWithTrust, TeamSignal } from "@/api/model";
+import { Button } from "@/shared/ui/button";
 import { ErrorNote } from "@/features/auth/ui";
 import {
+  DISCIPLINE_LABEL,
   dots,
+  FSP_LEVEL_LABEL,
   GRADE_LABEL,
+  periodRu,
+  RANK_LABEL,
+  TEAM_ROLE_LABEL,
   points,
   roleLabel,
   SIGNAL_LABEL,
@@ -53,7 +59,7 @@ function Header({ p }: { p: CandidateProfile }) {
           <span
             className={cn(
               "inline-flex h-[30px] items-center rounded-md px-3 font-mono text-[13px] font-semibold",
-              g.preliminary ? "border border-dashed border-brand text-brand" : "bg-brand text-on-brand",
+              g.preliminary ? "border border-dashed border-brand-fg text-brand-fg" : "bg-brand text-on-brand",
             )}
           >
             {parts.join(" · ")}
@@ -157,7 +163,7 @@ function TeamSignals({ signals, soft }: { signals: TeamSignal[]; soft: string[] 
         <div key={t.signal} className="flex flex-col gap-0.5">
           <div className="flex flex-wrap items-baseline gap-2">
             <span className="font-semibold">{SIGNAL_LABEL[t.signal] ?? t.signal}</span>
-            <span className="font-mono text-xs font-semibold text-brand">— {STRENGTH_LABEL[t.label] ?? t.label}</span>
+            <span className="font-mono text-xs font-semibold text-brand-fg">— {STRENGTH_LABEL[t.label] ?? t.label}</span>
           </div>
           {t.facts.map((f, i) => (
             <span key={f.fact_id ?? i} className="text-sm text-muted">
@@ -175,6 +181,87 @@ function TeamSignals({ signals, soft }: { signals: TeamSignal[]; soft: string[] 
         </div>
       )}
     </Card>
+  );
+}
+
+
+function FspCard({ fsp }: { fsp?: OwnerFsp | null }) {
+  const items = fsp?.achievements ?? [];
+  const ranks = fsp?.ranks ?? [];
+  return (
+    <Card title="Достижения ФСП">
+      {items.length === 0 && ranks.length === 0 ? (
+        <p className="text-sm text-muted">
+          Результатов ФСП пока нет. Когда профиль будет связан с ФСП, соревнования и разряды появятся здесь и усилят грейд.
+        </p>
+      ) : (
+        <>
+          <ul className="flex flex-col gap-3">
+            {items.map((a) => (
+              <li key={a.fact_id} className="grid grid-cols-[44px_minmax(0,1fr)] items-start gap-3">
+                <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-tint-100 font-mono text-lg font-bold text-brand-deep dark:text-brand-mid">
+                  {a.place ?? "·"}
+                </span>
+                <span className="flex min-w-0 flex-col gap-0.5">
+                  <span className="break-words text-sm font-semibold">{a.title}</span>
+                  <span className="font-mono text-xs text-muted">
+                    {[
+                      a.place != null && a.of != null ? `${a.place} из ${a.of}` : null,
+                      FSP_LEVEL_LABEL[a.level] ?? null,
+                      a.team_role ? TEAM_ROLE_LABEL[a.team_role] ?? a.team_role : null,
+                      a.year,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+          {ranks.length > 0 && (
+            <ul className="flex flex-wrap gap-2 border-t border-hairline pt-3">
+              {ranks.map((r) => (
+                <li key={r.discipline} className="rounded-md border border-tint-200 bg-tint-50 px-2.5 py-1 text-xs font-semibold text-brand-deep dark:text-brand-mid">
+                  {RANK_LABEL[r.rank] ?? r.rank} · {DISCIPLINE_LABEL[r.discipline] ?? r.discipline}
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      )}
+    </Card>
+  );
+}
+
+function ExperienceCard({ items }: { items: ExperienceItem[] }) {
+  if (!items.length) return null;
+  return (
+    <Card title="Опыт">
+      <ul className="flex flex-col gap-3">
+        {items.map((e, i) => (
+          <li key={`${e.title}-${i}`} className="flex flex-col gap-0.5">
+            <span className="font-semibold">{e.title}</span>
+            <span className="text-sm text-muted">{[e.company, periodRu(e.start, e.end)].filter(Boolean).join(" · ")}</span>
+          </li>
+        ))}
+      </ul>
+    </Card>
+  );
+}
+
+function NextStep({ p }: { p: CandidateProfile }) {
+  const verified = (p.skills ?? []).filter((s) => !s.claimed_only).length;
+  if (verified >= 3 && p.grade.grade) return null;
+  return (
+    <section aria-label="Усилить профиль" className="flex flex-col gap-3 rounded-xl border border-tint-200 bg-tint-50 p-5">
+      <h2 className="font-mono text-[17px] font-semibold">Усильте профиль</h2>
+      <p className="text-sm">
+        Чем больше проверяемого в профиле, тем выше доверие к навыкам и точнее грейд. Загрузите резюме: навыки появятся с цитатами из текста.
+      </p>
+      <Link to="/onboarding" className="self-start">
+        <Button size="sm">Загрузить резюме</Button>
+      </Link>
+    </section>
   );
 }
 
@@ -198,12 +285,19 @@ export default function Profile() {
     );
   const p = q.data.data;
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
+    <div className="mx-auto grid w-full max-w-5xl items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       {title}
-      <Header p={p} />
-      <GradeWhy g={p.grade} />
-      <Skills skills={p.skills ?? []} />
-      <TeamSignals signals={p.team_signals ?? []} soft={p.claimed_soft ?? []} />
+      <div className="flex min-w-0 flex-col gap-4">
+        <Header p={p} />
+        <NextStep p={p} />
+        <GradeWhy g={p.grade} />
+      </div>
+      <div className="flex min-w-0 flex-col gap-4">
+        <Skills skills={p.skills ?? []} />
+        <FspCard fsp={p.fsp} />
+        <TeamSignals signals={p.team_signals ?? []} soft={p.claimed_soft ?? []} />
+        <ExperienceCard items={p.experience ?? []} />
+      </div>
     </div>
   );
 }

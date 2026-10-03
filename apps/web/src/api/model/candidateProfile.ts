@@ -7,6 +7,7 @@
 import type { Category } from './category';
 import type { ExperienceItem } from './experienceItem';
 import type { GradeInfo } from './gradeInfo';
+import type { OwnerFsp } from './ownerFsp';
 import type { Preferences } from './preferences';
 import type { SearchStatus } from './searchStatus';
 import type { SkillWithTrust } from './skillWithTrust';
@@ -14,7 +15,7 @@ import type { TeamSignal } from './teamSignal';
 import type { Visibility } from './visibility';
 
 /**
- * `CandidateProfile` (api.md §3). Пока без `fsp`, `code`, `completeness`.
+ * `CandidateProfile` (api.md §3). Пока без `code`, `completeness`.
  */
 export interface CandidateProfile {
   pseudonym: string;
@@ -28,5 +29,6 @@ export interface CandidateProfile {
   skills?: SkillWithTrust[];
   team_signals?: TeamSignal[];
   claimed_soft?: string[];
+  fsp?: OwnerFsp | null;
   experience?: ExperienceItem[];
 }

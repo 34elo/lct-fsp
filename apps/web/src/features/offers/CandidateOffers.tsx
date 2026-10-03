@@ -79,7 +79,7 @@ export function CandidateOfferDetail() {
   const err = accept.error ?? decline.error;
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4 md:p-6">
-      <Link to="/me/offers" className="text-sm font-semibold text-brand hover:underline">← Все офферы</Link>
+      <Link to="/me/offers" className="text-sm font-semibold text-brand-fg hover:underline">← Все офферы</Link>
       {q.isPending && <p role="status" className="text-muted">Загрузка…</p>}
       {q.isError && <ErrorNote>Оффер не найден.</ErrorNote>}
       {o && (

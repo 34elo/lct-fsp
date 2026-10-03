@@ -61,7 +61,7 @@ class ExperienceItem(BaseModel):
 
 
 class CandidateProfile(BaseModel):
-    """`CandidateProfile` (api.md §3). Пока без `fsp`, `code`, `completeness`."""
+    """`CandidateProfile` (api.md §3). Пока без `code`, `completeness`."""
 
     pseudonym: str
     profile_version: int
@@ -74,6 +74,7 @@ class CandidateProfile(BaseModel):
     skills: list[card.SkillWithTrust] = []
     team_signals: list[card.TeamSignal] = []
     claimed_soft: list[str] = []
+    fsp: card.OwnerFsp | None = None
     experience: list[ExperienceItem] = []
 
 
@@ -123,6 +124,7 @@ async def profile_out(session: AsyncSession, c: Candidate) -> CandidateProfile:
         skills=parts.skills,
         team_signals=parts.team_signals,
         claimed_soft=list(c.claimed_soft or []),
+        fsp=await card.owner_fsp(session, c),
         experience=await resumes.experience_for_profile(session, c.user_id),
     )
 

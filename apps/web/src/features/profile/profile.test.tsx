@@ -95,6 +95,29 @@ test("профиль: категория, предварительный гре�
   expect(within(team).getByText(/коммуникабельный/)).toBeInTheDocument();
 });
 
+test("профиль: достижения ФСП, разряд, опыт и меню кандидата", async () => {
+  profile = {
+    ...full,
+    fsp: {
+      verified: true,
+      achievements: [{ fact_id: "f1", title: "Финал по продуктовому программированию", level: "national", place: 2, of: 40, year: 2026, team_role: "captain" }],
+      ranks: [{ discipline: "product", rank: "rank_2" }],
+    },
+    experience: [{ title: "Backend-разработчик", company: "Кедр Софт", start: "2024-08-01", end: null, skills: [] }],
+  };
+  mount("/me");
+  const fsp = await screen.findByRole("region", { name: "Достижения ФСП" });
+  expect(within(fsp).getByText("Финал по продуктовому программированию")).toBeInTheDocument();
+  expect(within(fsp).getByText("2 из 40 · всероссийский · капитан · 2026")).toBeInTheDocument();
+  expect(within(fsp).getByText("2 разряд · Продуктовое программирование")).toBeInTheDocument();
+  expect(within(screen.getByRole("region", { name: "Опыт" })).getByText(/Кедр Софт/)).toBeInTheDocument();
+  // Меню: десктопное и нижняя панель ведут во все разделы кандидата, включая резюме.
+  for (const nav of screen.getAllByRole("navigation", { name: "Разделы" })) {
+    expect(within(nav).getByRole("link", { name: "Офферы" })).toHaveAttribute("href", "/me/offers");
+    expect(within(nav).getByRole("link", { name: "Резюме" })).toHaveAttribute("href", "/onboarding");
+  }
+});
+
 test("пустой профиль: подсказка вместо грейда и навыков", async () => {
   profile = { ...base, claimed_soft: [], category: null, skills: [], team_signals: [], grade: { grade: null, score: null, confidence: null, preliminary: true, breakdown: [] } };
   mount("/me");

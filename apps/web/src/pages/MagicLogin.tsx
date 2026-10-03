@@ -31,7 +31,7 @@ export default function MagicLogin() {
           <ErrorNote>{error}</ErrorNote>
           <p className="text-sm text-muted">
             Запросите новую ссылку в боте или{" "}
-            <Link to="/login" className="font-semibold text-brand">
+            <Link to="/login" className="font-semibold text-brand-fg">
               войдите по почте
             </Link>
             .

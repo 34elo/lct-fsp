@@ -4,7 +4,7 @@ export default function NotFound() {
   return (
     <section className="flex flex-col gap-3 p-6">
       <h1 className="text-2xl font-bold">Страница не найдена</h1>
-      <Link to="/" className="font-semibold text-brand">
+      <Link to="/" className="font-semibold text-brand-fg">
         На главную
       </Link>
     </section>
