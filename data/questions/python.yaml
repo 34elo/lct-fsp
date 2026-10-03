@@ -1,0 +1,112 @@
+# Черновик банка (E2-5): вопросы не проверены вторым человеком. После проверки status: draft -> approved.
+skill: python
+status: draft
+source: llm_draft
+questions:
+- id: python-01
+  d: 1
+  text: Что вернёт выражение len('привет')?
+  options: ['7', '12', 'Ошибку: строка не в ASCII', '6']
+  correct: D
+  explanation: Строки в Python 3 хранятся как последовательности символов Unicode; len считает символы, а не байты.
+- id: python-02
+  d: 1
+  text: Какой тип у результата выражения 7 / 2 в Python 3?
+  options: [decimal, int, float, fraction]
+  correct: C
+  explanation: Оператор / всегда возвращает float (3.5); целочисленное деление — //.
+- id: python-03
+  d: 2
+  text: Что выведет код?
+  code: 'a = [1, 2, 3]
+
+    b = a
+
+    b.append(4)
+
+    print(a)'
+  options: ['[4]', '[1, 2, 3, 4]', '[1, 2, 3]', Ошибку]
+  correct: B
+  explanation: b и a ссылаются на один и тот же список, изменение через b видно через a.
+- id: python-04
+  d: 2
+  text: Чем кортеж (tuple) отличается от списка (list)?
+  options: [Кортеж неизменяем, Кортеж не может содержать разные типы, Кортеж быстрее только при поиске по значению, Кортеж не поддерживает индексацию]
+  correct: A
+  explanation: Кортеж неизменяем (hashable при неизменяемых элементах), список — изменяемый.
+- id: python-05
+  d: 2
+  text: Что выведет код?
+  code: print([x * x for x in range(5) if x % 2 == 0])
+  options: ['[1, 9]', '[0, 1, 4, 9, 16]', '[4, 16]', '[0, 4, 16]']
+  correct: D
+  explanation: 'Берутся чётные x из 0..4: 0, 2, 4, их квадраты — 0, 4, 16.'
+- id: python-06
+  d: 2
+  text: Как правильно прочитать файл целиком и гарантированно закрыть его?
+  options: [f = open('a.txt'); data = f.read(), 'data = open(''a.txt'', ''w'').read()', 'with open(''a.txt'') as f: data = f.read()', data = file('a.txt').read()]
+  correct: C
+  explanation: Контекстный менеджер with закрывает файл даже при исключении.
+- id: python-07
+  d: 3
+  text: Что выведет код?
+  code: "def f(x, acc=[]):\n    acc.append(x)\n    return acc\n\nf(1)\nprint(f(2))"
+  options: ['[2]', '[1, 2]', '[1]', Ошибку]
+  correct: B
+  explanation: Значение по умолчанию вычисляется один раз при определении функции, список общий между вызовами.
+- id: python-08
+  d: 3
+  text: Для чего нужен декоратор functools.wraps?
+  options: [Сохраняет имя и docstring исходной функции в обёртке, Делает функцию потокобезопасной, Ускоряет вызов обёрнутой функции, Кеширует результаты вызовов]
+  correct: A
+  explanation: wraps копирует __name__, __doc__ и другие атрибуты исходной функции в обёртку.
+- id: python-09
+  d: 3
+  text: Что произойдёт при выполнении кода?
+  code: 'd = {}
+
+    d[[1, 2]] = ''x'''
+  options: [Ключ будет преобразован в кортеж, 'В словаре появится ключ [1, 2]', KeyError, 'TypeError: unhashable type: ''list''']
+  correct: D
+  explanation: Ключи словаря должны быть хешируемыми; список изменяем и не хешируется.
+- id: python-10
+  d: 3
+  text: В чём разница между генератором и списком, построенным в list comprehension?
+  options: [Генератор всегда быстрее по времени итерации, Разницы нет, 'Генератор вычисляет элементы лениво, по одному', Генератор поддерживает индексацию]
+  correct: C
+  explanation: Генератор не хранит все элементы в памяти и отдаёт их по требованию; индексации у него нет.
+- id: python-11
+  d: 4
+  text: Что выведет код?
+  code: 'fs = [lambda: i for i in range(3)]
+
+    print([f() for f in fs])'
+  options: [NameError, '[2, 2, 2]', '[0, 1, 2]', '[0, 0, 0]']
+  correct: B
+  explanation: Лямбды замыкают переменную i, а не её значение; к моменту вызова i равна 2.
+- id: python-12
+  d: 4
+  text: Что делает GIL в CPython?
+  options: [Позволяет одновременно исполнять байт-код только одному потоку интерпретатора, Защищает память от утечек, Блокирует все операции ввода-вывода, Запрещает создавать больше одного потока]
+  correct: A
+  explanation: GIL сериализует исполнение байт-кода, поэтому CPU-bound потоки не ускоряются; для ввода-вывода GIL освобождается.
+- id: python-13
+  d: 4
+  text: Что выведет код?
+  code: "class A:\n    def __init__(self):\n        self.x = 1\n    def __eq__(self, o):\n        return self.x == o.x\n\nprint(len({A(), A()}))"
+  options: ['2', '1', '0', TypeError при создании множества]
+  correct: D
+  explanation: При определении __eq__ без __hash__ класс становится нехешируемым, поэтому A() нельзя положить в set.
+- id: python-14
+  d: 5
+  text: Что выведет код?
+  code: "def gen():\n    x = yield 1\n    print('got', x)\n    yield 2\n\ng = gen()\nprint(next(g))\nprint(g.send('a'))"
+  options: ['1, got None, 2', 'got None, 1, 2', '1, got a, 2', '1, 2, got a']
+  correct: C
+  explanation: 'send(''a'') возобновляет генератор, yield 1 возвращает ''a'' в x; печатается ''got a'', затем отдаётся 2. Порядок вывода: 1, got a, 2.'
+- id: python-15
+  d: 5
+  text: Каков порядок разрешения методов (MRO) для class D(B, C), где B(A) и C(A)?
+  options: ['D, C, B, A', 'D, B, C, A', 'D, B, A, C', 'D, A, B, C']
+  correct: B
+  explanation: 'C3-линеаризация ставит общий базовый класс A после всех его наследников: D, B, C, A.'
