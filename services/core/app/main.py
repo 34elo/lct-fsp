@@ -21,6 +21,7 @@ from app.events_stream import UiHub
 from app.events_stream import router as events_router
 from app.identity.router import router as identity_router
 from app.matching.router import router as search_router
+from app.offers.router import router as offers_router
 from app.resumes.router import router as resumes_router
 from app.taxonomy.router import router as taxonomy_router
 from app.telegram.router import internal as telegram_internal_router
@@ -72,6 +73,7 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(admin_companies_router)
     app.include_router(vacancies_router)
     app.include_router(search_router)
+    app.include_router(offers_router)
 
     @app.get("/readyz", include_in_schema=False)
     async def readyz():

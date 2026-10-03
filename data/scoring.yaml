@@ -328,8 +328,9 @@ limits:
   min_cluster_size: 5  # ячейки < 5 человек скрыты
 
   # Offer-related
-  offer_per_day_limit: 10  # лимит офферов в сутки (from E8-1)
-  offer_validity_days: 14  # стандартный срок жизни оффера
+  offer_company_per_day: 20  # офферов за скользящие 24 ч от одной компании
+  offer_candidate_per_day: 10  # входящих офферов за 24 ч одному кандидату
+  offer_validity_days: 7  # срок жизни оффера до expired (flows.md F8)
 
   # Profile freshness
   profile_fresh_days: 7  # профиль обновлён за 7 дней → × 1.01
