@@ -89,7 +89,7 @@ export default function Register() {
       </form>
       <p className="text-sm text-muted">
         Уже есть аккаунт?{" "}
-        <Link to="/login" state={{ from }} className="font-semibold text-brand">
+        <Link to="/login" state={{ from }} className="font-semibold text-brand-fg">
           Войти
         </Link>
       </p>

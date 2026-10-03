@@ -46,7 +46,7 @@ export default function Login() {
       </form>
       <p className="text-sm text-muted">
         Нет аккаунта?{" "}
-        <Link to="/register" state={{ from }} className="font-semibold text-brand">
+        <Link to="/register" state={{ from }} className="font-semibold text-brand-fg">
           Зарегистрироваться
         </Link>
       </p>

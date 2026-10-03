@@ -2589,6 +2589,16 @@
             "title": "Claimed Soft",
             "default": []
           },
+          "fsp": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OwnerFsp"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "experience": {
             "items": {
               "$ref": "#/components/schemas/ExperienceItem"
@@ -2609,7 +2619,7 @@
           "grade"
         ],
         "title": "CandidateProfile",
-        "description": "`CandidateProfile` (api.md §3). Пока без `fsp`, `code`, `completeness`."
+        "description": "`CandidateProfile` (api.md §3). Пока без `code`, `completeness`."
       },
       "CardMatch": {
         "properties": {
@@ -3536,6 +3546,67 @@
         "title": "FeedbackRequest",
         "description": "Реакция на показ кандидата."
       },
+      "FspAchievement": {
+        "properties": {
+          "fact_id": {
+            "type": "string",
+            "title": "Fact Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "level": {
+            "type": "string",
+            "title": "Level"
+          },
+          "place": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Place"
+          },
+          "of": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Of"
+          },
+          "year": {
+            "type": "integer",
+            "title": "Year"
+          },
+          "team_role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Team Role"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fact_id",
+          "title",
+          "level",
+          "year"
+        ],
+        "title": "FspAchievement"
+      },
       "FspHighlight": {
         "properties": {
           "title": {
@@ -3580,6 +3651,24 @@
           "year"
         ],
         "title": "FspHighlight"
+      },
+      "FspRankBrief": {
+        "properties": {
+          "discipline": {
+            "type": "string",
+            "title": "Discipline"
+          },
+          "rank": {
+            "type": "string",
+            "title": "Rank"
+          }
+        },
+        "type": "object",
+        "required": [
+          "discipline",
+          "rank"
+        ],
+        "title": "FspRankBrief"
       },
       "Grade": {
         "type": "string",
@@ -4299,6 +4388,35 @@
           "not_hired"
         ],
         "title": "OfferStatus"
+      },
+      "OwnerFsp": {
+        "properties": {
+          "verified": {
+            "type": "boolean",
+            "title": "Verified"
+          },
+          "achievements": {
+            "items": {
+              "$ref": "#/components/schemas/FspAchievement"
+            },
+            "type": "array",
+            "title": "Achievements"
+          },
+          "ranks": {
+            "items": {
+              "$ref": "#/components/schemas/FspRankBrief"
+            },
+            "type": "array",
+            "title": "Ranks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "verified",
+          "achievements",
+          "ranks"
+        ],
+        "title": "OwnerFsp"
       },
       "ParsedResume": {
         "properties": {

@@ -335,6 +335,53 @@ def _category(c: Candidate) -> Category | None:
     )
 
 
+class FspAchievement(BaseModel):
+    fact_id: str
+    title: str
+    level: str
+    place: int | None = None
+    of: int | None = None
+    year: int
+    team_role: str | None = None
+
+
+class FspRankBrief(BaseModel):
+    discipline: str
+    rank: str
+
+
+class OwnerFsp(BaseModel):
+    verified: bool
+    achievements: list[FspAchievement]
+    ranks: list[FspRankBrief]
+
+
+async def owner_fsp(session: AsyncSession, c: Candidate) -> OwnerFsp | None:
+    """Достижения и разряды ФСП владельца; один факт даёт несколько навыков, схлопываем по `fact_id`."""
+    achievements: dict[str, FspAchievement] = {}
+    ranks: dict[str, FspRankBrief] = {}
+    verified = False
+    for ev in await graph.evidence_of(session, [c.user_id], source="fsp"):
+        d = ev.details or {}
+        verified = verified or bool(ev.verified)
+        if ev.fact_type == "fsp_rank" and d.get("rank") and d.get("discipline"):
+            disc = str(d["discipline"])
+            ranks[disc] = FspRankBrief(discipline=disc, rank=str(d["rank"]))
+        elif ev.fact_type == "fsp_result" and isinstance(d.get("label"), str):
+            achievements.setdefault(
+                str(ev.fact_id),
+                FspAchievement(
+                    fact_id=str(ev.fact_id), title=d["label"], level=str(d.get("level") or ""),
+                    place=d.get("place"), of=d.get("participants"), year=ev.observed_at.year,
+                    team_role=d.get("team_role"),
+                ),
+            )  # fmt: skip
+    if not achievements and not ranks:
+        return None
+    ordered = sorted(achievements.values(), key=lambda a: (-a.year, a.place or 10**9))
+    return OwnerFsp(verified=verified, achievements=ordered, ranks=list(ranks.values()))
+
+
 async def build_owner_parts(
     session: AsyncSession, c: Candidate, trust: TrustConfig, today: date | None = None
 ) -> OwnerProfileParts:

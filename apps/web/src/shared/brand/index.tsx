@@ -138,13 +138,13 @@ export function MatchRing({ value, size = 60 }: { value: number; size?: number }
   );
 }
 
-/** Логотип: знак на светлом/тёмном фоне переключается темой (две картинки, видна одна). */
+/** Логотип: файлы `*w.svg` — с тёмным текстом для светлой темы, без `w` — со светлым текстом для тёмной (две картинки, видна одна). */
 export function Logo({ className, mark = false }: { className?: string; mark?: boolean }) {
   const base = mark ? "logo_02" : "logo_01";
   return (
     <span className={cn("inline-flex items-center", className)}>
-      <img src={`/brand/${base}.svg`} alt="ФСП Карьера" className="h-8 dark:hidden" />
-      <img src={`/brand/${base}w.svg`} alt="ФСП Карьера" className="hidden h-8 dark:block" />
+      <img src={`/brand/${base}w.svg`} alt="ФСП Карьера" className="h-8 dark:hidden" />
+      <img src={`/brand/${base}.svg`} alt="ФСП Карьера" className="hidden h-8 dark:block" />
     </span>
   );
 }

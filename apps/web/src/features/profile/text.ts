@@ -73,3 +73,39 @@ export function dateRu(iso: string): string {
   const d = new Date(iso);
   return Number.isNaN(d.getTime()) ? "" : d.toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" });
 }
+
+export const FSP_LEVEL_LABEL: Record<string, string> = {
+  regional: "региональный уровень",
+  interregional: "межрегиональный",
+  national: "всероссийский",
+  international: "международный",
+};
+
+export const DISCIPLINE_LABEL: Record<string, string> = {
+  algorithmic: "Алгоритмическое программирование",
+  product: "Продуктовое программирование",
+  security: "Информационная безопасность",
+  robotics: "Робототехника",
+  uav: "Беспилотные системы",
+};
+
+export const RANK_LABEL: Record<string, string> = {
+  rank_3: "3 разряд",
+  rank_2: "2 разряд",
+  rank_1: "1 разряд",
+  cms: "Кандидат в мастера спорта",
+  ms: "Мастер спорта",
+};
+
+export const TEAM_ROLE_LABEL: Record<string, string> = { captain: "капитан", member: "участник" };
+
+/** «Июнь 2024 — н. в.» по ISO-датам `YYYY-MM...` из опыта. */
+export function periodRu(start?: string | null, end?: string | null): string {
+  const f = (v: string) => {
+    const d = new Date(v);
+    return Number.isNaN(d.getTime()) ? "" : d.toLocaleDateString("ru-RU", { month: "long", year: "numeric" });
+  };
+  const a = start ? f(start) : "";
+  const b = end ? f(end) : "по настоящее время";
+  return a ? `${a} — ${b}` : "";
+}

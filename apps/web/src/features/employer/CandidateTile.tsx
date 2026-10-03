@@ -80,7 +80,7 @@ export function CandidateTile({ card, vacancyId }: { card: CandidateCard; vacanc
       <Why card={card} />
 
       <div className="flex flex-wrap gap-2 pt-1">
-        <Link to={`/employer/candidates/${card.pseudo_id}${q}`} className="inline-flex h-9 items-center rounded-lg border border-brand px-3 text-sm font-semibold text-brand hover:bg-tint-50">
+        <Link to={`/employer/candidates/${card.pseudo_id}${q}`} className="inline-flex h-9 items-center rounded-lg border border-brand-fg px-3 text-sm font-semibold text-brand-fg hover:bg-tint-50">
           Открыть карточку
         </Link>
         {/* Точка интеграции: модалку оффера делает E8-6, пока ведёт на заглушку маршрута. */}

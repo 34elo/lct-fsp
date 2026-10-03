@@ -184,7 +184,8 @@ def _seed_graph(c, uid, h_slug="python"):
             "insert into evidence (id, candidate_id, skill_id, source, strength, observed_at,"
             " fact_type, fact_id, details, verified, is_active) values (?,?,?,?,?,?,?,?,?,1,1)",
             (ev_id, uid, sid, "fsp", 0.9, "2026-01-10", "fsp_result", fact,
-             json.dumps({"label": "Кубок ФСП, финал, 2 место из 120"})),
+             json.dumps({"label": "Кубок ФСП, финал, 2 место из 120", "level": "national",
+                        "place": 2, "participants": 120, "team_role": "captain"})),
         )  # fmt: skip
         con.execute(
             "insert into candidate_skills (candidate_id, skill_id, confidence, level, sources,"
@@ -245,6 +246,11 @@ def test_profile_has_category_grade_skills_team_signals(c):
     (s,) = p["skills"]
     assert s["skill"]["slug"] == "python" and s["level"] == 3 and s["sources"] == ["fsp"]
     assert s["top_evidence"][0]["title"] == "Кубок ФСП, финал, 2 место из 120"
+    (a,) = p["fsp"]["achievements"]  # один факт — одно достижение
+    assert (a["title"], a["level"], a["place"], a["of"], a["year"], a["team_role"]) == (
+        "Кубок ФСП, финал, 2 место из 120", "national", 2, 120, 2026, "captain"
+    )
+    assert p["fsp"]["verified"] is True and p["fsp"]["ranks"] == []
     (t,) = p["team_signals"]  # growth 0.1 < 0.3 не показываем
     assert (t["signal"], t["label"]) == ("leadership", "present" if t["value"] < 0.6 else "strong")
     assert t["facts"][0]["title"] == "Капитан команды, всероссийский уровень, 2 место, 2026"
@@ -254,6 +260,7 @@ def test_empty_profile_has_null_category_and_no_skills(c):
     h = _user(c, "a@x.io")
     p = c.get("/candidates/me/profile", headers=h).json()
     assert p["category"] is None and p["skills"] == [] and p["team_signals"] == []
+    assert p["fsp"] is None
     assert p["grade"]["grade"] is None and p["grade"]["preliminary"] is True
 
 
