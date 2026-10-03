@@ -245,6 +245,7 @@ async def salary_hint(
         active=cand.search_status == "active", cfg=_PACCEPT,
     )  # fmt: skip
     below = cand.salary_min is not None and hi < cand.salary_min
+    median = await candidates.category_median(session, cand.primary_role, cand.grade)
     wide = vacancies.range_too_wide(lo, hi)
     notes = []
     if below:
@@ -252,7 +253,8 @@ async def salary_hint(
     if wide:
         notes.append("Вилка слишком широкая: сузьте её, так оффер выглядит честнее.")
     return SalaryHint(
-        candidate_min=cand.salary_min, below_candidate_min=below, p_accept=round(p, 3),
+        candidate_min=cand.salary_min, below_candidate_min=below, category_median=median,
+        vs_category_median=round(hi / median - 1, 3) if median else 0.0, p_accept=round(p, 3),
         acceptance_hint=p_hint(p, _PACCEPT), range_too_wide=wide, message=" ".join(notes),
     )  # fmt: skip
 

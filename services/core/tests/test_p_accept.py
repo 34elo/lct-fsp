@@ -2,7 +2,7 @@
 
 import math
 
-from app.matching.p_accept import PAcceptConfig, hint, p_accept
+from app.matching.p_accept import PAcceptConfig, hint, mutual, p_accept
 
 CFG = PAcceptConfig.load()
 
@@ -42,3 +42,9 @@ def test_hint_thresholds():
 def test_active_and_rating_raise_probability():
     assert _p(active=True) > _p()
     assert _p(responsibility_score=5.0) > _p() > _p(responsibility_score=1.0)
+
+
+def test_mutual_is_harmonic_mean():
+    assert math.isclose(mutual(0.8, 0.4), 2 * 0.8 * 0.4 / 1.2)
+    assert mutual(0.6, 0.6) == 0.6 and mutual(0.0, 0.0) == 0.0
+    assert mutual(0.9, 0.1) < 0.5  # низкий интерес тянет H вниз сильнее среднего

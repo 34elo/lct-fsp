@@ -25,6 +25,7 @@ from app.candidates import service as candidates
 from app.candidates.models import Candidate
 from app.graph import service as graph
 from app.graph.trust import EvidenceView, TrustConfig, effective_strength
+from app.matching.p_accept import PAcceptConfig, hint, mutual, p_accept
 from app.matching.scoring import MatchConfig, MatchResult, score_candidate
 from app.matching.service import build_views, load_vacancy
 from app.taxonomy import service as taxonomy
@@ -36,7 +37,7 @@ FSP_HIGHLIGHTS = 3
 TRUST_TOP = 5  # доверие кандидата = среднее по пяти сильнейшим навыкам
 NICE_WEIGHT = 0.5
 
-Sort = Literal["match", "trust", "fresh"]
+Sort = Literal["match", "trust", "fresh", "mutual"]
 
 
 class SkillBrief(BaseModel):
@@ -57,6 +58,7 @@ class FspHighlight(BaseModel):
 class CardMatch(BaseModel):
     score: float
     explanation: list[ExplanationItem]
+    interest: str | None = None  # low | medium | high — интерес кандидата к вакансии (p_accept)
 
 
 class CandidateCard(BaseModel):
@@ -87,6 +89,7 @@ class Row:
     relevance: float
     skills: list[Any]
     result: MatchResult | None = None
+    p_accept: float | None = None
 
     def key(self, sort: Sort) -> float:
         if sort == "fresh":
@@ -94,6 +97,8 @@ class Row:
         if sort == "trust":
             return self.trust
         if self.result is not None:
+            if sort == "mutual" and self.p_accept is not None:
+                return mutual(self.result.score, self.p_accept)
             return self.result.score
         return self.relevance
 
@@ -182,6 +187,7 @@ def _card(
     names: dict[uuid.UUID, tuple[str, str]],
     highlights: list[FspHighlight],
     result: MatchResult | None,
+    interest: str | None = None,
 ) -> CandidateCard:
     ordered = sorted(skills, key=lambda s: (s.claimed_only, -s.confidence, str(s.skill_id)))
     top = [
@@ -205,9 +211,23 @@ def _card(
         city=c.city,
         relocation=c.relocation,
         search_status=candidates.effective_status(c),
-        match=CardMatch(score=result.score, explanation=result.explanation) if result else None,
+        match=CardMatch(score=result.score, explanation=result.explanation, interest=interest)
+        if result
+        else None,
         updated_at=c.updated_at,
     )
+
+
+def p_accept_for(
+    v: Any, cand: Candidate, responsibility_score: float | None, cfg: PAcceptConfig
+) -> float:
+    """p_accept кандидата под вакансию (`v` — VacancyView) при вилке вакансии."""
+    return p_accept(
+        salary_to=v.salary_to, salary_min=cand.salary_min, vacancy_formats=v.formats,
+        candidate_formats=cand.formats or (), vacancy_skills=[q.slug for q in v.skills],
+        primary_stack=cand.primary_stack or (), responsibility_score=responsibility_score,
+        active=candidates.effective_status(cand) == "active", cfg=cfg,
+    )  # fmt: skip
 
 
 async def search_candidates(
@@ -224,14 +244,20 @@ async def search_candidates(
     cfg: MatchConfig,
     trust: TrustConfig,
     today: date | None = None,
+    responsibility_score: float | None = None,
+    pa_cfg: PAcceptConfig | None = None,
 ) -> dict[str, Any]:
     """Страница выдачи `{items, next_cursor, total}`; `items` — JSON-словари `CandidateCard`."""
     limit = max(1, min(limit, MAX_LIMIT))
+    if sort == "mutual" and vacancy_id is None:
+        sort = "match"  # H считается под вакансию; без неё — обычное соответствие
+    pa_cfg = pa_cfg or PAcceptConfig.load()
     after = decode_cursor(cursor, sort) if cursor else None
     key = cache_key(
         await candidates.catalog_version(session),
         {"company": str(company_id), "f": filters.model_dump(mode="json"), "sort": sort,
-         "vacancy": [str(vacancy_id), vacancy_version], "limit": limit},
+         "vacancy": [str(vacancy_id), vacancy_version], "limit": limit,
+         "rs": responsibility_score},
         cursor,
     )  # fmt: skip
     if redis is not None:
@@ -290,10 +316,12 @@ async def search_candidates(
             views = await build_views(session, [r.cand for r in rows], v, adj, trust, day)
             for r, view in zip(rows, views, strict=True):
                 r.result = score_candidate(v, view, adj, cfg)
+                if r.result is not None:
+                    r.p_accept = p_accept_for(v, r.cand, responsibility_score, pa_cfg)
 
     def sortkey(r: Row) -> float:
         k = r.key(sort)
-        if sort == "match" and vacancy_id is not None and r.result is None:
+        if sort in ("match", "mutual") and vacancy_id is not None and r.result is None:
             k -= 10  # не прошёл жёсткие фильтры вакансии — после подходящих
         return round(k, 6)
 
@@ -319,9 +347,14 @@ async def search_candidates(
     names = {sid: (slug_of[sid], name_of.get(sid, slug_of[sid])) for sid in slug_of}
     highlights = await _fsp_highlights(session, page_ids, trust, day)
     items = [
-        _card(r.cand, r.skills, names, highlights.get(r.cand.user_id, []), r.result).model_dump(
-            mode="json"
-        )
+        _card(
+            r.cand,
+            r.skills,
+            names,
+            highlights.get(r.cand.user_id, []),
+            r.result,
+            None if r.p_accept is None else hint(r.p_accept, pa_cfg),
+        ).model_dump(mode="json")
         for r in page
     ]
     out = {"items": items, "next_cursor": next_cursor, "total": total}

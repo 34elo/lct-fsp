@@ -38,7 +38,7 @@ class SearchRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     filters: SearchFilters = Field(default_factory=SearchFilters)
-    sort: search.Sort = "match"
+    sort: search.Sort | None = None  # по умолчанию: с вакансией — mutual (H), без — match
     cursor: str | None = Field(default=None, max_length=200)
     limit: int = Field(default=20, ge=1, le=search.MAX_LIMIT)
     vacancy_id: uuid.UUID | None = None
@@ -66,10 +66,12 @@ async def search_candidates(
     version = None
     if body.vacancy_id is not None:  # чужая или несуществующая вакансия → 404
         version = (await vacancies.get_owned(session, user, body.vacancy_id)).version
+    sort = body.sort or ("mutual" if body.vacancy_id else "match")
     page = await search.search_candidates(
-        session, redis, company_id=company.id, filters=body.filters, sort=body.sort,
+        session, redis, company_id=company.id, filters=body.filters, sort=sort,
         cursor=body.cursor, limit=body.limit, vacancy_id=body.vacancy_id,
         vacancy_version=version, cfg=_CFG, trust=_TRUST,
+        responsibility_score=company.responsibility_score,
     )  # fmt: skip
 
     session_id = body.session_id or uuid.uuid4()
@@ -93,7 +95,7 @@ async def search_candidates(
                 score=match.get("score", 0.0),
                 features={
                     "search_filters": body.filters.model_dump(mode="json"),
-                    "sort": body.sort,
+                    "sort": sort,
                 },
             )
 
@@ -117,7 +119,13 @@ async def candidate_card(
     if cand is None:
         raise ProblemError(404, "candidate_not_found", "Кандидат не найден")
     out = await card.build_card(
-        session, cand, vacancy_id=vacancy_id, cfg=_CFG, trust=_TRUST, company_id=company.id
+        session,
+        cand,
+        vacancy_id=vacancy_id,
+        cfg=_CFG,
+        trust=_TRUST,
+        company_id=company.id,
+        responsibility_score=company.responsibility_score,
     )
     await views.record(
         session, candidate_id=cand.user_id, company_id=company.id, viewer_user_id=user.id,
