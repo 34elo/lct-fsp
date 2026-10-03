@@ -9,17 +9,21 @@ rec_feedback: реакции работодателя на показ (откр�
 
 import sqlalchemy as sa
 from alembic import op
+from sqlalchemy.dialects import postgresql
 
 revision = "0023"
 down_revision = "0022"
 branch_labels = None
 depends_on = None
 
+_ID = sa.BigInteger().with_variant(sa.Integer(), "sqlite")
+_JSON = sa.JSON().with_variant(postgresql.JSONB(), "postgresql")
+
 
 def upgrade() -> None:
     op.create_table(
         "impressions",
-        sa.Column("id", sa.BigInteger(), primary_key=True, autoincrement=True),
+        sa.Column("id", _ID, primary_key=True, autoincrement=True),
         sa.Column("company_id", sa.Uuid(), nullable=False),
         sa.Column("user_id", sa.Uuid(), nullable=False),
         sa.Column("session_id", sa.Text(), nullable=False),
@@ -28,17 +32,27 @@ def upgrade() -> None:
         sa.Column("candidate_id", sa.Uuid(), nullable=False),
         sa.Column("position", sa.SmallInteger(), nullable=False),
         sa.Column("score", sa.Float(), nullable=False),
-        sa.Column("features", sa.JSON(), nullable=True),
+        sa.Column("features", _JSON, nullable=True),
         sa.Column("model_version", sa.Text()),
-        sa.Column("shown_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+        sa.Column(
+            "shown_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.func.now(),
+        ),
         sa.ForeignKeyConstraint(["company_id"], ["companies.id"]),
         sa.ForeignKeyConstraint(["candidate_id"], ["candidates.user_id"]),
     )
-    op.create_index("ix_impressions_company_shown_at", "impressions", ["company_id", "shown_at"], postgresql_ops={"shown_at": "DESC"})
+    op.create_index(
+        "ix_impressions_company_shown_at",
+        "impressions",
+        ["company_id", "shown_at"],
+        postgresql_ops={"shown_at": "DESC"},
+    )
 
     op.create_table(
         "rec_feedback",
-        sa.Column("id", sa.BigInteger(), primary_key=True, autoincrement=True),
+        sa.Column("id", _ID, primary_key=True, autoincrement=True),
         sa.Column("impression_id", sa.BigInteger(), nullable=False),
         sa.Column("company_id", sa.Uuid(), nullable=False),
         sa.Column("user_id", sa.Uuid(), nullable=False),
@@ -46,7 +60,12 @@ def upgrade() -> None:
         sa.Column("candidate_id", sa.Uuid(), nullable=False),
         sa.Column("event", sa.Text(), nullable=False),  # open | dwell | shortlist | dismiss | offer
         sa.Column("reason", sa.Text()),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.func.now(),
+        ),
         sa.ForeignKeyConstraint(["impression_id"], ["impressions.id"]),
         sa.ForeignKeyConstraint(["company_id"], ["companies.id"]),
         sa.ForeignKeyConstraint(["candidate_id"], ["candidates.user_id"]),

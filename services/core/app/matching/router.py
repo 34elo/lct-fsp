@@ -128,5 +128,7 @@ async def _get_candidate_id_by_pseudo_id(session: AsyncSession, pseudo_id: str) 
 
     from app.candidates.models import Candidate
 
-    result = await session.execute(select(Candidate.user_id).where(Candidate.pseudo_id == pseudo_id))
+    result = await session.execute(
+        select(Candidate.user_id).where(Candidate.pseudo_id == pseudo_id)
+    )
     return result.scalar_one_or_none()

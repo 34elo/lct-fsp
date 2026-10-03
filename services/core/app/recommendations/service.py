@@ -74,9 +74,7 @@ async def get_impression_by_id(session: AsyncSession, impression_id: int) -> Imp
     return await session.get(Impression, impression_id)
 
 
-async def get_session_impressions(
-    session: AsyncSession, session_id: str
-) -> list[Impression]:
+async def get_session_impressions(session: AsyncSession, session_id: str) -> list[Impression]:
     """Получить все impressions для сессии."""
     result = await session.execute(
         select(Impression).where(Impression.session_id == session_id).order_by(Impression.position)
@@ -84,11 +82,11 @@ async def get_session_impressions(
     return result.scalars().all()
 
 
-async def get_session_feedback(
-    session: AsyncSession, session_id: str
-) -> list[RecFeedback]:
+async def get_session_feedback(session: AsyncSession, session_id: str) -> list[RecFeedback]:
     """Получить все feedback для сессии."""
     result = await session.execute(
-        select(RecFeedback).where(RecFeedback.session_id == session_id).order_by(RecFeedback.created_at)
+        select(RecFeedback)
+        .where(RecFeedback.session_id == session_id)
+        .order_by(RecFeedback.created_at)
     )
     return result.scalars().all()

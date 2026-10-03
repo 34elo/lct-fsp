@@ -1,223 +1,217 @@
-"""Тесты для логирования показов и реакций (E17-1)."""
+"""Тесты логирования показов и реакций (E17-1)."""
 
+import json
+import sqlite3
 import subprocess
 import sys
 import uuid
+from datetime import UTC, datetime
 from pathlib import Path
 
 import fakeredis
 import pytest
 from app.config import Settings
 from app.main import build_app
-from app.recommendations import service
 from fastapi.testclient import TestClient
 from fsp_platform.ratelimit import RateLimiter
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy import create_engine, inspect
 
 CORE = Path(__file__).resolve().parents[1]
 PWD = "correct-horse-battery"
+INN = "7707083893"
+NOW = datetime.now(UTC).isoformat(sep=" ")
 
 
 @pytest.fixture
 def c(tmp_path):
-    """Создать тестовый клиент с БД."""
     db = tmp_path / "c.db"
     subprocess.run(
         [sys.executable, "-m", "alembic", "-x", f"url=sqlite+aiosqlite:///{db}", "upgrade", "head"],
-        cwd=CORE,
-        check=True,
-        capture_output=True,
-    )
+        cwd=CORE, check=True, capture_output=True,
+    )  # fmt: skip
     app = build_app(Settings(database_url=f"sqlite+aiosqlite:///{db}", ui_bus_enabled=False))
     with TestClient(app) as client:
         app.state.redis = fakeredis.FakeAsyncRedis()
         app.state.limiter = RateLimiter(app.state.redis)
-        client.app_ = app
+        client.db = db
         yield client
 
 
-def _user(c, email, role="candidate", consent=True):
-    """Создать пользователя и получить заголовок авторизации."""
+def _user(c, email, role):
     r = c.post("/auth/register", json={"email": email, "password": PWD, "role": role})
-    h = {"Authorization": f"Bearer {r.json()['access_token']}"}
-    if consent:
-        body = {"consents": [{"type": "pd_processing", "granted": True}]}
-        assert c.put("/me/consents", json=body, headers=h).status_code == 200
-    return h
+    return {"Authorization": f"Bearer {r.json()['access_token']}"}
 
 
-@pytest.mark.asyncio
-async def test_record_impression():
-    """Тест записи impression в БД."""
-    db_url = "sqlite+aiosqlite:///:memory:"
-    engine = create_async_engine(db_url)
-
-    async with engine.begin() as conn:
-        # Создать таблицы напрямую для теста
-        from app.recommendations.models import Impression
-        from app.candidates.models import Candidate
-        from app.companies.models import Company
-
-        await conn.run_sync(Impression.__table__.create, checkfirst=True)
-        await conn.run_sync(Candidate.__table__.create, checkfirst=True)
-        await conn.run_sync(Company.__table__.create, checkfirst=True)
-
-    # Фиксированные ID для теста
-    company_id = uuid.uuid4()
-    user_id = uuid.uuid4()
-    candidate_id = uuid.uuid4()
-
-    async with AsyncSession(engine) as session:
-        # Записать impression
-        impression = await service.record_impression(
-            session,
-            company_id=company_id,
-            user_id=user_id,
-            session_id="session-123",
-            context_type="search",
-            context_id="",
-            candidate_id=candidate_id,
-            position=1,
-            score=0.85,
-            features={"test": "feature"},
-            model_version="1.0",
+def _employer(c, email, name="Acme Labs"):
+    h = _user(c, email, "employer")
+    co = c.post("/companies", json={"name": name, "inn": INN}, headers=h).json()
+    with sqlite3.connect(c.db) as con:
+        con.execute(
+            "update companies set status='verified' where id=?", (co["id"].replace("-", ""),)
         )
-        await session.commit()
-
-        assert impression.id is not None
-        assert impression.company_id == company_id
-        assert impression.position == 1
-        assert impression.score == 0.85
+    return h, co["id"].replace("-", "")
 
 
-@pytest.mark.asyncio
-async def test_record_feedback():
-    """Тест записи rec_feedback в БД."""
-    db_url = "sqlite+aiosqlite:///:memory:"
-    engine = create_async_engine(db_url)
-
-    async with engine.begin() as conn:
-        from app.recommendations.models import Impression, RecFeedback
-        from app.candidates.models import Candidate
-        from app.companies.models import Company
-
-        await conn.run_sync(Impression.__table__.create, checkfirst=True)
-        await conn.run_sync(RecFeedback.__table__.create, checkfirst=True)
-        await conn.run_sync(Candidate.__table__.create, checkfirst=True)
-        await conn.run_sync(Company.__table__.create, checkfirst=True)
-
-    company_id = uuid.uuid4()
-    user_id = uuid.uuid4()
-    candidate_id = uuid.uuid4()
-
-    async with AsyncSession(engine) as session:
-        # Записать impression сначала
-        impression = await service.record_impression(
-            session,
-            company_id=company_id,
-            user_id=user_id,
-            session_id="session-123",
-            context_type="search",
-            context_id="",
-            candidate_id=candidate_id,
-            position=1,
-            score=0.85,
+def _cand(c, n):
+    uid = uuid.uuid4().hex
+    row = dict(
+        pseudonym=f"Backend #{n}", pseudo_id=f"pid{n:04d}", primary_role="backend",
+        grade="middle", grade_confidence=0.75, formats=["remote"], employment_types=["full"],
+        city="Москва", relocation=False, search_status="open", stoplist_company_ids=[],
+        primary_stack=["python"],
+    )  # fmt: skip
+    cols = ["user_id", "visibility", "updated_at", *row]
+    vals = [uid, "{}", NOW, *(json.dumps(v) if isinstance(v, list) else v for v in row.values())]
+    with sqlite3.connect(c.db) as con:
+        con.execute(
+            f"insert into candidates ({','.join(cols)}) values ({','.join('?' * len(cols))})", vals
         )
-        await session.flush()
-
-        # Записать feedback
-        feedback = await service.record_feedback(
-            session,
-            impression_id=impression.id,
-            company_id=company_id,
-            user_id=user_id,
-            session_id="session-123",
-            candidate_id=candidate_id,
-            event="open",
-            reason=None,
-        )
-        await session.commit()
-
-        assert feedback.id is not None
-        assert feedback.impression_id == impression.id
-        assert feedback.event == "open"
+    return uid
 
 
-def test_post_feedback_success(c):
-    """Тест успешной отправки feedback через API."""
-    # Создать работодателя
-    employer_h = _user(c, "employer@test.ru", role="employer")
+def _q(c, sql, *args):
+    with sqlite3.connect(c.db) as con:
+        return con.execute(sql, args).fetchall()
 
-    # Создать компанию
-    r = c.post("/companies", json={"name": "Test Corp"}, headers=employer_h)
-    assert r.status_code == 201
-    company_id = r.json()["id"]
 
-    # Создать кандидата
-    candidate_h = _user(c, "candidate@test.ru", role="candidate")
-    r = c.get("/candidates/me/profile", headers=candidate_h)
-    assert r.status_code == 200
-    candidate_pseudo_id = r.json()["pseudonym"]  # или pseudo_id в зависимости от API
+@pytest.fixture
+def market(c):
+    h, company_id = _employer(c, "e@x.ru")
+    cands = {f"pid{n:04d}": _cand(c, n) for n in (1, 2, 3)}
+    return h, company_id, cands
 
-    # Записать impression вручную (в реальной системе это происходит в search endpoint)
-    # Для этого нам нужно получить доступ к сессии БД, но через тест это сложнее
-    # Поэтому просто проверим, что endpoint отвергает несуществующий impression_id
 
+def _search(c, h, **body):
+    return c.post("/search/candidates", json=body, headers=h)
+
+
+def test_search_writes_impressions_with_positions_and_session(c, market):
+    h, company_id, cands = market
+    sid = str(uuid.uuid4())
+    r = _search(c, h, session_id=sid)
+    assert r.status_code == 200, r.text
+    assert r.json()["session_id"] == sid
+    pids = [i["pseudo_id"] for i in r.json()["items"]]
+    assert len(pids) == 3
+
+    rows = _q(
+        c,
+        "select position, candidate_id, session_id, context_type, context_id, company_id,"
+        " model_version from impressions order by position",
+    )
+    assert [x[0] for x in rows] == [1, 2, 3]
+    assert [x[1] for x in rows] == [cands[p] for p in pids]
+    assert {x[2] for x in rows} == {str(uuid.UUID(sid))}
+    assert {(x[3], x[4]) for x in rows} == {("search", "")}
+    assert {x[5] for x in rows} == {company_id}
+
+
+def test_search_generates_session_id_when_absent(c, market):
+    h, _, _ = market
+    r = _search(c, h)
+    sid = r.json()["session_id"]
+    assert str(uuid.UUID(sid)) == sid
+    assert _q(c, "select count(*) from impressions where session_id=?", sid)[0][0] == 3
+
+
+def test_feedback_is_recorded(c, market):
+    h, company_id, cands = market
+    _search(c, h)
+    imp_id, cand_id, sid = _q(
+        c, "select id, candidate_id, session_id from impressions where position=2"
+    )[0]
     r = c.post(
         "/recs/feedback",
-        json={"impression_id": 999, "event": "open"},
-        headers=employer_h,
+        json={"impression_id": imp_id, "event": "dismiss", "reason": "дорого"},
+        headers=h,
     )
+    assert r.status_code == 200, r.text
+    assert r.json()["impression_id"] == imp_id and r.json()["event"] == "dismiss"
+    rows = _q(
+        c,
+        "select impression_id, company_id, session_id, candidate_id, event, reason"
+        " from rec_feedback",
+    )
+    assert rows == [(imp_id, company_id, sid, cand_id, "dismiss", "дорого")]
+    # повтор — это новая реакция (журнал событий), на показ не влияет
+    assert (
+        c.post(
+            "/recs/feedback", json={"impression_id": imp_id, "event": "open"}, headers=h
+        ).status_code
+        == 200
+    )
+    assert _q(c, "select count(*) from rec_feedback")[0][0] == 2
+    assert _q(c, "select count(*) from impressions")[0][0] == 3
+
+
+def test_feedback_validation(c, market):
+    h, _, _ = market
+    _search(c, h)
+    imp_id = _q(c, "select id from impressions")[0][0]
+    r = c.post("/recs/feedback", json={"impression_id": imp_id, "event": "bogus"}, headers=h)
+    assert r.status_code == 422
+    assert _q(c, "select count(*) from rec_feedback")[0][0] == 0
+
+
+def test_feedback_unknown_impression_404(c, market):
+    h, _, _ = market
+    r = c.post("/recs/feedback", json={"impression_id": 999, "event": "open"}, headers=h)
     assert r.status_code == 404
     assert r.json()["code"] == "impression_not_found"
 
 
-def test_post_feedback_forbidden(c):
-    """Тест что работодатель из другой компании не может отправить feedback."""
-    # Создать двух работодателей в разных компаниях
-    employer1_h = _user(c, "employer1@test.ru", role="employer")
-    employer2_h = _user(c, "employer2@test.ru", role="employer")
-
-    # Создать две компании
-    r = c.post("/companies", json={"name": "Test Corp 1"}, headers=employer1_h)
-    assert r.status_code == 201
-
-    r = c.post("/companies", json={"name": "Test Corp 2"}, headers=employer2_h)
-    assert r.status_code == 201
-
-    # Попытка отправить feedback на impression с другой компании должна быть forbidden
-    # Но так как impression не существует, мы получим 404 вместо этого
-    # Это нормально для этого теста
+def test_feedback_foreign_impression_404(c, market):
+    h, _, _ = market
+    _search(c, h)
+    imp_id = _q(c, "select id from impressions")[0][0]
+    h2, _ = _employer(c, "other@x.ru", name="Other Co")
+    r = c.post("/recs/feedback", json={"impression_id": imp_id, "event": "open"}, headers=h2)
+    assert r.status_code == 404
+    assert r.json()["code"] == "impression_not_found"
+    assert _q(c, "select count(*) from rec_feedback")[0][0] == 0
 
 
-def test_record_impression_integration(c):
-    """Интеграционный тест: поиск должен логировать impressions."""
-    # Создать работодателя и его компанию
-    employer_h = _user(c, "employer@test.ru", role="employer")
-    r = c.post("/companies", json={"name": "Test Corp"}, headers=employer_h)
-    assert r.status_code == 201
+def test_feedback_permissions(c, market):
+    h, _, _ = market
+    _search(c, h)
+    imp_id = _q(c, "select id from impressions")[0][0]
+    body = {"impression_id": imp_id, "event": "open"}
+    assert c.post("/recs/feedback", json=body).status_code == 401
+    cand_h = _user(c, "cand@x.ru", "candidate")
+    assert c.post("/recs/feedback", json=body, headers=cand_h).status_code == 403
+    assert _q(c, "select count(*) from rec_feedback")[0][0] == 0
 
-    # Создать кандидата с профилем
-    candidate_h = _user(c, "candidate@test.ru", role="candidate")
-    r = c.get("/candidates/me/profile", headers=candidate_h)
-    assert r.status_code == 200
 
-    # Выполнить поиск
-    search_session_id = str(uuid.uuid4())
-    r = c.post(
-        "/search/candidates",
-        json={
-            "filters": {},
-            "sort": "match",
-            "limit": 20,
-            "session_id": search_session_id,
-        },
-        headers=employer_h,
-    )
+def test_schema_matches_data_model(c):
+    insp = inspect(create_engine(f"sqlite:///{c.db}"))
+    assert [x["name"] for x in insp.get_columns("impressions")] == [
+        "id", "company_id", "user_id", "session_id", "context_type", "context_id",
+        "candidate_id", "position", "score", "features", "model_version", "shown_at",
+    ]  # fmt: skip
+    assert [x["name"] for x in insp.get_columns("rec_feedback")] == [
+        "id", "impression_id", "company_id", "user_id", "session_id", "candidate_id",
+        "event", "reason", "created_at",
+    ]  # fmt: skip
+    idx = {x["name"]: x["column_names"] for x in insp.get_indexes("impressions")}
+    assert idx["ix_impressions_company_shown_at"] == ["company_id", "shown_at"]
 
-    assert r.status_code == 200
-    result = r.json()
-    assert "session_id" in result
-    assert result["session_id"] == search_session_id
-    # Impressions должны быть залогированы в БД,
-    # но в этом тесте мы не можем их напрямую проверить
+
+def test_migration_0023_downgrade(tmp_path):
+    db = tmp_path / "m.db"
+    url = f"sqlite+aiosqlite:///{db}"
+
+    def alembic(*a):
+        subprocess.run(
+            [sys.executable, "-m", "alembic", "-x", f"url={url}", *a],
+            cwd=CORE, check=True, capture_output=True,
+        )  # fmt: skip
+
+    def tables():
+        return set(inspect(create_engine(f"sqlite:///{db}")).get_table_names())
+
+    alembic("upgrade", "head")
+    assert {"impressions", "rec_feedback"} <= tables()
+    alembic("downgrade", "0022")
+    assert not {"impressions", "rec_feedback"} & tables()
+    alembic("upgrade", "head")
+    assert {"impressions", "rec_feedback"} <= tables()
