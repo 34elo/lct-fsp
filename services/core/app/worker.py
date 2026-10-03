@@ -22,6 +22,7 @@ from fsp_platform.messaging import (
 )
 from fsp_platform.outbox import OutboxRelay
 
+from app.analytics import handlers as analytics_handlers
 from app.config import Settings
 from app.graph import handlers as graph_handlers
 from app.graph.embedding import MlEmbedder
@@ -79,6 +80,9 @@ class Worker:
         )
         notification_handlers.register(
             self.consumers, self.session_factory, lambda m: publish_ui(self.broker, m)
+        )
+        analytics_handlers.register(
+            self.consumers, self.session_factory, self.settings.analytics_salt
         )
         self.relay = OutboxRelay(
             self.session_factory,
