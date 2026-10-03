@@ -14,5 +14,11 @@ class Settings(BaseServiceSettings):
     pseudo_id_secret: str = "dev-only-pseudo-secret"
     # сервисные токены internal API (security.md §1); пусто = эндпоинт закрыт
     service_token_ml: str = ""
+    service_token_bot: str = ""
+    # Telegram (telegram.md §6, security.md §1): токен бота проверяет подпись Login Widget
+    tg_bot_token: str = ""
+    tg_bot_username: str = ""
+    # публичный адрес SPA для magic-ссылок из бота
+    web_base_url: str = "http://localhost:5173"
     # data/scoring.yaml (доверие, грейд, матчинг); пусто — файл из корня репозитория
     scoring_config_path: str = ""
