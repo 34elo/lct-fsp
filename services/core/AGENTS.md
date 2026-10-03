@@ -27,6 +27,7 @@
 - `app/companies/` — компании: `/companies`, `/companies/me[/members]`, модерация `/admin/companies/*` (pending → verified|rejected)
 - `app/vacancies/` — вакансии: `/vacancies[/{id}]`, `publish`, `close`; публиковать может только `verified` компания; события `vacancy.published|updated|closed`
 - `app/matching/` — подбор (ml.md §6, matching.md §3–4): `scoring.py` (жёсткие фильтры, скоринг, `K_soft`, объяснения шаблонами со ссылками на доказательства), `service.py` (`match_vacancy_candidates`: отбор SQL → скоринг; `match_vacancy` / `match_candidate` пишут `matches` и `matches.ready`), `models.py` (`matches`), `handlers.py` (`vacancy.*`, `skills.profile.updated` → `core.match.*`), `search.py` + `router.py` (`POST /search/candidates`: анонимные `CandidateCard`, курсор, кеш `c:search:*`)
+- `app/offers/` — офферы (api.md §2.5, flows.md F8): `service.py` (`create` с вилкой, лимитами 24 ч и `Idempotency-Key`; `TRANSITIONS`/`transition` — единственная точка смены статуса, пишет `offer_events` и `offer.*` в outbox; `expire_due` для cron), `router.py` (`/offers[/{id}[/accept|decline|withdraw|status]]`, `/candidates/me/offers`), `models.py`
 - `app/worker.py` — `Worker.consumers[<очередь>].on(type)` + `idempotent()` для обработчиков
 - `app/scheduler.py` — `SCHEDULE` (messaging.md §4)
 - `migrations/` — Alembic (async), `versions/`

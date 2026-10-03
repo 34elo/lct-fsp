@@ -82,7 +82,9 @@ async def candidate_card(
     cand = await card.get_visible(session, pseudo_id, company.id)
     if cand is None:
         raise ProblemError(404, "candidate_not_found", "Кандидат не найден")
-    out = await card.build_card(session, cand, vacancy_id=vacancy_id, cfg=_CFG, trust=_TRUST)
+    out = await card.build_card(
+        session, cand, vacancy_id=vacancy_id, cfg=_CFG, trust=_TRUST, company_id=company.id
+    )
     await views.record(
         session, candidate_id=cand.user_id, company_id=company.id, viewer_user_id=user.id,
         source=source, vacancy_id=vacancy_id,

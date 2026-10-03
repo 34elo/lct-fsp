@@ -119,3 +119,8 @@ async def verify(session: AsyncSession, company_id: uuid.UUID) -> Company:
 
 async def reject(session: AsyncSession, company_id: uuid.UUID) -> Company:
     return await _moderate(session, company_id, CompanyStatus.rejected, _REJECT_FROM)
+
+
+async def get_company(session: AsyncSession, company_id: uuid.UUID) -> Company | None:
+    """Компания без проверки доступа — для публичных блоков (оффер кандидату)."""
+    return await session.get(Company, company_id)
