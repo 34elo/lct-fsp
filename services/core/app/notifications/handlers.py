@@ -29,6 +29,7 @@ from app.companies import service as companies
 from app.notifications import service
 from app.notifications.service import UiPublish
 from app.offers import service as offers
+from app.offers.models import Offer
 from app.vacancies import service as vacancies
 
 log = structlog.get_logger()
@@ -77,14 +78,12 @@ def _updated(user_id: uuid.UUID, ev: OfferEvent, awaiting: str | None) -> UiMess
     )
 
 
-async def _offer_sent(session: AsyncSession, ev: OfferEvent, out: list[UiMessage]) -> None:
-    offer = await offers.get(session, ev.offer_id)
-    if offer is None or offer.candidate_id is None:
-        return
+async def offer_card_data(session: AsyncSession, offer: Offer) -> dict:
+    """Поля шаблона `offer_new` (и карточки оффера в боте): без ПДн, только вилка и вакансия."""
     company = await companies.get_company(session, offer.company_id)
     vacancy = await vacancies.get(session, offer.vacancy_id)
     snap = offer.match_snapshot or {}
-    data = {
+    return {
         "offer_id": str(offer.id),
         "company_name": company.name if company else None,
         "company_responsibility": company.responsibility_score if company else None,
@@ -99,6 +98,13 @@ async def _offer_sent(session: AsyncSession, ev: OfferEvent, out: list[UiMessage
         "below_candidate_min": offer.below_candidate_min,
         "expires_at": offer.expires_at.isoformat(),
     }
+
+
+async def _offer_sent(session: AsyncSession, ev: OfferEvent, out: list[UiMessage]) -> None:
+    offer = await offers.get(session, ev.offer_id)
+    if offer is None or offer.candidate_id is None:
+        return
+    data = await offer_card_data(session, offer)
     await service.notify(
         session,
         offer.candidate_id,

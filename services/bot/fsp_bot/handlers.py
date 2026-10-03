@@ -21,8 +21,17 @@ from aiogram.types import (
 )
 
 from fsp_bot.core_client import CoreClient, CoreError
-from fsp_bot.states import Onboarding, Resume
-from fsp_bot.templates.render import profile_summary, resume_parsed, resume_progress
+from fsp_bot.states import Offer, Onboarding, Resume
+from fsp_bot.templates.render import (
+    DECLINE_CODES,
+    decline_keyboard,
+    offer_accepted,
+    offer_keyboard,
+    offer_new,
+    profile_summary,
+    resume_parsed,
+    resume_progress,
+)
 
 log = structlog.get_logger()
 
@@ -38,13 +47,16 @@ CORE_DOWN = "Сервис временно недоступен, попробу�
 NOT_RESUME = "Это не PDF и не DOCX. Пришли резюме в одном из этих форматов."
 MAX_RESUME_BYTES = 10 * 1024 * 1024  # telegram.md §3
 RESUME_PROMPT = "Пришли резюме файлом: PDF или DOCX, до 10 МБ."
-BTN_RESUME, BTN_PROFILE = "📄 Резюме", "👤 Профиль"
+BTN_RESUME, BTN_PROFILE, BTN_OFFERS = "📄 Резюме", "👤 Профиль", "💼 Офферы"
 POLL_INTERVAL = 3.0
 POLL_TIMEOUT = 180.0
 STAGES = {"queued": "В очереди на разбор", "parsing": "Читаю текст и ищу навыки"}
 
 MENU_KB = ReplyKeyboardMarkup(
-    keyboard=[[KeyboardButton(text=BTN_RESUME), KeyboardButton(text=BTN_PROFILE)]],
+    keyboard=[
+        [KeyboardButton(text=BTN_RESUME), KeyboardButton(text=BTN_PROFILE)],
+        [KeyboardButton(text=BTN_OFFERS)],
+    ],
     resize_keyboard=True,
 )
 
@@ -56,6 +68,26 @@ CONSENT_KB = InlineKeyboardMarkup(
         ]
     ]
 )
+
+
+OFFER_ERRORS = {
+    "offer_not_found": "Оффер не найден.",
+    "invalid_transition": "Оффер уже закрыт, ответить на него нельзя.",
+    "offer_expired": "Срок действия оффера истёк.",
+    "offer_closed": "Переписка по этому офферу закрыта.",
+    "empty_message": "Напиши вопрос текстом.",
+    "telegram_unknown": "Сначала нажми /start.",
+    "forbidden": "Офферы доступны кандидатам.",
+}
+ASK_QUESTION = "Напиши вопрос работодателю одним сообщением. Отмена: /cancel"
+NO_OFFERS = "Активных офферов пока нет. Они появятся здесь, как только работодатель ответит."
+MENU_TEXTS = (BTN_RESUME, BTN_PROFILE, BTN_OFFERS)
+
+
+def offer_error(exc: CoreError) -> str:
+    if exc.status == 429:
+        return "Слишком часто, попробуй чуть позже."
+    return OFFER_ERRORS.get(exc.code, CORE_DOWN)
 
 
 def file_kind(head: bytes) -> str | None:
@@ -135,6 +167,132 @@ def build_router(
         await call.answer()
         if isinstance(call.message, Message):
             await call.message.edit_text("Без согласий продолжить нельзя. Вернуться: /start")
+
+    # --- Офферы (telegram.md §2, §3, §5) ---------------------------------------------------
+
+    @router.message(Command("offers"))
+    @router.message(F.text == BTN_OFFERS)
+    async def offers_list(message: Message, state: FSMContext) -> None:
+        user = message.from_user
+        if user is None:
+            return
+        await state.clear()
+        try:
+            rows = await core.offers(user.id)
+        except CoreError as exc:
+            await message.answer(offer_error(exc))
+            return
+        if not rows:
+            await message.answer(NO_OFFERS)
+            return
+        for row in rows:
+            await message.answer(
+                offer_new(row),
+                parse_mode="HTML",
+                reply_markup=offer_keyboard(str(row["offer_id"]), row["status"]),
+            )
+
+    def _offer_id(call: CallbackQuery, prefix: str) -> str:
+        return (call.data or "").removeprefix(prefix).split(":")[0]
+
+    @router.callback_query(F.data.startswith("o:v:"))
+    async def offer_details(call: CallbackQuery) -> None:
+        offer_id = _offer_id(call, "o:v:")
+        try:
+            row = await core.offer_view(call.from_user.id, offer_id)
+        except CoreError as exc:
+            await call.answer(offer_error(exc), show_alert=True)
+            return
+        await call.answer()
+        if isinstance(call.message, Message):
+            await edit(call.message, offer_new(row), offer_keyboard(offer_id, row["status"]))
+
+    @router.callback_query(F.data.startswith("o:a:"))
+    async def offer_accept(call: CallbackQuery, state: FSMContext) -> None:
+        offer_id = _offer_id(call, "o:a:")
+        try:
+            await core.offer_accept(call.from_user.id, offer_id)
+        except CoreError as exc:
+            await call.answer(offer_error(exc), show_alert=True)
+            return
+        await state.clear()
+        await call.answer("Оффер принят")
+        if isinstance(call.message, Message):
+            await edit(call.message, offer_accepted({}), offer_keyboard(offer_id, "accepted"))
+
+    @router.callback_query(F.data.startswith("o:d:"))
+    async def offer_decline_ask(call: CallbackQuery) -> None:
+        offer_id = _offer_id(call, "o:d:")
+        await call.answer()
+        if isinstance(call.message, Message):
+            try:
+                await call.message.edit_reply_markup(reply_markup=decline_keyboard(offer_id))
+            except TelegramBadRequest as exc:
+                log.info("edit_skipped", reason=str(exc)[:60])
+
+    @router.callback_query(F.data.startswith("o:b:"))
+    async def offer_decline_back(call: CallbackQuery) -> None:
+        offer_id = _offer_id(call, "o:b:")
+        await call.answer()
+        if isinstance(call.message, Message):
+            try:
+                await call.message.edit_reply_markup(
+                    reply_markup=offer_keyboard(offer_id, "viewed")
+                )
+            except TelegramBadRequest as exc:
+                log.info("edit_skipped", reason=str(exc)[:60])
+
+    @router.callback_query(F.data.startswith("o:r:"))
+    async def offer_decline(call: CallbackQuery) -> None:
+        _, _, offer_id, *rest = (call.data or "").split(":")
+        reason = DECLINE_CODES.get(rest[0]) if rest else None
+        if reason is None:
+            await call.answer("Неизвестная причина.", show_alert=True)
+            return
+        try:
+            await core.offer_decline(call.from_user.id, offer_id, reason)
+        except CoreError as exc:
+            await call.answer(offer_error(exc), show_alert=True)
+            return
+        await call.answer("Готово")
+        if isinstance(call.message, Message):
+            await edit(
+                call.message, "❌ Вы отклонили оффер. Спасибо за ответ, мы передали причину."
+            )
+
+    @router.callback_query(F.data.startswith("o:q:"))
+    async def offer_question_ask(call: CallbackQuery, state: FSMContext) -> None:
+        offer_id = _offer_id(call, "o:q:")
+        await state.set_state(Offer.awaiting_question)
+        await state.update_data(offer_id=offer_id)
+        await call.answer()
+        if isinstance(call.message, Message):
+            await call.message.answer(ASK_QUESTION)
+
+    @router.message(Command("cancel"))
+    async def cancel(message: Message, state: FSMContext) -> None:
+        await state.clear()
+        await message.answer("Отменено.", reply_markup=MENU_KB)
+
+    @router.message(
+        Offer.awaiting_question, F.text, ~F.text.startswith("/"), ~F.text.in_(MENU_TEXTS)
+    )
+    async def offer_question(message: Message, state: FSMContext) -> None:
+        user = message.from_user
+        data = await state.get_data()
+        offer_id = data.get("offer_id")
+        if user is None or not offer_id or not message.text:
+            await state.clear()
+            return
+        try:
+            await core.offer_message(user.id, str(offer_id), message.text)
+        except CoreError as exc:
+            if exc.status != 429:  # при лимите состояние остаётся: можно повторить позже
+                await state.clear()
+            await message.answer(offer_error(exc))
+            return
+        await state.clear()
+        await message.answer("✉️ Вопрос отправлен работодателю. Ответ придёт сюда.")
 
     @router.message(Command("resume"))
     @router.message(F.text == BTN_RESUME)

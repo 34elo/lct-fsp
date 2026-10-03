@@ -198,7 +198,10 @@
 | `GET /internal/tg/profile?tg_user_id=` | bot | Краткий профиль для сообщения: `{primary_role, grade, grade_preliminary, skills[≤6]: {name, level, claimed_only}, fsp[≤3]}` |
 | `POST /internal/tg/fsp/link`, `…/verify` | bot | Привязка ФСП из бота |
 | `POST /internal/tg/github` | bot | `{tg_user_id, login}` |
-| `POST /internal/tg/offers/{id}/view|accept|decline|messages` | bot | Действия по офферу от имени `tg_user_id` |
+| `GET /internal/tg/offers?tg_user_id=` | bot | Активные офферы кандидата (`sent|viewed|accepted|interview`, до 10, новые первыми) → `TgOffer[]`: поля `offer_id`, `status` и те же данные, что у шаблона `offer_new` (`company_name`, `company_responsibility`, `vacancy_title`, `formats[]`, `employment_type`, `salary_from/to`, `message`, `match_score`, `explanation[]`, `below_candidate_min`, `expires_at`) |
+| `POST /internal/tg/offers/{id}/view|accept` | bot | `{tg_user_id}` → `TgOffer`. `view` переводит `sent → viewed`; правила и ошибки как у `/offers/{id}/accept` (`409 invalid_transition`, `409 offer_expired`) |
+| `POST /internal/tg/offers/{id}/decline` | bot | `{tg_user_id, reason, comment?}` → `TgOffer`; `reason` — `DeclineReason` (бот переводит коды кнопок `ls|ws|wf|wg|nl|ot`) |
+| `POST /internal/tg/offers/{id}/messages` | bot | `{tg_user_id, text}` (1–2000) → `201 {id}`; канал `tg`, правила и лимит 30/час как у сайта (`409 offer_closed`, `422 empty_message`). Чужой оффер, как и везде, — `404 offer_not_found`; неизвестный Telegram — `404 telegram_unknown` |
 | `POST /internal/tg/tests`, `…/{id}/answer` | bot | Адаптивный тест |
 | `GET /internal/tg/navigator?tg_user_id=` | bot | Навигатор кратко |
 | `PATCH /internal/tg/status` | bot | Статус поиска |
@@ -436,6 +439,7 @@ interface ParsedResumeEdits {
 | `r:ok:<resume_id>` | Подтвердить разбор резюме |
 | `o:v:<offer_id>` / `o:a:<offer_id>` / `o:d:<offer_id>` / `o:q:<offer_id>` | Подробнее / принять / отклонить / вопрос |
 | `o:r:<offer_id>:<reason>` | Причина отказа (`ls`, `ws`, `wf`, `wg`, `nl`, `ot`) |
+| `o:b:<offer_id>` | Назад от выбора причины к кнопкам оффера |
 | `t:s:<skill_slug>` | Начать тест |
 | `t:a:<session_id>:<question_idx>:<option_id>` | Ответ теста (~45 байт; индекс вопроса защищает от нажатия старой кнопки) |
 | `s:<active|open|dnd>` | Статус поиска |

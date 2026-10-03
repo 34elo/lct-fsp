@@ -2,27 +2,49 @@ from fsp_bot.templates import render, render_keyboard
 from fsp_contracts.notify import TgButton, TgTemplate
 
 
-def test_offer_new_escapes_html_and_shows_fork():
+def test_offer_new_renders_core_fields():
+    """Поля — ровно те, что кладёт `offer_card_data` в core."""
     text = render(
         TgTemplate.offer_new,
         {
-            "company": "Север <b>",
-            "verified": True,
-            "rating": 4.6,
-            "title": "Middle Backend",
+            "offer_id": "o1",
+            "company_name": "Север <b>",
+            "company_responsibility": 4.6,
+            "vacancy_title": "Middle Backend",
+            "formats": ["remote"],
+            "employment_type": "full",
             "salary_from": 200000,
             "salary_to": 250000,
-            "format": "удалёнка",
-            "below_min": 230000,
-            "match": 92,
-            "reasons": [{"ok": True, "text": "FastAPI"}, {"ok": False, "text": "Нет Kafka"}],
-            "deadline": "12 октября",
+            "message": "Привет <i>!",
+            "match_score": 0.92,
+            "explanation": [
+                {"kind": "plus", "text": "FastAPI"},
+                {"kind": "warn", "text": "Нет Kafka"},
+            ],
+            "below_candidate_min": True,
+            "expires_at": "2026-10-12T09:00:00+00:00",
         },
     )
-    assert "Север &lt;b&gt;" in text
-    assert "200 000 – 250 000 ₽" in text
-    assert "Ниже ваших ожиданий (от 230 000 ₽)" in text
+    assert "Север &lt;b&gt;" in text and "(ответственность 4.6/5)" in text
+    assert "200 000 – 250 000 ₽" in text and "удалёнка · полная занятость" in text
+    assert "⚠ Ниже ваших ожиданий" in text
+    assert "Совпадение <b>92%</b>" in text
     assert "✓ FastAPI" in text and "⚠ Нет Kafka" in text
+    assert "«Привет &lt;i&gt;!»" in text
+    assert "⏳ Ответить до 12 октября" in text
+
+
+def test_offer_new_minimal_and_status_templates():
+    text = render(
+        TgTemplate.offer_new,
+        {"salary_from": 1, "salary_to": 2, "below_candidate_min": False, "expires_at": "bad"},
+    )
+    assert "Ниже" not in text and "Совпадение" not in text and "до bad" in text
+    assert "принят" in render(
+        TgTemplate.offer_updated, {"status": "accepted", "vacancy_title": "X"}
+    )
+    assert "Вы приняли оффер" in render(TgTemplate.offer_accepted, {"offer_id": "o1"})
+    assert "Новое сообщение" in render(TgTemplate.offer_message, {"message_id": "m1"})
 
 
 def test_every_template_renders_with_empty_data():
