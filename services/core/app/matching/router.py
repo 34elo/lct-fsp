@@ -6,7 +6,7 @@ import uuid
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, Query, Request
-from fsp_contracts.ml import SearchFilters
+from fsp_contracts.ml import ParsedQuery, SearchFilters
 from fsp_platform.app import ProblemError
 from pydantic import BaseModel, ConfigDict, Field
 from redis.asyncio import Redis
@@ -18,10 +18,11 @@ from app.deps import get_redis, get_session
 from app.graph.trust import TrustConfig
 from app.identity.deps import require_roles
 from app.identity.models import User
-from app.matching import card, search, similar, uplift_service
+from app.matching import card, query_parser, search, similar, uplift_service
 from app.matching.card import CandidateCardFull
 from app.matching.scoring import MatchConfig
 from app.matching.uplift import UpliftConfig
+from app.taxonomy import service as taxonomy
 from app.vacancies import service as vacancies
 from app.views import service as views
 
@@ -50,6 +51,23 @@ class SearchPage(BaseModel):
     next_cursor: str | None
     total: int
     session_id: uuid.UUID
+
+
+class ParseRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    text: str = Field(min_length=1, max_length=query_parser.MAX_TEXT)
+
+
+@router.post("/search/parse", response_model=ParsedQuery)
+async def search_parse(
+    body: ParseRequest,
+    user: User = Depends(_employer),
+    session: AsyncSession = Depends(get_session),
+) -> Any:
+    """Правиловый разбор текста в чипсы-фильтры (E7-5); LLM-уточнение добавит E7-6."""
+    index = await taxonomy.alias_index(session)
+    return query_parser.parse_query(body.text, index.forms, index.names)
 
 
 @router.post("/search/candidates", response_model=SearchPage)

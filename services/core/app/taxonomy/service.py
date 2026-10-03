@@ -466,3 +466,39 @@ async def testable_ids(session: AsyncSession, skill_ids: list[uuid.UUID]) -> set
         select(Skill.id).where(Skill.id.in_(skill_ids), Skill.testable.is_(True))
     )
     return set(rows)
+
+
+@dataclass(frozen=True)
+class AliasIndex:
+    forms: dict[str, str]  # нормализованная форма → slug
+    names: dict[str, str]  # slug → название
+
+
+async def alias_index(session: AsyncSession) -> AliasIndex:
+    """Нормализованная форма (slug, название, синонимы) → slug живого навыка.
+
+    Слитый навык ведёт в целевой, `rejected` не попадает. Форма, указывающая на разные навыки,
+    отбрасывается: разбор запроса не гадает.
+    """
+    skills = {
+        s.id: s for s in await session.scalars(select(Skill).where(Skill.status != "rejected"))
+    }
+
+    def target(sk: Skill) -> Skill | None:
+        if sk.status == "merged":
+            t = skills.get(sk.merged_into) if sk.merged_into else None
+            return t if t is not None and t.status != "merged" else None
+        return sk
+
+    forms: dict[str, set[str]] = {}
+    for sk in skills.values():
+        if (t := target(sk)) is not None:
+            for f in (sk.slug, sk.name):
+                forms.setdefault(norm_alias(f), set()).add(t.slug)
+    for a in await session.scalars(select(SkillAlias)):
+        if (sk := skills.get(a.skill_id)) is not None and (t := target(sk)) is not None:
+            forms.setdefault(a.alias_norm, set()).add(t.slug)
+    return AliasIndex(
+        forms={f: next(iter(s)) for f, s in forms.items() if len(s) == 1},
+        names={sk.slug: sk.name for sk in skills.values() if sk.status != "merged"},
+    )
