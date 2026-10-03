@@ -20,6 +20,7 @@ export const ROUTES: RouteDef[] = [
   { path: "/login", title: "Вход", section: "auth" },
   { path: "/register", title: "Регистрация", section: "auth" },
   { path: "/auth/magic", title: "Вход по ссылке", section: "auth" },
+  { path: "/consents", title: "Согласия", screen: "M1", section: "auth" },
   { path: "/auth/fsp/callback", title: "Вход через ФСП", section: "auth" },
 
   { path: "/onboarding", title: "Онбординг", screen: "M1", section: "candidate" },
