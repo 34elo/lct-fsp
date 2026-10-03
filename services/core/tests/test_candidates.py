@@ -317,3 +317,47 @@ async def test_pseudonym_collision_retries(tmp_path, monkeypatch):
         a = await service.get_or_create(s, u1, "secret")
         b = await service.get_or_create(s, u2, "secret")
         assert a.pseudonym == "Candidate #1111" and b.pseudonym == "Candidate #2222"
+
+
+def test_category_explanation_and_dispute(c):
+    h = _user(c, "a@x.io")
+    c.get("/candidates/me/profile", headers=h)
+    c.db_path = Path(c.app_.state.settings.database_url.split("///")[1])
+    _seed_graph(c, _uid(c, h))
+    r = c.get("/candidates/me/category", headers=h)
+    assert r.status_code == 200, r.text
+    j = r.json()
+    assert j["grade"]["grade"] == "junior_plus" and j["grade"]["next_grade"]["hints"]
+    assert j["dispute"] is None and isinstance(j["explanation"], list)
+
+    body = {"claimed_role": "frontend", "claimed_grade": "middle", "comment": " Я фронтендер "}
+    d = c.post("/candidates/me/category/dispute", json=body, headers=h)
+    assert d.status_code == 201, d.text
+    assert d.json()["status"] == "open" and d.json()["comment"] == "Я фронтендер"
+    assert c.post("/candidates/me/category/dispute", json=body, headers=h).status_code == 409
+    assert (
+        c.get("/candidates/me/category", headers=h).json()["dispute"]["claimed_role"] == "frontend"
+    )
+
+    import sqlite3
+
+    with sqlite3.connect(c.db_path) as con:
+        (payload,) = con.execute(
+            "select payload from outbox where type='category.disputed'"
+        ).fetchone()
+    assert "фронтендер" not in payload and "frontend" in payload
+
+
+def test_category_dispute_validation_and_access(c):
+    h = _user(c, "a@x.io")
+    bad = {"claimed_role": "wizard", "claimed_grade": "middle"}
+    assert c.post("/candidates/me/category/dispute", json=bad, headers=h).status_code == 422
+    ok = {"claimed_role": "backend", "claimed_grade": "senior"}
+    emp = _user(c, "e@x.io", role="employer")
+    assert c.get("/candidates/me/category", headers=emp).status_code == 403
+    assert c.post("/candidates/me/category/dispute", json=ok, headers=emp).status_code == 403
+    noc = _user(c, "n@x.io", consent=False)
+    assert c.post("/candidates/me/category/dispute", json=ok, headers=noc).status_code == 403
+    h2 = _user(c, "b@x.io")  # чужое оспаривание не видно
+    c.post("/candidates/me/category/dispute", json=ok, headers=h)
+    assert c.get("/candidates/me/category", headers=h2).json()["dispute"] is None

@@ -10,12 +10,13 @@ import uuid
 from datetime import UTC, timedelta
 
 import sqlalchemy as sa
+from fsp_platform.app import ProblemError
 from sqlalchemy import select
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.candidates.models import DEFAULT_VISIBILITY, Candidate
+from app.candidates.models import DEFAULT_VISIBILITY, Candidate, CategoryDispute
 from app.identity.models import utcnow
 
 ACTIVE_DAYS = 7
@@ -250,3 +251,37 @@ async def category_median(session: AsyncSession, role: str | None, grade: str | 
     )  # fmt: skip
     vals = list((await session.execute(stmt)).scalars())
     return int(statistics.median(vals)) if len(vals) >= MEDIAN_MIN_SAMPLE else None
+
+
+async def open_dispute(session: AsyncSession, candidate_id: uuid.UUID) -> CategoryDispute | None:
+    return await session.scalar(
+        select(CategoryDispute)
+        .where(CategoryDispute.candidate_id == candidate_id, CategoryDispute.resolved_at.is_(None))
+        .order_by(CategoryDispute.created_at.desc())
+        .limit(1)
+    )
+
+
+async def add_dispute(
+    session: AsyncSession, cand: Candidate, *, role: str, grade: str, comment: str | None
+) -> CategoryDispute:
+    """Запись для модерации + событие `category.disputed` (комментарий в событие не идёт)."""
+    from fsp_contracts.enums import Grade, RoleSlug
+    from fsp_contracts.envelope import new_envelope
+    from fsp_contracts.events import CategoryDisputed
+    from fsp_platform.outbox import add_to_outbox
+
+    if await open_dispute(session, cand.user_id) is not None:
+        raise ProblemError(409, "dispute_exists", "Оспаривание уже на рассмотрении")
+    row = CategoryDispute(
+        id=uuid.uuid4(), candidate_id=cand.user_id, claimed_role=role, claimed_grade=grade,
+        comment=(comment or "").strip() or None,
+    )  # fmt: skip
+    session.add(row)
+    await session.flush()
+    event = CategoryDisputed(
+        dispute_id=row.id, candidate_id=cand.user_id,
+        claimed_role=RoleSlug(role), claimed_grade=Grade(grade),
+    )  # fmt: skip
+    await add_to_outbox(session, new_envelope("category.disputed", "core", event), cand.user_id)
+    return row

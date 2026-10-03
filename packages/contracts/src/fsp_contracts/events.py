@@ -92,6 +92,15 @@ class SkillsProfileUpdated(BaseModel):
     diff: ProfileDiff = Field(default_factory=ProfileDiff)
 
 
+class CategoryDisputed(BaseModel):
+    """Оспаривание категории кандидатом; комментарий (ПДн) в событие не попадает."""
+
+    dispute_id: UUID
+    candidate_id: UUID
+    claimed_role: RoleSlug
+    claimed_grade: Grade
+
+
 class TaxonomyUpdated(BaseModel):
     version: int
     changed_skill_ids: list[UUID] = Field(default_factory=list)
@@ -226,6 +235,7 @@ EVENTS: dict[str, type[BaseModel]] = {
     "resume.confirmed": ResumeEvent,
     "evidence.changed": EvidenceChanged,
     "skills.profile.updated": SkillsProfileUpdated,
+    "category.disputed": CategoryDisputed,
     "taxonomy.updated": TaxonomyUpdated,
     "vacancy.published": VacancyEvent,
     "vacancy.updated": VacancyEvent,

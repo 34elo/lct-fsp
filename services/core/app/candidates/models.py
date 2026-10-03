@@ -113,3 +113,21 @@ class Candidate(Base):
         sa.DateTime(timezone=True), default=utcnow, onupdate=utcnow
     )
     deleted_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), default=None)
+
+
+class CategoryDispute(Base):
+    """Оспаривание категории кандидатом; разбирает админ (data-model.md §3.2)."""
+
+    __tablename__ = "category_disputes"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    candidate_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("candidates.user_id", ondelete="CASCADE"), index=True
+    )
+    claimed_role: Mapped[str] = mapped_column(Text)
+    claimed_grade: Mapped[str] = mapped_column(Text)
+    comment: Mapped[str | None] = mapped_column(Text, default=None)
+    created_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), default=utcnow, server_default=sa.func.now()
+    )
+    resolved_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), default=None)
