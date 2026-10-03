@@ -52,6 +52,7 @@ class Candidate(Base):
     grade_next: Mapped[dict | None] = mapped_column(sa.JSON, default=None)  # next_grade + hints
     experience_months: Mapped[int | None] = mapped_column(default=None)
     team_signals: Mapped[dict | None] = mapped_column(sa.JSON, default=None)
+    claimed_soft: Mapped[list[str] | None] = mapped_column(TextArray, default=None)
     # слияние пересчётов (graph.md §4.4)
     recompute_requested_at: Mapped[datetime | None] = mapped_column(
         sa.DateTime(timezone=True), default=None
