@@ -5,7 +5,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface StartOut {
+export interface AppTelegramRouterStartOut {
   user_id: string;
   role: string;
   missing_consents: string[];

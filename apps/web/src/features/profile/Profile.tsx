@@ -1,4 +1,8 @@
+import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
+
+import { FspLinkPanel } from "@/features/fsp/FspLinkPanel";
+import { useEventStream } from "@/shared/lib/useEventStream";
 
 import { useGetProfileCandidatesMeProfileGet } from "@/api/endpoints/candidates/candidates";
 import type { CandidateProfile, ExperienceItem, GradeInfo, OwnerFsp, SkillWithTrust, TeamSignal } from "@/api/model";
@@ -130,7 +134,28 @@ function GradeWhy({ g }: { g: GradeInfo }) {
   );
 }
 
+/** Навыки, у которых после обновления выросла сила или которых раньше не было: они «загораются» волной. */
+function useIgnited(skills: SkillWithTrust[]): Map<string, number> {
+  const prev = useRef<Map<string, number> | null>(null);
+  const out = useRef(new Map<string, number>());
+  const sig = skills.map((s) => `${s.skill.slug}:${s.claimed_only ? 0 : s.level}`).join("|");
+  const seen = useRef<string | null>(null);
+  if (seen.current !== sig) {
+    const cur = new Map(skills.map((s) => [s.skill.slug, s.claimed_only ? 0 : s.level] as const));
+    const lit = new Map<string, number>();
+    if (prev.current) {
+      let i = 0;
+      for (const [slug, lvl] of cur) if (lvl > (prev.current.get(slug) ?? -1) && lvl > 0) lit.set(slug, i++);
+    }
+    out.current = lit;
+    prev.current = cur;
+    seen.current = sig;
+  }
+  return out.current;
+}
+
 function Skills({ skills }: { skills: SkillWithTrust[] }) {
+  const lit = useIgnited(skills);
   return (
     <Card title="Навыки">
       {skills.length === 0 ? (
@@ -139,7 +164,11 @@ function Skills({ skills }: { skills: SkillWithTrust[] }) {
         <>
           <ul className="flex flex-wrap gap-2">
             {skills.map((s) => (
-              <li key={s.skill.slug}>
+              <li
+                key={`${s.skill.slug}-${lit.has(s.skill.slug) ? "lit" : ""}`}
+                className={lit.has(s.skill.slug) ? "fsp-ignite rounded-md" : undefined}
+                style={lit.has(s.skill.slug) ? ({ "--i": lit.get(s.skill.slug) } as React.CSSProperties) : undefined}
+              >
                 <Link to={`/me/skills/${encodeURIComponent(s.skill.slug)}`} aria-label={`${s.skill.name}: чем подтверждён`} className="rounded-md">
                   <SkillChip name={s.skill.name} level={s.claimed_only ? 0 : dots(s.level)} variant={kindOf(s)} />
                 </Link>
@@ -185,14 +214,14 @@ function TeamSignals({ signals, soft }: { signals: TeamSignal[]; soft: string[] 
 }
 
 
-function FspCard({ fsp }: { fsp?: OwnerFsp | null }) {
+function FspCard({ fsp, imported }: { fsp?: OwnerFsp | null; imported: boolean }) {
   const items = fsp?.achievements ?? [];
   const ranks = fsp?.ranks ?? [];
   return (
     <Card title="Достижения ФСП">
       {items.length === 0 && ranks.length === 0 ? (
         <p className="text-sm text-muted">
-          Результатов ФСП пока нет. Когда профиль будет связан с ФСП, соревнования и разряды появятся здесь и усилят грейд.
+          Результатов ФСП пока нет. Привяжите профиль ФСП: соревнования и разряды появятся здесь и усилят грейд.
         </p>
       ) : (
         <>
@@ -229,6 +258,12 @@ function FspCard({ fsp }: { fsp?: OwnerFsp | null }) {
           )}
         </>
       )}
+      {imported && (
+        <p role="status" className="text-sm font-semibold text-brand-fg">
+          Данные ФСП загружены, навыки и грейд обновлены.
+        </p>
+      )}
+      <FspLinkPanel next="/me" />
     </Card>
   );
 }
@@ -268,6 +303,8 @@ function NextStep({ p }: { p: CandidateProfile }) {
 /** «Мой профиль» (макет D): шапка, почему такой грейд, навыки с точками, командные сигналы. */
 export default function Profile() {
   const q = useGetProfileCandidatesMeProfileGet();
+  const [imported, setImported] = useState(false);
+  useEventStream(() => setImported(true), ["fsp.imported"]);
   const title = <h1 className="sr-only">Мой профиль</h1>;
   if (q.isPending)
     return (
@@ -294,7 +331,7 @@ export default function Profile() {
       </div>
       <div className="flex min-w-0 flex-col gap-4">
         <Skills skills={p.skills ?? []} />
-        <FspCard fsp={p.fsp} />
+        <FspCard fsp={p.fsp} imported={imported} />
         <TeamSignals signals={p.team_signals ?? []} soft={p.claimed_soft ?? []} />
         <ExperienceCard items={p.experience ?? []} />
       </div>

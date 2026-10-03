@@ -215,7 +215,7 @@ export default function Search() {
         </label>
         <div className="col-span-2 flex items-end justify-between gap-3 md:col-span-2">
           <Field label="Сортировка">
-            <select className={sel} value={form.sort} onChange={(e) => set("sort", e.target.value as SearchRequestSort)} aria-label="Сортировка">
+            <select className={sel} value={form.sort ?? undefined} onChange={(e) => set("sort", e.target.value as SearchRequestSort)} aria-label="Сортировка">
               {Object.entries(SORT_LABEL).map(([k, v]) => (
                 <option key={k} value={k}>{v}</option>
               ))}

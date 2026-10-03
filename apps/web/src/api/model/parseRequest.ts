@@ -5,11 +5,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface LinkIn {
-  tg_user_id: number;
+export interface ParseRequest {
   /**
      * @minLength 1
-     * @maxLength 256
+     * @maxLength 500
      */
-  token: string;
+  text: string;
 }

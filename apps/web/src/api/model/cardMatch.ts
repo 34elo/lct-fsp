@@ -9,4 +9,5 @@ import type { ExplanationItem } from './explanationItem';
 export interface CardMatch {
   score: number;
   explanation: ExplanationItem[];
+  interest?: string | null;
 }

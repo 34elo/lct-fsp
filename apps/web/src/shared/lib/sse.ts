@@ -92,6 +92,10 @@ export function invalidateFor(qc: QueryClient, m: SseMessage) {
     case "resume.parsed":
     case "code.analysis.completed":
       void qc.invalidateQueries({ queryKey: ["profile"] });
+      // Ключи orval — пути запросов: профиль и обзор ФСП перечитываем по ним.
+      void qc.invalidateQueries({
+        predicate: (q) => typeof q.queryKey[0] === "string" && q.queryKey[0].startsWith("/candidates/me/"),
+      });
       break;
     case "offer.created":
     case "offer.updated":
