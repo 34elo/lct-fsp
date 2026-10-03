@@ -114,15 +114,30 @@ def test_search_generates_session_id_when_absent(c, market):
     assert _q(c, "select count(*) from impressions where session_id=?", sid)[0][0] == 3
 
 
+def _body(c, event="open"):
+    sid, pid = _q(
+        c,
+        "select i.session_id, c.pseudo_id from impressions i"
+        " join candidates c on c.user_id=i.candidate_id limit 1",
+    )[0]
+    return {"session_id": sid, "candidate_pseudo_id": pid, "event": event}
+
+
 def test_feedback_is_recorded(c, market):
     h, company_id, cands = market
     _search(c, h)
     imp_id, cand_id, sid = _q(
         c, "select id, candidate_id, session_id from impressions where position=2"
     )[0]
+    pid = _q(c, "select pseudo_id from candidates where user_id=?", cand_id)[0][0]
     r = c.post(
         "/recs/feedback",
-        json={"impression_id": imp_id, "event": "dismiss", "reason": "дорого"},
+        json={
+            "session_id": sid,
+            "candidate_pseudo_id": pid,
+            "event": "dismiss",
+            "reason": "дорого",
+        },
         headers=h,
     )
     assert r.status_code == 200, r.text
@@ -136,7 +151,9 @@ def test_feedback_is_recorded(c, market):
     # повтор — это новая реакция (журнал событий), на показ не влияет
     assert (
         c.post(
-            "/recs/feedback", json={"impression_id": imp_id, "event": "open"}, headers=h
+            "/recs/feedback",
+            json={"session_id": sid, "candidate_pseudo_id": pid, "event": "open"},
+            headers=h,
         ).status_code
         == 200
     )
@@ -144,18 +161,37 @@ def test_feedback_is_recorded(c, market):
     assert _q(c, "select count(*) from impressions")[0][0] == 3
 
 
+def test_feedback_uses_last_impression_in_session(c, market):
+    h, _, _ = market
+    sid = str(uuid.uuid4())
+    _search(c, h, session_id=sid)
+    _search(c, h, session_id=sid)
+    body = _body(c)
+    r = c.post("/recs/feedback", json=body, headers=h)
+    assert r.status_code == 200, r.text
+    last = _q(
+        c,
+        "select max(i.id) from impressions i join candidates c on c.user_id=i.candidate_id"
+        " where c.pseudo_id=? and i.session_id=?",
+        body["candidate_pseudo_id"],
+        body["session_id"],
+    )[0][0]
+    assert r.json()["impression_id"] == last
+
+
 def test_feedback_validation(c, market):
     h, _, _ = market
     _search(c, h)
-    imp_id = _q(c, "select id from impressions")[0][0]
-    r = c.post("/recs/feedback", json={"impression_id": imp_id, "event": "bogus"}, headers=h)
-    assert r.status_code == 422
+    body = _body(c)
+    assert c.post("/recs/feedback", json={**body, "event": "bogus"}, headers=h).status_code == 422
+    assert c.post("/recs/feedback", json={**body, "event": "offer"}, headers=h).status_code == 422
     assert _q(c, "select count(*) from rec_feedback")[0][0] == 0
 
 
 def test_feedback_unknown_impression_404(c, market):
     h, _, _ = market
-    r = c.post("/recs/feedback", json={"impression_id": 999, "event": "open"}, headers=h)
+    body = {"session_id": "nope", "candidate_pseudo_id": "pid0001", "event": "open"}
+    r = c.post("/recs/feedback", json=body, headers=h)
     assert r.status_code == 404
     assert r.json()["code"] == "impression_not_found"
 
@@ -163,9 +199,9 @@ def test_feedback_unknown_impression_404(c, market):
 def test_feedback_foreign_impression_404(c, market):
     h, _, _ = market
     _search(c, h)
-    imp_id = _q(c, "select id from impressions")[0][0]
+    body = _body(c)
     h2, _ = _employer(c, "other@x.ru", name="Other Co")
-    r = c.post("/recs/feedback", json={"impression_id": imp_id, "event": "open"}, headers=h2)
+    r = c.post("/recs/feedback", json=body, headers=h2)
     assert r.status_code == 404
     assert r.json()["code"] == "impression_not_found"
     assert _q(c, "select count(*) from rec_feedback")[0][0] == 0
@@ -174,8 +210,7 @@ def test_feedback_foreign_impression_404(c, market):
 def test_feedback_permissions(c, market):
     h, _, _ = market
     _search(c, h)
-    imp_id = _q(c, "select id from impressions")[0][0]
-    body = {"impression_id": imp_id, "event": "open"}
+    body = _body(c)
     assert c.post("/recs/feedback", json=body).status_code == 401
     cand_h = _user(c, "cand@x.ru", "candidate")
     assert c.post("/recs/feedback", json=body, headers=cand_h).status_code == 403
