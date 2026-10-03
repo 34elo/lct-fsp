@@ -4,27 +4,65 @@
 	admin off
 }
 
+# Общие маршруты API: префикс /api/v1 срезается, core монтирует роуты без него (api.md §1).
+# /internal наружу не отдаём. flush_interval -1: иначе SSE буферизуется.
+(api_routes) {
+	@internal path /internal /internal/* /api/v1/internal /api/v1/internal/*
+	handle @internal {
+		respond "not found" 404
+	}
+	handle /integrations/fsp/* {
+		reverse_proxy fsp-connector:8300
+	}
+	handle /api/docs {
+		rewrite * /docs
+		reverse_proxy core-api:8000
+	}
+	handle /api/redoc {
+		rewrite * /redoc
+		reverse_proxy core-api:8000
+	}
+	handle /api/v1/* {
+		uri strip_prefix /api/v1
+		reverse_proxy core-api:8000 {
+			flush_interval -1
+			transport http {
+				read_timeout 600s
+				write_timeout 600s
+			}
+		}
+	}
+}
+
+(web_route) {
+	handle {
+		reverse_proxy web:8080
+	}
+}
+
+# Запрос без известного Host (localhost:28080, Vite-прокси, healthcheck): SPA + API на одном origin.
 :80 {
 	handle /healthz {
 		respond "ok" 200
 	}
+	# страница «Войти через ФСП» мока на том же origin (локально нет поддомена mock.)
+	handle /oauth/* {
+		reverse_proxy fsp-mock:8200
+	}
+	import api_routes
+	import web_route
 }
 
 http://dashboard.fsp.patissons.tech {
-	root * /srv/web
-	try_files {path} /index.html
-	file_server
+	# SPA ходит на относительный /api/v1 того же хоста
+	import api_routes
+	import web_route
 }
 
 http://api.fsp.patissons.tech {
-	handle /integrations/fsp/* {
-		reverse_proxy fsp-connector:8300
-	}
+	import api_routes
 	handle {
-		# flush_interval -1: иначе SSE буферизуется
-		reverse_proxy core-api:8000 {
-			flush_interval -1
-		}
+		respond "not found" 404
 	}
 }
 
