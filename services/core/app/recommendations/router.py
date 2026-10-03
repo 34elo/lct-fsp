@@ -10,6 +10,7 @@ from fsp_platform.app import ProblemError
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.candidates import service as candidates
 from app.deps import get_session
 from app.identity.deps import require_roles
 from app.identity.models import User
@@ -23,8 +24,9 @@ _employer = require_roles("employer")
 class FeedbackRequest(BaseModel):
     """Реакция на показ кандидата."""
 
-    impression_id: int
-    event: str = Field(..., pattern="^(open|dwell|shortlist|dismiss|offer)$")
+    session_id: str
+    candidate_pseudo_id: str
+    event: str = Field(..., pattern="^(open|dwell|shortlist|dismiss)$")
     reason: str | None = None
 
 
@@ -41,18 +43,21 @@ async def record_feedback(
     - `dwell`: работодатель потратил время на карточку (>2с)
     - `shortlist`: добавлен в шорт-лист
     - `dismiss`: отклонен без оффера
-    - `offer`: отправлен оффер
     """
-    # Проверить, что impression существует и принадлежит компании пользователя
-    impression = await service.get_impression_by_id(session, body.impression_id)
     company_id = await _get_company_id(session, user)
-    # чужой показ неотличим от несуществующего → 404
-    if impression is None or impression.company_id != company_id:
+    cand = await candidates.get_by_pseudo_id(session, body.candidate_pseudo_id)
+    impression = (
+        await service.find_last_impression(session, company_id, body.session_id, cand.user_id)
+        if cand is not None
+        else None
+    )
+    # чужой/несуществующий показ неотличим → 404
+    if impression is None:
         raise ProblemError(404, "impression_not_found", "Показ не найден")
 
     feedback = await service.record_feedback(
         session,
-        impression_id=body.impression_id,
+        impression_id=impression.id,
         company_id=impression.company_id,
         user_id=user.id,
         session_id=impression.session_id,
