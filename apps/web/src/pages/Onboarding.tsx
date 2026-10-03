@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
+
+import { FspLinkPanel } from "@/features/fsp/FspLinkPanel";
 
 import { ResumeStep } from "@/features/onboarding/ResumeStep";
 import { cn } from "@/shared/lib/cn";
@@ -35,7 +37,10 @@ function Soon({ text, onNext }: { text: string; onNext: () => void }) {
  * Согласие `pd_processing` уже выдано: без него `RequireRole` не пускает в кабинет.
  */
 export default function Onboarding() {
-  const [index, setIndex] = useState(1);
+  const [params] = useSearchParams();
+  // Возврат из ФСП (?fsp=linked|error): сразу на шаг «ФСП», пройденные до него шаги считаем закрытыми.
+  const fromFsp = params.get("fsp") !== null;
+  const [index, setIndex] = useState(fromFsp ? 2 : 1);
   const [outcome, setOutcome] = useState<Partial<Record<StepId, Outcome>>>({ consents: "done" });
   const [skills, setSkills] = useState<number | null>(null);
 
@@ -85,10 +90,15 @@ export default function Onboarding() {
                 />
               )}
               {state === "current" && s.id === "fsp" && (
-                <Soon
-                  text="Результаты соревнований ФСП — самое сильное подтверждение: они поднимут навыки и грейд."
-                  onNext={() => finish("fsp", "skipped")}
-                />
+                <div className="flex flex-col gap-3">
+                  <p className="text-sm text-muted">
+                    Результаты соревнований ФСП — самое сильное подтверждение: они поднимут навыки и грейд.
+                  </p>
+                  <FspLinkPanel next="/onboarding" onLinked={() => finish("fsp", "done")} />
+                  <Button variant="ghost" onClick={() => finish("fsp", "skipped")}>
+                    {params.get("fsp") === "linked" ? "Дальше" : "Пропустить"}
+                  </Button>
+                </div>
               )}
               {state === "current" && s.id === "github" && (
                 <Soon

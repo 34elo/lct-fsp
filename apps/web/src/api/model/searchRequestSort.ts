@@ -5,11 +5,12 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type SearchRequestSort = typeof SearchRequestSort[keyof typeof SearchRequestSort];
+export type SearchRequestSort = typeof SearchRequestSort[keyof typeof SearchRequestSort] | null;
 
 
 export const SearchRequestSort = {
   match: 'match',
   trust: 'trust',
   fresh: 'fresh',
+  mutual: 'mutual',
 } as const;
