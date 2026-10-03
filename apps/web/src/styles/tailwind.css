@@ -49,3 +49,30 @@
     outline-offset: 2px;
   }
 }
+
+/* Лог сборки и чипсы «вот что я понял»: строки появляются по одной; при «уменьшить движение» — сразу. */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes fsp-appear {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes fsp-rotate {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  .fsp-log-line,
+  .fsp-chip-in {
+    animation: fsp-appear 240ms ease-out both;
+  }
+  .fsp-spin {
+    display: inline-block;
+    animation: fsp-rotate 1.2s linear infinite;
+  }
+}
