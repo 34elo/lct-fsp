@@ -10,6 +10,7 @@ import json
 import secrets
 import uuid
 from datetime import UTC, date, datetime, timedelta
+from pathlib import Path
 from typing import Annotated, Any
 from urllib.parse import urlencode
 
@@ -34,7 +35,7 @@ from fsp_platform.logging import configure_logging
 from pydantic import BaseModel
 
 from fsp_mock.config import Settings
-from fsp_mock.data import Store, build_store
+from fsp_mock.data import Store, build_store, load_store
 
 log = structlog.get_logger()
 
@@ -78,7 +79,11 @@ def build_app(settings: Settings | None = None, store: Store | None = None) -> F
         "`FSP_WEBHOOK_URL` с подписью `X-Signature: sha256=HMAC(FSP_WEBHOOK_SECRET, body)`.\n"
         "- `/mock/codes` — админ: последние коды верификации (для демо)."
     )
-    app.state.store = store or build_store()
+    app.state.store = store or (
+        load_store(settings.fsp_mock_data)
+        if settings.fsp_mock_data and Path(settings.fsp_mock_data).is_file()
+        else build_store()
+    )
     # клиент вебхуков подменяется в тестах
     app.state.http = httpx.AsyncClient(timeout=5)
     st: Store = app.state.store
