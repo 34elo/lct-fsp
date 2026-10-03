@@ -585,3 +585,41 @@ def test_complaint(world):
     ch2, *_ = _candidate(c, "c2@x.ru", 2)
     assert c.post(f"/offers/{oid}/complaint", json=body, headers=ch2).status_code == 404
     assert _db(c, "select reason, status from complaints") == [("spam", "open")]
+
+
+def test_salary_hint(world):
+    c, e, vid, ch, pid, uid = world
+    body = {
+        "vacancy_id": vid,
+        "candidate_pseudo_id": pid,
+        "salary_from": 200000,
+        "salary_to": 340000,
+    }
+    r = c.post("/offers/salary-hint", json=body, headers=e)
+    assert r.status_code == 200, r.text
+    h = r.json()
+    assert h["candidate_min"] == 350000 and h["below_candidate_min"] is True
+    assert h["range_too_wide"] is True and 0 < h["p_accept"] < 1
+    assert h["acceptance_hint"] in ("low", "medium", "high") and h["message"]
+    better = c.post("/offers/salary-hint", json=body | {"salary_to": 450000}, headers=e).json()
+    assert better["p_accept"] > h["p_accept"] and better["below_candidate_min"] is False
+    bad = c.post("/offers/salary-hint", json=body | {"salary_from": None}, headers=e)
+    assert bad.status_code == 422 and bad.json()["code"] == "salary_range_required"
+    assert c.post("/offers/salary-hint", json=body, headers=ch).status_code == 403
+    miss = c.post("/offers/salary-hint", json=body | {"candidate_pseudo_id": "nope"}, headers=e)
+    assert miss.status_code == 404
+    other = _employer(c, "o2@x.ru", name="Other", inn="7736050003")
+    assert c.post("/offers/salary-hint", json=body, headers=other).status_code == 404
+
+
+def test_offer_events_timeline(world):
+    c, e, vid, ch, pid, uid = world
+    oid = _offer(c, e, vid, pid).json()["id"]
+    c.post(f"/offers/{oid}/accept", headers=ch)
+    for who in (e, ch):
+        ev = c.get(f"/offers/{oid}/events", headers=who).json()
+        assert [x["to_status"] for x in ev] == ["sent", "accepted"]
+        assert [x["actor"] for x in ev] == ["company", "candidate"]
+        assert "payload" not in ev[0]
+    other = _employer(c, "o3@x.ru", name="Other", inn="7736050003")
+    assert c.get(f"/offers/{oid}/events", headers=other).status_code == 404
