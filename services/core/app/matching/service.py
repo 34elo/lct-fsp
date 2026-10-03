@@ -1,7 +1,8 @@
 """Подбор кандидатов под вакансию (matching.md §2–4, ml.md §6): отбор SQL → скоринг → объяснения.
 
 Модуль не лезет в чужие модели: данные берёт через `service.py` модулей vacancies, taxonomy,
-graph и candidates. Формулы — в `scoring.py`. Запись в `matches` и выдача — E7-2/E7-3.
+graph и candidates. Формулы — в `scoring.py`. Запись в `matches` — `match_vacancy` /
+`match_candidate`; выдача — E7-3.
 """
 
 from __future__ import annotations
@@ -11,11 +12,17 @@ from collections.abc import Iterable
 from datetime import UTC, date, datetime
 from typing import TYPE_CHECKING
 
+from fsp_contracts import new_envelope
+from fsp_contracts.commands import CoreMatchCandidate, CoreMatchVacancy
+from fsp_contracts.events import MatchesReady
+from fsp_platform.outbox import add_to_outbox
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.candidates import service as candidates
 from app.graph import service as graph
 from app.graph.trust import EvidenceView, TrustConfig, effective_strength
+from app.matching.models import Match
 from app.matching.scoring import (
     CandidateView,
     FspProof,
@@ -215,3 +222,129 @@ async def match_vacancy_candidates(
         if (r := score_candidate(v, c, adj, cfg, semantic_only=c.id in semantic_only)) is not None
     ]
     return sorted(out, key=lambda r: (-r.score, str(r.candidate_id)))
+
+
+# --- таблица matches (E7-2) ---------------------------------------------------------------
+
+
+def _fill(m: Match, r: MatchResult, vacancy_version: int, now: datetime) -> None:
+    if (m.candidate_version, m.vacancy_version) != (r.profile_version, vacancy_version):
+        m.rationale = None  # обоснование LLM относилось к прежним версиям
+    m.score = r.score
+    m.breakdown = r.breakdown
+    m.explanation = [i.model_dump(mode="json") for i in r.explanation]
+    m.candidate_version = r.profile_version
+    m.vacancy_version = vacancy_version
+    m.computed_at = now
+
+
+def _new(vacancy_id: uuid.UUID, r: MatchResult, vacancy_version: int, now: datetime) -> Match:
+    m = Match(
+        vacancy_id=vacancy_id, candidate_id=r.candidate_id, candidate_version=-1,
+        vacancy_version=-1, rationale=None,
+    )  # fmt: skip
+    _fill(m, r, vacancy_version, now)
+    return m
+
+
+async def match_vacancy(
+    session: AsyncSession,
+    vacancy_id: uuid.UUID,
+    cfg: MatchConfig,
+    trust: TrustConfig,
+    *,
+    version: int | None = None,
+    vacancy_embedding: list[float] | None = None,
+    today: date | None = None,
+) -> int | None:
+    """Пересчитать подборку вакансии: заменить строки `matches`, послать `matches.ready`.
+
+    Возвращает число подобранных; None — пропуск (нет вакансии, не опубликована или команда
+    устарела: версия вакансии уже новее, значит, придёт свежая команда).
+    """
+    v = await vacancies.get(session, vacancy_id)
+    if v is None or v.status != "published" or (version is not None and v.version > version):
+        return None
+    results = await match_vacancy_candidates(
+        session, vacancy_id, cfg, trust, vacancy_embedding=vacancy_embedding, today=today
+    )
+    now = datetime.now(UTC)
+    old = {
+        m.candidate_id: m
+        for m in await session.scalars(select(Match).where(Match.vacancy_id == vacancy_id))
+    }
+    for r in results:
+        if (m := old.pop(r.candidate_id, None)) is not None:
+            _fill(m, r, v.version, now)
+        else:
+            session.add(_new(vacancy_id, r, v.version, now))
+    for m in old.values():
+        await session.delete(m)
+    await session.flush()
+    event = MatchesReady(vacancy_id=vacancy_id, count=len(results))
+    await add_to_outbox(session, new_envelope("matches.ready", "core", event), v.company_id)
+    return len(results)
+
+
+async def match_candidate(
+    session: AsyncSession,
+    candidate_id: uuid.UUID,
+    cfg: MatchConfig,
+    trust: TrustConfig,
+    *,
+    version: int | None = None,
+    today: date | None = None,
+) -> int | None:
+    """Пересчитать строки `matches` одного кандидата по всем опубликованным вакансиям.
+
+    Возвращает число вакансий, под которые он подходит; None — пропуск (нет анкеты или команда
+    устарела по `profile_version`). Скрытый (dnd) или удалённый кандидат из подборок уходит.
+    """
+    cand = await candidates.get(session, candidate_id)
+    if cand is None or (version is not None and cand.profile_version > version):
+        return None
+    old = {
+        m.vacancy_id: m
+        for m in await session.scalars(select(Match).where(Match.candidate_id == candidate_id))
+    }
+    now = datetime.now(UTC)
+    day = today or now.date()
+    count = 0
+    for vac in await vacancies.list_published(session):
+        loaded = await load_vacancy(session, vac.id)
+        if loaded is None:
+            continue
+        v, adj = loaded
+        (view,) = await build_views(session, [cand], v, adj, trust, day)
+        r = score_candidate(v, view, adj, cfg)
+        m = old.pop(vac.id, None)
+        if r is None:
+            if m is not None:
+                await session.delete(m)
+            continue
+        count += 1
+        if m is not None:
+            _fill(m, r, v.version, now)
+        else:
+            session.add(_new(vac.id, r, v.version, now))
+    for m in old.values():  # вакансия закрыта или снята с публикации
+        await session.delete(m)
+    await session.flush()
+    return count
+
+
+async def drop_vacancy_matches(session: AsyncSession, vacancy_id: uuid.UUID) -> None:
+    """Вакансия закрыта: подборка больше не нужна."""
+    await session.execute(delete(Match).where(Match.vacancy_id == vacancy_id))
+
+
+async def request_match_vacancy(session: AsyncSession, vacancy_id: uuid.UUID, version: int) -> None:
+    cmd = CoreMatchVacancy(vacancy_id=vacancy_id, version=version)
+    await add_to_outbox(session, new_envelope("core.match.vacancy", "core", cmd), vacancy_id)
+
+
+async def request_match_candidate(
+    session: AsyncSession, candidate_id: uuid.UUID, profile_version: int
+) -> None:
+    cmd = CoreMatchCandidate(candidate_id=candidate_id, profile_version=profile_version)
+    await add_to_outbox(session, new_envelope("core.match.candidate", "core", cmd), candidate_id)
