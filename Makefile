@@ -1,4 +1,4 @@
-.PHONY: demo-env logs ps seed seed-plan seed-fsp-mock synth taxonomy-load up down dev-core compose-config sync lint fmt test test-py test-web test-integration new-service web-install asyncapi api-gen
+.PHONY: demo-snapshot demo-reset demo-warm demo-env logs ps seed seed-plan seed-fsp-mock synth taxonomy-load up down dev-core compose-config sync lint fmt test test-py test-web test-integration new-service web-install asyncapi api-gen
 
 sync:
 	uv sync --all-packages
@@ -96,3 +96,12 @@ seed-fsp-mock:
 	SEED=$(SEED) uv run python -m tools.seed fsp-mock
 seed-plan:
 	SEED=$(SEED) uv run python -m tools.seed plan
+
+# Снапшот витрины (evaluation.md §4): make demo-snapshot (после make seed) -> make demo-reset (≤ 1 мин) -> make demo-warm
+# Файлы в infra/snapshots/ (в git не идут): core.dump, fsp_connector.dump, fsp-mock.json
+demo-snapshot:
+	COMPOSE="$(COMPOSE)" sh infra/scripts/demo.sh snapshot
+demo-reset:
+	COMPOSE="$(COMPOSE)" sh infra/scripts/demo.sh reset
+demo-warm:
+	GATEWAY_PORT=$$(sed -n 's/^GATEWAY_PORT=//p' $(ENV_FILE)) COMPOSE="$(COMPOSE)" sh infra/scripts/demo.sh warm
