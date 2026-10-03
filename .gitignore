@@ -37,3 +37,6 @@ __pycache__/
 node_modules/
 dist/
 asyncapi.json
+
+# локальные env-файлы с секретами
+.env.demo
