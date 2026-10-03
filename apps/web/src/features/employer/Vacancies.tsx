@@ -11,11 +11,14 @@ export default function Vacancies() {
   const list = q.data?.status === 200 ? q.data.data : [];
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4 md:p-6">
-      <h1 className="font-mono text-2xl font-semibold">Вакансии</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="font-mono text-2xl font-semibold">Вакансии</h1>
+        <Link to="/employer/vacancies/new" className="inline-flex h-11 items-center rounded-lg bg-brand px-4 font-semibold text-on-brand hover:bg-brand-deep">Создать вакансию</Link>
+      </div>
       {q.isPending && <p role="status" className="text-muted">Загрузка…</p>}
       {q.isError && <ErrorNote>Не удалось загрузить вакансии.</ErrorNote>}
       {q.isSuccess && list.length === 0 && (
-        <p className="rounded-xl border border-hairline bg-card p-5 text-sm">Вакансий пока нет. Создание вакансии появится в следующей версии.</p>
+        <p className="rounded-xl border border-hairline bg-card p-5 text-sm">Вакансий пока нет.</p>
       )}
       <ul className="grid gap-3 md:grid-cols-2">
         {list.map((v) => (
@@ -46,6 +49,9 @@ export default function Vacancies() {
               className="inline-flex h-9 items-center self-start rounded-lg bg-brand px-3 text-sm font-semibold text-on-brand hover:bg-brand-deep"
             >
               Подборка кандидатов
+            </Link>
+            <Link to={`/employer/vacancies/${v.id}`} className="inline-flex h-9 items-center self-start rounded-lg px-3 text-sm font-semibold text-brand-fg hover:bg-tint-50">
+              Редактировать
             </Link>
           </li>
         ))}

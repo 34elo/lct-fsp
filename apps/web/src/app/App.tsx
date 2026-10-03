@@ -11,7 +11,9 @@ import Profile from "@/features/profile/Profile";
 import SkillEvidence from "@/features/profile/SkillEvidence";
 import CandidateView from "@/features/employer/CandidateView";
 import EmployerSearch from "@/features/employer/Search";
+import Company from "@/features/employer/Company";
 import Vacancies from "@/features/employer/Vacancies";
+import VacancyEditor from "@/features/employer/VacancyEditor";
 import OfferComposer from "@/features/offers/OfferComposer";
 import { EmployerOfferDetail, EmployerOffers } from "@/features/offers/EmployerOffers";
 import { CandidateOfferDetail, CandidateOffers } from "@/features/offers/CandidateOffers";
@@ -26,7 +28,7 @@ const EmployerLayout = lazy(() => import("@/app/layouts/EmployerLayout"));
 const AdminLayout = lazy(() => import("@/app/layouts/AdminLayout"));
 
 // Эти пути уже реализованы настоящими страницами (E1-4).
-const IMPLEMENTED = new Set(["/login", "/register", "/auth/magic", "/consents", "/onboarding", "/me", "/me/skills/:slug", "/employer/search", "/employer/candidates/:id", "/employer/vacancies", "/employer/vacancies/:id/shortlist", "/employer/offers/new", "/employer/offers", "/employer/offers/:id", "/me/offers", "/me/offers/:id"]);
+const IMPLEMENTED = new Set(["/login", "/register", "/auth/magic", "/consents", "/onboarding", "/me", "/me/skills/:slug", "/employer/search", "/employer/candidates/:id", "/employer/vacancies", "/employer/vacancies/new", "/employer/vacancies/:id", "/employer/company", "/employer/vacancies/:id/shortlist", "/employer/offers/new", "/employer/offers", "/employer/offers/:id", "/me/offers", "/me/offers/:id"]);
 
 const stubs = (section: string) =>
   ROUTES.filter((r) => r.section === section && !IMPLEMENTED.has(r.path)).map((r) => (
@@ -52,6 +54,9 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
             <Route path="/employer/search" element={<EmployerSearch />} />
             <Route path="/employer/candidates/:id" element={<CandidateView />} />
             <Route path="/employer/vacancies" element={<Vacancies />} />
+            <Route path="/employer/vacancies/new" element={<VacancyEditor />} />
+            <Route path="/employer/vacancies/:id" element={<VacancyEditor />} />
+            <Route path="/employer/company" element={<Company />} />
             <Route path="/employer/offers/new" element={<OfferComposer />} />
             <Route path="/employer/offers" element={<EmployerOffers />} />
             <Route path="/employer/offers/:id" element={<EmployerOfferDetail />} />
