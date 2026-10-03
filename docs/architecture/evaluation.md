@@ -74,7 +74,7 @@
 
 `make seed [SEED=n]` наполняет живой стек: пишет данные мока в `reports/seed/fsp-mock.json` (compose монтирует каталог в `fsp-mock` как `/seed`, `FSP_MOCK_DATA`; сервис пересоздаётся) и заводит записи в БД core через сервисные слои (регистрация, резюме, события ФСП, `recompute_profile`, подбор, офферы), секреты и порт Postgres берёт из `.env`/`.env.demo`. Повторный запуск ничего не дублирует. Все демо-аккаунты имеют тестовый пароль из `tools/seed/config.yaml` (`demo.password`); логины печатаются в конце: герои `anya@`, `dima@`, `olga@demo.fsp.test`, кандидаты `cand{NNNN}@`, работодатели `hr{NN}@`, админ `admin@demo.fsp.test`. Аня и Дима в core к ФСП намеренно **не** привязаны: привязка («Войти через ФСП», участники `p-anya`, `p-dima` в моке) — шаг живого демо.
 
-`make seed` (детерминированно) → `make demo-snapshot` → `make demo-reset` возвращает это состояние меньше чем за минуту.
+`make seed` (детерминированно) → `make demo-snapshot` → `make demo-reset` возвращает это состояние меньше чем за минуту (≈50 с: стоп сервисов, `pg_restore` core и fsp_connector, `FLUSHALL` Redis, `fsp-mock` с исходным JSON, запуск). `make demo-warm` прогревает логины, поиск и профиль. Дампы лежат в `infra/snapshots/` и не коммитятся; скрипт — `infra/scripts/demo.sh`.
 
 ## 5. Стенд оценки (`tools/eval`)
 
