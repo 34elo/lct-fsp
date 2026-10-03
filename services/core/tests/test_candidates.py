@@ -284,7 +284,7 @@ async def test_pseudonym_collision_retries(tmp_path, monkeypatch):
     from fsp_platform.db import make_engine, make_session_factory, session_scope
 
     url = f"sqlite+aiosqlite:///{tmp_path / 'p.db'}"
-    subprocess.run(
+    subprocess.run(  # noqa: ASYNC221
         [sys.executable, "-m", "alembic", "-x", f"url={url}", "upgrade", "head"],
         cwd=CORE, check=True, capture_output=True,
     )
