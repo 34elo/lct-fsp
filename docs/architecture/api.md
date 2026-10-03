@@ -30,13 +30,13 @@
 | `POST /auth/login` | P | `{email, password}` → `{access_token, user}` + cookie |
 | `POST /auth/refresh` | P (cookie) | Ротация refresh, новый access |
 | `POST /auth/logout` | любая | Отзыв семьи refresh-токенов |
-| `POST /auth/telegram` | P | Данные Telegram Login Widget → вход или регистрация кандидата |
-| `POST /auth/magic` | P | `{token}` из ссылки бота → вход |
+| `POST /auth/telegram` | P | Поля Telegram Login Widget как есть (`id`, `auth_date`, `hash`, …) → `{access_token, user}` + cookie. Подпись HMAC и `auth_date` ≤ 24 ч; нового пользователя создаёт кандидатом без email. Ошибки: `401 invalid_telegram_auth`, `401 telegram_auth_expired`, `503 telegram_login_disabled` (нет токена бота) |
+| `POST /auth/magic` | P | `{token}` из ссылки бота → `{access_token, user}` + cookie. Токен одноразовый (5 мин); иначе `401 invalid_magic_token` |
 | `GET /auth/fsp/start` | P/C | Редирект на OAuth ФСП (мок). Для вошедшего кандидата это привязка, иначе вход |
 | `GET /auth/fsp/callback` | P/C | Обмен кода → `fsp_links` → `fsp_sync` |
 | `GET /me` | любая | `{user, role, candidate?, company?, consents, telegram_linked}` |
 | `GET /me/consents`, `PUT /me/consents` | любая | Список и выдача/отзыв согласий |
-| `POST /me/telegram/link` | C, E | → `{deep_link}` для привязки Telegram |
+| `POST /me/telegram/link` | C, E | → `{deep_link}` вида `https://t.me/<bot>?start=link_<token>` (токен 15 мин, одноразовый); `503 telegram_disabled`, если имя бота не задано |
 
 Коды ошибок `/auth/*`: `email_taken` (409), `invalid_credentials` (401, одинаков для неверного пароля и неизвестного email), `refresh_reused` (401, повторное использование refresh — вся семья отозвана, cookie сбрасывается), `unauthorized` (401), `rate_limited` (429), `forbidden_origin` (403, `Origin` не из `ALLOWED_ORIGINS` на `/auth/refresh` и `/auth/logout`). Саморегистрация — только `candidate` и `employer`. `GET /me` пока возвращает `{id, email, role, consents[]}` (`consents` — типы действующих согласий).
 
@@ -180,10 +180,10 @@
 
 | Метод и путь | Кто вызывает | Назначение |
 |---|---|---|
-| `POST /internal/tg/start` | bot | `{tg_user_id, chat_id, username, start_param?}` → `{user_id, role, missing_consents[], linked: bool}` |
-| `POST /internal/tg/consents` | bot | `{tg_user_id, types[]}` |
-| `POST /internal/tg/link` | bot | `{tg_user_id, token}` — привязка по deep link |
-| `POST /internal/auth/magic-link` | bot | `{tg_user_id, redirect}` → `{url}` |
+| `POST /internal/tg/start` | bot | `{tg_user_id, chat_id, username, start_param?}` → `{user_id, role, missing_consents[], linked: bool}`. Нет аккаунта — создаёт кандидата без email (заготовку), повтор обновляет `chat_id`. `missing_consents` — из `pd_processing`, `telegram_notifications`; `linked` — аккаунт связан с сайтом (есть email). `start_param` обрабатывает бот |
+| `POST /internal/tg/consents` | bot | `{tg_user_id, types[]}` → `204`; неизвестный тип `422 invalid_consent`, неизвестный Telegram `404 telegram_unknown` |
+| `POST /internal/tg/link` | bot | `{tg_user_id, token}` — привязка по deep link → `{user_id, linked}`. Заготовка бота (без email и пароля) вливается в аккаунт сайта: согласия переносятся, заготовка деактивируется. Повтор для того же аккаунта безвреден. Ошибки: `410 link_token_invalid`, `404 telegram_unknown` (не было `/start`), `409 telegram_already_linked` (Telegram привязан к другому аккаунту сайта или у аккаунта уже есть другой Telegram) |
+| `POST /internal/auth/magic-link` | bot | `{tg_user_id, redirect}` → `{url}` вида `<WEB_BASE_URL>/auth/magic?token=…&redirect=…`. `redirect` — только путь SPA (`/…`), иначе `422 invalid_redirect`; 5 ссылок в минуту на Telegram |
 | `POST /internal/tg/resumes` | bot | multipart `file` + `tg_user_id` → `202` |
 | `POST /internal/tg/resumes/{id}/confirm` | bot | Подтверждение без правок |
 | `GET /internal/tg/profile?tg_user_id=` | bot | Краткий профиль для сообщения |

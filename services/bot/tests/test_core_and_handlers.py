@@ -1,3 +1,4 @@
+import json
 from datetime import UTC, datetime
 
 import httpx
@@ -82,3 +83,12 @@ async def test_start_asks_missing_consents_and_stores_state(redis):
     assert len(texts) == 2 and "согласие" in texts[1]
     assert calls == ["/internal/tg/start"]
     assert any("fsm:" in k.decode() for k in await redis.keys("*"))
+
+
+async def test_magic_link_returns_url():
+    def handler(req: httpx.Request):
+        assert req.url.path == "/internal/auth/magic-link"
+        assert json.loads(req.content) == {"tg_user_id": 5, "redirect": "/me"}
+        return httpx.Response(200, json={"url": "https://web.test/auth/magic?token=t"})
+
+    assert await core_with(handler).magic_link(5, "/me") == "https://web.test/auth/magic?token=t"
