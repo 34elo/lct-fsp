@@ -8,3 +8,6 @@ class Settings(BaseServiceSettings):
     fsp_webhook_secret: str = "dev-webhook-secret"
     code_ttl_seconds: int = 600
     code_max_attempts: int = 5
+    fsp_mock_data: str | None = (
+        None  # JSON витрины от tools/seed; None — минимальный набор из data.py
+    )

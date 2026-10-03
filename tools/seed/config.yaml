@@ -1,0 +1,134 @@
+# Параметры демо-витрины (evaluation.md §4). Все люди и компании вымышленные.
+# Пароли ниже — тестовые значения для демо-аккаунтов, не реальные.
+
+seed: 20261003            # SEED по умолчанию; переопределяется --seed или env SEED
+
+counts:
+  candidates: 400
+  companies: 25
+  companies_pending: 2    # «на модерации» для демо админки
+  vacancies: 80
+  vacancies_closed: 8
+  offers: 300
+  fsp_participants: 600
+  fsp_past_competitions: 45
+  fsp_upcoming: 7
+  provisional_skills: 20
+  analytics_days: 14
+
+shares:
+  fsp: 0.40               # доля кандидатов, привязанных к ФСП
+  # GitHub (0.5) и тесты (0.3) — по распределению tools/synth
+
+demo:
+  password: "demo-pass-1234"      # тестовый пароль всех демо-аккаунтов
+  candidate_email: "cand{n:04d}@demo.fsp.test"
+  employer_email: "hr{n:02d}@demo.fsp.test"
+  participant_email: "participant{n:04d}@example.test"
+  admin_email: "admin@demo.fsp.test"
+
+cities: [Москва, Санкт-Петербург, Новосибирск, Екатеринбург, Казань, Нижний Новгород, Самара, Краснодар, Томск, Воронеж]
+regions:
+  Москва: Москва
+  Санкт-Петербург: Санкт-Петербург
+  Новосибирск: Новосибирская область
+  Екатеринбург: Свердловская область
+  Казань: Татарстан
+  Нижний Новгород: Нижегородская область
+  Самара: Самарская область
+  Краснодар: Краснодарский край
+  Томск: Томская область
+  Воронеж: Воронежская область
+
+last_names_m: [Иванов, Петров, Смирнов, Кузнецов, Попов, Соколов, Лебедев, Морозов, Новиков, Фёдоров, Михайлов, Беляев, Тарасов, Жуков, Крылов, Зайцев, Громов, Ершов, Мельников, Богданов, Власов, Киселёв, Сорокин, Блинов, Дроздов]
+first_names_m: [Алексей, Дмитрий, Сергей, Андрей, Илья, Максим, Роман, Артём, Никита, Егор, Павел, Кирилл, Тимур, Владислав, Григорий]
+first_names_f: [Мария, Елена, Ольга, Наталья, Екатерина, Дарья, Ксения, Полина, Алиса, Виктория, Софья, Ирина, Татьяна, Юлия, Вероника]
+
+# Вымышленные компании: 25 штук, первая — «Северный код» (Ольга, герой)
+companies:
+  - {name: "Северный код", site: "https://severnykod.example.test", about: "Продуктовая ИТ-компания, 200 человек: платформа онлайн-записи и аналитика для сервисного бизнеса."}
+  - {name: "Лаборатория Ветер", site: "https://veter-lab.example.test", about: "Разработка систем мониторинга и телеметрии для малых производств."}
+  - {name: "Кедр Софт", site: "https://kedr-soft.example.test", about: "Заказная разработка веб-сервисов для региональных компаний."}
+  - {name: "Полярный Узел", site: "https://polar-node.example.test", about: "Облачная инфраструктура и DevOps как услуга."}
+  - {name: "Орбита Данных", site: "https://orbita-data.example.test", about: "Аналитические витрины и ML для ритейла."}
+  - {name: "Малахит Системс", site: "https://malakhit.example.test", about: "Корпоративные системы документооборота."}
+  - {name: "Рябина Лабс", site: "https://ryabina-labs.example.test", about: "Мобильные приложения для образовательных проектов."}
+  - {name: "Тундра Технолоджи", site: "https://tundra-tech.example.test", about: "Встраиваемые системы и промышленная автоматика."}
+  - {name: "Зелёный Контур", site: "https://zelenyj-kontur.example.test", about: "Сервисы умного дома и интернета вещей."}
+  - {name: "Янтарь Девелопмент", site: "https://yantar-dev.example.test", about: "Финтех-платформа для малого бизнеса."}
+  - {name: "Байкал Диджитал", site: "https://baikal-digital.example.test", about: "Электронная коммерция и логистика."}
+  - {name: "Сокол Инжиниринг", site: "https://sokol-eng.example.test", about: "Безопасность приложений и аудит инфраструктуры."}
+  - {name: "Маяк Сервис", site: "https://mayak-service.example.test", about: "Платформа клиентской поддержки."}
+  - {name: "Снегирь Групп", site: "https://snegir-group.example.test", about: "Игровая студия: мобильные и браузерные игры."}
+  - {name: "Рассвет Информ", site: "https://rassvet-inform.example.test", about: "Региональные госуслуги и порталы."}
+  - {name: "Вега Ресерч", site: "https://vega-research.example.test", about: "Компьютерное зрение для промышленного контроля качества."}
+  - {name: "Алтай Софтвер", site: "https://altai-soft.example.test", about: "Учётные системы для агросектора."}
+  - {name: "Гранит Финанс Технологии", site: "https://granit-fintech.example.test", about: "Скоринг и антифрод для небанковских организаций."}
+  - {name: "Дубрава Медиа", site: "https://dubrava-media.example.test", about: "Видеосервис и рекомендации контента."}
+  - {name: "Нева Кодворкс", site: "https://neva-codeworks.example.test", about: "Разработка корпоративных порталов."}
+  - {name: "Урал Тех Партнёры", site: "https://ural-tech.example.test", about: "Интеграции и миграция данных для промышленности."}
+  - {name: "Перекрёсток Аналитики", site: "https://perekrestok-analytics.example.test", about: "Продуктовая аналитика и A/B-тесты."}
+  - {name: "Лотос Системс", site: "https://lotos-systems.example.test", about: "Сервисы бронирования для туризма."}
+  - {name: "Ключ Старт", site: "https://klyuch-start.example.test", about: "Стартап: платформа для онлайн-курсов."}
+  - {name: "Радуга Девайсы", site: "https://raduga-devices.example.test", about: "Прошивки и мобильные приложения для носимых устройств."}
+
+role_titles:
+  backend: Backend-разработчик
+  frontend: Frontend-разработчик
+  fullstack: Fullstack-разработчик
+  mobile: Мобильный разработчик
+  ml: ML-инженер
+  data_engineer: Дата-инженер
+  devops: DevOps-инженер
+  qa: QA-инженер
+  security: Специалист по ИБ
+  gamedev: Разработчик игр
+  embedded: Embedded-разработчик
+  analyst: Аналитик
+  product: Продуктовый менеджер
+  designer: Дизайнер интерфейсов
+
+grade_titles:
+  intern: Стажёр
+  junior: Junior
+  junior_plus: Junior+
+  middle: Middle
+  middle_plus: Middle+
+  senior: Senior
+  lead: Lead
+
+# Распределение результатов офферов в истории (evaluation.md §4)
+offer_outcomes:
+  accepted: 0.22
+  declined: 0.28
+  expired: 0.18
+  withdrawn: 0.04
+  interview: 0.08
+  hired: 0.05
+  not_hired: 0.04
+  viewed: 0.06            # только свежие
+  sent: 0.05              # только свежие
+decline_reasons: {low_salary: 0.35, wrong_stack: 0.2, wrong_format: 0.15, wrong_grade: 0.1, not_looking: 0.15, other: 0.05}
+
+# Спорные навыки для демо роста графа (provisional); slug → название
+provisional_skills:
+  - [bun, Bun]
+  - [htmx, htmx]
+  - [astro, Astro]
+  - [deno, Deno]
+  - [zig, Zig]
+  - [nix, Nix]
+  - [temporal, Temporal.io]
+  - [duckdb, DuckDB]
+  - [polars, Polars]
+  - [qwik, Qwik]
+  - [solidjs, SolidJS]
+  - [tauri, Tauri]
+  - [bevy, Bevy]
+  - [mojo, Mojo]
+  - [ollama, Ollama]
+  - [langgraph, LangGraph]
+  - [pocketbase, PocketBase]
+  - [supabase, Supabase]
+  - [cloudflare-workers, Cloudflare Workers]
+  - [rye, Rye]

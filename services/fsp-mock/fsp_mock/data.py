@@ -5,8 +5,10 @@
 
 from __future__ import annotations
 
+import json
 import random
 from datetime import date, timedelta
+from pathlib import Path
 from typing import Any
 
 from fsp_contracts.enums import FspDiscipline
@@ -266,4 +268,38 @@ def build_store() -> Store:
             score=round(rng.uniform(1, 100), 1),
             date=c["end_date"],
         )
+    return s
+
+
+def load_store(path: str | Path) -> Store:
+    """Данные мока из JSON, который пишет `tools/seed` (`fsp-mock`): участники, соревнования,
+    команды, результаты. Даты — ISO-строки."""
+    data = json.loads(Path(path).read_text(encoding="utf-8"))
+    s = Store()
+    for c in data["competitions"]:
+        c = dict(c)
+        c["start_date"] = date.fromisoformat(c["start_date"])
+        if c.get("end_date"):
+            c["end_date"] = date.fromisoformat(c["end_date"])
+        s.add_competition(c.pop("id"), **c)
+    for p in data["participants"]:
+        p = dict(p)
+        s.add_participant(
+            p["id"],
+            p["last_name"],
+            p["first_name"],
+            middle=p.get("middle_name"),
+            birth_year=p["birth_year"],
+            region=p["region"],
+            email=p["email"],
+            phone=p.get("phone") or "+79001234567",
+            ranks=p.get("ranks") or [],
+        )
+    for t in data["teams"]:
+        s.teams[t["id"]] = t
+    for pid, items in data["results"].items():
+        for r in items:
+            r = dict(r)
+            r["date"] = date.fromisoformat(r["date"])
+            s.add_result(pid, **r)
     return s

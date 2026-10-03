@@ -1,4 +1,4 @@
-.PHONY: demo-env logs ps synth taxonomy-load up down dev-core compose-config sync lint fmt test test-py test-web test-integration new-service web-install asyncapi api-gen
+.PHONY: demo-env logs ps seed seed-plan seed-fsp-mock synth taxonomy-load up down dev-core compose-config sync lint fmt test test-py test-web test-integration new-service web-install asyncapi api-gen
 
 sync:
 	uv sync --all-packages
@@ -82,3 +82,17 @@ taxonomy-load:
 SPLIT ?= dev
 synth:
 	uv run python tools/synth/synth.py --split $(SPLIT) --out reports/synth/$(SPLIT)
+
+# Демо-витрина (evaluation.md §4): make seed [SEED=42]. Пишет данные fsp-mock в reports/seed/fsp-mock.json
+# (compose монтирует каталог в fsp-mock, сервис пересоздаётся), наполняет БД core сервисными слоями
+# (секреты и порт Postgres берёт из $(ENV_FILE)), печатает демо-аккаунты. Повторный запуск безопасен.
+# Нужны поднятый стек (make up) и справочник навыков (его грузит core-migrate).
+seed:
+	mkdir -p reports/seed
+	SEED=$(SEED) uv run python -m tools.seed all --env-file $(ENV_FILE)
+	$(COMPOSE) up -d --build --no-deps --force-recreate fsp-mock
+seed-fsp-mock:
+	mkdir -p reports/seed
+	SEED=$(SEED) uv run python -m tools.seed fsp-mock
+seed-plan:
+	SEED=$(SEED) uv run python -m tools.seed plan
