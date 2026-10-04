@@ -1,10 +1,14 @@
 # Документация ФСП Карьера
 
+> ⚠️ **Читать с нуля:** [case.md](case.md) (ТЗ за 5 минут) → [solution.md](solution.md) (наше решение, **v2, рабочая версия** от 2026-10-05) → [process/plan.md §4.2](process/plan.md#42-очередь-v2) (что делаем). Документы в `architecture/` описывают текущую реализацию и обновляются по мере задач.
+
 ## Структура
 
 ```
 docs/
-├── case.md              кейс организаторов, ресурсы, что сдаём
+├── case.md              ТЗ (выжимка), критерии, что сдаём
+├── tz-2026.pdf          оригинал ТЗ
+├── solution.md          решение v2: ключевые идеи, отличия, питч, соответствие ТЗ (рабочая версия)
 ├── product.md           продукт: выжимка, персоны, механики, правила, метрики, демо, питч
 ├── architecture/
 │   ├── overview.md      идея, принципы, контейнеры, потоки, карта документов
@@ -45,7 +49,7 @@ docs/
 
 | Задача | Документы |
 |---|---|
-| Понять проект с нуля | [product.md](product.md) (раздел «Коротко») → [architecture/overview.md](architecture/overview.md) → [process/workflow.md](process/workflow.md) |
+| Понять проект с нуля | [case.md](case.md) → [solution.md](solution.md) → [architecture/overview.md](architecture/overview.md) → [process/workflow.md](process/workflow.md) |
 | Бэкенд | [services.md](architecture/services.md), [graph.md](architecture/graph.md), [data-model.md](architecture/data-model.md), [api.md](architecture/api.md), [messaging.md](architecture/messaging.md), [flows.md](architecture/flows.md) |
 | ML | [ml.md](architecture/ml.md), [skills.md](architecture/skills.md), [matching.md](architecture/matching.md), [evaluation.md](architecture/evaluation.md) |
 | Фронтенд | [frontend.md](architecture/frontend.md), [api.md](architecture/api.md) §3–4, [design/brief.md](design/brief.md), [design/brand.md](design/brand.md) |
