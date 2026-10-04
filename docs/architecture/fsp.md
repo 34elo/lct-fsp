@@ -17,13 +17,27 @@
 ```python
 class FspPort(Protocol):
     async def get_participant(self, participant_id: str) -> FspParticipant: ...
-    async def find_participant(self, *, email: str | None = None, last_name: str | None = None,
-                               birth_date: date | None = None) -> list[FspParticipantBrief]: ...
-    async def get_results(self, participant_id: str, since: date | None = None) -> list[FspResult]: ...
+    async def find_participant(
+        self,
+        *,
+        email: str | None = None,
+        last_name: str | None = None,
+        birth_date: date | None = None,
+    ) -> list[FspParticipantBrief]: ...
+    async def get_results(
+        self, participant_id: str, since: date | None = None
+    ) -> list[FspResult]: ...
     async def get_ranks(self, participant_id: str) -> list[FspRank]: ...
-    async def get_competitions(self, *, date_from: date | None = None, date_to: date | None = None,
-                               discipline: str | None = None) -> list[FspCompetition]: ...
-    async def get_standings(self, competition_id: str) -> list[FspStandingRow]: ...   # для рейтинга, 🚀
+    async def get_competitions(
+        self,
+        *,
+        date_from: date | None = None,
+        date_to: date | None = None,
+        discipline: str | None = None,
+    ) -> list[FspCompetition]: ...
+    async def get_standings(
+        self, competition_id: str
+    ) -> list[FspStandingRow]: ...  # для рейтинга, 🚀
     async def get_team(self, team_id: str) -> FspTeam: ...
     # верификация
     async def send_verification_code(self, participant_id: str) -> MaskedContact: ...
@@ -38,23 +52,29 @@ DTO (нормализованные, наши):
 ```python
 class FspResult(BaseModel):
     competition_id: str
-    discipline: FspDiscipline          # algorithmic | product | security | uav | robotics
+    discipline: FspDiscipline  # algorithmic | product | security | uav | robotics
     stage: Literal["qualifier", "final"]
     team_id: str | None
     team_role: Literal["captain", "member", "individual"]
     place: int | None
-    participants_total: int | None     # участников или команд в зачёте
+    participants_total: int | None  # участников или команд в зачёте
     score: float | None
-    track: str | None                  # трек хакатона, если есть
+    track: str | None  # трек хакатона, если есть
     date: date
 
+
 class FspCompetition(BaseModel):
-    id: str; title: str; discipline: FspDiscipline
+    id: str
+    title: str
+    discipline: FspDiscipline
     level: Literal["regional", "interregional", "national", "international"]
-    format: Literal["online", "offline"]; region: str | None
-    start_date: date; end_date: date | None
+    format: Literal["online", "offline"]
+    region: str | None
+    start_date: date
+    end_date: date | None
     status: Literal["announced", "registration", "ongoing", "finished"]
-    tracks: list[str] = []; registration_url: str | None
+    tracks: list[str] = []
+    registration_url: str | None
 ```
 
 Адаптеры:
