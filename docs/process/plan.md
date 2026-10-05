@@ -157,7 +157,7 @@
 | 405 | E19-4 | web: Фирменные: MatchRing, MatchWhy, SalaryRange, StatusBadge, AcceptanceMeter, CircuitLine, BuildLog, CandidateCard, OfferCard | E19-3 | 🤝 | sonnet | 1 база · M0 | 🔍 98cb01f |
 | 406 | E19-16b | Макеты v2 блока 2: потребность → категории, кандидаты категории, отклики, публичные вакансии (blocks.md §12) | P5 | 🤝 | sonnet | 1 база · M0 | 🔍 df36db9 |
 | 407 | E19-5 | web: Каркас приложения: шапка со счётчиками, навигация из `routes.ts` по `nav`, боковая панель админки, контейнер | E19-2, Т0 | 🤝 | sonnet | 1 база · M0 | 🔍 02b2e41 |
-| 408 | E20-9a | OpenAPI: `make openapi` → `docs/openapi.json`, проверка в CI, `responses=` у модулей блока 2 | Т0 | 🤖 | haiku | 1 база · M0 | ⏳ |
+| 408 | E20-9a | OpenAPI: `make openapi` → `docs/openapi.json`, проверка в CI, `responses=` у модулей блока 2 | Т0 | 🤖 | haiku | 1 база · M0 | ✅ 8142364 |
 | 409 | E20-11 | Согласие `profile_publication` | Т0 | 🤖 | haiku | 1 база · M0 | ⏳ |
 | 410 | E20-12 | Контакты компании | E6-1 | 🤖 | haiku | 1 база · M0 | ⏳ |
 | 411 | E20-2 | Приглашение без вакансии (ADR-022), контракт, `require_verified_email` | E8-1, Т0 | 🤖 | opus | 1 база · M0 | ⏳ |
