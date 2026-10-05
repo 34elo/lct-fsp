@@ -20,6 +20,10 @@ import { CandidateOfferDetail, CandidateOffers } from "@/features/offers/Candida
 import NotFound from "@/pages/NotFound";
 import Register from "@/pages/Register";
 import { Stub } from "@/pages/Stub";
+// >>> block1 imports
+// <<< block1 imports
+// >>> block2 imports
+// <<< block2 imports
 
 // Разделы по ролям грузятся лениво (frontend.md: «ленивые разделы»).
 const PublicLayout = lazy(() => import("@/app/layouts/PublicLayout"));
@@ -47,6 +51,10 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
             <Route path="/me/skills/:slug" element={<SkillEvidence />} />
             <Route path="/me/offers" element={<CandidateOffers />} />
             <Route path="/me/offers/:id" element={<CandidateOfferDetail />} />
+            {/* >>> block1 (candidate) */}
+            {/* <<< block1 (candidate) */}
+            {/* >>> block2 (candidate) */}
+            {/* <<< block2 (candidate) */}
           </>
         )}
         {section === "employer" && (
@@ -61,6 +69,18 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
             <Route path="/employer/offers" element={<EmployerOffers />} />
             <Route path="/employer/offers/:id" element={<EmployerOfferDetail />} />
             <Route path="/employer/vacancies/:id/shortlist" element={<EmployerSearch />} />
+            {/* >>> block1 (employer) */}
+            {/* <<< block1 (employer) */}
+            {/* >>> block2 (employer) */}
+            {/* <<< block2 (employer) */}
+          </>
+        )}
+        {section === "admin" && (
+          <>
+            {/* >>> block1 (admin) */}
+            {/* <<< block1 (admin) */}
+            {/* >>> block2 (admin) */}
+            {/* <<< block2 (admin) */}
           </>
         )}
       </Route>
@@ -79,6 +99,14 @@ export function App() {
           <Route path="/auth/magic" element={<MagicLogin />} />
           <Route path="/consents" element={<Consents />} />
           {stubs("auth")}
+          {/* >>> block1 (auth) */}
+          {/* <<< block1 (auth) */}
+          {/* >>> block2 (auth) */}
+          {/* <<< block2 (auth) */}
+          {/* >>> block1 (public) */}
+          {/* <<< block1 (public) */}
+          {/* >>> block2 (public) */}
+          {/* <<< block2 (public) */}
         </Route>
         {guarded("candidate", CandidateLayout)}
         {guarded("employer", EmployerLayout)}
