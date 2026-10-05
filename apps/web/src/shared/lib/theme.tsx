@@ -6,9 +6,9 @@ const KEY = "fsp-theme";
 function readStored(): ThemeMode {
   try {
     const v = localStorage.getItem(KEY);
-    return v === "light" || v === "dark" ? v : "system";
+    return v === "dark" || v === "system" ? v : "light"; // по умолчанию светлая
   } catch {
-    return "system";
+    return "light";
   }
 }
 
@@ -37,8 +37,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const setMode = useCallback((m: ThemeMode) => {
     try {
-      if (m === "system") localStorage.removeItem(KEY);
-      else localStorage.setItem(KEY, m);
+      localStorage.setItem(KEY, m);
     } catch {
       /* хранилище недоступно: тема живёт до перезагрузки */
     }
