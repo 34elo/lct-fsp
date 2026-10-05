@@ -1,4 +1,4 @@
-"""HTTP `/assessment/*` (assessment.md §10). E22-1: попытка, `next`, `answers`, состояние."""
+"""HTTP `/assessment/*` (assessment.md §10). Попытка, `next`, `answers`, состояние, опрос."""
 
 from __future__ import annotations
 
@@ -47,6 +47,8 @@ class AttemptOut(BaseModel):
     target: int
     started_at: datetime
     finished_at: datetime | None
+    low_confidence: bool = False  # решение по EAP на максимуме заданий или при нехватке банка
+    upgrade_offer: TestGrade | None = None  # бонусный этап пройден: предложение повышения
 
 
 class NextOut(BaseModel):
@@ -78,7 +80,7 @@ class AnswerOut(BaseModel):
     "/assessment/attempts",
     status_code=201,
     response_model=AttemptOut,
-    responses=problem_responses(401, 403, 409, 422),
+    responses=problem_responses(401, 403, 409, 422, 503),
 )
 async def create_attempt(
     body: AttemptIn,

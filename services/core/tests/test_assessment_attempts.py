@@ -138,7 +138,9 @@ async def test_attempt_flow_through_api(api, factory, taxonomy_loaded):
         assert seen <= 20
 
     final = api.get(f"/assessment/attempts/{aid}", headers=h).json()
-    assert final["status"] == "passed" and final["answered"] == seen == att["target"]
+    # длину задаёт SPRT (E22-3): минимум 6, если банк позволяет; иначе решение по EAP
+    assert final["status"] == "passed" and final["answered"] == seen
+    assert seen >= att["target"] or final["low_confidence"]
     assert final["finished_at"] is not None
     async with session_scope(factory) as s:
         fams = (await s.execute(select(func.count()).select_from(FamilyRow))).scalar_one()
