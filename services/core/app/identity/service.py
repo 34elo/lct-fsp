@@ -16,6 +16,7 @@ from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import Settings
 from app.identity.models import RefreshToken, User
 
 REFRESH_TTL = timedelta(days=30)
@@ -148,3 +149,19 @@ async def logout(session: AsyncSession, raw: str | None) -> None:
     )
     if row is not None:
         await _revoke_family(session, row.family_id)
+
+
+def is_email_verified(user: User, *, required: bool | None = None) -> bool:
+    """`True`, если проверка выключена (`EMAIL_VERIFICATION_REQUIRED=false`) или email подтверждён.
+
+    `required` переопределяет настройку (для тестов); по умолчанию читается из окружения.
+    """
+    if required is None:
+        required = Settings().email_verification_required
+    return not required or user.email_verified_at is not None
+
+
+def require_verified_email(user: User, *, required: bool | None = None) -> None:
+    """403 `email_not_verified`, если проверка включена, а email не подтверждён."""
+    if not is_email_verified(user, required=required):
+        raise ProblemError(403, "email_not_verified", "Подтвердите email")
