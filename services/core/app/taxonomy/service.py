@@ -13,6 +13,7 @@ import uuid
 from dataclasses import dataclass, field
 from typing import Any
 
+from fsp_contracts.assessment import ProfessionInfo
 from fsp_contracts.envelope import new_envelope
 from fsp_contracts.events import TaxonomyUpdated
 from fsp_platform.outbox import add_to_outbox
@@ -502,3 +503,21 @@ async def alias_index(session: AsyncSession) -> AliasIndex:
         forms={f: next(iter(s)) for f, s in forms.items() if len(s) == 1},
         names={sk.slug: sk.name for sk in skills.values() if sk.status != "merged"},
     )
+
+
+async def list_professions(session: AsyncSession) -> list[ProfessionInfo]:
+    """Профессии и веса навыков (blocks.md §4.3). Типы навыков (`skill_types`) добавит E21-1."""
+    roles = list(await session.scalars(select(Role).order_by(Role.slug)))
+    slug_by_id = {
+        s.id: s.slug for s in await session.scalars(select(Skill).where(Skill.status.in_(_LIVE)))
+    }
+    weights: dict[str, dict[str, float]] = {}
+    for rs in await session.scalars(select(RoleSkill)):
+        if rs.skill_id in slug_by_id:
+            weights.setdefault(rs.role, {})[slug_by_id[rs.skill_id]] = rs.weight
+    return [
+        ProfessionInfo(
+            slug=r.slug, title=r.name, skill_weights=dict(sorted(weights.get(r.slug, {}).items()))
+        )
+        for r in roles
+    ]
