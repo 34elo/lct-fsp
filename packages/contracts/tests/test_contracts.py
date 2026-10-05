@@ -225,3 +225,25 @@ def test_analytics_events_validate_and_reject_pii():
     g = validate_event(ev("graph_opened", {"nodes": 12, "from": "card"}), source="web")
     assert g.props == {"nodes": 12, "from": "card"}
     assert len(ANALYTICS_EVENTS) >= 45
+
+
+def test_offer_event_v2_without_vacancy():
+    """ADR-022 (E20-2): `vacancy_id` пуст, `initiator`; старый payload без поля — `employer`."""
+    from fsp_contracts import new_envelope
+    from fsp_contracts.hiring import OFFER_SCHEMA_VERSION, OfferInitiator
+
+    ids = {"offer_id": str(uuid4()), "candidate_id": str(uuid4()), "company_id": str(uuid4())}
+    env = new_envelope(
+        "offer.sent", "core", OfferEvent(**ids, status=OfferStatus.sent, actor="company"),
+        schema_version=OFFER_SCHEMA_VERSION,
+    )  # fmt: skip
+    again = Envelope.model_validate_json(env.model_dump_json())
+    assert again.schema_version == 2
+    parsed = parse_payload(again)
+    assert parsed.vacancy_id is None and parsed.initiator is OfferInitiator.employer
+    v1 = OfferEvent.model_validate({**ids, "vacancy_id": str(uuid4()), "status": "sent"})
+    assert v1.initiator == "employer"
+    resp = OfferEvent.model_validate({**ids, "status": "sent", "initiator": "candidate"})
+    assert resp.initiator is OfferInitiator.candidate
+    with pytest.raises(ValidationError):
+        OfferEvent.model_validate({**ids, "status": "sent", "initiator": "admin"})

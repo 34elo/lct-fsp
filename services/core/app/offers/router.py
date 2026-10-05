@@ -16,6 +16,7 @@ from fsp_contracts.enums import (
     RoleSlug,
     WorkFormat,
 )
+from fsp_contracts.hiring import ContactMethod, OfferInitiator
 from fsp_contracts.ml import ExplanationItem
 from fsp_platform.app import ProblemError
 from fsp_platform.ratelimit import RateLimiter
@@ -26,6 +27,7 @@ from app.candidates import service as candidates
 from app.companies import service as companies
 from app.deps import get_limiter, get_session
 from app.graph.trust import TrustConfig
+from app.identity import service as identity
 from app.identity.deps import require_roles
 from app.identity.models import User
 from app.matching import card
@@ -52,14 +54,19 @@ _PACCEPT = PAcceptConfig.load()
 
 
 class CreateOffer(BaseModel):
+    """Приглашение работодателя. Без `vacancy_id` (ADR-022) обязателен `title`."""
+
     model_config = ConfigDict(extra="forbid")
 
-    vacancy_id: uuid.UUID
+    vacancy_id: uuid.UUID | None = None
     candidate_pseudo_id: str = Field(min_length=1, max_length=64)
     # обязательны по смыслу; отсутствие даёт 422 `salary_range_required`, а не общую ошибку схемы
     salary_from: int | None = Field(default=None, le=100_000_000)
     salary_to: int | None = Field(default=None, le=100_000_000)
     message: str | None = Field(default=None, max_length=2000)
+    title: str | None = Field(default=None, max_length=200)
+    description: str | None = Field(default=None, max_length=4000)
+    contact_method: ContactMethod | None = None
 
 
 class DeclineIn(BaseModel):
@@ -100,7 +107,11 @@ class OfferOut(BaseModel):
     status: OfferStatus
     created_at: datetime
     expires_at: datetime
-    vacancy: VacancyBrief
+    vacancy: VacancyBrief | None = None  # пусто у приглашения без вакансии (ADR-022)
+    title: str | None = None
+    description: str | None = None
+    contact_method: ContactMethod | None = None
+    initiator: OfferInitiator = OfferInitiator.employer
     salary_from: int
     salary_to: int
     message: str | None = None
@@ -192,11 +203,13 @@ class ComplaintOut(BaseModel):
 
 
 async def _base(session: AsyncSession, o: Offer) -> dict[str, Any]:
-    v = await vacancies.get(session, o.vacancy_id)
+    v = await vacancies.get(session, o.vacancy_id) if o.vacancy_id else None
     snap = o.match_snapshot
     return {
         "id": o.id, "status": o.status, "created_at": o.created_at, "expires_at": o.expires_at,
-        "vacancy": VacancyBrief.model_validate(v, from_attributes=True),
+        "vacancy": VacancyBrief.model_validate(v, from_attributes=True) if v else None,
+        "title": o.title or (v.title if v else None), "description": o.description,
+        "contact_method": o.contact_method, "initiator": o.initiator,
         "salary_from": o.salary_from, "salary_to": o.salary_to, "message": o.message,
         "below_candidate_min": o.below_candidate_min,
         "match_snapshot": MatchSnapshot.model_validate(snap) if snap else None,
@@ -268,7 +281,7 @@ async def salary_hint(
     "/offers",
     response_model=OfferForCompany,
     status_code=201,
-    responses=problem_responses(401, 403, 404, 422),
+    responses=problem_responses(401, 403, 404, 409, 422, 429),
 )
 async def create_offer(
     body: CreateOffer,
@@ -279,15 +292,17 @@ async def create_offer(
 ) -> Any:
     if not idempotency_key or not idempotency_key.strip():
         raise ProblemError(422, "idempotency_key_required", "Нужен заголовок Idempotency-Key")
+    identity.require_verified_email(user)  # blocks.md §4.6
     company, _ = await companies.require_company(session, user.id)
-    vacancy = await vacancies.get_owned(session, user, body.vacancy_id)
+    vacancy = await vacancies.get_owned(session, user, body.vacancy_id) if body.vacancy_id else None
     cand = await card.get_visible(session, body.candidate_pseudo_id, company.id)
     if cand is None:
         raise ProblemError(404, "candidate_not_found", "Кандидат не найден")
     offer, replay = await service.create(
         session, company=company, user_id=user.id, vacancy=vacancy, candidate=cand,
         salary_from=body.salary_from, salary_to=body.salary_to, message=body.message,
-        idempotency_key=idempotency_key.strip(), limits=_LIMITS,
+        idempotency_key=idempotency_key.strip(), limits=_LIMITS, title=body.title,
+        description=body.description, contact_method=body.contact_method,
     )  # fmt: skip
     if replay:
         response.headers["Idempotent-Replay"] = "true"

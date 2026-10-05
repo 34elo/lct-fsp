@@ -81,13 +81,14 @@ def _updated(user_id: uuid.UUID, ev: OfferEvent, awaiting: str | None) -> UiMess
 async def offer_card_data(session: AsyncSession, offer: Offer) -> dict:
     """Поля шаблона `offer_new` (и карточки оффера в боте): без ПДн, только вилка и вакансия."""
     company = await companies.get_company(session, offer.company_id)
-    vacancy = await vacancies.get(session, offer.vacancy_id)
+    vacancy = await vacancies.get(session, offer.vacancy_id) if offer.vacancy_id else None
     snap = offer.match_snapshot or {}
     return {
         "offer_id": str(offer.id),
         "company_name": company.name if company else None,
         "company_responsibility": company.responsibility_score if company else None,
-        "vacancy_title": vacancy.title if vacancy else None,
+        # приглашение без вакансии (ADR-022) показывает своё название
+        "vacancy_title": vacancy.title if vacancy else offer.title,
         "formats": list(vacancy.formats) if vacancy else [],
         "employment_type": vacancy.employment_type if vacancy else None,
         "salary_from": offer.salary_from,
@@ -134,7 +135,11 @@ async def _to_company(
 ) -> None:
     """Всем участникам компании. Без ПДн кандидата: id оффера, вакансия, статус."""
     vacancy = await vacancies.get(session, ev.vacancy_id) if ev.vacancy_id else None
-    vacancy_title = vacancy.title if vacancy else None
+    if vacancy is not None:
+        vacancy_title = vacancy.title
+    else:  # приглашение без вакансии (ADR-022): его название
+        offer = await offers.get(session, ev.offer_id)
+        vacancy_title = offer.title if offer else None
     data = {
         "offer_id": str(ev.offer_id),
         "status": ev.status.value,
