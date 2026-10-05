@@ -26,7 +26,7 @@
 | `trust_level` | 0…4 (○○○○ … ●●●●) |
 | `offer_status` | `sent`, `viewed`, `accepted`, `declined`, `expired`, `withdrawn`, `interview`, `hired`, `not_hired` |
 | `decline_reason` | `low_salary`, `wrong_stack`, `wrong_format`, `wrong_grade`, `not_looking`, `other` |
-| `consent_type` | `pd_processing` (обязательное), `fsp_data`, `code_analysis`, `telegram_notifications`, `public_profile` |
+| `consent_type` | `pd_processing` (обязательное), `fsp_data`, `code_analysis`, `telegram_notifications`, `public_profile`, `profile_publication` |
 | `fsp_discipline` | `algorithmic`, `product`, `security`, `uav`, `robotics` ⚠️ |
 | `fsp_level` | `regional`, `interregional`, `national`, `international` ⚠️ |
 | `fsp_rank` | `youth_3`, `youth_2`, `youth_1`, `rank_3`, `rank_2`, `rank_1`, `cms` (КМС), `ms` (МС), `msic` (МСМК) ⚠️ |
