@@ -13,7 +13,7 @@ import uuid
 from dataclasses import dataclass, field
 from typing import Any
 
-from fsp_contracts.assessment import ProfessionInfo
+from fsp_contracts.assessment import ProfessionInfo, SkillType
 from fsp_contracts.envelope import new_envelope
 from fsp_contracts.events import TaxonomyUpdated
 from fsp_platform.outbox import add_to_outbox
@@ -95,7 +95,14 @@ async def build_snapshot(session: AsyncSession) -> dict[str, Any]:
             for rs in await session.scalars(select(RoleSkill).where(RoleSkill.role == role.slug))
             if rs.skill_id in by_id
         }
-        roles.append({"slug": role.slug, "name": role.name, "skills": dict(sorted(ws.items()))})
+        roles.append(
+            {
+                "slug": role.slug,
+                "name": role.name,
+                "profession": role.is_profession,
+                "skills": dict(sorted(ws.items())),
+            }
+        )
     disciplines = []
     for d in await session.scalars(select(Discipline).order_by(Discipline.slug)):
         rules = sorted(
@@ -119,6 +126,7 @@ async def build_snapshot(session: AsyncSession) -> dict[str, Any]:
                 "group": s.grp,
                 "status": s.status,
                 "testable": s.testable,
+                "skill_type": s.skill_type,
                 "description": s.description,
                 "aliases": aliases.get(s.id, []),
             }
@@ -178,6 +186,7 @@ async def sync(session: AsyncSession, data: TaxonomyData) -> SyncResult:
             continue  # правка администратора/конвейера важнее сида
         row.name, row.kind, row.grp = sk.name, sk.kind, sk.group
         row.testable, row.description = sk.testable, sk.description
+        row.skill_type = data.skill_types[sk.slug].value
     await session.flush()
     ids = {slug: row.id for slug, row in existing.items()}
 
@@ -238,9 +247,9 @@ async def sync(session: AsyncSession, data: TaxonomyData) -> SyncResult:
     roles = {r.slug: r for r in await session.scalars(select(Role))}
     for r in data.roles:
         if r.slug in roles:
-            roles[r.slug].name = r.name
+            roles[r.slug].name, roles[r.slug].is_profession = r.name, r.profession
         else:
-            session.add(Role(slug=r.slug, name=r.name))
+            session.add(Role(slug=r.slug, name=r.name, is_profession=r.profession))
     await session.flush()
     have_rs = {(x.role, x.skill_id): x for x in await session.scalars(select(RoleSkill))}
     want_rs = {(r.slug, ids[s]): w for r in data.roles for s, w in r.skills.items()}
@@ -506,18 +515,22 @@ async def alias_index(session: AsyncSession) -> AliasIndex:
 
 
 async def list_professions(session: AsyncSession) -> list[ProfessionInfo]:
-    """Профессии и веса навыков (blocks.md §4.3). Типы навыков (`skill_types`) добавит E21-1."""
-    roles = list(await session.scalars(select(Role).order_by(Role.slug)))
-    slug_by_id = {
-        s.id: s.slug for s in await session.scalars(select(Skill).where(Skill.status.in_(_LIVE)))
-    }
+    """Профессии теста (`roles.is_profession`), веса и типы навыков (blocks.md §4.3)."""
+    roles = list(
+        await session.scalars(select(Role).where(Role.is_profession.is_(True)).order_by(Role.slug))
+    )
+    skills = {s.id: s for s in await session.scalars(select(Skill).where(Skill.status.in_(_LIVE)))}
     weights: dict[str, dict[str, float]] = {}
     for rs in await session.scalars(select(RoleSkill)):
-        if rs.skill_id in slug_by_id:
-            weights.setdefault(rs.role, {})[slug_by_id[rs.skill_id]] = rs.weight
-    return [
-        ProfessionInfo(
-            slug=r.slug, title=r.name, skill_weights=dict(sorted(weights.get(r.slug, {}).items()))
-        )
-        for r in roles
-    ]
+        if rs.skill_id in skills:
+            weights.setdefault(rs.role, {})[skills[rs.skill_id].slug] = rs.weight
+    out = []
+    for r in roles:
+        ws = dict(sorted(weights.get(r.slug, {}).items()))
+        types = {
+            s.slug: SkillType(s.skill_type)
+            for s in skills.values()
+            if s.slug in ws and s.skill_type is not None
+        }
+        out.append(ProfessionInfo(slug=r.slug, title=r.name, skill_weights=ws, skill_types=types))
+    return out

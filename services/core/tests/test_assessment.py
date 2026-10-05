@@ -14,7 +14,7 @@ from app.identity.models import User
 from app.openapi_errors import problem_responses
 from app.taxonomy import service as tax
 from app.taxonomy.loader import load_taxonomy
-from fsp_contracts.assessment import CategoryChanged, TestGrade
+from fsp_contracts.assessment import CategoryChanged, SkillType, TestGrade
 from fsp_contracts.registry import EVENTS
 from fsp_platform.app import ProblemError
 from fsp_platform.db import make_engine, make_session_factory, session_scope
@@ -166,10 +166,96 @@ async def test_list_professions(factory):
         await tax.sync(s, data)
     async with session_scope(factory) as s:
         profs = {p.slug: p for p in await tax.list_professions(s)}
-    assert {"backend", "frontend", "mobile", "ml", "devops", "qa"} <= set(profs)
+    assert set(profs) == {"backend", "frontend", "mobile", "ml", "devops", "qa", "ai_engineer"}
     be = profs["backend"]
     assert be.title and be.skill_weights and all(0 < w <= 1 for w in be.skill_weights.values())
-    assert "python" in be.skill_weights and be.skill_types == {}
+    assert "python" in be.skill_weights
+    assert set(be.skill_types) == set(be.skill_weights)
+    assert be.skill_types["python"] == SkillType.hard
+    assert be.skill_types["algorithms"] == SkillType.fundamental
+    assert be.skill_types["debugging"] == SkillType.thinking
+    # каждая профессия покрывает все шесть типов навыков
+    for p in profs.values():
+        assert set(p.skill_types.values()) == set(SkillType), p.slug
+    assert {"rag", "llm_serving"} <= set(profs["ai_engineer"].skill_weights)
+
+
+async def test_professions_endpoint(factory, db_url):
+    from app.config import Settings
+    from app.main import build_app
+    from fastapi.testclient import TestClient
+
+    data = load_taxonomy(CORE.parents[1] / "data" / "taxonomy")
+    async with session_scope(factory) as s:
+        await tax.sync(s, data)
+    app = build_app(Settings(database_url=db_url, ui_bus_enabled=False))
+    with TestClient(app) as c:
+        r = c.get("/taxonomy/professions")
+    assert r.status_code == 200
+    body = r.json()
+    assert len(body["professions"]) == 7
+    assert body["skill_types"] == [t.value for t in SkillType]
+    assert body["grades"] == [
+        {"grade": "junior", "cut": -1.0},
+        {"grade": "middle", "cut": 0.0},
+        {"grade": "senior", "cut": 1.0},
+    ]
+
+
+def test_loader_skill_types_and_coverage(tmp_path):
+    import yaml
+    from app.taxonomy.loader import TaxonomyError
+
+    def build(profession_skills, types=None):
+        d = tmp_path / "t"
+        d.mkdir(exist_ok=True)
+        skills = [
+            {"slug": "a", "name": "A", "kind": "hard"},
+            {"slug": "b", "name": "B", "kind": "soft"},
+            {"slug": "c", "name": "C", "kind": "domain", "group": "fundamentals"},
+            {"slug": "d", "name": "D", "kind": "hard"},
+            {"slug": "e", "name": "E", "kind": "hard"},
+            {"slug": "f", "name": "F", "kind": "hard"},
+        ]
+        doc = {
+            "skills": skills,
+            "roles": [
+                {"slug": "dev", "name": "Dev", "profession": True, "skills": profession_skills}
+            ],
+        }
+        if types:
+            doc["skill_types"] = types
+        (d / "x.yaml").write_text(yaml.safe_dump(doc), encoding="utf-8")
+        return load_taxonomy(d)
+
+    with pytest.raises(TaxonomyError, match="нет навыков типов"):
+        build({"a": 1.0, "b": 1.0, "c": 1.0})
+    data = build(
+        {"a": 1.0, "b": 1.0, "c": 1.0, "d": 1.0, "e": 1.0, "f": 1.0},
+        [
+            {"type": "thinking", "skills": ["d"]},
+            {"type": "business", "skills": ["e"]},
+            {"type": "experience", "skills": ["f"]},
+        ],
+    )
+    assert (
+        data.skill_types["a"] == SkillType.hard and data.skill_types["c"] == SkillType.fundamental
+    )
+    assert data.skill_types["f"] == SkillType.experience
+    with pytest.raises(TaxonomyError, match="два разных типа"):
+        build(
+            {"a": 1.0},
+            [{"type": "thinking", "skills": ["a"]}, {"type": "soft", "skills": ["a"]}],
+        )
+    with pytest.raises(TaxonomyError, match="неизвестные навыки"):
+        build({"a": 1.0}, [{"type": "soft", "skills": ["zzz"]}])
+
+
+def test_real_scoring_grade_cuts():
+    from app.taxonomy.loader import load_grade_cuts
+
+    cuts = load_grade_cuts(CORE.parents[1] / "data" / "scoring.yaml")
+    assert cuts == {"junior": -1.0, "middle": 0.0, "senior": 1.0}
 
 
 def test_problem_responses_in_openapi():

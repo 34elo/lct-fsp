@@ -188,6 +188,7 @@
 | `GET /taxonomy` | `{version, skills[{slug,name,kind,group,testable}], roles[{slug,name}], disciplines[{slug,name}], grades[], formats[], employment_types[]}` (только `active` навыки). `ETag` `W/"tax-<version>-<хеш статики>"`, `If-None-Match` → 304, `Cache-Control: public, max-age=300` |
 | `POST /integrations/fsp/webhook` | Вебхук ФСП/мока (HMAC `X-Signature`) |
 | `GET /healthz`, `GET /readyz` | Проверки живости и готовности |
+| `GET /taxonomy/professions` | Публичный (E21-1). `{professions[{slug,title,skill_weights{slug:вес},skill_types{slug:тип}}], skill_types[6], grades[{grade,cut}]}`; профессии — роли с `profession: true`, каждая покрывает все 6 типов навыков; `cut` — минимальный θ грейда из `scoring.yaml` `assessment.grades` |
 
 ### 2.8. Realtime
 
@@ -214,7 +215,7 @@
 | `POST /internal/tg/tests`, `…/{id}/answer` | bot | Адаптивный тест |
 | `GET /internal/tg/navigator?tg_user_id=` | bot | Навигатор кратко |
 | `PATCH /internal/tg/status` | bot | Статус поиска |
-| `GET /internal/taxonomy/snapshot` | ml | `Authorization: Service <SERVICE_TOKEN_ML>` (пустой токен = закрыто, иначе 401). `{version, skills[{id,slug,name,kind,group,status,testable,description,aliases[]}], adjacent[{a,b,weight}], parent[{child,parent,weight}], distinct[[a,b]], roles[{slug,name,skills{}}], disciplines[{slug,name,rules[{skill,weight,track}]}]}`; вершины `active` и `provisional`, кеш Redis `c:tax:{version}` |
+| `GET /internal/taxonomy/snapshot` | ml | `Authorization: Service <SERVICE_TOKEN_ML>` (пустой токен = закрыто, иначе 401). `{version, skills[{id,slug,name,kind,group,status,testable,description,aliases[]}], adjacent[{a,b,weight}], parent[{child,parent,weight}], distinct[[a,b]], roles[{slug,name,profession,skills{}}], disciplines[{slug,name,rules[{skill,weight,track}]}]}`; вершины `active` и `provisional`, кеш Redis `c:tax:{version}` |
 
 **Internal fsp-connector** (вызывает core-api):
 
