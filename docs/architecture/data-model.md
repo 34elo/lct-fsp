@@ -85,7 +85,8 @@ CREATE TABLE users (
   role          text NOT NULL,                  -- user_role
   is_active     boolean NOT NULL DEFAULT true,
   created_at    timestamptz NOT NULL DEFAULT now(),
-  deleted_at    timestamptz
+  deleted_at    timestamptz,
+  email_verified_at timestamptz                   -- v2, миграция s0_02 (blocks.md §4.6)
 );
 
 CREATE TABLE telegram_accounts (
@@ -197,6 +198,20 @@ CREATE TABLE category_disputes (
   id uuid PRIMARY KEY, candidate_id uuid REFERENCES candidates(user_id) ON DELETE CASCADE,
   claimed_role text, claimed_grade text, comment text,
   created_at timestamptz DEFAULT now(), resolved_at timestamptz
+);
+
+-- v2 (миграция s0_01; blocks.md §4.2): текущий грейд по профессии; пишет блок 1, читает блок 2
+CREATE TABLE grades (
+  candidate_id uuid REFERENCES candidates(user_id) ON DELETE CASCADE,
+  profession text, grade text NOT NULL, theta float NOT NULL, se float,
+  band_position float NOT NULL, theta_by_type jsonb NOT NULL DEFAULT '{}',
+  integrity float NOT NULL DEFAULT 1.0,
+  needs_confirmation boolean NOT NULL DEFAULT false, low_confidence boolean NOT NULL DEFAULT false,
+  source text NOT NULL,                  -- test | seed
+  attempt_id uuid,                       -- FK на attempts добавит блок 1
+  confirmed_at timestamptz NOT NULL, valid_until timestamptz NOT NULL, next_change_at timestamptz NOT NULL,
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (candidate_id, profession)
 );
 ```
 
