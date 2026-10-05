@@ -1,6 +1,76 @@
 import { useEffect, useState, type ReactNode } from "react";
 
-import { Button, ConstellationAvatar, Logo, MatchRing, SkillChip, ThemeScope, TrustDots, type TrustKind } from "../src";
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Checkbox,
+  ConstellationAvatar,
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  DialogTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  EmptyState,
+  ErrorState,
+  Field,
+  FieldInput,
+  Input,
+  Logo,
+  MatchRing,
+  NotFound,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  Progress,
+  RadioGroup,
+  RadioGroupItem,
+  SegmentedControl,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Separator,
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetTitle,
+  SheetTrigger,
+  SkillChip,
+  Skeleton,
+  Slider,
+  Switch,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  Textarea,
+  ThemeScope,
+  Toaster,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+  TrustDots,
+  toast,
+  type TrustKind,
+} from "../src";
 import { DEMO_CANDIDATES, DEMO_SKILLS, RADII, TEXT_SIZES, TOKEN_GROUPS } from "./data";
 
 type Page = "tokens" | "base" | "brand";
@@ -94,24 +164,264 @@ function Tokens() {
   );
 }
 
-function Base() {
+function Row({ name, children }: { name: string; children: ReactNode }) {
   return (
-    <div className="grid gap-5">
-      {(["primary", "outline", "ghost"] as const).map((variant) => (
-        <Section key={variant} title={`Button · ${variant}`}>
-          <div className="flex flex-wrap items-center gap-3">
+    <div className="grid items-center gap-3 border-b border-hairline py-3 last:border-0 md:grid-cols-[9rem_1fr]">
+      <span className="lbl text-muted">{name}</span>
+      <div className="flex flex-wrap items-center gap-3">{children}</div>
+    </div>
+  );
+}
+
+function Base() {
+  const [trust, setTrust] = useState("all");
+  const [sheet, setSheet] = useState<"bottom" | "right">("bottom");
+  return (
+    <TooltipProvider>
+      <div className="grid gap-5">
+        <Section title="Кнопка">
+          <Row name="variant">
+            {(["default", "outline", "ghost", "destructive", "link"] as const).map((v) => (
+              <Button key={v} variant={v}>
+                {v === "destructive" ? "Повторить" : "Отправить"}
+              </Button>
+            ))}
+          </Row>
+          <Row name="size">
             {(["sm", "md", "lg"] as const).map((size) => (
-              <Button key={size} variant={variant} size={size}>
+              <Button key={size} size={size}>
                 Пригласить · {size}
               </Button>
             ))}
-            <Button variant={variant} disabled>
-              Недоступно
-            </Button>
-          </div>
+          </Row>
+          <Row name="состояния">
+            <Button disabled>Отправить</Button>
+            <Button loading>Отправка</Button>
+          </Row>
         </Section>
-      ))}
-    </div>
+
+        <Section title="Поля">
+          <Row name="Input">
+            <Input placeholder="Значение" className="w-48" aria-label="Значение" />
+            <Input disabled placeholder="Значение" className="w-48" aria-label="Недоступно" />
+            <Input loading placeholder="..." className="w-48" aria-label="Загрузка" />
+          </Row>
+          <Row name="Field + error">
+            <Field label="Вилка" error="от > до" className="w-56">
+              <FieldInput defaultValue="от > до" />
+            </Field>
+            <Field label="Город" hint="Подсказка" className="w-56">
+              <FieldInput placeholder="Подсказка" />
+            </Field>
+          </Row>
+          <Row name="Textarea">
+            <Textarea placeholder="О себе" className="w-80" aria-label="О себе" />
+          </Row>
+          <Row name="Select">
+            <Select defaultValue="mid">
+              <SelectTrigger className="w-48" aria-label="Грейд">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="jun">Junior</SelectItem>
+                <SelectItem value="mid">Middle</SelectItem>
+                <SelectItem value="sen">Senior</SelectItem>
+              </SelectContent>
+            </Select>
+          </Row>
+          <Row name="Выбор">
+            <label className="flex items-center gap-2 text-14">
+              <Checkbox defaultChecked /> Согласен
+            </label>
+            <label className="flex items-center gap-2 text-14">
+              <Checkbox disabled /> Недоступно
+            </label>
+            <RadioGroup defaultValue="a" className="flex gap-4" aria-label="Режим">
+              <label className="flex items-center gap-2 text-14">
+                <RadioGroupItem value="a" /> Удалённо
+              </label>
+              <label className="flex items-center gap-2 text-14">
+                <RadioGroupItem value="b" /> Офис
+              </label>
+            </RadioGroup>
+            <Switch defaultChecked aria-label="Уведомления" />
+            <Slider defaultValue={[40]} className="w-48" />
+          </Row>
+        </Section>
+
+        <Section title="Навигация">
+          <Row name="Tabs">
+            <Tabs defaultValue="a" className="w-full">
+              <TabsList>
+                <TabsTrigger value="a" count={3}>
+                  Шорт-лист
+                </TabsTrigger>
+                <TabsTrigger value="b" count={8}>
+                  Офферы
+                </TabsTrigger>
+                <TabsTrigger value="c" disabled>
+                  Архив
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="a" className="pt-3 text-14 text-muted">
+                Кандидаты в шорт-листе
+              </TabsContent>
+              <TabsContent value="b" className="pt-3 text-14 text-muted">
+                Отправленные офферы
+              </TabsContent>
+            </Tabs>
+          </Row>
+          <Row name="Segmented">
+            <SegmentedControl
+              label="Уровень доверия"
+              value={trust}
+              onValueChange={setTrust}
+              options={[
+                { value: "all", label: "Все" },
+                { value: "inferred", label: "Выведенные" },
+                { value: "verified", label: "Подтверждённые" },
+              ]}
+            />
+          </Row>
+        </Section>
+
+        <Section title="Оверлеи">
+          <Row name="Dialog">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline">Диалог</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogTitle>Отозвать оффер?</DialogTitle>
+                <DialogDescription>Кандидат увидит статус «Отозван».</DialogDescription>
+                <div className="mt-4 flex justify-end gap-2">
+                  <DialogClose asChild>
+                    <Button variant="ghost">Отмена</Button>
+                  </DialogClose>
+                  <Button variant="destructive">Отозвать</Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </Row>
+          <Row name="Sheet">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" onClick={() => setSheet("bottom")}>
+                  Нижний лист
+                </Button>
+              </SheetTrigger>
+              <SheetTrigger asChild>
+                <Button variant="outline" onClick={() => setSheet("right")}>
+                  Правая панель
+                </Button>
+              </SheetTrigger>
+              <SheetContent side={sheet}>
+                <SheetTitle>Фильтры</SheetTitle>
+                <SheetDescription>Параметры поиска</SheetDescription>
+              </SheetContent>
+            </Sheet>
+          </Row>
+          <Row name="Popover">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline">Откуда навык</Button>
+              </PopoverTrigger>
+              <PopoverContent>Источники: результат ФСП, репозиторий, тест.</PopoverContent>
+            </Popover>
+          </Row>
+          <Row name="Tooltip">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost">Грейд предварительный</Button>
+              </TooltipTrigger>
+              <TooltipContent>Нужен тест для подтверждения</TooltipContent>
+            </Tooltip>
+          </Row>
+          <Row name="DropdownMenu">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">Действия</Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem>Открыть профиль</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>В шорт-лист</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </Row>
+          <Row name="Toast">
+            <Button variant="outline" onClick={() => toast.success("Сохранено")}>
+              Сохранено
+            </Button>
+            <Button variant="outline" onClick={() => toast.error("Ошибка сети")}>
+              Ошибка сети
+            </Button>
+            <Toaster />
+          </Row>
+        </Section>
+
+        <Section title="Отображение">
+          <Row name="Badge">
+            <Badge>FastAPI</Badge>
+            <Badge variant="muted">muted</Badge>
+            <Badge variant="success">Сохранено</Badge>
+            <Badge variant="warning">Предварительно</Badge>
+            <Badge variant="error">Ошибка</Badge>
+            <Badge variant="dashed">FastAPI</Badge>
+          </Row>
+          <Row name="Skeleton">
+            <Skeleton className="h-16 w-48" />
+            <Skeleton className="h-4 w-32" />
+          </Row>
+          <Row name="Progress">
+            <Progress value={65} aria-label="Заполнено" className="w-64" />
+          </Row>
+          <Row name="Separator">
+            <Separator />
+          </Row>
+          <Row name="Card">
+            <Card className="w-56">
+              <CardHeader>
+                <CardTitle>Backend #4821</CardTitle>
+              </CardHeader>
+              <CardContent className="text-14 text-muted">Middle · Python</CardContent>
+            </Card>
+          </Row>
+          <Row name="Table">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Навык</TableHead>
+                  <TableHead>Доверие</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell>Python</TableCell>
+                  <TableCell>
+                    <TrustDots level={4} kind="verified" />
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Docker</TableCell>
+                  <TableCell>
+                    <TrustDots level={2} kind="claimed" />
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </Row>
+        </Section>
+
+        <Section title="Пусто, ошибка, 404">
+          <div className="grid gap-4 md:grid-cols-2">
+            <EmptyState title="Пока пусто" description="Добавьте первый навык." action={<Button size="sm">Добавить</Button>} />
+            <ErrorState description="Не удалось получить данные." onRetry={() => undefined} />
+          </div>
+          <NotFound action={<Button variant="outline">На главную</Button>} />
+        </Section>
+      </div>
+    </TooltipProvider>
   );
 }
 
