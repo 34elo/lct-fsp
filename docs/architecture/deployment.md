@@ -118,6 +118,7 @@ api.fsp.patissons.tech {
 | `ml-worker-code` | `services/ml` (очередь `ml.code`, tmpfs 1 ГБ, ограничения из security §6) | — | 2 CPU, 2 ГБ | ml |
 | `llm-chat` | **уже запущен отдельно** на ПК: `llama-server` с Qwen3-VL-4B Q4 (общий с другим проектом, хостовый порт 18090, ключ API). В наш compose не входит, сервисы ml ходят по `LLM_BASE_URL` | — | GPU | — |
 | `dozzle` | amir20/dozzle | 8888 (только через WG) | — | dev |
+| `mailpit` | axllent/mailpit | 28025 (UI, 127.0.0.1) | — | dev |
 | `prometheus` | prom/prometheus (+ `infra/prometheus.yml`: core, ml, fsp-connector, rabbitmq:15692, llm-chat, exporters) | 9090 (через WG) | 512 МБ | obs |
 | `grafana` | grafana/grafana (+ дашборды `infra/grafana/*.json`) | 3000 (через WG) | 256 МБ | obs |
 | `postgres-exporter`, `redis-exporter` | prometheuscommunity/postgres-exporter, oliver006/redis_exporter | — | 64 МБ | obs |

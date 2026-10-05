@@ -12,7 +12,7 @@ from app.companies.models import Company, CompanyMember  # noqa: F401
 from app.consents.models import Consent  # noqa: F401
 from app.graph import fsp_models as _fsp  # noqa: F401
 from app.graph.models import CandidateSkill, Evidence  # noqa: F401
-from app.identity.models import RefreshToken, User  # noqa: F401
+from app.identity.models import EmailVerification, RefreshToken, User  # noqa: F401
 from app.matching.models import Match  # noqa: F401
 from app.notifications.models import Notification  # noqa: F401
 from app.offers.models import (  # noqa: F401

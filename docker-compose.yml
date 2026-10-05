@@ -41,6 +41,12 @@ x-env-core: &env-core
   SERVICE_TOKEN_CORE: ${SERVICE_TOKEN_CORE:?задай SERVICE_TOKEN_CORE в .env}
   TG_BOT_TOKEN: ${TG_BOT_TOKEN:-}
   TG_BOT_USERNAME: ${TG_BOT_USERNAME:-}
+  EMAIL_VERIFICATION_REQUIRED: ${EMAIL_VERIFICATION_REQUIRED:-false}
+  SMTP_HOST: ${SMTP_HOST:-}
+  SMTP_PORT: ${SMTP_PORT:-1025}
+  SMTP_USER: ${SMTP_USER:-}
+  SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+  SMTP_FROM: ${SMTP_FROM:-no-reply@fsp-career.local}
 
 x-core-deps: &core-deps
   postgres: {condition: service_healthy}
@@ -373,6 +379,14 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     ports:
       - "127.0.0.1:${DOZZLE_PORT:-28888}:8080"
+
+  # Почтовая «ловушка» для кода подтверждения email (E20-1): SMTP_HOST=mailpit, письма — в UI
+  mailpit:
+    <<: *restart
+    image: axllent/mailpit:v1.21
+    profiles: [dev]
+    ports:
+      - "127.0.0.1:${MAILPIT_UI_PORT:-28025}:8025"
 
 volumes:
   pgdata:

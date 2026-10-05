@@ -48,3 +48,17 @@ class RefreshToken(Base):
     expires_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True))
     revoked_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), default=None)
     user_agent: Mapped[str | None] = mapped_column(Text, default=None)
+
+
+class EmailVerification(Base):
+    """Активный код подтверждения email (E20-1): одна строка на пользователя."""
+
+    __tablename__ = "email_verifications"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    )
+    code_hash: Mapped[str] = mapped_column(Text)  # sha256(user_id:code), сам код не храним
+    expires_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True))
+    sent_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True))
+    attempts: Mapped[int] = mapped_column(default=0, server_default="0")

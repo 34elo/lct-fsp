@@ -14,7 +14,9 @@ from app.consents import service as consents
 from app.deps import get_limiter, get_session
 from app.identity import service
 from app.identity.deps import get_current_user
+from app.identity.mailer import SmtpMailer
 from app.identity.models import User
+from app.openapi_errors import problem_responses
 from app.telegram import service as telegram
 
 router = APIRouter(tags=["auth"])
@@ -36,10 +38,13 @@ class UserOut(BaseModel):
     id: UUID
     email: str | None
     role: str
+    email_verified: bool = False
 
     @classmethod
     def of(cls, u: User) -> UserOut:
-        return cls(id=u.id, email=u.email, role=u.role)
+        return cls(
+            id=u.id, email=u.email, role=u.role, email_verified=u.email_verified_at is not None
+        )
 
 
 class AuthOut(BaseModel):
@@ -82,6 +87,50 @@ def _client_ip(request: Request) -> str:
     return fwd.split(",")[0].strip() if fwd else (request.client.host if request.client else "-")
 
 
+def _mailer(request: Request) -> SmtpMailer:
+    mailer = getattr(request.app.state, "mailer", None)
+    return mailer or SmtpMailer(request.app.state.settings)
+
+
+class VerifyIn(BaseModel):
+    code: str = Field(min_length=1, max_length=16)
+
+
+@router.post(
+    "/auth/email/send",
+    status_code=204,
+    responses=problem_responses(401, 409, 429),
+)
+async def email_send(
+    request: Request,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+    limiter: RateLimiter = Depends(get_limiter),
+):
+    """Повторная отправка кода: не чаще раза в минуту (409 `cooldown`), 5 в час (429)."""
+    if user.email_verified_at is not None:
+        return Response(status_code=204)
+    await limiter.check(f"email_code:{user.id}", 5, 3600)
+    await service.send_verification_code(
+        session, _mailer(request), request.app.state.settings, user
+    )
+    return Response(status_code=204)
+
+
+@router.post("/auth/email/verify", status_code=204, responses=problem_responses(400, 401, 429))
+async def email_verify(
+    body: VerifyIn,
+    request: Request,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    """Код из письма → `email_verified_at`. Неверный/истёкший — 400."""
+    if not await service.verify_code(session, request.app.state.settings, user, body.code):
+        # счётчик попыток должен попасть в БД, поэтому не исключение, а обычный ответ
+        return problem_response(400, "invalid_code", "Неверный код", "Проверьте код из письма")
+    return Response(status_code=204)
+
+
 @router.post("/auth/register", status_code=201, response_model=AuthOut)
 async def register(
     body: RegisterIn,
@@ -92,6 +141,8 @@ async def register(
 ):
     await limiter.check(f"register:ip:{_client_ip(request)}", 10, 60)
     user = await service.register(session, body.email, body.password, body.role)
+    settings = request.app.state.settings
+    await service.send_verification_code(session, _mailer(request), settings, user)
     issued = await service.issue_tokens(
         session, request.app.state.settings.jwt_secret, user, request.headers.get("user-agent")
     )
