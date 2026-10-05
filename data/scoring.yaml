@@ -154,6 +154,14 @@ assessment:
     exposure_min_tests: 20
   # Пилотные слоты (§6): slots скрытых позиций в случайных местах после after-го задания.
   pilot: { slots: 2, after: 3 }
+  # Грейды (§5): срок подтверждения, смена грейда не чаще раза в change_cooldown_days, повтор того же
+  # грейда после неудачи — через retry_days. Попытка на грейд ниже после неудачи доступна сразу.
+  rules: { validity_days: 365, change_cooldown_days: 90, retry_days: 30 }
+  # Честность (§8): I < threshold → «требует подтверждения»; доказательства `test` тогда не выше
+  # unconfirmed_cap (доверие ●●○○, т.е. < 0.6).
+  integrity: { threshold: 0.6, unconfirmed_cap: 0.59 }
+  # Доказательство `test` в графе: сила = max_strength · доля набранного по навыку.
+  evidence: { max_strength: 0.8 }
 
 ## 2. Grade (грейд)
 

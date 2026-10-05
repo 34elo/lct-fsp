@@ -280,6 +280,8 @@ rank = 0.6·match + 0.4·strength
 
 Сделано в E22-7 (опрос): `PUT /assessment/survey` — валидация (`422 unknown_profession`, `invalid_salary_range`), стек нормализуется (lower, без дублей, ≤30), идентичный последнему опрос не создаёт новую строку; `GET /assessment/survey` — последний опрос, а если опросов нет — черновик из анкеты/резюме (`prefilled: true`, `id: null`); `GET /assessment/history` — `{surveys, attempts, cooldowns}` (кулдауны = `next_change_at` грейдов). `claimed_vs_confirmed` берёт `declared_grade` из последнего опроса по профессии.
 
+Сделано в E22-4 (грейды и история): по завершении попытки (`grading.py`) — запись `grades` (`source=test`, срок 365 дней, `next_change_at` = +90 дней при смене грейда; прошёл ниже текущего — грейд не меняется, неудача — не меняет), доказательства `test` в `graph` (сила = 0.8 · доля набранного по навыку, при `integrity < 0.6` не выше 0.59, т.е. ●●○○; `fact_type=test_attempt`, `fact_id` = попытка), события. Кулдауны проверяются при `POST /assessment/attempts`: `409 cooldown` с датой первой строкой `detail`; повтор грейда после неудачи — 30 дней, смена грейда при действующем грейде — 90 дней, попытка ниже неудачной доступна сразу один раз. `POST /assessment/attempts/{id}/upgrade` принимает повышение после бонуса (повтор идемпотентен; `409 no_upgrade_offer`, `409 upgrade_stale`). В `GET /assessment/attempts/{id}` у завершённой попытки — `result` (грейд, θ, θ по типам, честность, разбор по навыкам), `upgrade_accepted`; в `GET /assessment/history` — `retries` (закрытые повторы). Параметры — `scoring.yaml`: `assessment.rules`, `integrity`, `evidence`. Старые `graph/category.py` и `graph/grade.py` категорию не задают (ADR-018): их выход — сигнал силы профиля.
+
 ## 11. События (outbox)
 
 | Событие | Тело |

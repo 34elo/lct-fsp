@@ -429,6 +429,10 @@ async def test_no_repeat_within_90_days(api, factory, taxonomy_loaded, fake_bank
     h = register(api)
     first = _start(api, h)
     _run(api, h, first, answer="0")
+    async with session_scope(factory) as s:  # E22-4: повтор грейда после неудачи — через 30 дней
+        (await s.get(Attempt, uuid.UUID(first))).finished_at = datetime.now(UTC) - timedelta(
+            days=31
+        )
     second = _start(api, h)
     _run(api, h, second, answer="0")
     _, rows1 = await _state(factory, first)
