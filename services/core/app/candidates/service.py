@@ -204,7 +204,14 @@ async def search_pool(
     relocation_ok: bool | None = None,
     active_only: bool = False,
 ) -> list[Candidate]:
-    """Каталог: видимые анкеты по фильтрам анкеты (скаляры — SQL, массивы — в памяти)."""
+    """Каталог: видимые анкеты по фильтрам анкеты (скаляры — SQL, массивы — в памяти).
+
+    Кандидат видна только если есть активное согласие profile_publication (§4.5 blocks.md).
+    """
+    from fsp_contracts.enums import ConsentType
+
+    from app.consents import service as consents
+
     stmt = select(Candidate).where(
         Candidate.deleted_at.is_(None),
         Candidate.search_status != "dnd",
@@ -233,6 +240,9 @@ async def search_pool(
         if lowered and (c.city or "").casefold() not in lowered and not c.relocation:
             continue
         if active_only and effective_status(c) != "active":
+            continue
+        # Кандидат виден в поиске только если дал согласие на публикацию профиля
+        if not await consents.has_consent(session, c.user_id, ConsentType.profile_publication):
             continue
         out.append(c)
     return out
