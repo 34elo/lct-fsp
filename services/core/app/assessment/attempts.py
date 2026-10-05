@@ -2,8 +2,8 @@
 
 Каркас без психометрии: порядок заданий фиксируется при создании попытки (навыки профессии,
 уровень около заявленного грейда, чередование типов навыков), попытка — `items.min` заданий,
-итог — средняя доля ≥ `simple_pass_share`. Rasch/EAP/SPRT и выбор по дефициту — E22-2/E22-3,
-грейды и события — E22-4.
+итог — средняя доля ≥ `simple_pass_share`. При завершении — θ/SE по EAP и калибровка `b`
+(E22-2, `psychometrics_db`). SPRT и выбор по дефициту — E22-3, грейды и события — E22-4.
 
 Ключ на клиент не уходит: в `responses` лежат только `(family_id, seed)`, задание пересобирается
 на сервере при выдаче и при проверке.
@@ -26,6 +26,7 @@ from app.assessment import families as registry
 from app.assessment.config import AssessmentConfig
 from app.assessment.families.base import Family, Item
 from app.assessment.models import Attempt, FamilyRow, Response
+from app.assessment.psychometrics_db import finalize_attempt
 from app.assessment.world import DOMAINS, World
 from app.taxonomy import service as taxonomy
 
@@ -70,6 +71,7 @@ async def sync_code_families(session: AsyncSession, cfg: AssessmentConfig) -> No
                 source="code",
                 status="active",
                 b=cfg.prior_b(fam.level),
+                anchor=bool(getattr(fam, "anchor", False)),
                 key_status="approved",
             )
             session.add(row)
@@ -188,7 +190,7 @@ async def _finish(session: AsyncSession, att: Attempt, cfg: AssessmentConfig) ->
     )
     att.status = "passed" if (mean or 0.0) >= cfg.simple_pass_share else "failed"
     att.finished_at = datetime.now(UTC)
-    await session.flush()
+    await finalize_attempt(session, att, cfg)
 
 
 async def _present(session: AsyncSession, att: Attempt, resp: Response) -> dict[str, Any]:
