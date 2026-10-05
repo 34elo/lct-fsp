@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 
-import { Button, ConstellationAvatar, Logo, MatchRing, SkillChip, TrustDots, type TrustKind } from "../src";
-import { DEMO_CANDIDATES, DEMO_SKILLS, RADII, TOKEN_GROUPS } from "./data";
+import { Button, ConstellationAvatar, Logo, MatchRing, SkillChip, ThemeScope, TrustDots, type TrustKind } from "../src";
+import { DEMO_CANDIDATES, DEMO_SKILLS, RADII, TEXT_SIZES, TOKEN_GROUPS } from "./data";
 
 type Page = "tokens" | "base" | "brand";
 const PAGES: { id: Page; title: string }[] = [
@@ -54,6 +54,31 @@ function Tokens() {
       <Section title="Шрифты">
         <p className="font-sans text-2xl">Onest — ФСП Карьера: доказанные навыки</p>
         <p className="font-mono text-base">JetBrains Mono — Кандидат #4821 · 275 000 ₽</p>
+      </Section>
+      <Section title="Шкала текста">
+        <div className="grid gap-2">
+          {TEXT_SIZES.map((n) => (
+            <div key={n} className="flex items-baseline gap-4">
+              <code className="w-12 font-mono text-xs text-muted">{n}</code>
+              <span style={{ fontSize: `var(--fs-${n})` }}>Доказанные навыки · 275 000 ₽</span>
+            </div>
+          ))}
+          <p className="lbl text-muted">Метка · mono 500 · 11 px · капс</p>
+        </div>
+      </Section>
+      <Section title="Тени и фокус">
+        <div className="flex flex-wrap gap-5">
+          <div className="h-16 w-28 rounded-xl bg-card shadow-xs" />
+          <div className="h-16 w-28 rounded-xl bg-card shadow-card" />
+          <div className="h-16 w-28 rounded-xl" style={{ outline: "var(--focus)", outlineOffset: 2 }} />
+        </div>
+        <p className="mt-3 font-mono text-xs text-muted">--shadow-xs · --shadow-card · --focus</p>
+      </Section>
+      <Section title="ThemeScope dark">
+        <ThemeScope dark className="rounded-xl border border-hairline p-4">
+          <p className="lbl text-muted">Тёмная область</p>
+          <Button variant="outline" size="sm">Outline</Button>
+        </ThemeScope>
       </Section>
       <Section title="Радиусы">
         <div className="flex flex-wrap gap-4">

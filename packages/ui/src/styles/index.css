@@ -35,6 +35,16 @@
   --radius-lg: var(--radius-lg);
   --radius-xl: var(--radius-xl);
   --radius-2xl: var(--radius-2xl);
+  --text-11: var(--fs-11);
+  --text-12: var(--fs-12);
+  --text-13: var(--fs-13);
+  --text-14: var(--fs-14);
+  --text-16: var(--fs-16);
+  --text-20: var(--fs-20);
+  --text-24: var(--fs-24);
+  --text-32: var(--fs-32);
+  --text-48: var(--fs-48);
+  --shadow-xs: var(--shadow-xs);
   --shadow-card: var(--shadow-card);
   --shadow-sheet: var(--shadow-sheet);
 }
@@ -50,4 +60,14 @@
     outline: var(--focus);
     outline-offset: 2px;
   }
+}
+
+/* Метка: Mono 500, 11 px, капс, разрядка .06em (docs/design/pack/docs/DESIGN_RULES.md). */
+@utility lbl {
+  font-family: var(--font-mono);
+  font-size: var(--fs-11);
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: var(--lbl-tracking);
+  text-transform: uppercase;
 }
