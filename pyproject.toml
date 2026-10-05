@@ -9,7 +9,7 @@ dependencies = []
 package = false
 
 [tool.uv.workspace]
-members = ["packages/*", "services/*"]
+members = ["packages/contracts", "packages/platform", "services/*"]  # явный список: packages/ui — не Python-пакет
 
 [tool.uv.sources]
 fsp-contracts = { workspace = true }
