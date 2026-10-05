@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import uuid
 from collections import defaultdict
+from collections.abc import Collection
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -227,9 +228,17 @@ async def _write_grade(
 
 
 async def _write_evidence(
-    session: AsyncSession, att: Attempt, cfg: AssessmentConfig, now: datetime
+    session: AsyncSession,
+    att: Attempt,
+    cfg: AssessmentConfig,
+    now: datetime,
+    *,
+    exclude: Collection[uuid.UUID] = frozenset(),
 ) -> None:
-    """Доказательства `test` по навыкам попытки: сила = max · доля набранного (идемпотентно)."""
+    """Доказательства `test` по навыкам попытки: сила = max · доля набранного (идемпотентно).
+
+    `exclude` — выведенные из оценки семейства (пересчёт при карантине, E22-9).
+    """
     rows = (
         await session.execute(
             select(Response, FamilyRow)
@@ -244,6 +253,8 @@ async def _write_evidence(
     per_skill: dict[uuid.UUID, list[float]] = defaultdict(list)
     types: dict[uuid.UUID, str] = {}
     for r, f in rows:
+        if f.id in exclude:
+            continue
         per_skill[f.skill_id].append(r.score or 0.0)
         types[f.skill_id] = f.skill_type
     cap = cfg.evidence_max_strength
@@ -320,6 +331,9 @@ async def on_finished(
     await add_to_outbox(
         session, new_event("assessment.attempt.finished", PRODUCER, event), att.candidate_id
     )
+    from app.assessment import lifecycle  # тревоги семейств после попытки (E22-9)
+
+    await lifecycle.watch_attempt(session, att, cfg)
 
 
 async def accept_upgrade(

@@ -13,6 +13,7 @@ from redis.asyncio import Redis
 from sqlalchemy import text
 
 # >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
+from app.assessment.admin_router import router as admin_families_router
 from app.assessment.router import router as assessment_router
 
 # <<< block1
@@ -86,6 +87,7 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(offers_router)
     # >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
     app.include_router(assessment_router)
+    app.include_router(admin_families_router)
     # <<< block1
     # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
     # <<< block2
