@@ -23,12 +23,12 @@ from fsp_platform.app import ProblemError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.assessment import engine, sprt
+from app.assessment import engine, grading, sprt
 from app.assessment import families as registry
 from app.assessment import selection as sel
 from app.assessment.config import AssessmentConfig
 from app.assessment.families.base import Family, Item
-from app.assessment.models import Attempt, FamilyRow, Response
+from app.assessment.models import Attempt, FamilyRow, Grade, Response
 from app.assessment.psychometrics_db import finalize_attempt
 from app.assessment.world import DOMAINS, World
 from app.taxonomy import service as taxonomy
@@ -120,6 +120,7 @@ async def create_attempt(
             "Неизвестная профессия",
             errors=[{"field": "profession", "message": profession}],
         )
+    await grading.check_cooldown(session, candidate_id, profession, declared_grade, cfg)
     active = await session.scalar(
         select(Attempt.id).where(
             Attempt.candidate_id == candidate_id,
@@ -192,6 +193,7 @@ async def _finish(session: AsyncSession, att: Attempt, status: str, cfg: Assessm
     att.status = status
     att.finished_at = datetime.now(UTC)
     await finalize_attempt(session, att, cfg)
+    await grading.on_finished(session, att, cfg)
 
 
 async def _conclude(
@@ -389,16 +391,40 @@ async def _after_scored(
         await session.flush()
 
 
+async def _by_skill(session: AsyncSession, attempt_id: uuid.UUID) -> list[dict[str, Any]]:
+    """Разбор по навыкам: сколько оцениваемых заданий и какая доля набрана (без ключей)."""
+    rows = (
+        await session.execute(
+            select(Response.score, FamilyRow.slug)
+            .join(FamilyRow, FamilyRow.id == Response.family_id)
+            .where(
+                Response.attempt_id == attempt_id,
+                Response.answered_at.is_not(None),
+                Response.is_pilot.is_(False),
+            )
+        )
+    ).all()
+    acc: dict[str, list[float]] = {}
+    for score, fam_slug in rows:
+        fam = registry.get(fam_slug)
+        if fam is not None:
+            acc.setdefault(fam.skill, []).append(score or 0.0)
+    return [
+        {"skill": k, "items": len(v), "share": round(sum(v) / len(v), 4)}
+        for k, v in sorted(acc.items())
+    ]
+
+
 async def attempt_summary(
     session: AsyncSession, candidate_id: uuid.UUID, attempt_id: uuid.UUID
 ) -> dict[str, Any]:
-    """Состояние попытки. Итог с грейдом, θ по типам и разбором — E22-4."""
+    """Состояние попытки; у завершённой — итог: грейд, θ, честность, разбор по навыкам."""
     att = await _own_attempt(session, candidate_id, attempt_id)
     answered = [r for r in await _issued(session, att.id) if r.answered_at is not None]
     main = att.plan.get("main") or {}
     bonus = att.plan.get("bonus") or {}
     offer = att.plan.get("upgrade_offer")
-    return {
+    out: dict[str, Any] = {
         "id": att.id,
         "profession": att.profession,
         "declared_grade": TestGrade(att.declared_grade),
@@ -410,4 +436,19 @@ async def attempt_summary(
         "finished_at": att.finished_at,
         "low_confidence": bool(main.get("low_confidence") or bonus.get("low_confidence")),
         "upgrade_offer": TestGrade(offer) if offer else None,
+        "upgrade_accepted": bool(att.plan.get("upgrade_accepted_at")),
     }
+    if att.status != "active":
+        grade_row = await session.get(Grade, (att.candidate_id, att.profession))
+        confirmed = grade_row is not None and grade_row.attempt_id == att.id
+        integrity = att.integrity if att.integrity is not None else 1.0
+        out["result"] = {
+            "grade": TestGrade(grade_row.grade) if confirmed else None,
+            "theta": att.theta,
+            "se": att.se,
+            "theta_by_type": att.plan.get("theta_by_type") or {},
+            "integrity": integrity,
+            "needs_confirmation": confirmed and bool(grade_row.needs_confirmation),
+            "by_skill": await _by_skill(session, att.id),
+        }
+    return out
