@@ -84,6 +84,10 @@ class Worker:
         analytics_handlers.register(
             self.consumers, self.session_factory, self.settings.analytics_salt
         )
+        # >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
+        # <<< block1
+        # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
+        # <<< block2
         self.relay = OutboxRelay(
             self.session_factory,
             lambda env: publish_envelope(self.broker, env),

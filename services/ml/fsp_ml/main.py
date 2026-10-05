@@ -32,6 +32,10 @@ def build_app(
     app = create_app(settings.service_name)
     real = embedder or load_embedder(settings.embedding_model_path)
     taxonomy = taxonomy or TaxonomyProvider(settings.core_url, settings.service_token_ml)
+    # >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
+    # <<< block1
+    # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
+    # <<< block2
     # у ml-api свой формат /healthz (api.md §2.10), вместо базового {"status": "ok"}
     app.router.routes[:] = [r for r in app.router.routes if getattr(r, "path", "") != "/healthz"]
 
