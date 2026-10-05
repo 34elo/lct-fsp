@@ -53,6 +53,19 @@ class AssessmentConfig:
     integrity_threshold: float = 0.6
     unconfirmed_cap: float = 0.59
     evidence_max_strength: float = 0.8
+    # Жизненный цикл семейства (§7): пороги допуска pilot → active и тревоги → quarantine
+    admit_min_n: int = 30
+    admit_min_rpb: float = 0.2
+    admit_max_abs_b: float = 3.0
+    admit_max_seed_spread: float = 0.15
+    seed_groups: int = 3
+    admit_max_dif: float = 0.1
+    dif_min_group: int = 5
+    alarm_min_n: int = 50
+    alarm_min_rpb: float = 0.05
+    leak_window: int = 50
+    leak_delta: float = 0.2
+    alarm_appeals: int = 3
 
     def prior_b(self, level: int) -> float:
         return self.b_by_level[level]
@@ -71,6 +84,9 @@ def load_config(path: str | None = None) -> AssessmentConfig:
     rules = a.get("rules") or {}
     integ = a.get("integrity") or {}
     evid = a.get("evidence") or {}
+    life = a.get("lifecycle") or {}
+    adm = life.get("admit") or {}
+    alarm = life.get("alarm") or {}
     return AssessmentConfig(
         cuts={g: float(v["cut"]) for g, v in a["grades"].items()},
         b_by_level={int(k): float(v) for k, v in a["b_by_level"].items()},
@@ -108,4 +124,16 @@ def load_config(path: str | None = None) -> AssessmentConfig:
         integrity_threshold=float(integ.get("threshold", 0.6)),
         unconfirmed_cap=float(integ.get("unconfirmed_cap", 0.59)),
         evidence_max_strength=float(evid.get("max_strength", 0.8)),
+        admit_min_n=int(adm.get("min_n", 30)),
+        admit_min_rpb=float(adm.get("min_rpb", 0.2)),
+        admit_max_abs_b=float(adm.get("max_abs_b", 3.0)),
+        admit_max_seed_spread=float(adm.get("max_seed_spread", 0.15)),
+        seed_groups=int(adm.get("seed_groups", 3)),
+        admit_max_dif=float(adm.get("max_dif", 0.1)),
+        dif_min_group=int(adm.get("dif_min_group", 5)),
+        alarm_min_n=int(alarm.get("min_n", 50)),
+        alarm_min_rpb=float(alarm.get("min_rpb", 0.05)),
+        leak_window=int(alarm.get("leak_window", 50)),
+        leak_delta=float(alarm.get("leak_delta", 0.2)),
+        alarm_appeals=int(alarm.get("appeals", 3)),
     )
