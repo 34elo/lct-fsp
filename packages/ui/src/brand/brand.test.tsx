@@ -18,9 +18,9 @@ test("MatchRing ограничивает значение", () => {
 });
 
 test("созвездие детерминировано и содержит 5–8 узлов", () => {
-  const a = constellationPoints("Кандидат #42");
-  expect(a).toEqual(constellationPoints("Кандидат #42"));
+  const a = constellationPoints("Backend #42");
+  expect(a).toEqual(constellationPoints("Backend #42"));
   expect(a.length).toBeGreaterThanOrEqual(5);
   expect(a.length).toBeLessThanOrEqual(8);
-  expect(a).not.toEqual(constellationPoints("Кандидат #43"));
+  expect(a).not.toEqual(constellationPoints("Backend #43"));
 });

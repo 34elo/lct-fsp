@@ -15,4 +15,14 @@ export {
   hashSeed,
   type TrustKind,
   type TrustLevel,
+  type TrustSource,
 } from "./brand";
+export {
+  FspProtocol,
+  GradeBadge,
+  SectionLabel,
+  TeamSignal,
+  VerifiedMark,
+  pseudonymLabel,
+  type FspResult,
+} from "./brand/protocol";
