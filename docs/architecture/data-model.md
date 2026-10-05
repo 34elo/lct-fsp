@@ -213,6 +213,43 @@ CREATE TABLE grades (
   updated_at timestamptz NOT NULL DEFAULT now(),
   PRIMARY KEY (candidate_id, profession)
 );
+-- миграция b1_03 (E22-1): grades.attempt_id REFERENCES attempts(id) ON DELETE SET NULL
+
+-- v2 (миграция b1_03; assessment.md §3): опрос, банк семейств, попытки, ответы
+CREATE TABLE surveys (
+  id uuid PRIMARY KEY, candidate_id uuid NOT NULL REFERENCES candidates(user_id) ON DELETE CASCADE,
+  industry text, profession text NOT NULL, stack jsonb NOT NULL DEFAULT '[]', formats jsonb NOT NULL DEFAULT '[]',
+  salary_from int, salary_to int, declared_grade text, created_at timestamptz NOT NULL DEFAULT now()
+);                                       -- история — новые строки
+CREATE TABLE families (
+  id uuid PRIMARY KEY,                   -- у кодовых семейств uuid5 от slug
+  slug text UNIQUE NOT NULL, kind text NOT NULL,
+  source text NOT NULL,                  -- code | spec | mutation | llm
+  skill_id uuid NOT NULL,                -- taxonomy.service.skill_id(slug), без FK
+  skill_type text NOT NULL, level smallint NOT NULL, b float NOT NULL, n int NOT NULL DEFAULT 0,
+  anchor boolean NOT NULL DEFAULT false,
+  status text NOT NULL DEFAULT 'draft',  -- draft | pilot | active | quarantine | retired
+  spec jsonb, key_status text NOT NULL DEFAULT 'approved', author_id uuid, company_id uuid,
+  ai_solvable float NOT NULL DEFAULT 0, stats jsonb NOT NULL DEFAULT '{}', version int NOT NULL DEFAULT 1,
+  created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE TABLE attempts (
+  id uuid PRIMARY KEY, candidate_id uuid NOT NULL REFERENCES candidates(user_id) ON DELETE CASCADE,
+  profession text NOT NULL, declared_grade text NOT NULL,
+  stage text NOT NULL DEFAULT 'main',    -- main | bonus
+  status text NOT NULL DEFAULT 'active', -- active | passed | failed | abandoned
+  plan jsonb NOT NULL DEFAULT '{}',      -- {domain, order: [family_id], target}
+  theta float, se float, llr float NOT NULL DEFAULT 0, integrity float NOT NULL DEFAULT 1.0,
+  started_at timestamptz NOT NULL DEFAULT now(), finished_at timestamptz
+);
+CREATE TABLE responses (                 -- ключа нет: задание пересобирается из (family_id, seed)
+  id uuid PRIMARY KEY, attempt_id uuid NOT NULL REFERENCES attempts(id) ON DELETE CASCADE,
+  seq int NOT NULL, family_id uuid NOT NULL REFERENCES families(id),
+  seed bigint NOT NULL,                  -- sha256(candidate_id:attempt_id:family_id), 63 бита
+  is_pilot boolean NOT NULL DEFAULT false, answer jsonb, score float, rt_ms int, telemetry jsonb,
+  created_at timestamptz NOT NULL DEFAULT now(), answered_at timestamptz,  -- null — выдано, не отвечено
+  UNIQUE (attempt_id, seq), UNIQUE (attempt_id, family_id)
+);
 ```
 
 ### 3.3. Доказательства и навыки (движок доверия)
