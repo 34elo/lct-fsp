@@ -126,12 +126,34 @@ assessment:
   b_by_level: { 1: -2.0, 2: -1.0, 3: 0.0, 4: 1.0, 5: 2.0 }
   # Число оцениваемых заданий в попытке (assessment.md §5): минимум и максимум.
   items: { min: 6, max: 20 }
-  # Каркас E22-1 до психометрии: попытка из items.min заданий, «прошёл» при средней доле ≥ этого.
-  simple_pass_share: 0.5
   # EAP θ (assessment.md §5): сетка [grid_min, grid_max] с шагом step, априорное N(prior_mean, prior_sd²).
   eap: { grid_min: -4.0, grid_max: 4.0, step: 0.1, prior_mean: 0.0, prior_sd: 1.0 }
   # Калибровка b после попытки (assessment.md §7): K = max(k_min, k0/√(1 + n)); у якорей K = 0.
   calibration: { k0: 0.5, k_min: 0.05 }
+  # SPRT у порога cut заявленного грейда (assessment.md §5): θ₀ = cut − delta, θ₁ = cut + delta;
+  # границы ln((1 − β)/α) = +2.197 и ln(β/(1 − α)) = −2.197.
+  sprt: { delta: 0.4, alpha: 0.1, beta: 0.1 }
+  # Бонусный этап (§5): прошёл за ≤ max_main_items и θ ≥ cut_следующего − margin → до max_items
+  # заданий с SPRT у порога следующего грейда (минимума нет, только границы SPRT).
+  bonus: { max_main_items: 10, margin: 0.5, max_items: 6 }
+  # План теста (§6): доли типов навыков по грейду; внутри типа — пропорционально весам профессии.
+  plan_shares:
+    junior: { fundamental: 0.35, hard: 0.40, thinking: 0.10, business: 0.05, soft: 0.05, experience: 0.05 }
+    middle: { fundamental: 0.25, hard: 0.35, thinking: 0.20, business: 0.10, soft: 0.05, experience: 0.05 }
+    senior: { fundamental: 0.20, hard: 0.25, thinking: 0.30, business: 0.15, soft: 0.05, experience: 0.05 }
+  # Выбор задания (§6): счёт P(1−P)·(1 − ai_penalty·ai_solvable), равновероятно из топ-top_k;
+  # уровень в пределах грейда ±level_window; не повторять кандидату repeat_days дней; экспозиция за
+  # exposure_days дней < exposure_max тестов (проверяется, когда тестов в окне ≥ exposure_min_tests).
+  selection:
+    top_k: 3
+    ai_penalty: 0.3
+    level_window: 1
+    repeat_days: 90
+    exposure_days: 7
+    exposure_max: 0.3
+    exposure_min_tests: 20
+  # Пилотные слоты (§6): slots скрытых позиций в случайных местах после after-го задания.
+  pilot: { slots: 2, after: 3 }
 
 ## 2. Grade (грейд)
 
