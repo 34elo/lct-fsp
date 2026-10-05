@@ -29,9 +29,7 @@ from app.candidates.models import Candidate
 
 PRODUCER = "core"
 GRADE_VALIDITY = timedelta(days=365)  # срок грейда: 12 месяцев (blocks.md §4.2)
-GRADE_COOLDOWN = timedelta(
-    days=30
-)  # ближайшая смена; точное значение — assessment.md / scoring.yaml
+GRADE_COOLDOWN = timedelta(days=90)  # смена грейда не чаще раза в 90 дней (assessment.md §5)
 
 
 def _aware(dt: datetime) -> datetime:

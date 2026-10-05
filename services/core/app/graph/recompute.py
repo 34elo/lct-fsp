@@ -309,6 +309,7 @@ async def recompute_profile(
             await session.delete(row)
             changed = True
 
+    # E22-4 (ADR-018): роли и грейд ниже — сигналы силы профиля, не категория; её задаёт assessment
     category_diff = None
     if graph is not None:
         cat = category_for(

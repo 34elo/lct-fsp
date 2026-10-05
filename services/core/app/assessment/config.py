@@ -46,6 +46,13 @@ class AssessmentConfig:
     # Пилотные слоты (§6)
     pilot_slots: int = 2
     pilot_after: int = 3
+    # Грейды (§5) и честность (§8)
+    validity_days: int = 365
+    change_cooldown_days: int = 90
+    retry_days: int = 30
+    integrity_threshold: float = 0.6
+    unconfirmed_cap: float = 0.59
+    evidence_max_strength: float = 0.8
 
     def prior_b(self, level: int) -> float:
         return self.b_by_level[level]
@@ -61,6 +68,9 @@ def load_config(path: str | None = None) -> AssessmentConfig:
     bonus = a.get("bonus") or {}
     sel = a.get("selection") or {}
     pilot = a.get("pilot") or {}
+    rules = a.get("rules") or {}
+    integ = a.get("integrity") or {}
+    evid = a.get("evidence") or {}
     return AssessmentConfig(
         cuts={g: float(v["cut"]) for g, v in a["grades"].items()},
         b_by_level={int(k): float(v) for k, v in a["b_by_level"].items()},
@@ -92,4 +102,10 @@ def load_config(path: str | None = None) -> AssessmentConfig:
         exposure_min_tests=int(sel.get("exposure_min_tests", 20)),
         pilot_slots=int(pilot.get("slots", 2)),
         pilot_after=int(pilot.get("after", 3)),
+        validity_days=int(rules.get("validity_days", 365)),
+        change_cooldown_days=int(rules.get("change_cooldown_days", 90)),
+        retry_days=int(rules.get("retry_days", 30)),
+        integrity_threshold=float(integ.get("threshold", 0.6)),
+        unconfirmed_cap=float(integ.get("unconfirmed_cap", 0.59)),
+        evidence_max_strength=float(evid.get("max_strength", 0.8)),
     )

@@ -121,7 +121,10 @@ class Attempt(Base):
     started_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), default=utcnow)
     finished_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), default=None)
 
-    __table_args__ = (sa.Index("ix_attempts_candidate_status", "candidate_id", "status"),)
+    __table_args__ = (
+        sa.Index("ix_attempts_candidate_status", "candidate_id", "status"),
+        sa.Index("ix_attempts_cand_prof_finished", "candidate_id", "profession", "finished_at"),
+    )
 
 
 class Response(Base):

@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.assessment import attempts, survey
+from app.assessment import attempts, grading, survey
 from app.assessment.config import AssessmentConfig, load_config
 from app.assessment.models import Attempt, Grade, Survey
 from app.candidates import service as candidates
@@ -37,6 +37,18 @@ class AttemptIn(BaseModel):
     declared_grade: TestGrade
 
 
+class AttemptResultOut(BaseModel):
+    """Итог завершённой попытки (assessment.md §10): грейд, θ по типам, честность, разбор."""
+
+    grade: TestGrade | None = None  # грейд, подтверждённый этой попыткой
+    theta: float | None = None
+    se: float | None = None
+    theta_by_type: dict[str, float] = Field(default_factory=dict)
+    integrity: float = 1.0
+    needs_confirmation: bool = False
+    by_skill: list[dict[str, Any]] = Field(default_factory=list)  # {skill, items, share}
+
+
 class AttemptOut(BaseModel):
     id: uuid.UUID
     profession: str
@@ -49,6 +61,8 @@ class AttemptOut(BaseModel):
     finished_at: datetime | None
     low_confidence: bool = False  # решение по EAP на максимуме заданий или при нехватке банка
     upgrade_offer: TestGrade | None = None  # бонусный этап пройден: предложение повышения
+    upgrade_accepted: bool = False
+    result: AttemptResultOut | None = None  # только у завершённой попытки
 
 
 class NextOut(BaseModel):
@@ -148,6 +162,23 @@ async def answer(
     )
 
 
+@router.post(
+    "/assessment/attempts/{attempt_id}/upgrade",
+    response_model=AttemptOut,
+    responses=problem_responses(401, 403, 404, 409),
+)
+async def upgrade(
+    attempt_id: uuid.UUID,
+    request: Request,
+    user: User = Depends(_candidate),
+    session: AsyncSession = Depends(get_session),
+):
+    """Принять повышение после бонусного этапа (повтор идемпотентен)."""
+    att = await attempts._own_attempt(session, user.id, attempt_id)
+    await grading.accept_upgrade(session, att, _cfg(request))
+    return await attempts.attempt_summary(session, user.id, attempt_id)
+
+
 # --- опрос и история (E22-7) ------------------------------------------------------------------
 
 
@@ -184,10 +215,17 @@ class CooldownOut(BaseModel):
     next_change_at: datetime
 
 
+class RetryOut(BaseModel):
+    profession: str
+    grade: TestGrade  # на этот грейд повтор закрыт после неудачи
+    next_attempt_at: datetime
+
+
 class HistoryOut(BaseModel):
     surveys: list[SurveyOut]
     attempts: list[AttemptOut]
-    cooldowns: list[CooldownOut]
+    cooldowns: list[CooldownOut]  # ближайшая смена грейда по профессиям
+    retries: list[RetryOut] = Field(default_factory=list)  # повтор того же грейда после неудачи
 
 
 @router.put(
@@ -229,6 +267,7 @@ async def get_survey(
     responses=problem_responses(401, 403),
 )
 async def history(
+    request: Request,
     user: User = Depends(_candidate),
     session: AsyncSession = Depends(get_session),
 ):
@@ -237,17 +276,26 @@ async def history(
         .where(Survey.candidate_id == user.id)
         .order_by(Survey.created_at.desc(), Survey.id.desc())
     )
-    atts = await session.scalars(
-        select(Attempt)
-        .where(Attempt.candidate_id == user.id)
-        .order_by(Attempt.started_at.desc(), Attempt.id.desc())
+    atts_list = list(
+        await session.scalars(
+            select(Attempt)
+            .where(Attempt.candidate_id == user.id)
+            .order_by(Attempt.started_at.desc(), Attempt.id.desc())
+        )
     )
     grades = await session.scalars(
         select(Grade).where(Grade.candidate_id == user.id).order_by(Grade.profession)
     )
+    retries = [
+        RetryOut(profession=p, grade=c.grade, next_attempt_at=c.until)
+        for p in sorted({a.profession for a in atts_list})
+        for c in await grading.cooldowns(session, user.id, p, _cfg(request))
+        if c.kind == "retry" and c.grade is not None
+    ]
     return HistoryOut(
+        retries=retries,
         surveys=[_survey_out(r) for r in surveys],
-        attempts=[await attempts.attempt_summary(session, user.id, a.id) for a in atts],
+        attempts=[await attempts.attempt_summary(session, user.id, a.id) for a in atts_list],
         cooldowns=[
             CooldownOut(profession=g.profession, grade=g.grade, next_change_at=g.next_change_at)
             for g in grades
