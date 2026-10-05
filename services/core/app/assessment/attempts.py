@@ -23,7 +23,7 @@ from fsp_platform.app import ProblemError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.assessment import engine, grading, sprt
+from app.assessment import engine, grading, sprt, telemetry
 from app.assessment import families as registry
 from app.assessment import selection as sel
 from app.assessment.config import AssessmentConfig
@@ -195,6 +195,7 @@ def _stage_scored(att: Attempt, issued: list[Response]) -> list[Response]:
 async def _finish(session: AsyncSession, att: Attempt, status: str, cfg: AssessmentConfig) -> None:
     att.status = status
     att.finished_at = datetime.now(UTC)
+    await telemetry.assess_attempt(session, att, cfg)  # E24-1: до калибровки `b`
     await finalize_attempt(session, att, cfg)
     await grading.on_finished(session, att, cfg)
 
@@ -258,7 +259,9 @@ async def _exhausted(
 
 async def _present(session: AsyncSession, att: Attempt, resp: Response) -> dict[str, Any]:
     item = build_item(await _family(session, resp.family_id), resp.seed, att.plan.get("domain"))
-    return {"response_id": resp.id, "seq": resp.seq, **item.public()}
+    out = {"response_id": resp.id, "seq": resp.seq, **item.public()}
+    out["time_limit_s"] = await telemetry.time_limit_for(session, resp.family_id, item.time_limit_s)
+    return out
 
 
 async def _skill_counts(
