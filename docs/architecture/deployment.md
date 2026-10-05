@@ -124,6 +124,16 @@ api.fsp.patissons.tech {
 
 **Профили:** `docker compose --profile core --profile ml --profile llm up -d`. Фронтендер может запускать только `core` + мок ML (`ML_FAKE=true` отдаёт заготовленные ответы), чтобы не зависеть от GPU.
 
+**Профили запуска (ADR-023, E20-8):**
+
+| Профиль | Команда | LLM | Эмбеддинги | RAM сервисов приложения* |
+|---|---|---|---|---|
+| `lite` | `make up-lite` | нет: `LLM_ENABLED=false`, `ML_FAKE=false`; каждая функция идёт правилами ([solution.md §3](../solution.md)) | `multilingual-e5-small` (384, ml-api добивает нулями до 1024) | ≈ 1.2–1.5 ГБ: core-api/worker/scheduler ~0.9, ml-api ~0.4 (с малой моделью), ml-worker-* ~0.15 |
+| `standard` | `make up` + малая LLM на CPU (`LLM_PROFILE=cpu`) | да, CPU | bge-m3 | ≈ 4 ГБ |
+| `full` | `make up` | да, GPU (общий `llama-server`) | bge-m3 | наш стенд |
+
+\* без postgres/redis/rabbitmq/minio (≈ 1–2 ГБ, настраиваются лимитами). Цифры ориентировочные, замер — при первом запуске lite. Без LLM: разбор резюме идёт словарём графа (`resume-rules-v1`, навык только с цитатой из текста; опыт и образование — E30-4), разбор запроса работодателя — правилами, остальные LLM-команды отвечают заглушкой до своих правиловых реализаций. Переменные: `LLM_ENABLED`, `EMBEDDING_MODEL`, `EMBEDDING_MODEL_PATH`.
+
 **Состояние (E0-2):** `docker-compose.yml` в корне содержит инфраструктуру профиля `core` (gateway, postgres, redis, rabbitmq, minio) и `dozzle` (`dev`); сервисы приложения добавляются своими задачами. Разовая инициализация: `infra/postgres/init.sh` (роли `core`, `fspc`, базы `core`, `fsp_connector`, расширения `vector`, `pg_trgm`), `rabbitmq-init` (vhost `fsp`, пользователи `core`, `ml`, `fspc`, `bot`), `minio-init` (бакет). Порты на хосте: gateway 28080, RabbitMQ UI 28672, Postgres 28432, Redis 28379 (последние три только на 127.0.0.1). Маршруты gateway — `infra/caddy/Caddyfile`. Первый запуск: `cp .env.example .env`, заменить `CHANGE_ME`, `make up`.
 
 ## 3. GPU: RX 5700 XT + Vulkan
@@ -199,6 +209,7 @@ OB_ISSUER_DID=did:web:fsp.patissons.tech
 | Команда | Что делает |
 |---|---|
 | `make up` / `make down` | Поднять / остановить все профили |
+| `make up-lite` | Профиль lite: ядро и ML без LLM (ADR-023) |
 | `make dev-core` | Только core-профиль + `ML_FAKE=true` |
 | `make migrate` | `alembic upgrade head` |
 | `make taxonomy-load` | Загрузить `data/taxonomy/*.yaml`, `data/fsp/discipline_rules.yaml`, банк вопросов |

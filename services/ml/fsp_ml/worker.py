@@ -48,7 +48,7 @@ class MlWorker:
     ):
         s = self.settings = settings or Settings()
         self.fake = s.ml_fake
-        if not self.fake and llm is None and not s.llm_base_url:
+        if not self.fake and s.llm_enabled and llm is None and not s.llm_base_url:
             raise RuntimeError("ML_FAKE=false: задайте LLM_BASE_URL или запускайте с ML_FAKE=true")
         self.queue = ROLE_QUEUE[role]
         self.broker = make_broker(s.rabbitmq_url)
@@ -57,13 +57,14 @@ class MlWorker:
             self.consumer.on(type_)(self._on_command)
         self.llm: LlmClient | None = None
         if not self.fake:
-            self.llm = llm or OpenAiLlm(
-                s.llm_base_url,
-                s.llm_api_key,
-                s.llm_model,
-                timeout=s.llm_timeout,
-                max_tokens=s.llm_max_tokens,
-            )
+            if s.llm_enabled:  # LLM_ENABLED=false: клиента нет, функции идут правилами
+                self.llm = llm or OpenAiLlm(
+                    s.llm_base_url,
+                    s.llm_api_key,
+                    s.llm_model,
+                    timeout=s.llm_timeout,
+                    max_tokens=s.llm_max_tokens,
+                )
             self.storage = storage or ObjectStorage(
                 s.s3_endpoint, s.s3_access_key, s.s3_secret_key, s.s3_bucket
             )
@@ -82,7 +83,6 @@ class MlWorker:
 
     async def _resume_parse(self, envelope: Envelope) -> list[Envelope]:
         p = parse_payload(envelope)
-        assert self.llm is not None
 
         async def progress(stage: str, pct: int, message: str) -> None:
             data = JobProgress(

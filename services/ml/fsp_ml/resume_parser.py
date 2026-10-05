@@ -290,6 +290,39 @@ def assemble(
     )
 
 
+RULES_VERSION = "resume-rules-v1"
+_NAME_WORD = re.compile(r"[А-ЯЁA-Z][а-яёa-z]+(?:-[А-ЯЁA-Z][а-яёa-z]+)?")
+
+
+def extract_rules(text: str, index: TaxonomyIndex | None) -> LlmResume:
+    """Разбор без LLM (LLM_ENABLED=false): навыки по словарю графа, цитата — строка резюме.
+
+    Каждое слово и пара-тройка слов строки ищутся в словаре синонимов; `assemble` дальше проверяет
+    цитату так же, как для LLM. Опыт и образование не извлекаем (полный правиловый разбор — E30-4).
+    """
+    skills: list[LlmSkill] = []
+    seen: set[str] = set()
+    if index is not None:
+        for line in text.splitlines():
+            line = line.strip()
+            quote = line[:400]
+            tokens = _TOKEN.findall(line)
+            for n in (3, 2, 1):
+                for i in range(len(tokens) - n + 1):
+                    raw = " ".join(tokens[i : i + n])
+                    slug = index.lookup(raw)
+                    if slug and slug not in seen and raw.lower() in quote.lower():
+                        seen.add(slug)
+                        skills.append(LlmSkill(name=raw[:80], quote=quote))
+    full_name = None
+    for line in text.splitlines()[:5]:
+        words = line.split()
+        if 2 <= len(words) <= 3 and all(_NAME_WORD.fullmatch(w) for w in words):
+            full_name = line.strip()
+            break
+    return LlmResume(full_name=full_name, skills=skills[:80])
+
+
 async def _noop(stage: str, pct: int, message: str) -> None:
     return None
 
@@ -297,13 +330,13 @@ async def _noop(stage: str, pct: int, message: str) -> None:
 async def parse_resume(
     data: bytes,
     *,
-    llm: LlmClient,
+    llm: LlmClient | None,
     index: TaxonomyIndex | None,
     model: str,
     today: date,
     progress: Progress | None = None,
 ) -> ParsedResume:
-    """Полный конвейер. Ошибки: `ResumeFileError` (bad_file, scanned_pdf), `LlmError`."""
+    """Полный конвейер. `llm=None` — правиловая ветка. Ошибки: `ResumeFileError`, `LlmError`."""
     report = progress or _noop
     t0 = time.monotonic()
     await report("text", 10, "Извлекаем текст")
@@ -313,11 +346,15 @@ async def parse_resume(
         text = text[:MAX_TEXT_CHARS]
         warnings.append("text_truncated")
     await report("llm", 30, "Разбираем опыт и навыки")
-    llm_out = await extract_llm(llm, text)
+    if llm is None:
+        llm_out = extract_rules(text, index)
+        version = RULES_VERSION
+        warnings.append("rules_mode")
+    else:
+        llm_out = await extract_llm(llm, text)
+        version = parser_version(model)
     await report("verify", 85, "Проверяем навыки по тексту")
-    parsed = assemble(
-        text, llm_out, index, version=parser_version(model), today=today, warnings=warnings
-    )
+    parsed = assemble(text, llm_out, index, version=version, today=today, warnings=warnings)
     # без ПДн: только размеры и счётчики
     log.info(
         "resume_parsed",

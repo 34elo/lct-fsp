@@ -1,4 +1,4 @@
-.PHONY: demo-snapshot demo-reset demo-warm demo-env logs ps seed seed-plan seed-fsp-mock synth taxonomy-load up down dev-core compose-config sync lint fmt test test-py test-web test-integration new-service web-install asyncapi api-gen
+.PHONY: up-lite demo-snapshot demo-reset demo-warm demo-env logs ps seed seed-plan seed-fsp-mock synth taxonomy-load up down dev-core compose-config sync lint fmt test test-py test-web test-integration new-service web-install asyncapi api-gen
 
 sync:
 	uv sync --all-packages
@@ -114,3 +114,10 @@ demo-reset:
 	COMPOSE="$(COMPOSE)" sh infra/scripts/demo.sh reset
 demo-warm:
 	GATEWAY_PORT=$$(sed -n 's/^GATEWAY_PORT=//p' $(ENV_FILE)) COMPOSE="$(COMPOSE)" sh infra/scripts/demo.sh warm
+
+# >>> block1 (lite)
+# Профиль lite (ADR-023): ядро и ML без LLM (LLM_ENABLED=false, ML_FAKE=false), малая модель эмбеддингов, ≤ 1.5 ГБ на сервисы приложения
+LITE_ENV = LLM_ENABLED=false ML_FAKE=false EMBEDDING_MODEL=$${EMBEDDING_MODEL:-multilingual-e5-small}
+up-lite: demo-env
+	$(LITE_ENV) docker compose --env-file $(ENV_FILE) --profile core --profile ml $(BOT_PROFILE) up -d --build --wait
+# <<< block1
