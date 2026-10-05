@@ -56,13 +56,16 @@ def build_item(fam: Family, seed: int, domain: str | None) -> Item:
 async def sync_code_families(session: AsyncSession, cfg: AssessmentConfig) -> None:
     """Реестр кодовых семейств → таблица `families` (идемпотентно).
 
-    Новое семейство: статус `active`, `b` — априорная по уровню. У существующего обновляются
-    только описательные поля; `b`, `n`, `status`, `stats` принадлежат калибровке и админу.
+    Новое семейство: `b` — априорная по уровню; статус `active` только у стартового банка (в таблице
+    ещё нет кодовых семейств), позже добавленные идут в `pilot` и ждут допуска админом (E22-9).
+    У существующего обновляются только описательные поля; `b`, `n`, `status`, `stats` принадлежат
+    калибровке и админу.
     """
     rows = {
         r.slug: r
         for r in await session.scalars(select(FamilyRow).where(FamilyRow.source == "code"))
     }
+    initial = "active" if not rows else "pilot"
     for fam in registry.REGISTRY.values():
         row = rows.get(fam.slug)
         if row is None:
@@ -70,7 +73,7 @@ async def sync_code_families(session: AsyncSession, cfg: AssessmentConfig) -> No
                 id=family_id(fam.slug),
                 slug=fam.slug,
                 source="code",
-                status="active",
+                status=initial,
                 b=cfg.prior_b(fam.level),
                 anchor=bool(getattr(fam, "anchor", False)),
                 key_status="approved",
