@@ -26,4 +26,6 @@ export const TOKEN_GROUPS: { title: string; tokens: string[] }[] = [
   },
 ];
 
+export const TEXT_SIZES = [11, 12, 13, 14, 16, 20, 24, 32, 48] as const;
+
 export const RADII = ["sm", "md", "lg", "xl", "2xl"] as const;

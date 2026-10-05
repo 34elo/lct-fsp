@@ -7,7 +7,7 @@ import { useTheme, type ThemeMode } from "@/shared/lib/theme";
 import { Logo } from "@/shared/brand";
 import { Button } from "@/shared/ui/button";
 
-const NEXT: Record<ThemeMode, ThemeMode> = { system: "light", light: "dark", dark: "system" };
+const NEXT: Record<ThemeMode, ThemeMode> = { light: "dark", dark: "system", system: "light" };
 const LABEL: Record<ThemeMode, string> = { system: "Тема: системная", light: "Тема: светлая", dark: "Тема: тёмная" };
 
 export function ThemeToggle() {

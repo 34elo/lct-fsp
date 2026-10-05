@@ -1,6 +1,7 @@
 /* Токены ФСП (эталон — docs/design/pack/tokens/globals.css). Светлая тема в :root, тёмная в .dark. */
 :root {
   --brand: #402fff;
+  --brand-fg: #402fff;
   --brand-deep: #201880;
   --brand-mid: #a9a1ff;
   --tint-50: #f4f3ff;
@@ -28,8 +29,20 @@
   --radius-lg: 10px;
   --radius-xl: 12px;
   --radius-2xl: 20px;
-  --shadow-card: 0 20px 50px rgba(0, 0, 0, 0.35);
+  --shadow-xs: 0 1px 2px rgba(27, 28, 33, 0.06);
+  --shadow-card: 0 1px 3px rgba(27, 28, 33, 0.08), 0 4px 12px rgba(27, 28, 33, 0.05);
   --shadow-sheet: 0 -8px 24px rgba(27, 28, 33, 0.12);
+  /* Шкала текста (px). Метка (lbl) — Mono 500, 11 px, капс, .06em. */
+  --fs-11: 11px;
+  --fs-12: 12px;
+  --fs-13: 13px;
+  --fs-14: 14px;
+  --fs-16: 16px;
+  --fs-20: 20px;
+  --fs-24: 24px;
+  --fs-32: 32px;
+  --fs-48: 48px;
+  --lbl-tracking: 0.06em;
   --focus: 2px solid var(--brand);
   color-scheme: light;
 }
@@ -54,5 +67,7 @@
   --warning-fg: #f5d28a;
   --error: #ff6b7a;
   --error-bg: #2e1418;
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-card: 0 20px 50px rgba(0, 0, 0, 0.35);
   color-scheme: dark;
 }
