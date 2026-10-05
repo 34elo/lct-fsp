@@ -14,7 +14,7 @@
 ## Ключевые файлы
 - `src/styles/tokens.css` — CSS-переменные, светлая в `:root`, тёмная в `.dark`.
 - `src/styles/index.css` — `@theme inline`, `dark`-вариант, базовые стили (импорт: `@fsp/ui/styles.css`).
-- `src/primitives/` — базовые компоненты; `src/brand/` — фирменные; `src/lib/cn.ts`; `src/index.ts` — публичный экспорт.
+- `src/primitives/` — базовые (`button`, `form`, `overlay`, `display`: Radix + lucide + sonner; Skeleton, EmptyState, ErrorState, NotFound общие для Б1 и Б2); `src/brand/` — фирменные; `src/lib/cn.ts`; `src/index.ts` — публичный экспорт.
 - `playground/data.ts` — демо-данные из `docs/design/pack/docs/DATA.md` (только playground и тесты).
 
 ## Правила
