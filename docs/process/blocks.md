@@ -160,19 +160,23 @@ from enum import StrEnum
 from typing import Annotated
 from pydantic import Field
 
+
 class SkillType(StrEnum):
-    fundamental = "fundamental"   # фундамент
-    hard = "hard"                 # хард
-    thinking = "thinking"         # инженерное мышление
-    business = "business"         # бизнес
-    soft = "soft"                 # софт
-    experience = "experience"     # опыт («учиться»)
+    fundamental = "fundamental"  # фундамент
+    hard = "hard"  # хард
+    thinking = "thinking"  # инженерное мышление
+    business = "business"  # бизнес
+    soft = "soft"  # софт
+    experience = "experience"  # опыт («учиться»)
+
 
 class TestGrade(StrEnum):
     """Грейды v2. Значения совпадают с `enums.Grade`, другие грейды v2 не использует."""
+
     junior = "junior"
     middle = "middle"
     senior = "senior"
+
 
 TEST_GRADE_ORDER: tuple[TestGrade, ...] = (TestGrade.junior, TestGrade.middle, TestGrade.senior)
 
@@ -216,13 +220,14 @@ class CategoryRef(BaseModel):
     profession: ProfessionSlug
     grade: TestGrade
 
+
 class CandidateGrade(BaseModel):
     candidate_id: UUID
     profession: ProfessionSlug
     grade: TestGrade
     theta: float
     se: float | None = None
-    band_position: float            # T ∈ [0, 1]
+    band_position: float  # T ∈ [0, 1]
     theta_by_type: dict[SkillType, float] = {}
     integrity: float = 1.0
     needs_confirmation: bool = False
@@ -233,18 +238,22 @@ class CandidateGrade(BaseModel):
     valid_until: datetime
     next_change_at: datetime
 
+
 class ClaimedVsConfirmed(BaseModel):
     profession: ProfessionSlug
-    declared_grade: TestGrade | None   # последний опрос
-    resume_grade: str | None           # из резюме (старая шкала enums.Grade), только «заявлено»
+    declared_grade: TestGrade | None  # последний опрос
+    resume_grade: str | None  # из резюме (старая шкала enums.Grade), только «заявлено»
     confirmed_grade: TestGrade | None  # из grades
     status: Literal["confirmed", "overclaimed", "underclaimed", "unconfirmed"]
+
 
 class ProfessionInfo(BaseModel):
     slug: ProfessionSlug
     title: str
-    skill_weights: dict[str, float]           # slug навыка → вес 0..1 («насколько типичен», как в roles.yaml); не нормирован
-    skill_types: dict[str, SkillType] = {}    # заполняет E21-1
+    skill_weights: dict[
+        str, float
+    ]  # slug навыка → вес 0..1 («насколько типичен», как в roles.yaml); не нормирован
+    skill_types: dict[str, SkillType] = {}  # заполняет E21-1
 ```
 
 Сигнатуры заморожены. Все функции асинхронные, первый аргумент — `session: AsyncSession`:
@@ -279,14 +288,14 @@ class ProfessionInfo(BaseModel):
 Регистрирует этап 0 в `fsp_contracts/assessment.py`, словарь `ASSESSMENT_EVENTS` подключается в `EVENTS` (§5.3). **Производитель — Б1** (и `seed_grade`), потребители — Б2 (`matching`, бот, аналитика).
 
 ```python
-class AttemptFinished(BaseModel):          # "assessment.attempt.finished"
+class AttemptFinished(BaseModel):  # "assessment.attempt.finished"
     candidate_id: UUID
     attempt_id: UUID
     profession: ProfessionSlug
     declared_grade: TestGrade
     stage: Literal["main", "bonus"]
     result: Literal["passed", "failed", "abandoned"]
-    grade: TestGrade | None                # действующий грейд после попытки
+    grade: TestGrade | None  # действующий грейд после попытки
     theta: float
     se: float
     integrity: float
@@ -295,12 +304,14 @@ class AttemptFinished(BaseModel):          # "assessment.attempt.finished"
     finished_at: datetime
     profile_version: int
 
-class CategoryChanged(BaseModel):          # "candidate.category.changed"
+
+class CategoryChanged(BaseModel):  # "candidate.category.changed"
     candidate_id: UUID
-    categories: list[CategoryRef]          # полный текущий набор, а не дельта
+    categories: list[CategoryRef]  # полный текущий набор, а не дельта
     profile_version: int
 
-class FamilyStatusChanged(BaseModel):      # "assessment.family.status_changed" (внутреннее Б1)
+
+class FamilyStatusChanged(BaseModel):  # "assessment.family.status_changed" (внутреннее Б1)
     family_id: UUID
     from_: str | None = Field(default=None, alias="from")
     to: str
