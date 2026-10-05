@@ -17,6 +17,7 @@ docs/
 │   ├── graph.md         граф доказательств: вершины, рёбра, хранение, обходы, API подграфа
 │   ├── skills.md        граф навыков: ядро + рост, модерация, склейка синонимов, софт-сигналы
 │   ├── matching.md      подбор, взаимный подбор, похожие, подстройка в сессии, uplift
+│   ├── assessment.md    v2: тест, семейства, калибровка, ранжирование заданий и кандидатов, API
 │   ├── ml.md            модели и железо, резюме, доверие, грейд, ДНК кода, тест, интервью
 │   ├── data-model.md    таблицы (DDL)
 │   ├── api.md           REST, схемы, SSE, internal, ml-api, callback бота
@@ -51,6 +52,7 @@ docs/
 |---|---|
 | Понять проект с нуля | [case.md](case.md) → [solution.md](solution.md) → [architecture/overview.md](architecture/overview.md) → [process/workflow.md](process/workflow.md) |
 | Бэкенд | [services.md](architecture/services.md), [graph.md](architecture/graph.md), [data-model.md](architecture/data-model.md), [api.md](architecture/api.md), [messaging.md](architecture/messaging.md), [flows.md](architecture/flows.md) |
+| Тест и категории (v2) | [assessment.md](architecture/assessment.md), [solution.md](solution.md) |
 | ML | [ml.md](architecture/ml.md), [skills.md](architecture/skills.md), [matching.md](architecture/matching.md), [evaluation.md](architecture/evaluation.md) |
 | Фронтенд | [frontend.md](architecture/frontend.md), [api.md](architecture/api.md) §3–4, [design/brief.md](design/brief.md), [design/brand.md](design/brand.md) |
 | Бот | [telegram.md](architecture/telegram.md), [api.md](architecture/api.md) §2.9 |
