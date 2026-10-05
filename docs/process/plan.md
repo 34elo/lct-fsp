@@ -155,7 +155,7 @@
 | 403 | E19-2 | web: Базовые компоненты (Radix, shadcn, lucide) со всеми состояниями + общие Skeleton, EmptyState, ErrorState, 404 | E19-1 | 🤝 | sonnet | 1 база · M0 | 🔍 33de220 |
 | 404 | E19-3 | web: Фирменные: TrustDots с поповером, SkillChip, GradeBadge, ConstellationAvatar, FspProtocol, «Backend #N» | E19-1 | 🤝 | sonnet | 1 база · M0 | 🔍 b914ba7 |
 | 405 | E19-4 | web: Фирменные: MatchRing, MatchWhy, SalaryRange, StatusBadge, AcceptanceMeter, CircuitLine, BuildLog, CandidateCard, OfferCard | E19-3 | 🤝 | sonnet | 1 база · M0 | 🔍 98cb01f |
-| 406 | E19-16b | Макеты v2 блока 2: потребность → категории, кандидаты категории, отклики, публичные вакансии (blocks.md §12) | P5 | 🤝 | sonnet | 1 база · M0 | ⏳ |
+| 406 | E19-16b | Макеты v2 блока 2: потребность → категории, кандидаты категории, отклики, публичные вакансии (blocks.md §12) | P5 | 🤝 | sonnet | 1 база · M0 | 🔍 df36db9 |
 | 407 | E19-5 | web: Каркас приложения: шапка со счётчиками, навигация из `routes.ts` по `nav`, боковая панель админки, контейнер | E19-2, Т0 | 🤝 | sonnet | 1 база · M0 | ⏳ |
 | 408 | E20-9a | OpenAPI: `make openapi` → `docs/openapi.json`, проверка в CI, `responses=` у модулей блока 2 | Т0 | 🤖 | haiku | 1 база · M0 | ⏳ |
 | 409 | E20-11 | Согласие `profile_publication` | Т0 | 🤖 | haiku | 1 база · M0 | ⏳ |
@@ -392,3 +392,4 @@
 
 | Дата | Ветка | Сделано | Заблокировано | Проверить человеку |
 |---|---|---|---|---|
+| 2026-10-06 | block2 | E19-0…E19-4, E19-16b (все 🔍) | — (ЖДЁМ Т0: E19-5 и далее зависят от этапа 0, в origin/dev он ещё не слит). Заявка: BuildLog в `features/onboarding` (зона Б1) — реэкспорт из @fsp/ui откатил, Б1 может заменить сам | Визуально сверить playground `pnpm --filter @fsp/ui dev` и `pnpm shot` с макетами (скриншоты не снимались, localhost в песочнице недоступен); `pnpm shot /employer/search --as employer` на живом стеке; макеты PNG 39–42; Docker-тесты не запускались |
