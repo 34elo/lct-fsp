@@ -444,12 +444,15 @@ CREATE TABLE saved_searches (id uuid PRIMARY KEY, company_id uuid REFERENCES com
 ```sql
 CREATE TABLE offers (
   id uuid PRIMARY KEY,
-  vacancy_id uuid NOT NULL REFERENCES vacancies(id),
+  vacancy_id uuid REFERENCES vacancies(id),   -- NULL: приглашение без вакансии (ADR-022, E20-2)
   candidate_id uuid REFERENCES candidates(user_id) ON DELETE SET NULL,
   company_id uuid NOT NULL REFERENCES companies(id),
   created_by uuid NOT NULL REFERENCES users(id),
   salary_from int NOT NULL, salary_to int NOT NULL CHECK (salary_to >= salary_from),
   message text,
+  title text, description text,          -- без вакансии title обязателен (проверка в core)
+  contact_method text,                   -- platform | email | phone | telegram
+  initiator text NOT NULL DEFAULT 'employer', -- employer (приглашение) | candidate (отклик)
   status text NOT NULL DEFAULT 'sent',
   decline_reason text, decline_comment text,
   awaiting_reply_from text,              -- candidate | company | NULL

@@ -706,3 +706,4 @@ from app.assessment.router import router as assessment_router
 | Дата | № | Кто → кому | Что | Задача | Статус |
 |---|---|---|---|---|---|
 | 2026-10-06 | З-2-01 | Б2 → Б1 | `candidates.service.search_pool` должен отфильтровывать кандидатов без активного `consents.has_consent(profile_publication)` (patch готов: в цикле после active_only; был в 67a88e4, откачен) | E20-11 | открыта |
+| 2026-10-06 | С-2-01 | Б2 → оба | `OfferEvent` (`offer.*`): новое поле `initiator` (по умолчанию `employer`), `vacancy_id` может быть `null`, конверт `schema_version: 2`; enum'ы `OfferInitiator`, `ContactMethod` в `hiring.py`. Совместимо | E20-2 | готово |
