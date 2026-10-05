@@ -154,7 +154,7 @@
 | 402 | E19-1 | web: Токены, шрифты, светлая тема по умолчанию, `ThemeScope dark` | E19-0 | 🤝 | sonnet | 1 база · M0 | 🔍 5b362dd |
 | 403 | E19-2 | web: Базовые компоненты (Radix, shadcn, lucide) со всеми состояниями + общие Skeleton, EmptyState, ErrorState, 404 | E19-1 | 🤝 | sonnet | 1 база · M0 | 🔍 33de220 |
 | 404 | E19-3 | web: Фирменные: TrustDots с поповером, SkillChip, GradeBadge, ConstellationAvatar, FspProtocol, «Backend #N» | E19-1 | 🤝 | sonnet | 1 база · M0 | 🔍 b914ba7 |
-| 405 | E19-4 | web: Фирменные: MatchRing, MatchWhy, SalaryRange, StatusBadge, AcceptanceMeter, CircuitLine, BuildLog, CandidateCard, OfferCard | E19-3 | 🤝 | sonnet | 1 база · M0 | ⏳ |
+| 405 | E19-4 | web: Фирменные: MatchRing, MatchWhy, SalaryRange, StatusBadge, AcceptanceMeter, CircuitLine, BuildLog, CandidateCard, OfferCard | E19-3 | 🤝 | sonnet | 1 база · M0 | 🔍 98cb01f |
 | 406 | E19-16b | Макеты v2 блока 2: потребность → категории, кандидаты категории, отклики, публичные вакансии (blocks.md §12) | P5 | 🤝 | sonnet | 1 база · M0 | ⏳ |
 | 407 | E19-5 | web: Каркас приложения: шапка со счётчиками, навигация из `routes.ts` по `nav`, боковая панель админки, контейнер | E19-2, Т0 | 🤝 | sonnet | 1 база · M0 | ⏳ |
 | 408 | E20-9a | OpenAPI: `make openapi` → `docs/openapi.json`, проверка в CI, `responses=` у модулей блока 2 | Т0 | 🤖 | haiku | 1 база · M0 | ⏳ |
