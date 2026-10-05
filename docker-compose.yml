@@ -17,6 +17,7 @@ x-env-common: &env-common
   REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
   JWT_SECRET: ${JWT_SECRET:?задай JWT_SECRET в .env}
   ML_FAKE: ${ML_FAKE:-true}
+  LLM_ENABLED: ${LLM_ENABLED:-true}  # false — профиль lite (make up-lite): всё без LLM
 
 x-env-core: &env-core
   <<: *env-common
@@ -311,6 +312,8 @@ services:
       LLM_API_KEY: ${LLM_API_KEY:-}
       LLM_MODEL: ${LLM_MODEL:-qwen3-vl-4b}
       GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-bge-m3}
+      EMBEDDING_MODEL_PATH: ${EMBEDDING_MODEL_PATH:-}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     command: ["uvicorn", "fsp_ml.main:app", "--host", "0.0.0.0", "--port", "8100"]

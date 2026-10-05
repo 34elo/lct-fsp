@@ -143,7 +143,7 @@ async def resume_parse_llm(
     p: cmd.MlResumeParse,
     *,
     load: Callable[[str], Awaitable[bytes]],
-    llm: LlmClient,
+    llm: LlmClient | None,
     taxonomy: TaxonomyProvider,
     model: str,
     today: date,
