@@ -1,7 +1,7 @@
 """Публичное API блока 1 для блока 2 (blocks.md §4.3). Сигнатуры заморожены.
 
 Функции не делают `commit`: транзакцией управляет вызывающий. Читают только таблицу `grades`
-(и `candidates` для заявленного); `surveys`/`attempts` подключит блок 1 (E22-*).
+(и `candidates` для заявленного); `surveys`/`attempts` есть (E22-7).
 """
 
 from __future__ import annotations
@@ -23,6 +23,7 @@ from fsp_platform.outbox import add_to_outbox
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.assessment import survey
 from app.assessment.models import Grade
 from app.candidates.models import Candidate
 
@@ -134,8 +135,8 @@ async def claimed_vs_confirmed(
 ) -> list[ClaimedVsConfirmed]:
     """По каждой профессии из грейдов и резюме: заявлено против подтверждённого.
 
-    Заявленное сейчас — `candidates.grade` по `primary_role` (резюме, старая шкала). Опросы
-    (`declared_grade`) подключит блок 1 в E22-*; тогда заявленным считается последний опрос.
+    Заявленное — последний опрос (`declared_grade`) по профессии; из резюме — `candidates.grade`
+    по `primary_role` (старая шкала).
     Сравнение идёт с `declared_grade`, а без него — с `resume_grade`, если он junior/middle/senior.
     """
     grades = {g.profession: g for g in await get_grades(session, candidate_id)}
@@ -143,7 +144,7 @@ async def claimed_vs_confirmed(
     resume: dict[str, str] = {}
     if cand and cand.primary_role and cand.grade:
         resume[cand.primary_role] = cand.grade
-    declared: dict[str, TestGrade] = {}  # TODO(E22-*): последний опрос из `surveys`
+    declared = await survey.declared_grades(session, candidate_id)
 
     out: list[ClaimedVsConfirmed] = []
     for prof in sorted(set(grades) | set(resume) | set(declared)):

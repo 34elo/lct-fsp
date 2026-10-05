@@ -274,6 +274,8 @@ rank = 0.6·match + 0.4·strength
 
 Сделано в E22-1 (каркас): `POST /assessment/attempts` (+ `422 unknown_profession`, `409 attempt_active` — незавершённая попытка по той же профессии), `next` (повторный GET возвращает то же неотвеченное задание; в ответе ещё `seq`), `answers` (ответ `{response_id, accepted, done}` без балла; ответ на задание завершённой попытки — `409 attempt_finished`), `GET /assessment/attempts/{id}` — пока только состояние (`status`, `answered`, `target`). Порядок заданий фиксируется при создании попытки (навыки профессии, уровень ±1 от грейда, чередование типов), длина — `items.min`, итог — средняя доля ≥ `simple_pass_share`; заменяется на §5–6 в E22-2/E22-3.
 
+Сделано в E22-7 (опрос): `PUT /assessment/survey` — валидация (`422 unknown_profession`, `invalid_salary_range`), стек нормализуется (lower, без дублей, ≤30), идентичный последнему опрос не создаёт новую строку; `GET /assessment/survey` — последний опрос, а если опросов нет — черновик из анкеты/резюме (`prefilled: true`, `id: null`); `GET /assessment/history` — `{surveys, attempts, cooldowns}` (кулдауны = `next_change_at` грейдов). `claimed_vs_confirmed` берёт `declared_grade` из последнего опроса по профессии.
+
 ## 11. События (outbox)
 
 | Событие | Тело |
