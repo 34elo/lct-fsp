@@ -10,7 +10,7 @@ import math
 from dataclasses import dataclass, field
 from enum import StrEnum
 from random import Random
-from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any, ClassVar, Protocol, runtime_checkable
 
 from fsp_contracts.assessment import SkillType
 
@@ -132,6 +132,9 @@ class BaseFamily:
     skill_type: SkillType
     level: int
     anchor: bool = False  # якорь держит шкалу: K = 0 при калибровке (assessment.md §7)
+    # Ручки сложности и их границы для уровня: `generate` кладёт значения в `item.meta["knobs"]`,
+    # `make families-check` проверяет, что они в границах (assessment.md §4).
+    knob_bounds: ClassVar[dict[str, tuple[float, float]]] = {}
 
     def generate(self, rng: Random, world: World) -> Item:  # pragma: no cover - абстрактный
         raise NotImplementedError

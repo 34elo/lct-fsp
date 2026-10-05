@@ -1,0 +1,118 @@
+"""E22-6: первые кодовые семейства и `families-check` (assessment.md §4)."""
+
+from random import Random
+
+import pytest
+from app.assessment import families as registry
+from app.assessment.families import check
+from app.assessment.families.base import BaseFamily, Item, Kind
+from app.assessment.world import World
+from fsp_contracts.assessment import SkillType
+
+FAMILIES = list(registry.REGISTRY.values())
+
+
+def test_bank_passes_check():
+    """То же, что `make families-check`, на меньшем числе сидов (без подпроцессов)."""
+    assert check.run(FAMILIES, 200) == []
+
+
+def test_every_skill_type_and_kind_covered():
+    types = {SkillType(f.skill_type) for f in FAMILIES}
+    assert types == set(SkillType)
+    assert {f.kind for f in FAMILIES} == set(Kind) - {Kind.open}
+    anchors = [f.slug for f in FAMILIES if getattr(f, "anchor", False)]
+    assert 1 <= len(anchors) <= len(FAMILIES) // 4  # якоря — около 10 % банка
+
+
+def test_digest_stable_across_hashseed():
+    assert check.check_hashseed(20) == []
+
+
+def test_root_cause_is_unique_failing_with_healthy_deps():
+    fam = registry.get("service_graph_root_cause")
+    for seed in check.seeds(100):
+        item = check.build(fam, seed)
+        assert 0 <= item.key < len(item.options)
+        assert 2 <= item.meta["knobs"]["n_failing"] <= 5
+        assert item.options[item.key] in item.stem.split("Алертят ошибками: ")[1]
+
+
+def test_mutant_differs_and_key_points_to_mutated_line():
+    fam = registry.get("py_find_bug")
+    for seed in check.seeds(50):
+        item = check.build(fam, seed)
+        ok, bug = item.meta["exec_ok"].splitlines(), item.meta["exec_bug"].splitlines()
+        assert [i + 1 for i, (a, b) in enumerate(zip(ok, bug, strict=True)) if a != b] == item.key
+        assert check.run_python(item.meta["exec_ok"]) != check.run_python(item.meta["exec_bug"])
+
+
+def test_sjt_key_orders_by_rating():
+    fam = registry.get("sjt_code_review")
+    item = check.build(fam, 7)
+    ratings = item.meta["ratings"]
+    assert [ratings[i] for i in item.key] == sorted(ratings, reverse=True)
+    assert fam.score(item, item.key) == 1.0
+    assert fam.score(item, list(reversed(item.key))) == 0.0
+
+
+def test_unit_economics_numbers():
+    """LTV = ARPU · маржа / отток; окупаемость = CAC / (ARPU · маржа) — целые числа."""
+    fam = registry.get("unit_economics_calc")
+    for seed in check.seeds(100):
+        item = check.build(fam, seed)
+        assert isinstance(item.key, int) and item.key > 0
+
+
+def test_js_default_sort_is_lexicographic():
+    fam = registry.get("js_trace")
+    sorts = [it for it in (check.build(fam, s) for s in check.seeds(100)) if ".sort()" in it.stem]
+    assert sorts
+    for it in sorts:
+        values = [int(v) for v in it.stem.split("[", 1)[1].split("]", 1)[0].split(", ")]
+        assert it.key in values
+
+
+class _Broken(BaseFamily):
+    slug = "broken"
+    kind = Kind.choice
+    skill = "python"
+    skill_type = SkillType.hard
+    level = 2
+    knob_bounds = {"n": (1, 2)}
+
+    def generate(self, rng: Random, world: World) -> Item:
+        return Item(
+            kind=self.kind,
+            stem="?",
+            options=["a", "a"],
+            key=5,
+            meta={"exec": "print(2)", "knobs": {"n": 9}},
+        )
+
+
+def test_check_catches_broken_family():
+    errs = check.check_family(_Broken(), [1])
+    text = " ".join(errs)
+    assert "повторы" in text and "вне вариантов" in text and "ручка n=9" in text
+    assert "решатель" in text
+
+
+def test_check_bank_flags_gaps_and_taxonomy_mismatch():
+    class WrongType(_Broken):
+        slug = "wrong_type"
+        skill_type = SkillType.soft
+
+    errs = check.check_bank([WrongType()], check.TAXONOMY)
+    text = " ".join(errs)
+    assert "тип навыка fundamental" in text
+    assert "нет семейства kind=order" in text
+    assert "нет якорных" in text
+    assert "wrong_type: тип soft ≠ hard" in text
+
+
+@pytest.mark.parametrize("fam", FAMILIES, ids=lambda f: f.slug)
+def test_key_never_public(fam):
+    item = check.build(fam, 3)
+    public = item.public()
+    assert "key" not in public and "meta" not in public
