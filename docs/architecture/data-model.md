@@ -406,6 +406,8 @@ CREATE TABLE interview_sessions (
 ```sql
 CREATE TABLE companies (
   id uuid PRIMARY KEY, name text NOT NULL, inn text, site text, description text, logo_key text,
+  contacts json,                                                -- {name, email, phone, telegram}
+  direction text,                                               -- направление деятельности
   status text NOT NULL DEFAULT 'pending', responsibility_score real, created_at timestamptz DEFAULT now()
 );
 CREATE TABLE company_members (company_id uuid REFERENCES companies(id) ON DELETE CASCADE, user_id uuid REFERENCES users(id) ON DELETE CASCADE, role text NOT NULL, PRIMARY KEY (company_id, user_id));
