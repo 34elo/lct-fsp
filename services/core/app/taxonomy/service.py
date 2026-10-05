@@ -534,3 +534,11 @@ async def list_professions(session: AsyncSession) -> list[ProfessionInfo]:
         }
         out.append(ProfessionInfo(slug=r.slug, title=r.name, skill_weights=ws, skill_types=types))
     return out
+
+
+async def skill_kinds(session: AsyncSession, skill_ids: list[uuid.UUID]) -> dict[uuid.UUID, str]:
+    """id → kind (`hard` | `soft` | …): ручная форма отделяет софт-навыки от стека."""
+    if not skill_ids:
+        return {}
+    rows = await session.execute(select(Skill.id, Skill.kind).where(Skill.id.in_(skill_ids)))
+    return {sid: kind for sid, kind in rows.all()}

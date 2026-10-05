@@ -49,6 +49,7 @@
 | Метод и путь | Назначение |
 |---|---|
 | `GET /candidates/me/profile` | Полный профиль владельца: `CandidateProfile` |
+| `PATCH /candidates/me/profile` | Ручная форма (E20-4), частичное обновление: `{contacts: {email, phone, telegram} | null, stack: [{slug, years?}], experience_months, desired_roles: RoleSlug[] (≤5), soft_skills: slug[]}` → `CandidateProfile` (в нём `contacts` — только владельцу, `desired_roles`, `experience_months`). Стек — полный список: доказательства `self` (сила 0.15, «заявлено»), убранные выключаются; софт-навыки → `claimed_soft`. Контакты шифруются (`contacts_enc`, Fernet). Изменение стека, стажа, софт-навыков → пересчёт и рост `profile_version`. Ошибки: `422 unknown_skill` (нет в справочнике, софт в стеке, не софт в `soft_skills`) |
 | `PATCH /candidates/me/preferences` | `{salary_min, formats, employment_types, city, relocation, search_status}`. `search_status=active` выставляет `active_until=+7д` |
 | `PATCH /candidates/me/visibility` | `{companies, education, repos, public_profile}` |
 | `PUT /candidates/me/stoplist` | `{company_ids[]}` |

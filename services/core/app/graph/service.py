@@ -139,8 +139,9 @@ async def deactivate(
     source: EvidenceSource | str | None = None,
     fact_type: str | None = None,
     fact_id: uuid.UUID | None = None,
+    skill_ids: set[uuid.UUID] | None = None,
 ) -> int:
-    """Мягко выключить доказательства по фильтру (минимум один фильтр). Возвращает число."""
+    """Мягко выключить доказательства по фильтру (нужен source или fact_*). Возвращает число."""
     if source is None and fact_type is None and fact_id is None:
         raise ValueError("нужен хотя бы один фильтр")
     stmt = select(Evidence).where(Evidence.candidate_id == candidate_id, Evidence.is_active)
@@ -150,6 +151,8 @@ async def deactivate(
         stmt = stmt.where(Evidence.fact_type == fact_type)
     if fact_id is not None:
         stmt = stmt.where(Evidence.fact_id == fact_id)
+    if skill_ids is not None:
+        stmt = stmt.where(Evidence.skill_id.in_(skill_ids))
     rows = list(await session.scalars(stmt))
     for r in rows:
         r.is_active = False
