@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { apiProxy } from "./vite.config";
 
 test("локальная цель прокси — как есть", () => {
