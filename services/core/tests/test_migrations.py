@@ -24,3 +24,27 @@ def test_upgrade_and_downgrade(tmp_path):
     assert {"outbox", "inbox", "alembic_version"} <= tables
     _alembic(url, "downgrade", "base")
     assert "outbox" not in set(inspect(create_engine(f"sqlite:///{db}")).get_table_names())
+
+
+def test_stage0_migrations_chain(tmp_path):
+    """s0_01 (grades) → s0_02 (users.email_verified_at): upgrade и пошаговый downgrade."""
+    db = tmp_path / "s0.db"
+    url = f"sqlite+aiosqlite:///{db}"
+    sync = f"sqlite:///{db}"
+    heads = subprocess.run(
+        [sys.executable, "-m", "alembic", "-x", f"url={url}", "heads"],
+        cwd=CORE,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+    assert heads.count("(head)") == 1 and "s0_02" in heads
+    _alembic(url, "upgrade", "head")
+    insp = inspect(create_engine(sync))
+    assert "grades" in insp.get_table_names()
+    assert "email_verified_at" in {c["name"] for c in insp.get_columns("users")}
+    _alembic(url, "downgrade", "s0_01")
+    insp = inspect(create_engine(sync))
+    assert "email_verified_at" not in {c["name"] for c in insp.get_columns("users")}
+    _alembic(url, "downgrade", "0024")
+    assert "grades" not in inspect(create_engine(sync)).get_table_names()

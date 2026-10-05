@@ -152,6 +152,7 @@ class ConsentType(StrEnum):
     code_analysis = "code_analysis"
     telegram_notifications = "telegram_notifications"
     public_profile = "public_profile"
+    profile_publication = "profile_publication"
 
 
 class FspDiscipline(StrEnum):
