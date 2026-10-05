@@ -30,7 +30,9 @@ def build_app(
     settings = settings or Settings()
     configure_logging(settings.service_name, settings.log_level)
     app = create_app(settings.service_name)
-    real = embedder or load_embedder(settings.embedding_model_path)
+    real = embedder or load_embedder(
+        settings.embedding_model_path, settings.embedding_model, settings.embedding_dim
+    )
     taxonomy = taxonomy or TaxonomyProvider(settings.core_url, settings.service_token_ml)
     # >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
     # <<< block1
@@ -40,7 +42,8 @@ def build_app(
     app.router.routes[:] = [r for r in app.router.routes if getattr(r, "path", "") != "/healthz"]
 
     def require_fake() -> None:
-        if not settings.ml_fake:
+        # без LLM (lite) этот путь — правиловый разбор запроса
+        if not settings.ml_fake and settings.llm_enabled:
             raise ProblemError(503, "ml_unavailable", "Модели ещё не подключены (ML_FAKE=false)")
 
     @app.post("/v1/query/parse")
@@ -70,7 +73,7 @@ def build_app(
 
     @app.get("/healthz")
     async def healthz() -> MlHealth:
-        up = "up" if settings.ml_fake else "down"
+        up = "up" if settings.ml_fake and settings.llm_enabled else "down"
         emb = "up" if (real is not None or settings.ml_fake) else "down"
         return MlHealth(
             llm=up, embedder=emb, model=real.model if real else fake.FAKE_MODEL, queue_depth=0
