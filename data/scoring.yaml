@@ -158,8 +158,30 @@ assessment:
   # грейда после неудачи — через retry_days. Попытка на грейд ниже после неудачи доступна сразу.
   rules: { validity_days: 365, change_cooldown_days: 90, retry_days: 30 }
   # Честность (§8): I < threshold → «требует подтверждения»; доказательства `test` тогда не выше
-  # unconfirmed_cap (доверие ●●○○, т.е. < 0.6).
-  integrity: { threshold: 0.6, unconfirmed_cap: 0.59 }
+  # unconfirmed_cap (доверие ●●○○, т.е. < 0.6). Сигналы (§8, E24-1): верный ответ (балл ≥ correct_min)
+  # на трудное задание (θ − b < fast_margin) быстрее fast_ratio × медианы семейства — −fast_penalty за
+  # каждый; уход со вкладки > away_min_ms, затем верный ответ — −away_penalty, не больше away_max;
+  # person-fit lz < lz_threshold (от lz_min_items ответов) — −lz_penalty; ≥ copy_min_matches неверных
+  # ответов вида copy_kinds, совпавших с верным ответом другого кандидата на его вариант, — −copy_penalty.
+  integrity:
+    threshold: 0.6
+    unconfirmed_cap: 0.59
+    correct_min: 1.0
+    fast_margin: -0.5
+    fast_ratio: 0.3
+    fast_penalty: 0.15
+    away_min_ms: 10000
+    away_penalty: 0.1
+    away_max: 0.3
+    lz_threshold: -2.0
+    lz_penalty: 0.2
+    lz_min_items: 6
+    copy_penalty: 0.3
+    copy_min_matches: 2
+    copy_kinds: [exact, estimate, find_bug]
+  # Таймер задания (§8): p95 (quantile) времени ответа семейства по последним window ответам, не меньше
+  # min_s; при < min_n ответах — таймер семейства. Медиана для сигнала «быстро» — тоже от min_n ответов.
+  timer: { quantile: 0.95, min_n: 20, window: 500, min_s: 15 }
   # Доказательство `test` в графе: сила = max_strength · доля набранного по навыку.
   evidence: { max_strength: 0.8 }
   # Жизненный цикл семейства (§7). Допуск pilot → active: все пороги + кнопка админа. Сиды делятся на
