@@ -80,7 +80,12 @@ def company_out(c: Company, my_role: str | None = None) -> CompanyOut:
     )
 
 
-@router.post("/companies", response_model=CompanyOut, status_code=201, responses=problem_responses(401, 403, 422))
+@router.post(
+    "/companies",
+    response_model=CompanyOut,
+    status_code=201,
+    responses=problem_responses(401, 403, 422),
+)
 async def register_company(
     body: CompanyIn,
     user: User = Depends(_employer),
@@ -98,7 +103,9 @@ async def get_my_company(
     return company_out(company, member.role)
 
 
-@router.patch("/companies/me", response_model=CompanyOut, responses=problem_responses(401, 403, 422))
+@router.patch(
+    "/companies/me", response_model=CompanyOut, responses=problem_responses(401, 403, 422)
+)
 async def patch_my_company(
     body: CompanyPatch,
     user: User = Depends(_employer),
@@ -112,7 +119,12 @@ async def patch_my_company(
     return company_out(company, member.role)
 
 
-@router.post("/companies/me/members", response_model=MemberOut, status_code=201, responses=problem_responses(401, 403, 422))
+@router.post(
+    "/companies/me/members",
+    response_model=MemberOut,
+    status_code=201,
+    responses=problem_responses(401, 403, 422),
+)
 async def invite_member(
     body: MemberIn,
     user: User = Depends(_employer),
@@ -133,7 +145,9 @@ async def admin_list(
     return [company_out(c) for c in items]
 
 
-@admin_router.post("/{company_id}/verify", response_model=CompanyOut, responses=problem_responses(401, 403, 404))
+@admin_router.post(
+    "/{company_id}/verify", response_model=CompanyOut, responses=problem_responses(401, 403, 404)
+)
 async def admin_verify(
     company_id: UUID,
     _: User = Depends(_admin),
@@ -142,7 +156,9 @@ async def admin_verify(
     return company_out(await service.verify(session, company_id))
 
 
-@admin_router.post("/{company_id}/reject", response_model=CompanyOut, responses=problem_responses(401, 403, 404))
+@admin_router.post(
+    "/{company_id}/reject", response_model=CompanyOut, responses=problem_responses(401, 403, 404)
+)
 async def admin_reject(
     company_id: UUID,
     _: User = Depends(_admin),
