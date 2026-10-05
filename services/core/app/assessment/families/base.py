@@ -131,6 +131,7 @@ class BaseFamily:
     skill: str
     skill_type: SkillType
     level: int
+    anchor: bool = False  # якорь держит шкалу: K = 0 при калибровке (assessment.md §7)
 
     def generate(self, rng: Random, world: World) -> Item:  # pragma: no cover - абстрактный
         raise NotImplementedError
