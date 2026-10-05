@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.candidates import service
 from app.candidates.models import Candidate
+from app.config import Settings
 from app.consents import service as consents
 from app.consents.deps import require_consent
 from app.deps import get_session
@@ -84,6 +85,9 @@ class CandidateProfile(BaseModel):
     skills: list[card.SkillWithTrust] = []
     team_signals: list[card.TeamSignal] = []
     claimed_soft: list[str] = []
+    contacts: ContactsIO | None = None  # только владельцу; в карточку работодателя не идёт
+    desired_roles: list[str] = []
+    experience_months: int | None = None
     fsp: card.OwnerFsp | None = None
     experience: list[ExperienceItem] = []
 
@@ -109,13 +113,41 @@ class VisibilityIn(BaseModel):
     teams: bool | None = None
 
 
+class ContactsIO(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    email: str | None = Field(default=None, max_length=254, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+    phone: str | None = Field(default=None, max_length=32, pattern=r"^\+?[0-9 ()\-]{5,32}$")
+    telegram: str | None = Field(default=None, max_length=33, pattern=r"^@?[A-Za-z0-9_]{5,32}$")
+
+
+class StackItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    slug: str = Field(min_length=1, max_length=100)
+    years: float | None = Field(default=None, ge=0, le=60)
+
+
+class ProfileIn(BaseModel):
+    """`PATCH /candidates/me/profile`: частичное обновление ручной формы (E20-4)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    contacts: ContactsIO | None = None  # null очищает
+    stack: list[StackItem] | None = Field(default=None, max_length=60)  # полный список
+    experience_months: int | None = Field(default=None, ge=0, le=720)
+    desired_roles: list[RoleSlug] | None = Field(default=None, max_length=5)
+    soft_skills: list[str] | None = Field(default=None, max_length=30)  # slug
+
+
 class StoplistIO(BaseModel):
     company_ids: list[UUID] = Field(max_length=service.STOPLIST_MAX)
 
 
-async def profile_out(session: AsyncSession, c: Candidate) -> CandidateProfile:
+async def profile_out(session: AsyncSession, c: Candidate, settings: Settings) -> CandidateProfile:
     vis = {**{"teams": True}, **c.visibility}
     parts = await card.build_owner_parts(session, c, _TRUST)
+    contacts = service.contacts_of(c, settings.pii_key)
     return CandidateProfile(
         pseudonym=c.pseudonym,
         profile_version=c.profile_version,
@@ -134,6 +166,9 @@ async def profile_out(session: AsyncSession, c: Candidate) -> CandidateProfile:
         skills=parts.skills,
         team_signals=parts.team_signals,
         claimed_soft=list(c.claimed_soft or []),
+        contacts=ContactsIO(**contacts) if contacts else None,
+        desired_roles=list(c.desired_roles or []),
+        experience_months=c.experience_months,
         fsp=await card.owner_fsp(session, c),
         experience=await resumes.experience_for_profile(session, c.user_id),
     )
@@ -151,7 +186,9 @@ async def get_profile(
     user: User = Depends(owner),
     session: AsyncSession = Depends(get_session),
 ):
-    return await profile_out(session, await _cand(request, session, user))
+    return await profile_out(
+        session, await _cand(request, session, user), request.app.state.settings
+    )
 
 
 @router.get("/skills/{skill_id}/evidence", response_model=list[card.EvidenceBrief])
@@ -169,6 +206,22 @@ async def skill_evidence(
     return items
 
 
+@router.patch("/profile", response_model=CandidateProfile)
+async def patch_profile(
+    body: ProfileIn,
+    request: Request,
+    user: User = Depends(writer),
+    session: AsyncSession = Depends(get_session),
+):
+    cand = await _cand(request, session, user)
+    changes = body.model_dump(exclude_unset=True, mode="json")
+    for key in ("stack", "experience_months", "desired_roles", "soft_skills"):
+        if key in changes and changes[key] is None and key != "experience_months":
+            changes[key] = []  # null и [] для списков одно и то же
+    await service.update_profile(session, cand, changes, pii_key=request.app.state.settings.pii_key)
+    return await profile_out(session, cand, request.app.state.settings)
+
+
 @router.patch("/preferences", response_model=CandidateProfile)
 async def patch_preferences(
     body: PreferencesIn,
@@ -178,7 +231,7 @@ async def patch_preferences(
 ):
     cand = await _cand(request, session, user)
     await service.update_preferences(session, cand, body.model_dump(exclude_unset=True))
-    return await profile_out(session, cand)
+    return await profile_out(session, cand, request.app.state.settings)
 
 
 @router.patch("/visibility", response_model=CandidateProfile)
@@ -201,7 +254,7 @@ async def patch_visibility(
         )
     cand = await _cand(request, session, user)
     await service.update_visibility(session, cand, changes)
-    return await profile_out(session, cand)
+    return await profile_out(session, cand, request.app.state.settings)
 
 
 @router.put("/stoplist", response_model=StoplistIO)
