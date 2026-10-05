@@ -4112,8 +4112,38 @@
               }
             }
           },
+          "409": {
+            "description": "Конфликт (в том числе cooldown)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Ошибка валидации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Слишком много запросов",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -6386,6 +6416,17 @@
         ],
         "title": "ConsentType"
       },
+      "ContactMethod": {
+        "type": "string",
+        "enum": [
+          "platform",
+          "email",
+          "phone",
+          "telegram"
+        ],
+        "title": "ContactMethod",
+        "description": "Как компания предлагает связаться после принятия приглашения."
+      },
       "Contacts-Input": {
         "properties": {
           "name": {
@@ -6485,8 +6526,15 @@
       "CreateOffer": {
         "properties": {
           "vacancy_id": {
-            "type": "string",
-            "format": "uuid",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Vacancy Id"
           },
           "candidate_pseudo_id": {
@@ -6530,15 +6578,49 @@
               }
             ],
             "title": "Message"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 4000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "contact_method": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContactMethod"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
         "type": "object",
         "required": [
-          "vacancy_id",
           "candidate_pseudo_id"
         ],
-        "title": "CreateOffer"
+        "title": "CreateOffer",
+        "description": "Приглашение работодателя. Без `vacancy_id` (ADR-022) обязателен `title`."
       },
       "Decline": {
         "properties": {
@@ -7684,7 +7766,50 @@
             "title": "Expires At"
           },
           "vacancy": {
-            "$ref": "#/components/schemas/VacancyBrief"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VacancyBrief"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "contact_method": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContactMethod"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "initiator": {
+            "$ref": "#/components/schemas/OfferInitiator",
+            "default": "employer"
           },
           "salary_from": {
             "type": "integer",
@@ -7750,7 +7875,6 @@
           "status",
           "created_at",
           "expires_at",
-          "vacancy",
           "salary_from",
           "salary_to",
           "below_candidate_min",
@@ -7779,7 +7903,50 @@
             "title": "Expires At"
           },
           "vacancy": {
-            "$ref": "#/components/schemas/VacancyBrief"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VacancyBrief"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "contact_method": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContactMethod"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "initiator": {
+            "$ref": "#/components/schemas/OfferInitiator",
+            "default": "employer"
           },
           "salary_from": {
             "type": "integer",
@@ -7862,12 +8029,20 @@
           "status",
           "created_at",
           "expires_at",
-          "vacancy",
           "salary_from",
           "salary_to",
           "below_candidate_min"
         ],
         "title": "OfferForCompany"
+      },
+      "OfferInitiator": {
+        "type": "string",
+        "enum": [
+          "employer",
+          "candidate"
+        ],
+        "title": "OfferInitiator",
+        "description": "Кто начал взаимодействие (ADR-022): приглашение работодателя или отклик кандидата."
       },
       "OfferStatus": {
         "type": "string",

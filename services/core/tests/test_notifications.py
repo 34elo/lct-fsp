@@ -257,3 +257,21 @@ def test_profile_updated_only_on_significant_diff(world):
     assert _notes(c) == []
     send(ProfileDiff(skills_up=[SkillLevelChange(slug="python", **{"from": 2}, to=3)]))
     assert [n[1] for n in _notes(c)] == ["profile_updated"]
+
+
+def test_invite_without_vacancy_notifies_with_title_once(world):
+    """E20-2: приглашение без вакансии; повтор `offer.sent` не дублирует уведомление."""
+    c, e, e_uid, vid, ch, ch_uid = world
+    _link_tg(c, ch, ch_uid)
+    body = {"candidate_pseudo_id": "pid0001", "salary_from": 250000, "salary_to": 320000,
+            "title": "R&D-приглашение"}  # fmt: skip
+    r = c.post("/offers", json=body, headers={**e, "Idempotency-Key": uuid.uuid4().hex})
+    assert r.status_code == 201, r.text
+    oid = r.json()["id"]
+    _drain(c, repeat=3)
+    assert [n[1] for n in _notes(c)] == ["offer_new"]
+    (cmd,) = _tg(c)
+    assert cmd["data"]["vacancy_title"] == "R&D-приглашение"
+    assert c.post(f"/offers/{oid}/accept", headers=ch).status_code == 200
+    _drain(c, types=("offer.accepted",), repeat=2)
+    assert [n[1] for n in _notes(c)] == ["offer_new", "offer_accepted"]  # компании — один раз

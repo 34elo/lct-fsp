@@ -7,7 +7,9 @@
   кандидат — `offer_candidate_per_day` (scoring.yaml `limits`);
 - `Idempotency-Key` уникален в паре с компанией; повтор того же запроса возвращает исходный
   оффер, тот же ключ с другим запросом — 409;
-- чужой оффер → 404; каждый переход пишет `offer_events` и `offer.*` в outbox в одной транзакции.
+- чужой оффер → 404; каждый переход пишет `offer_events` и `offer.*` в outbox в одной транзакции;
+- приглашение без вакансии (ADR-022): нужен `title`; второе открытое приглашение без вакансии
+  тому же кандидату от той же компании — 409; события `offer.*` идут со schema_version 2.
 """
 
 from __future__ import annotations
@@ -22,6 +24,7 @@ import yaml
 from fsp_contracts import new_envelope
 from fsp_contracts.enums import CompanyStatus, DeclineReason, OfferStatus
 from fsp_contracts.events import OfferEvent as OfferEventPayload
+from fsp_contracts.hiring import OFFER_SCHEMA_VERSION, ContactMethod, OfferInitiator
 from fsp_platform.app import ProblemError
 from fsp_platform.outbox import add_to_outbox
 from sqlalchemy import func, select
@@ -141,9 +144,14 @@ async def _emit(session: AsyncSession, offer: Offer, to: OfferStatus, *, prev, a
     name = _EVENT.get(to, "offer.status_changed")
     payload = OfferEventPayload(
         offer_id=offer.id, candidate_id=offer.candidate_id, company_id=offer.company_id,
-        vacancy_id=offer.vacancy_id, status=to, prev_status=prev, actor=actor, **extra,
+        vacancy_id=offer.vacancy_id, status=to, prev_status=prev, actor=actor,
+        initiator=OfferInitiator(offer.initiator), **extra,
     )  # fmt: skip
-    await add_to_outbox(session, new_envelope(name, "core", payload), offer.id)
+    await add_to_outbox(session, _envelope(name, payload), offer.id)
+
+
+def _envelope(name: str, payload: OfferEventPayload):
+    return new_envelope(name, "core", payload, schema_version=OFFER_SCHEMA_VERSION)
 
 
 async def _log(
@@ -170,16 +178,22 @@ async def create(
     *,
     company: Company,
     user_id: uuid.UUID,
-    vacancy: Vacancy,
+    vacancy: Vacancy | None,
     candidate: Candidate,
     salary_from: int | None,
     salary_to: int | None,
     message: str | None,
     idempotency_key: str,
     limits: OfferLimits,
+    title: str | None = None,
+    description: str | None = None,
+    contact_method: ContactMethod | None = None,
     now: datetime | None = None,
 ) -> tuple[Offer, bool]:
-    """Новый оффер. Возвращает `(оффер, replay)`: `replay=True` — это повтор по тому же ключу."""
+    """Новый оффер (приглашение работодателя, ADR-022: вакансия необязательна).
+
+    Возвращает `(оффер, replay)`: `replay=True` — это повтор по тому же ключу.
+    """
     now = now or datetime.now(UTC)
     existing = await _find_by_key(session, company.id, idempotency_key)
     if existing is not None:
@@ -187,16 +201,27 @@ async def create(
 
     if company.status != CompanyStatus.verified.value:
         raise ProblemError(403, "company_not_verified", "Компания не прошла верификацию")
-    if vacancy.status != VacancyStatus.published.value:
+    title = (title or "").strip() or None
+    if vacancy is None and title is None:
+        raise ProblemError(
+            422, "title_required", "Укажите название приглашения",
+            errors=[{"field": "title", "message": "без вакансии название обязательно"}],
+        )  # fmt: skip
+    if vacancy is not None and vacancy.status != VacancyStatus.published.value:
         raise ProblemError(409, "vacancy_not_published", "Вакансия не опубликована")
     lo, hi = validate_range(salary_from, salary_to)
 
-    dup = await session.scalar(
-        select(Offer.id).where(
+    if vacancy is not None:
+        dup_q = select(Offer.id).where(
             Offer.vacancy_id == vacancy.id, Offer.candidate_id == candidate.user_id
         )
-    )
-    if dup is not None:
+    else:  # без вакансии: одно открытое приглашение от компании кандидату
+        dup_q = select(Offer.id).where(
+            Offer.vacancy_id.is_(None), Offer.company_id == company.id,
+            Offer.candidate_id == candidate.user_id, Offer.status.in_(OPEN),
+            Offer.expires_at > now,
+        )  # fmt: skip
+    if await session.scalar(dup_q.limit(1)) is not None:
         raise ProblemError(409, "offer_exists", "Оффер этому кандидату по вакансии уже отправлен")
 
     since = now - WINDOW
@@ -213,12 +238,15 @@ async def create(
             headers=_retry_after(oldest, now),
         )  # fmt: skip
 
+    snapshot = await matching.snapshot(session, vacancy.id, candidate.user_id) if vacancy else None
     offer = Offer(
-        id=uuid.uuid4(), vacancy_id=vacancy.id, candidate_id=candidate.user_id,
-        company_id=company.id, created_by=user_id, salary_from=lo, salary_to=hi,
-        message=(message or "").strip() or None, status=S.sent.value,
-        awaiting_reply_from="candidate",
-        match_snapshot=await matching.snapshot(session, vacancy.id, candidate.user_id),
+        id=uuid.uuid4(), vacancy_id=vacancy.id if vacancy else None,
+        candidate_id=candidate.user_id, company_id=company.id, created_by=user_id,
+        salary_from=lo, salary_to=hi, message=(message or "").strip() or None,
+        title=title, description=(description or "").strip() or None,
+        contact_method=contact_method.value if contact_method else None,
+        initiator=OfferInitiator.employer.value, status=S.sent.value,
+        awaiting_reply_from="candidate", match_snapshot=snapshot,
         below_candidate_min=candidate.salary_min is not None and hi < candidate.salary_min,
         idempotency_key=idempotency_key, created_at=now,
         expires_at=now + timedelta(days=limits.validity_days),
@@ -239,8 +267,9 @@ async def create(
     return offer, False
 
 
-def _replay(existing: Offer, vacancy: Vacancy, candidate: Candidate) -> Offer:
-    if existing.vacancy_id != vacancy.id or existing.candidate_id != candidate.user_id:
+def _replay(existing: Offer, vacancy: Vacancy | None, candidate: Candidate) -> Offer:
+    vacancy_id = vacancy.id if vacancy else None
+    if existing.vacancy_id != vacancy_id or existing.candidate_id != candidate.user_id:
         raise ProblemError(
             409, "idempotency_key_reused", "Idempotency-Key уже использован для другого оффера"
         )
@@ -409,9 +438,9 @@ async def add_message(
     payload = OfferEventPayload(
         offer_id=offer.id, candidate_id=offer.candidate_id, company_id=offer.company_id,
         vacancy_id=offer.vacancy_id, status=OfferStatus(offer.status), actor=side,
-        message_id=msg.id,
+        message_id=msg.id, initiator=OfferInitiator(offer.initiator),
     )  # fmt: skip
-    await add_to_outbox(session, new_envelope("offer.message", "core", payload), offer.id)
+    await add_to_outbox(session, _envelope("offer.message", payload), offer.id)
     return msg
 
 

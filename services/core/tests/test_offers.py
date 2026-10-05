@@ -623,3 +623,107 @@ def test_offer_events_timeline(world):
         assert "payload" not in ev[0]
     other = _employer(c, "o3@x.ru", name="Other", inn="7736050003")
     assert c.get(f"/offers/{oid}/events", headers=other).status_code == 404
+
+
+# --- E20-2: приглашение без вакансии (ADR-022) ---------------------------------------------
+
+
+def _invite(c, h, pid, key=None, **over):
+    body = {"candidate_pseudo_id": pid, "salary_from": 250000, "salary_to": 320000,
+            "title": "Python-разработчик в R&D", "description": "Пилотный проект",
+            "contact_method": "telegram"} | over  # fmt: skip
+    body = {k: v for k, v in body.items() if v is not None}
+    return c.post("/offers", json=body, headers={**h, "Idempotency-Key": key or uuid.uuid4().hex})
+
+
+def test_invite_without_vacancy_created_and_accepted(world):
+    c, e, vid, ch, pid, uid = world
+    r = _invite(c, e, pid)
+    assert r.status_code == 201, r.text
+    o = r.json()
+    assert o["vacancy"] is None and o["initiator"] == "employer"
+    assert (o["title"], o["description"], o["contact_method"]) == (
+        "Python-разработчик в R&D", "Пилотный проект", "telegram",
+    )  # fmt: skip
+    assert o["match_snapshot"] is None and o["candidate"]["pseudo_id"] == pid
+    mine = c.get("/candidates/me/offers", headers=ch).json()
+    assert [x["id"] for x in mine] == [o["id"]] and mine[0]["vacancy"] is None
+    assert mine[0]["company"]["name"] == "Acme Labs"
+    assert c.post(f"/offers/{o['id']}/accept", headers=ch).status_code == 200
+    assert _status(c, e, o["id"]) == "accepted"
+    assert c.get(f"/offers/{o['id']}/contacts", headers=e).status_code == 200
+    assert _events(c) == ["offer.sent", "offer.accepted"]
+    rows = _db(c, "select payload from outbox where type like 'offer.%'")
+    envs = [json.loads(p) for (p,) in rows]
+    assert {env["schema_version"] for env in envs} == {2}
+    assert all(env["payload"]["vacancy_id"] is None for env in envs)
+    assert all(env["payload"]["initiator"] == "employer" for env in envs)
+
+
+def test_invite_with_vacancy_keeps_vacancy_and_v2_event(world):
+    c, e, vid, ch, pid, uid = world
+    o = _offer(c, e, vid, pid).json()
+    assert o["vacancy"]["id"] == vid and o["title"] == "Backend" and o["initiator"] == "employer"
+    (raw,) = _db(c, "select payload from outbox where type='offer.sent'")[0]
+    env = json.loads(raw)
+    assert env["schema_version"] == 2 and env["payload"]["vacancy_id"] == vid
+
+
+def test_invite_requires_salary_and_title(world):
+    c, e, vid, ch, pid, uid = world
+    for over in ({"salary_from": None}, {"salary_to": None}):
+        r = _invite(c, e, pid, **over)
+        assert (r.status_code, r.json()["code"]) == (422, "salary_range_required"), over
+    r = _invite(c, e, pid, title=None)
+    assert (r.status_code, r.json()["code"]) == (422, "title_required")
+    r = _invite(c, e, pid, title="   ")
+    assert (r.status_code, r.json()["code"]) == (422, "title_required")
+    r = _invite(c, e, pid, contact_method="pigeon")
+    assert r.status_code == 422
+    assert _db(c, "select count(*) from offers") == [(0,)]
+    assert _events(c) == []
+
+
+def test_invite_idempotent_and_no_duplicates(world):
+    c, e, vid, ch, pid, uid = world
+    r1 = _invite(c, e, pid, key="inv-1")
+    r2 = _invite(c, e, pid, key="inv-1")  # повтор того же запроса
+    assert r2.status_code == 201 and r2.headers.get("Idempotent-Replay") == "true"
+    assert r1.json()["id"] == r2.json()["id"]
+    # тот же ключ, но с вакансией — другой запрос
+    r = _offer(c, e, vid, pid, key="inv-1")
+    assert (r.status_code, r.json()["code"]) == (409, "idempotency_key_reused")
+    # второе открытое приглашение без вакансии тому же кандидату — 409
+    r = _invite(c, e, pid, title="Другое")
+    assert (r.status_code, r.json()["code"]) == (409, "offer_exists")
+    assert _db(c, "select count(*) from offers") == [(1,)]
+    assert _events(c) == ["offer.sent"]
+    # после отказа можно пригласить снова; оффер по вакансии не мешает
+    c.post(f"/offers/{r1.json()['id']}/decline", json={"reason": "other"}, headers=ch)
+    assert _invite(c, e, pid).status_code == 201
+    assert _offer(c, e, vid, pid).status_code == 201
+
+
+def test_invite_foreign_is_404(world):
+    c, e, vid, ch, pid, uid = world
+    oid = _invite(c, e, pid).json()["id"]
+    e2 = _employer(c, "e2@x.ru", name="Other", inn="7736050003")
+    ch2, _, _ = _candidate(c, "c2@x.ru", 2)
+    assert c.get(f"/offers/{oid}", headers=e2).status_code == 404
+    assert c.get(f"/offers/{oid}", headers=ch2).status_code == 404
+    assert c.post(f"/offers/{oid}/accept", headers=ch2).status_code == 404
+    assert c.post(f"/offers/{oid}/withdraw", headers=e2).status_code == 404
+    # чужая вакансия в приглашении — 404
+    r = _offer(c, e2, vid, pid)
+    assert r.status_code == 404
+    assert _invite(c, ch, pid).status_code == 403  # кандидат не приглашает
+    assert _status(c, e, oid) == "sent"
+
+
+def test_invite_requires_verified_email_when_enabled(world, monkeypatch):
+    c, e, vid, ch, pid, uid = world
+    monkeypatch.setenv("EMAIL_VERIFICATION_REQUIRED", "true")
+    r = _invite(c, e, pid)
+    assert (r.status_code, r.json()["code"]) == (403, "email_not_verified")
+    _db(c, "update users set email_verified_at=? where email='e@x.ru'", _past(minutes=1))
+    assert _invite(c, e, pid).status_code == 201
