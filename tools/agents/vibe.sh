@@ -2,13 +2,15 @@
 # Вайбкодинг без открытого чата (запасной вариант к /vibe).
 # контекстом: диспетчер берёт одну задачу, отдаёт её сабагенту, проверяет и ставит статус.
 # Если упёрлись в лимит, ждём и повторяем.
-# Использование: tools/agents/vibe.sh [сколько задач, по умолчанию 6] [модель диспетчера, по умолчанию sonnet]
+# Использование: tools/agents/vibe.sh <блок 0|1|2> [сколько задач, по умолчанию 6] [модель диспетчера, по умолчанию sonnet]
+# Правила двух блоков — docs/process/blocks.md.
 set -uo pipefail
-MAX="${1:-6}"
-MODEL="${2:-sonnet}"
+BLOCK="${1:?укажи блок: 0, 1 или 2}"
+MAX="${2:-6}"
+MODEL="${3:-sonnet}"
 cd "$(git rev-parse --show-toplevel)"
 mkdir -p reports
-LOG="reports/vibe-$(date +%F).log"
+LOG="reports/vibe-b${BLOCK}-$(date +%F).log"
 
 if [ -n "$(git status --porcelain)" ]; then
   echo "Рабочее дерево не чистое — закоммить или убери изменения." | tee -a "$LOG"; exit 1
@@ -17,7 +19,7 @@ fi
 for i in $(seq 1 "$MAX"); do
   echo "=== задача $i/$MAX, $(date +%T) ===" >>"$LOG"
   for attempt in 1 2 3 4 5 6; do
-    claude -p "Выполни инструкции из .claude/commands/vibe.md с лимитом 1 задача. Вопросов не задавай." \
+    claude -p "Выполни инструкции из .claude/commands/vibe.md с аргументами: ${BLOCK} 1 (блок ${BLOCK}, лимит 1 задача). Вопросов не задавай." \
       --permission-mode acceptEdits --model "$MODEL" >>"$LOG" 2>&1
     code=$?
     if [ $code -eq 0 ]; then break; fi
@@ -27,6 +29,6 @@ for i in $(seq 1 "$MAX"); do
       echo "ошибка запуска (код $code) — останавливаюсь" >>"$LOG"; exit $code
     fi
   done
-  if tail -n 40 "$LOG" | grep -q "ОЧЕРЕДЬ ПУСТА"; then echo "очередь пуста" >>"$LOG"; break; fi
+  if tail -n 40 "$LOG" | grep -qE "ПУСТА|ЖДЁМ Т"; then echo "очередь блока пуста или ждёт точку стыковки" >>"$LOG"; break; fi
 done
 echo "=== конец смены $(date +%T) ===" >>"$LOG"
