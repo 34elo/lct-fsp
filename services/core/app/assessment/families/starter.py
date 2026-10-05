@@ -21,6 +21,8 @@ class PyLoopSum(BaseFamily):
     skill = "python"
     skill_type = SkillType.hard
     level = 2
+    anchor = True
+    knob_bounds = {"range_len": (5, 30), "k": (2, 5)}
 
     def generate(self, rng: Random, world: World) -> Item:
         var = world.entities[0][0]
@@ -38,6 +40,7 @@ class PyLoopSum(BaseFamily):
             stem=f"Что выведет код сервиса {world.services[0]} ({world.company})?\n\n{code}",
             key=key,
             time_limit_s=90,
+            meta={"exec": code, "knobs": {"range_len": hi - lo, "k": k}},
         )
 
 
@@ -66,6 +69,7 @@ class ComplexityChoice(BaseFamily):
     skill = "algorithms"
     skill_type = SkillType.fundamental
     level = 2
+    anchor = True
 
     def generate(self, rng: Random, world: World) -> Item:
         tmpl, answer = rng.choice(_SNIPPETS)

@@ -120,4 +120,8 @@ demo-warm:
 LITE_ENV = LLM_ENABLED=false ML_FAKE=false EMBEDDING_MODEL=$${EMBEDDING_MODEL:-multilingual-e5-small}
 up-lite: demo-env
 	$(LITE_ENV) docker compose --env-file $(ENV_FILE) --profile core --profile ml $(BOT_PROFILE) up -d --build --wait
+# Автопроверка кодовых семейств заданий (assessment.md §4): ключи, исполнение, ручки, детерминизм
+.PHONY: families-check
+families-check:
+	uv run python -m app.assessment.families.check --seeds 1000
 # <<< block1

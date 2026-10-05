@@ -13,6 +13,13 @@ jobs:
       - run: uv run ruff check . && uv run ruff format --check .
       - run: uv run lint-imports
       - run: uv run pytest -q
+  families-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --all-packages --frozen
+      - run: make families-check
   web:
     runs-on: ubuntu-latest
     defaults:
