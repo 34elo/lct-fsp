@@ -127,6 +127,7 @@ CREATE TABLE candidates (
   public_slug        text UNIQUE,                     -- для публичного профиля и бейджа (по желанию)
   full_name_enc      bytea,                           -- ПДн шифруются Fernet
   contacts_enc       bytea,                           -- {email, phone, telegram}
+  desired_roles      text[],                          -- желаемые роли из ручной формы (E20-4), RoleSlug
   city               text,
   relocation         boolean DEFAULT false,
   search_status      text NOT NULL DEFAULT 'open',    -- search_status

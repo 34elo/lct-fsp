@@ -104,6 +104,9 @@ class Candidate(Base):
     embedding_model: Mapped[str | None] = mapped_column(Text, default=None)
     team_signals: Mapped[dict | None] = mapped_column(sa.JSON, default=None)
     claimed_soft: Mapped[list[str] | None] = mapped_column(TextArray, default=None)
+    # ручная форма (E20-4): контакты шифруются Fernet (security.md §3), желаемые роли — slug
+    contacts_enc: Mapped[bytes | None] = mapped_column(sa.LargeBinary, default=None)
+    desired_roles: Mapped[list[str] | None] = mapped_column(TextArray, default=None)
     # слияние пересчётов (graph.md §4.4)
     recompute_requested_at: Mapped[datetime | None] = mapped_column(
         sa.DateTime(timezone=True), default=None

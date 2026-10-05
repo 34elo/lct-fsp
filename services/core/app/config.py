@@ -47,6 +47,8 @@ class Settings(BaseServiceSettings):
     email_code_max_attempts: int = 5
     # LLM для резюме, навыков, теста; false — ml-воркеры не ходят в llama-server (ML_FAKE и т.п.)
     llm_enabled: bool = True
+    # Fernet-ключ шифрования ПДн в БД (contacts_enc); в проде из PII_KEY (security.md §3)
+    pii_key: str = "ZGV2LW9ubHktcGlpLWtleS0wMTIzNDU2Nzg5YWJjZGU="
     # <<< block1
     # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
     # <<< block2
