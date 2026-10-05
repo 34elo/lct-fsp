@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
@@ -22,6 +23,13 @@ _employer = require_roles("employer")
 _admin = require_roles("fsp_admin")
 
 
+class Contacts(BaseModel):
+    name: str | None = None
+    email: str | None = None
+    phone: str | None = None
+    telegram: str | None = None
+
+
 class CompanyOut(BaseModel):
     id: UUID
     name: str
@@ -29,6 +37,8 @@ class CompanyOut(BaseModel):
     site: str | None
     description: str | None
     logo_key: str | None
+    contacts: dict[str, Any] | None
+    direction: str | None
     status: CompanyStatus
     responsibility_score: float | None
     created_at: datetime
@@ -42,6 +52,8 @@ class CompanyIn(BaseModel):
     inn: str | None = Field(default=None, pattern=r"^(\d{10}|\d{12})$")
     site: str | None = Field(default=None, max_length=300)
     description: str | None = Field(default=None, max_length=5000)
+    contacts: Contacts | None = Field(default=None)
+    direction: str | None = Field(default=None, max_length=1000)
 
 
 class CompanyPatch(BaseModel):
@@ -51,6 +63,8 @@ class CompanyPatch(BaseModel):
     inn: str | None = Field(default=None, pattern=r"^(\d{10}|\d{12})$")
     site: str | None = Field(default=None, max_length=300)
     description: str | None = Field(default=None, max_length=5000)
+    contacts: Contacts | None = Field(default=None)
+    direction: str | None = Field(default=None, max_length=1000)
 
 
 class MemberIn(BaseModel):
@@ -73,6 +87,8 @@ def company_out(c: Company, my_role: str | None = None) -> CompanyOut:
         site=c.site,
         description=c.description,
         logo_key=c.logo_key,
+        contacts=c.contacts,
+        direction=c.direction,
         status=CompanyStatus(c.status),
         responsibility_score=c.responsibility_score,
         created_at=c.created_at,
