@@ -8,53 +8,95 @@ export interface RouteDef {
   /** Макет из docs/design/screens (для сверки). */
   screen?: string;
   section: Section;
+  /** Владелец страницы (blocks.md §4.8). */
+  owner: "b1" | "b2";
+  /** Пункт навигации: меню строится из routes.ts (blocks.md §4.8). */
+  nav?: boolean;
 }
 
 /** Карта маршрутов — frontend.md §1. Роль определяется разделом. */
 export const ROUTES: RouteDef[] = [
-  { path: "/", title: "Лендинг", screen: "L1, L2", section: "public" },
-  { path: "/athlete/:id", title: "Публичная карточка", screen: "P1", section: "public" },
-  { path: "/verify/:id", title: "Проверка Open Badge", section: "public" },
-  { path: "/run/:token", title: "Живой прогон", screen: "Q3", section: "public" },
+  { path: "/", title: "Лендинг", screen: "L1, L2", section: "public", owner: "b2" },
+  { path: "/athlete/:id", title: "Публичная карточка", screen: "P1", section: "public", owner: "b2" },
+  { path: "/verify/:id", title: "Проверка Open Badge", section: "public", owner: "b2" },
+  { path: "/run/:token", title: "Живой прогон", screen: "Q3", section: "public", owner: "b2" },
+  // >>> block1 (public)
+  // <<< block1 (public)
+  // >>> block2 (public)
+  { path: "/jobs", title: "Вакансии", section: "public", owner: "b2" },
+  { path: "/jobs/:id", title: "Вакансия", section: "public", owner: "b2" },
+  // <<< block2 (public)
 
-  { path: "/login", title: "Вход", section: "auth" },
-  { path: "/register", title: "Регистрация", section: "auth" },
-  { path: "/auth/magic", title: "Вход по ссылке", section: "auth" },
-  { path: "/consents", title: "Согласия", screen: "M1", section: "auth" },
-  { path: "/auth/fsp/callback", title: "Вход через ФСП", section: "auth" },
+  { path: "/login", title: "Вход", section: "auth", owner: "b1" },
+  { path: "/register", title: "Регистрация", section: "auth", owner: "b1" },
+  { path: "/auth/magic", title: "Вход по ссылке", section: "auth", owner: "b1" },
+  { path: "/consents", title: "Согласия", screen: "M1", section: "auth", owner: "b1" },
+  { path: "/auth/fsp/callback", title: "Вход через ФСП", section: "auth", owner: "b1" },
+  // >>> block1 (auth)
+  { path: "/verify-email", title: "Подтверждение email", section: "auth", owner: "b1" },
+  // <<< block1 (auth)
+  // >>> block2 (auth)
+  // <<< block2 (auth)
 
-  { path: "/onboarding", title: "Онбординг", screen: "M1", section: "candidate" },
-  { path: "/me", title: "Мой профиль", screen: "D", section: "candidate" },
-  { path: "/me/graph", title: "Граф доказательств", screen: "G1, G2", section: "candidate" },
-  { path: "/me/skills/:slug", title: "Доказательства навыка", section: "candidate" },
-  { path: "/me/offers", title: "Офферы", screen: "M2", section: "candidate" },
-  { path: "/me/offers/:id", title: "Оффер", screen: "M2", section: "candidate" },
-  { path: "/me/growth", title: "Рост и тест", screen: "M3", section: "candidate" },
-  { path: "/me/badge", title: "Open Badge", screen: "Q5", section: "candidate" },
-  { path: "/me/settings", title: "Настройки", section: "candidate" },
+  { path: "/onboarding", title: "Онбординг", screen: "M1", section: "candidate", owner: "b1", nav: true },
+  { path: "/me", title: "Мой профиль", screen: "D", section: "candidate", owner: "b1", nav: true },
+  { path: "/me/graph", title: "Граф доказательств", screen: "G1, G2", section: "candidate", owner: "b1", nav: true },
+  { path: "/me/skills/:slug", title: "Доказательства навыка", section: "candidate", owner: "b1" },
+  { path: "/me/offers", title: "Офферы", screen: "M2", section: "candidate", owner: "b2", nav: true },
+  { path: "/me/offers/:id", title: "Оффер", screen: "M2", section: "candidate", owner: "b2" },
+  { path: "/me/growth", title: "Рост и тест", screen: "M3", section: "candidate", owner: "b1", nav: true },
+  { path: "/me/badge", title: "Open Badge", screen: "Q5", section: "candidate", owner: "b1" },
+  { path: "/me/settings", title: "Настройки", section: "candidate", owner: "b1", nav: true },
+  // >>> block1 (candidate)
+  { path: "/me/assessment", title: "Опрос и грейд", section: "candidate", owner: "b1", nav: true },
+  { path: "/me/assessment/history", title: "История тестов", section: "candidate", owner: "b1" },
+  { path: "/me/assessment/attempts/:id", title: "Прохождение теста", section: "candidate", owner: "b1" },
+  { path: "/me/assessment/attempts/:id/result", title: "Результат теста", section: "candidate", owner: "b1" },
+  { path: "/me/tasks", title: "Регулярные задания", section: "candidate", owner: "b1", nav: true },
+  { path: "/me/profile/edit", title: "Редактирование профиля", section: "candidate", owner: "b1" },
+  // <<< block1 (candidate)
+  // >>> block2 (candidate)
+  { path: "/me/responses", title: "Мои отклики", section: "candidate", owner: "b2", nav: true },
+  // <<< block2 (candidate)
 
-  { path: "/employer/market", title: "Рынок талантов", screen: "E1", section: "employer" },
-  { path: "/employer/search", title: "Поиск", screen: "A, E2", section: "employer" },
-  { path: "/employer/candidates/:id", title: "Карточка кандидата", screen: "B", section: "employer" },
-  { path: "/employer/candidates/:id/graph", title: "Граф кандидата", screen: "G1", section: "employer" },
-  { path: "/employer/candidates/:id/interview", title: "Интервью", screen: "Q4", section: "employer" },
-  { path: "/employer/offers/new", title: "Новый оффер", screen: "C", section: "employer" },
-  { path: "/employer/vacancies", title: "Вакансии", screen: "E3", section: "employer" },
-  { path: "/employer/vacancies/:id", title: "Вакансия", screen: "E3", section: "employer" },
-  { path: "/employer/vacancies/:id/shortlist", title: "Подборка", screen: "E4", section: "employer" },
-  { path: "/employer/offers", title: "Мои офферы", screen: "E5", section: "employer" },
-  { path: "/employer/offers/:id", title: "Оффер", screen: "E5", section: "employer" },
-  { path: "/employer/company", title: "Компания", section: "employer" },
+  { path: "/employer/market", title: "Рынок талантов", screen: "E1", section: "employer", owner: "b2", nav: true },
+  { path: "/employer/search", title: "Поиск", screen: "A, E2", section: "employer", owner: "b2", nav: true },
+  { path: "/employer/candidates/:id", title: "Карточка кандидата", screen: "B", section: "employer", owner: "b2" },
+  { path: "/employer/candidates/:id/graph", title: "Граф кандидата", screen: "G1", section: "employer", owner: "b2" },
+  { path: "/employer/candidates/:id/interview", title: "Интервью", screen: "Q4", section: "employer", owner: "b2" },
+  { path: "/employer/offers/new", title: "Новый оффер", screen: "C", section: "employer", owner: "b2" },
+  { path: "/employer/vacancies", title: "Вакансии", screen: "E3", section: "employer", owner: "b2", nav: true },
+  { path: "/employer/vacancies/:id", title: "Вакансия", screen: "E3", section: "employer", owner: "b2" },
+  { path: "/employer/vacancies/:id/shortlist", title: "Подборка", screen: "E4", section: "employer", owner: "b2" },
+  { path: "/employer/offers", title: "Мои офферы", screen: "E5", section: "employer", owner: "b2", nav: true },
+  { path: "/employer/offers/:id", title: "Оффер", screen: "E5", section: "employer", owner: "b2" },
+  { path: "/employer/company", title: "Компания", section: "employer", owner: "b2", nav: true },
+  // >>> block1 (employer)
+  { path: "/employer/tasks", title: "Задания компании", section: "employer", owner: "b1", nav: true },
+  { path: "/employer/families/new", title: "Конструктор задания", section: "employer", owner: "b1" },
+  // <<< block1 (employer)
+  // >>> block2 (employer)
+  { path: "/employer/needs/new", title: "Новая потребность", section: "employer", owner: "b2", nav: true },
+  { path: "/employer/needs/:id", title: "Рекомендованные категории", section: "employer", owner: "b2" },
+  { path: "/employer/categories/:profession/:grade", title: "Кандидаты категории", section: "employer", owner: "b2" },
+  { path: "/employer/responses", title: "Отклики на вакансии", section: "employer", owner: "b2", nav: true },
+  // <<< block2 (employer)
 
-  { path: "/federation", title: "Дашборд ФСП", screen: "F1", section: "admin" },
-  { path: "/federation/matrix", title: "Матрица дисциплин", screen: "F2", section: "admin" },
-  { path: "/federation/moderation", title: "Модерация", screen: "F3", section: "admin" },
-  { path: "/federation/demo", title: "Демо-пульт", screen: "F4", section: "admin" },
-  { path: "/admin/skills", title: "Граф навыков", screen: "G3", section: "admin" },
-  { path: "/admin/quality", title: "Качество", screen: "Q1", section: "admin" },
-  { path: "/admin/quality/fairness", title: "Справедливость", screen: "Q2", section: "admin" },
-  { path: "/admin/quality/runs", title: "Живые прогоны", screen: "Q3", section: "admin" },
-  { path: "/admin/health", title: "Здоровье", screen: "Q6", section: "admin" },
+  { path: "/federation", title: "Дашборд ФСП", screen: "F1", section: "admin", owner: "b2", nav: true },
+  { path: "/federation/matrix", title: "Матрица дисциплин", screen: "F2", section: "admin", owner: "b2", nav: true },
+  { path: "/federation/moderation", title: "Модерация", screen: "F3", section: "admin", owner: "b2", nav: true },
+  { path: "/federation/demo", title: "Демо-пульт", screen: "F4", section: "admin", owner: "b2", nav: true },
+  { path: "/admin/skills", title: "Граф навыков", screen: "G3", section: "admin", owner: "b1", nav: true },
+  { path: "/admin/quality", title: "Качество", screen: "Q1", section: "admin", owner: "b2", nav: true },
+  { path: "/admin/quality/fairness", title: "Справедливость", screen: "Q2", section: "admin", owner: "b2" },
+  { path: "/admin/quality/runs", title: "Живые прогоны", screen: "Q3", section: "admin", owner: "b2" },
+  { path: "/admin/health", title: "Здоровье", screen: "Q6", section: "admin", owner: "b2", nav: true },
+  // >>> block1 (admin)
+  { path: "/admin/families", title: "Очередь допуска", section: "admin", owner: "b1", nav: true },
+  { path: "/admin/professions", title: "Профессии и навыки", section: "admin", owner: "b1", nav: true },
+  // <<< block1 (admin)
+  // >>> block2 (admin)
+  // <<< block2 (admin)
 ];
 
 export const SECTION_ROLE: Partial<Record<Section, Role>> = {
