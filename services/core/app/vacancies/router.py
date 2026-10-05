@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.deps import get_session
 from app.identity.deps import require_roles
 from app.identity.models import User
+from app.openapi_errors import problem_responses
 from app.vacancies import service
 from app.vacancies.models import Vacancy
 from app.vacancies.service import SkillReq, VacancyStatus
@@ -134,7 +135,7 @@ def _reqs(items: list[SkillReqIn]) -> list[SkillReq]:
     return [SkillReq(**i.model_dump()) for i in items]
 
 
-@router.post("", response_model=VacancyOut, status_code=201)
+@router.post("", response_model=VacancyOut, status_code=201, responses=problem_responses(401, 403, 422))
 async def create_vacancy(
     body: VacancyIn,
     user: User = Depends(_employer),
@@ -145,7 +146,7 @@ async def create_vacancy(
     return await _out(session, v)
 
 
-@router.get("", response_model=list[VacancyOut])
+@router.get("", response_model=list[VacancyOut], responses=problem_responses(401, 403))
 async def list_vacancies(
     status: VacancyStatus | None = None,
     user: User = Depends(_employer),
@@ -156,7 +157,7 @@ async def list_vacancies(
     return [vacancy_out(v, skills[v.id]) for v in items]
 
 
-@router.get("/{vacancy_id}", response_model=VacancyOut)
+@router.get("/{vacancy_id}", response_model=VacancyOut, responses=problem_responses(401, 403, 404))
 async def get_vacancy(
     vacancy_id: UUID,
     user: User = Depends(_employer),
@@ -165,7 +166,7 @@ async def get_vacancy(
     return await _out(session, await service.get_owned(session, user, vacancy_id))
 
 
-@router.patch("/{vacancy_id}", response_model=VacancyOut)
+@router.patch("/{vacancy_id}", response_model=VacancyOut, responses=problem_responses(401, 403, 404, 422))
 async def patch_vacancy(
     vacancy_id: UUID,
     body: VacancyPatch,
@@ -178,7 +179,7 @@ async def patch_vacancy(
     return await _out(session, v)
 
 
-@router.delete("/{vacancy_id}", status_code=204)
+@router.delete("/{vacancy_id}", status_code=204, responses=problem_responses(401, 403, 404))
 async def delete_vacancy(
     vacancy_id: UUID,
     user: User = Depends(_employer),
@@ -188,7 +189,7 @@ async def delete_vacancy(
     return Response(status_code=204)
 
 
-@router.post("/{vacancy_id}/publish", response_model=VacancyOut)
+@router.post("/{vacancy_id}/publish", response_model=VacancyOut, responses=problem_responses(401, 403, 404))
 async def publish_vacancy(
     vacancy_id: UUID,
     user: User = Depends(_employer),
@@ -197,7 +198,7 @@ async def publish_vacancy(
     return await _out(session, await service.publish(session, user, vacancy_id))
 
 
-@router.post("/{vacancy_id}/close", response_model=VacancyOut)
+@router.post("/{vacancy_id}/close", response_model=VacancyOut, responses=problem_responses(401, 403, 404))
 async def close_vacancy(
     vacancy_id: UUID,
     user: User = Depends(_employer),
