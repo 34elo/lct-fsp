@@ -40,3 +40,6 @@ asyncapi.json
 
 # локальные env-файлы с секретами
 .env.demo
+
+apps/web/playwright-report/
+apps/web/test-results/
