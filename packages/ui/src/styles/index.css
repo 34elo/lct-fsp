@@ -71,3 +71,51 @@
   letter-spacing: var(--lbl-tracking);
   text-transform: uppercase;
 }
+
+/* Лог сборки и чипсы «вот что я понял»: строки появляются по одной; при «уменьшить движение» — сразу. */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes fsp-appear {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes fsp-rotate {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  .fsp-log-line,
+  .fsp-chip-in {
+    animation: fsp-appear 240ms ease-out both;
+  }
+  /* «Загорание» навыков после импорта ФСП: волна по чипам со ступенчатой задержкой. */
+  @keyframes fsp-ignite {
+    0% {
+      opacity: 0.4;
+      transform: scale(0.94);
+      box-shadow: 0 0 0 0 transparent;
+    }
+    45% {
+      opacity: 1;
+      transform: scale(1.06);
+      box-shadow: 0 0 0 4px var(--tint-200);
+    }
+    100% {
+      transform: none;
+      box-shadow: 0 0 0 0 transparent;
+    }
+  }
+  .fsp-ignite {
+    animation: fsp-ignite 700ms ease-out both;
+    animation-delay: calc(var(--i, 0) * 90ms);
+  }
+  .fsp-spin {
+    display: inline-block;
+    animation: fsp-rotate 1.2s linear infinite;
+  }
+}

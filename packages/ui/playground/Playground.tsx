@@ -1,7 +1,18 @@
 import { useEffect, useState, type ReactNode } from "react";
 
 import {
+  AcceptanceMeter,
   Badge,
+  BuildLog,
+  CandidateCard,
+  CircuitLine,
+  MatchWhy,
+  OfferCard,
+  SalaryRange,
+  StatusBadge,
+  UpliftCard,
+  OFFER_STATUS_LABEL,
+  type OfferStatus,
   Button,
   Card,
   CardContent,
@@ -492,6 +503,99 @@ function Brand() {
           <TeamSignal name="Лидерство" strength="strong" fact="капитан на 2 соревнованиях ФСП" />
           <TeamSignal name="Работа в команде" strength="medium" fact="3 командных соревнования, общий репозиторий с 4 участниками" />
           <TeamSignal name="коммуникабельный" claimed />
+        </div>
+      </Section>
+      <Section title="MatchWhy, SalaryRange, AcceptanceMeter">
+        <div className="grid gap-4 md:grid-cols-3">
+          <MatchWhy
+            items={[
+              { kind: "ok", text: "Python и FastAPI подтверждены кодом" },
+              { kind: "warn", text: "Kafka только в резюме" },
+              { kind: "no", text: "Офис в другом городе" },
+            ]}
+          />
+          <div className="grid content-start gap-3">
+            <SalaryRange from={200000} to={250000} label="Вилка в месяц" />
+            <SalaryRange from={200000} to={250000} size="offer" />
+          </div>
+          <div className="grid content-start gap-2">
+            <AcceptanceMeter level="low" />
+            <AcceptanceMeter level="medium" />
+            <AcceptanceMeter level="high" />
+          </div>
+        </div>
+      </Section>
+      <Section title="StatusBadge">
+        <div className="flex flex-wrap gap-2">
+          {(Object.keys(OFFER_STATUS_LABEL) as OfferStatus[]).map((s) => (
+            <StatusBadge key={s} status={s} />
+          ))}
+        </div>
+      </Section>
+      <Section title="CircuitLine, UpliftCard, BuildLog">
+        <div className="grid gap-5 md:grid-cols-3">
+          <CircuitLine
+            steps={[
+              { id: "1", label: "Резюме разобрано", state: "done" },
+              { id: "2", label: "Адаптивный тест", state: "current" },
+              { id: "3", label: "Грейд", state: "future" },
+            ]}
+          />
+          <UpliftCard skill="Kafka" pct={18} hint="Пройдите тест по Kafka: вырастут шансы на 18 процентов" onConfirm={() => toast("Тест запущен")} />
+          <BuildLog
+            title="разбор резюме"
+            lines={[
+              { id: "1", text: "Файл прочитан", state: "done" },
+              { id: "2", text: "Ищем навыки", state: "active" },
+            ]}
+          />
+        </div>
+        <CircuitLine
+          orientation="horizontal"
+          className="mt-5"
+          steps={[
+            { id: "1", label: "Отправлен", state: "done" },
+            { id: "2", label: "Просмотрен", state: "current" },
+            { id: "3", label: "Собеседование", state: "future" },
+            { id: "4", label: "Нанят", state: "future" },
+          ]}
+        />
+      </Section>
+      <Section title="CandidateCard и OfferCard">
+        <div className="grid gap-4 lg:grid-cols-[3fr_2fr]">
+          <CandidateCard
+            c={{
+              number: 4821,
+              role: "backend",
+              grade: "Middle",
+              stack: "Python",
+              match: 92,
+              skills: DEMO_SKILLS.slice(0, 4),
+              fsp: DEMO_FSP,
+              expectations: ["от 230 000 ₽", "удалёнка"],
+              why: [
+                { kind: "ok", text: "Python 4 из 4, подтверждено ФСП" },
+                { kind: "warn", text: "Нет опыта с Kafka" },
+              ],
+            }}
+          />
+          <OfferCard
+            o={{
+              company: "Северный код",
+              rating: 4.6,
+              verified: true,
+              from: 200000,
+              to: 250000,
+              title: "Backend Python",
+              tags: ["Python", "FastAPI"],
+              match: 88,
+              status: "sent",
+              deadline: "14 окт",
+              belowExpectation: 230000,
+              acceptance: "medium",
+            }}
+            onOpen={() => toast("Оффер открыт")}
+          />
         </div>
       </Section>
       <Section title="ConstellationAvatar и MatchRing">
