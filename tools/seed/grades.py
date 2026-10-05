@@ -1,6 +1,7 @@
 """Seed-грейды блока 1 (blocks.md §4.11, S0-3): таблица `grades` до появления настоящего теста.
 
-Грейды пишет `app.assessment.service.seed_grade` (source="seed", событие `candidate.category.changed`).
+Грейды пишет `app.assessment.service.seed_grade` (source="seed", событие
+`candidate.category.changed`).
 Распределение детерминировано по SEED плана: junior 40 %, middle 40 %, senior 20 %, у 5 %
 `needs_confirmation`. Профессии — 6 существующих; каждая из 18 категорий (6 × 3) непуста.
 Герои получают грейды по своей истории: Аня — backend/junior, Дима — backend/middle
