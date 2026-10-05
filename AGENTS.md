@@ -8,6 +8,8 @@
 
 > ⚠️ **ТЗ (2026) изменило задачу:** категория определяется опросом и **тестом**, а не резюме. Концепция v2 (рабочая) — [docs/solution.md](docs/solution.md), выжимка ТЗ — [docs/case.md](docs/case.md). Документы в `docs/architecture/` описывают текущую реализацию и обновляются по мере задач E20–E27.
 
+> 🔀 **Работа идёт двумя параллельными блоками** (ветки `block1` и `block2`, этап 0 — `stage0`). Кто чем владеет, что лежит на стыке, как править общие файлы и сливать ветки — [docs/process/blocks.md](docs/process/blocks.md). Правило: свою зону правишь, чужую только вызываешь через `service.py` или контракт.
+
 ## Репозиторий
 
 ```
@@ -32,7 +34,7 @@ docs/                     документация (карта — docs/README.m
 
 | Задача | Читай |
 |---|---|
-| Любая | этот файл + задача в [backlog.md](docs/process/backlog.md) |
+| Любая | этот файл + задача в [backlog.md](docs/process/backlog.md) + **[blocks.md](docs/process/blocks.md) §0 и §8** (два блока: зона, стык, общие файлы) |
 | Понять кейс и решение с нуля | [case.md](docs/case.md) → [solution.md](docs/solution.md) (v2) → [system.md](docs/architecture/system.md) (архитектура) |
 | Тест, категории, ранжирование v2 (E20–E30) | [assessment.md](docs/architecture/assessment.md) (нужный раздел), [solution.md](docs/solution.md), ADR-018…024 в [decisions.md](docs/architecture/decisions.md) |
 | Что делать сейчас, очередь агентов | [plan.md](docs/process/plan.md) (§3 дни, §4 очередь) |
