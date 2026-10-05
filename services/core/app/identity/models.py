@@ -30,6 +30,10 @@ class User(Base):
         sa.DateTime(timezone=True), default=utcnow, server_default=sa.func.now()
     )
     deleted_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), default=None)
+    # подтверждение email (blocks.md §4.6); поток кода — E20-1
+    email_verified_at: Mapped[datetime | None] = mapped_column(
+        sa.DateTime(timezone=True), default=None
+    )
 
 
 class RefreshToken(Base):
