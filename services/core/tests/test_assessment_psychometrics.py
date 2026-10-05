@@ -212,7 +212,7 @@ async def test_finished_attempt_has_theta_and_calibrates_bank(api, factory, taxo
             fam = await s.get(FamilyRow, a.family_id)
             b0, n0 = before[fam.id]
             assert fam.n == n0 + 1
-            if fam.id == anchor_id:
+            if fam.anchor:
                 assert fam.b == b0  # якорь держит шкалу
             else:
                 assert fam.b == pytest.approx(calibrate_b(b0, n0, att.theta, 1.0, CFG))
