@@ -9,6 +9,12 @@ import {
   CardTitle,
   Checkbox,
   ConstellationAvatar,
+  FspProtocol,
+  GradeBadge,
+  SectionLabel,
+  TeamSignal,
+  VerifiedMark,
+  pseudonymLabel,
   Dialog,
   DialogClose,
   DialogContent,
@@ -71,7 +77,7 @@ import {
   toast,
   type TrustKind,
 } from "../src";
-import { DEMO_CANDIDATES, DEMO_SKILLS, RADII, TEXT_SIZES, TOKEN_GROUPS } from "./data";
+import { DEMO_CANDIDATES, DEMO_FSP, DEMO_SKILLS, RADII, TEXT_SIZES, TOKEN_GROUPS } from "./data";
 
 type Page = "tokens" | "base" | "brand";
 const PAGES: { id: Page; title: string }[] = [
@@ -123,7 +129,7 @@ function Tokens() {
       ))}
       <Section title="Шрифты">
         <p className="font-sans text-2xl">Onest — ФСП Карьера: доказанные навыки</p>
-        <p className="font-mono text-base">JetBrains Mono — Кандидат #4821 · 275 000 ₽</p>
+        <p className="font-mono text-base">JetBrains Mono — Backend #4821 · 275 000 ₽</p>
       </Section>
       <Section title="Шкала текста">
         <div className="grid gap-2">
@@ -453,7 +459,47 @@ function Brand() {
           ))}
         </div>
       </Section>
+      <Section title="TrustDots с поповером «Откуда навык»">
+        <div className="flex flex-wrap items-center gap-4">
+          <SkillChip
+            name="FastAPI"
+            level={3}
+            sources={[
+              { title: "Код на GitHub", detail: "6 репозиториев с FastAPI, в двух есть тесты", strength: "strong", date: "12 сен 2026" },
+              { title: "Адаптивный тест · Python web", detail: "Уровень выше среднего, 18 вопросов", strength: "medium", date: "28 сен 2026" },
+              { title: "Указано в резюме", detail: "Не засчитывается в уровень", strength: "none", date: "01 окт 2026" },
+            ]}
+          />
+          <SkillChip name="Kubernetes" level={1} variant="provisional" isNew />
+        </div>
+      </Section>
+      <Section title="GradeBadge">
+        <div className="flex flex-wrap items-center gap-3">
+          <GradeBadge grade="Middle" role="Backend" stack="Python" />
+          <GradeBadge grade="Junior+" role="Backend" stack="Python" preliminary hint="Данных пока мало: нужен тест" />
+        </div>
+      </Section>
+      <Section title="FspProtocol и VerifiedMark">
+        <div className="grid gap-3">
+          <VerifiedMark />
+          <FspProtocol results={DEMO_FSP} />
+          <FspProtocol results={[]} />
+        </div>
+      </Section>
+      <Section title="TeamSignal и SectionLabel">
+        <div className="grid gap-3">
+          <SectionLabel>Командные сигналы</SectionLabel>
+          <TeamSignal name="Лидерство" strength="strong" fact="капитан на 2 соревнованиях ФСП" />
+          <TeamSignal name="Работа в команде" strength="medium" fact="3 командных соревнования, общий репозиторий с 4 участниками" />
+          <TeamSignal name="коммуникабельный" claimed />
+        </div>
+      </Section>
       <Section title="ConstellationAvatar и MatchRing">
+        <div className="mb-3 flex items-end gap-3">
+          <ConstellationAvatar seed={pseudonymLabel("backend", 4821)} size={48} signalNode />
+          <ConstellationAvatar seed={pseudonymLabel("backend", 1307)} size={32} />
+          <ConstellationAvatar seed="Backend #5" size={24} />
+        </div>
         <div className="grid gap-3">
           {DEMO_CANDIDATES.map((c) => (
             <div key={c.pseudo} className="flex items-center gap-4 rounded-lg border border-hairline p-3">
