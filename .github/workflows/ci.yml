@@ -12,6 +12,7 @@ jobs:
       - run: uv sync --all-packages --frozen
       - run: uv run ruff check . && uv run ruff format --check .
       - run: uv run lint-imports
+      - run: cd services/core && uv run python export_openapi.py > /tmp/openapi.json && diff -q /tmp/openapi.json ../../docs/openapi.json
       - run: uv run pytest -q
   web:
     # pnpm-workspace в корне: apps/web + packages/ui (@fsp/ui), версия pnpm — из packageManager

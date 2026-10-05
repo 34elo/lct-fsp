@@ -135,7 +135,9 @@ def _reqs(items: list[SkillReqIn]) -> list[SkillReq]:
     return [SkillReq(**i.model_dump()) for i in items]
 
 
-@router.post("", response_model=VacancyOut, status_code=201, responses=problem_responses(401, 403, 422))
+@router.post(
+    "", response_model=VacancyOut, status_code=201, responses=problem_responses(401, 403, 422)
+)
 async def create_vacancy(
     body: VacancyIn,
     user: User = Depends(_employer),
@@ -166,7 +168,9 @@ async def get_vacancy(
     return await _out(session, await service.get_owned(session, user, vacancy_id))
 
 
-@router.patch("/{vacancy_id}", response_model=VacancyOut, responses=problem_responses(401, 403, 404, 422))
+@router.patch(
+    "/{vacancy_id}", response_model=VacancyOut, responses=problem_responses(401, 403, 404, 422)
+)
 async def patch_vacancy(
     vacancy_id: UUID,
     body: VacancyPatch,
@@ -189,7 +193,9 @@ async def delete_vacancy(
     return Response(status_code=204)
 
 
-@router.post("/{vacancy_id}/publish", response_model=VacancyOut, responses=problem_responses(401, 403, 404))
+@router.post(
+    "/{vacancy_id}/publish", response_model=VacancyOut, responses=problem_responses(401, 403, 404)
+)
 async def publish_vacancy(
     vacancy_id: UUID,
     user: User = Depends(_employer),
@@ -198,7 +204,9 @@ async def publish_vacancy(
     return await _out(session, await service.publish(session, user, vacancy_id))
 
 
-@router.post("/{vacancy_id}/close", response_model=VacancyOut, responses=problem_responses(401, 403, 404))
+@router.post(
+    "/{vacancy_id}/close", response_model=VacancyOut, responses=problem_responses(401, 403, 404)
+)
 async def close_vacancy(
     vacancy_id: UUID,
     user: User = Depends(_employer),
