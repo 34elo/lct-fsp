@@ -53,6 +53,8 @@ matching ── категория = профессия × грейд; сила 
 | `attempts` | `id`, `candidate_id`, `profession`, `declared_grade`, `stage` (`main`, `bonus`), `status` (`active`, `passed`, `failed`, `abandoned`), `plan` (JSON), `theta`, `se`, `llr`, `integrity`, `started_at`, `finished_at` |
 | `responses` | `attempt_id`, `seq`, `family_id`, `seed`, `is_pilot`, `answer` (JSON), `score` 0–1, `rt_ms`, `telemetry` (JSON: уходы со вкладки, вставки) |
 | `grades` | `candidate_id`, `profession`, `grade`, `theta`, `theta_by_type` (JSON), `confirmed_at`, `valid_until`, `next_change_at`, `attempt_id` |
+| `needs` (модуль `matching`) | `id`, `company_id`, `text`, `skills` (JSON веса), `grade`, `salary_from/to`, `formats[]`, `vacancy_id?`, `shortlist[]` |
+| `regular_tasks`, `task_submissions` (модуль `assessment`) | задание: `company_id`, `family_id` или `spec`, `profession`, `grade`, `rubric`, `period_days`; ответ: `task_id`, `candidate_id`, `answer`, `score`, `rubric_marks`, `scored_by` (`auto`, `llm_draft`, `employer`) |
 
 - Правильные ответы на клиент не уходят никогда: сервер хранит `(family_id, seed)` и пересобирает задание при проверке.
 - `seed = hash(candidate_id, attempt_id, family_id)`.
