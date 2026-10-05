@@ -241,3 +241,55 @@ async def test_seed_core_end_to_end_and_idempotent(factory):
     again = await seeder().run()
     assert again.get("candidates", 0) == 0 and again.get("offers", 0) == 0
     assert await counts() == first  # повторный запуск ничего не меняет
+
+
+# ------------------------------------------------------------------ seed-грейды блока 1
+def test_grades_plan_distribution_and_coverage(plan):
+    from collections import Counter
+
+    from tools.seed.grades import PROFESSIONS, plan_grades
+
+    g = plan_grades(plan)
+    assert plan_grades(plan) == g  # детерминизм
+    cells = {(e["profession"], e["grade"]) for es in g.values() for e in es}
+    assert cells == {(p, gr) for p in PROFESSIONS for gr in ("junior", "middle", "senior")}
+    first = Counter(es[0]["grade"] for k, es in g.items() if not k.startswith("hero-"))
+    n = sum(first.values())
+    assert abs(first["junior"] / n - 0.4) < 0.02 and abs(first["senior"] / n - 0.2) < 0.02
+    flags = sum(es[0]["needs_confirmation"] for k, es in g.items() if not k.startswith("hero-"))
+    assert flags == round(n * 0.05)
+    assert g["hero-anya"][0]["grade"] == "junior" and g["hero-dima"][0]["grade"] == "middle"
+    assert plan_grades(build_plan(seed=8, anchor=ANCHOR)) != g
+
+
+async def test_seed_grades_core_and_idempotent(factory):
+    from app.assessment import service as assessment
+    from app.identity.models import User
+    from fsp_platform.db import session_scope
+    from sqlalchemy import select
+
+    from tools.seed.grades import PROFESSIONS, seed_grades
+
+    await _load_taxonomy(factory)
+    plan = build_plan(seed=3, anchor=date.today(), counts=SMALL)
+    from tools.seed.loader import Seeder
+
+    seeder = Seeder(plan, factory, password="demo-pass-1234", pseudo_secret="t", analytics_salt="t")
+    await seeder.run()
+    first = await seed_grades(factory, plan, seeder.user_ids)
+    assert first["grades"] >= 42
+    async with session_scope(factory) as s:
+        counts = await assessment.category_counts(s)
+        anya = await s.scalar(select(User).where(User.email == "anya@demo.fsp.test"))
+        dima = await s.scalar(select(User).where(User.email == "dima@demo.fsp.test"))
+        assert {(g.profession, g.grade) for g in await assessment.get_grades(s, anya.id)} == {
+            ("backend", "junior")
+        }
+        assert [g.grade for g in await assessment.get_grades(s, dima.id)] == ["middle"]
+    assert {(p, g) for p in PROFESSIONS for g in ("junior", "middle", "senior")} <= set(counts)
+    assert await seed_grades(factory, plan, seeder.user_ids) == {
+        "grades": 0,
+        "grades_candidates": 0,
+    }
+    async with session_scope(factory) as s:
+        assert await assessment.category_counts(s) == counts

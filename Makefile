@@ -91,6 +91,7 @@ seed:
 	mkdir -p reports/seed
 	SEED=$(SEED) uv run python -m tools.seed all --env-file $(ENV_FILE)
 # >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
+	SEED=$(SEED) uv run python -m tools.seed grades --env-file $(ENV_FILE)
 # <<< block1
 # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
 # <<< block2
