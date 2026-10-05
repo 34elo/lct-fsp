@@ -44,3 +44,4 @@ export {
   type WhyKind,
 } from "./brand/match";
 export { CandidateCard, OfferCard, type CandidateCardData, type OfferCardData } from "./brand/cards";
+export * from "./icons";

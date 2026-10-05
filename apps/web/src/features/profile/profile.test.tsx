@@ -111,11 +111,12 @@ test("профиль: достижения ФСП, разряд, опыт и м�
   expect(within(fsp).getByText("2 из 40 · всероссийский · капитан · 2026")).toBeInTheDocument();
   expect(within(fsp).getByText("2 разряд · Продуктовое программирование")).toBeInTheDocument();
   expect(within(screen.getByRole("region", { name: "Опыт" })).getByText(/Кедр Софт/)).toBeInTheDocument();
-  // Меню: десктопное и нижняя панель ведут во все разделы кандидата, включая резюме.
-  for (const nav of screen.getAllByRole("navigation", { name: "Разделы" })) {
-    expect(within(nav).getByRole("link", { name: "Офферы" })).toHaveAttribute("href", "/me/offers");
-    expect(within(nav).getByRole("link", { name: "Резюме" })).toHaveAttribute("href", "/onboarding");
-  }
+  // Меню: шапка (десктоп) ведёт во все разделы кандидата, нижняя панель (E19-5) — в четыре главных.
+  const [top, bottom] = screen.getAllByRole("navigation", { name: "Разделы" });
+  expect(within(top).getByRole("link", { name: "Офферы" })).toHaveAttribute("href", "/me/offers");
+  expect(within(top).getByRole("link", { name: "Резюме" })).toHaveAttribute("href", "/onboarding");
+  expect(within(bottom).getByRole("link", { name: "Офферы" })).toHaveAttribute("href", "/me/offers");
+  expect(within(bottom).getByRole("link", { name: "ФСП" })).toHaveAttribute("href", "/me/settings");
 });
 
 test("пустой профиль: подсказка вместо грейда и навыков", async () => {
@@ -129,7 +130,7 @@ test("пустой профиль: подсказка вместо грейда 
 test("доказательства навыка: название, источник, дата", async () => {
   mount("/me/skills/python");
   expect(await screen.findByText("Кубок ФСП, финал, 2 место из 120")).toBeInTheDocument();
-  expect(screen.getByText("ФСП")).toBeInTheDocument();
+  expect(within(screen.getByRole("main")).getByText("ФСП")).toBeInTheDocument();
   expect(screen.getByText("проверено")).toBeInTheDocument();
 });
 
