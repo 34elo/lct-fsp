@@ -1,5 +1,7 @@
 # Модель данных
 
+> ⚠️ Таблицы модуля `assessment` v2 (`surveys`, `families`, `attempts`, `responses`, `grades`) — [assessment.md §3](assessment.md#3-данные).
+
 > PostgreSQL 16. Расширения: `pgvector`, `pg_trgm`, `citext`, `pgcrypto`.
 > ID — UUID v7 (генерируются в приложении, сортируются по времени). Время — `timestamptz`. Деньги — целые рубли в месяц «на руки» (`int`).
 > DDL ниже — **ориентир для моделей SQLAlchemy и миграций Alembic**, а не финальный скрипт. Владелец таблиц — `core` (база `core`), кроме §3.10 — база `fsp_connector`.
