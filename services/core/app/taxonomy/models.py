@@ -25,6 +25,8 @@ class Skill(Base):
     support_candidates: Mapped[int] = mapped_column(default=0, server_default="0")
     support_vacancies: Mapped[int] = mapped_column(default=0, server_default="0")
     testable: Mapped[bool] = mapped_column(default=False, server_default=sa.false())
+    # fundamental | hard | thinking | business | soft | experience (assessment.md §2)
+    skill_type: Mapped[str | None] = mapped_column(Text, default=None)
     description: Mapped[str | None] = mapped_column(Text, default=None)
     created_at: Mapped[datetime] = mapped_column(
         sa.DateTime(timezone=True), default=utcnow, server_default=sa.func.now()
@@ -79,6 +81,8 @@ class Role(Base):
 
     slug: Mapped[str] = mapped_column(Text, primary_key=True)
     name: Mapped[str] = mapped_column(Text)
+    # профессия теста (assessment.md §2); остальные роли — только для подсказок и поиска
+    is_profession: Mapped[bool] = mapped_column(default=False, server_default=sa.false())
 
 
 class RoleSkill(Base):

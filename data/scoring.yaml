@@ -114,6 +114,15 @@ category:
   stack_size: 3  # длина primary_stack
   explain_top: 5  # навыков в объяснении
 
+## 1a. Тест и грейды v2 (assessment.md §2, §5) — раздел блока 1
+
+assessment:
+  # Универсальная шкала θ: cut — минимальный θ грейда. Junior — −1.0, Middle — 0.0, Senior — 1.0.
+  grades:
+    junior: { cut: -1.0 }
+    middle: { cut: 0.0 }
+    senior: { cut: 1.0 }
+
 ## 2. Grade (грейд)
 
 # Grade thresholds by points (ml.md §5)

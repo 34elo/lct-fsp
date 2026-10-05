@@ -5,17 +5,23 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+from pathlib import Path
 from typing import Any
 
 import structlog
 from fastapi import APIRouter, Depends, Header, Request, Response
+from fsp_contracts.assessment import ProfessionInfo, SkillType, TestGrade
 from fsp_contracts.enums import EmploymentType, Grade, WorkFormat
 from fsp_platform.app import ProblemError
+from pydantic import BaseModel
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.deps import get_redis, get_session
 from app.taxonomy import service
+from app.taxonomy.loader import load_grade_cuts
+
+DEFAULT_SCORING_PATH = Path(__file__).resolve().parents[4] / "data" / "scoring.yaml"
 
 log = structlog.get_logger()
 router = APIRouter(tags=["taxonomy"])
@@ -101,3 +107,28 @@ async def internal_snapshot(
         lambda snap: {"version": version, **snap},
     )
     return Response(body, media_type="application/json")
+
+
+class GradeCut(BaseModel):
+    grade: TestGrade
+    cut: float  # минимальный θ грейда
+
+
+class ProfessionsOut(BaseModel):
+    professions: list[ProfessionInfo]
+    skill_types: list[SkillType]
+    grades: list[GradeCut]
+
+
+@router.get("/taxonomy/professions", response_model=ProfessionsOut)
+async def get_professions(
+    request: Request, session: AsyncSession = Depends(get_session)
+) -> ProfessionsOut:
+    """Профессии теста, веса и типы навыков, грейды с порогами θ (assessment.md §10)."""
+    path = Path(request.app.state.settings.scoring_config_path or DEFAULT_SCORING_PATH)
+    cuts = load_grade_cuts(path)
+    return ProfessionsOut(
+        professions=await service.list_professions(session),
+        skill_types=list(SkillType),
+        grades=[GradeCut(grade=TestGrade(g), cut=c) for g, c in cuts.items()],
+    )

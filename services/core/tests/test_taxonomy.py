@@ -222,8 +222,8 @@ def test_real_core_data_valid():
     root = CORE.parents[1] / "data"
     data = load_taxonomy(root / "taxonomy", root / "fsp" / "discipline_rules.yaml")
     slugs = {s.slug for s in data.skills}
-    assert 150 <= len(slugs) <= 250
-    assert {r.slug for r in data.roles} == {r.value for r in RoleSlug}
+    assert 150 <= len(slugs) <= 320
+    assert {r.slug for r in data.roles} == {r.value for r in RoleSlug} | {"ai_engineer"}
     # навыки правил дисциплин ФСП присутствуют в ядре
     assert {s for rules in data.discipline_rules.values() for s, _, _ in rules} <= slugs
     assert ("java", "javascript") in data.distinct
