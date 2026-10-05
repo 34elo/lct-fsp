@@ -10,8 +10,10 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from fsp_contracts.assessment import ASSESSMENT_EVENTS
 from fsp_contracts.enums import DeclineReason, Grade, OfferStatus, RoleSlug, TrustLevel
 from fsp_contracts.fsp import FspCompetition, FspRank, FspResult, FspTeam
+from fsp_contracts.hiring import HIRING_EVENTS
 from fsp_contracts.ml import (
     CodeAnalysisResult,
     InterviewGrade,
@@ -267,6 +269,8 @@ EVENTS: dict[str, type[BaseModel]] = {
     "ml.skills.resolved": MlSkillsResolved,
     "ml.matches.explained": MlMatchesExplained,
     "ml.questions.generated": MlQuestionsGenerated,
+    **ASSESSMENT_EVENTS,
+    **HIRING_EVENTS,
 }
 
 # Кто публикует (для AsyncAPI и проверки producer в конверте).

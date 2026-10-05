@@ -12,6 +12,12 @@ from fsp_platform.storage import ObjectStorage
 from redis.asyncio import Redis
 from sqlalchemy import text
 
+# >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
+from app.assessment.router import router as assessment_router
+
+# <<< block1
+# >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
+# <<< block2
 from app.candidates.router import router as candidates_router
 from app.companies.router import admin_router as admin_companies_router
 from app.companies.router import router as companies_router
@@ -78,6 +84,11 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(search_router)
     app.include_router(recommendations_router)
     app.include_router(offers_router)
+    # >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
+    app.include_router(assessment_router)
+    # <<< block1
+    # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
+    # <<< block2
 
     @app.get("/readyz", include_in_schema=False)
     async def readyz():
