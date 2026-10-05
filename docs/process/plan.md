@@ -151,7 +151,7 @@
 | # | ID | Задача | Зависит от | Режим | Модель | Уровень · веха | Статус |
 |---|---|---|---|---|---|---|---|
 | 401 | E19-0 | web: Каркас `packages/ui` (`@fsp/ui`): pnpm-workspace в корне, перенос `shared/brand`, кнопки и токенов, playground, `pnpm shot`, прокси на `VITE_API_TARGET`, Dockerfile и CI | P5 | 🤝 | opus | 1 база · M0 | 🔍 6b206dd |
-| 402 | E19-1 | web: Токены, шрифты, светлая тема по умолчанию, `ThemeScope dark` | E19-0 | 🤝 | sonnet | 1 база · M0 | ⏳ |
+| 402 | E19-1 | web: Токены, шрифты, светлая тема по умолчанию, `ThemeScope dark` | E19-0 | 🤝 | sonnet | 1 база · M0 | 🔍 5b362dd |
 | 403 | E19-2 | web: Базовые компоненты (Radix, shadcn, lucide) со всеми состояниями + общие Skeleton, EmptyState, ErrorState, 404 | E19-1 | 🤝 | sonnet | 1 база · M0 | ⏳ |
 | 404 | E19-3 | web: Фирменные: TrustDots с поповером, SkillChip, GradeBadge, ConstellationAvatar, FspProtocol, «Backend #N» | E19-1 | 🤝 | sonnet | 1 база · M0 | ⏳ |
 | 405 | E19-4 | web: Фирменные: MatchRing, MatchWhy, SalaryRange, StatusBadge, AcceptanceMeter, CircuitLine, BuildLog, CandidateCard, OfferCard | E19-3 | 🤝 | sonnet | 1 база · M0 | ⏳ |
