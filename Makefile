@@ -124,4 +124,8 @@ up-lite: demo-env
 .PHONY: families-check
 families-check:
 	uv run python -m app.assessment.families.check --seeds 1000
+# Схема карточек навыков data/skills/cards (assessment.md §2)
+.PHONY: cards-check
+cards-check:
+	cd services/core && uv run python -m app.taxonomy.cards
 # <<< block1
