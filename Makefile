@@ -30,6 +30,10 @@ test-integration:
 test-web:
 	cd apps/web && pnpm test
 
+# e2e Playwright на стенде с сидом (make up && make seed); нужен Node >= 20
+e2e:
+	cd apps/web && pnpm e2e
+
 web-install:
 	cd apps/web && pnpm install
 
