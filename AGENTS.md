@@ -34,7 +34,7 @@ docs/                     документация (карта — docs/README.m
 |---|---|
 | Любая | этот файл + задача в [backlog.md](docs/process/backlog.md) |
 | Понять кейс и решение с нуля | [case.md](docs/case.md) → [solution.md](docs/solution.md) (v2) |
-| Тестирование, категории v2 (E20–E27) | [solution.md](docs/solution.md), [decisions.md](docs/architecture/decisions.md) ADR-018…023 |
+| Тест, категории, ранжирование v2 (E20–E30) | [assessment.md](docs/architecture/assessment.md) (нужный раздел), [solution.md](docs/solution.md), ADR-018…024 в [decisions.md](docs/architecture/decisions.md) |
 | Что делать сейчас, очередь агентов | [plan.md](docs/process/plan.md) (§3 дни, §4 очередь) |
 | Модели БД, миграции | [data-model.md](docs/architecture/data-model.md) (нужный раздел) |
 | Эндпоинт | [api.md](docs/architecture/api.md) (нужная строка каталога + схема §3) |

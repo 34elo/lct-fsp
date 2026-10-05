@@ -34,7 +34,7 @@
 | `graph` | **Граф доказательств:** факты, доказательства, пересчёт доверия с наследованием по иерархии, командные сигналы, категория, грейд, эмбеддинг профиля, связи людей, API подграфа | `evidence`, `candidate_skills`, `fsp_participants`, `fsp_results`, `fsp_ranks`, `fsp_competitions`, `fsp_teams`, `fsp_team_members`, `code_repos`, `repo_contributors`, `candidate_links` |
 | `taxonomy` | **Граф навыков:** ядро и рост (применяет решения конвейера: новые вершины, синонимы, связи, слияния), смежность и иерархия, роли, дисциплины, правила, веса, ночной рост связей, очередь админа. Держит граф навыков в памяти ([skills.md](skills.md)) | `skills`, `skill_aliases`, `skill_relations`, `skill_distinct`, `skill_blocklist`, `skill_mentions`, `skill_merges`, `roles`, `role_skills`, `disciplines`, `discipline_skill_rules`, `scoring_config` |
 | `code` | Привязка GitHub, постановка анализа, приём результата → факты-репозитории | `github_accounts`, `code_analyses` |
-| `assessment` | Банк вопросов, адаптивный тест, оркестрация ИИ-интервью | `questions`, `test_sessions`, `interview_sessions` |
+| `assessment` | v2 ([assessment.md](assessment.md)): опрос, семейства заданий и мир, попытки, Rasch + SPRT, грейды и кулдауны, жизненный цикл семейств, конструктор | `surveys`, `families`, `attempts`, `responses`, `grades` |
 | `companies` | Компании, участники, модерация, рейтинг ответственности | `companies`, `company_members` |
 | `vacancies` | Вакансии на профессиональном языке | `vacancies`, `vacancy_skills` |
 | `matching` | **Рекомендации:** отбор, скоринг, переранжирование, объяснения, подборки под вакансии, похожие кандидаты, подстройка в сессии, uplift для кандидата, подсказка по вилке | `matches`, `impressions`, `rec_feedback` |
