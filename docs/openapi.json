@@ -4786,7 +4786,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Contacts"
+                  "$ref": "#/components/schemas/Contacts-Output"
                 }
               }
             }
@@ -5966,6 +5966,28 @@
               }
             ],
             "title": "Description"
+          },
+          "contacts": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Contacts-Input"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direction"
           }
         },
         "additionalProperties": false,
@@ -6038,6 +6060,29 @@
             ],
             "title": "Logo Key"
           },
+          "contacts": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contacts"
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direction"
+          },
           "status": {
             "$ref": "#/components/schemas/CompanyStatus"
           },
@@ -6076,6 +6121,8 @@
           "site",
           "description",
           "logo_key",
+          "contacts",
+          "direction",
           "status",
           "responsibility_score",
           "created_at"
@@ -6132,6 +6179,28 @@
               }
             ],
             "title": "Description"
+          },
+          "contacts": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Contacts-Input"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direction"
           }
         },
         "additionalProperties": false,
@@ -6317,7 +6386,57 @@
         ],
         "title": "ConsentType"
       },
-      "Contacts": {
+      "Contacts-Input": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "telegram": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Telegram"
+          }
+        },
+        "type": "object",
+        "title": "Contacts"
+      },
+      "Contacts-Output": {
         "properties": {
           "name": {
             "type": "string",
@@ -7729,7 +7848,7 @@
           "contacts": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/Contacts"
+                "$ref": "#/components/schemas/Contacts-Output"
               },
               {
                 "type": "null"

@@ -27,7 +27,7 @@ def test_upgrade_and_downgrade(tmp_path):
 
 
 def test_stage0_migrations_chain(tmp_path):
-    """s0_01 (grades) → s0_02 (users.email_verified_at) → b2_01 (company contacts): upgrade и пошаговый downgrade."""
+    """s0_01 → s0_02 → b2_01 (контакты компании): upgrade и пошаговый downgrade."""
     db = tmp_path / "s0.db"
     url = f"sqlite+aiosqlite:///{db}"
     sync = f"sqlite:///{db}"
