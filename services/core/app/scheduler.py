@@ -31,6 +31,10 @@ SCHEDULE: dict[str, int] = {
     "company.rating": 60 * 60,
     "candidate_links.refresh": 10 * 60,
     "cleanup": 24 * 60 * 60,
+    # >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
+    # <<< block1
+    # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
+    # <<< block2
 }
 
 

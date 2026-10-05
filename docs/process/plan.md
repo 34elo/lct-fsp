@@ -79,7 +79,7 @@
 
 | Точка | Что | Статус |
 |---|---|---|
-| Т0 | Этап 0 в `dev` | ⏳ |
+| Т0 | Этап 0 в `dev` | ✅ слит в dev |
 | Т1 | Дизайн-фундамент `@fsp/ui` (E19-0…E19-5) в `dev` | ⏳ |
 | Т2 | Ядро через API: тест (Б1) и подбор (Б2) в `dev`, `test_joint_t2.py` зелёный | ⏳ |
 | Т3 | Экраны и промежуточная сдача: E22-8, E20-7a, E23-6, E20-7b в `dev` | ⏳ |
@@ -89,11 +89,11 @@
 
 | # | ID | Задача | Зависит от | Режим | Модель | Уровень · веха | Статус |
 |---|---|---|---|---|---|---|---|
-| 200 | S0-1 | Контракты стыка в `packages/contracts` (blocks.md §4.1, §4.3, §4.4, §4.7, §11) | — | 🤖 | opus | 0 этап · M0 | ⏳ |
-| 201 | S0-2 | Граница в core: модуль `assessment` с таблицей `grades` и API §4.3, email-флаг, `list_professions`, `problem_responses`, маркеры секций (blocks.md §11) | S0-1 | 🤖 | opus | 0 этап · M0 | ⏳ |
-| 202 | S0-3 | Seed-грейды `tools/seed/grades.py` (blocks.md §4.11) | S0-2 | 🤖 | sonnet | 0 этап · M0 | ⏳ |
-| 203 | S0-4 | web: маршруты v2 с `owner`/`nav` и маркеры в `routes.ts`/`App.tsx` (blocks.md §4.8, §5.4) | — | 🤖 | sonnet | 0 этап · M0 | ⏳ |
-| 204 | E29-1 | Каркас тестов: фабрики `tests/factories/{base,assessment,hiring}.py`, `make_grade`, фикстуры, хелперы, Playwright, CI (blocks.md §5.8) | S0-2 | 🤖 | sonnet | 0 этап · M0 | ⏳ |
+| 200 | S0-1 | Контракты стыка в `packages/contracts` (blocks.md §4.1, §4.3, §4.4, §4.7, §11) | — | 🤖 | opus | 0 этап · M0 | ✅ 68c8eb3 |
+| 201 | S0-2 | Граница в core: модуль `assessment` с таблицей `grades` и API §4.3, email-флаг, `list_professions`, `problem_responses`, маркеры секций (blocks.md §11) | S0-1 | 🤖 | opus | 0 этап · M0 | ✅ 33e6bf8 |
+| 202 | S0-3 | Seed-грейды `tools/seed/grades.py` (blocks.md §4.11) | S0-2 | 🤖 | sonnet | 0 этап · M0 | ✅ 052987b |
+| 203 | S0-4 | web: маршруты v2 с `owner`/`nav` и маркеры в `routes.ts`/`App.tsx` (blocks.md §4.8, §5.4) | — | 🤖 | sonnet | 0 этап · M0 | ✅ 18c7823 |
+| 204 | E29-1 | Каркас тестов: фабрики `tests/factories/{base,assessment,hiring}.py`, `make_grade`, фикстуры, хелперы, Playwright, CI (blocks.md §5.8) | S0-2 | 🤖 | sonnet | 0 этап · M0 | ✅ d97ade7 |
 
 #### 4.2.1. Блок 1 «Кандидат и тест»
 
@@ -387,6 +387,7 @@
 
 | Дата | Ветка | Сделано | Заблокировано | Проверить человеку |
 |---|---|---|---|---|
+| 2026-10-05 | `stage0` | ✅ S0-1, S0-2, S0-3, S0-4, E29-1 (слито в `dev` вместе с merge-коммитом; blocks.md §13.0 — журнал стыков этапа 0) | нет ⛔ | прогон `uv run pytest -q` и `pnpm test` при слиянии — см. описание PR; Т0 пройдена |
 
 ### 6.2. Блок 2
 

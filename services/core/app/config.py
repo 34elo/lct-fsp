@@ -32,3 +32,12 @@ class Settings(BaseServiceSettings):
     # fsp-connector (api.md §2.9): OAuth и привязка ФСП; пусто — эндпоинты отвечают 503
     fsp_connector_url: str = ""
     service_token_core: str = ""
+
+    # >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
+    # подтверждение email (blocks.md §4.6): Б1 (E20-1) включает в .env.example, Б2 — после Т2
+    email_verification_required: bool = False
+    # LLM для резюме, навыков, теста; false — ml-воркеры не ходят в llama-server (ML_FAKE и т.п.)
+    llm_enabled: bool = True
+    # <<< block1
+    # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
+    # <<< block2

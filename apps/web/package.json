@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",
     "test": "vitest run",
-    "api:gen": "orval"
+    "api:gen": "orval",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "@fsp/ui": "workspace:*",
@@ -24,6 +25,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
+    "@playwright/test": "^1.63.0",
     "@testing-library/jest-dom": "^6.6.0",
     "@testing-library/react": "^16.0.0",
     "@types/node": "^22.20.4",
