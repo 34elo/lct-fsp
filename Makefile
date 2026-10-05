@@ -7,7 +7,7 @@ lint:
 	uv run ruff check .
 	uv run ruff format --check .
 	uv run lint-imports
-	cd apps/web && pnpm lint && pnpm typecheck
+	pnpm -r lint && pnpm -r typecheck
 
 fmt:
 	uv run ruff check --fix .
@@ -28,10 +28,10 @@ test-integration:
 	rc=$$?; $(TEST_COMPOSE) down -v; exit $$rc
 
 test-web:
-	cd apps/web && pnpm test
+	pnpm -r test
 
 web-install:
-	cd apps/web && pnpm install
+	pnpm install
 
 # make new-service NAME=core
 new-service:
@@ -72,7 +72,7 @@ compose-config:
 	docker compose --env-file $(ENV_FILE) --profile core --profile ml --profile bot --profile llm --profile dev --profile obs config -q
 
 api-gen:
-	cd apps/web && pnpm api:gen
+	pnpm --filter fsp-web api:gen
 
 # Загрузить data/taxonomy/*.yaml и data/fsp/discipline_rules.yaml в БД core (идемпотентно, версия растёт при изменениях)
 taxonomy-load:

@@ -1,4 +1,4 @@
-/* Токены ФСП из docs/design/handoff/globals.css. Светлая тема в :root, тёмная в .dark. */
+/* Токены ФСП (эталон — docs/design/pack/tokens/globals.css). Светлая тема в :root, тёмная в .dark. */
 :root {
   --brand: #402fff;
   --brand-deep: #201880;
