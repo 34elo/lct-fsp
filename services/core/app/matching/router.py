@@ -66,7 +66,9 @@ class ParseRequest(BaseModel):
     text: str = Field(min_length=1, max_length=query_parser.MAX_TEXT)
 
 
-@router.post("/search/parse", response_model=ParsedQuery, responses=problem_responses(401, 403, 422))
+@router.post(
+    "/search/parse", response_model=ParsedQuery, responses=problem_responses(401, 403, 422)
+)
 async def search_parse(
     body: ParseRequest,
     user: User = Depends(_employer),
@@ -77,7 +79,9 @@ async def search_parse(
     return query_parser.parse_query(body.text, index.forms, index.names)
 
 
-@router.post("/search/candidates", response_model=SearchPage, responses=problem_responses(401, 403, 404, 422))
+@router.post(
+    "/search/candidates", response_model=SearchPage, responses=problem_responses(401, 403, 404, 422)
+)
 async def search_candidates(
     body: SearchRequest,
     request: Request,
@@ -129,7 +133,11 @@ async def search_candidates(
     return {**page, "session_id": session_id}
 
 
-@router.get("/candidates/{pseudo_id}/card", response_model=CandidateCardFull, responses=problem_responses(401, 403, 404))
+@router.get(
+    "/candidates/{pseudo_id}/card",
+    response_model=CandidateCardFull,
+    responses=problem_responses(401, 403, 404),
+)
 async def candidate_card(
     pseudo_id: str,
     vacancy_id: uuid.UUID | None = None,
@@ -164,7 +172,11 @@ class SimilarPage(BaseModel):
     session_id: uuid.UUID
 
 
-@router.get("/candidates/{pseudo_id}/similar", response_model=SimilarPage, responses=problem_responses(401, 403, 404))
+@router.get(
+    "/candidates/{pseudo_id}/similar",
+    response_model=SimilarPage,
+    responses=problem_responses(401, 403, 404),
+)
 async def candidate_similar(
     pseudo_id: str,
     limit: int = Query(default=10, ge=1, le=similar.MAX_LIMIT),
@@ -238,7 +250,12 @@ class UpliftOut(BaseModel):
     combo: UpliftCombo | None = None
 
 
-@router.get("/candidates/me/uplift", response_model=UpliftOut, response_model_exclude_none=True, responses=problem_responses(401, 403))
+@router.get(
+    "/candidates/me/uplift",
+    response_model=UpliftOut,
+    response_model_exclude_none=True,
+    responses=problem_responses(401, 403),
+)
 async def my_uplift(
     user: User = Depends(_candidate),
     session: AsyncSession = Depends(get_session),

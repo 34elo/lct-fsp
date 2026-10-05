@@ -61,7 +61,9 @@ class StartOut(BaseModel):
 
 
 @router.get(
-    "/auth/fsp/start", response_model=StartOut, responses={302: {"description": "redirect"}, **problem_responses(401, 403, 503)}
+    "/auth/fsp/start",
+    response_model=StartOut,
+    responses={302: {"description": "redirect"}, **problem_responses(401, 403, 503)},
 )
 async def fsp_start(
     request: Request,
@@ -138,7 +140,11 @@ class VerifyOut(BaseModel):
     verified: bool
 
 
-@router.post("/candidates/me/fsp/link", response_model=LinkOut, responses=problem_responses(401, 403, 422, 429, 503))
+@router.post(
+    "/candidates/me/fsp/link",
+    response_model=LinkOut,
+    responses=problem_responses(401, 403, 422, 429, 503),
+)
 async def fsp_link(
     body: LinkIn,
     request: Request,
@@ -157,7 +163,11 @@ async def fsp_link(
     return LinkOut(method=data["method"], masked_contact=data.get("masked_contact"))
 
 
-@router.post("/candidates/me/fsp/verify", response_model=VerifyOut, responses=problem_responses(401, 403, 422, 429, 503))
+@router.post(
+    "/candidates/me/fsp/verify",
+    response_model=VerifyOut,
+    responses=problem_responses(401, 403, 422, 429, 503),
+)
 async def fsp_verify(
     body: VerifyIn,
     user: User = Depends(writer),
