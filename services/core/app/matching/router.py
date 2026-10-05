@@ -22,6 +22,7 @@ from app.matching import card, query_parser, search, similar, uplift_service
 from app.matching.card import CandidateCardFull
 from app.matching.scoring import MatchConfig
 from app.matching.uplift import UpliftConfig
+from app.openapi_errors import problem_responses
 from app.taxonomy import service as taxonomy
 from app.vacancies import service as vacancies
 from app.views import service as views
@@ -33,6 +34,12 @@ _candidate = require_roles("candidate")
 _CFG = MatchConfig.load()
 _TRUST = TrustConfig.load()
 _UPLIFT = UpliftConfig.load()
+
+# Responses for error codes
+_PARSE_RESPONSES = problem_responses(401, 403, 422)
+_SEARCH_RESPONSES = problem_responses(401, 403, 404, 422)
+_CARD_RESPONSES = problem_responses(401, 403, 404)
+_UPLIFT_RESPONSES = problem_responses(401, 403)
 
 
 class SearchRequest(BaseModel):
@@ -59,7 +66,7 @@ class ParseRequest(BaseModel):
     text: str = Field(min_length=1, max_length=query_parser.MAX_TEXT)
 
 
-@router.post("/search/parse", response_model=ParsedQuery)
+@router.post("/search/parse", response_model=ParsedQuery, responses=problem_responses(401, 403, 422))
 async def search_parse(
     body: ParseRequest,
     user: User = Depends(_employer),
@@ -70,7 +77,7 @@ async def search_parse(
     return query_parser.parse_query(body.text, index.forms, index.names)
 
 
-@router.post("/search/candidates", response_model=SearchPage)
+@router.post("/search/candidates", response_model=SearchPage, responses=problem_responses(401, 403, 404, 422))
 async def search_candidates(
     body: SearchRequest,
     request: Request,
@@ -122,7 +129,7 @@ async def search_candidates(
     return {**page, "session_id": session_id}
 
 
-@router.get("/candidates/{pseudo_id}/card", response_model=CandidateCardFull)
+@router.get("/candidates/{pseudo_id}/card", response_model=CandidateCardFull, responses=problem_responses(401, 403, 404))
 async def candidate_card(
     pseudo_id: str,
     vacancy_id: uuid.UUID | None = None,
@@ -157,7 +164,7 @@ class SimilarPage(BaseModel):
     session_id: uuid.UUID
 
 
-@router.get("/candidates/{pseudo_id}/similar", response_model=SimilarPage)
+@router.get("/candidates/{pseudo_id}/similar", response_model=SimilarPage, responses=problem_responses(401, 403, 404))
 async def candidate_similar(
     pseudo_id: str,
     limit: int = Query(default=10, ge=1, le=similar.MAX_LIMIT),
@@ -231,7 +238,7 @@ class UpliftOut(BaseModel):
     combo: UpliftCombo | None = None
 
 
-@router.get("/candidates/me/uplift", response_model=UpliftOut, response_model_exclude_none=True)
+@router.get("/candidates/me/uplift", response_model=UpliftOut, response_model_exclude_none=True, responses=problem_responses(401, 403))
 async def my_uplift(
     user: User = Depends(_candidate),
     session: AsyncSession = Depends(get_session),

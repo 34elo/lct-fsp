@@ -45,6 +45,11 @@ new-service:
 asyncapi:
 	uv run python -m fsp_contracts.asyncapi > asyncapi.json
 
+# OpenAPI схема REST API
+openapi:
+	mkdir -p docs
+	cd services/core && PYTHONUTF8=1 uv run python export_openapi.py > ../../docs/openapi.json
+
 # --- compose ---
 # Окружение: .env, если в нём задан JWT_SECRET (то есть он полный); иначе .env.demo (создаётся infra/scripts/gen-demo-env.sh со случайными секретами)
 ENV_FILE := $(if $(shell grep -s -E '^JWT_SECRET=.+' .env),.env,.env.demo)

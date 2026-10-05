@@ -33,6 +33,7 @@ from app.matching.p_accept import PAcceptConfig, p_accept
 from app.matching.p_accept import hint as p_hint
 from app.matching.scoring import MatchConfig
 from app.matching.search import CandidateCard
+from app.openapi_errors import problem_responses
 from app.offers import service
 from app.offers.models import Offer, OfferMessage
 from app.telegram import service as telegram
@@ -224,7 +225,7 @@ async def for_company(session: AsyncSession, o: Offer) -> OfferForCompany:
     return OfferForCompany(**await _base(session, o), candidate=cand)
 
 
-@router.post("/offers/salary-hint", response_model=SalaryHint)
+@router.post("/offers/salary-hint", response_model=SalaryHint, responses=problem_responses(401, 403, 404, 422))
 async def salary_hint(
     body: SalaryHintIn,
     user: User = Depends(_employer),
@@ -259,7 +260,7 @@ async def salary_hint(
     )  # fmt: skip
 
 
-@router.post("/offers", response_model=OfferForCompany, status_code=201)
+@router.post("/offers", response_model=OfferForCompany, status_code=201, responses=problem_responses(401, 403, 404, 422))
 async def create_offer(
     body: CreateOffer,
     response: Response,
@@ -284,7 +285,7 @@ async def create_offer(
     return await for_company(session, offer)
 
 
-@router.get("/offers", response_model=list[OfferForCompany])
+@router.get("/offers", response_model=list[OfferForCompany], responses=problem_responses(401, 403))
 async def list_offers(
     status: OfferStatus | None = None,
     vacancy_id: uuid.UUID | None = None,
@@ -298,7 +299,7 @@ async def list_offers(
     return [await for_company(session, o) for o in rows]
 
 
-@router.get("/candidates/me/offers", response_model=list[OfferForCandidate])
+@router.get("/candidates/me/offers", response_model=list[OfferForCandidate], responses=problem_responses(401, 403))
 async def my_offers(
     user: User = Depends(_candidate), session: AsyncSession = Depends(get_session)
 ) -> Any:
@@ -307,7 +308,7 @@ async def my_offers(
     ]
 
 
-@router.get("/offers/{offer_id}", response_model=OfferForCandidate | OfferForCompany)
+@router.get("/offers/{offer_id}", response_model=OfferForCandidate | OfferForCompany, responses=problem_responses(401, 403, 404))
 async def get_offer(
     offer_id: uuid.UUID,
     user: User = Depends(_both),
@@ -325,7 +326,7 @@ async def get_offer(
     return out
 
 
-@router.post("/offers/{offer_id}/accept", response_model=OfferForCandidate)
+@router.post("/offers/{offer_id}/accept", response_model=OfferForCandidate, responses=problem_responses(401, 403, 404))
 async def accept_offer(
     offer_id: uuid.UUID, user: User = Depends(_candidate),
     session: AsyncSession = Depends(get_session),
@@ -335,7 +336,7 @@ async def accept_offer(
     return await for_candidate(session, offer)
 
 
-@router.post("/offers/{offer_id}/decline", response_model=OfferForCandidate)
+@router.post("/offers/{offer_id}/decline", response_model=OfferForCandidate, responses=problem_responses(401, 403, 404, 422))
 async def decline_offer(
     offer_id: uuid.UUID, body: DeclineIn, user: User = Depends(_candidate),
     session: AsyncSession = Depends(get_session),
@@ -345,7 +346,7 @@ async def decline_offer(
     return await for_candidate(session, offer)
 
 
-@router.post("/offers/{offer_id}/withdraw", response_model=OfferForCompany)
+@router.post("/offers/{offer_id}/withdraw", response_model=OfferForCompany, responses=problem_responses(401, 403, 404))
 async def withdraw_offer(
     offer_id: uuid.UUID, user: User = Depends(_employer),
     session: AsyncSession = Depends(get_session),
@@ -356,7 +357,7 @@ async def withdraw_offer(
     return await for_company(session, offer)
 
 
-@router.post("/offers/{offer_id}/status", response_model=OfferForCompany)
+@router.post("/offers/{offer_id}/status", response_model=OfferForCompany, responses=problem_responses(401, 403, 404, 422))
 async def set_offer_status(
     offer_id: uuid.UUID, body: StatusIn, user: User = Depends(_employer),
     session: AsyncSession = Depends(get_session),
@@ -383,7 +384,7 @@ async def _contacts(session: AsyncSession, offer: Offer, viewer: User) -> Contac
     )
 
 
-@router.get("/offers/{offer_id}/contacts", response_model=Contacts)
+@router.get("/offers/{offer_id}/contacts", response_model=Contacts, responses=problem_responses(401, 403, 404))
 async def offer_contacts(
     offer_id: uuid.UUID, user: User = Depends(_employer),
     session: AsyncSession = Depends(get_session),
@@ -407,7 +408,7 @@ def _msg(m: OfferMessage) -> MessageOut:
     return MessageOut.model_validate(m, from_attributes=True)
 
 
-@router.get("/offers/{offer_id}/events", response_model=list[OfferEventOut])
+@router.get("/offers/{offer_id}/events", response_model=list[OfferEventOut], responses=problem_responses(401, 403, 404))
 async def list_events(
     offer_id: uuid.UUID, user: User = Depends(_both), session: AsyncSession = Depends(get_session)
 ) -> Any:
@@ -418,7 +419,7 @@ async def list_events(
     ]
 
 
-@router.get("/offers/{offer_id}/messages", response_model=list[MessageOut])
+@router.get("/offers/{offer_id}/messages", response_model=list[MessageOut], responses=problem_responses(401, 403, 404))
 async def list_messages(
     offer_id: uuid.UUID, user: User = Depends(_both), session: AsyncSession = Depends(get_session)
 ) -> Any:
@@ -426,7 +427,7 @@ async def list_messages(
     return [_msg(m) for m in await service.list_messages(session, offer)]
 
 
-@router.post("/offers/{offer_id}/messages", response_model=MessageOut, status_code=201)
+@router.post("/offers/{offer_id}/messages", response_model=MessageOut, status_code=201, responses=problem_responses(401, 403, 404, 429))
 async def post_message(
     offer_id: uuid.UUID, body: MessageIn, user: User = Depends(_both),
     session: AsyncSession = Depends(get_session),
@@ -439,7 +440,7 @@ async def post_message(
     )
 
 
-@router.post("/offers/{offer_id}/complaint", response_model=ComplaintOut, status_code=201)
+@router.post("/offers/{offer_id}/complaint", response_model=ComplaintOut, status_code=201, responses=problem_responses(401, 403, 404))
 async def complain(
     offer_id: uuid.UUID, body: ComplaintIn, user: User = Depends(_candidate),
     session: AsyncSession = Depends(get_session),

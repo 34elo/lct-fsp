@@ -14,6 +14,7 @@ from app.candidates import service as candidates
 from app.deps import get_session
 from app.identity.deps import require_roles
 from app.identity.models import User
+from app.openapi_errors import problem_responses
 from app.recommendations import service
 
 router = APIRouter(tags=["recommendations"], prefix="/recs")
@@ -30,7 +31,7 @@ class FeedbackRequest(BaseModel):
     reason: str | None = None
 
 
-@router.post("/feedback")
+@router.post("/feedback", responses=problem_responses(401, 403, 404, 422))
 async def record_feedback(
     body: FeedbackRequest,
     user: User = Depends(_employer),

@@ -22,6 +22,7 @@ from app.identity.deps import get_current_user
 from app.identity.models import User
 from app.notifications.handlers import offer_card_data
 from app.offers import service as offers
+from app.openapi_errors import problem_responses
 from app.resumes import service as resumes
 from app.taxonomy import service as taxonomy
 from app.telegram import service
@@ -42,7 +43,7 @@ class DeepLinkOut(BaseModel):
     deep_link: str
 
 
-@router.post("/me/telegram/link", response_model=DeepLinkOut)
+@router.post("/me/telegram/link", response_model=DeepLinkOut, responses=problem_responses(401, 429))
 async def my_link(
     request: Request,
     user: User = Depends(get_current_user),
