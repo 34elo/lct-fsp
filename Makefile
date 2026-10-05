@@ -30,6 +30,10 @@ test-integration:
 test-web:
 	pnpm -r test
 
+# e2e Playwright на стенде с сидом (make up && make seed); нужен Node >= 20
+e2e:
+	cd apps/web && pnpm e2e
+
 web-install:
 	pnpm install
 
@@ -90,6 +94,11 @@ synth:
 seed:
 	mkdir -p reports/seed
 	SEED=$(SEED) uv run python -m tools.seed all --env-file $(ENV_FILE)
+# >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
+	SEED=$(SEED) uv run python -m tools.seed grades --env-file $(ENV_FILE)
+# <<< block1
+# >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
+# <<< block2
 	$(COMPOSE) up -d --build --no-deps --force-recreate fsp-mock
 seed-fsp-mock:
 	mkdir -p reports/seed

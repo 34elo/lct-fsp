@@ -679,7 +679,10 @@ from app.assessment.router import router as assessment_router
 
 | Дата | № | Что | Кого касается | Задача | Статус |
 |---|---|---|---|---|---|
-| | | | | | |
+| 2026-10-05 | S0-a | `claimed_vs_confirmed`: без `surveys` `declared_grade=None`, заявленное берётся из резюме | Б1 (E22, E23-3) | S0-2 | реализовано, уточнит Б1 |
+| 2026-10-05 | S0-b | `last_activity_at` пока `max(grades.confirmed_at)`; `attempts` и `task_submissions` подключит Б1 | Б2 (свежесть R) | S0-2 | реализовано, уточнит Б1 |
+| 2026-10-05 | S0-c | `next_change_at` у seed-грейда = +30 дней (`GRADE_COOLDOWN`) | Б2 | S0-2 | реализовано, уточнит Б1 |
+| 2026-10-05 | S0-d | `factories/base.py` теперь менять только по заявке; `make e2e`, `@playwright/test` добавлены | оба блока | E29-1 | готово |
 
 ### 13.1. Блок 1
 

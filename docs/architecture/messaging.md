@@ -41,6 +41,9 @@ ml-worker ─────► │ ui.user.<user_id> (прогресс задач)
 | `evidence.changed` | core | `{candidate_id, sources[]}` |
 | `skills.profile.updated` | core | `{candidate_id, profile_version, diff: {skills_up, skills_new, grade, category}}` |
 | `category.disputed` | core | `{dispute_id, candidate_id, claimed_role, claimed_grade}` (комментарий кандидата в событие не попадает) |
+| `assessment.attempt.finished` | core | `{candidate_id, attempt_id, profession, declared_grade, stage, result, grade?, theta, se, integrity, needs_confirmation, low_confidence, finished_at, profile_version}` (`contracts/assessment.py`, assessment.md §11) |
+| `candidate.category.changed` | core | `{candidate_id, categories: [{profession, grade}], profile_version}` — полный набор, не дельта |
+| `assessment.family.status_changed` | core | `{family_id, from, to}` (внутреннее блока 1) |
 | `taxonomy.updated` | core | `{version, changed_skill_ids[]}` |
 | `vacancy.published` / `vacancy.updated` / `vacancy.closed` | core | `{vacancy_id, version}` |
 | `offer.sent` / `offer.viewed` / `offer.accepted` / `offer.declined` / `offer.expired` / `offer.withdrawn` / `offer.message` / `offer.status_changed` | core | `{offer_id, candidate_id, company_id, …}` |

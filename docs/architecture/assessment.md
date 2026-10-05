@@ -273,9 +273,11 @@ rank = 0.6·match + 0.4·strength
 
 | Событие | Тело |
 |---|---|
-| `assessment.attempt.finished` | `{candidate_id, attempt_id, profession, result, grade?, theta, integrity, version}` |
+| `assessment.attempt.finished` | `{candidate_id, attempt_id, profession, declared_grade, stage, result, grade?, theta, se, integrity, needs_confirmation, low_confidence, finished_at, profile_version}` |
 | `candidate.category.changed` | `{candidate_id, categories: [{profession, grade}], profile_version}` |
 | `assessment.family.status_changed` | `{family_id, from, to}` |
+
+Модели — `fsp_contracts/assessment.py` (`AttemptFinished`, `CategoryChanged`, `FamilyStatusChanged`, словарь `ASSESSMENT_EVENTS`).
 
 Обработчики идемпотентны (inbox) и сверяют `profile_version`.
 

@@ -22,6 +22,6 @@ export default defineConfig(({ mode }) => {
       dedupe: ["react", "react-dom"],
     },
     server: { port: 28173, proxy: { "/api": apiProxy(target) } },
-    test: { environment: "jsdom", globals: true, setupFiles: ["./src/test-setup.ts"], css: false },
+    test: { environment: "jsdom", globals: true, setupFiles: ["./src/test-setup.ts"], css: false, exclude: ["e2e/**", "node_modules/**"] },
   };
 });
