@@ -33,7 +33,7 @@ docs/                     документация (карта — docs/README.m
 | Задача | Читай |
 |---|---|
 | Любая | этот файл + задача в [backlog.md](docs/process/backlog.md) |
-| Понять кейс и решение с нуля | [case.md](docs/case.md) → [solution.md](docs/solution.md) (v2) |
+| Понять кейс и решение с нуля | [case.md](docs/case.md) → [solution.md](docs/solution.md) (v2) → [system.md](docs/architecture/system.md) (архитектура) |
 | Тест, категории, ранжирование v2 (E20–E30) | [assessment.md](docs/architecture/assessment.md) (нужный раздел), [solution.md](docs/solution.md), ADR-018…024 в [decisions.md](docs/architecture/decisions.md) |
 | Что делать сейчас, очередь агентов | [plan.md](docs/process/plan.md) (§3 дни, §4 очередь) |
 | Модели БД, миграции | [data-model.md](docs/architecture/data-model.md) (нужный раздел) |
@@ -47,7 +47,7 @@ docs/                     документация (карта — docs/README.m
 | Бот | [telegram.md](docs/architecture/telegram.md) |
 | Фронт | [frontend.md](docs/architecture/frontend.md), [design/brief.md](docs/design/brief.md) §0 (экран → файл → маршрут), нужный макет из `docs/design/screens/`, компоненты и токены из `docs/design/handoff/` |
 | Редизайн, вид экранов, `packages/ui` | [backlog.md §E19](docs/process/backlog.md#e19-редизайн-по-пакету-дизайна), эталоны в [docs/design/pack/](docs/design/pack/) |
-| Метрики, события аналитики | [metrics.md](docs/architecture/metrics.md) |
+| Метрики, события аналитики | [metrics.md](docs/architecture/metrics.md) (v2 — §9) |
 | Эталоны, синтетика, seed, eval | [evaluation.md](docs/architecture/evaluation.md) |
 | Инфраструктура | [deployment.md](docs/architecture/deployment.md), [security.md](docs/architecture/security.md) |
 | Почему так решили | [decisions.md](docs/architecture/decisions.md) |
