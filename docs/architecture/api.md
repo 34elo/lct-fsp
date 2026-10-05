@@ -30,6 +30,8 @@
 | `POST /auth/login` | P | `{email, password}` → `{access_token, user}` + cookie |
 | `POST /auth/refresh` | P (cookie) | Ротация refresh, новый access |
 | `POST /auth/logout` | любая | Отзыв семьи refresh-токенов |
+| `POST /auth/email/send` | U | Повторная отправка кода подтверждения → 204. Не чаще раза в минуту (409 `cooldown`, дата в `detail`), 5 в час (429). Новый код аннулирует старый |
+| `POST /auth/email/verify` | U | `{code}` → 204, ставит `email_verified_at`. Неверный код → 400 `invalid_code`; истёк (15 мин) → 400 `code_expired`; 5 неверных попыток → 429 `too_many_attempts`. Повтор после успеха — 204 |
 | `POST /auth/telegram` | P | Поля Telegram Login Widget как есть (`id`, `auth_date`, `hash`, …) → `{access_token, user}` + cookie. Подпись HMAC и `auth_date` ≤ 24 ч; нового пользователя создаёт кандидатом без email. Ошибки: `401 invalid_telegram_auth`, `401 telegram_auth_expired`, `503 telegram_login_disabled` (нет токена бота) |
 | `POST /auth/magic` | P | `{token}` из ссылки бота → `{access_token, user}` + cookie. Токен одноразовый (5 мин); иначе `401 invalid_magic_token` |
 | `GET /auth/fsp/start` | P/C | Редирект на OAuth ФСП (мок). Для вошедшего кандидата это привязка, иначе вход |
@@ -38,7 +40,7 @@
 | `GET /me/consents`, `PUT /me/consents` | любая | Список и выдача/отзыв согласий |
 | `POST /me/telegram/link` | C, E | → `{deep_link}` вида `https://t.me/<bot>?start=link_<token>` (токен 15 мин, одноразовый); `503 telegram_disabled`, если имя бота не задано |
 
-Коды ошибок `/auth/*`: `email_taken` (409), `invalid_credentials` (401, одинаков для неверного пароля и неизвестного email), `refresh_reused` (401, повторное использование refresh — вся семья отозвана, cookie сбрасывается), `unauthorized` (401), `rate_limited` (429), `forbidden_origin` (403, `Origin` не из `ALLOWED_ORIGINS` на `/auth/refresh` и `/auth/logout`). Саморегистрация — только `candidate` и `employer`. `GET /me` пока возвращает `{id, email, role, consents[]}` (`consents` — типы действующих согласий).
+Коды ошибок `/auth/*`: `email_taken` (409), `invalid_credentials` (401, одинаков для неверного пароля и неизвестного email), `refresh_reused` (401, повторное использование refresh — вся семья отозвана, cookie сбрасывается), `unauthorized` (401), `rate_limited` (429), `forbidden_origin` (403, `Origin` не из `ALLOWED_ORIGINS` на `/auth/refresh` и `/auth/logout`). Саморегистрация — только `candidate` и `employer`. Код подтверждения (E20-1, 6 цифр, хранится хешем) уходит на email при регистрации по SMTP (`SMTP_*`; пустой `SMTP_HOST` — письмо не отправляется, регистрация не падает; dev — Mailpit, профиль `dev`, UI `:28025`). `EMAIL_VERIFICATION_REQUIRED` (по умолчанию `false`) включает проверку `require_verified_email` там, где она вызывается. `user` в ответах `/auth/*` и `/me` содержит `email_verified`. `GET /me` пока возвращает `{id, email, role, email_verified, consents[]}` (`consents` — типы действующих согласий).
 
 `GET /me/consents` → массив по всем `consent_type`: `{type, required, granted, version, current_version, granted_at}`. `PUT /me/consents` `{consents:[{type, granted, version?}]}` → тот же массив; идемпотентно. Выдача с устаревшей `version` → 409 `consent_version_mismatch`. Эндпоинты, требующие согласия, отвечают 403 `consent_required` (зависимость `require_consent(type)`).
 
@@ -186,9 +188,9 @@
 | `GET /public/profiles/{slug}` | Публичный профиль (если кандидат включил) |
 | `GET /athlete/{slug}` | Краулерам (Telegram, VK, Slack по User-Agent) — HTML с OG-тегами, людям — редирект на `dashboard.fsp…/athlete/{slug}` |
 | `GET /taxonomy` | `{version, skills[{slug,name,kind,group,testable}], roles[{slug,name}], disciplines[{slug,name}], grades[], formats[], employment_types[]}` (только `active` навыки). `ETag` `W/"tax-<version>-<хеш статики>"`, `If-None-Match` → 304, `Cache-Control: public, max-age=300` |
+| `GET /taxonomy/professions` | Публичный (E21-1). `{professions[{slug,title,skill_weights{slug:вес},skill_types{slug:тип}}], skill_types[6], grades[{grade,cut}]}`; профессии — роли с `profession: true`, каждая покрывает все 6 типов навыков; `cut` — минимальный θ грейда из `scoring.yaml` `assessment.grades` |
 | `POST /integrations/fsp/webhook` | Вебхук ФСП/мока (HMAC `X-Signature`) |
 | `GET /healthz`, `GET /readyz` | Проверки живости и готовности |
-| `GET /taxonomy/professions` | Публичный (E21-1). `{professions[{slug,title,skill_weights{slug:вес},skill_types{slug:тип}}], skill_types[6], grades[{grade,cut}]}`; профессии — роли с `profession: true`, каждая покрывает все 6 типов навыков; `cut` — минимальный θ грейда из `scoring.yaml` `assessment.grades` |
 
 ### 2.8. Realtime
 

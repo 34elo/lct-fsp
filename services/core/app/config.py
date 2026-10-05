@@ -36,6 +36,15 @@ class Settings(BaseServiceSettings):
     # >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
     # подтверждение email (blocks.md §4.6): Б1 (E20-1) включает в .env.example, Б2 — после Т2
     email_verification_required: bool = False
+    # SMTP для кода подтверждения (E20-1); пусто — письма не отправляются (dev: Mailpit)
+    smtp_host: str = ""
+    smtp_port: int = 1025
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_from: str = "no-reply@fsp-career.local"
+    email_code_ttl_minutes: int = 15
+    email_resend_cooldown_seconds: int = 60
+    email_code_max_attempts: int = 5
     # LLM для резюме, навыков, теста; false — ml-воркеры не ходят в llama-server (ML_FAKE и т.п.)
     llm_enabled: bool = True
     # <<< block1
