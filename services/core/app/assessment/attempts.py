@@ -29,6 +29,7 @@ from app.assessment import selection as sel
 from app.assessment.config import AssessmentConfig
 from app.assessment.families.base import Family, Item
 from app.assessment.families.spec import SpecFamily
+from app.assessment.mining.family import MinedFamily
 from app.assessment.models import Attempt, FamilyRow, Grade, Response
 from app.assessment.psychometrics_db import finalize_attempt
 from app.assessment.world import DOMAINS, World, domain_for_profession
@@ -177,11 +178,13 @@ async def _family(session: AsyncSession, fam_id: uuid.UUID) -> Family:
 
 
 def family_of(row: FamilyRow) -> Family | None:
-    """Кодовое семейство из реестра или спецификация конструктора (E30-1)."""
+    """Кодовое семейство из реестра, спецификация конструктора (E30-1) или майнинг (E30-3)."""
     if row.source == "code":
         return registry.get(row.slug)
     if row.source == "spec" and row.spec:
         return SpecFamily.from_row(row)
+    if row.source == "mutation" and row.spec:
+        return MinedFamily.from_row(row)
     return None
 
 

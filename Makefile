@@ -124,6 +124,17 @@ up-lite: demo-env
 .PHONY: families-check
 families-check:
 	uv run python -m app.assessment.families.check --seeds 1000
+# Майнинг мутаций открытого кода → семейства find_bug (E30-3, assessment.md §4). Код проектов только
+# читается (AST + песочница), не импортируется и не запускается. SRC — имя из
+# data/questions/mutations/sources.yaml; DIR — локальная копия (без неё нужен MUTMINE_GITHUB=1)
+.PHONY: assessment-mutations-mine assessment-mutations-check assessment-mutations-import
+assessment-mutations-mine:
+	cd services/core && uv run python -m app.assessment.mining mine --source $(SRC) $(if $(DIR),--dir $(abspath $(DIR)))
+assessment-mutations-check:
+	cd services/core && uv run python -m app.assessment.mining check ../../data/questions/mutations/*.json
+# Банк → families (draft); PILOT=1 — сразу в pilot (в active — только админ по статистике пилота)
+assessment-mutations-import:
+	cd services/core && uv run python -m app.assessment.mining import ../../data/questions/mutations/*.json $(if $(PILOT),--pilot)
 # Схема карточек навыков data/skills/cards (assessment.md §2)
 .PHONY: cards-check
 cards-check:

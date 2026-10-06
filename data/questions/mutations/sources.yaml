@@ -1,0 +1,33 @@
+# Источники майнинга мутаций (E30-3, assessment.md §4): открытые проекты MIT / Apache-2.0
+# с тестами (доктесты, assert). Код только читается и разбирается AST; не импортируется и не
+# запускается. Лицензия проверяется по файлу LICENSE в корне архива — не совпала, майнинг отказывает.
+#
+# Запуск (из services/core):
+#   MUTMINE_GITHUB=1 uv run python -m app.assessment.mining mine --source thealgorithms
+#   uv run python -m app.assessment.mining mine --source keon_algorithms --dir /path/to/clone
+# Результат — data/questions/mutations/<name>.json; в БД — `... mining import <файлы> [--pilot]`.
+#
+# ref: перед боевым майнингом закрепите SHA коммита (ветка меняется, банк должен воспроизводиться).
+sources:
+  - name: thealgorithms
+    repo: TheAlgorithms/Python
+    ref: master
+    license: MIT
+    # чистые функции с доктестами; каталоги с вводом-выводом, сетью и numpy не берём
+    include:
+      - bit_manipulation/
+      - boolean_algebra/
+      - conversions/
+      - divide_and_conquer/
+      - dynamic_programming/
+      - maths/
+      - searches/
+      - sorts/
+      - strings/
+  - name: keon_algorithms
+    repo: keon/algorithms
+    ref: master
+    license: MIT
+    # функции в algorithms/, тесты unittest в tests/ (assertEqual(f(…), …))
+    include:
+      - algorithms/
