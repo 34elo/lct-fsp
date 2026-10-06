@@ -23,7 +23,7 @@ from core_helpers import assert_foreign_is_404, register
 from fsp_platform.db import session_scope
 from sqlalchemy import func, select
 
-PUBLIC_FIELDS = {"done", "response_id", "seq", "kind", "stem", "options", "time_limit_s"}
+PUBLIC_FIELDS = {"done", "response_id", "seq", "kind", "stem", "options", "time_limit_s", "steps"}
 TAXONOMY = Path(__file__).resolve().parents[3] / "data" / "taxonomy"
 
 # --- чистые функции ---------------------------------------------------------------------------
