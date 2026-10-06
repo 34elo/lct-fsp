@@ -35,7 +35,7 @@ from app.matching.p_accept import PAcceptConfig, p_accept
 from app.matching.p_accept import hint as p_hint
 from app.matching.scoring import MatchConfig
 from app.matching.search import CandidateCard
-from app.offers import service, teams
+from app.offers import service, teams, why
 from app.offers.models import ContactReveal, Offer, OfferMessage
 from app.openapi_errors import problem_responses
 from app.telegram import service as telegram
@@ -139,10 +139,12 @@ class CompanyBrief(BaseModel):
     logo_url: str | None = None
     responsibility_score: float | None = None
     verified: bool
+    reliability: why.CompanyReliability | None = None  # E33-2: доля ответов, срок ответа
 
 
 class OfferForCandidate(OfferOut):
     company: CompanyBrief
+    why_you: why.WhyYou | None = None  # E33-2: только у интереса и приглашения компании
 
 
 class Contacts(BaseModel):
@@ -268,8 +270,15 @@ async def for_candidate(session: AsyncSession, o: Offer) -> OfferForCandidate:
     brief = CompanyBrief(
         id=c.id, name=c.name, responsibility_score=c.responsibility_score,
         verified=companies.badge_visible(c),
+        reliability=await why.company_reliability(session, c.id, c.responsibility_score),
     )  # fmt: skip
-    return OfferForCandidate(**await _base(session, o), company=brief)
+    cand = await candidates.get(session, o.candidate_id) if o.candidate_id else None
+    reasons = (
+        await why.why_you(session, o, cand)
+        if cand is not None and o.initiator == OfferInitiator.employer.value
+        else None
+    )
+    return OfferForCandidate(**await _base(session, o), company=brief, why_you=reasons)
 
 
 async def for_company(session: AsyncSession, o: Offer) -> OfferForCompany:

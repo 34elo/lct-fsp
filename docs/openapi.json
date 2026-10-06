@@ -10495,6 +10495,16 @@
           "verified": {
             "type": "boolean",
             "title": "Verified"
+          },
+          "reliability": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CompanyReliability"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -10809,6 +10819,50 @@
         "additionalProperties": false,
         "type": "object",
         "title": "CompanyPatch"
+      },
+      "CompanyReliability": {
+        "properties": {
+          "responsibility_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Responsibility Score"
+          },
+          "response_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Response Rate"
+          },
+          "avg_response_hours": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Response Hours"
+          },
+          "sample": {
+            "type": "integer",
+            "title": "Sample",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "CompanyReliability"
       },
       "CompanyStatus": {
         "type": "string",
@@ -13598,6 +13652,16 @@
           },
           "company": {
             "$ref": "#/components/schemas/CompanyBrief"
+          },
+          "why_you": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WhyYou"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -18464,6 +18528,51 @@
           "change"
         ],
         "title": "WeightOut"
+      },
+      "WhyFactor": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "weight": {
+            "type": "number",
+            "title": "Weight"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "text",
+          "weight"
+        ],
+        "title": "WhyFactor"
+      },
+      "WhyYou": {
+        "properties": {
+          "factors": {
+            "items": {
+              "$ref": "#/components/schemas/WhyFactor"
+            },
+            "type": "array",
+            "title": "Factors",
+            "default": []
+          },
+          "unconfirmed": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Unconfirmed",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "WhyYou"
       },
       "WorkFormat": {
         "type": "string",
