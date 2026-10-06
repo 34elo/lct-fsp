@@ -34,7 +34,7 @@ from random import Random
 from fsp_contracts.assessment import SkillType
 
 from app.assessment.families import REGISTRY
-from app.assessment.families.base import Family, Item, Kind, score_exact
+from app.assessment.families.base import SCORERS, Family, Item, Kind, score_exact
 from app.assessment.world import World
 
 ROOT = Path(__file__).resolve().parents[5]
@@ -61,8 +61,40 @@ def run_python(code: str) -> str:
     return buf.getvalue().strip()
 
 
+class _Step:
+    """Шаг цепочки как семейство для `check_item`: оценка по `kind` шага, без ручек."""
+
+    def __init__(self, kind: Kind) -> None:
+        self.kind = kind
+
+    def score(self, item: Item, answer: object) -> float:
+        return SCORERS[item.kind](item.key, answer)
+
+
+def check_chain(fam: Family, item: Item) -> list[str]:
+    """`chain` (E26-3): ≥ 2 шагов обычных типов, каждый проходит те же проверки, ключ — их ключи."""
+    errs: list[str] = []
+    if len(item.steps) < 2:
+        return ["в цепочке меньше двух шагов"]
+    for i, st in enumerate(item.steps, start=1):
+        if st.kind in (Kind.chain, Kind.open):
+            errs.append(f"шаг {i}: kind {st.kind.value} недопустим в цепочке")
+            continue
+        errs += [f"шаг {i}: {e}" for e in check_item(_Step(st.kind), st)]  # type: ignore[arg-type]
+    if item.key != [st.key for st in item.steps]:
+        errs.append("ключ цепочки ≠ ключам шагов")
+    wrong = [None, *json.loads(json.dumps(item.key))[1:]]
+    if not 0.0 < fam.score(item, wrong) < 1.0:
+        errs.append("ошибка в одном шаге не даёт частичный балл")
+    return errs
+
+
 def check_item(fam: Family, item: Item) -> list[str]:
     errs: list[str] = []
+    if item.kind == Kind.chain:
+        errs += check_chain(fam, item)
+    elif item.steps:
+        errs.append("шаги есть только у chain")
     if item.kind != fam.kind:
         errs.append(f"kind {item.kind} ≠ {fam.kind}")
     if item.kind == Kind.open:
