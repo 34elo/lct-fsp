@@ -15,13 +15,15 @@ from typing import Annotated, Any
 from urllib.parse import urlencode
 
 import httpx
+import jwt
 import structlog
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
 from fastapi import Depends, FastAPI, Header, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fsp_contracts.enums import FspDiscipline
 from fsp_contracts.fsp import (
     FspCompetition,
-    FspOAuthIdentity,
     FspParticipant,
     FspParticipantBrief,
     FspResult,
@@ -65,6 +67,19 @@ def pkce_s256(verifier: str) -> str:
     return base64.urlsafe_b64encode(digest).rstrip(b"=").decode()
 
 
+def _load_signing_key(pem: str | None) -> rsa.RSAPrivateKey:
+    if pem:
+        key = serialization.load_pem_private_key(pem.encode(), password=None)
+        if isinstance(key, rsa.RSAPrivateKey):
+            return key
+    return rsa.generate_private_key(public_exponent=65537, key_size=2048)
+
+
+def _b64u_int(n: int) -> str:
+    raw = n.to_bytes((n.bit_length() + 7) // 8, "big")
+    return base64.urlsafe_b64encode(raw).rstrip(b"=").decode()
+
+
 def build_app(settings: Settings | None = None, store: Store | None = None) -> FastAPI:
     settings = settings or Settings()
     configure_logging(settings.service_name, settings.log_level)
@@ -87,6 +102,20 @@ def build_app(settings: Settings | None = None, store: Store | None = None) -> F
     # клиент вебхуков подменяется в тестах
     app.state.http = httpx.AsyncClient(timeout=5)
     st: Store = app.state.store
+
+    # OIDC: подпись id_token (RS256), публичный ключ — в JWKS
+    signing_key = _load_signing_key(settings.fsp_mock_oidc_private_key)
+    pub = signing_key.public_key().public_numbers()
+    kid = hashlib.sha256(f"{pub.n}:{pub.e}".encode()).hexdigest()[:16]
+    jwk = {
+        "kty": "RSA",
+        "use": "sig",
+        "alg": "RS256",
+        "kid": kid,
+        "n": _b64u_int(pub.n),
+        "e": _b64u_int(pub.e),
+    }
+    issuer = settings.fsp_mock_issuer.rstrip("/")
 
     def api_key(x_api_key: str | None = Header(default=None)) -> None:
         if not x_api_key or not secrets.compare_digest(x_api_key, settings.fsp_mock_api_key):
@@ -217,7 +246,15 @@ def build_app(settings: Settings | None = None, store: Store | None = None) -> F
             "</body></html>"
         )
 
-    oauth_keys = ("client_id", "redirect_uri", "state", "code_challenge", "code_challenge_method")
+    oauth_keys = (
+        "client_id",
+        "redirect_uri",
+        "state",
+        "code_challenge",
+        "code_challenge_method",
+        "scope",
+        "nonce",
+    )
 
     @app.get("/oauth/authorize", response_class=HTMLResponse)
     async def authorize(request: Request, q: str = "") -> HTMLResponse:
@@ -249,6 +286,8 @@ def build_app(settings: Settings | None = None, store: Store | None = None) -> F
             "participant_id": pid,
             "challenge": challenge,
             "redirect_uri": redirect_uri,
+            "client_id": str(form.get("client_id", "")),
+            "nonce": str(form.get("nonce", "")),
             "expires_at": datetime.now(UTC) + timedelta(minutes=5),
         }
         query = {"code": code}
@@ -257,8 +296,33 @@ def build_app(settings: Settings | None = None, store: Store | None = None) -> F
         sep = "&" if "?" in redirect_uri else "?"
         return RedirectResponse(f"{redirect_uri}{sep}{urlencode(query)}", status_code=303)
 
+    def full_name(p: dict[str, Any]) -> str:
+        return " ".join(x for x in (p["last_name"], p["first_name"], p["middle_name"]) if x)
+
+    @app.get("/.well-known/openid-configuration")
+    async def openid_configuration() -> dict[str, Any]:
+        return {
+            "issuer": issuer,
+            "authorization_endpoint": f"{issuer}/oauth/authorize",
+            "token_endpoint": f"{issuer}/oauth/token",
+            "userinfo_endpoint": f"{issuer}/oauth/userinfo",
+            "jwks_uri": f"{issuer}/oauth/jwks",
+            "response_types_supported": ["code"],
+            "grant_types_supported": ["authorization_code"],
+            "subject_types_supported": ["public"],
+            "id_token_signing_alg_values_supported": ["RS256"],
+            "code_challenge_methods_supported": ["S256"],
+            "token_endpoint_auth_methods_supported": ["none"],
+            "scopes_supported": ["openid", "profile"],
+            "claims_supported": ["sub", "name", "participant_id", "iss", "aud", "exp", "iat"],
+        }
+
+    @app.get("/oauth/jwks")
+    async def jwks() -> dict[str, Any]:
+        return {"keys": [jwk]}
+
     @app.post("/oauth/token")
-    async def token(request: Request) -> dict[str, str]:
+    async def token(request: Request) -> dict[str, Any]:
         ctype = request.headers.get("content-type", "")
         data: dict[str, Any] = (
             await request.json()
@@ -274,18 +338,37 @@ def build_app(settings: Settings | None = None, store: Store | None = None) -> F
         if not verifier or not secrets.compare_digest(pkce_s256(verifier), rec["challenge"]):
             raise ProblemError(400, "invalid_grant", "PKCE: code_verifier не подходит")
         access = secrets.token_urlsafe(32)
-        st.tokens[access] = rec["participant_id"]
-        return {"access_token": access, "token_type": "Bearer"}
+        pid = rec["participant_id"]
+        st.tokens[access] = pid
+        now = datetime.now(UTC)
+        claims: dict[str, Any] = {
+            "iss": issuer,
+            "sub": pid,
+            "aud": str(data.get("client_id") or rec.get("client_id") or "fsp-career"),
+            "iat": int(now.timestamp()),
+            "exp": int((now + timedelta(minutes=10)).timestamp()),
+            "name": full_name(st.participants[pid]),
+            "participant_id": pid,
+        }
+        if rec.get("nonce"):
+            claims["nonce"] = rec["nonce"]
+        id_token = jwt.encode(claims, signing_key, algorithm="RS256", headers={"kid": kid})
+        return {
+            "access_token": access,
+            "token_type": "Bearer",
+            "expires_in": 3600,
+            "id_token": id_token,
+        }
 
     @app.get("/oauth/userinfo")
-    async def userinfo(authorization: str | None = Header(default=None)) -> FspOAuthIdentity:
+    async def userinfo(authorization: str | None = Header(default=None)) -> dict[str, Any]:
         scheme, _, tok = (authorization or "").partition(" ")
         pid = st.tokens.get(tok) if scheme.lower() == "bearer" else None
         if not pid:
             raise ProblemError(401, "unauthorized", "Неверный токен")
-        p = st.participants[pid]
-        full = " ".join(x for x in (p["last_name"], p["first_name"], p["middle_name"]) if x)
-        return FspOAuthIdentity(participant_id=pid, full_name=full)
+        name = full_name(st.participants[pid])
+        # participant_id/full_name — исходный контракт (FspOAuthIdentity); sub/name — OIDC
+        return {"participant_id": pid, "full_name": name, "sub": pid, "name": name}
 
     # ------------------------------------------------------------------ /mock
     @app.post("/mock/results", dependencies=auth)
