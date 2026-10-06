@@ -4,6 +4,7 @@ plan      — построить план и напечатать сводку (
 fsp-mock  — записать JSON с данными fsp-mock (FSP_MOCK_DATA=<файл> для сервиса)
 core      — наполнить БД core через его сервисные слои (DATABASE_URL, справочник навыков загружен)
 all       — fsp-mock + core
+demo2     — демо-данные v2 (E34-1, demo_v2.py): герои, компании, офферы, задания; после grades
 grades    — seed-грейды (таблица grades, блок 1); после core, идемпотентно
 """
 
@@ -98,6 +99,28 @@ async def seed_grades_cmd(plan: dict) -> dict:
         await engine.dispose()
 
 
+async def seed_demo2_cmd(plan: dict) -> dict:
+    from app.config import Settings
+    from fsp_platform.db import make_engine, make_session_factory
+
+    from .demo_v2 import seed_demo_v2
+    from .loader import Seeder
+
+    settings = Settings()
+    engine = make_engine(settings.database_url)
+    try:
+        seeder = Seeder(
+            plan,
+            make_session_factory(engine),
+            password=load_config()["demo"]["password"],
+            pseudo_secret=settings.pseudo_id_secret,
+            analytics_salt=settings.analytics_salt,
+        )
+        return await seed_demo_v2(seeder)
+    finally:
+        await engine.dispose()
+
+
 def load_env_file(path: Path, db_host_port: str = "28432") -> None:
     """Подгрузить секреты стека из env-файла (.env / .env.demo) в окружение процесса и собрать
     DATABASE_URL на проброшенный порт Postgres. Значения не печатаются; уже заданные env важнее."""
@@ -135,7 +158,7 @@ def print_accounts(plan: dict) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="tools.seed", description=__doc__)
-    p.add_argument("command", choices=["plan", "fsp-mock", "core", "all", "grades"])
+    p.add_argument("command", choices=["plan", "fsp-mock", "core", "all", "grades", "demo2"])
     p.add_argument(
         "--seed", type=int, default=int(os.environ["SEED"]) if os.environ.get("SEED") else None
     )
@@ -167,6 +190,13 @@ def main(argv: list[str] | None = None) -> int:
             stats = asyncio.run(seed_grades_cmd(plan))
         except Exception as exc:  # noqa: BLE001
             print(f"Ошибка seed-грейдов: {type(exc).__name__}: {exc}", file=sys.stderr)
+            return 1
+        print(json.dumps(stats, ensure_ascii=False, indent=1, sort_keys=True))
+    if args.command == "demo2":
+        try:
+            stats = asyncio.run(seed_demo2_cmd(plan))
+        except Exception as exc:  # noqa: BLE001
+            print(f"Ошибка демо-данных v2: {type(exc).__name__}: {exc}", file=sys.stderr)
             return 1
         print(json.dumps(stats, ensure_ascii=False, indent=1, sort_keys=True))
     return 0
