@@ -96,6 +96,12 @@ def test_broken_family_alarms_on_synthetic():
     leak += [Answer(1.0, 0.0, 100 + i) for i in range(50)]
     st = compute_stats(leak, 0.0, CFG)
     assert st.leak == pytest.approx(1.0 - 34 / 100) and "leak" in alarm_reasons(st, CFG)
+    # сдвиг состава: последние 50 — сильные (θ = 2, P = 0.881), 44 верных из 50. Доля верных
+    # выросла на 0.38, но остаток y − P(θ, b) тот же → тревоги нет (ADR-030)
+    shift = [Answer(float(i % 2 == 0), 0.0, i) for i in range(100)]
+    shift += [Answer(float(i < 44), 2.0, 100 + i) for i in range(50)]
+    st2 = compute_stats(shift, 0.0, CFG)
+    assert st2.p is not None and abs(st2.leak) < 0.01 and alarm_reasons(st2, CFG) == []
     st3 = compute_stats(_good(10), 0.0, CFG, appeals=3)
     assert alarm_reasons(st3, CFG) == ["appeals"]
 

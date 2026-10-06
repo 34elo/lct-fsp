@@ -370,10 +370,11 @@ class Journey:
     person: Person
     granted: str
     attempts: list[AttemptOut]
+    threshold: float = 0.6  # assessment.integrity.threshold
 
     @property
     def flagged(self) -> bool:
-        return any(a.integrity < 0.6 for a in self.attempts)  # порог совпадает с scoring.yaml
+        return any(a.integrity < self.threshold for a in self.attempts)
 
 
 def journey(
@@ -399,7 +400,7 @@ def journey(
             break
         i = TEST_GRADE_ORDER.index(grade)
         grade = TEST_GRADE_ORDER[i - 1] if i > 0 and len(atts) == 1 else None
-    return Journey(p, granted, atts)
+    return Journey(p, granted, atts, bank.cfg.integrity_threshold)
 
 
 def make_person(rng: random.Random, cfg: AssessmentConfig, kind: str = "honest") -> Person:
@@ -458,6 +459,14 @@ def run(sc: SimConfig, cfg: AssessmentConfig | None = None) -> dict[str, Any]:
     ]
     acc_clear = sum(j.granted == true_grade(j.person.theta, cfg) for j in clear) / max(
         1, len(clear)
+    )
+    # Та же точность при фиксированном отступе 0.5 от порогов — сравнима между разными δ.
+    clear05 = [j for j in honest if min(abs(j.person.theta - c) for c in cfg.cuts.values()) >= 0.5]
+    acc05 = sum(j.granted == true_grade(j.person.theta, cfg) for j in clear05) / max(
+        1, len(clear05)
+    )
+    overgrade = sum(rank(j.granted) > rank(true_grade(j.person.theta, cfg)) for j in honest) / max(
+        1, len(honest)
     )
     decisions = [
         (a.passed, j.person.theta >= cfg.cuts[a.grade.value]) for j in honest for a in j.attempts
@@ -535,6 +544,8 @@ def run(sc: SimConfig, cfg: AssessmentConfig | None = None) -> dict[str, Any]:
         "grade_accuracy": _r(acc),
         "grade_accuracy_within1": _r(off1),
         "grade_accuracy_outside_indifference": _r(acc_clear),
+        "grade_accuracy_margin_05": _r(acc05),
+        "grade_overgrade": _r(overgrade),
         "sprt_decision_accuracy": _r(dec_acc),
         "kappa": _r(kappa),
         "mean_items": _r(mean_items),
@@ -551,6 +562,7 @@ def run(sc: SimConfig, cfg: AssessmentConfig | None = None) -> dict[str, Any]:
         "cheater_overgrade": _r(cheat_over),
         "leak_false_upgrade": _r(over(knowers)),
         "leak_baseline_upgrade": _r(over(others)),
+        "leak_excess_upgrade": _r(over(knowers) - over(others)),
         "leak_answers_to_quarantine": statistics.median(q_after) if q_after else None,
         "leak_quarantined_share": _r(len(q_after) / max(1, len(leaked))),
         "leak_median_answers_after": statistics.median(leak_answers) if leak_answers else None,
