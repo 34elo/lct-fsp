@@ -256,8 +256,9 @@ async def explain_answer(
 
 
 class SurveyIn(BaseModel):
+    # ADR-025 п.4: «отрасль» = IT-направление = `profession`; `industry` не спрашивается в UI
     industry: str | None = Field(default=None, max_length=64)
-    profession: ProfessionSlug
+    profession: ProfessionSlug  # IT-направление — первый шаг опроса
     stack: list[str] = Field(default_factory=list, max_length=survey.MAX_STACK)
     formats: list[WorkFormat] = Field(default_factory=list)
     salary_from: int | None = Field(default=None, ge=0, le=100_000_000)
