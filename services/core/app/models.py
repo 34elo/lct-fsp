@@ -10,6 +10,7 @@ from app.assessment.models import Grade  # noqa: F401
 from app.candidates.models import Candidate, CategoryDispute  # noqa: F401
 from app.companies.models import Company, CompanyMember  # noqa: F401
 from app.consents.models import Consent  # noqa: F401
+from app.credentials.models import IssuedCredential  # noqa: F401
 from app.graph import fsp_models as _fsp  # noqa: F401
 from app.graph.models import CandidateSkill, Evidence  # noqa: F401
 from app.identity.models import RefreshToken, User  # noqa: F401
