@@ -128,12 +128,38 @@ async def update_profile(
         soft = [names[by_slug[s]] for s in slugs]
         recompute |= (cand.claimed_soft or []) != soft
         cand.claimed_soft = soft
+    if "age_group" in changes or "parent_consent" in changes:
+        _set_age(cand, changes)
     if "stack" in changes:
         await _set_stack(session, cand, changes["stack"] or [])  # сам запрашивает пересчёт
     await session.flush()
     if recompute:
         await graph.request_recompute(session, cand.user_id)
     return cand
+
+
+def _set_age(cand: Candidate, changes: dict) -> None:
+    """Возрастная группа и согласие родителя (E32-5b). Дата рождения не хранится.
+
+    Согласие осмысленно только для `minor`; смена группы на `adult` или отзыв сбрасывают отметку.
+    """
+    group = changes.get("age_group", cand.age_group)
+    if group not in (None, "adult", "minor"):
+        raise ProblemError(422, "validation_error", "Неизвестная возрастная группа")
+    if "parent_consent" in changes and changes["parent_consent"] and group != "minor":
+        raise ProblemError(
+            422, "validation_error", "Согласие родителя нужно только кандидатам 15–17 лет"
+        )
+    cand.age_group = group
+    if group != "minor" or changes.get("parent_consent") is False:
+        cand.parent_consent_at = None
+    elif changes.get("parent_consent") and cand.parent_consent_at is None:
+        cand.parent_consent_at = utcnow()
+
+
+def is_publishable(cand: Candidate) -> bool:
+    """Профиль 15–17 лет не публикуется без согласия родителя (E32-5b)."""
+    return cand.age_group != "minor" or cand.parent_consent_at is not None
 
 
 def _skill_error(slugs: list[str], field: str, message: str) -> ProblemError:
@@ -219,6 +245,13 @@ def effective_status(cand: Candidate) -> str:
 # --- чтение для подбора (matching) -------------------------------------------------------
 
 
+_PUBLISHABLE = sa.or_(
+    Candidate.age_group.is_(None),
+    Candidate.age_group != "minor",
+    Candidate.parent_consent_at.is_not(None),
+)
+
+
 def _attr_filters(
     stmt: sa.Select, *, salary_cap: float, formats: list[str], company_id: uuid.UUID, pg: bool
 ) -> sa.Select:
@@ -226,6 +259,7 @@ def _attr_filters(
     stmt = stmt.where(
         Candidate.deleted_at.is_(None),
         Candidate.search_status != "dnd",
+        _PUBLISHABLE,
         sa.or_(Candidate.salary_min.is_(None), Candidate.salary_min <= salary_cap),
     )
     if pg:
@@ -312,6 +346,7 @@ async def search_pool(
     stmt = select(Candidate).where(
         Candidate.deleted_at.is_(None),
         Candidate.search_status != "dnd",
+        _PUBLISHABLE,
         Candidate.primary_role.is_not(None),
     )
     if roles:
