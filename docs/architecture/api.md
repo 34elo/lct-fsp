@@ -239,6 +239,7 @@
 | `POST /v1/query/parse` | `{text, rule_hint?: SearchFilters, taxonomy_version}` | `ParsedQuery` |
 | `POST /v1/embeddings` | `{texts[], kind: "query"|"passage"}` | `{model, dim, vectors[][]}` |
 | `POST /v1/skills/resolve` | `{mentions: [{raw, context}], taxonomy_version}` (до 50) | `[{raw, norm, decision: alias|fuzzy|new|same_pending|rejected, skill_slug?, kind: hard|soft|domain|not_skill, relation?: {type, to_slug, confidence}, reason?}]` ([skills.md §3](skills.md#3-конвейер-для-нового-упоминания)) |
+| `POST /v1/families/key-draft` | `FamilyKeyDraftRequest`: `{kind, stem, options[], lines[], actions[], steps[], rubric[]}` — пример варианта задания конструктора без ключа | `FamilyKeyDraft`: `{correct?, bug_lines?, scores?, answer?, rubric?, rationale?, model}` — черновик (E30-1, [assessment.md §10](assessment.md#10-api-v2)); `ML_FAKE` — заглушка, `LLM_ENABLED=false` — `503 llm_disabled` |
 | `GET /healthz` | — | `{llm: up|down, embedder: up|down, model, queue_depth}` |
 
 ## 3. Ключевые схемы (TypeScript-нотация)

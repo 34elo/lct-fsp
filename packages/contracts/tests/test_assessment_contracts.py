@@ -101,3 +101,18 @@ def test_registries_wired():
     assert set(ASSESSMENT_ANALYTICS_EVENTS) <= set(ANALYTICS_EVENTS)
     assert set(HIRING_ANALYTICS_EVENTS) <= set(ANALYTICS_EVENTS)
     assert ConsentType.profile_publication == "profile_publication"
+
+
+def test_family_key_draft_contract():
+    """E30-1: core ↔ ml-api `POST /v1/families/key-draft`."""
+    from fsp_contracts.ml import FamilyKeyDraft, FamilyKeyDraftRequest
+
+    req = FamilyKeyDraftRequest.model_validate(
+        {"kind": "sjt", "stem": "PR на 3000 строк", "actions": ["Разбить", "Одобрить", "Обсудить"]}
+    )
+    assert req.options == [] and req.rubric == []
+    with pytest.raises(ValidationError):
+        FamilyKeyDraftRequest.model_validate({"kind": "essay", "stem": "x"})
+    d = FamilyKeyDraft.model_validate({"scores": [3, 1, 2], "model": "qwen3-vl-4b"})
+    assert d.correct is None and d.scores == [3.0, 1.0, 2.0]
+    assert FamilyKeyDraft.model_validate(d.model_dump(mode="json")) == d

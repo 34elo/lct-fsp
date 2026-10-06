@@ -16,7 +16,7 @@ from fsp_contracts.ml import (
 from fsp_platform.app import ProblemError, create_app
 from fsp_platform.logging import configure_logging
 
-from fsp_ml import fake
+from fsp_ml import fake, family_key
 from fsp_ml.config import Settings
 from fsp_ml.embedder import Embedder, embed, load_embedder
 from fsp_ml.taxonomy import TaxonomyProvider
@@ -35,6 +35,7 @@ def build_app(
     )
     taxonomy = taxonomy or TaxonomyProvider(settings.core_url, settings.service_token_ml)
     # >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
+    app.include_router(family_key.build_router(settings))  # E30-1: черновик ключа задания
     # <<< block1
     # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
     # <<< block2

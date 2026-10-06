@@ -49,6 +49,8 @@ class Settings(BaseServiceSettings):
     llm_enabled: bool = True
     # Fernet-ключ шифрования ПДн в БД (contacts_enc); в проде из PII_KEY (security.md §3)
     pii_key: str = "ZGV2LW9ubHktcGlpLWtleS0wMTIzNDU2Nzg5YWJjZGU="
+    # E30-1: черновик ключа задания конструктора через ml-api; таймаут синхронного запроса
+    assessment_key_draft_timeout_seconds: float = 30.0
     # <<< block1
     # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
     # <<< block2
