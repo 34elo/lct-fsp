@@ -25,10 +25,11 @@ from app.identity.models import User
 from app.matching import needs, needs_service, query_parser, search
 from app.matching import query_llm as qllm
 from app.matching.needs_service import NeedCategory
-from app.matching.router import _query_llm
+from app.matching.router import _get_candidate_id_by_pseudo_id, _query_llm
 from app.matching.scoring import MatchConfig
 from app.matching.strength import StrengthConfig
 from app.openapi_errors import problem_responses
+from app.recommendations import service as rec_service
 from app.taxonomy import service as taxonomy
 
 router = APIRouter(tags=["needs"])
@@ -70,6 +71,7 @@ class CategoryPage(BaseModel):
     items: list[search.CandidateCard]
     next_cursor: str | None
     total: int
+    session_id: uuid.UUID  # сессия показов: с ней фронт шлёт POST /recs/feedback (E17-5)
 
 
 @router.post(
@@ -162,6 +164,7 @@ async def category_candidates(
     grade: str,
     request: Request,
     need_id: uuid.UUID | None = None,
+    session_id: uuid.UUID | None = None,
     cursor: str | None = Query(default=None, max_length=200),
     limit: int = Query(default=20, ge=1, le=search.MAX_LIMIT),
     user: User = Depends(_employer),
@@ -187,6 +190,20 @@ async def category_candidates(
     for item in page["items"]:
         item["is_shortlisted"] = item["pseudo_id"] in shortlist
 
+    # Показы для обратной связи (E17-5): сессия продолжается со следующих страниц
+    sid = session_id or uuid.uuid4()
+    context_id = f"{profession}/{grade}"
+    for position, item in enumerate(page["items"], 1):
+        cid = await _get_candidate_id_by_pseudo_id(session, item["pseudo_id"])
+        if cid:
+            strength = item.get("strength") or {}
+            await rec_service.record_impression(
+                session, company_id=company.id, user_id=user.id, session_id=str(sid),
+                context_type="search", context_id=context_id, candidate_id=cid,
+                position=position, score=strength.get("rank") or 0.0,
+                features={"sort": "category", "category": context_id},
+            )  # fmt: skip
+
     if cursor is None:  # просмотр категории считаем по первой странице
         await analytics.track_employer(
             session, request.app.state.settings.analytics_salt, company.id, "category_viewed",
@@ -196,7 +213,7 @@ async def category_candidates(
             },
         )  # fmt: skip
         await session.commit()
-    return {k: page[k] for k in ("items", "next_cursor", "total")}
+    return {**{k: page[k] for k in ("items", "next_cursor", "total")}, "session_id": sid}
 
 
 async def _track_shortlist(

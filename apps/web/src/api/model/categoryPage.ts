@@ -10,4 +10,5 @@ export interface CategoryPage {
   items: CandidateCard[];
   next_cursor: string | null;
   total: number;
+  session_id: string;
 }

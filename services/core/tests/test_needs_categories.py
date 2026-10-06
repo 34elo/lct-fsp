@@ -190,3 +190,28 @@ def test_category_candidates_ranked_anonymous_with_explanation(c, market):
 def test_invalid_category_is_422(c, market):
     assert c.get("/categories/backend/god/candidates", headers=_hdr(market)).status_code == 422
     assert c.get("/categories/Bad-Slug/middle/candidates", headers=_hdr(market)).status_code == 422
+
+
+def test_category_page_returns_session_and_feedback_works(c, market):
+    r = c.get("/categories/backend/middle/candidates?limit=2", headers=_hdr(market))
+    sid = r.json()["session_id"]
+    pid = r.json()["items"][0]["pseudo_id"]
+    f = c.post(
+        "/recs/feedback",
+        json={"session_id": sid, "candidate_pseudo_id": pid, "event": "dismiss"},
+        headers=_hdr(market),
+    )
+    assert f.status_code == 200, f.text
+    assert f.json()["tuning"]["session_id"] == sid
+    # вторая страница продолжает ту же сессию
+    p2 = c.get(
+        f"/categories/backend/middle/candidates?limit=2&session_id={sid}", headers=_hdr(market)
+    )
+    assert p2.json()["session_id"] == sid
+    # чужой кандидат вне показов — 404
+    f = c.post(
+        "/recs/feedback",
+        json={"session_id": sid, "candidate_pseudo_id": "pid0001", "event": "open"},
+        headers=_hdr(market),
+    )
+    assert f.status_code == 404
