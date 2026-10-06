@@ -30,11 +30,10 @@ from app.assessment.config import AssessmentConfig
 from app.assessment.families.base import Family, Item
 from app.assessment.models import Attempt, FamilyRow, Grade, Response
 from app.assessment.psychometrics_db import finalize_attempt
-from app.assessment.world import DOMAINS, World
+from app.assessment.world import DOMAINS, World, domain_for_profession
 from app.taxonomy import service as taxonomy
 
 _NS = uuid.UUID("3f0c7d2e-6a1b-4c55-9f0e-5b2a7f9d1c33")
-_PROFESSION_DOMAIN = {"ai_engineer": "rag_service"}
 
 
 def family_id(slug: str) -> uuid.UUID:
@@ -150,7 +149,7 @@ async def create_attempt(
     )
     rng = Random(item_seed(candidate_id, att.id, uuid.UUID(int=0)))
     att.plan = {
-        "domain": _PROFESSION_DOMAIN.get(profession) or rng.choice(DOMAINS),
+        "domain": domain_for_profession(profession) or rng.choice(DOMAINS),
         "sections": engine.sections_json(sections),
         "pilot_seqs": sel.pilot_positions(rng, cfg),
         "target": cfg.min_items,
