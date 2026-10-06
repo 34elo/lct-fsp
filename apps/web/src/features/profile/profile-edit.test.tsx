@@ -104,6 +104,18 @@ test("добавление навыка в стек и софт-качества
   expect(b.soft_skills.sort()).toEqual(["communication", "teamwork"]);
 });
 
+test("15–17 лет: без согласия родителя предупреждение, с согласием — в PATCH", async () => {
+  const bodies = install();
+  mount();
+  fireEvent.click(await screen.findByTestId("profile-edit-age-minor"));
+  expect(screen.getByTestId("profile-edit-age-hidden")).toBeInTheDocument();
+  fireEvent.click(screen.getByTestId("profile-edit-age-parent"));
+  expect(screen.queryByTestId("profile-edit-age-hidden")).toBeNull();
+  fireEvent.click(screen.getByTestId("profile-edit-save"));
+  await screen.findByTestId("profile-edit-saved");
+  expect(bodies[0]).toMatchObject({ age_group: "minor", parent_consent: true });
+});
+
 test("невалидная почта блокирует отправку", async () => {
   const bodies = install();
   mount();
