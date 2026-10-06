@@ -6,10 +6,13 @@ export {
   LayoutDashboard,
   LogOut,
   Moon,
+  Search,
+  SlidersHorizontal,
   Sun,
   SunMoon,
   TrendingUp,
   Trophy,
   User,
+  X,
   type LucideIcon,
 } from "lucide-react";

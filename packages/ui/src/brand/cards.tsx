@@ -65,10 +65,10 @@ export function CandidateCard({
           </ul>
           {c.fsp && c.fsp.length > 0 && <FspProtocol results={c.fsp.slice(0, 2)} />}
           {c.expectations && c.expectations.length > 0 && (
-            <p className="text-13 text-muted">
+            <div className="text-13 text-muted">
               <SectionLabel className="mr-2 inline">Ожидания</SectionLabel>
               {c.expectations.join(" · ")}
-            </p>
+            </div>
           )}
         </div>
         <aside className="grid min-w-0 content-start gap-3 md:border-l md:border-hairline md:pl-4">
