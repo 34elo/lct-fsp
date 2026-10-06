@@ -705,7 +705,7 @@ from app.assessment.router import router as assessment_router
 
 | Дата | № | Кто → кому | Что | Задача | Статус |
 |---|---|---|---|---|---|
-| 2026-10-06 | З-2-01 | Б2 → Б1 | `candidates.service.search_pool` должен отфильтровывать кандидатов без активного `consents.has_consent(profile_publication)` (patch готов: в цикле после active_only; был в 67a88e4, откачен) | E20-11 | открыта |
+| 2026-10-06 | З-2-01 | Б2 → Б1 | `candidates.service.search_pool` должен отфильтровывать кандидатов без активного `consents.has_consent(profile_publication)` (patch готов: в цикле после active_only; был в 67a88e4, откачен) | E20-11 | закрыта: фильтр сделан в `matching` блока 2, не в `candidates.service` (75dca0d) |
 | 2026-10-06 | С-2-01 | Б2 → оба | `OfferEvent` (`offer.*`): новое поле `initiator` (по умолчанию `employer`), `vacancy_id` может быть `null`, конверт `schema_version: 2`; enum'ы `OfferInitiator`, `ContactMethod` в `hiring.py`. Совместимо | E20-2 | готово |
 | 2026-10-06 | С-2-02 | Б2 → Б1 | `analytics.py` теперь вливает `ASSESSMENT_ANALYTICS_EVENTS` и `HIRING_ANALYTICS_EVENTS` в `ANALYTICS_EVENTS`; события Б1 регистрируются в своём словаре. Совместимо | E31-1 | готово |
 | 2026-10-06 | С-2-03 | Б2 → Б1 | В `assessment.py` (контракты) заранее добавлен `RegularTaskPublished` (`regular_task.published`: family_id, profession, candidate_ids[]) для обработчика бота E9-6. Б1 в E25-1 публикует событие в этой форме или правит модель (при расхождении — править обработчик в `notifications/handlers.py`) | E9-6 | открыто, согласовать |
