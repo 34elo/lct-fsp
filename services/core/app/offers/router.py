@@ -40,6 +40,7 @@ from app.offers.models import Offer, OfferMessage
 from app.openapi_errors import problem_responses
 from app.telegram import service as telegram
 from app.vacancies import service as vacancies
+from app.vacancies.service import VacancyConfig
 
 router = APIRouter(tags=["offers"])
 admin_router = APIRouter(prefix="/admin/complaints", tags=["admin"])
@@ -53,6 +54,7 @@ _LIMITS = service.OfferLimits.load()
 _CFG = MatchConfig.load()
 _TRUST = TrustConfig.load()
 _PACCEPT = PAcceptConfig.load()
+_VACANCY_CFG = VacancyConfig.load()
 
 
 class CreateOffer(BaseModel):
@@ -351,7 +353,7 @@ async def salary_hint(
     )  # fmt: skip
     below = cand.salary_min is not None and hi < cand.salary_min
     median = await candidates.category_median(session, cand.primary_role, cand.grade)
-    wide = vacancies.range_too_wide(lo, hi)
+    wide = vacancies.range_too_wide(lo, hi, _VACANCY_CFG)
     notes = []
     if below:
         notes.append("Верх вилки ниже ожиданий кандидата.")
