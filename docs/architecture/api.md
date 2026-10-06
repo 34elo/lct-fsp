@@ -175,7 +175,7 @@
 | `GET|PUT /admin/scoring-config` | Веса доверия, грейда, матчинга (с версией) |
 | `GET /admin/companies?status=pending`, `POST /admin/companies/{id}/verify|reject` | Модерация компаний |
 | `GET /admin/complaints`, `POST /admin/complaints/{id}/resolve` | Жалобы |
-| `GET /admin/dashboard` | Воронка ФСП → профиль → оффер → найм, востребованные навыки, регионы, переходы на соревнования |
+| `GET /admin/dashboard?days=30` | Дашборд ФСП (роль `fsp_admin`), `days` 1–180. Когортная воронка по `analytics_events`: регистрация → тест → категория (`category_changed` или `profile_updated.grade_to`) → приглашение (`offer_received`) → ответ; у этапов `count`, `pct_of_registered`, `pct_of_previous`; `fsp_share` (привязали ФСП / зарегистрированные), `navigator_to_competition` (клик `competition_clicked` из навигатора или uplift / увидели `uplift_shown`). Ячейки меньше 5 человек: `count`, `pct` = `null`, `hidden: true`. Востребованные навыки и регионы — позже |
 | `GET /admin/quality`, `GET /admin/quality/{run_id}` | Страница качества (eval_runs) |
 | `POST /admin/quality/runs` | Загрузка результата `make eval` (роль A или сервисный токен) |
 | `GET /admin/quality/fairness` | Панель справедливости: impact ratio по группам (синтетика + демо-показы) |
