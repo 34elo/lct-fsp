@@ -889,6 +889,473 @@
         }
       }
     },
+    "/internal/tg/fsp": {
+      "get": {
+        "tags": [
+          "internal"
+        ],
+        "summary": "Tg Fsp",
+        "operationId": "tg_fsp_internal_tg_fsp_get",
+        "parameters": [
+          {
+            "name": "tg_user_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Tg User Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgFspOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/tg/fsp/link": {
+      "post": {
+        "tags": [
+          "internal"
+        ],
+        "summary": "Tg Fsp Link",
+        "description": "Те же правила, что у `/candidates/me/fsp/link` (10 попыток / 10 мин, нужно согласие ПДн).",
+        "operationId": "tg_fsp_link_internal_tg_fsp_link_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TgFspLinkIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgFspLinkOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/tg/fsp/verify": {
+      "post": {
+        "tags": [
+          "internal"
+        ],
+        "summary": "Tg Fsp Verify",
+        "operationId": "tg_fsp_verify_internal_tg_fsp_verify_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TgFspVerifyIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/tg/fsp/sync": {
+      "post": {
+        "tags": [
+          "internal"
+        ],
+        "summary": "Tg Fsp Sync",
+        "operationId": "tg_fsp_sync_internal_tg_fsp_sync_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TgConfirmIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/tg/category": {
+      "get": {
+        "tags": [
+          "internal"
+        ],
+        "summary": "Tg Category",
+        "description": "Подтверждённые категории (грейды теста) и «заявлено vs подтверждено»; публичное API Б1.",
+        "operationId": "tg_category_internal_tg_category_get",
+        "parameters": [
+          {
+            "name": "tg_user_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Tg User Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgCategoryOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/tg/settings": {
+      "get": {
+        "tags": [
+          "internal"
+        ],
+        "summary": "Tg Settings",
+        "operationId": "tg_settings_internal_tg_settings_get",
+        "parameters": [
+          {
+            "name": "tg_user_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Tg User Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgSettingsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "internal"
+        ],
+        "summary": "Tg Settings Update",
+        "description": "Только минимальная зарплата и форматы; остальное — на сайте. `salary_min: null` очищает.",
+        "operationId": "tg_settings_update_internal_tg_settings_patch",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TgSettingsIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgSettingsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/tg/status": {
+      "patch": {
+        "tags": [
+          "internal"
+        ],
+        "summary": "Tg Status",
+        "description": "Статус поиска: `active` на 7 дней, `open`, `dnd` (как `PATCH /candidates/me/preferences`).",
+        "operationId": "tg_status_internal_tg_status_patch",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TgStatusIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgSettingsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/internal/tg/offers": {
       "get": {
         "tags": [
@@ -12273,6 +12740,110 @@
         ],
         "title": "TeamSignalKind"
       },
+      "TgCategoryItem": {
+        "properties": {
+          "profession": {
+            "type": "string",
+            "title": "Profession"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "grade": {
+            "type": "string",
+            "title": "Grade"
+          },
+          "needs_confirmation": {
+            "type": "boolean",
+            "title": "Needs Confirmation"
+          },
+          "valid_until": {
+            "type": "string",
+            "title": "Valid Until"
+          }
+        },
+        "type": "object",
+        "required": [
+          "profession",
+          "title",
+          "grade",
+          "needs_confirmation",
+          "valid_until"
+        ],
+        "title": "TgCategoryItem"
+      },
+      "TgCategoryOut": {
+        "properties": {
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/TgCategoryItem"
+            },
+            "type": "array",
+            "title": "Categories"
+          },
+          "claims": {
+            "items": {
+              "$ref": "#/components/schemas/TgClaim"
+            },
+            "type": "array",
+            "title": "Claims"
+          }
+        },
+        "type": "object",
+        "required": [
+          "categories",
+          "claims"
+        ],
+        "title": "TgCategoryOut"
+      },
+      "TgClaim": {
+        "properties": {
+          "profession": {
+            "type": "string",
+            "title": "Profession"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "declared_grade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Declared Grade"
+          },
+          "confirmed_grade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmed Grade"
+          }
+        },
+        "type": "object",
+        "required": [
+          "profession",
+          "title",
+          "status",
+          "declared_grade",
+          "confirmed_grade"
+        ],
+        "title": "TgClaim"
+      },
       "TgConfirmIn": {
         "properties": {
           "tg_user_id": {
@@ -12314,6 +12885,132 @@
           "reason"
         ],
         "title": "TgDeclineIn"
+      },
+      "TgFspLinkIn": {
+        "properties": {
+          "tg_user_id": {
+            "type": "integer",
+            "title": "Tg User Id"
+          },
+          "participant_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Participant Id"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 254
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tg_user_id"
+        ],
+        "title": "TgFspLinkIn"
+      },
+      "TgFspLinkOut": {
+        "properties": {
+          "method": {
+            "type": "string",
+            "title": "Method"
+          },
+          "masked_contact": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Masked Contact"
+          }
+        },
+        "type": "object",
+        "required": [
+          "method"
+        ],
+        "title": "TgFspLinkOut"
+      },
+      "TgFspOut": {
+        "properties": {
+          "linked": {
+            "type": "boolean",
+            "title": "Linked"
+          },
+          "verified": {
+            "type": "boolean",
+            "title": "Verified"
+          },
+          "participant_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Participant Id"
+          },
+          "achievements": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Achievements",
+            "default": []
+          },
+          "teams": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Teams",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "linked",
+          "verified"
+        ],
+        "title": "TgFspOut"
+      },
+      "TgFspVerifyIn": {
+        "properties": {
+          "tg_user_id": {
+            "type": "integer",
+            "title": "Tg User Id"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 16,
+            "minLength": 1,
+            "title": "Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tg_user_id",
+          "code"
+        ],
+        "title": "TgFspVerifyIn"
       },
       "TgMessageIn": {
         "properties": {
@@ -12578,6 +13275,79 @@
         ],
         "title": "TgResumeOut"
       },
+      "TgSettingsIn": {
+        "properties": {
+          "tg_user_id": {
+            "type": "integer",
+            "title": "Tg User Id"
+          },
+          "salary_min": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100000000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary Min"
+          },
+          "formats": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/WorkFormat"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Formats"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tg_user_id"
+        ],
+        "title": "TgSettingsIn"
+      },
+      "TgSettingsOut": {
+        "properties": {
+          "salary_min": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary Min"
+          },
+          "formats": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Formats"
+          },
+          "search_status": {
+            "type": "string",
+            "title": "Search Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "salary_min",
+          "formats",
+          "search_status"
+        ],
+        "title": "TgSettingsOut"
+      },
       "TgSkill": {
         "properties": {
           "name": {
@@ -12600,6 +13370,23 @@
           "claimed_only"
         ],
         "title": "TgSkill"
+      },
+      "TgStatusIn": {
+        "properties": {
+          "tg_user_id": {
+            "type": "integer",
+            "title": "Tg User Id"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SearchStatus"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tg_user_id",
+          "status"
+        ],
+        "title": "TgStatusIn"
       },
       "TrackEventIn": {
         "properties": {
