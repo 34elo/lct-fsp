@@ -51,7 +51,7 @@ export function EmployerOfferDetail() {
               </div>
               <StatusBadge status={o.status} />
             </div>
-            <p className="text-sm">{o.vacancy.title} · {o.vacancy.formats.map((f) => FORMAT_LABEL[f] ?? f).join(", ")}</p>
+            <p className="text-sm">{(o.vacancy as { title?: string } | null)?.title ?? (o as { title?: string | null }).title ?? "Приглашение"}{o.vacancy ? ` · ${o.vacancy.formats.map((f) => FORMAT_LABEL[f] ?? f).join(", ")}` : ""}</p>
             <p className="font-mono text-lg font-semibold">{rub(o.salary_from)} – {rub(o.salary_to)} <span className="font-sans text-sm font-normal text-muted">в месяц</span></p>
             {o.below_candidate_min && <p className="rounded-lg bg-warning-bg px-3 py-2 text-sm text-warning-fg">Вилка ниже ожиданий кандидата.</p>}
             {o.match_snapshot && <p className="text-sm text-muted">Совпадение на момент оффера: {percent(o.match_snapshot.score)}%</p>}
