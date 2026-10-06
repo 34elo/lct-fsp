@@ -26,10 +26,6 @@ import Survey from "@/features/assessment/Survey";
 import Attempt from "@/features/assessment/Attempt";
 import Result from "@/features/assessment/Result";
 import History from "@/features/assessment/History";
-import Survey from "@/features/assessment/Survey";
-import Attempt from "@/features/assessment/Attempt";
-import Result from "@/features/assessment/Result";
-import History from "@/features/assessment/History";
 import VerifyEmail from "@/features/auth/VerifyEmail";
 import ProfileEdit from "@/features/profile/ProfileEdit";
 import CandidateTasks from "@/features/tasks/CandidateTasks";
@@ -61,9 +57,6 @@ const IMPLEMENTED = new Set(["/", "/login", "/register", "/auth/magic", "/consen
 // Б1: страницы теста (E22-8).
 ["/me/assessment", "/me/assessment/history", "/me/assessment/attempts/:id", "/me/assessment/attempts/:id/result"].forEach((p) => IMPLEMENTED.add(p));
 
-// Б1: страницы теста (E22-8).
-["/me/assessment", "/me/assessment/history", "/me/assessment/attempts/:id", "/me/assessment/attempts/:id/result"].forEach((p) => IMPLEMENTED.add(p));
-
 const stubs = (section: string) =>
   ROUTES.filter((r) => r.section === section && !IMPLEMENTED.has(r.path)).map((r) => (
     <Route key={r.path} path={r.path} element={<Stub routePath={r.path} />} />
@@ -82,10 +75,6 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
             <Route path="/me/offers" element={<CandidateOffers />} />
             <Route path="/me/offers/:id" element={<CandidateOfferDetail />} />
             {/* >>> block1 (candidate) */}
-            <Route path="/me/assessment" element={<Survey />} />
-            <Route path="/me/assessment/history" element={<History />} />
-            <Route path="/me/assessment/attempts/:id" element={<Attempt />} />
-            <Route path="/me/assessment/attempts/:id/result" element={<Result />} />
             <Route path="/me/assessment" element={<Survey />} />
             <Route path="/me/assessment/history" element={<History />} />
             <Route path="/me/assessment/attempts/:id" element={<Attempt />} />
