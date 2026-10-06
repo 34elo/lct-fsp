@@ -4,6 +4,7 @@
  * core
  * OpenAPI spec version: 0.1.0
  */
+import type { AttemptOutMode } from './attemptOutMode';
 import type { AttemptOutStage } from './attemptOutStage';
 import type { AttemptOutStatus } from './attemptOutStatus';
 import type { AttemptResultOut } from './attemptResultOut';
@@ -14,6 +15,7 @@ export interface AttemptOut {
   profession: string;
   declared_grade: TestGrade;
   stage: AttemptOutStage;
+  mode?: AttemptOutMode;
   status: AttemptOutStatus;
   answered: number;
   target: number;
