@@ -88,7 +88,7 @@ async def push(ui_publish: UiPublish | None, messages: list[UiMessage]) -> None:
         try:
             await ui_publish(m)
         except Exception:
-            log.warning("ui_publish_failed", event=m.event)
+            log.warning("ui_publish_failed", ui_event=m.event)
 
 
 async def send_tg(
