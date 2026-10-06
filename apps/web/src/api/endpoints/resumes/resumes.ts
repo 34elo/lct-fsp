@@ -27,6 +27,7 @@ import type {
   BodyUploadResumeCandidatesMeResumesPost,
   ConfirmIn,
   HTTPValidationError,
+  ProblemOut,
   ResumeAccepted,
   ResumeOut
 } from '../../model';
@@ -59,15 +60,55 @@ export type uploadResumeCandidatesMeResumesPostResponse202 = {
   status: 202
 }
 
+export type uploadResumeCandidatesMeResumesPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type uploadResumeCandidatesMeResumesPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type uploadResumeCandidatesMeResumesPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type uploadResumeCandidatesMeResumesPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type uploadResumeCandidatesMeResumesPostResponse413ApplicationProblemJson = {
+  data: ProblemOut
+  status: 413
+}
+
+export type uploadResumeCandidatesMeResumesPostResponse413ApplicationJson = {
+  data: ProblemOut
+  status: 413
+}
+
 export type uploadResumeCandidatesMeResumesPostResponse422 = {
   data: HTTPValidationError
   status: 422
 }
 
+export type uploadResumeCandidatesMeResumesPostResponse429ApplicationProblemJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type uploadResumeCandidatesMeResumesPostResponse429ApplicationJson = {
+  data: ProblemOut
+  status: 429
+}
+
 export type uploadResumeCandidatesMeResumesPostResponseSuccess = (uploadResumeCandidatesMeResumesPostResponse202) & {
   headers: Headers;
 };
-export type uploadResumeCandidatesMeResumesPostResponseError = (uploadResumeCandidatesMeResumesPostResponse422) & {
+export type uploadResumeCandidatesMeResumesPostResponseError = (uploadResumeCandidatesMeResumesPostResponse401ApplicationProblemJson | uploadResumeCandidatesMeResumesPostResponse401ApplicationJson | uploadResumeCandidatesMeResumesPostResponse403ApplicationProblemJson | uploadResumeCandidatesMeResumesPostResponse403ApplicationJson | uploadResumeCandidatesMeResumesPostResponse413ApplicationProblemJson | uploadResumeCandidatesMeResumesPostResponse413ApplicationJson | uploadResumeCandidatesMeResumesPostResponse422 | uploadResumeCandidatesMeResumesPostResponse429ApplicationProblemJson | uploadResumeCandidatesMeResumesPostResponse429ApplicationJson) & {
   headers: Headers;
 };
 
@@ -103,7 +144,7 @@ formData.append(`file`, bodyUploadResumeCandidatesMeResumesPost.file);
 
 export const getUploadResumeCandidatesMeResumesPostMutationKey = () => ['uploadResumeCandidatesMeResumesPost'] as const;
 
-export const getUploadResumeCandidatesMeResumesPostMutationOptions = <TError = ErrorType<HTTPValidationError>,
+export const getUploadResumeCandidatesMeResumesPostMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadResumeCandidatesMeResumesPost>>, TError,UploadResumeCandidatesMeResumesPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof uploadResumeCandidatesMeResumesPost>>, TError,UploadResumeCandidatesMeResumesPostMutationVariables, TContext> => {
 
@@ -132,13 +173,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type UploadResumeCandidatesMeResumesPostMutationResult = NonNullable<Awaited<ReturnType<typeof uploadResumeCandidatesMeResumesPost>>>
     export type UploadResumeCandidatesMeResumesPostMutationBody = BodyUploadResumeCandidatesMeResumesPost
-    export type UploadResumeCandidatesMeResumesPostMutationError = ErrorType<HTTPValidationError>
+    export type UploadResumeCandidatesMeResumesPostMutationError = ErrorType<ProblemOut | HTTPValidationError>
     export type UploadResumeCandidatesMeResumesPostMutationVariables = {data: BodyUploadResumeCandidatesMeResumesPost}
 
     /**
  * @summary Upload Resume
  */
-export const useUploadResumeCandidatesMeResumesPost = <TError = ErrorType<HTTPValidationError>,
+export const useUploadResumeCandidatesMeResumesPost = <TError = ErrorType<ProblemOut | HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadResumeCandidatesMeResumesPost>>, TError,UploadResumeCandidatesMeResumesPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof uploadResumeCandidatesMeResumesPost>>,
@@ -153,6 +194,36 @@ export const useUploadResumeCandidatesMeResumesPost = <TError = ErrorType<HTTPVa
   status: 200
 }
 
+export type getResumeCandidatesMeResumesResumeIdGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type getResumeCandidatesMeResumesResumeIdGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type getResumeCandidatesMeResumesResumeIdGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type getResumeCandidatesMeResumesResumeIdGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type getResumeCandidatesMeResumesResumeIdGetResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type getResumeCandidatesMeResumesResumeIdGetResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
 export type getResumeCandidatesMeResumesResumeIdGetResponse422 = {
   data: HTTPValidationError
   status: 422
@@ -161,7 +232,7 @@ export type getResumeCandidatesMeResumesResumeIdGetResponse422 = {
 export type getResumeCandidatesMeResumesResumeIdGetResponseSuccess = (getResumeCandidatesMeResumesResumeIdGetResponse200) & {
   headers: Headers;
 };
-export type getResumeCandidatesMeResumesResumeIdGetResponseError = (getResumeCandidatesMeResumesResumeIdGetResponse422) & {
+export type getResumeCandidatesMeResumesResumeIdGetResponseError = (getResumeCandidatesMeResumesResumeIdGetResponse401ApplicationProblemJson | getResumeCandidatesMeResumesResumeIdGetResponse401ApplicationJson | getResumeCandidatesMeResumesResumeIdGetResponse403ApplicationProblemJson | getResumeCandidatesMeResumesResumeIdGetResponse403ApplicationJson | getResumeCandidatesMeResumesResumeIdGetResponse404ApplicationProblemJson | getResumeCandidatesMeResumesResumeIdGetResponse404ApplicationJson | getResumeCandidatesMeResumesResumeIdGetResponse422) & {
   headers: Headers;
 };
 
@@ -200,7 +271,7 @@ export const getGetResumeCandidatesMeResumesResumeIdGetQueryKey = (resumeId: str
     }
 
 
-export const getGetResumeCandidatesMeResumesResumeIdGetQueryOptions = <TData = Awaited<ReturnType<typeof getResumeCandidatesMeResumesResumeIdGet>>, TError = ErrorType<HTTPValidationError>>(resumeId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getResumeCandidatesMeResumesResumeIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+export const getGetResumeCandidatesMeResumesResumeIdGetQueryOptions = <TData = Awaited<ReturnType<typeof getResumeCandidatesMeResumesResumeIdGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(resumeId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getResumeCandidatesMeResumesResumeIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -219,10 +290,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetResumeCandidatesMeResumesResumeIdGetQueryResult = NonNullable<Awaited<ReturnType<typeof getResumeCandidatesMeResumesResumeIdGet>>>
-export type GetResumeCandidatesMeResumesResumeIdGetQueryError = ErrorType<HTTPValidationError>
+export type GetResumeCandidatesMeResumesResumeIdGetQueryError = ErrorType<ProblemOut | HTTPValidationError>
 
 
-export function useGetResumeCandidatesMeResumesResumeIdGet<TData = Awaited<ReturnType<typeof getResumeCandidatesMeResumesResumeIdGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useGetResumeCandidatesMeResumesResumeIdGet<TData = Awaited<ReturnType<typeof getResumeCandidatesMeResumesResumeIdGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  resumeId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getResumeCandidatesMeResumesResumeIdGet>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getResumeCandidatesMeResumesResumeIdGet>>,
@@ -232,7 +303,7 @@ export function useGetResumeCandidatesMeResumesResumeIdGet<TData = Awaited<Retur
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetResumeCandidatesMeResumesResumeIdGet<TData = Awaited<ReturnType<typeof getResumeCandidatesMeResumesResumeIdGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useGetResumeCandidatesMeResumesResumeIdGet<TData = Awaited<ReturnType<typeof getResumeCandidatesMeResumesResumeIdGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  resumeId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getResumeCandidatesMeResumesResumeIdGet>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getResumeCandidatesMeResumesResumeIdGet>>,
@@ -242,7 +313,7 @@ export function useGetResumeCandidatesMeResumesResumeIdGet<TData = Awaited<Retur
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetResumeCandidatesMeResumesResumeIdGet<TData = Awaited<ReturnType<typeof getResumeCandidatesMeResumesResumeIdGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useGetResumeCandidatesMeResumesResumeIdGet<TData = Awaited<ReturnType<typeof getResumeCandidatesMeResumesResumeIdGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  resumeId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getResumeCandidatesMeResumesResumeIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -250,7 +321,7 @@ export function useGetResumeCandidatesMeResumesResumeIdGet<TData = Awaited<Retur
  * @summary Get Resume
  */
 
-export function useGetResumeCandidatesMeResumesResumeIdGet<TData = Awaited<ReturnType<typeof getResumeCandidatesMeResumesResumeIdGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useGetResumeCandidatesMeResumesResumeIdGet<TData = Awaited<ReturnType<typeof getResumeCandidatesMeResumesResumeIdGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  resumeId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getResumeCandidatesMeResumesResumeIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -272,15 +343,50 @@ export type confirmResumeCandidatesMeResumesResumeIdConfirmPostResponse200 = {
   status: 200
 }
 
-export type confirmResumeCandidatesMeResumesResumeIdConfirmPostResponse422 = {
-  data: HTTPValidationError
+export type confirmResumeCandidatesMeResumesResumeIdConfirmPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type confirmResumeCandidatesMeResumesResumeIdConfirmPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type confirmResumeCandidatesMeResumesResumeIdConfirmPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type confirmResumeCandidatesMeResumesResumeIdConfirmPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type confirmResumeCandidatesMeResumesResumeIdConfirmPostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type confirmResumeCandidatesMeResumesResumeIdConfirmPostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type confirmResumeCandidatesMeResumesResumeIdConfirmPostResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type confirmResumeCandidatesMeResumesResumeIdConfirmPostResponse422ApplicationJson = {
+  data: ProblemOut
   status: 422
 }
 
 export type confirmResumeCandidatesMeResumesResumeIdConfirmPostResponseSuccess = (confirmResumeCandidatesMeResumesResumeIdConfirmPostResponse200) & {
   headers: Headers;
 };
-export type confirmResumeCandidatesMeResumesResumeIdConfirmPostResponseError = (confirmResumeCandidatesMeResumesResumeIdConfirmPostResponse422) & {
+export type confirmResumeCandidatesMeResumesResumeIdConfirmPostResponseError = (confirmResumeCandidatesMeResumesResumeIdConfirmPostResponse401ApplicationProblemJson | confirmResumeCandidatesMeResumesResumeIdConfirmPostResponse401ApplicationJson | confirmResumeCandidatesMeResumesResumeIdConfirmPostResponse403ApplicationProblemJson | confirmResumeCandidatesMeResumesResumeIdConfirmPostResponse403ApplicationJson | confirmResumeCandidatesMeResumesResumeIdConfirmPostResponse404ApplicationProblemJson | confirmResumeCandidatesMeResumesResumeIdConfirmPostResponse404ApplicationJson | confirmResumeCandidatesMeResumesResumeIdConfirmPostResponse422ApplicationProblemJson | confirmResumeCandidatesMeResumesResumeIdConfirmPostResponse422ApplicationJson) & {
   headers: Headers;
 };
 
@@ -329,7 +435,7 @@ return apiFetch<confirmResumeCandidatesMeResumesResumeIdConfirmPostResponse>(get
 
 export const getConfirmResumeCandidatesMeResumesResumeIdConfirmPostMutationKey = () => ['confirmResumeCandidatesMeResumesResumeIdConfirmPost'] as const;
 
-export const getConfirmResumeCandidatesMeResumesResumeIdConfirmPostMutationOptions = <TError = ErrorType<HTTPValidationError>,
+export const getConfirmResumeCandidatesMeResumesResumeIdConfirmPostMutationOptions = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmResumeCandidatesMeResumesResumeIdConfirmPost>>, TError,ConfirmResumeCandidatesMeResumesResumeIdConfirmPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof confirmResumeCandidatesMeResumesResumeIdConfirmPost>>, TError,ConfirmResumeCandidatesMeResumesResumeIdConfirmPostMutationVariables, TContext> => {
 
@@ -358,13 +464,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type ConfirmResumeCandidatesMeResumesResumeIdConfirmPostMutationResult = NonNullable<Awaited<ReturnType<typeof confirmResumeCandidatesMeResumesResumeIdConfirmPost>>>
     export type ConfirmResumeCandidatesMeResumesResumeIdConfirmPostMutationBody = ConfirmIn | null | undefined
-    export type ConfirmResumeCandidatesMeResumesResumeIdConfirmPostMutationError = ErrorType<HTTPValidationError>
+    export type ConfirmResumeCandidatesMeResumesResumeIdConfirmPostMutationError = ErrorType<ProblemOut>
     export type ConfirmResumeCandidatesMeResumesResumeIdConfirmPostMutationVariables = {resumeId: string;data?: ConfirmIn | null}
 
     /**
  * @summary Confirm Resume
  */
-export const useConfirmResumeCandidatesMeResumesResumeIdConfirmPost = <TError = ErrorType<HTTPValidationError>,
+export const useConfirmResumeCandidatesMeResumesResumeIdConfirmPost = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmResumeCandidatesMeResumesResumeIdConfirmPost>>, TError,ConfirmResumeCandidatesMeResumesResumeIdConfirmPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof confirmResumeCandidatesMeResumesResumeIdConfirmPost>>,

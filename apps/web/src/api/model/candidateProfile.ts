@@ -5,6 +5,8 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { Category } from './category';
+import type { ClaimedVsConfirmed } from './claimedVsConfirmed';
+import type { ContactsIO } from './contactsIO';
 import type { ExperienceItem } from './experienceItem';
 import type { GradeInfo } from './gradeInfo';
 import type { OwnerFsp } from './ownerFsp';
@@ -29,6 +31,10 @@ export interface CandidateProfile {
   skills?: SkillWithTrust[];
   team_signals?: TeamSignal[];
   claimed_soft?: string[];
+  contacts?: ContactsIO | null;
+  desired_roles?: string[];
+  experience_months?: number | null;
   fsp?: OwnerFsp | null;
   experience?: ExperienceItem[];
+  claimed_vs_confirmed?: ClaimedVsConfirmed[];
 }

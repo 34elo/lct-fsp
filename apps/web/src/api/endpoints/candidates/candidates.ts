@@ -32,6 +32,8 @@ import type {
   HTTPValidationError,
   MyViewsCandidatesMeViewsGet200,
   PreferencesIn,
+  ProblemOut,
+  ProfileIn,
   StoplistIO,
   VisibilityIn
 } from '../../model';
@@ -64,12 +66,34 @@ export type getProfileCandidatesMeProfileGetResponse200 = {
   status: 200
 }
 
+export type getProfileCandidatesMeProfileGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type getProfileCandidatesMeProfileGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type getProfileCandidatesMeProfileGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type getProfileCandidatesMeProfileGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
 export type getProfileCandidatesMeProfileGetResponseSuccess = (getProfileCandidatesMeProfileGetResponse200) & {
   headers: Headers;
 };
-;
+export type getProfileCandidatesMeProfileGetResponseError = (getProfileCandidatesMeProfileGetResponse401ApplicationProblemJson | getProfileCandidatesMeProfileGetResponse401ApplicationJson | getProfileCandidatesMeProfileGetResponse403ApplicationProblemJson | getProfileCandidatesMeProfileGetResponse403ApplicationJson) & {
+  headers: Headers;
+};
 
-export type getProfileCandidatesMeProfileGetResponse = (getProfileCandidatesMeProfileGetResponseSuccess)
+export type getProfileCandidatesMeProfileGetResponse = (getProfileCandidatesMeProfileGetResponseSuccess | getProfileCandidatesMeProfileGetResponseError)
 
 export const getGetProfileCandidatesMeProfileGetUrl = () => {
 
@@ -104,7 +128,7 @@ export const getGetProfileCandidatesMeProfileGetQueryKey = () => {
     }
 
 
-export const getGetProfileCandidatesMeProfileGetQueryOptions = <TData = Awaited<ReturnType<typeof getProfileCandidatesMeProfileGet>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProfileCandidatesMeProfileGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+export const getGetProfileCandidatesMeProfileGetQueryOptions = <TData = Awaited<ReturnType<typeof getProfileCandidatesMeProfileGet>>, TError = ErrorType<ProblemOut>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProfileCandidatesMeProfileGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -123,10 +147,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetProfileCandidatesMeProfileGetQueryResult = NonNullable<Awaited<ReturnType<typeof getProfileCandidatesMeProfileGet>>>
-export type GetProfileCandidatesMeProfileGetQueryError = ErrorType<unknown>
+export type GetProfileCandidatesMeProfileGetQueryError = ErrorType<ProblemOut>
 
 
-export function useGetProfileCandidatesMeProfileGet<TData = Awaited<ReturnType<typeof getProfileCandidatesMeProfileGet>>, TError = ErrorType<unknown>>(
+export function useGetProfileCandidatesMeProfileGet<TData = Awaited<ReturnType<typeof getProfileCandidatesMeProfileGet>>, TError = ErrorType<ProblemOut>>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProfileCandidatesMeProfileGet>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getProfileCandidatesMeProfileGet>>,
@@ -136,7 +160,7 @@ export function useGetProfileCandidatesMeProfileGet<TData = Awaited<ReturnType<t
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetProfileCandidatesMeProfileGet<TData = Awaited<ReturnType<typeof getProfileCandidatesMeProfileGet>>, TError = ErrorType<unknown>>(
+export function useGetProfileCandidatesMeProfileGet<TData = Awaited<ReturnType<typeof getProfileCandidatesMeProfileGet>>, TError = ErrorType<ProblemOut>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProfileCandidatesMeProfileGet>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getProfileCandidatesMeProfileGet>>,
@@ -146,7 +170,7 @@ export function useGetProfileCandidatesMeProfileGet<TData = Awaited<ReturnType<t
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetProfileCandidatesMeProfileGet<TData = Awaited<ReturnType<typeof getProfileCandidatesMeProfileGet>>, TError = ErrorType<unknown>>(
+export function useGetProfileCandidatesMeProfileGet<TData = Awaited<ReturnType<typeof getProfileCandidatesMeProfileGet>>, TError = ErrorType<ProblemOut>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProfileCandidatesMeProfileGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -154,7 +178,7 @@ export function useGetProfileCandidatesMeProfileGet<TData = Awaited<ReturnType<t
  * @summary Get Profile
  */
 
-export function useGetProfileCandidatesMeProfileGet<TData = Awaited<ReturnType<typeof getProfileCandidatesMeProfileGet>>, TError = ErrorType<unknown>>(
+export function useGetProfileCandidatesMeProfileGet<TData = Awaited<ReturnType<typeof getProfileCandidatesMeProfileGet>>, TError = ErrorType<ProblemOut>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProfileCandidatesMeProfileGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -171,9 +195,305 @@ export function useGetProfileCandidatesMeProfileGet<TData = Awaited<ReturnType<t
 
 
 
+export type patchProfileCandidatesMeProfilePatchResponse200 = {
+  data: CandidateProfile
+  status: 200
+}
+
+export type patchProfileCandidatesMeProfilePatchResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type patchProfileCandidatesMeProfilePatchResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type patchProfileCandidatesMeProfilePatchResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type patchProfileCandidatesMeProfilePatchResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type patchProfileCandidatesMeProfilePatchResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type patchProfileCandidatesMeProfilePatchResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type patchProfileCandidatesMeProfilePatchResponseSuccess = (patchProfileCandidatesMeProfilePatchResponse200) & {
+  headers: Headers;
+};
+export type patchProfileCandidatesMeProfilePatchResponseError = (patchProfileCandidatesMeProfilePatchResponse401ApplicationProblemJson | patchProfileCandidatesMeProfilePatchResponse401ApplicationJson | patchProfileCandidatesMeProfilePatchResponse403ApplicationProblemJson | patchProfileCandidatesMeProfilePatchResponse403ApplicationJson | patchProfileCandidatesMeProfilePatchResponse422ApplicationProblemJson | patchProfileCandidatesMeProfilePatchResponse422ApplicationJson) & {
+  headers: Headers;
+};
+
+export type patchProfileCandidatesMeProfilePatchResponse = (patchProfileCandidatesMeProfilePatchResponseSuccess | patchProfileCandidatesMeProfilePatchResponseError)
+
+export const getPatchProfileCandidatesMeProfilePatchUrl = () => {
+
+
+
+
+  return `/candidates/me/profile`
+}
+
+/**
+ * @summary Patch Profile
+ */
+export const patchProfileCandidatesMeProfilePatch = async (profileIn: ProfileIn, options?: Parameters<typeof apiFetch>[1]): Promise<patchProfileCandidatesMeProfilePatchResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<patchProfileCandidatesMeProfilePatchResponse>(getPatchProfileCandidatesMeProfilePatchUrl(),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(profileIn)
+  }
+);}
+
+
+
+
+
+export const getPatchProfileCandidatesMeProfilePatchMutationKey = () => ['patchProfileCandidatesMeProfilePatch'] as const;
+
+export const getPatchProfileCandidatesMeProfilePatchMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchProfileCandidatesMeProfilePatch>>, TError,PatchProfileCandidatesMeProfilePatchMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof patchProfileCandidatesMeProfilePatch>>, TError,PatchProfileCandidatesMeProfilePatchMutationVariables, TContext> => {
+
+const mutationKey = getPatchProfileCandidatesMeProfilePatchMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof patchProfileCandidatesMeProfilePatch>>, PatchProfileCandidatesMeProfilePatchMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  patchProfileCandidatesMeProfilePatch(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PatchProfileCandidatesMeProfilePatchMutationResult = NonNullable<Awaited<ReturnType<typeof patchProfileCandidatesMeProfilePatch>>>
+    export type PatchProfileCandidatesMeProfilePatchMutationBody = ProfileIn
+    export type PatchProfileCandidatesMeProfilePatchMutationError = ErrorType<ProblemOut>
+    export type PatchProfileCandidatesMeProfilePatchMutationVariables = {data: ProfileIn}
+
+    /**
+ * @summary Patch Profile
+ */
+export const usePatchProfileCandidatesMeProfilePatch = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchProfileCandidatesMeProfilePatch>>, TError,PatchProfileCandidatesMeProfilePatchMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof patchProfileCandidatesMeProfilePatch>>,
+        TError,
+        PatchProfileCandidatesMeProfilePatchMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPatchProfileCandidatesMeProfilePatchMutationOptions(options), queryClient);
+    }
+    export type profilePdfCandidatesMeProfilePdfGetResponse200 = {
+  data: Blob
+  status: 200
+}
+
+export type profilePdfCandidatesMeProfilePdfGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type profilePdfCandidatesMeProfilePdfGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type profilePdfCandidatesMeProfilePdfGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type profilePdfCandidatesMeProfilePdfGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type profilePdfCandidatesMeProfilePdfGetResponseSuccess = (profilePdfCandidatesMeProfilePdfGetResponse200) & {
+  headers: Headers;
+};
+export type profilePdfCandidatesMeProfilePdfGetResponseError = (profilePdfCandidatesMeProfilePdfGetResponse401ApplicationProblemJson | profilePdfCandidatesMeProfilePdfGetResponse401ApplicationJson | profilePdfCandidatesMeProfilePdfGetResponse403ApplicationProblemJson | profilePdfCandidatesMeProfilePdfGetResponse403ApplicationJson) & {
+  headers: Headers;
+};
+
+export type profilePdfCandidatesMeProfilePdfGetResponse = (profilePdfCandidatesMeProfilePdfGetResponseSuccess | profilePdfCandidatesMeProfilePdfGetResponseError)
+
+export const getProfilePdfCandidatesMeProfilePdfGetUrl = () => {
+
+
+
+
+  return `/candidates/me/profile.pdf`
+}
+
+/**
+ * PDF-профиль владельца (E20-6): категория, грейд, навыки с доверием, ФСП, тесты.
+ * @summary Profile Pdf
+ */
+export const profilePdfCandidatesMeProfilePdfGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<profilePdfCandidatesMeProfilePdfGetResponse> => {
+
+  return apiFetch<profilePdfCandidatesMeProfilePdfGetResponse>(getProfilePdfCandidatesMeProfilePdfGetUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getProfilePdfCandidatesMeProfilePdfGetQueryKey = () => {
+    return [
+    `/candidates/me/profile.pdf`
+    ] as const;
+    }
+
+
+export const getProfilePdfCandidatesMeProfilePdfGetQueryOptions = <TData = Awaited<ReturnType<typeof profilePdfCandidatesMeProfilePdfGet>>, TError = ErrorType<ProblemOut>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof profilePdfCandidatesMeProfilePdfGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getProfilePdfCandidatesMeProfilePdfGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof profilePdfCandidatesMeProfilePdfGet>>> = ({ signal }) => profilePdfCandidatesMeProfilePdfGet({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof profilePdfCandidatesMeProfilePdfGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ProfilePdfCandidatesMeProfilePdfGetQueryResult = NonNullable<Awaited<ReturnType<typeof profilePdfCandidatesMeProfilePdfGet>>>
+export type ProfilePdfCandidatesMeProfilePdfGetQueryError = ErrorType<ProblemOut>
+
+
+export function useProfilePdfCandidatesMeProfilePdfGet<TData = Awaited<ReturnType<typeof profilePdfCandidatesMeProfilePdfGet>>, TError = ErrorType<ProblemOut>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof profilePdfCandidatesMeProfilePdfGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof profilePdfCandidatesMeProfilePdfGet>>,
+          TError,
+          Awaited<ReturnType<typeof profilePdfCandidatesMeProfilePdfGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useProfilePdfCandidatesMeProfilePdfGet<TData = Awaited<ReturnType<typeof profilePdfCandidatesMeProfilePdfGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof profilePdfCandidatesMeProfilePdfGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof profilePdfCandidatesMeProfilePdfGet>>,
+          TError,
+          Awaited<ReturnType<typeof profilePdfCandidatesMeProfilePdfGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useProfilePdfCandidatesMeProfilePdfGet<TData = Awaited<ReturnType<typeof profilePdfCandidatesMeProfilePdfGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof profilePdfCandidatesMeProfilePdfGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Profile Pdf
+ */
+
+export function useProfilePdfCandidatesMeProfilePdfGet<TData = Awaited<ReturnType<typeof profilePdfCandidatesMeProfilePdfGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof profilePdfCandidatesMeProfilePdfGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getProfilePdfCandidatesMeProfilePdfGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 export type skillEvidenceCandidatesMeSkillsSkillIdEvidenceGetResponse200 = {
   data: EvidenceBrief[]
   status: 200
+}
+
+export type skillEvidenceCandidatesMeSkillsSkillIdEvidenceGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type skillEvidenceCandidatesMeSkillsSkillIdEvidenceGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type skillEvidenceCandidatesMeSkillsSkillIdEvidenceGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type skillEvidenceCandidatesMeSkillsSkillIdEvidenceGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type skillEvidenceCandidatesMeSkillsSkillIdEvidenceGetResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type skillEvidenceCandidatesMeSkillsSkillIdEvidenceGetResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
 }
 
 export type skillEvidenceCandidatesMeSkillsSkillIdEvidenceGetResponse422 = {
@@ -184,7 +504,7 @@ export type skillEvidenceCandidatesMeSkillsSkillIdEvidenceGetResponse422 = {
 export type skillEvidenceCandidatesMeSkillsSkillIdEvidenceGetResponseSuccess = (skillEvidenceCandidatesMeSkillsSkillIdEvidenceGetResponse200) & {
   headers: Headers;
 };
-export type skillEvidenceCandidatesMeSkillsSkillIdEvidenceGetResponseError = (skillEvidenceCandidatesMeSkillsSkillIdEvidenceGetResponse422) & {
+export type skillEvidenceCandidatesMeSkillsSkillIdEvidenceGetResponseError = (skillEvidenceCandidatesMeSkillsSkillIdEvidenceGetResponse401ApplicationProblemJson | skillEvidenceCandidatesMeSkillsSkillIdEvidenceGetResponse401ApplicationJson | skillEvidenceCandidatesMeSkillsSkillIdEvidenceGetResponse403ApplicationProblemJson | skillEvidenceCandidatesMeSkillsSkillIdEvidenceGetResponse403ApplicationJson | skillEvidenceCandidatesMeSkillsSkillIdEvidenceGetResponse404ApplicationProblemJson | skillEvidenceCandidatesMeSkillsSkillIdEvidenceGetResponse404ApplicationJson | skillEvidenceCandidatesMeSkillsSkillIdEvidenceGetResponse422) & {
   headers: Headers;
 };
 
@@ -224,7 +544,7 @@ export const getSkillEvidenceCandidatesMeSkillsSkillIdEvidenceGetQueryKey = (ski
     }
 
 
-export const getSkillEvidenceCandidatesMeSkillsSkillIdEvidenceGetQueryOptions = <TData = Awaited<ReturnType<typeof skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet>>, TError = ErrorType<HTTPValidationError>>(skillId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+export const getSkillEvidenceCandidatesMeSkillsSkillIdEvidenceGetQueryOptions = <TData = Awaited<ReturnType<typeof skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(skillId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -243,10 +563,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type SkillEvidenceCandidatesMeSkillsSkillIdEvidenceGetQueryResult = NonNullable<Awaited<ReturnType<typeof skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet>>>
-export type SkillEvidenceCandidatesMeSkillsSkillIdEvidenceGetQueryError = ErrorType<HTTPValidationError>
+export type SkillEvidenceCandidatesMeSkillsSkillIdEvidenceGetQueryError = ErrorType<ProblemOut | HTTPValidationError>
 
 
-export function useSkillEvidenceCandidatesMeSkillsSkillIdEvidenceGet<TData = Awaited<ReturnType<typeof skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useSkillEvidenceCandidatesMeSkillsSkillIdEvidenceGet<TData = Awaited<ReturnType<typeof skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  skillId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet>>,
@@ -256,7 +576,7 @@ export function useSkillEvidenceCandidatesMeSkillsSkillIdEvidenceGet<TData = Awa
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSkillEvidenceCandidatesMeSkillsSkillIdEvidenceGet<TData = Awaited<ReturnType<typeof skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useSkillEvidenceCandidatesMeSkillsSkillIdEvidenceGet<TData = Awaited<ReturnType<typeof skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  skillId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet>>,
@@ -266,7 +586,7 @@ export function useSkillEvidenceCandidatesMeSkillsSkillIdEvidenceGet<TData = Awa
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSkillEvidenceCandidatesMeSkillsSkillIdEvidenceGet<TData = Awaited<ReturnType<typeof skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useSkillEvidenceCandidatesMeSkillsSkillIdEvidenceGet<TData = Awaited<ReturnType<typeof skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  skillId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -274,7 +594,7 @@ export function useSkillEvidenceCandidatesMeSkillsSkillIdEvidenceGet<TData = Awa
  * @summary Skill Evidence
  */
 
-export function useSkillEvidenceCandidatesMeSkillsSkillIdEvidenceGet<TData = Awaited<ReturnType<typeof skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useSkillEvidenceCandidatesMeSkillsSkillIdEvidenceGet<TData = Awaited<ReturnType<typeof skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  skillId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof skillEvidenceCandidatesMeSkillsSkillIdEvidenceGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -296,15 +616,40 @@ export type patchPreferencesCandidatesMePreferencesPatchResponse200 = {
   status: 200
 }
 
-export type patchPreferencesCandidatesMePreferencesPatchResponse422 = {
-  data: HTTPValidationError
+export type patchPreferencesCandidatesMePreferencesPatchResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type patchPreferencesCandidatesMePreferencesPatchResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type patchPreferencesCandidatesMePreferencesPatchResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type patchPreferencesCandidatesMePreferencesPatchResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type patchPreferencesCandidatesMePreferencesPatchResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type patchPreferencesCandidatesMePreferencesPatchResponse422ApplicationJson = {
+  data: ProblemOut
   status: 422
 }
 
 export type patchPreferencesCandidatesMePreferencesPatchResponseSuccess = (patchPreferencesCandidatesMePreferencesPatchResponse200) & {
   headers: Headers;
 };
-export type patchPreferencesCandidatesMePreferencesPatchResponseError = (patchPreferencesCandidatesMePreferencesPatchResponse422) & {
+export type patchPreferencesCandidatesMePreferencesPatchResponseError = (patchPreferencesCandidatesMePreferencesPatchResponse401ApplicationProblemJson | patchPreferencesCandidatesMePreferencesPatchResponse401ApplicationJson | patchPreferencesCandidatesMePreferencesPatchResponse403ApplicationProblemJson | patchPreferencesCandidatesMePreferencesPatchResponse403ApplicationJson | patchPreferencesCandidatesMePreferencesPatchResponse422ApplicationProblemJson | patchPreferencesCandidatesMePreferencesPatchResponse422ApplicationJson) & {
   headers: Headers;
 };
 
@@ -352,7 +697,7 @@ return apiFetch<patchPreferencesCandidatesMePreferencesPatchResponse>(getPatchPr
 
 export const getPatchPreferencesCandidatesMePreferencesPatchMutationKey = () => ['patchPreferencesCandidatesMePreferencesPatch'] as const;
 
-export const getPatchPreferencesCandidatesMePreferencesPatchMutationOptions = <TError = ErrorType<HTTPValidationError>,
+export const getPatchPreferencesCandidatesMePreferencesPatchMutationOptions = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchPreferencesCandidatesMePreferencesPatch>>, TError,PatchPreferencesCandidatesMePreferencesPatchMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof patchPreferencesCandidatesMePreferencesPatch>>, TError,PatchPreferencesCandidatesMePreferencesPatchMutationVariables, TContext> => {
 
@@ -381,13 +726,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type PatchPreferencesCandidatesMePreferencesPatchMutationResult = NonNullable<Awaited<ReturnType<typeof patchPreferencesCandidatesMePreferencesPatch>>>
     export type PatchPreferencesCandidatesMePreferencesPatchMutationBody = PreferencesIn
-    export type PatchPreferencesCandidatesMePreferencesPatchMutationError = ErrorType<HTTPValidationError>
+    export type PatchPreferencesCandidatesMePreferencesPatchMutationError = ErrorType<ProblemOut>
     export type PatchPreferencesCandidatesMePreferencesPatchMutationVariables = {data: PreferencesIn}
 
     /**
  * @summary Patch Preferences
  */
-export const usePatchPreferencesCandidatesMePreferencesPatch = <TError = ErrorType<HTTPValidationError>,
+export const usePatchPreferencesCandidatesMePreferencesPatch = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchPreferencesCandidatesMePreferencesPatch>>, TError,PatchPreferencesCandidatesMePreferencesPatchMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof patchPreferencesCandidatesMePreferencesPatch>>,
@@ -402,15 +747,40 @@ export const usePatchPreferencesCandidatesMePreferencesPatch = <TError = ErrorTy
   status: 200
 }
 
-export type patchVisibilityCandidatesMeVisibilityPatchResponse422 = {
-  data: HTTPValidationError
+export type patchVisibilityCandidatesMeVisibilityPatchResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type patchVisibilityCandidatesMeVisibilityPatchResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type patchVisibilityCandidatesMeVisibilityPatchResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type patchVisibilityCandidatesMeVisibilityPatchResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type patchVisibilityCandidatesMeVisibilityPatchResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type patchVisibilityCandidatesMeVisibilityPatchResponse422ApplicationJson = {
+  data: ProblemOut
   status: 422
 }
 
 export type patchVisibilityCandidatesMeVisibilityPatchResponseSuccess = (patchVisibilityCandidatesMeVisibilityPatchResponse200) & {
   headers: Headers;
 };
-export type patchVisibilityCandidatesMeVisibilityPatchResponseError = (patchVisibilityCandidatesMeVisibilityPatchResponse422) & {
+export type patchVisibilityCandidatesMeVisibilityPatchResponseError = (patchVisibilityCandidatesMeVisibilityPatchResponse401ApplicationProblemJson | patchVisibilityCandidatesMeVisibilityPatchResponse401ApplicationJson | patchVisibilityCandidatesMeVisibilityPatchResponse403ApplicationProblemJson | patchVisibilityCandidatesMeVisibilityPatchResponse403ApplicationJson | patchVisibilityCandidatesMeVisibilityPatchResponse422ApplicationProblemJson | patchVisibilityCandidatesMeVisibilityPatchResponse422ApplicationJson) & {
   headers: Headers;
 };
 
@@ -458,7 +828,7 @@ return apiFetch<patchVisibilityCandidatesMeVisibilityPatchResponse>(getPatchVisi
 
 export const getPatchVisibilityCandidatesMeVisibilityPatchMutationKey = () => ['patchVisibilityCandidatesMeVisibilityPatch'] as const;
 
-export const getPatchVisibilityCandidatesMeVisibilityPatchMutationOptions = <TError = ErrorType<HTTPValidationError>,
+export const getPatchVisibilityCandidatesMeVisibilityPatchMutationOptions = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchVisibilityCandidatesMeVisibilityPatch>>, TError,PatchVisibilityCandidatesMeVisibilityPatchMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof patchVisibilityCandidatesMeVisibilityPatch>>, TError,PatchVisibilityCandidatesMeVisibilityPatchMutationVariables, TContext> => {
 
@@ -487,13 +857,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type PatchVisibilityCandidatesMeVisibilityPatchMutationResult = NonNullable<Awaited<ReturnType<typeof patchVisibilityCandidatesMeVisibilityPatch>>>
     export type PatchVisibilityCandidatesMeVisibilityPatchMutationBody = VisibilityIn
-    export type PatchVisibilityCandidatesMeVisibilityPatchMutationError = ErrorType<HTTPValidationError>
+    export type PatchVisibilityCandidatesMeVisibilityPatchMutationError = ErrorType<ProblemOut>
     export type PatchVisibilityCandidatesMeVisibilityPatchMutationVariables = {data: VisibilityIn}
 
     /**
  * @summary Patch Visibility
  */
-export const usePatchVisibilityCandidatesMeVisibilityPatch = <TError = ErrorType<HTTPValidationError>,
+export const usePatchVisibilityCandidatesMeVisibilityPatch = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchVisibilityCandidatesMeVisibilityPatch>>, TError,PatchVisibilityCandidatesMeVisibilityPatchMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof patchVisibilityCandidatesMeVisibilityPatch>>,
@@ -508,15 +878,40 @@ export const usePatchVisibilityCandidatesMeVisibilityPatch = <TError = ErrorType
   status: 200
 }
 
-export type putStoplistCandidatesMeStoplistPutResponse422 = {
-  data: HTTPValidationError
+export type putStoplistCandidatesMeStoplistPutResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type putStoplistCandidatesMeStoplistPutResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type putStoplistCandidatesMeStoplistPutResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type putStoplistCandidatesMeStoplistPutResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type putStoplistCandidatesMeStoplistPutResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type putStoplistCandidatesMeStoplistPutResponse422ApplicationJson = {
+  data: ProblemOut
   status: 422
 }
 
 export type putStoplistCandidatesMeStoplistPutResponseSuccess = (putStoplistCandidatesMeStoplistPutResponse200) & {
   headers: Headers;
 };
-export type putStoplistCandidatesMeStoplistPutResponseError = (putStoplistCandidatesMeStoplistPutResponse422) & {
+export type putStoplistCandidatesMeStoplistPutResponseError = (putStoplistCandidatesMeStoplistPutResponse401ApplicationProblemJson | putStoplistCandidatesMeStoplistPutResponse401ApplicationJson | putStoplistCandidatesMeStoplistPutResponse403ApplicationProblemJson | putStoplistCandidatesMeStoplistPutResponse403ApplicationJson | putStoplistCandidatesMeStoplistPutResponse422ApplicationProblemJson | putStoplistCandidatesMeStoplistPutResponse422ApplicationJson) & {
   headers: Headers;
 };
 
@@ -564,7 +959,7 @@ return apiFetch<putStoplistCandidatesMeStoplistPutResponse>(getPutStoplistCandid
 
 export const getPutStoplistCandidatesMeStoplistPutMutationKey = () => ['putStoplistCandidatesMeStoplistPut'] as const;
 
-export const getPutStoplistCandidatesMeStoplistPutMutationOptions = <TError = ErrorType<HTTPValidationError>,
+export const getPutStoplistCandidatesMeStoplistPutMutationOptions = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putStoplistCandidatesMeStoplistPut>>, TError,PutStoplistCandidatesMeStoplistPutMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof putStoplistCandidatesMeStoplistPut>>, TError,PutStoplistCandidatesMeStoplistPutMutationVariables, TContext> => {
 
@@ -593,13 +988,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type PutStoplistCandidatesMeStoplistPutMutationResult = NonNullable<Awaited<ReturnType<typeof putStoplistCandidatesMeStoplistPut>>>
     export type PutStoplistCandidatesMeStoplistPutMutationBody = StoplistIO
-    export type PutStoplistCandidatesMeStoplistPutMutationError = ErrorType<HTTPValidationError>
+    export type PutStoplistCandidatesMeStoplistPutMutationError = ErrorType<ProblemOut>
     export type PutStoplistCandidatesMeStoplistPutMutationVariables = {data: StoplistIO}
 
     /**
  * @summary Put Stoplist
  */
-export const usePutStoplistCandidatesMeStoplistPut = <TError = ErrorType<HTTPValidationError>,
+export const usePutStoplistCandidatesMeStoplistPut = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putStoplistCandidatesMeStoplistPut>>, TError,PutStoplistCandidatesMeStoplistPutMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof putStoplistCandidatesMeStoplistPut>>,
@@ -614,12 +1009,34 @@ export const usePutStoplistCandidatesMeStoplistPut = <TError = ErrorType<HTTPVal
   status: 200
 }
 
+export type myViewsCandidatesMeViewsGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type myViewsCandidatesMeViewsGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type myViewsCandidatesMeViewsGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type myViewsCandidatesMeViewsGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
 export type myViewsCandidatesMeViewsGetResponseSuccess = (myViewsCandidatesMeViewsGetResponse200) & {
   headers: Headers;
 };
-;
+export type myViewsCandidatesMeViewsGetResponseError = (myViewsCandidatesMeViewsGetResponse401ApplicationProblemJson | myViewsCandidatesMeViewsGetResponse401ApplicationJson | myViewsCandidatesMeViewsGetResponse403ApplicationProblemJson | myViewsCandidatesMeViewsGetResponse403ApplicationJson) & {
+  headers: Headers;
+};
 
-export type myViewsCandidatesMeViewsGetResponse = (myViewsCandidatesMeViewsGetResponseSuccess)
+export type myViewsCandidatesMeViewsGetResponse = (myViewsCandidatesMeViewsGetResponseSuccess | myViewsCandidatesMeViewsGetResponseError)
 
 export const getMyViewsCandidatesMeViewsGetUrl = () => {
 
@@ -655,7 +1072,7 @@ export const getMyViewsCandidatesMeViewsGetQueryKey = () => {
     }
 
 
-export const getMyViewsCandidatesMeViewsGetQueryOptions = <TData = Awaited<ReturnType<typeof myViewsCandidatesMeViewsGet>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myViewsCandidatesMeViewsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+export const getMyViewsCandidatesMeViewsGetQueryOptions = <TData = Awaited<ReturnType<typeof myViewsCandidatesMeViewsGet>>, TError = ErrorType<ProblemOut>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myViewsCandidatesMeViewsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -674,10 +1091,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type MyViewsCandidatesMeViewsGetQueryResult = NonNullable<Awaited<ReturnType<typeof myViewsCandidatesMeViewsGet>>>
-export type MyViewsCandidatesMeViewsGetQueryError = ErrorType<unknown>
+export type MyViewsCandidatesMeViewsGetQueryError = ErrorType<ProblemOut>
 
 
-export function useMyViewsCandidatesMeViewsGet<TData = Awaited<ReturnType<typeof myViewsCandidatesMeViewsGet>>, TError = ErrorType<unknown>>(
+export function useMyViewsCandidatesMeViewsGet<TData = Awaited<ReturnType<typeof myViewsCandidatesMeViewsGet>>, TError = ErrorType<ProblemOut>>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof myViewsCandidatesMeViewsGet>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof myViewsCandidatesMeViewsGet>>,
@@ -687,7 +1104,7 @@ export function useMyViewsCandidatesMeViewsGet<TData = Awaited<ReturnType<typeof
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useMyViewsCandidatesMeViewsGet<TData = Awaited<ReturnType<typeof myViewsCandidatesMeViewsGet>>, TError = ErrorType<unknown>>(
+export function useMyViewsCandidatesMeViewsGet<TData = Awaited<ReturnType<typeof myViewsCandidatesMeViewsGet>>, TError = ErrorType<ProblemOut>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myViewsCandidatesMeViewsGet>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof myViewsCandidatesMeViewsGet>>,
@@ -697,7 +1114,7 @@ export function useMyViewsCandidatesMeViewsGet<TData = Awaited<ReturnType<typeof
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useMyViewsCandidatesMeViewsGet<TData = Awaited<ReturnType<typeof myViewsCandidatesMeViewsGet>>, TError = ErrorType<unknown>>(
+export function useMyViewsCandidatesMeViewsGet<TData = Awaited<ReturnType<typeof myViewsCandidatesMeViewsGet>>, TError = ErrorType<ProblemOut>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myViewsCandidatesMeViewsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -705,7 +1122,7 @@ export function useMyViewsCandidatesMeViewsGet<TData = Awaited<ReturnType<typeof
  * @summary My Views
  */
 
-export function useMyViewsCandidatesMeViewsGet<TData = Awaited<ReturnType<typeof myViewsCandidatesMeViewsGet>>, TError = ErrorType<unknown>>(
+export function useMyViewsCandidatesMeViewsGet<TData = Awaited<ReturnType<typeof myViewsCandidatesMeViewsGet>>, TError = ErrorType<ProblemOut>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myViewsCandidatesMeViewsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -727,12 +1144,34 @@ export type getCategoryCandidatesMeCategoryGetResponse200 = {
   status: 200
 }
 
+export type getCategoryCandidatesMeCategoryGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type getCategoryCandidatesMeCategoryGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type getCategoryCandidatesMeCategoryGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type getCategoryCandidatesMeCategoryGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
 export type getCategoryCandidatesMeCategoryGetResponseSuccess = (getCategoryCandidatesMeCategoryGetResponse200) & {
   headers: Headers;
 };
-;
+export type getCategoryCandidatesMeCategoryGetResponseError = (getCategoryCandidatesMeCategoryGetResponse401ApplicationProblemJson | getCategoryCandidatesMeCategoryGetResponse401ApplicationJson | getCategoryCandidatesMeCategoryGetResponse403ApplicationProblemJson | getCategoryCandidatesMeCategoryGetResponse403ApplicationJson) & {
+  headers: Headers;
+};
 
-export type getCategoryCandidatesMeCategoryGetResponse = (getCategoryCandidatesMeCategoryGetResponseSuccess)
+export type getCategoryCandidatesMeCategoryGetResponse = (getCategoryCandidatesMeCategoryGetResponseSuccess | getCategoryCandidatesMeCategoryGetResponseError)
 
 export const getGetCategoryCandidatesMeCategoryGetUrl = () => {
 
@@ -767,7 +1206,7 @@ export const getGetCategoryCandidatesMeCategoryGetQueryKey = () => {
     }
 
 
-export const getGetCategoryCandidatesMeCategoryGetQueryOptions = <TData = Awaited<ReturnType<typeof getCategoryCandidatesMeCategoryGet>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCategoryCandidatesMeCategoryGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+export const getGetCategoryCandidatesMeCategoryGetQueryOptions = <TData = Awaited<ReturnType<typeof getCategoryCandidatesMeCategoryGet>>, TError = ErrorType<ProblemOut>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCategoryCandidatesMeCategoryGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -786,10 +1225,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetCategoryCandidatesMeCategoryGetQueryResult = NonNullable<Awaited<ReturnType<typeof getCategoryCandidatesMeCategoryGet>>>
-export type GetCategoryCandidatesMeCategoryGetQueryError = ErrorType<unknown>
+export type GetCategoryCandidatesMeCategoryGetQueryError = ErrorType<ProblemOut>
 
 
-export function useGetCategoryCandidatesMeCategoryGet<TData = Awaited<ReturnType<typeof getCategoryCandidatesMeCategoryGet>>, TError = ErrorType<unknown>>(
+export function useGetCategoryCandidatesMeCategoryGet<TData = Awaited<ReturnType<typeof getCategoryCandidatesMeCategoryGet>>, TError = ErrorType<ProblemOut>>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCategoryCandidatesMeCategoryGet>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getCategoryCandidatesMeCategoryGet>>,
@@ -799,7 +1238,7 @@ export function useGetCategoryCandidatesMeCategoryGet<TData = Awaited<ReturnType
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetCategoryCandidatesMeCategoryGet<TData = Awaited<ReturnType<typeof getCategoryCandidatesMeCategoryGet>>, TError = ErrorType<unknown>>(
+export function useGetCategoryCandidatesMeCategoryGet<TData = Awaited<ReturnType<typeof getCategoryCandidatesMeCategoryGet>>, TError = ErrorType<ProblemOut>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCategoryCandidatesMeCategoryGet>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getCategoryCandidatesMeCategoryGet>>,
@@ -809,7 +1248,7 @@ export function useGetCategoryCandidatesMeCategoryGet<TData = Awaited<ReturnType
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetCategoryCandidatesMeCategoryGet<TData = Awaited<ReturnType<typeof getCategoryCandidatesMeCategoryGet>>, TError = ErrorType<unknown>>(
+export function useGetCategoryCandidatesMeCategoryGet<TData = Awaited<ReturnType<typeof getCategoryCandidatesMeCategoryGet>>, TError = ErrorType<ProblemOut>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCategoryCandidatesMeCategoryGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -817,7 +1256,7 @@ export function useGetCategoryCandidatesMeCategoryGet<TData = Awaited<ReturnType
  * @summary Get Category
  */
 
-export function useGetCategoryCandidatesMeCategoryGet<TData = Awaited<ReturnType<typeof getCategoryCandidatesMeCategoryGet>>, TError = ErrorType<unknown>>(
+export function useGetCategoryCandidatesMeCategoryGet<TData = Awaited<ReturnType<typeof getCategoryCandidatesMeCategoryGet>>, TError = ErrorType<ProblemOut>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCategoryCandidatesMeCategoryGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -839,15 +1278,40 @@ export type disputeCategoryCandidatesMeCategoryDisputePostResponse201 = {
   status: 201
 }
 
-export type disputeCategoryCandidatesMeCategoryDisputePostResponse422 = {
-  data: HTTPValidationError
+export type disputeCategoryCandidatesMeCategoryDisputePostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type disputeCategoryCandidatesMeCategoryDisputePostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type disputeCategoryCandidatesMeCategoryDisputePostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type disputeCategoryCandidatesMeCategoryDisputePostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type disputeCategoryCandidatesMeCategoryDisputePostResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type disputeCategoryCandidatesMeCategoryDisputePostResponse422ApplicationJson = {
+  data: ProblemOut
   status: 422
 }
 
 export type disputeCategoryCandidatesMeCategoryDisputePostResponseSuccess = (disputeCategoryCandidatesMeCategoryDisputePostResponse201) & {
   headers: Headers;
 };
-export type disputeCategoryCandidatesMeCategoryDisputePostResponseError = (disputeCategoryCandidatesMeCategoryDisputePostResponse422) & {
+export type disputeCategoryCandidatesMeCategoryDisputePostResponseError = (disputeCategoryCandidatesMeCategoryDisputePostResponse401ApplicationProblemJson | disputeCategoryCandidatesMeCategoryDisputePostResponse401ApplicationJson | disputeCategoryCandidatesMeCategoryDisputePostResponse403ApplicationProblemJson | disputeCategoryCandidatesMeCategoryDisputePostResponse403ApplicationJson | disputeCategoryCandidatesMeCategoryDisputePostResponse422ApplicationProblemJson | disputeCategoryCandidatesMeCategoryDisputePostResponse422ApplicationJson) & {
   headers: Headers;
 };
 
@@ -895,7 +1359,7 @@ return apiFetch<disputeCategoryCandidatesMeCategoryDisputePostResponse>(getDispu
 
 export const getDisputeCategoryCandidatesMeCategoryDisputePostMutationKey = () => ['disputeCategoryCandidatesMeCategoryDisputePost'] as const;
 
-export const getDisputeCategoryCandidatesMeCategoryDisputePostMutationOptions = <TError = ErrorType<HTTPValidationError>,
+export const getDisputeCategoryCandidatesMeCategoryDisputePostMutationOptions = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof disputeCategoryCandidatesMeCategoryDisputePost>>, TError,DisputeCategoryCandidatesMeCategoryDisputePostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof disputeCategoryCandidatesMeCategoryDisputePost>>, TError,DisputeCategoryCandidatesMeCategoryDisputePostMutationVariables, TContext> => {
 
@@ -924,13 +1388,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type DisputeCategoryCandidatesMeCategoryDisputePostMutationResult = NonNullable<Awaited<ReturnType<typeof disputeCategoryCandidatesMeCategoryDisputePost>>>
     export type DisputeCategoryCandidatesMeCategoryDisputePostMutationBody = DisputeIn
-    export type DisputeCategoryCandidatesMeCategoryDisputePostMutationError = ErrorType<HTTPValidationError>
+    export type DisputeCategoryCandidatesMeCategoryDisputePostMutationError = ErrorType<ProblemOut>
     export type DisputeCategoryCandidatesMeCategoryDisputePostMutationVariables = {data: DisputeIn}
 
     /**
  * @summary Dispute Category
  */
-export const useDisputeCategoryCandidatesMeCategoryDisputePost = <TError = ErrorType<HTTPValidationError>,
+export const useDisputeCategoryCandidatesMeCategoryDisputePost = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof disputeCategoryCandidatesMeCategoryDisputePost>>, TError,DisputeCategoryCandidatesMeCategoryDisputePostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof disputeCategoryCandidatesMeCategoryDisputePost>>,
