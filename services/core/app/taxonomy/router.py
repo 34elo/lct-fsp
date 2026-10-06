@@ -18,6 +18,7 @@ from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.deps import get_redis, get_session
+from app.openapi_errors import problem_responses
 from app.taxonomy import service
 from app.taxonomy.loader import load_grade_cuts
 
@@ -64,7 +65,7 @@ async def _cached(redis: Redis, key: str, session: AsyncSession, build) -> bytes
     return body
 
 
-@router.get("/taxonomy")
+@router.get("/taxonomy", responses=problem_responses(503))
 async def get_taxonomy(
     request: Request,
     session: AsyncSession = Depends(get_session),
@@ -94,7 +95,11 @@ async def require_ml(request: Request, authorization: str | None = Header(defaul
         raise ProblemError(401, "unauthorized", "Нужен сервисный токен")
 
 
-@router.get("/internal/taxonomy/snapshot", dependencies=[Depends(require_ml)])
+@router.get(
+    "/internal/taxonomy/snapshot",
+    dependencies=[Depends(require_ml)],
+    responses=problem_responses(401, 503),
+)
 async def internal_snapshot(
     session: AsyncSession = Depends(get_session),
     redis: Redis = Depends(get_redis),
@@ -120,7 +125,9 @@ class ProfessionsOut(BaseModel):
     grades: list[GradeCut]
 
 
-@router.get("/taxonomy/professions", response_model=ProfessionsOut)
+@router.get(
+    "/taxonomy/professions", response_model=ProfessionsOut, responses=problem_responses(503)
+)
 async def get_professions(
     request: Request, session: AsyncSession = Depends(get_session)
 ) -> ProfessionsOut:
