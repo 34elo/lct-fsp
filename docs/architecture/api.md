@@ -406,9 +406,13 @@ interface Uplift {
   combo?: { skills: string[]; extra: number; pct: number };
 }
 
-interface Navigator {
-  target: { role: RoleSlug; grade: Grade };
-  next_grade: { points_needed: number; hints: string[] };
+interface Navigator {             // E12-1: GET /candidates/me/navigator (app/matching/navigator.py)
+  target?: { role: RoleSlug; grade: "junior" | "middle" | "senior" };   // следующий грейд теста; нет у senior
+  current_grade?: { profession: string; grade: string; valid_until: string; needs_confirmation: boolean };  // из assessment.get_grades
+  next_grade?: { points_needed: number; hints: string[] };   // v1, candidates.grade_next
+  test?: { profession: string; grade: string; path: string };  // path = /me/assessment?profession=&grade= (blocks.md §4.8)
+  skill_gaps: { skill: string; name: string; weight: number; confidence: number; testable: boolean }[];  // навыки профессии с уверенностью < 0.65, до 8
+  competitions: { id: string; title: string; start_date: string; registration_url?: string; skills: string[] }[];  // ближайшие 120 дней, правило дисциплины закрывает пробел, до 5
   uplift: Uplift["items"];          // топ-3
 }
 

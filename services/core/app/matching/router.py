@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, Query, Request
@@ -18,7 +19,7 @@ from app.deps import get_redis, get_session
 from app.graph.trust import TrustConfig
 from app.identity.deps import require_roles
 from app.identity.models import User
-from app.matching import card, query_parser, search, similar, uplift_service
+from app.matching import card, navigator, query_parser, search, similar, uplift_service
 from app.matching.card import CandidateCardFull
 from app.matching.scoring import MatchConfig
 from app.matching.uplift import UpliftConfig
@@ -281,6 +282,74 @@ class UpliftOut(BaseModel):
     base: int
     items: list[UpliftItem]
     combo: UpliftCombo | None = None
+
+
+class NavTarget(BaseModel):
+    role: str
+    grade: str
+
+
+class NavCurrent(BaseModel):
+    profession: str
+    grade: str
+    valid_until: datetime
+    needs_confirmation: bool
+
+
+class NavNextGrade(BaseModel):
+    points_needed: float
+    hints: list[str]
+
+
+class NavTest(BaseModel):
+    profession: str
+    grade: str
+    path: str  # маршрут блока 1: /me/assessment?profession=&grade=
+
+
+class NavGap(BaseModel):
+    skill: str
+    name: str
+    weight: float
+    confidence: float
+    testable: bool
+
+
+class NavCompetition(BaseModel):
+    id: str
+    title: str
+    start_date: str
+    registration_url: str | None = None
+    skills: list[str]
+
+
+class NavigatorOut(BaseModel):
+    target: NavTarget | None = None
+    current_grade: NavCurrent | None = None
+    next_grade: NavNextGrade | None = None
+    test: NavTest | None = None
+    skill_gaps: list[NavGap]
+    competitions: list[NavCompetition]
+    uplift: list[UpliftItem]
+
+
+@router.get(
+    "/candidates/me/navigator",
+    response_model=NavigatorOut,
+    response_model_exclude_none=True,
+    responses=problem_responses(401, 403),
+)
+async def my_navigator(
+    user: User = Depends(_candidate),
+    session: AsyncSession = Depends(get_session),
+    redis: Redis = Depends(get_redis),
+) -> Any:
+    """Путь к следующему грейду: пробелы по профессии, тест, соревнования ФСП, uplift."""
+    cand = await candidates.get(session, user.id)
+    if cand is None:
+        return {"skill_gaps": [], "competitions": [], "uplift": []}
+    up = await uplift_service.compute(session, redis, cand, _CFG, _TRUST, _UPLIFT)
+    return await navigator.compute(session, cand, up["items"], _UPLIFT)
 
 
 @router.get(
