@@ -57,7 +57,9 @@ def market(c):
     h = _employer(c, "e@x.ru")
     with sqlite3.connect(c.db) as con:
         for role, weights in ROLES.items():
-            con.execute("insert into roles (slug, name) values (?,?)", (role, role.title()))
+            con.execute(
+                "insert into roles (slug, name, is_profession) values (?,?,1)", (role, role.title())
+            )
             for slug, w in weights.items():
                 if slug in c.skills:
                     con.execute(
