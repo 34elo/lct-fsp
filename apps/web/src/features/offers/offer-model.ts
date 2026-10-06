@@ -1,4 +1,7 @@
 /** Чистая логика формы оффера: разбор вилки и проверки. Используют страница и модалка оффера. */
+import type { CircuitStep } from "@fsp/ui";
+
+import type { OfferForCandidate, VacancyBrief } from "@/api/model";
 
 /** «230 000» → 230000; пусто или не число → null. */
 export function parseRub(s: string): number | null {
@@ -76,4 +79,50 @@ export function declineBreakdown(offers: { decline?: { reason: string } | null }
   return [...counts]
     .map(([reason, count]) => ({ reason, count, pct: Math.round((count / total) * 100) }))
     .sort((a, b) => b.count - a.count || a.reason.localeCompare(b.reason));
+}
+
+/**
+ * Оффер глазами кандидата. Сгенерированный `OfferForCandidate` ещё без `title` и `initiator`
+ * и с обязательной вакансией, а API отдаёт `vacancy: null` для приглашения без вакансии (ADR-022).
+ */
+export type CandidateOffer = Omit<OfferForCandidate, "vacancy"> & {
+  vacancy?: VacancyBrief | null;
+  title?: string | null;
+  description?: string | null;
+  contact_method?: "platform" | "email" | "phone" | "telegram" | null;
+  initiator?: "employer" | "candidate";
+};
+
+/** Название для карточки: вакансия, иначе название приглашения. */
+export function offerTitle(o: Pick<CandidateOffer, "title" | "vacancy">): string {
+  return o.vacancy?.title ?? o.title ?? "Приглашение";
+}
+
+/** Оффер ждёт ответа кандидата. */
+export function isAwaiting(status: string): boolean {
+  return status === "sent" || status === "viewed";
+}
+
+export interface PastSummary {
+  total: number;
+  accepted: number;
+  declined: number;
+  expired: number;
+}
+
+/** Сводка «Прошлые офферы: принято … · отклонено … · истёк …». */
+export function pastSummary(past: { status: string }[]): PastSummary {
+  const n = (...s: string[]) => past.filter((o) => s.includes(o.status)).length;
+  return { total: past.length, accepted: n("accepted", "interview", "hired", "not_hired"), declined: n("declined"), expired: n("expired", "withdrawn") };
+}
+
+/** Шаги блока «Что дальше» после принятия. */
+export function nextSteps(status: string): CircuitStep[] {
+  const decided = status === "hired" || status === "not_hired";
+  return [
+    { id: "accepted", label: "Оффер принят", state: "done" },
+    { id: "contacts", label: "Контакты переданы", state: "done" },
+    { id: "interview", label: "Интервью", state: decided ? "done" : "current" },
+    { id: "decision", label: "Решение", state: decided ? "done" : "future" },
+  ];
 }
