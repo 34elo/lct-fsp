@@ -690,6 +690,9 @@ from app.assessment.router import router as assessment_router
 |---|---|---|---|---|---|
 | 2026-10-06 | B1-a | Б1 → Б2 | `claimed_vs_confirmed.declared_grade` теперь заполняется из последнего опроса (`surveys`); сигнатура не менялась | E22-7 | готово |
 | | | | | | |
+| 2026-10-06 | З-1-01 | Б1 → общий | Команда `skills.relations.refresh` в `packages/contracts/commands.py` и подключение ночного `taxonomy.growth.refresh` в scheduler/worker | E16-6 | открыта |
+| 2026-10-06 | З-1-02 | Б1 → Б2 | Публичная функция видимости кандидата в `matching.service` (сейчас правило продублировано в `graph/router.py`) | E16-2 | открыта |
+| 2026-10-06 | З-1-03 | Б1 → инфра | Пакеты `libpango-1.0-0`, `libpangoft2-1.0-0`, `fonts-dejavu-core` в `infra/docker/python.Dockerfile` для PDF-профиля | E20-6 | открыта |
 
 ### 13.2. Блок 2
 
