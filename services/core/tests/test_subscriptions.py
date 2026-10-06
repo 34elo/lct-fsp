@@ -24,8 +24,10 @@ _cand, _employer, _hdr = ts._cand, ts._employer, ts._hdr
 def world(c):
     h = _employer(c, "e@x.ru")
     with sqlite3.connect(c.db) as con:
-        con.execute("insert into roles (slug, name) values ('backend', 'Backend')")
-        con.execute("insert into roles (slug, name) values ('ml', 'ML')")
+        con.execute(
+            "insert into roles (slug, name, is_profession) values ('backend', 'Backend', 1)"
+        )
+        con.execute("insert into roles (slug, name, is_profession) values ('ml', 'ML', 1)")
     c.factory = make_session_factory(make_engine(f"sqlite+aiosqlite:///{c.db}"))
     c.ui = []
     return h
