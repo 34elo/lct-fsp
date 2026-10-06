@@ -1,4 +1,4 @@
-"""E22-4: грейды, кулдауны, история, повышение, доказательства `test`, события (§5, §11)."""
+"""E22-4: грейды, кулдауны, история, приглашение бонусного этапа (ADR-025 п.2), доказательства `test`, события (§5, §11)."""
 
 import uuid
 from datetime import UTC, datetime, timedelta
@@ -128,33 +128,88 @@ async def test_pass_writes_grade_evidence_and_events(api, factory, taxonomy_load
     assert len(await _events(factory, "assessment.attempt.finished")) == 1
 
 
-async def test_upgrade_accept_is_idempotent_and_private(api, factory, taxonomy_loaded, fake_bank):
+async def test_bonus_invites_instead_of_upgrade(api, factory, taxonomy_loaded, fake_bank):
+    """ADR-025 п.2: бонус не меняет грейд, а приглашает на отдельный тест следующего грейда."""
     h = register(api)
     uid = _uid(api, h)
     aid = _start(api, h).json()["id"]
     _run(api, h, aid)
-    assert api.get(f"/assessment/attempts/{aid}", headers=h).json()["upgrade_offer"] == "senior"
+    out = api.get(f"/assessment/attempts/{aid}", headers=h).json()
+    assert out["invited_grade"] == "senior" and out["result"]["grade"] == "middle"
+    expires = datetime.fromisoformat(out["invite_expires_at"])
+    assert (expires - datetime.now(UTC)).days in (29, 30)
+    (fin,) = await _events(factory, "assessment.attempt.finished")
+    f = AttemptFinished.model_validate(fin.payload["payload"])
+    assert (f.grade, f.invited_grade, f.stage) == (M, S, "bonus")
+    async with session_scope(factory) as s:
+        assert (await s.get(Grade, (uid, "backend"))).grade == "middle"
+    assert len(await _events(factory, "candidate.category.changed")) == 1
+
+    # тест по приглашению: без кулдауна смены грейда, повтор возвращает ту же попытку
     assert_foreign_is_404(api, "POST", f"/assessment/attempts/{aid}/upgrade", register(api))
     r = api.post(f"/assessment/attempts/{aid}/upgrade", headers=h)
-    assert r.status_code == 200, r.text
-    assert r.json()["upgrade_accepted"] and r.json()["result"]["grade"] == "senior"
+    assert r.status_code == 201, r.text
+    inv = r.json()
+    assert (inv["declared_grade"], inv["status"], inv["invited_by"]) == ("senior", "active", aid)
     again = api.post(f"/assessment/attempts/{aid}/upgrade", headers=h)
-    assert again.status_code == 200 and again.json()["upgrade_accepted"]
+    assert again.status_code == 201 and again.json()["id"] == inv["id"]
+    src = api.get(f"/assessment/attempts/{aid}", headers=h).json()
+    assert src["invite_attempt_id"] == inv["id"]
+    async with session_scope(factory) as s:
+        assert (await s.get(Grade, (uid, "backend"))).grade == "middle"  # ещё не пройден
+    _run(api, h, inv["id"])
     async with session_scope(factory) as s:
         row = await s.get(Grade, (uid, "backend"))
-        assert row.grade == "senior" and (row.next_change_at - row.confirmed_at).days == 90
-    cats = await _events(factory, "candidate.category.changed")
-    assert len(cats) == 2  # основной этап + принятие, повтор события не плодит
-    last = CategoryChanged.model_validate(cats[-1].payload["payload"])
+        assert (row.grade, str(row.attempt_id)) == ("senior", inv["id"])
+    last = CategoryChanged.model_validate(
+        (await _events(factory, "candidate.category.changed"))[-1].payload["payload"]
+    )
     assert [(c.profession, c.grade) for c in last.categories] == [("backend", S)]
 
 
-async def test_upgrade_without_offer_is_409(api, taxonomy_loaded, fake_bank):
+async def test_invited_failure_keeps_grade_and_retry_open(
+    api, factory, taxonomy_loaded, fake_bank
+):
+    """Провал приглашённого теста не меняет грейд и не закрывает повтор (ADR-025 п.2)."""
     h = register(api)
+    uid = _uid(api, h)
+    aid = _start(api, h).json()["id"]
+    _run(api, h, aid)
+    inv = api.post(f"/assessment/attempts/{aid}/upgrade", headers=h).json()
+    _run(api, h, inv["id"], answer="0")
+    assert api.get(f"/assessment/attempts/{inv['id']}", headers=h).json()["status"] == "failed"
+    async with session_scope(factory) as s:
+        assert (await s.get(Grade, (uid, "backend"))).grade == "middle"
+        cds = await grading.cooldowns(s, uid, "backend", CFG)
+        assert all(c.kind == "change" for c in cds)  # повтора после неудачи нет
+    hist = api.get("/assessment/history", headers=h).json()
+    assert hist["retries"] == []
+
+
+async def test_invite_errors(api, factory, taxonomy_loaded, fake_bank):
+    h = register(api)
+    uid = _uid(api, h)
     aid = _start(api, h, grade="junior").json()["id"]
     _run(api, h, aid, answer="0")
     r = api.post(f"/assessment/attempts/{aid}/upgrade", headers=h)
-    assert (r.status_code, r.json()["code"]) == (409, "no_upgrade_offer")
+    assert (r.status_code, r.json()["code"]) == (409, "no_invite")
+
+    h2 = register(api)
+    uid = _uid(api, h2)
+    aid = _start(api, h2).json()["id"]
+    _run(api, h2, aid)
+    async with session_scope(factory) as s:
+        att = await s.get(Attempt, uuid.UUID(aid))
+        past = (datetime.now(UTC) - timedelta(days=1)).isoformat()
+        att.plan = {**att.plan, "invite_expires_at": past}
+    r = api.post(f"/assessment/attempts/{aid}/upgrade", headers=h2)
+    assert (r.status_code, r.json()["code"]) == (409, "invite_expired")
+    async with session_scope(factory) as s:
+        att = await s.get(Attempt, uuid.UUID(aid))
+        att.plan = {**att.plan, "invite_expires_at": None}
+        (await s.get(Grade, (uid, "backend"))).grade = "senior"
+    r = api.post(f"/assessment/attempts/{aid}/upgrade", headers=h2)
+    assert (r.status_code, r.json()["code"]) == (409, "invite_stale")
 
 
 async def test_failure_keeps_grade_and_sets_retry_cooldown(
