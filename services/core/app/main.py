@@ -34,6 +34,7 @@ from app.matching.router import router as search_router
 from app.offers.router import router as offers_router
 from app.recommendations.router import router as recommendations_router
 from app.resumes.router import router as resumes_router
+from app.taxonomy.admin_router import router as admin_taxonomy_router
 from app.taxonomy.router import router as taxonomy_router
 from app.telegram.router import internal as telegram_internal_router
 from app.telegram.router import router as telegram_router
@@ -90,6 +91,7 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     # >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
     app.include_router(assessment_router)
     app.include_router(admin_families_router)
+    app.include_router(admin_taxonomy_router)
     app.include_router(families_router)
     app.include_router(graph_router)  # /candidates/me/graph раньше {pseudo_id}
     # <<< block1
