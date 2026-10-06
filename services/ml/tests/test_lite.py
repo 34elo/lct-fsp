@@ -16,7 +16,7 @@ def test_rules_parse_keeps_only_quoted_skills():
     )
     assert parsed.skills and all(s.quote and s.slug for s in parsed.skills)
     assert all(s.raw.lower() in s.quote.lower() for s in parsed.skills)
-    assert parsed.parser_version == "resume-rules-v1"
+    assert parsed.parser_version == "resume-rules-v2"
 
 
 async def test_parse_resume_without_llm(monkeypatch):
