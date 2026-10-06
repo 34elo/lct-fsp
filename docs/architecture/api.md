@@ -192,7 +192,7 @@
 | `GET /public/credentials/{id}` | **Open Badge 3.0** (W3C Verifiable Credential, JSON-LD, подпись Ed25519 `eddsa-rdfc-2022`): достижение «Подтверждено ФСП» с навыками ●●●● и фактами-основаниями |
 | `GET /public/credentials/{id}/verify` | Проверка подписи и отзыва (для работодателя вне платформы) |
 | `GET /.well-known/did.json` | Публичный ключ издателя (`did:web:fsp.patissons.tech`) |
-| `POST /track` | Батч событий интерфейса (до 50), см. [metrics.md](metrics.md) |
+| `POST /track` | Батч событий интерфейса, см. [metrics.md](metrics.md). Тело `{events[1..50]{event, ts, session_id?, run_id?, app_version?, props}, batch_id?, access_token?}` (`actor`, `role`, `channel` от клиента не принимаются → `422`). Авторизация необязательна: роль и псевдоним берутся из Bearer-токена, для `sendBeacon` (без заголовков) токен можно передать в теле; без токена событие анонимное. `202 {accepted, rejected, duplicate}`: событие с неизвестным именем, не из источника `web` или с лишним полем в `props` отклоняется (`rejected`), остальные пишутся. Повтор того же `batch_id` за 10 минут не пишет события (`duplicate: true`). 120 запросов в минуту на пользователя или IP, `429` |
 | `GET /public/profiles/{slug}` | Публичный профиль (если кандидат включил) |
 | `GET /athlete/{slug}` | Краулерам (Telegram, VK, Slack по User-Agent) — HTML с OG-тегами, людям — редирект на `dashboard.fsp…/athlete/{slug}` |
 | `GET /taxonomy` | `{version, skills[{slug,name,kind,group,testable}], roles[{slug,name}], disciplines[{slug,name}], grades[], formats[], employment_types[]}` (только `active` навыки). `ETag` `W/"tax-<version>-<хеш статики>"`, `If-None-Match` → 304, `Cache-Control: public, max-age=300` |
@@ -207,6 +207,7 @@
 
 | Метод и путь | Кто вызывает | Назначение |
 |---|---|---|
+| `POST /internal/track` | bot | Батч событий бота: `{events[1..50]{event, ts, session_id?, run_id?, app_version?, props, user_id?, role?}, batch_id?}` → `202 {accepted, rejected, duplicate}`. Канал `tg`, источник `bot` (допустимы только события с этим источником: `uplift_shown`, `uplift_clicked`, `competition_clicked`); `user_id` core превращает в псевдоним `HMAC` сам, без него событие анонимное. Повтор `batch_id` не дублирует |
 | `POST /internal/tg/start` | bot | `{tg_user_id, chat_id, username, start_param?}` → `{user_id, role, missing_consents[], linked: bool}`. Нет аккаунта — создаёт кандидата без email (заготовку), повтор обновляет `chat_id`. `missing_consents` — из `pd_processing`, `telegram_notifications`; `linked` — аккаунт связан с сайтом (есть email). `start_param` обрабатывает бот |
 | `POST /internal/tg/consents` | bot | `{tg_user_id, types[]}` → `204`; неизвестный тип `422 invalid_consent`, неизвестный Telegram `404 telegram_unknown` |
 | `POST /internal/tg/link` | bot | `{tg_user_id, token}` — привязка по deep link → `{user_id, linked}`. Заготовка бота (без email и пароля) вливается в аккаунт сайта: согласия переносятся, заготовка деактивируется. Повтор для того же аккаунта безвреден. Ошибки: `410 link_token_invalid`, `404 telegram_unknown` (не было `/start`), `409 telegram_already_linked` (Telegram привязан к другому аккаунту сайта или у аккаунта уже есть другой Telegram) |
