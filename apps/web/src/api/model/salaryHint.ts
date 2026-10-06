@@ -12,6 +12,9 @@ export interface SalaryHint {
   vs_category_median?: number;
   p_accept: number;
   acceptance_hint: string;
+  suggested_salary_to?: number | null;
+  suggested_p_accept?: number | null;
+  avg_response_hours?: number | null;
   range_too_wide: boolean;
   message: string;
 }

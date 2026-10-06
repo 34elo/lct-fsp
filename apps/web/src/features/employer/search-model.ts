@@ -236,6 +236,7 @@ export function toCardData(card: CandidateCard): CandidateCardData {
     })),
     fsp: fspResults(card),
     expectations,
+    interestedYou: card.interested_you ?? false,
     why: (card.match?.explanation ?? []).slice(0, 4).map((e) => ({ kind: WHY_KIND[e.kind] ?? "warn", text: e.text })),
   };
 }

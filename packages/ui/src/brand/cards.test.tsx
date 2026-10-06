@@ -45,8 +45,8 @@ describe("StatusBadge", () => {
     expect(screen.getByText(OFFER_STATUS_LABEL[s])).toBeInTheDocument();
     expect(container.querySelector("svg")).not.toBeNull();
   });
-  it("покрывает все девять статусов контракта", () => {
-    expect(Object.keys(OFFER_STATUS_LABEL)).toHaveLength(9);
+  it("покрывает все одиннадцать статусов контракта", () => {
+    expect(Object.keys(OFFER_STATUS_LABEL)).toHaveLength(11);
   });
 });
 

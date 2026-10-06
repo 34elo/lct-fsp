@@ -19,6 +19,7 @@ export interface TgOfferOut {
   employment_type: string | null;
   salary_from: number;
   salary_to: number;
+  salary_basis?: string;
   message: string | null;
   match_score: number | null;
   explanation: TgOfferOutExplanationItem[];

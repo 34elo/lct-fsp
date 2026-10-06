@@ -26,6 +26,7 @@ import {
   useAcceptOfferOffersOfferIdAcceptPost,
   useDeclineOfferOffersOfferIdDeclinePost,
   useGetOfferOffersOfferIdGet,
+  useMyInterestsCandidatesMeInterestsGet,
   useMyOffersCandidatesMeOffersGet,
 } from "@/api/endpoints/offers/offers";
 import { DeclineReason } from "@/api/model";
@@ -34,7 +35,8 @@ import { FORMAT_LABEL, percent } from "@/features/employer/text";
 import { GRADE_LABEL } from "@/features/profile/text";
 import { Conversation, invalidateOffers, Panel, Timeline } from "./parts";
 import { isAwaiting, nextSteps, offerTitle, pastSummary, type CandidateOffer } from "./offer-model";
-import { ACTIVE_STATUSES, CAND_TEXT as T, CONTACT_LABEL, daysLeft, dateOnly, DECLINE_LABEL, offerErrorText } from "./text";
+import { ACTIVE_STATUSES, CAND_TEXT as T, CONTACT_LABEL, daysLeft, dateOnly, DECLINE_LABEL, INT_TEXT as IT, offerErrorText } from "./text";
+import { WhyYouBlock, whyYouItems } from "./WhyYou";
 
 function cardData(o: CandidateOffer): OfferCardData {
   const tags = o.vacancy ? o.vacancy.formats.map((f) => FORMAT_LABEL[f] ?? f) : [T.invite];
@@ -83,12 +85,23 @@ export function CandidateOffers() {
   const past = sorted.filter((o) => !ACTIVE_STATUSES.includes(o.status));
   const fresh = all.filter((o) => o.status === "sent").length;
   const ps = pastSummary(past);
+  const interests = useMyInterestsCandidatesMeInterestsGet();
+  const interestCount = interests.data?.status === 200 ? interests.data.data.companies : 0;
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4 md:p-6">
       <header className="flex items-center justify-between gap-3">
         <h1 className="font-mono text-24 font-semibold">{T.title}</h1>
         {fresh > 0 && <span className="rounded-full bg-brand px-2.5 py-0.5 font-mono text-12 font-semibold text-on-brand">{T.newCount(fresh)}</span>}
       </header>
+      {interestCount > 0 && (
+        <Link to="/me/interests" className="flex items-center justify-between gap-3 rounded-xl border border-brand bg-tint-50 p-4 hover:bg-tint-100 focus-visible:outline-2 focus-visible:outline-brand">
+          <span className="grid gap-0.5">
+            <b className="font-mono text-16">{IT.banner(interestCount)}</b>
+            <span className="text-13 text-muted">{IT.bannerHint}</span>
+          </span>
+          <span aria-hidden className="text-brand-fg">›</span>
+        </Link>
+      )}
       {q.isPending && (
         <div role="status" aria-label="Загрузка" className="grid gap-3 md:grid-cols-2">
           <Skeleton className="h-64" />
@@ -133,6 +146,7 @@ export function CandidateOfferDetail() {
   const answerable = !!o && isAwaiting(o.status);
   const accepted = !!o && ["accepted", "interview", "hired", "not_hired"].includes(o.status);
   const why = o ? whyItems(o) : [];
+  const hasWhyYou = !!o && whyYouItems(o.why_you).length > 0;
   const err = accept.error;
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4 md:p-6">
@@ -187,7 +201,12 @@ export function CandidateOfferDetail() {
             </section>
           )}
 
-          {why.length > 0 && (
+          {hasWhyYou && (
+            <Panel title={T.why}>
+              <WhyYouBlock why={o.why_you} reliability={o.company.reliability} />
+            </Panel>
+          )}
+          {!hasWhyYou && why.length > 0 && (
             <Panel title={T.why}>
               <MatchWhy items={why} />
             </Panel>
