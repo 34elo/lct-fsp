@@ -5,19 +5,30 @@
  * OpenAPI spec version: 0.1.0
  */
 import {
-  useMutation
+  useMutation,
+  useQuery
 } from '@tanstack/react-query';
 import type {
+  DataTag,
+  DefinedInitialDataOptions,
+  DefinedUseQueryResult,
   MutationFunction,
   QueryClient,
+  QueryFunction,
+  QueryKey,
+  UndefinedInitialDataOptions,
   UseMutationOptions,
-  UseMutationResult
+  UseMutationResult,
+  UseQueryOptions,
+  UseQueryResult
 } from '@tanstack/react-query';
 
 import type {
+  FeedbackOut,
   FeedbackRequest,
   HTTPValidationError,
-  RecordFeedbackRecsFeedbackPost200
+  ProblemOut,
+  SessionTuning
 } from '../../model';
 
 import { apiFetch } from '../../mutator';
@@ -28,20 +39,70 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 
+const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
+  const result = { queryKey } as T & { queryKey: K };
+  for (const key of Object.keys(query)) {
+    // The explicit queryKey always wins, matching the previous
+    // `{ ...query, queryKey }` spread where it was set last.
+    if (key === 'queryKey') continue;
+    Object.defineProperty(result, key, {
+      enumerable: true,
+      configurable: true,
+      get: () => (query as Record<string, unknown>)[key],
+    });
+  }
+  return result;
+};
+
 export type recordFeedbackRecsFeedbackPostResponse200 = {
-  data: RecordFeedbackRecsFeedbackPost200
+  data: FeedbackOut
   status: 200
 }
 
-export type recordFeedbackRecsFeedbackPostResponse422 = {
-  data: HTTPValidationError
+export type recordFeedbackRecsFeedbackPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type recordFeedbackRecsFeedbackPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type recordFeedbackRecsFeedbackPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type recordFeedbackRecsFeedbackPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type recordFeedbackRecsFeedbackPostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type recordFeedbackRecsFeedbackPostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type recordFeedbackRecsFeedbackPostResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type recordFeedbackRecsFeedbackPostResponse422ApplicationJson = {
+  data: ProblemOut
   status: 422
 }
 
 export type recordFeedbackRecsFeedbackPostResponseSuccess = (recordFeedbackRecsFeedbackPostResponse200) & {
   headers: Headers;
 };
-export type recordFeedbackRecsFeedbackPostResponseError = (recordFeedbackRecsFeedbackPostResponse422) & {
+export type recordFeedbackRecsFeedbackPostResponseError = (recordFeedbackRecsFeedbackPostResponse401ApplicationProblemJson | recordFeedbackRecsFeedbackPostResponse401ApplicationJson | recordFeedbackRecsFeedbackPostResponse403ApplicationProblemJson | recordFeedbackRecsFeedbackPostResponse403ApplicationJson | recordFeedbackRecsFeedbackPostResponse404ApplicationProblemJson | recordFeedbackRecsFeedbackPostResponse404ApplicationJson | recordFeedbackRecsFeedbackPostResponse422ApplicationProblemJson | recordFeedbackRecsFeedbackPostResponse422ApplicationJson) & {
   headers: Headers;
 };
 
@@ -96,7 +157,7 @@ return apiFetch<recordFeedbackRecsFeedbackPostResponse>(getRecordFeedbackRecsFee
 
 export const getRecordFeedbackRecsFeedbackPostMutationKey = () => ['recordFeedbackRecsFeedbackPost'] as const;
 
-export const getRecordFeedbackRecsFeedbackPostMutationOptions = <TError = ErrorType<HTTPValidationError>,
+export const getRecordFeedbackRecsFeedbackPostMutationOptions = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordFeedbackRecsFeedbackPost>>, TError,RecordFeedbackRecsFeedbackPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof recordFeedbackRecsFeedbackPost>>, TError,RecordFeedbackRecsFeedbackPostMutationVariables, TContext> => {
 
@@ -125,13 +186,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type RecordFeedbackRecsFeedbackPostMutationResult = NonNullable<Awaited<ReturnType<typeof recordFeedbackRecsFeedbackPost>>>
     export type RecordFeedbackRecsFeedbackPostMutationBody = FeedbackRequest
-    export type RecordFeedbackRecsFeedbackPostMutationError = ErrorType<HTTPValidationError>
+    export type RecordFeedbackRecsFeedbackPostMutationError = ErrorType<ProblemOut>
     export type RecordFeedbackRecsFeedbackPostMutationVariables = {data: FeedbackRequest}
 
     /**
  * @summary Record Feedback
  */
-export const useRecordFeedbackRecsFeedbackPost = <TError = ErrorType<HTTPValidationError>,
+export const useRecordFeedbackRecsFeedbackPost = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordFeedbackRecsFeedbackPost>>, TError,RecordFeedbackRecsFeedbackPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof recordFeedbackRecsFeedbackPost>>,
@@ -140,4 +201,277 @@ export const useRecordFeedbackRecsFeedbackPost = <TError = ErrorType<HTTPValidat
         TContext
       > => {
       return useMutation(getRecordFeedbackRecsFeedbackPostMutationOptions(options), queryClient);
+    }
+    export type getSessionTuningRecsSessionsSessionIdGetResponse200 = {
+  data: SessionTuning
+  status: 200
+}
+
+export type getSessionTuningRecsSessionsSessionIdGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type getSessionTuningRecsSessionsSessionIdGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type getSessionTuningRecsSessionsSessionIdGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type getSessionTuningRecsSessionsSessionIdGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type getSessionTuningRecsSessionsSessionIdGetResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type getSessionTuningRecsSessionsSessionIdGetResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type getSessionTuningRecsSessionsSessionIdGetResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type getSessionTuningRecsSessionsSessionIdGetResponseSuccess = (getSessionTuningRecsSessionsSessionIdGetResponse200) & {
+  headers: Headers;
+};
+export type getSessionTuningRecsSessionsSessionIdGetResponseError = (getSessionTuningRecsSessionsSessionIdGetResponse401ApplicationProblemJson | getSessionTuningRecsSessionsSessionIdGetResponse401ApplicationJson | getSessionTuningRecsSessionsSessionIdGetResponse403ApplicationProblemJson | getSessionTuningRecsSessionsSessionIdGetResponse403ApplicationJson | getSessionTuningRecsSessionsSessionIdGetResponse404ApplicationProblemJson | getSessionTuningRecsSessionsSessionIdGetResponse404ApplicationJson | getSessionTuningRecsSessionsSessionIdGetResponse422) & {
+  headers: Headers;
+};
+
+export type getSessionTuningRecsSessionsSessionIdGetResponse = (getSessionTuningRecsSessionsSessionIdGetResponseSuccess | getSessionTuningRecsSessionsSessionIdGetResponseError)
+
+export const getGetSessionTuningRecsSessionsSessionIdGetUrl = (sessionId: string,) => {
+
+
+
+
+  return `/recs/sessions/${sessionId}`
+}
+
+/**
+ * Учтённые подстройки сессии: веса признаков, чипсы «Учли: …», подсказки фильтров.
+ * @summary Get Session Tuning
+ */
+export const getSessionTuningRecsSessionsSessionIdGet = async (sessionId: string, options?: Parameters<typeof apiFetch>[1]): Promise<getSessionTuningRecsSessionsSessionIdGetResponse> => {
+
+  return apiFetch<getSessionTuningRecsSessionsSessionIdGetResponse>(getGetSessionTuningRecsSessionsSessionIdGetUrl(sessionId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSessionTuningRecsSessionsSessionIdGetQueryKey = (sessionId: string,) => {
+    return [
+    `/recs/sessions/${sessionId}`
+    ] as const;
+    }
+
+
+export const getGetSessionTuningRecsSessionsSessionIdGetQueryOptions = <TData = Awaited<ReturnType<typeof getSessionTuningRecsSessionsSessionIdGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(sessionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSessionTuningRecsSessionsSessionIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSessionTuningRecsSessionsSessionIdGetQueryKey(sessionId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSessionTuningRecsSessionsSessionIdGet>>> = ({ signal }) => getSessionTuningRecsSessionsSessionIdGet(sessionId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: sessionId !== null && sessionId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSessionTuningRecsSessionsSessionIdGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetSessionTuningRecsSessionsSessionIdGetQueryResult = NonNullable<Awaited<ReturnType<typeof getSessionTuningRecsSessionsSessionIdGet>>>
+export type GetSessionTuningRecsSessionsSessionIdGetQueryError = ErrorType<ProblemOut | HTTPValidationError>
+
+
+export function useGetSessionTuningRecsSessionsSessionIdGet<TData = Awaited<ReturnType<typeof getSessionTuningRecsSessionsSessionIdGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ sessionId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSessionTuningRecsSessionsSessionIdGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSessionTuningRecsSessionsSessionIdGet>>,
+          TError,
+          Awaited<ReturnType<typeof getSessionTuningRecsSessionsSessionIdGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSessionTuningRecsSessionsSessionIdGet<TData = Awaited<ReturnType<typeof getSessionTuningRecsSessionsSessionIdGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ sessionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSessionTuningRecsSessionsSessionIdGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSessionTuningRecsSessionsSessionIdGet>>,
+          TError,
+          Awaited<ReturnType<typeof getSessionTuningRecsSessionsSessionIdGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSessionTuningRecsSessionsSessionIdGet<TData = Awaited<ReturnType<typeof getSessionTuningRecsSessionsSessionIdGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ sessionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSessionTuningRecsSessionsSessionIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Session Tuning
+ */
+
+export function useGetSessionTuningRecsSessionsSessionIdGet<TData = Awaited<ReturnType<typeof getSessionTuningRecsSessionsSessionIdGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ sessionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSessionTuningRecsSessionsSessionIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetSessionTuningRecsSessionsSessionIdGetQueryOptions(sessionId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type resetSessionTuningRecsSessionsSessionIdDeleteResponse204 = {
+  data: void
+  status: 204
+}
+
+export type resetSessionTuningRecsSessionsSessionIdDeleteResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type resetSessionTuningRecsSessionsSessionIdDeleteResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type resetSessionTuningRecsSessionsSessionIdDeleteResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type resetSessionTuningRecsSessionsSessionIdDeleteResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type resetSessionTuningRecsSessionsSessionIdDeleteResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type resetSessionTuningRecsSessionsSessionIdDeleteResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type resetSessionTuningRecsSessionsSessionIdDeleteResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type resetSessionTuningRecsSessionsSessionIdDeleteResponseSuccess = (resetSessionTuningRecsSessionsSessionIdDeleteResponse204) & {
+  headers: Headers;
+};
+export type resetSessionTuningRecsSessionsSessionIdDeleteResponseError = (resetSessionTuningRecsSessionsSessionIdDeleteResponse401ApplicationProblemJson | resetSessionTuningRecsSessionsSessionIdDeleteResponse401ApplicationJson | resetSessionTuningRecsSessionsSessionIdDeleteResponse403ApplicationProblemJson | resetSessionTuningRecsSessionsSessionIdDeleteResponse403ApplicationJson | resetSessionTuningRecsSessionsSessionIdDeleteResponse404ApplicationProblemJson | resetSessionTuningRecsSessionsSessionIdDeleteResponse404ApplicationJson | resetSessionTuningRecsSessionsSessionIdDeleteResponse422) & {
+  headers: Headers;
+};
+
+export type resetSessionTuningRecsSessionsSessionIdDeleteResponse = (resetSessionTuningRecsSessionsSessionIdDeleteResponseSuccess | resetSessionTuningRecsSessionsSessionIdDeleteResponseError)
+
+export const getResetSessionTuningRecsSessionsSessionIdDeleteUrl = (sessionId: string,) => {
+
+
+
+
+  return `/recs/sessions/${sessionId}`
+}
+
+/**
+ * Сброс подстройки (крестик на чипсе): реакции до сброса больше не учитываются.
+ * @summary Reset Session Tuning
+ */
+export const resetSessionTuningRecsSessionsSessionIdDelete = async (sessionId: string, options?: Parameters<typeof apiFetch>[1]): Promise<resetSessionTuningRecsSessionsSessionIdDeleteResponse> => {
+
+  return apiFetch<resetSessionTuningRecsSessionsSessionIdDeleteResponse>(getResetSessionTuningRecsSessionsSessionIdDeleteUrl(sessionId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getResetSessionTuningRecsSessionsSessionIdDeleteMutationKey = () => ['resetSessionTuningRecsSessionsSessionIdDelete'] as const;
+
+export const getResetSessionTuningRecsSessionsSessionIdDeleteMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resetSessionTuningRecsSessionsSessionIdDelete>>, TError,ResetSessionTuningRecsSessionsSessionIdDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof resetSessionTuningRecsSessionsSessionIdDelete>>, TError,ResetSessionTuningRecsSessionsSessionIdDeleteMutationVariables, TContext> => {
+
+const mutationKey = getResetSessionTuningRecsSessionsSessionIdDeleteMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof resetSessionTuningRecsSessionsSessionIdDelete>>, ResetSessionTuningRecsSessionsSessionIdDeleteMutationVariables> = (props) => {
+          const {sessionId} = props ?? {};
+
+          return  resetSessionTuningRecsSessionsSessionIdDelete(sessionId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ResetSessionTuningRecsSessionsSessionIdDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof resetSessionTuningRecsSessionsSessionIdDelete>>>
+
+    export type ResetSessionTuningRecsSessionsSessionIdDeleteMutationError = ErrorType<ProblemOut | HTTPValidationError>
+    export type ResetSessionTuningRecsSessionsSessionIdDeleteMutationVariables = {sessionId: string}
+
+    /**
+ * @summary Reset Session Tuning
+ */
+export const useResetSessionTuningRecsSessionsSessionIdDelete = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resetSessionTuningRecsSessionsSessionIdDelete>>, TError,ResetSessionTuningRecsSessionsSessionIdDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof resetSessionTuningRecsSessionsSessionIdDelete>>,
+        TError,
+        ResetSessionTuningRecsSessionsSessionIdDeleteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getResetSessionTuningRecsSessionsSessionIdDeleteMutationOptions(options), queryClient);
     }

@@ -5,10 +5,12 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { CandidateCard } from './candidateCard';
+import type { SearchTuning } from './searchTuning';
 
 export interface SearchPage {
   items: CandidateCard[];
   next_cursor: string | null;
   total: number;
   session_id: string;
+  tuning?: SearchTuning | null;
 }

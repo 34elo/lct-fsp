@@ -2,6 +2,8 @@
 
 Цепочка (messaging.md §3): запись в `notifications` + `ui.user.<id>` + команда `notify.telegram`.
 Идемпотентность — inbox; команда боту идёт через outbox в той же транзакции.
+
+E9-6: обработчики для FSP и регулярных заданий; E25-1 добавит регулярные задания.
 """
 
 from __future__ import annotations
@@ -11,8 +13,10 @@ from collections.abc import Mapping
 
 import structlog
 from fsp_contracts import Envelope
+from fsp_contracts.assessment import RegularTaskPublished
 from fsp_contracts.enums import OfferStatus
-from fsp_contracts.events import OfferEvent, SkillsProfileUpdated
+from fsp_contracts.events import FspResultsImported, OfferEvent, SkillsProfileUpdated
+from fsp_contracts.hiring import OfferInitiator
 from fsp_contracts.notify import TgButton, TgTemplate
 from fsp_contracts.ui import (
     OfferCreated,
@@ -81,13 +85,14 @@ def _updated(user_id: uuid.UUID, ev: OfferEvent, awaiting: str | None) -> UiMess
 async def offer_card_data(session: AsyncSession, offer: Offer) -> dict:
     """Поля шаблона `offer_new` (и карточки оффера в боте): без ПДн, только вилка и вакансия."""
     company = await companies.get_company(session, offer.company_id)
-    vacancy = await vacancies.get(session, offer.vacancy_id)
+    vacancy = await vacancies.get(session, offer.vacancy_id) if offer.vacancy_id else None
     snap = offer.match_snapshot or {}
     return {
         "offer_id": str(offer.id),
         "company_name": company.name if company else None,
         "company_responsibility": company.responsibility_score if company else None,
-        "vacancy_title": vacancy.title if vacancy else None,
+        # приглашение без вакансии (ADR-022) показывает своё название
+        "vacancy_title": vacancy.title if vacancy else offer.title,
         "formats": list(vacancy.formats) if vacancy else [],
         "employment_type": vacancy.employment_type if vacancy else None,
         "salary_from": offer.salary_from,
@@ -134,7 +139,11 @@ async def _to_company(
 ) -> None:
     """Всем участникам компании. Без ПДн кандидата: id оффера, вакансия, статус."""
     vacancy = await vacancies.get(session, ev.vacancy_id) if ev.vacancy_id else None
-    vacancy_title = vacancy.title if vacancy else None
+    if vacancy is not None:
+        vacancy_title = vacancy.title
+    else:  # приглашение без вакансии (ADR-022): его название
+        offer = await offers.get(session, ev.offer_id)
+        vacancy_title = offer.title if offer else None
     data = {
         "offer_id": str(ev.offer_id),
         "status": ev.status.value,
@@ -157,7 +166,7 @@ async def _to_company(
 
 def _awaiting(ev: OfferEvent) -> str | None:
     if ev.status in (S.sent, S.viewed):
-        return "candidate"
+        return "company" if ev.initiator == OfferInitiator.candidate else "candidate"
     return None
 
 
@@ -189,8 +198,14 @@ async def _offer_event(session: AsyncSession, envelope: Envelope, out: list[UiMe
     ev = OfferEvent.model_validate(envelope.payload)
     st = ev.status
     match envelope.type:
+        case "offer.sent" if ev.initiator == OfferInitiator.candidate:
+            await _to_company(
+                session, ev, out, type="application_new", title="Новый отклик на вакансию"
+            )
         case "offer.sent":
             await _offer_sent(session, ev, out)
+        case "offer.viewed" if ev.initiator == OfferInitiator.candidate:
+            out.append(_updated(ev.candidate_id, ev, "company"))
         case "offer.viewed":
             out.extend(_updated(u, ev, "candidate") for u in await _members(session, ev))
         case "offer.accepted":
@@ -215,6 +230,10 @@ async def _offer_event(session: AsyncSession, envelope: Envelope, out: list[UiMe
             )
             await _to_candidate(
                 session, ev, out, type="offer_expired", title=_CLOSED_BY_SYSTEM_TEXT[S.expired]
+            )
+        case "offer.withdrawn" if ev.actor == "candidate":  # кандидат отозвал свой отклик
+            await _to_company(
+                session, ev, out, type="application_withdrawn", title="Кандидат отозвал отклик"
             )
         case "offer.withdrawn":
             await _to_candidate(
@@ -295,3 +314,34 @@ def register(
             tg=TgTemplate.profile_updated, tg_data={"diff": diff},
         )  # fmt: skip
         await service.push(ui_publish, out)
+
+    # >>> block2 (E9-6)
+    @consumers["core.handlers"].on("fsp.results.imported")
+    @idempotent(session_factory, "notifications.fsp_imported")
+    async def on_fsp_imported(envelope: Envelope, session: AsyncSession) -> None:
+        ev = FspResultsImported.model_validate(envelope.payload)
+        out: list[UiMessage] = []
+        await service.notify(
+            session, ev.candidate_id, type="fsp_imported", title="Новый результат ФСП",
+            payload={}, out=out,
+            tg=TgTemplate.fsp_imported, tg_data={"count": len(ev.results)},
+        )  # fmt: skip
+        await service.push(ui_publish, out)
+
+    @consumers["core.handlers"].on("regular_task.published")
+    @idempotent(session_factory, "notifications.regular_task")
+    async def on_regular_task(envelope: Envelope, session: AsyncSession) -> None:
+        ev = RegularTaskPublished.model_validate(envelope.payload)
+        out: list[UiMessage] = []
+        # Отправляем уведомления каждому кандидату в списке
+        for candidate_id in ev.candidate_ids:
+            await service.notify(
+                session, candidate_id, type="regular_task_published",
+                title=f"Новое задание по {ev.profession}",
+                payload={"family_id": str(ev.family_id), "profession": ev.profession}, out=out,
+                tg=TgTemplate.regular_task_published,
+                tg_data={"profession": ev.profession},
+            )  # fmt: skip
+        await service.push(ui_publish, out)
+
+    # <<< block2

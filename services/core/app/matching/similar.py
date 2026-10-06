@@ -20,6 +20,7 @@ from app.graph import service as graph
 from app.graph.trust import TrustConfig
 from app.matching import search
 from app.matching.scoring import cosine
+from app.matching.service import only_published
 from app.taxonomy import service as taxonomy
 
 W_SKILLS = 0.7
@@ -72,7 +73,9 @@ async def find_similar(
     day = today or datetime.now(UTC).date()
     pool = [
         c
-        for c in await candidates.search_pool(session, company_id=company_id)
+        for c in await only_published(
+            session, await candidates.search_pool(session, company_id=company_id)
+        )
         if c.user_id != base.user_id
     ]
     if not pool:

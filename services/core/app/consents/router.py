@@ -11,6 +11,7 @@ from app.consents import service
 from app.deps import get_session
 from app.identity.deps import get_current_user
 from app.identity.models import User
+from app.openapi_errors import problem_responses
 
 router = APIRouter(tags=["consents"])
 
@@ -52,14 +53,14 @@ async def list_out(session: AsyncSession, user: User) -> list[ConsentOut]:
     return out
 
 
-@router.get("/me/consents", response_model=list[ConsentOut])
+@router.get("/me/consents", response_model=list[ConsentOut], responses=problem_responses(401))
 async def get_consents(
     user: User = Depends(get_current_user), session: AsyncSession = Depends(get_session)
 ):
     return await list_out(session, user)
 
 
-@router.put("/me/consents", response_model=list[ConsentOut])
+@router.put("/me/consents", response_model=list[ConsentOut], responses=problem_responses(401, 422))
 async def put_consents(
     body: ConsentsIn,
     user: User = Depends(get_current_user),

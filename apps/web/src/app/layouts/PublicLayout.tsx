@@ -1,4 +1,4 @@
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet, useLocation } from "react-router-dom";
 
 import { useAuth } from "@/shared/lib/auth";
 import { Logo } from "@/shared/brand";
@@ -6,6 +6,8 @@ import { ThemeToggle } from "./Shell";
 
 export default function PublicLayout() {
   const { status } = useAuth();
+  // Лендинг рисует свою шапку и на всю ширину (E19-14).
+  if (useLocation().pathname === "/") return <Outlet />;
   return (
     <div className="min-h-dvh bg-page text-ink">
       <header className="flex items-center gap-3 border-b border-hairline bg-card px-4 py-3">

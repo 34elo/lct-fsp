@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
@@ -13,12 +14,20 @@ from app.companies.models import Company
 from app.deps import get_session
 from app.identity.deps import require_roles
 from app.identity.models import User
+from app.openapi_errors import problem_responses
 
 router = APIRouter(tags=["companies"])
 admin_router = APIRouter(prefix="/admin/companies", tags=["admin"])
 
 _employer = require_roles("employer")
 _admin = require_roles("fsp_admin")
+
+
+class Contacts(BaseModel):
+    name: str | None = None
+    email: str | None = None
+    phone: str | None = None
+    telegram: str | None = None
 
 
 class CompanyOut(BaseModel):
@@ -28,6 +37,8 @@ class CompanyOut(BaseModel):
     site: str | None
     description: str | None
     logo_key: str | None
+    contacts: dict[str, Any] | None
+    direction: str | None
     status: CompanyStatus
     responsibility_score: float | None
     created_at: datetime
@@ -41,6 +52,8 @@ class CompanyIn(BaseModel):
     inn: str | None = Field(default=None, pattern=r"^(\d{10}|\d{12})$")
     site: str | None = Field(default=None, max_length=300)
     description: str | None = Field(default=None, max_length=5000)
+    contacts: Contacts | None = Field(default=None)
+    direction: str | None = Field(default=None, max_length=1000)
 
 
 class CompanyPatch(BaseModel):
@@ -50,6 +63,8 @@ class CompanyPatch(BaseModel):
     inn: str | None = Field(default=None, pattern=r"^(\d{10}|\d{12})$")
     site: str | None = Field(default=None, max_length=300)
     description: str | None = Field(default=None, max_length=5000)
+    contacts: Contacts | None = Field(default=None)
+    direction: str | None = Field(default=None, max_length=1000)
 
 
 class MemberIn(BaseModel):
@@ -72,6 +87,8 @@ def company_out(c: Company, my_role: str | None = None) -> CompanyOut:
         site=c.site,
         description=c.description,
         logo_key=c.logo_key,
+        contacts=c.contacts,
+        direction=c.direction,
         status=CompanyStatus(c.status),
         responsibility_score=c.responsibility_score,
         created_at=c.created_at,
@@ -79,7 +96,12 @@ def company_out(c: Company, my_role: str | None = None) -> CompanyOut:
     )
 
 
-@router.post("/companies", response_model=CompanyOut, status_code=201)
+@router.post(
+    "/companies",
+    response_model=CompanyOut,
+    status_code=201,
+    responses=problem_responses(401, 403, 422),
+)
 async def register_company(
     body: CompanyIn,
     user: User = Depends(_employer),
@@ -89,7 +111,7 @@ async def register_company(
     return company_out(company, CompanyMemberRole.admin.value)
 
 
-@router.get("/companies/me", response_model=CompanyOut)
+@router.get("/companies/me", response_model=CompanyOut, responses=problem_responses(401, 403))
 async def get_my_company(
     user: User = Depends(_employer), session: AsyncSession = Depends(get_session)
 ):
@@ -97,7 +119,9 @@ async def get_my_company(
     return company_out(company, member.role)
 
 
-@router.patch("/companies/me", response_model=CompanyOut)
+@router.patch(
+    "/companies/me", response_model=CompanyOut, responses=problem_responses(401, 403, 422)
+)
 async def patch_my_company(
     body: CompanyPatch,
     user: User = Depends(_employer),
@@ -111,7 +135,12 @@ async def patch_my_company(
     return company_out(company, member.role)
 
 
-@router.post("/companies/me/members", response_model=MemberOut, status_code=201)
+@router.post(
+    "/companies/me/members",
+    response_model=MemberOut,
+    status_code=201,
+    responses=problem_responses(401, 403, 422),
+)
 async def invite_member(
     body: MemberIn,
     user: User = Depends(_employer),
@@ -122,7 +151,7 @@ async def invite_member(
     return MemberOut(user_id=member.user_id, role=CompanyMemberRole(member.role))
 
 
-@admin_router.get("", response_model=list[CompanyOut])
+@admin_router.get("", response_model=list[CompanyOut], responses=problem_responses(401, 403))
 async def admin_list(
     status: CompanyStatus | None = None,
     _: User = Depends(_admin),
@@ -132,7 +161,9 @@ async def admin_list(
     return [company_out(c) for c in items]
 
 
-@admin_router.post("/{company_id}/verify", response_model=CompanyOut)
+@admin_router.post(
+    "/{company_id}/verify", response_model=CompanyOut, responses=problem_responses(401, 403, 404)
+)
 async def admin_verify(
     company_id: UUID,
     _: User = Depends(_admin),
@@ -141,7 +172,9 @@ async def admin_verify(
     return company_out(await service.verify(session, company_id))
 
 
-@admin_router.post("/{company_id}/reject", response_model=CompanyOut)
+@admin_router.post(
+    "/{company_id}/reject", response_model=CompanyOut, responses=problem_responses(401, 403, 404)
+)
 async def admin_reject(
     company_id: UUID,
     _: User = Depends(_admin),

@@ -87,3 +87,9 @@ class ConnectorClient:
         return await self._call(
             "POST", "/internal/links/verify", json={"candidate_id": str(candidate_id), "code": code}
         )
+
+    async def demo_create_result(self) -> dict[str, Any]:
+        return await self._call("POST", "/internal/demo/fsp-result")
+
+    async def demo_reset(self) -> dict[str, Any]:
+        return await self._call("POST", "/internal/demo/reset")

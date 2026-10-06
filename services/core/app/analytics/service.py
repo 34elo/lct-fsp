@@ -17,6 +17,7 @@ from fsp_contracts.analytics import AnalyticsEvent, Source, validate_event
 from sqlalchemy import delete, insert, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.analytics import runs as live_runs
 from app.analytics.models import AnalyticsEventRow
 
 log = structlog.get_logger()
@@ -65,13 +66,15 @@ async def record(
         try:
             ev = validate_event(ev, source)
         except ValueError as exc:  # UnknownAnalyticsEvent и pydantic.ValidationError
-            log.warning("analytics_event_rejected", event=ev.event, error=type(exc).__name__)
+            log.warning("analytics_event_rejected", name=ev.event, error=type(exc).__name__)
             continue
         rows.append(ev.model_dump(mode="python"))
     for ts in {r["ts"] for r in rows}:
         await ensure_partition(session, ts)
     if rows:
+        runs = await live_runs.attach(session, rows)  # метка живого прогона до записи
         await session.execute(insert(AnalyticsEventRow), rows)
+        live_runs.apply(runs, rows)  # автозасчёт заданий
     return len(rows)
 
 

@@ -14,12 +14,14 @@ from typing import TYPE_CHECKING
 
 from fsp_contracts import new_envelope
 from fsp_contracts.commands import CoreMatchCandidate, CoreMatchVacancy
+from fsp_contracts.enums import ConsentType
 from fsp_contracts.events import MatchesReady
 from fsp_platform.outbox import add_to_outbox
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.candidates import service as candidates
+from app.consents import service as consents
 from app.graph import service as graph
 from app.graph.trust import EvidenceView, TrustConfig, effective_strength
 from app.matching.models import Match
@@ -38,6 +40,14 @@ from app.vacancies import service as vacancies
 
 if TYPE_CHECKING:
     from app.candidates.service import Candidate
+
+
+async def only_published(session, cands: list[Candidate]) -> list[Candidate]:
+    """Видимость для работодателя (blocks.md §4.5): только с действующим `profile_publication`."""
+    allowed = await consents.users_with_consent(
+        session, [c.user_id for c in cands], ConsentType.profile_publication
+    )
+    return [c for c in cands if c.user_id in allowed]
 
 
 async def load_vacancy(
@@ -99,11 +109,14 @@ async def select_candidates(
         "formats": list(v.formats),
         "company_id": v.company_id,
     }
-    found = await candidates.eligible(session, ids, **attrs)
+    found = await only_published(session, await candidates.eligible(session, ids, **attrs))
     semantic: list[Candidate] = []
     if v.embedding:
-        semantic = await candidates.nearest_by_embedding(
-            session, list(v.embedding), limit=cfg.semantic_limit, **attrs
+        semantic = await only_published(
+            session,
+            await candidates.nearest_by_embedding(
+                session, list(v.embedding), limit=cfg.semantic_limit, **attrs
+            ),
         )
     by_graph = {c.user_id for c in found}
     only = [c for c in semantic if c.user_id not in by_graph]

@@ -12,6 +12,12 @@ from fsp_platform.storage import ObjectStorage
 from redis.asyncio import Redis
 from sqlalchemy import text
 
+from app.analytics.dashboard_router import router as analytics_dashboard_router
+from app.analytics.router import internal as analytics_internal_router
+from app.analytics.router import router as analytics_router
+from app.analytics.runs_router import admin as live_runs_admin_router
+from app.analytics.runs_router import public as live_runs_public_router
+
 # >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
 from app.assessment.router import router as assessment_router
 
@@ -28,6 +34,7 @@ from app.events_stream import router as events_router
 from app.fsp.router import router as fsp_router
 from app.identity.router import router as identity_router
 from app.matching.router import router as search_router
+from app.offers.router import admin_router as admin_complaints_router
 from app.offers.router import router as offers_router
 from app.recommendations.router import router as recommendations_router
 from app.resumes.router import router as resumes_router
@@ -84,10 +91,16 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(search_router)
     app.include_router(recommendations_router)
     app.include_router(offers_router)
+    app.include_router(admin_complaints_router)
     # >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
     app.include_router(assessment_router)
     # <<< block1
     # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
+    app.include_router(analytics_router)
+    app.include_router(analytics_internal_router)
+    app.include_router(live_runs_admin_router)
+    app.include_router(live_runs_public_router)
+    app.include_router(analytics_dashboard_router)
     # <<< block2
 
     @app.get("/readyz", include_in_schema=False)

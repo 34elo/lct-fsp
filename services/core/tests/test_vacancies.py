@@ -200,3 +200,23 @@ def test_delete_draft(c):
     assert c.get(f"/vacancies/{vid}", headers=h).status_code == 404
     with sqlite3.connect(c.db) as con:
         assert con.execute("select count(*) from vacancy_skills").fetchone() == (0,)
+
+
+def test_range_too_wide_threshold(c):
+    """range_too_wide: (до − от) / от > 0.5 equals salary_to/from > 1.5; backend uses 1.6 (EU)."""
+    h = _employer(c, "e@x.io")
+    # 200k → 300k: 300/200 = 1.5, не попадает в > 1.6
+    v1 = c.post("/vacancies", json=_body(salary_from=200000, salary_to=300000), headers=h).json()
+    assert v1["range_too_wide"] is False
+    # 200k → 320k: 320/200 = 1.6, равен пороговому значению, не попадает в > 1.6
+    v2 = c.post("/vacancies", json=_body(salary_from=200000, salary_to=320000), headers=h).json()
+    assert v2["range_too_wide"] is False
+    # 200k → 321k: 321/200 = 1.605, попадает в > 1.6
+    v3 = c.post("/vacancies", json=_body(salary_from=200000, salary_to=321000), headers=h).json()
+    assert v3["range_too_wide"] is True
+    # 100k → 160k: граничное значение 1.6x
+    v4 = c.post("/vacancies", json=_body(salary_from=100000, salary_to=160000), headers=h).json()
+    assert v4["range_too_wide"] is False
+    # 100k → 161k: чуть выше 1.6x
+    v5 = c.post("/vacancies", json=_body(salary_from=100000, salary_to=161000), headers=h).json()
+    assert v5["range_too_wide"] is True

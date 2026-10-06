@@ -194,3 +194,41 @@ def test_mock_results_requires_key_and_known_ids():
         },
     }
     assert c.post("/mock/results", json=body, headers=KEY).status_code == 404
+
+
+def test_oidc_discovery_jwks_id_token():
+    import jwt
+
+    app = build_app(Settings(fsp_mock_api_key="k", fsp_mock_issuer="http://fsp.test/"))
+    c = TestClient(app, follow_redirects=False)
+    conf = c.get("/.well-known/openid-configuration").json()
+    assert conf["issuer"] == "http://fsp.test"
+    assert conf["jwks_uri"] == "http://fsp.test/oauth/jwks"
+    assert conf["code_challenge_methods_supported"] == ["S256"]
+    keys = c.get("/oauth/jwks").json()["keys"]
+    assert keys[0]["kty"] == "RSA" and keys[0]["alg"] == "RS256"
+
+    verifier = "v" * 50
+    params = {
+        "client_id": "career",
+        "redirect_uri": "http://app.test/cb",
+        "state": "s",
+        "nonce": "n-1",
+        "scope": "openid profile",
+        "code_challenge": pkce_s256(verifier),
+        "code_challenge_method": "S256",
+    }
+    r = c.post("/oauth/authorize", data={**params, "participant_id": "p-anya"})
+    code = parse_qs(urlparse(r.headers["location"]).query)["code"][0]
+    tok = c.post(
+        "/oauth/token",
+        data={"code": code, "code_verifier": verifier, "client_id": "career"},
+    ).json()
+    key = jwt.PyJWK(keys[0]).key
+    claims = jwt.decode(
+        tok["id_token"], key, algorithms=["RS256"], audience="career", issuer="http://fsp.test"
+    )
+    assert claims["sub"] == "p-anya" and claims["nonce"] == "n-1"
+    assert jwt.get_unverified_header(tok["id_token"])["kid"] == keys[0]["kid"]
+    info = c.get("/oauth/userinfo", headers={"Authorization": f"Bearer {tok['access_token']}"})
+    assert info.json()["sub"] == "p-anya" and info.json()["participant_id"] == "p-anya"
