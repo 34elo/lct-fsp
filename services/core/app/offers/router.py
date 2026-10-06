@@ -31,7 +31,7 @@ from app.identity import service as identity
 from app.identity.deps import require_roles
 from app.identity.models import User
 from app.matching import card
-from app.matching.p_accept import PAcceptConfig, p_accept
+from app.matching.p_accept import PAcceptConfig, p_accept, suggest_raise
 from app.matching.p_accept import hint as p_hint
 from app.matching.scoring import MatchConfig
 from app.matching.search import CandidateCard
@@ -162,7 +162,7 @@ class OfferForCompany(OfferOut):
 class SalaryHintIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    vacancy_id: uuid.UUID
+    vacancy_id: uuid.UUID | None = None  # интерес без вакансии (E33-5): формат и навыки неизвестны
     candidate_pseudo_id: str = Field(min_length=1, max_length=64)
     salary_from: int | None = Field(default=None, le=100_000_000)
     salary_to: int | None = Field(default=None, le=100_000_000)
@@ -175,6 +175,9 @@ class SalaryHint(BaseModel):
     vs_category_median: float = 0.0
     p_accept: float
     acceptance_hint: str  # low | medium | high
+    suggested_salary_to: int | None = None  # верх вилки, при котором p_accept ≥ порога high
+    suggested_p_accept: float | None = None
+    avg_response_hours: float | None = None  # средний срок ответа кандидатов категории
     range_too_wide: bool
     message: str
 
@@ -359,18 +362,32 @@ async def salary_hint(
 ) -> Any:
     """Подсказка по вилке до отправки: `p_accept`, «ниже ожиданий», «слишком широкая»."""
     company, _ = await companies.require_company(session, user.id)
-    vacancy = await vacancies.get_owned(session, user, body.vacancy_id)
+    vacancy = await vacancies.get_owned(session, user, body.vacancy_id) if body.vacancy_id else None
     cand = await card.get_visible(session, body.candidate_pseudo_id, company.id)
     if cand is None:
         raise ProblemError(404, "candidate_not_found", "Кандидат не найден")
     lo, hi = service.validate_range(body.salary_from, body.salary_to)
-    slugs = [slug for _, slug in (await vacancies.skills_of(session, [vacancy.id]))[vacancy.id]]
-    p = p_accept(
-        salary_to=hi, salary_min=cand.salary_min, vacancy_formats=vacancy.formats,
-        candidate_formats=cand.formats or (), vacancy_skills=slugs,
-        primary_stack=cand.primary_stack or (), responsibility_score=company.responsibility_score,
-        active=cand.search_status == "active", cfg=_PACCEPT,
-    )  # fmt: skip
+    slugs = (
+        [slug for _, slug in (await vacancies.skills_of(session, [vacancy.id]))[vacancy.id]]
+        if vacancy
+        else []
+    )
+
+    def _p(to: int) -> float:
+        return p_accept(
+            salary_to=to, salary_min=cand.salary_min,
+            vacancy_formats=vacancy.formats if vacancy else (),
+            candidate_formats=cand.formats or (), vacancy_skills=slugs,
+            primary_stack=cand.primary_stack or (),
+            responsibility_score=company.responsibility_score,
+            active=cand.search_status == "active", cfg=_PACCEPT,
+        )  # fmt: skip
+
+    p = _p(hi)
+    raised = suggest_raise(hi, p, _p, _PACCEPT)
+    resp_hours = await service.avg_response_hours(
+        session, cand.primary_role, _PACCEPT.response_min_sample
+    )
     below = cand.salary_min is not None and hi < cand.salary_min
     median = await candidates.category_median(session, cand.primary_role, cand.grade)
     wide = vacancies.range_too_wide(lo, hi, _VACANCY_CFG)
@@ -382,7 +399,10 @@ async def salary_hint(
     return SalaryHint(
         candidate_min=cand.salary_min, below_candidate_min=below, category_median=median,
         vs_category_median=round(hi / median - 1, 3) if median else 0.0, p_accept=round(p, 3),
-        acceptance_hint=p_hint(p, _PACCEPT), range_too_wide=wide, message=" ".join(notes),
+        acceptance_hint=p_hint(p, _PACCEPT), range_too_wide=wide,
+        suggested_salary_to=raised[0] if raised else None,
+        suggested_p_accept=round(raised[1], 3) if raised else None,
+        avg_response_hours=resp_hours, message=" ".join(notes),
     )  # fmt: skip
 
 

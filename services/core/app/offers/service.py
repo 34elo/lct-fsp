@@ -595,6 +595,32 @@ def _replay(existing: Offer, vacancy: Vacancy | None, candidate: Candidate) -> O
     return existing
 
 
+async def avg_response_hours(
+    session: AsyncSession, role: str | None, min_sample: int = 3
+) -> float | None:
+    """Средний срок ответа кандидатов категории (роли) на приглашения, часы (E33-5).
+
+    Старт — `invited_at` (приглашение после интереса) или `created_at`; конец — `responded_at`.
+    Откликов кандидата (`initiator = candidate`) и без ответа не считаем; мало данных — None.
+    """
+    if not role:
+        return None
+    stmt = (
+        select(Offer.invited_at, Offer.created_at, Offer.responded_at)
+        .join(Candidate, Candidate.user_id == Offer.candidate_id)
+        .where(
+            Candidate.primary_role == role, Offer.initiator == "employer",
+            Offer.responded_at.is_not(None),
+        )
+    )  # fmt: skip
+    hours = [
+        (_aware(done) - _aware(start or created)).total_seconds() / 3600
+        for start, created, done in (await session.execute(stmt)).all()
+    ]
+    hours = [h for h in hours if h >= 0]
+    return round(sum(hours) / len(hours), 1) if len(hours) >= min_sample else None
+
+
 async def get(session: AsyncSession, offer_id: uuid.UUID) -> Offer | None:
     """Оффер без проверки доступа — для внутренних обработчиков событий."""
     return await session.get(Offer, offer_id)
