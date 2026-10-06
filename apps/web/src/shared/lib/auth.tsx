@@ -83,8 +83,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Не-2xx мутатор бросает как ApiError, поэтому в `data` всегда успешный ответ.
   const signIn = useCallback(async (auth: unknown) => {
     setAccessToken((auth as AuthOut).access_token);
+    // Кеш прежнего пользователя не должен попадать в кабинет нового (счётчики, списки).
+    qc.clear();
     await reloadMe();
-  }, [reloadMe]);
+  }, [reloadMe, qc]);
 
   const login = useCallback(
     async (email: string, password: string) => signIn((await loginAuthLoginPost({ email, password })).data),

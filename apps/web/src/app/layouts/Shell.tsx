@@ -19,9 +19,19 @@ function useOfferCounts(variant: "top" | "side"): Record<string, number | undefi
   const employer = useListOffersOffersGet(undefined, { query: { enabled: variant === "top" && role === "employer", retry: false } });
   const candidate = useMyOffersCandidatesMeOffersGet(undefined, { query: { enabled: variant === "top" && role === "candidate", retry: false } });
   const interests = useMyInterestsCandidatesMeInterestsGet({ query: { enabled: variant === "top" && role === "candidate", retry: false } });
-  const n = (q: { data?: { status: number; data: unknown } }) =>
-    q.data?.status === 200 && Array.isArray(q.data.data) ? q.data.data.length : undefined;
-  return { "/employer/offers": n(employer), "/me/offers": n(candidate), "/me/interests": interests.data?.status === 200 ? interests.data.data.companies : undefined };
+  return {
+    "/employer/offers": offerCount(employer.data),
+    "/me/offers": offerCount(candidate.data),
+    "/me/interests": interests.data?.status === 200 ? positive(interests.data.data.companies) : undefined,
+  };
+}
+
+const positive = (n: number | undefined) => (n && n > 0 ? n : undefined);
+
+/** Число приглашений для бейджа: свои отклики кандидата не считаем, ноль не показываем. */
+export function offerCount(res?: { status: number; data: unknown }): number | undefined {
+  if (res?.status !== 200 || !Array.isArray(res.data)) return undefined;
+  return positive(res.data.filter((o) => (o as { initiator?: string }).initiator !== "candidate").length);
 }
 
 /**
@@ -33,7 +43,7 @@ export function Shell({ nav, variant }: { nav: NavItem[]; variant: "top" | "side
   const counts = useOfferCounts(variant);
   const bottom = variant === "top" && role === "candidate";
   return (
-    <div className={cn("min-h-dvh bg-page text-ink", variant === "side" && "md:grid md:grid-cols-[220px_1fr]")}>
+    <div className={cn("min-h-dvh overflow-x-clip bg-page text-ink", variant === "side" && "md:grid md:grid-cols-[220px_1fr]")}>
       {variant === "side" && <AdminSidebar nav={nav} />}
       <div className="flex min-h-dvh min-w-0 flex-col">
         <AppHeader nav={nav} counts={counts} withTabs={variant === "top"} />

@@ -41,6 +41,7 @@ import DemoTwoWorlds from "@/features/demo/TwoWorlds";
 // <<< block1 imports
 // >>> block2 imports
 import Landing from "@/features/landing/Landing";
+import Legal from "@/features/landing/Legal";
 import FederationDashboard from "@/features/admin/Dashboard";
 import FederationModeration from "@/features/admin/Moderation";
 import Navigator from "@/features/navigator/Navigator";
@@ -63,7 +64,7 @@ const AdminLayout = lazy(() => import("@/app/layouts/AdminLayout"));
 const RunPage = lazy(() => import("@/features/runs/RunPage"));
 
 // Эти пути уже реализованы настоящими страницами (E1-4).
-const IMPLEMENTED = new Set(["/", "/login", "/register", "/auth/magic", "/consents", "/onboarding", "/me", "/me/skills/:slug", "/employer/search", "/employer/candidates/:id", "/employer/vacancies", "/employer/vacancies/new", "/employer/vacancies/:id", "/employer/company", "/employer/vacancies/:id/shortlist", "/employer/offers/new", "/employer/offers", "/employer/offers/:id", "/me/offers", "/me/offers/:id", "/me/navigator", "/verify-email", "/me/profile/edit", "/me/responses", "/employer/responses", "/jobs", "/jobs/:id", "/run/:token", "/federation", "/federation/moderation", "/me/tasks", "/employer/tasks", "/employer/families/new", "/admin/families", "/admin/professions", "/admin/skills", "/employer/needs/new", "/employer/needs/:id", "/employer/categories/:profession/:grade", "/employer/subscriptions", "/me/interests"]);
+const IMPLEMENTED = new Set(["/", "/login", "/register", "/auth/magic", "/consents", "/onboarding", "/me", "/me/skills/:slug", "/employer/search", "/employer/candidates/:id", "/employer/vacancies", "/employer/vacancies/new", "/employer/vacancies/:id", "/employer/company", "/employer/vacancies/:id/shortlist", "/employer/offers/new", "/employer/offers", "/employer/offers/:id", "/me/offers", "/me/offers/:id", "/me/navigator", "/verify-email", "/me/profile/edit", "/me/responses", "/employer/responses", "/jobs", "/jobs/:id", "/terms", "/privacy", "/run/:token", "/federation", "/federation/moderation", "/me/tasks", "/employer/tasks", "/employer/families/new", "/admin/families", "/admin/professions", "/admin/skills", "/employer/needs/new", "/employer/needs/:id", "/employer/categories/:profession/:grade", "/employer/subscriptions", "/me/interests"]);
 
 // Б1: страницы теста (E22-8).
 ["/me/graph", "/me/assessment", "/me/assessment/history", "/me/assessment/attempts/:id", "/me/assessment/attempts/:id/result", "/admin/demo/two-worlds", "/admin/demo/llm-exam", "/admin/demo/new-profession"].forEach((p) => IMPLEMENTED.add(p));
@@ -170,6 +171,8 @@ export function App() {
           <Route path="/run/:token" element={<RunPage />} />
           <Route path="/jobs" element={<Jobs />} />
           <Route path="/jobs/:id" element={<JobDetail />} />
+          <Route path="/terms" element={<Legal />} />
+          <Route path="/privacy" element={<Legal />} />
           {/* <<< block2 (public) */}
         </Route>
         {guarded("candidate", CandidateLayout)}
