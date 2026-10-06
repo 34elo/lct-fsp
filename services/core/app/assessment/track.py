@@ -53,4 +53,4 @@ async def emit(
         async with session.begin_nested():
             await analytics.record(session, [ev])
     except Exception as exc:  # аналитика не должна ронять тест
-        log.warning("assessment_analytics_failed", event=name, error=type(exc).__name__)
+        log.warning("assessment_analytics_failed", analytics_event=name, error=type(exc).__name__)
