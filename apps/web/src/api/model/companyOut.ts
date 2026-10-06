@@ -18,6 +18,7 @@ export interface CompanyOut {
   contacts: CompanyOutContacts;
   direction: string | null;
   status: CompanyStatus;
+  show_verified_badge?: boolean;
   responsibility_score: number | null;
   created_at: string;
   my_role?: CompanyMemberRole | null;

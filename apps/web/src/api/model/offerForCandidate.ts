@@ -10,7 +10,9 @@ import type { Decline } from './decline';
 import type { MatchSnapshot } from './matchSnapshot';
 import type { OfferInitiator } from './offerInitiator';
 import type { OfferStatus } from './offerStatus';
+import type { SalaryBasis } from './salaryBasis';
 import type { VacancyBrief } from './vacancyBrief';
+import type { WhyYou } from './whyYou';
 
 export interface OfferForCandidate {
   id: string;
@@ -25,10 +27,16 @@ export interface OfferForCandidate {
   team_offer_id?: string | null;
   salary_from: number;
   salary_to: number;
+  salary_basis?: SalaryBasis;
+  contacts_revoked_at?: string | null;
   message?: string | null;
   below_candidate_min: boolean;
   match_snapshot?: MatchSnapshot | null;
   decline?: Decline | null;
   awaiting_reply_from?: string | null;
+  interest_at?: string | null;
+  interest_opened_at?: string | null;
+  invited_at?: string | null;
   company: CompanyBrief;
+  why_you?: WhyYou | null;
 }

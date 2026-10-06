@@ -3394,6 +3394,186 @@
         }
       }
     },
+    "/companies/{company_id}/interest": {
+      "post": {
+        "tags": [
+          "search"
+        ],
+        "summary": "Mark Candidate Interest",
+        "description": "Кандидат показывает интерес к компании (E33-6).",
+        "operationId": "mark_candidate_interest_companies__company_id__interest_post",
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Company Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Mark Candidate Interest Companies  Company Id  Interest Post"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "search"
+        ],
+        "summary": "Remove Candidate Interest",
+        "description": "Кандидат снимает интерес к компании (E33-6).",
+        "operationId": "remove_candidate_interest_companies__company_id__interest_delete",
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Company Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Remove Candidate Interest Companies  Company Id  Interest Delete"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/recs/feedback": {
       "post": {
         "tags": [
@@ -3993,6 +4173,528 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/interests": {
+      "post": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Create Interest",
+        "description": "Интерес к анонимному кандидату. Повтор отметки возвращает открытый интерес.",
+        "operationId": "create_interest_interests_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInterest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferForCompany"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Конфликт (в том числе cooldown)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Слишком много запросов",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/interests/{offer_id}/invite": {
+      "post": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Invite From Interest",
+        "description": "Кандидат открыл интерес → приглашение (`interest_opened → sent`).",
+        "operationId": "invite_from_interest_interests__offer_id__invite_post",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/InviteFromInterest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferForCompany"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Конфликт (в том числе cooldown)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/candidates/me/interests": {
+      "get": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "My Interests",
+        "operationId": "my_interests_candidates_me_interests_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterestsSummary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/interests/{offer_id}/open": {
+      "post": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Open Interest",
+        "description": "«Открыть»: компания получает уведомление и может отправить приглашение. Повтор — no-op.",
+        "operationId": "open_interest_interests__offer_id__open_post",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferForCandidate"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Конфликт (в том числе cooldown)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/interests/{offer_id}/decline": {
+      "post": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Decline Interest",
+        "description": "«Не интересно» с причиной (вилка, формат, компания, не ищу). Повтор — no-op.",
+        "operationId": "decline_interest_interests__offer_id__decline_post",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeclineIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferForCandidate"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Конфликт (в том числе cooldown)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
                 }
               }
             }
@@ -5025,6 +5727,110 @@
           },
           "404": {
             "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/offers/{offer_id}/contacts/revoke": {
+      "post": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Revoke Contacts",
+        "description": "Отзыв доступа к контактам: компания перестаёт их видеть (E32-5a). Повтор — no-op.",
+        "operationId": "revoke_contacts_offers__offer_id__contacts_revoke_post",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferForCandidate"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Конфликт (в том числе cooldown)",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -6316,6 +7122,87 @@
         }
       }
     },
+    "/admin/metrics": {
+      "get": {
+        "tags": [
+          "admin-metrics"
+        ],
+        "summary": "Get Metrics",
+        "description": "Воронки кандидата и работодателя, приглашения (время до первого, доля принятых,\nответ за 72 ч, причины отказов), отклики. Ячейки меньше 5 скрыты.",
+        "operationId": "get_metrics_admin_metrics_get",
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 180,
+              "minimum": 1,
+              "default": 30,
+              "title": "Days"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetricsOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/needs": {
       "post": {
         "tags": [
@@ -6839,6 +7726,724 @@
           }
         }
       }
+    },
+    "/subscriptions": {
+      "get": {
+        "tags": [
+          "subscriptions"
+        ],
+        "summary": "List Subscriptions",
+        "operationId": "list_subscriptions_subscriptions_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SubscriptionOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Subscriptions Subscriptions Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "subscriptions"
+        ],
+        "summary": "Create Subscription",
+        "operationId": "create_subscription_subscriptions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubscriptionCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Слишком много запросов",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/subscriptions/{subscription_id}": {
+      "delete": {
+        "tags": [
+          "subscriptions"
+        ],
+        "summary": "Delete Subscription",
+        "operationId": "delete_subscription_subscriptions__subscription_id__delete",
+        "parameters": [
+          {
+            "name": "subscription_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Subscription Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/public/profiles/{slug}": {
+      "get": {
+        "tags": [
+          "public"
+        ],
+        "summary": "Get Public Profile",
+        "description": "Публичный профиль кандидата (если он включил видимость).",
+        "operationId": "get_public_profile_public_profiles__slug__get",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/credentials": {
+      "get": {
+        "tags": [
+          "credentials"
+        ],
+        "summary": "My Credentials",
+        "operationId": "my_credentials_me_credentials_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CredentialOut"
+                  },
+                  "type": "array",
+                  "title": "Response My Credentials Me Credentials Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "credentials"
+        ],
+        "summary": "Issue Credential",
+        "description": "Выпустить Open Badge на действующую категорию. Тот же грейд повторно: тот же бейдж.",
+        "operationId": "issue_credential_me_credentials_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CredentialIssueIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CredentialOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Конфликт (в том числе cooldown)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/credentials/{credential_id}/revoke": {
+      "post": {
+        "tags": [
+          "credentials"
+        ],
+        "summary": "Revoke Credential",
+        "description": "Отозвать свой бейдж. Чужой или несуществующий: 404.",
+        "operationId": "revoke_credential_me_credentials__credential_id__revoke_post",
+        "parameters": [
+          {
+            "name": "credential_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Credential Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CredentialOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/public/credentials/{credential_id}": {
+      "get": {
+        "tags": [
+          "credentials"
+        ],
+        "summary": "Get Credential",
+        "description": "Подписанный OpenBadgeCredential (JSON-LD). Скрыт, если отозван или профиль не публичный.",
+        "operationId": "get_credential_public_credentials__credential_id__get",
+        "parameters": [
+          {
+            "name": "credential_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Credential Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/ld+json": {}
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/public/credentials/{credential_id}/verify": {
+      "get": {
+        "tags": [
+          "credentials"
+        ],
+        "summary": "Verify Credential",
+        "description": "Подпись, отзыв, срок. Отозванный бейдж: `200 {valid:false, revoked:true}`.",
+        "operationId": "verify_credential_public_credentials__credential_id__verify_get",
+        "parameters": [
+          {
+            "name": "credential_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Credential Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CredentialCheckOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/public/credentials/verify": {
+      "post": {
+        "tags": [
+          "credentials"
+        ],
+        "summary": "Verify Presented",
+        "description": "Проверка предъявленного документа (например, файла из кабинета): подделка → `valid:false`.",
+        "operationId": "verify_presented_public_credentials_verify_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "type": "object",
+                "title": "Credential"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CredentialCheckOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/.well-known/did.json": {
+      "get": {
+        "tags": [
+          "credentials"
+        ],
+        "summary": "Did Document",
+        "description": "Публичный ключ издателя (`did:web`).",
+        "operationId": "did_document__well_known_did_json_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -7231,6 +8836,11 @@
             "type": "boolean",
             "title": "Is Shortlisted",
             "default": false
+          },
+          "interested_you": {
+            "type": "boolean",
+            "title": "Interested You",
+            "default": false
           }
         },
         "type": "object",
@@ -7388,6 +8998,11 @@
           "is_shortlisted": {
             "type": "boolean",
             "title": "Is Shortlisted",
+            "default": false
+          },
+          "interested_you": {
+            "type": "boolean",
+            "title": "Interested You",
             "default": false
           },
           "skills": {
@@ -7904,6 +9519,16 @@
           "verified": {
             "type": "boolean",
             "title": "Verified"
+          },
+          "reliability": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CompanyReliability"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -7979,6 +9604,11 @@
               }
             ],
             "title": "Direction"
+          },
+          "show_verified_badge": {
+            "type": "boolean",
+            "title": "Show Verified Badge",
+            "default": true
           }
         },
         "additionalProperties": false,
@@ -8076,6 +9706,11 @@
           },
           "status": {
             "$ref": "#/components/schemas/CompanyStatus"
+          },
+          "show_verified_badge": {
+            "type": "boolean",
+            "title": "Show Verified Badge",
+            "default": true
           },
           "responsibility_score": {
             "anyOf": [
@@ -8192,11 +9827,66 @@
               }
             ],
             "title": "Direction"
+          },
+          "show_verified_badge": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Show Verified Badge"
           }
         },
         "additionalProperties": false,
         "type": "object",
         "title": "CompanyPatch"
+      },
+      "CompanyReliability": {
+        "properties": {
+          "responsibility_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Responsibility Score"
+          },
+          "response_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Response Rate"
+          },
+          "avg_response_hours": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Response Hours"
+          },
+          "sample": {
+            "type": "integer",
+            "title": "Sample",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "CompanyReliability"
       },
       "CompanyStatus": {
         "type": "string",
@@ -8484,6 +10174,93 @@
         ],
         "title": "Contacts"
       },
+      "CreateInterest": {
+        "properties": {
+          "candidate_pseudo_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Candidate Pseudo Id"
+          },
+          "salary_from": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100000000.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary From"
+          },
+          "salary_to": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100000000.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary To"
+          },
+          "salary_basis": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SalaryBasis"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "vacancy_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vacancy Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "candidate_pseudo_id"
+        ],
+        "title": "CreateInterest",
+        "description": "Отметка «интересен»: вилка обязательна, сообщение до 300 символов, вакансия — по желанию."
+      },
       "CreateOffer": {
         "properties": {
           "vacancy_id": {
@@ -8527,6 +10304,16 @@
               }
             ],
             "title": "Salary To"
+          },
+          "salary_basis": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SalaryBasis"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "message": {
             "anyOf": [
@@ -8627,6 +10414,137 @@
         ],
         "title": "CreateTeamOffer"
       },
+      "CredentialCheckOut": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "valid": {
+            "type": "boolean",
+            "title": "Valid"
+          },
+          "signature_valid": {
+            "type": "boolean",
+            "title": "Signature Valid"
+          },
+          "known": {
+            "type": "boolean",
+            "title": "Known"
+          },
+          "revoked": {
+            "type": "boolean",
+            "title": "Revoked"
+          },
+          "expired": {
+            "type": "boolean",
+            "title": "Expired"
+          },
+          "issuer": {
+            "type": "string",
+            "title": "Issuer"
+          },
+          "checked_at": {
+            "type": "string",
+            "title": "Checked At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "valid",
+          "signature_valid",
+          "known",
+          "revoked",
+          "expired",
+          "issuer",
+          "checked_at"
+        ],
+        "title": "CredentialCheckOut"
+      },
+      "CredentialIssueIn": {
+        "properties": {
+          "profession": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profession"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "CredentialIssueIn"
+      },
+      "CredentialOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "profession": {
+            "type": "string",
+            "title": "Profession"
+          },
+          "grade": {
+            "type": "string",
+            "title": "Grade"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "issued_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Issued At"
+          },
+          "valid_until": {
+            "type": "string",
+            "title": "Valid Until"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "credential": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Credential"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "profession",
+          "grade",
+          "url",
+          "issued_at",
+          "valid_until",
+          "credential"
+        ],
+        "title": "CredentialOut"
+      },
       "DashboardOut": {
         "properties": {
           "since": {
@@ -8644,7 +10562,7 @@
           },
           "funnel": {
             "items": {
-              "$ref": "#/components/schemas/Stage"
+              "$ref": "#/components/schemas/app__analytics__dashboard__Stage"
             },
             "type": "array",
             "title": "Funnel"
@@ -8723,7 +10641,8 @@
           "wrong_format",
           "wrong_grade",
           "not_looking",
-          "other"
+          "other",
+          "wrong_company"
         ],
         "title": "DeclineReason"
       },
@@ -9364,6 +11283,22 @@
         ],
         "title": "FspTeam"
       },
+      "Funnel": {
+        "properties": {
+          "stages": {
+            "items": {
+              "$ref": "#/components/schemas/app__analytics__metrics__Stage"
+            },
+            "type": "array",
+            "title": "Stages"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stages"
+        ],
+        "title": "Funnel"
+      },
       "Grade": {
         "type": "string",
         "enum": [
@@ -9515,6 +11450,248 @@
           "count"
         ],
         "title": "Hint"
+      },
+      "InterestsSummary": {
+        "properties": {
+          "companies": {
+            "type": "integer",
+            "title": "Companies"
+          },
+          "salary_from_min": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary From Min"
+          },
+          "salary_to_max": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary To Max"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OfferForCandidate"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "companies",
+          "items"
+        ],
+        "title": "InterestsSummary",
+        "description": "«K компаний интересуются вами, вилки …» и карточки без контактов."
+      },
+      "InviteFromInterest": {
+        "properties": {
+          "salary_from": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100000000.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary From"
+          },
+          "salary_to": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100000000.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary To"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 4000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "contact_method": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContactMethod"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "InviteFromInterest",
+        "description": "Приглашение по открытому интересу; пустые поля берутся из интереса."
+      },
+      "InviteMetrics": {
+        "properties": {
+          "sent": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sent"
+          },
+          "answered": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answered"
+          },
+          "accepted": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accepted"
+          },
+          "declined": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Declined"
+          },
+          "expired": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expired"
+          },
+          "accept_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accept Rate"
+          },
+          "respond_72h_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Respond 72H Rate"
+          },
+          "first_invite": {
+            "$ref": "#/components/schemas/Timing"
+          },
+          "invited_within_14d_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invited Within 14D Pct"
+          },
+          "need_to_invite": {
+            "$ref": "#/components/schemas/Timing"
+          },
+          "decline_reasons": {
+            "items": {
+              "$ref": "#/components/schemas/ReasonShare"
+            },
+            "type": "array",
+            "title": "Decline Reasons"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sent",
+          "answered",
+          "accepted",
+          "declined",
+          "expired",
+          "accept_rate",
+          "respond_72h_rate",
+          "first_invite",
+          "invited_within_14d_pct",
+          "need_to_invite",
+          "decline_reasons"
+        ],
+        "title": "InviteMetrics"
       },
       "LoginIn": {
         "properties": {
@@ -9784,6 +11961,46 @@
           "created_at"
         ],
         "title": "MessageOut"
+      },
+      "MetricsOut": {
+        "properties": {
+          "since": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Since"
+          },
+          "days": {
+            "type": "integer",
+            "title": "Days"
+          },
+          "min_cell": {
+            "type": "integer",
+            "title": "Min Cell"
+          },
+          "candidate_funnel": {
+            "$ref": "#/components/schemas/Funnel"
+          },
+          "employer_funnel": {
+            "$ref": "#/components/schemas/Funnel"
+          },
+          "invites": {
+            "$ref": "#/components/schemas/InviteMetrics"
+          },
+          "responses": {
+            "$ref": "#/components/schemas/ResponseMetrics"
+          }
+        },
+        "type": "object",
+        "required": [
+          "since",
+          "days",
+          "min_cell",
+          "candidate_funnel",
+          "employer_funnel",
+          "invites",
+          "responses"
+        ],
+        "title": "MetricsOut"
       },
       "NavCompetition": {
         "properties": {
@@ -10359,6 +12576,22 @@
             "type": "integer",
             "title": "Salary To"
           },
+          "salary_basis": {
+            "$ref": "#/components/schemas/SalaryBasis",
+            "default": "gross"
+          },
+          "contacts_revoked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contacts Revoked At"
+          },
           "message": {
             "anyOf": [
               {
@@ -10405,8 +12638,54 @@
             ],
             "title": "Awaiting Reply From"
           },
+          "interest_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interest At"
+          },
+          "interest_opened_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interest Opened At"
+          },
+          "invited_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invited At"
+          },
           "company": {
             "$ref": "#/components/schemas/CompanyBrief"
+          },
+          "why_you": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WhyYou"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -10508,6 +12787,22 @@
             "type": "integer",
             "title": "Salary To"
           },
+          "salary_basis": {
+            "$ref": "#/components/schemas/SalaryBasis",
+            "default": "gross"
+          },
+          "contacts_revoked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contacts Revoked At"
+          },
           "message": {
             "anyOf": [
               {
@@ -10553,6 +12848,42 @@
               }
             ],
             "title": "Awaiting Reply From"
+          },
+          "interest_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interest At"
+          },
+          "interest_opened_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interest Opened At"
+          },
+          "invited_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invited At"
           },
           "candidate": {
             "anyOf": [
@@ -10607,7 +12938,9 @@
           "withdrawn",
           "interview",
           "hired",
-          "not_hired"
+          "not_hired",
+          "interest",
+          "interest_opened"
         ],
         "title": "OfferStatus"
       },
@@ -11084,6 +13417,9 @@
             "type": "integer",
             "title": "Salary To"
           },
+          "salary_basis": {
+            "$ref": "#/components/schemas/SalaryBasis"
+          },
           "description": {
             "anyOf": [
               {
@@ -11130,6 +13466,7 @@
           "city",
           "salary_from",
           "salary_to",
+          "salary_basis",
           "description",
           "skills",
           "published_at",
@@ -11188,6 +13525,24 @@
         "title": "Ratio",
         "description": "Доля: числитель `count` (уникальные люди) и `pct` от знаменателя `of`."
       },
+      "ReasonShare": {
+        "properties": {
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reason",
+          "count"
+        ],
+        "title": "ReasonShare"
+      },
       "RegisterIn": {
         "properties": {
           "email": {
@@ -11235,6 +13590,78 @@
         "additionalProperties": false,
         "type": "object",
         "title": "ResolveComplaintIn"
+      },
+      "ResponseMetrics": {
+        "properties": {
+          "created": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created"
+          },
+          "answered": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answered"
+          },
+          "accepted": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accepted"
+          },
+          "answer_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answer Rate"
+          },
+          "accept_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accept Rate"
+          },
+          "time_to_answer": {
+            "$ref": "#/components/schemas/Timing"
+          }
+        },
+        "type": "object",
+        "required": [
+          "created",
+          "answered",
+          "accepted",
+          "answer_rate",
+          "accept_rate",
+          "time_to_answer"
+        ],
+        "title": "ResponseMetrics"
       },
       "ResumeAccepted": {
         "properties": {
@@ -11965,6 +14392,15 @@
         ],
         "title": "RunTaskPublic"
       },
+      "SalaryBasis": {
+        "type": "string",
+        "enum": [
+          "gross",
+          "net"
+        ],
+        "title": "SalaryBasis",
+        "description": "Вилка до НДФЛ (`gross`, по умолчанию) или на руки (`net`) — E32-5a."
+      },
       "SalaryHint": {
         "properties": {
           "candidate_min": {
@@ -12006,6 +14442,39 @@
             "type": "string",
             "title": "Acceptance Hint"
           },
+          "suggested_salary_to": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggested Salary To"
+          },
+          "suggested_p_accept": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggested P Accept"
+          },
+          "avg_response_hours": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Response Hours"
+          },
           "range_too_wide": {
             "type": "boolean",
             "title": "Range Too Wide"
@@ -12028,8 +14497,15 @@
       "SalaryHintIn": {
         "properties": {
           "vacancy_id": {
-            "type": "string",
-            "format": "uuid",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Vacancy Id"
           },
           "candidate_pseudo_id": {
@@ -12066,7 +14542,6 @@
         "additionalProperties": false,
         "type": "object",
         "required": [
-          "vacancy_id",
           "candidate_pseudo_id"
         ],
         "title": "SalaryHintIn"
@@ -12663,6 +15138,11 @@
             "title": "Is Shortlisted",
             "default": false
           },
+          "interested_you": {
+            "type": "boolean",
+            "title": "Interested You",
+            "default": false
+          },
           "similarity": {
             "type": "number",
             "title": "Similarity"
@@ -12772,6 +15252,29 @@
           "group"
         ],
         "title": "SkillInfo"
+      },
+      "SkillMin": {
+        "properties": {
+          "slug": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Slug"
+          },
+          "min_level": {
+            "type": "integer",
+            "maximum": 4.0,
+            "minimum": 1.0,
+            "title": "Min Level",
+            "default": 2
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "slug"
+        ],
+        "title": "SkillMin"
       },
       "SkillReqIn": {
         "properties": {
@@ -12918,65 +15421,6 @@
         ],
         "title": "SkillWithTrust"
       },
-      "Stage": {
-        "properties": {
-          "count": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Count"
-          },
-          "hidden": {
-            "type": "boolean",
-            "title": "Hidden"
-          },
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "title": {
-            "type": "string",
-            "title": "Title"
-          },
-          "pct_of_registered": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Pct Of Registered"
-          },
-          "pct_of_previous": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Pct Of Previous"
-          }
-        },
-        "type": "object",
-        "required": [
-          "count",
-          "hidden",
-          "id",
-          "title",
-          "pct_of_registered",
-          "pct_of_previous"
-        ],
-        "title": "Stage"
-      },
       "StartIn": {
         "properties": {
           "tg_user_id": {
@@ -13109,6 +15553,129 @@
           "value"
         ],
         "title": "StrengthView"
+      },
+      "SubscriptionCreate": {
+        "properties": {
+          "profession": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Profession"
+          },
+          "grades": {
+            "items": {
+              "$ref": "#/components/schemas/TestGrade"
+            },
+            "type": "array",
+            "maxItems": 3,
+            "title": "Grades"
+          },
+          "skills": {
+            "items": {
+              "$ref": "#/components/schemas/SkillMin"
+            },
+            "type": "array",
+            "maxItems": 10,
+            "title": "Skills"
+          },
+          "salary_max": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary Max"
+          },
+          "formats": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 5,
+            "title": "Formats"
+          },
+          "only_confirmed": {
+            "type": "boolean",
+            "title": "Only Confirmed",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "profession"
+        ],
+        "title": "SubscriptionCreate"
+      },
+      "SubscriptionOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "profession": {
+            "type": "string",
+            "title": "Profession"
+          },
+          "grades": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Grades"
+          },
+          "skills": {
+            "items": {
+              "$ref": "#/components/schemas/SkillMin"
+            },
+            "type": "array",
+            "title": "Skills"
+          },
+          "salary_max": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary Max"
+          },
+          "formats": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Formats"
+          },
+          "only_confirmed": {
+            "type": "boolean",
+            "title": "Only Confirmed"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "profession",
+          "grades",
+          "skills",
+          "salary_max",
+          "formats",
+          "only_confirmed",
+          "created_at"
+        ],
+        "title": "SubscriptionOut"
       },
       "SusIn": {
         "properties": {
@@ -13810,6 +16377,11 @@
             "type": "integer",
             "title": "Salary To"
           },
+          "salary_basis": {
+            "type": "string",
+            "title": "Salary Basis",
+            "default": "gross"
+          },
           "message": {
             "anyOf": [
               {
@@ -14082,6 +16654,44 @@
           "status"
         ],
         "title": "TgStatusIn"
+      },
+      "Timing": {
+        "properties": {
+          "n": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "N"
+          },
+          "median_s": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median S"
+          },
+          "hidden": {
+            "type": "boolean",
+            "title": "Hidden"
+          }
+        },
+        "type": "object",
+        "required": [
+          "n",
+          "median_s",
+          "hidden"
+        ],
+        "title": "Timing",
+        "description": "Время до события: медиана в секундах и число наблюдений (малые выборки скрыты)."
       },
       "TrackEventIn": {
         "properties": {
@@ -14584,6 +17194,10 @@
             "exclusiveMinimum": 0.0,
             "title": "Salary To"
           },
+          "salary_basis": {
+            "$ref": "#/components/schemas/SalaryBasis",
+            "default": "gross"
+          },
           "description": {
             "anyOf": [
               {
@@ -14681,6 +17295,9 @@
             "type": "integer",
             "title": "Salary To"
           },
+          "salary_basis": {
+            "$ref": "#/components/schemas/SalaryBasis"
+          },
           "range_too_wide": {
             "type": "boolean",
             "title": "Range Too Wide"
@@ -14748,6 +17365,7 @@
           "city",
           "salary_from",
           "salary_to",
+          "salary_basis",
           "range_too_wide",
           "description",
           "status",
@@ -14867,6 +17485,16 @@
               }
             ],
             "title": "Salary To"
+          },
+          "salary_basis": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SalaryBasis"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "description": {
             "anyOf": [
@@ -15115,6 +17743,51 @@
         ],
         "title": "WeightOut"
       },
+      "WhyFactor": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "weight": {
+            "type": "number",
+            "title": "Weight"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "text",
+          "weight"
+        ],
+        "title": "WhyFactor"
+      },
+      "WhyYou": {
+        "properties": {
+          "factors": {
+            "items": {
+              "$ref": "#/components/schemas/WhyFactor"
+            },
+            "type": "array",
+            "title": "Factors",
+            "default": []
+          },
+          "unconfirmed": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Unconfirmed",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "WhyYou"
+      },
       "WorkFormat": {
         "type": "string",
         "enum": [
@@ -15123,6 +17796,129 @@
           "remote"
         ],
         "title": "WorkFormat"
+      },
+      "app__analytics__dashboard__Stage": {
+        "properties": {
+          "count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Count"
+          },
+          "hidden": {
+            "type": "boolean",
+            "title": "Hidden"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "pct_of_registered": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pct Of Registered"
+          },
+          "pct_of_previous": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pct Of Previous"
+          }
+        },
+        "type": "object",
+        "required": [
+          "count",
+          "hidden",
+          "id",
+          "title",
+          "pct_of_registered",
+          "pct_of_previous"
+        ],
+        "title": "Stage"
+      },
+      "app__analytics__metrics__Stage": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "available": {
+            "type": "boolean",
+            "title": "Available"
+          },
+          "count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Count"
+          },
+          "hidden": {
+            "type": "boolean",
+            "title": "Hidden"
+          },
+          "pct_of_first": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pct Of First"
+          },
+          "pct_of_previous": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pct Of Previous"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "available",
+          "count",
+          "hidden",
+          "pct_of_first",
+          "pct_of_previous"
+        ],
+        "title": "Stage"
       },
       "app__consents__router__ConsentsIn": {
         "properties": {

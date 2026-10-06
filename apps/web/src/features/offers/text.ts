@@ -1,6 +1,8 @@
 import { ApiError } from "@/api/mutator";
 
 export const OFFER_STATUS_LABEL: Record<string, string> = {
+  interest: "Интерес",
+  interest_opened: "Интерес открыт",
   sent: "Отправлен",
   viewed: "Просмотрен",
   accepted: "Принят",
@@ -35,6 +37,7 @@ export const DECLINE_LABEL: Record<string, string> = {
   wrong_format: "Не подходит формат",
   wrong_grade: "Не тот уровень",
   not_looking: "Не ищу сейчас",
+  wrong_company: "Не та компания",
   other: "Другое",
 };
 
@@ -92,6 +95,14 @@ export function offerErrorText(err: unknown, fallback = "Не удалось в�
       return "Контакты откроются после принятия оффера.";
     case "offer_not_found":
       return "Оффер не найден.";
+    case "interest_limit_exceeded":
+      return "Недельный лимит интересов исчерпан. Попробуйте позже.";
+    case "interest_not_found":
+      return "Интерес не найден: он истёк или отозван.";
+    case "interest_not_opened":
+      return "Приглашение можно отправить после того, как кандидат откроет интерес.";
+    case "title_required":
+      return "Без вакансии укажите название приглашения.";
   }
   if (err.status === 429) return "Слишком много запросов. Подождите немного и повторите.";
   if (err.status === 409) return "Состояние оффера изменилось. Обновите страницу.";
@@ -103,7 +114,7 @@ export function offerErrorText(err: unknown, fallback = "Не удалось в�
 export const BOARD_TEXT = {
   title: "Мои офферы",
   subtitle: (n: number) => `Отправлено офферов: ${n}. Колонки — статусы, в «Закрыто» отказы, истёкшие и отозванные.`,
-  columns: { sent: "Отправлен", viewed: "Просмотрен", interview: "Интервью", accepted: "Принят", hired: "Нанят", closed: "Закрыто" },
+  columns: { interest: "Интерес", sent: "Отправлен", viewed: "Просмотрен", interview: "Интервью", accepted: "Принят", hired: "Нанят", closed: "Закрыто" },
   tabs: "Статусы офферов",
   count: (n: number) => `Карточек: ${n}`,
   emptyColumn: "Пока пусто",
@@ -163,6 +174,60 @@ export const CAND_TEXT = {
   below: (from: string) => `Ниже ваших ожиданий (от ${from})`,
   belowPlain: "Ниже ваших ожиданий",
   replyBy: (d: string, n: number) => `${d} · осталось ${n} дн.`,
+};
+
+/** Тексты «Вами интересуются» (кандидат) и интереса/приглашения (работодатель), ADR-026. */
+export const INT_TEXT = {
+  title: "Вами интересуются",
+  lead: "Компании отметили ваш профиль и показали вилку. Контакты остаются скрытыми, пока вы не примете приглашение.",
+  count: (n: number) => `${n} ${n % 10 === 1 && n % 100 !== 11 ? "компания интересуется" : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? "компании интересуются" : "компаний интересуются"} вами`,
+  range: (r: string) => `Вилки компаний: ${r}`,
+  empty: "Пока никто не интересуется",
+  emptyHint: "Интересы появятся здесь и в Telegram, когда компании найдут ваш профиль. Подтверждённые навыки и тест повышают шанс.",
+  loadError: "Не удалось загрузить интересы.",
+  back: "Все офферы",
+  banner: (n: number) => `Вами интересуются: ${n}`,
+  bannerHint: "Компании отметили ваш профиль и ждут, откроете ли вы интерес.",
+  open: "Открыть интерес",
+  notInterested: "Не интересно",
+  opened: "Вы открыли интерес. Ждём приглашение от компании.",
+  openedShort: "Открыто, ждём приглашение",
+  until: (d: string, n: number) => `Действует до ${d} · осталось ${n} дн.`,
+  fromCompany: "Сообщение компании",
+  why: "Почему вы",
+  whyNone: "Причины совпадения недоступны.",
+  unconfirmed: "Что не подтверждено",
+  reliability: "Как компания отвечает",
+  responseRate: (p: number) => `отвечает на ${p}% обращений`,
+  avgHours: (h: number) => `в среднем за ${h < 24 ? `${Math.max(1, Math.round(h))} ч` : `${Math.round(h / 24)} дн.`}`,
+  noReliability: "Мало данных о скорости ответов",
+  sheetTitle: "Почему не интересно?",
+  sheetHint: "Один тап. Компания увидит причину без вашего имени.",
+  cancel: "Отмена",
+  declineReasons: ["low_salary", "wrong_format", "wrong_company", "not_looking"] as const,
+  factor: { grade: "Грейд", skills: "Навыки", salary: "Вилка", format: "Формат" } as Record<string, string>,
+};
+
+export const EMP_INT_TEXT = {
+  titleInterest: (name: string) => `Интерес к кандидату ${name}`,
+  leadInterest: "Первый шаг без обязательств: кандидат увидит вилку и «почему вы». Контакты не раскрываются.",
+  titleInvite: (name: string) => `Приглашение кандидату ${name}`,
+  leadInvite: "Кандидат открыл интерес. Уточните вилку и отправьте приглашение: после принятия раскроются контакты.",
+  infoInterest: "Интерес действует 7 дней. Кандидат получит его в кабинет и Telegram. Лимит интересов в неделю ограничен.",
+  infoInvite: "Срок ответа на приглашение 7 дней.",
+  sendInterest: "Отметить «интересен»",
+  sendInvite: "Отправить приглашение",
+  invite: "Пригласить",
+  interestBtn: "Проявить интерес",
+  messageInterest: "Короткое сообщение (до 300 символов)",
+  suggest: (to: string, pct: number) => `Поднимите верх вилки до ${to}: ответ вероятнее (${pct}%).`,
+  apply: "Применить",
+  respHours: (h: number) => `Кандидаты категории отвечают в среднем за ${h < 24 ? `${Math.max(1, Math.round(h))} ч` : `${Math.round(h / 24)} дн.`}.`,
+  interestSent: "Интерес отправлен",
+  waitOpen: "Ждём, пока кандидат откроет интерес. Его вилку и «почему вы» он уже видит.",
+  waitInvite: "Кандидат открыл интерес. Отправьте приглашение, чтобы продолжить.",
+  withdrawInterest: "Отозвать интерес",
+  interestedYou: "Вами интересовался",
 };
 
 export const CONTACT_LABEL: Record<string, string> = { platform: "через платформу", email: "email", phone: "телефон", telegram: "Telegram" };

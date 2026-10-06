@@ -18,4 +18,6 @@ export const OfferStatus = {
   interview: 'interview',
   hired: 'hired',
   not_hired: 'not_hired',
+  interest: 'interest',
+  interest_opened: 'interest_opened',
 } as const;

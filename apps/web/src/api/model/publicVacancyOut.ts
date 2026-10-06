@@ -8,6 +8,7 @@ import type { EmploymentType } from './employmentType';
 import type { Grade } from './grade';
 import type { PublicCompany } from './publicCompany';
 import type { RoleSlug } from './roleSlug';
+import type { SalaryBasis } from './salaryBasis';
 import type { SkillReqOut } from './skillReqOut';
 import type { WorkFormat } from './workFormat';
 
@@ -25,6 +26,7 @@ export interface PublicVacancyOut {
   city: string | null;
   salary_from: number;
   salary_to: number;
+  salary_basis: SalaryBasis;
   description: string | null;
   skills: SkillReqOut[];
   published_at: string | null;

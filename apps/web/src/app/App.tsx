@@ -35,6 +35,8 @@ import EmployerResponses from "@/features/responses/EmployerResponses";
 import NeedNew from "@/features/needs/NeedNew";
 import NeedCategories from "@/features/needs/NeedCategories";
 import CategoryCandidates from "@/features/needs/CategoryCandidates";
+import Subscriptions from "@/features/needs/Subscriptions";
+import { CandidateInterests } from "@/features/offers/CandidateInterests";
 // <<< block2 imports
 
 // Разделы по ролям грузятся лениво (frontend.md: «ленивые разделы»).
@@ -45,7 +47,7 @@ const AdminLayout = lazy(() => import("@/app/layouts/AdminLayout"));
 const RunPage = lazy(() => import("@/features/runs/RunPage"));
 
 // Эти пути уже реализованы настоящими страницами (E1-4).
-const IMPLEMENTED = new Set(["/", "/login", "/register", "/auth/magic", "/consents", "/onboarding", "/me", "/me/skills/:slug", "/employer/search", "/employer/candidates/:id", "/employer/vacancies", "/employer/vacancies/new", "/employer/vacancies/:id", "/employer/company", "/employer/vacancies/:id/shortlist", "/employer/offers/new", "/employer/offers", "/employer/offers/:id", "/me/offers", "/me/offers/:id", "/me/navigator", "/me/responses", "/employer/responses", "/jobs", "/jobs/:id", "/run/:token", "/federation", "/federation/moderation", "/employer/needs/new", "/employer/needs/:id", "/employer/categories/:profession/:grade"]);
+const IMPLEMENTED = new Set(["/", "/login", "/register", "/auth/magic", "/consents", "/onboarding", "/me", "/me/skills/:slug", "/employer/search", "/employer/candidates/:id", "/employer/vacancies", "/employer/vacancies/new", "/employer/vacancies/:id", "/employer/company", "/employer/vacancies/:id/shortlist", "/employer/offers/new", "/employer/offers", "/employer/offers/:id", "/me/offers", "/me/offers/:id", "/me/navigator", "/me/responses", "/employer/responses", "/jobs", "/jobs/:id", "/run/:token", "/federation", "/federation/moderation", "/employer/needs/new", "/employer/needs/:id", "/employer/categories/:profession/:grade", "/employer/subscriptions", "/me/interests"]);
 
 const stubs = (section: string) =>
   ROUTES.filter((r) => r.section === section && !IMPLEMENTED.has(r.path)).map((r) => (
@@ -69,6 +71,7 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
             {/* >>> block2 (candidate) */}
             <Route path="/me/navigator" element={<Navigator />} />
             <Route path="/me/responses" element={<CandidateResponses />} />
+            <Route path="/me/interests" element={<CandidateInterests />} />
             {/* <<< block2 (candidate) */}
           </>
         )}
@@ -91,6 +94,7 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
             <Route path="/employer/needs/new" element={<NeedNew />} />
             <Route path="/employer/needs/:id" element={<NeedCategories />} />
             <Route path="/employer/categories/:profession/:grade" element={<CategoryCandidates />} />
+            <Route path="/employer/subscriptions" element={<Subscriptions />} />
             {/* <<< block2 (employer) */}
           </>
         )}

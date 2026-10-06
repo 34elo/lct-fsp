@@ -16,7 +16,7 @@ function OfferCardRow({ o }: { o: OfferForCompany }) {
   const c = o.candidate;
   const name = c?.pseudonym ?? T.deleted;
   const sub = c ? [c.primary_role && roleLabel(c.primary_role), c.grade && (GRADE_LABEL[c.grade] ?? c.grade)].filter(Boolean).join(" · ") : "";
-  const waiting = o.status === "sent" || o.status === "viewed";
+  const waiting = o.status === "sent" || o.status === "viewed" || o.status === "interest" || o.status === "interest_opened";
   const reason = o.decline ? (DECLINE_LABEL[o.decline.reason] ?? o.decline.reason).toLowerCase() : null;
   return (
     <li>
@@ -41,7 +41,7 @@ function OfferCardRow({ o }: { o: OfferForCompany }) {
           {shortDate(o.created_at)}
           {waiting && <> · {T.replyBy(dateOnly(o.expires_at))}</>}
         </span>
-        {o.awaiting_reply_from === "company" && <span className="text-12 font-semibold text-brand-fg">{T.yourTurn}</span>}
+        {(o.awaiting_reply_from === "company" || o.status === "interest_opened") && <span className="text-12 font-semibold text-brand-fg">{T.yourTurn}</span>}
       </Link>
     </li>
   );
@@ -98,10 +98,12 @@ function Declines({ offers }: { offers: OfferForCompany[] }) {
 /** Мои офферы (экран E5): канбан по статусам, на телефоне — вкладки со счётчиками. */
 export function EmployerOffers() {
   const q = useListOffersOffersGet();
-  const [tab, setTab] = useState<BoardColumn>("sent");
+  const [picked, setTab] = useState<BoardColumn | null>(null);
   const offers = q.data?.status === 200 ? q.data.data : [];
   const groups = groupByColumn(offers);
   const st = boardStats(offers);
+  // Пока ничего не выбрано: первая непустая из «Отправлен» и «Интерес» (на телефоне иначе открылась бы пустая вкладка).
+  const tab: BoardColumn = picked ?? (groups.sent.length === 0 && groups.interest.length > 0 ? "interest" : "sent");
   return (
     <main className="mx-auto flex w-full max-w-[1400px] flex-col gap-5 p-4 md:p-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
@@ -109,7 +111,7 @@ export function EmployerOffers() {
           <h1 className="font-mono text-28 font-semibold">{T.title}</h1>
           {q.isSuccess && <p className="text-14 text-muted">{T.subtitle(st.total)}</p>}
         </div>
-        {q.isSuccess && st.total > 0 && (
+        {q.isSuccess && offers.length > 0 && (
           <dl className="flex gap-6">
             {[
               [T.kpiViewed, st.viewedPct === null ? "—" : `${st.viewedPct}%`],
@@ -125,16 +127,16 @@ export function EmployerOffers() {
         )}
       </header>
 
-      {q.isPending && <div role="status" aria-label="Загрузка" className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-40" />)}</div>}
+      {q.isPending && <div role="status" aria-label="Загрузка" className="grid gap-3 md:grid-cols-3 xl:grid-cols-7">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-40" />)}</div>}
       {q.isError && <ErrorState title={T.loadError} onRetry={() => void q.refetch()} />}
-      {q.isSuccess && st.total === 0 && (
+      {q.isSuccess && offers.length === 0 && (
         <EmptyState
           title={T.empty}
           description={T.emptyHint}
           action={<Link to="/employer/search" className={buttonVariants({ variant: "primary" })}>{T.toSearch}</Link>}
         />
       )}
-      {q.isSuccess && st.total > 0 && (
+      {q.isSuccess && offers.length > 0 && (
         <>
           <div role="tablist" aria-label={T.tabs} className="-mx-4 flex gap-1 overflow-x-auto border-b border-hairline px-4 md:hidden">
             {BOARD_COLUMNS.map((id) => (

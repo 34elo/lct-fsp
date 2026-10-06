@@ -1,4 +1,4 @@
-import { ArrowRight, Bookmark } from "lucide-react";
+import { ArrowRight, Bookmark, Sparkles } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { cn } from "../lib/cn";
@@ -22,6 +22,8 @@ export interface CandidateCardData {
   /** Ожидания: «от 230 000 ₽», формат работы и т. п. */
   expectations?: string[];
   why?: WhyItem[];
+  /** Кандидат отметил именно вашу компанию («вами интересовался»). */
+  interestedYou?: boolean;
 }
 
 const btn =
@@ -34,6 +36,7 @@ export function CandidateCard({
   onShortlist,
   onReject,
   onOpen,
+  onInterest,
   className,
 }: {
   c: CandidateCardData;
@@ -41,6 +44,8 @@ export function CandidateCard({
   onShortlist?: () => void;
   onReject?: () => void;
   onOpen?: () => void;
+  /** Первый шаг контакта: «интересен» с вилкой (E33). */
+  onInterest?: () => void;
   className?: string;
 }) {
   const pseudo = pseudonymLabel(c.role, c.number);
@@ -55,6 +60,12 @@ export function CandidateCard({
               <GradeBadge grade={c.grade} stack={c.stack} preliminary={c.gradePreliminary} className="w-fit" />
             </div>
           </header>
+          {c.interestedYou && (
+            <p className="inline-flex w-fit items-center gap-1.5 rounded-full border border-brand bg-tint-50 px-2.5 py-0.5 text-12 font-semibold text-brand-fg">
+              <Sparkles aria-hidden className="size-3.5" />
+              Вами интересовался
+            </p>
+          )}
           {c.fsp && c.fsp.length > 0 && <VerifiedMark className="w-fit">Подтверждено ФСП</VerifiedMark>}
           <ul className="flex flex-wrap gap-1.5" aria-label="Навыки">
             {c.skills.map((s) => (
@@ -88,6 +99,12 @@ export function CandidateCard({
         >
           <Bookmark aria-hidden className="size-4" fill={shortlisted ? "currentColor" : "none"} />В шорт-лист
         </button>
+        {onInterest && (
+          <button type="button" onClick={onInterest} className={cn(btn, "border border-brand text-brand-fg")}>
+            <Sparkles aria-hidden className="size-4" />
+            Интересен
+          </button>
+        )}
         <button type="button" onClick={onReject} className={cn(btn, "border border-hairline text-ink")}>
           Не подходит
         </button>

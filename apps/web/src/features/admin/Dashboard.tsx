@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Badge, Card, CardContent, CardHeader, CardTitle, ErrorState, Skeleton } from "@fsp/ui";
 
 import { useGetDashboardAdminDashboardGet } from "@/api/endpoints/admin-dashboard/admin-dashboard";
-import type { Ratio, Stage } from "@/api/model";
+import type { AppAnalyticsDashboardStage as Stage, Ratio } from "@/api/model";
 import { cell, T } from "./text";
 
 const PERIODS = [7, 30, 90];

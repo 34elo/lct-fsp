@@ -5,7 +5,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface Stage {
+export interface AppAnalyticsDashboardStage {
   count: number | null;
   hidden: boolean;
   id: string;
