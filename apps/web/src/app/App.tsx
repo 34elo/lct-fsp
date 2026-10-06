@@ -11,6 +11,7 @@ import Profile from "@/features/profile/Profile";
 import SkillEvidence from "@/features/profile/SkillEvidence";
 import CandidateView from "@/features/employer/CandidateView";
 import EmployerSearch from "@/features/employer/Search";
+import Shortlist from "@/features/employer/Shortlist";
 import Company from "@/features/employer/Company";
 import Vacancies from "@/features/employer/Vacancies";
 import VacancyEditor from "@/features/employer/VacancyEditor";
@@ -68,7 +69,7 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
             <Route path="/employer/offers/new" element={<OfferComposer />} />
             <Route path="/employer/offers" element={<EmployerOffers />} />
             <Route path="/employer/offers/:id" element={<EmployerOfferDetail />} />
-            <Route path="/employer/vacancies/:id/shortlist" element={<EmployerSearch />} />
+            <Route path="/employer/vacancies/:id/shortlist" element={<Shortlist />} />
             {/* >>> block1 (employer) */}
             {/* <<< block1 (employer) */}
             {/* >>> block2 (employer) */}
