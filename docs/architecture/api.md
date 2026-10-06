@@ -222,7 +222,11 @@
 | `GET /internal/tg/resumes/{id}?tg_user_id=` | bot | `{status, error, experience_months, skills[], unknown_skills}` — компактный итог разбора для сообщения «Вот что я понял»; чужое → 404 |
 | `POST /internal/tg/resumes/{id}/confirm` | bot | `{tg_user_id}` — подтверждение без правок; повтор безвреден; до разбора `409 resume_not_parsed` |
 | `GET /internal/tg/profile?tg_user_id=` | bot | Краткий профиль для сообщения: `{primary_role, grade, grade_preliminary, skills[≤6]: {name, level, claimed_only}, fsp[≤3]}` |
-| `POST /internal/tg/fsp/link`, `…/verify` | bot | Привязка ФСП из бота |
+| `GET /internal/tg/fsp?tg_user_id=` | bot | `{linked, verified, participant_id, achievements[≤6], teams[]}` (E9-4) |
+| `POST /internal/tg/fsp/link`, `…/verify`, `…/sync` | bot | `{tg_user_id, participant_id? \| email?}` → `{method, masked_contact}`; `{tg_user_id, code}` → `{verified}`; `{tg_user_id}` → `202`. Правила и лимиты как у `/candidates/me/fsp/*` (10 попыток / 10 мин, sync раз в 10 мин, нужно `pd_processing`); ошибки connector пробрасываются с тем же `code` |
+| `GET /internal/tg/category?tg_user_id=` | bot | `{categories[{profession, title, grade, needs_confirmation, valid_until}], claims[{profession, title, status, declared_grade, confirmed_grade}]}` — через `assessment.service` (`get_grades`, `claimed_vs_confirmed`), без своей логики |
+| `GET\|PATCH /internal/tg/settings` | bot | `{salary_min, formats[], search_status}`; PATCH `{tg_user_id, salary_min?, formats?}` частичный, `salary_min: null` очищает; запись требует `pd_processing` |
+| `PATCH /internal/tg/status` | bot | `{tg_user_id, status: active\|open\|dnd}` → настройки; `active` на 7 дней, как `PATCH /candidates/me/preferences` |
 | `POST /internal/tg/github` | bot | `{tg_user_id, login}` |
 | `GET /internal/tg/offers?tg_user_id=` | bot | Активные офферы кандидата (`sent|viewed|accepted|interview`, до 10, новые первыми) → `TgOffer[]`: поля `offer_id`, `status` и те же данные, что у шаблона `offer_new` (`company_name`, `company_responsibility`, `vacancy_title`, `formats[]`, `employment_type`, `salary_from/to`, `message`, `match_score`, `explanation[]`, `below_candidate_min`, `expires_at`) |
 | `POST /internal/tg/offers/{id}/view|accept` | bot | `{tg_user_id}` → `TgOffer`. `view` переводит `sent → viewed`; правила и ошибки как у `/offers/{id}/accept` (`409 invalid_transition`, `409 offer_expired`) |
@@ -469,5 +473,7 @@ interface ParsedResumeEdits {
 | `t:s:<skill_slug>` | Начать тест |
 | `t:a:<session_id>:<question_idx>:<option_id>` | Ответ теста (~45 байт; индекс вопроса защищает от нажатия старой кнопки) |
 | `s:<active|open|dnd>` | Статус поиска |
+| `f:l` / `f:s` | ФСП: ввести ID или email / обновить результаты |
+| `g:sal` / `g:f:<remote|hybrid|office>` | Настройки: минимальная зарплата (FSM) / переключить формат |
 
 Подробно: [telegram.md](telegram.md).
