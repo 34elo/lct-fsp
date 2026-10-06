@@ -9,7 +9,7 @@ import type { ConsentChange } from './consentChange';
 export interface AppConsentsRouterConsentsIn {
   /**
      * @minItems 1
-     * @maxItems 5
+     * @maxItems 6
      */
   consents: ConsentChange[];
 }
