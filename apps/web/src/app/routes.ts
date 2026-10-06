@@ -57,6 +57,7 @@ export const ROUTES: RouteDef[] = [
   // <<< block1 (candidate)
   // >>> block2 (candidate)
   { path: "/me/responses", title: "Мои отклики", section: "candidate", owner: "b2", nav: true },
+  { path: "/me/navigator", title: "Навигатор роста", section: "candidate", owner: "b2", nav: true },
   // <<< block2 (candidate)
 
   { path: "/employer/market", title: "Рынок талантов", screen: "E1", section: "employer", owner: "b2", nav: true },
@@ -119,6 +120,7 @@ export const NAV: Record<"candidate" | "employer" | "admin", NavItem[]> = {
     { to: "/onboarding", label: "Резюме" },
     { to: "/me/graph", label: "Граф" },
     { to: "/me/growth", label: "Рост" },
+    { to: "/me/navigator", label: "Навигатор", desktopOnly: true },
     { to: "/me/settings", label: "Настройки", desktopOnly: true },
   ],
   employer: [

@@ -17,6 +17,7 @@
 | `/me/skills/:slug` | C | Доказательства навыка |
 | `/me/offers`, `/me/offers/:id` | C | Офферы и переписка (M2) |
 | `/me/growth` | C | Uplift, путь к грейду, соревнования, адаптивный тест (M3) |
+| `/me/navigator` | C | Навигатор роста (Б2, E12-3): `NavigatorPath`, uplift-карточки, соревнования ФСП; «Пройти тест» ведёт на `/me/assessment?profession=&grade=` |
 | `/me/badge` | C | Open Badge (Q5) |
 | `/me/settings` | C | Статус, зарплата, формат, видимость, стоп-лист, согласия, удаление |
 | `/employer/market` | E | Рынок талантов (E1) |
