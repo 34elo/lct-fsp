@@ -587,6 +587,35 @@ def test_complaint(world):
     assert _db(c, "select reason, status from complaints") == [("spam", "open")]
 
 
+def test_admin_complaints(world):
+    c, e, vid, ch, pid, uid = world
+    oid = _offer(c, e, vid, pid).json()["id"]
+    c.post(f"/offers/{oid}/complaint", json={"reason": "spam", "comment": "Рассылка"}, headers=ch)
+    c.post("/auth/register", json={"email": "root@x.io", "password": PWD, "role": "candidate"})
+    _db(c, "update users set role='fsp_admin' where email='root@x.io'")
+    tok = c.post("/auth/login", json={"email": "root@x.io", "password": PWD}).json()
+    adm = {"Authorization": f"Bearer {tok['access_token']}"}
+    assert c.get("/admin/complaints", headers=ch).status_code == 403
+    assert c.get("/admin/complaints", headers=e).status_code == 403
+    assert c.get("/admin/complaints", headers={}).status_code == 401
+    assert c.get("/admin/complaints?status=zzz", headers=adm).status_code == 422
+    rows = c.get("/admin/complaints?status=open", headers=adm).json()
+    assert len(rows) == 1 and rows[0]["reason"] == "spam" and rows[0]["offer_id"] == oid
+    assert "reporter" not in json.dumps(rows) and "user_id" not in json.dumps(rows)
+    cid = rows[0]["id"]
+    url = f"/admin/complaints/{cid}/resolve"
+    assert c.post(url, headers=ch).status_code == 403
+    assert c.post(f"/admin/complaints/{uuid.uuid4()}/resolve", headers=adm).status_code == 404
+    assert c.post(url, json={"decision": "x"}, headers=adm).status_code == 422
+    r = c.post(url, headers=adm)
+    assert r.status_code == 200 and r.json()["status"] == "resolved"
+    assert c.post(url, json={"decision": "resolved"}, headers=adm).json()["status"] == "resolved"
+    r = c.post(url, json={"decision": "dismissed"}, headers=adm)
+    assert r.status_code == 409 and r.json()["code"] == "invalid_status"
+    assert c.get("/admin/complaints?status=open", headers=adm).json() == []
+    assert len(c.get("/admin/complaints", headers=adm).json()) == 1
+
+
 def test_salary_hint(world):
     c, e, vid, ch, pid, uid = world
     body = {
