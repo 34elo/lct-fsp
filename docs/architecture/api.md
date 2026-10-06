@@ -71,7 +71,7 @@
 | `GET /candidates/me/code-analysis` | Последний `CodeAnalysis` |
 | `GET /candidates/me/navigator` | `Navigator` |
 | `GET /candidates/me/uplift` | `Uplift` — какой навык подтвердить, чтобы подходить под N% больше вакансий ([matching.md §6](matching.md#6-uplift-для-кандидата-какой-навык-добавить)) |
-| `GET /candidates/me/graph?skills=top|all&vacancy_id=` | `Subgraph` — граф доказательств для визуализации ([graph.md §6](graph.md#6-api-подграфа)) |
+| `GET /candidates/me/graph?skills=top|all&depth=facts|competitions` | `Subgraph` — граф доказательств (в т.ч. тесты `test`) для визуализации ([graph.md §6](graph.md#6-api-подграфа)) |
 | `POST /candidates/me/navigator/clicks` | `{competition_id, skill_id}` — учёт переходов на соревнования |
 | `GET /candidates/me/views` | `{total_30d, companies_30d, by_day[]}` |
 | `GET /candidates/me/offers` | `OfferForCandidate[]` |
@@ -131,7 +131,7 @@
 | `POST /vacancies/from-query` | E | `{parsed_query}` → черновик вакансии |
 | `GET /vacancies/{id}/matches?min_trust=&fsp_only=&cursor=` | E | `Page<MatchItem>` + `session_id`; пишет показы |
 | `GET /candidates/{pseudo_id}/similar?limit=` | E | `{items: CandidateCard + similarity, common_skills[], session_id}` (формула — matching.md §11); скрытая анкета — 404 `candidate_not_found`; пишет показы |
-| `GET /candidates/{pseudo_id}/graph?vacancy_id=` | E | Анонимный подграф, подсветка путей под требования вакансии |
+| `GET /candidates/{pseudo_id}/graph?skills=&depth=&vacancy_id=` | E | Анонимный подграф, подсветка путей под требования вакансии; скрытый кандидат и чужая вакансия — 404 |
 | `POST /recs/feedback` | E | `{session_id, candidate_pseudo_id, event: open|dwell|shortlist|dismiss, reason?}` |
 | `GET /recs/sessions/{id}`, `DELETE /recs/sessions/{id}` | E | Учтённые подстройки (чипсы «Учли: …») / сброс |
 | `GET /teams?discipline=&min_place=` | E | 🚀 Команды ФСП, где есть кандидаты платформы |
