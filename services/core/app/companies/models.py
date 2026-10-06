@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from typing import Any
 
 import sqlalchemy as sa
 from fsp_platform.db import Base
@@ -22,6 +23,8 @@ class Company(Base):
     site: Mapped[str | None] = mapped_column(Text, default=None)
     description: Mapped[str | None] = mapped_column(Text, default=None)
     logo_key: Mapped[str | None] = mapped_column(Text, default=None)
+    contacts: Mapped[dict[str, Any] | None] = mapped_column(sa.JSON, default=None)
+    direction: Mapped[str | None] = mapped_column(Text, default=None)
     status: Mapped[str] = mapped_column(Text, default="pending", server_default="pending")
     responsibility_score: Mapped[float | None] = mapped_column(sa.Float, default=None)
     created_at: Mapped[datetime] = mapped_column(

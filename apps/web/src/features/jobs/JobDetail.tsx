@@ -1,0 +1,114 @@
+import { useState } from "react";
+import { Link, useLocation, useParams } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+
+import { Button, ErrorState, SectionLabel, Skeleton, SkillChip, formatRubRange } from "@fsp/ui";
+
+import { useListPublicVacanciesVacanciesPublicGet } from "@/api/endpoints/vacancies/vacancies";
+import { useApplyToVacancyVacanciesVacancyIdApplyPost } from "@/api/endpoints/vacancies/vacancies";
+import { ErrorNote, fieldClass } from "@/features/auth/ui";
+import { FORMAT_LABEL } from "@/features/employer/text";
+import { roleLabel } from "@/features/profile/text";
+import { useAuth } from "@/shared/lib/auth";
+import { cn } from "@/shared/lib/cn";
+import { gradeSpan } from "./Jobs";
+import { applyErrorText, isUnverified, JOBS_TEXT as T } from "./text";
+
+/** Состояния кнопки отклика (макет J1): не вошёл, не кандидат, email не подтверждён, отправлено. */
+function ApplyBox({ vacancyId }: { vacancyId: string }) {
+  const { status, role } = useAuth();
+  const loc = useLocation();
+  const qc = useQueryClient();
+  const [message, setMessage] = useState("");
+  const apply = useApplyToVacancyVacanciesVacancyIdApplyPost({
+    mutation: { onSuccess: () => void qc.invalidateQueries({ predicate: (q) => String(q.queryKey[0]).startsWith("/candidates/me") || String(q.queryKey[0]).startsWith("/offers") }) },
+  });
+  if (status !== "authenticated") {
+    return (
+      <section className="flex flex-col gap-2 rounded-xl border border-hairline bg-card p-4">
+        <p className="text-14 text-muted">{T.loginHint}</p>
+        <Link to="/login" state={{ from: loc.pathname }} className="inline-flex h-12 items-center justify-center rounded-lg bg-brand px-5 font-semibold text-on-brand">
+          {T.loginApply}
+        </Link>
+      </section>
+    );
+  }
+  if (role !== "candidate") return <p className="rounded-xl border border-hairline bg-card p-4 text-14 text-muted">{T.employerHint}</p>;
+  if (apply.isSuccess && apply.data.status === 201) {
+    return (
+      <section role="status" className="flex flex-col gap-2 rounded-xl border border-brand-mid bg-tint-50 p-4">
+        <h2 className="font-mono text-16 font-semibold">{T.sentTitle}</h2>
+        <p className="text-14">{T.sentHint}</p>
+        <Link to="/me/responses" className="text-14 font-semibold text-brand-fg hover:underline">{T.toResponses}</Link>
+      </section>
+    );
+  }
+  const unverified = isUnverified(apply.error);
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        apply.mutate({ vacancyId, data: { message: message.trim() || null } });
+      }}
+      className="flex flex-col gap-3"
+    >
+      <label className="flex flex-col gap-1 text-13 font-semibold">
+        {T.messageLabel}
+        <textarea value={message} onChange={(e) => setMessage(e.target.value)} maxLength={2000} rows={4} placeholder={T.messagePlaceholder} className={cn(fieldClass, "h-auto py-2 font-normal")} />
+      </label>
+      <p className="text-12 text-muted">{T.contactsNote}</p>
+      {unverified ? (
+        <section role="alert" className="flex flex-col gap-2 rounded-xl border border-warning-border bg-warning-bg p-4 text-warning-fg">
+          <h2 className="font-mono text-16 font-semibold">{T.unverifiedTitle}</h2>
+          <p className="text-14">{T.unverifiedHint}</p>
+          <Link to="/verify-email" className="text-14 font-semibold underline">{T.unverifiedAction}</Link>
+        </section>
+      ) : (
+        apply.isError && <ErrorNote>{applyErrorText(apply.error)}</ErrorNote>
+      )}
+      <Button type="submit" size="lg" loading={apply.isPending} disabled={unverified}>{apply.isPending ? T.sending : T.apply}</Button>
+    </form>
+  );
+}
+
+/** Вакансия (J1, /jobs/:id). Отдельного публичного эндпоинта нет: ищем в публичной выдаче. */
+export default function JobDetail() {
+  const { id = "" } = useParams();
+  const q = useListPublicVacanciesVacanciesPublicGet({ limit: 100 });
+  const v = (q.data?.status === 200 ? q.data.data : []).find((x) => x.id === id);
+  return (
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
+      <Link to="/jobs" className="text-sm font-semibold text-brand-fg hover:underline">← {T.back}</Link>
+      {q.isPending && <Skeleton role="status" aria-label="Загрузка" className="h-64" />}
+      {q.isError && <ErrorState title={T.notFound} onRetry={() => void q.refetch()} />}
+      {q.isSuccess && !v && <ErrorNote>{T.notFound}</ErrorNote>}
+      {v && (
+        <>
+          <header className="flex flex-col gap-1">
+            <h1 className="break-words font-mono text-24 font-semibold">{v.title}</h1>
+            <p className="text-13 text-muted">
+              {[v.company.name, v.city, v.formats.map((f) => FORMAT_LABEL[f] ?? f).join(", ").toLowerCase(), T.employment[v.employment_type]].filter(Boolean).join(" · ")}
+            </p>
+          </header>
+          <div>
+            <SectionLabel>{T.range}</SectionLabel>
+            <p className="font-mono text-24 font-semibold text-brand-deep dark:text-brand-mid">{formatRubRange(v.salary_from, v.salary_to)}</p>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            <span className="rounded-md bg-brand px-2 py-0.5 font-mono text-12 font-semibold text-on-brand">{roleLabel(v.role)} · {gradeSpan(v)}</span>
+            {v.skills.map((s) => (
+              <SkillChip key={s.slug} name={s.slug} variant="claimed" title={s.required ? T.required : undefined} />
+            ))}
+          </div>
+          {v.description && (
+            <section className="flex flex-col gap-2 rounded-xl border border-hairline bg-card p-4">
+              <SectionLabel>{T.description}</SectionLabel>
+              <p className="whitespace-pre-wrap break-words text-14">{v.description}</p>
+            </section>
+          )}
+          <ApplyBox vacancyId={v.id} />
+        </>
+      )}
+    </div>
+  );
+}

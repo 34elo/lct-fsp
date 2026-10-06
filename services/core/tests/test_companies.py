@@ -150,3 +150,76 @@ def test_blocked_cannot_be_moderated(c):
     for act in ("verify", "reject"):
         r = c.post(f"/admin/companies/{co['id']}/{act}", headers=adm)
         assert r.status_code == 409 and r.json()["code"] == "invalid_status"
+
+
+def test_company_contacts_and_direction(c):
+    h = _user(c, "e@x.io")
+    # Register company with contacts and direction
+    r = c.post(
+        "/companies",
+        json={
+            "name": "Tech Corp",
+            "inn": INN,
+            "contacts": {"name": "John Doe", "email": "john@tech.io", "phone": "+71234567890"},
+            "direction": "Software development and consulting",
+        },
+        headers=h,
+    )
+    assert r.status_code == 201
+    co = r.json()
+    assert co["contacts"]["name"] == "John Doe"
+    assert co["contacts"]["email"] == "john@tech.io"
+    assert co["contacts"]["phone"] == "+71234567890"
+    assert co["direction"] == "Software development and consulting"
+
+    # Verify contacts and direction are returned in GET
+    r = c.get("/companies/me", headers=h)
+    assert r.status_code == 200
+    co = r.json()
+    assert co["contacts"]["name"] == "John Doe"
+    assert co["contacts"]["email"] == "john@tech.io"
+    assert co["direction"] == "Software development and consulting"
+
+    # Update contacts and direction via PATCH
+    r = c.patch(
+        "/companies/me",
+        json={
+            "contacts": {
+                "name": "Jane Smith",
+                "email": "jane@tech.io",
+                "phone": "+71111111111",
+                "telegram": "@jane",
+            },
+            "direction": "AI and machine learning",
+        },
+        headers=h,
+    )
+    assert r.status_code == 200
+    co = r.json()
+    assert co["contacts"]["name"] == "Jane Smith"
+    assert co["contacts"]["telegram"] == "@jane"
+    assert co["direction"] == "AI and machine learning"
+
+    # Verify update persisted
+    r = c.get("/companies/me", headers=h)
+    assert r.status_code == 200
+    co = r.json()
+    assert co["contacts"]["name"] == "Jane Smith"
+    assert co["direction"] == "AI and machine learning"
+
+
+def test_company_contacts_optional(c):
+    h = _user(c, "e@x.io")
+    # Register company without contacts and direction
+    r = c.post("/companies", json={"name": "Simple Corp", "inn": INN}, headers=h)
+    assert r.status_code == 201
+    co = r.json()
+    assert co["contacts"] is None
+    assert co["direction"] is None
+
+    # Add only direction later
+    r = c.patch("/companies/me", json={"direction": "Manufacturing"}, headers=h)
+    assert r.status_code == 200
+    co = r.json()
+    assert co["direction"] == "Manufacturing"
+    assert co["contacts"] is None

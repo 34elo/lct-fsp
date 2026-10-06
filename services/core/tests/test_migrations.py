@@ -27,7 +27,7 @@ def test_upgrade_and_downgrade(tmp_path):
 
 
 def test_stage0_migrations_chain(tmp_path):
-    """s0_01 (grades) → s0_02 (users.email_verified_at): upgrade и пошаговый downgrade."""
+    """s0_01 → s0_02 → b2_01 (контакты компании) → b2_02 (приглашения): upgrade и downgrade."""
     db = tmp_path / "s0.db"
     url = f"sqlite+aiosqlite:///{db}"
     sync = f"sqlite:///{db}"
@@ -43,6 +43,20 @@ def test_stage0_migrations_chain(tmp_path):
     insp = inspect(create_engine(sync))
     assert "grades" in insp.get_table_names()
     assert "email_verified_at" in {c["name"] for c in insp.get_columns("users")}
+    # Check that b2_01 migration adds contacts and direction columns to companies
+    assert "contacts" in {c["name"] for c in insp.get_columns("companies")}
+    assert "direction" in {c["name"] for c in insp.get_columns("companies")}
+    # b2_02: приглашение без вакансии (ADR-022)
+    offer_cols = {c["name"]: c for c in insp.get_columns("offers")}
+    assert {"title", "description", "contact_method", "initiator"} <= set(offer_cols)
+    assert offer_cols["vacancy_id"]["nullable"] is True
+    _alembic(url, "downgrade", "b2_01")
+    insp = inspect(create_engine(sync))
+    offer_cols = {c["name"]: c for c in insp.get_columns("offers")}
+    assert "initiator" not in offer_cols and offer_cols["vacancy_id"]["nullable"] is False
+    _alembic(url, "downgrade", "s0_02")
+    insp = inspect(create_engine(sync))
+    assert "contacts" not in {c["name"] for c in insp.get_columns("companies")}
     _alembic(url, "downgrade", "s0_01")
     insp = inspect(create_engine(sync))
     assert "email_verified_at" not in {c["name"] for c in insp.get_columns("users")}

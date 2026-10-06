@@ -218,3 +218,29 @@ def test_assessment_analytics_props_strict():
         n.split("_")[0] in ("survey", "assessment", "family", "regular")
         for n in ASSESSMENT_ANALYTICS_EVENTS
     )
+
+
+def test_hiring_analytics_events_validate_and_reject_pii():
+    from datetime import UTC, datetime
+    from uuid import uuid4
+
+    import pytest
+    from fsp_contracts.analytics import AnalyticsEvent, validate_event
+    from pydantic import ValidationError
+
+    def ev(name, props):
+        return AnalyticsEvent(
+            event=name, ts=datetime(2026, 10, 6, 12, tzinfo=UTC), props=props, role="employer"
+        )
+
+    assert HIRING_ANALYTICS_EVENTS
+    assert set(HIRING_ANALYTICS_EVENTS) <= set(ANALYTICS_EVENTS)
+    ok = validate_event(ev("invite_sent", {"invite_id": str(uuid4()), "with_vacancy": False}))
+    assert ok.props["with_vacancy"] is False
+    # свободный текст и ПДн отклоняются
+    with pytest.raises(ValidationError):
+        validate_event(ev("need_created", {"need_id": str(uuid4()), "skills": 3, "text": "Вася"}))
+    with pytest.raises(ValidationError):
+        validate_event(
+            ev("category_viewed", {"profession": "Иван", "grade": "mid", "candidates": 1})
+        )

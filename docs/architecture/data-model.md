@@ -444,6 +444,8 @@ CREATE TABLE interview_sessions (
 ```sql
 CREATE TABLE companies (
   id uuid PRIMARY KEY, name text NOT NULL, inn text, site text, description text, logo_key text,
+  contacts json,                                                -- {name, email, phone, telegram}
+  direction text,                                               -- направление деятельности
   status text NOT NULL DEFAULT 'pending', responsibility_score real, created_at timestamptz DEFAULT now()
 );
 CREATE TABLE company_members (company_id uuid REFERENCES companies(id) ON DELETE CASCADE, user_id uuid REFERENCES users(id) ON DELETE CASCADE, role text NOT NULL, PRIMARY KEY (company_id, user_id));
@@ -480,12 +482,15 @@ CREATE TABLE saved_searches (id uuid PRIMARY KEY, company_id uuid REFERENCES com
 ```sql
 CREATE TABLE offers (
   id uuid PRIMARY KEY,
-  vacancy_id uuid NOT NULL REFERENCES vacancies(id),
+  vacancy_id uuid REFERENCES vacancies(id),   -- NULL: приглашение без вакансии (ADR-022, E20-2)
   candidate_id uuid REFERENCES candidates(user_id) ON DELETE SET NULL,
   company_id uuid NOT NULL REFERENCES companies(id),
   created_by uuid NOT NULL REFERENCES users(id),
   salary_from int NOT NULL, salary_to int NOT NULL CHECK (salary_to >= salary_from),
   message text,
+  title text, description text,          -- без вакансии title обязателен (проверка в core)
+  contact_method text,                   -- platform | email | phone | telegram
+  initiator text NOT NULL DEFAULT 'employer', -- employer (приглашение) | candidate (отклик)
   status text NOT NULL DEFAULT 'sent',
   decline_reason text, decline_comment text,
   awaiting_reply_from text,              -- candidate | company | NULL
@@ -551,16 +556,13 @@ CREATE TABLE rec_feedback (
   reason text, created_at timestamptz DEFAULT now()
 );
 
-CREATE MATERIALIZED VIEW candidate_links AS     -- связи людей (graph.md §7)
-SELECT a.candidate_id AS candidate_a, b.candidate_id AS candidate_b, 'fsp_team' AS kind, a.team_id AS context_id
-FROM fsp_team_members a JOIN fsp_team_members b ON a.team_id = b.team_id AND a.candidate_id < b.candidate_id
-WHERE a.candidate_id IS NOT NULL AND b.candidate_id IS NOT NULL
-UNION ALL
-SELECT r.candidate_id, c.candidate_id, 'repo', c.repo_id::text
-FROM repo_contributors c JOIN code_repos cr ON cr.id = c.repo_id
-JOIN code_analyses an ON an.id = cr.analysis_id
-JOIN LATERAL (SELECT an.candidate_id) r ON true
-WHERE c.candidate_id IS NOT NULL AND c.candidate_id <> r.candidate_id;
+CREATE TABLE candidate_links (                  -- связи людей (graph.md §7); обычная таблица, перестраивается
+  candidate_a uuid REFERENCES candidates(user_id) ON DELETE CASCADE,  -- заданием candidate_links.refresh
+  candidate_b uuid REFERENCES candidates(user_id) ON DELETE CASCADE,  -- (graph/fsp_links.py), пара упорядочена a < b
+  kind text,                                    -- fsp_team | repo (repo - после анализа GitHub, E16-8)
+  context_id text,                              -- fsp_teams.id или code_repos.id
+  PRIMARY KEY (candidate_a, candidate_b, kind, context_id)
+);
 CREATE INDEX ON candidate_links (candidate_a);
 CREATE INDEX ON candidate_links (candidate_b);
 CREATE TABLE eval_runs (id uuid PRIMARY KEY, created_at timestamptz DEFAULT now(), git_sha text, dataset text, config jsonb, metrics jsonb, report_md text);
@@ -606,6 +608,7 @@ CREATE TABLE analytics.analytics_events (id bigserial, ts timestamptz NOT NULL, 
 
 CREATE TABLE live_runs (                          -- живые прогоны (metrics-and-analytics.md §3)
   id uuid PRIMARY KEY, scenario text NOT NULL, token text UNIQUE NOT NULL, tasks jsonb NOT NULL,
+  actor text,                                    -- псевдоним испытателя (привязывается по первому событию с run_id)
   invited_at timestamptz DEFAULT now(), started_at timestamptz, finished_at timestamptz,
   sus_answers jsonb, sus_score real, category_agree boolean, notes text
 );

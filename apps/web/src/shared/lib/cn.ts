@@ -1,6 +1,2 @@
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+// Временный реэкспорт: cn переехал в @fsp/ui (E19-0). Уберёт E19-15.
+export { cn } from "@fsp/ui";

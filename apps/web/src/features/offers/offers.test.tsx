@@ -83,3 +83,87 @@ test("пустая вилка не отправляется", async () => {
   await waitFor(() => expect(screen.getAllByText(/Укажите обе границы вилки/).length).toBeGreaterThan(0));
   expect(calls).toHaveLength(0);
 });
+
+const mkOffer = (id: string, status: string, extra: Record<string, unknown> = {}) => ({
+  id, status, created_at: "2026-10-02T10:00:00Z", expires_at: "2026-10-16T10:00:00Z",
+  vacancy: { id: "v1", title: "Backend (Python)", role: "backend", formats: ["remote"] },
+  salary_from: 200000, salary_to: 250000, below_candidate_min: false,
+  candidate: { ...card, pseudonym: `Backend #${id}` }, ...extra,
+});
+
+test("канбан E5: шесть колонок, счётчики равны карточкам, причины отказов", async () => {
+  const list = [
+    mkOffer("1", "sent"), mkOffer("2", "sent"), mkOffer("3", "viewed"),
+    mkOffer("4", "declined", { decline: { reason: "wrong_stack" } }), mkOffer("5", "expired"),
+  ];
+  const f = globalThis.fetch as unknown as ReturnType<typeof vi.fn>;
+  const base = f.getMockImplementation()!;
+  f.mockImplementation(async (url: string, init?: RequestInit) => (url.endsWith("/offers") && init?.method !== "POST" ? res(200, list) : base(url, init)));
+  mount("/employer/offers");
+  const sent = await screen.findByRole("region", { name: "Отправлен" });
+  expect(sent.querySelectorAll("li")).toHaveLength(2);
+  expect(screen.getByRole("region", { name: "Нанят" })).toHaveTextContent("Пока пусто");
+  expect(screen.getByRole("region", { name: "Закрыто" }).querySelectorAll("li")).toHaveLength(2);
+  expect(screen.getAllByLabelText("Карточек: 2", { selector: "span" })).toHaveLength(2);
+  const tabs = screen.getAllByRole("tab");
+  expect(tabs).toHaveLength(6);
+  expect(tabs[0]).toHaveTextContent("Отправлен2");
+  expect(screen.getByText(/Не тот стек/, { selector: "span" })).toBeInTheDocument();
+  expect(screen.getByText(/Отклонён · не тот стек/)).toBeInTheDocument();
+});
+
+const candOffer = (id: string, status: string, extra: Record<string, unknown> = {}) => ({
+  id, status, created_at: "2026-10-02T10:00:00Z", expires_at: "2026-10-16T10:00:00Z",
+  vacancy: { id: "v1", title: "Backend (Python)", role: "backend", grade_min: "middle", grade_max: "middle_plus", formats: ["remote"], employment_type: "full" },
+  salary_from: 200000, salary_to: 250000, below_candidate_min: false, match_snapshot: null, decline: null,
+  company: { id: "c1", name: "Северный код", responsibility_score: 4.6, verified: true }, ...extra,
+});
+
+function stubCandidate(list: unknown[]) {
+  const f = globalThis.fetch as unknown as ReturnType<typeof vi.fn>;
+  const base = f.getMockImplementation()!;
+  f.mockImplementation(async (url: string, init?: RequestInit) => {
+    if (url.endsWith("/me")) return res(200, { id: "u2", email: "c@b.ru", role: "candidate", consents: ["pd_processing"] });
+    if (url.endsWith("/candidates/me/offers")) return res(200, list);
+    if (/\/offers\/o\d\/(messages|events)/.test(url)) return res(200, []);
+    const m = /\/offers\/(o\d)$/.exec(url);
+    if (m && init?.method !== "POST") return res(200, list.find((o) => (o as { id: string }).id === m[1]));
+    if (/\/offers\/o\d\/decline$/.test(url)) {
+      calls.push({ url, headers: new Headers(init?.headers), body: JSON.parse(String(init?.body)) });
+      return res(200, candOffer("o1", "declined"));
+    }
+    return base(url, init);
+  });
+}
+
+test("M2: приглашение без вакансии показывается по названию, плашка «ниже ожиданий», сводка прошлых", async () => {
+  stubCandidate([
+    candOffer("o1", "sent", { below_candidate_min: true }),
+    candOffer("o2", "sent", { vacancy: null, title: "Рекрутинг ML-команды", initiator: "employer" }),
+    candOffer("o3", "declined"),
+    candOffer("o4", "expired"),
+  ]);
+  mount("/me/offers");
+  expect(await screen.findByText("Рекрутинг ML-команды")).toBeInTheDocument();
+  expect(screen.getByText("Приглашение без вакансии")).toBeInTheDocument();
+  expect(screen.getByText("Ниже ваших ожиданий")).toBeInTheDocument();
+  expect(screen.getByText("2 новых")).toBeInTheDocument();
+  expect(screen.getByText(/принято 0 · отклонено 1 · истёк 1/)).toBeInTheDocument();
+});
+
+test("M2: отказ одним тапом по причине в нижнем листе", async () => {
+  stubCandidate([candOffer("o1", "sent")]);
+  mount("/me/offers/o1");
+  fireEvent.click(await screen.findByRole("button", { name: "Не подходит" }));
+  fireEvent.click(await screen.findByRole("button", { name: /Не тот стек/ }));
+  await waitFor(() => expect(calls).toHaveLength(1));
+  expect(calls[0].body).toEqual({ reason: "wrong_stack", comment: null });
+});
+
+test("M2: детали приглашения без вакансии открываются", async () => {
+  stubCandidate([candOffer("o2", "accepted", { vacancy: null, title: "Рекрутинг ML-команды", description: "Нужен тимлид" })]);
+  mount("/me/offers/o2");
+  expect(await screen.findByRole("heading", { name: "Оффер принят" })).toBeInTheDocument();
+  expect(screen.getByText("Нужен тимлид")).toBeInTheDocument();
+  expect(screen.getByText(/Рекрутинг ML-команды/)).toBeInTheDocument();
+});

@@ -7,21 +7,32 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, Form, Header, Request, UploadFile
-from fsp_contracts.enums import ConsentType, DeclineReason, OfferStatus
+from fsp_contracts.enums import (
+    ConsentType,
+    DeclineReason,
+    OfferStatus,
+    SearchStatus,
+    WorkFormat,
+)
 from fsp_platform.app import ProblemError
 from fsp_platform.ratelimit import RateLimiter
 from pydantic import BaseModel, Field
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.assessment import service as assessment
 from app.candidates import service as candidates
 from app.consents import service as consents
 from app.deps import get_limiter, get_redis, get_session, get_storage
+from app.fsp import service as fsp_service
+from app.fsp.client import ConnectorClient
+from app.fsp.router import get_connector
 from app.graph import service as graph
 from app.identity.deps import get_current_user
 from app.identity.models import User
 from app.notifications.handlers import offer_card_data
 from app.offers import service as offers
+from app.openapi_errors import problem_responses
 from app.resumes import service as resumes
 from app.taxonomy import service as taxonomy
 from app.telegram import service
@@ -42,7 +53,7 @@ class DeepLinkOut(BaseModel):
     deep_link: str
 
 
-@router.post("/me/telegram/link", response_model=DeepLinkOut)
+@router.post("/me/telegram/link", response_model=DeepLinkOut, responses=problem_responses(401, 429))
 async def my_link(
     request: Request,
     user: User = Depends(get_current_user),
@@ -152,6 +163,7 @@ async def magic_link(
 
 PROFILE_SKILLS = 6
 FSP_LINES = 3
+FSP_ACHIEVEMENTS = 6
 
 
 async def _candidate_by_tg(session: AsyncSession, tg_user_id: int) -> User:
@@ -280,18 +292,229 @@ async def tg_profile(
         for e in top
         if e.skill_id in slugs
     ]
-    fsp: dict[UUID, str] = {}
-    for ev in await graph.evidence_of(session, [user.id], source="fsp"):
-        label = (ev.details or {}).get("label")
-        if ev.fact_type == "fsp_result" and isinstance(label, str):
-            fsp.setdefault(ev.fact_id, label)
     return TgProfileOut(
         primary_role=cand.primary_role,
         grade=cand.grade,
         grade_preliminary=cand.grade_confidence is None or cand.grade_confidence < 0.5,
         skills=skills,
-        fsp=list(fsp.values())[:FSP_LINES],
+        fsp=(await _fsp_labels(session, user.id))[:FSP_LINES],
     )
+
+
+# --- ФСП, категория, статус и настройки из бота (api.md §2.10, E9-4) ----------------------------
+
+
+async def _fsp_labels(session: AsyncSession, user_id: UUID) -> list[str]:
+    labels: dict[UUID, str] = {}
+    for ev in await graph.evidence_of(session, [user_id], source="fsp"):
+        label = (ev.details or {}).get("label")
+        if ev.fact_type == "fsp_result" and isinstance(label, str):
+            labels.setdefault(ev.fact_id, label)
+    return list(labels.values())
+
+
+async def _require_pd(session: AsyncSession, user_id: UUID) -> None:
+    if not await consents.has_consent(session, user_id, ConsentType.pd_processing):
+        raise ProblemError(
+            403, "consent_required", "Нужно согласие", "Выдайте согласие pd_processing"
+        )
+
+
+class TgFspOut(BaseModel):
+    linked: bool
+    verified: bool
+    participant_id: str | None = None
+    achievements: list[str] = []
+    teams: list[str] = []
+
+
+@internal.get("/tg/fsp", response_model=TgFspOut, dependencies=[Depends(require_bot)])
+async def tg_fsp(tg_user_id: int, session: AsyncSession = Depends(get_session)):
+    user = await _candidate_by_tg(session, tg_user_id)
+    link = await fsp_service.link_status(session, user.id)
+    teams = [t["name"] for t in await fsp_service.teams_of(session, user.id) if t["name"]]
+    labels = (await _fsp_labels(session, user.id))[:FSP_ACHIEVEMENTS]
+    return TgFspOut(**link, achievements=labels, teams=teams)
+
+
+class TgFspLinkIn(BaseModel):
+    tg_user_id: int
+    participant_id: str | None = Field(default=None, max_length=64)
+    email: str | None = Field(default=None, max_length=254)
+
+
+class TgFspLinkOut(BaseModel):
+    method: str
+    masked_contact: str | None = None
+
+
+@internal.post("/tg/fsp/link", response_model=TgFspLinkOut, dependencies=[Depends(require_bot)])
+async def tg_fsp_link(
+    body: TgFspLinkIn,
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+    limiter: RateLimiter = Depends(get_limiter),
+    connector: ConnectorClient = Depends(get_connector),
+):
+    """Те же правила, что у `/candidates/me/fsp/link` (10 попыток / 10 мин, нужно согласие ПДн)."""
+    user = await _candidate_by_tg(session, body.tg_user_id)
+    await _require_pd(session, user.id)
+    await limiter.check(f"fsplink:{user.id}", 10, 600)
+    if not (body.participant_id or body.email):
+        raise ProblemError(422, "validation_error", "Укажите ID участника или email")
+    await candidates.get_or_create(session, user.id, request.app.state.settings.pseudo_id_secret)
+    data = await connector.link(
+        user.id, participant_id=body.participant_id, email=body.email, manual=False
+    )
+    return TgFspLinkOut(method=data["method"], masked_contact=data.get("masked_contact"))
+
+
+class TgFspVerifyIn(BaseModel):
+    tg_user_id: int
+    code: str = Field(min_length=1, max_length=16)
+
+
+@internal.post("/tg/fsp/verify", dependencies=[Depends(require_bot)])
+async def tg_fsp_verify(
+    body: TgFspVerifyIn,
+    session: AsyncSession = Depends(get_session),
+    limiter: RateLimiter = Depends(get_limiter),
+    connector: ConnectorClient = Depends(get_connector),
+):
+    user = await _candidate_by_tg(session, body.tg_user_id)
+    await _require_pd(session, user.id)
+    await limiter.check(f"fspverify:{user.id}", 20, 600)
+    data = await connector.verify(user.id, body.code)
+    return {"verified": bool(data.get("verified"))}
+
+
+@internal.post("/tg/fsp/sync", status_code=202, dependencies=[Depends(require_bot)])
+async def tg_fsp_sync(
+    body: TgConfirmIn,
+    session: AsyncSession = Depends(get_session),
+    redis: Redis = Depends(get_redis),
+):
+    user = await _candidate_by_tg(session, body.tg_user_id)
+    await _require_pd(session, user.id)
+    await fsp_service.request_sync(session, redis, user.id)
+    return {"status": "accepted"}
+
+
+class TgCategoryItem(BaseModel):
+    profession: str
+    title: str
+    grade: str
+    needs_confirmation: bool
+    valid_until: str
+
+
+class TgClaim(BaseModel):
+    profession: str
+    title: str
+    status: str
+    declared_grade: str | None
+    confirmed_grade: str | None
+
+
+class TgCategoryOut(BaseModel):
+    categories: list[TgCategoryItem]
+    claims: list[TgClaim]
+
+
+@internal.get("/tg/category", response_model=TgCategoryOut, dependencies=[Depends(require_bot)])
+async def tg_category(tg_user_id: int, session: AsyncSession = Depends(get_session)):
+    """Подтверждённые категории (грейды теста) и «заявлено vs подтверждено»; публичное API Б1."""
+    user = await _candidate_by_tg(session, tg_user_id)
+    titles = {p.slug: p.title for p in await taxonomy.list_professions(session)}
+    grades = await assessment.get_grades(session, user.id)
+    claims = await assessment.claimed_vs_confirmed(session, user.id)
+    return TgCategoryOut(
+        categories=[
+            TgCategoryItem(
+                profession=g.profession,
+                title=titles.get(g.profession, g.profession),
+                grade=g.grade.value,
+                needs_confirmation=g.needs_confirmation,
+                valid_until=g.valid_until.isoformat(),
+            )
+            for g in grades
+        ],
+        claims=[
+            TgClaim(
+                profession=c.profession,
+                title=titles.get(c.profession, c.profession),
+                status=c.status,
+                declared_grade=c.declared_grade.value if c.declared_grade else None,
+                confirmed_grade=c.confirmed_grade.value if c.confirmed_grade else None,
+            )
+            for c in claims
+        ],
+    )
+
+
+class TgSettingsOut(BaseModel):
+    salary_min: int | None
+    formats: list[str]
+    search_status: str
+
+
+async def _settings_out(request: Request, session: AsyncSession, user: User) -> TgSettingsOut:
+    cand = await candidates.get_or_create(
+        session, user.id, request.app.state.settings.pseudo_id_secret
+    )
+    return TgSettingsOut(
+        salary_min=cand.salary_min,
+        formats=list(cand.formats or []),
+        search_status=candidates.effective_status(cand),
+    )
+
+
+@internal.get("/tg/settings", response_model=TgSettingsOut, dependencies=[Depends(require_bot)])
+async def tg_settings(
+    request: Request, tg_user_id: int, session: AsyncSession = Depends(get_session)
+):
+    user = await _candidate_by_tg(session, tg_user_id)
+    return await _settings_out(request, session, user)
+
+
+class TgSettingsIn(BaseModel):
+    tg_user_id: int
+    salary_min: int | None = Field(default=None, ge=0, le=100_000_000)
+    formats: list[WorkFormat] | None = None
+
+
+@internal.patch("/tg/settings", response_model=TgSettingsOut, dependencies=[Depends(require_bot)])
+async def tg_settings_update(
+    body: TgSettingsIn, request: Request, session: AsyncSession = Depends(get_session)
+):
+    """Только минимальная зарплата и форматы; остальное — на сайте. `salary_min: null` очищает."""
+    user = await _candidate_by_tg(session, body.tg_user_id)
+    await _require_pd(session, user.id)
+    cand = await candidates.get_or_create(
+        session, user.id, request.app.state.settings.pseudo_id_secret
+    )
+    changes = body.model_dump(exclude_unset=True, exclude={"tg_user_id"})
+    await candidates.update_preferences(session, cand, changes)
+    return await _settings_out(request, session, user)
+
+
+class TgStatusIn(BaseModel):
+    tg_user_id: int
+    status: SearchStatus
+
+
+@internal.patch("/tg/status", response_model=TgSettingsOut, dependencies=[Depends(require_bot)])
+async def tg_status(
+    body: TgStatusIn, request: Request, session: AsyncSession = Depends(get_session)
+):
+    """Статус поиска: `active` на 7 дней, `open`, `dnd` (как `PATCH /candidates/me/preferences`)."""
+    user = await _candidate_by_tg(session, body.tg_user_id)
+    await _require_pd(session, user.id)
+    cand = await candidates.get_or_create(
+        session, user.id, request.app.state.settings.pseudo_id_secret
+    )
+    await candidates.update_preferences(session, cand, {"search_status": body.status.value})
+    return await _settings_out(request, session, user)
 
 
 # --- Офферы из бота (api.md §2.10) --------------------------------------------------------------
@@ -333,8 +556,10 @@ async def _offer_out(session: AsyncSession, offer) -> TgOfferOut:
 async def tg_offers(tg_user_id: int, session: AsyncSession = Depends(get_session)):
     """Активные офферы кандидата (меню «Офферы»): новые первыми, не больше 10."""
     user = await _candidate_by_tg(session, tg_user_id)
-    rows = [
-        o for o in await offers.list_for_candidate(session, user.id) if o.status in ACTIVE_OFFERS
+    rows = [  # свои отклики (ADR-022) в меню «Офферы» не показываем
+        o
+        for o in await offers.list_for_candidate(session, user.id, initiator="employer")
+        if o.status in ACTIVE_OFFERS
     ]
     return [await _offer_out(session, o) for o in rows[:TG_OFFERS_LIMIT]]
 

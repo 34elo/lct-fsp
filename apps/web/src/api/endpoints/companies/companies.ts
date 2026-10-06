@@ -27,9 +27,9 @@ import type {
   CompanyIn,
   CompanyOut,
   CompanyPatch,
-  HTTPValidationError,
   MemberIn,
-  MemberOut
+  MemberOut,
+  ProblemOut
 } from '../../model';
 
 import { apiFetch } from '../../mutator';
@@ -60,15 +60,40 @@ export type registerCompanyCompaniesPostResponse201 = {
   status: 201
 }
 
-export type registerCompanyCompaniesPostResponse422 = {
-  data: HTTPValidationError
+export type registerCompanyCompaniesPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type registerCompanyCompaniesPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type registerCompanyCompaniesPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type registerCompanyCompaniesPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type registerCompanyCompaniesPostResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type registerCompanyCompaniesPostResponse422ApplicationJson = {
+  data: ProblemOut
   status: 422
 }
 
 export type registerCompanyCompaniesPostResponseSuccess = (registerCompanyCompaniesPostResponse201) & {
   headers: Headers;
 };
-export type registerCompanyCompaniesPostResponseError = (registerCompanyCompaniesPostResponse422) & {
+export type registerCompanyCompaniesPostResponseError = (registerCompanyCompaniesPostResponse401ApplicationProblemJson | registerCompanyCompaniesPostResponse401ApplicationJson | registerCompanyCompaniesPostResponse403ApplicationProblemJson | registerCompanyCompaniesPostResponse403ApplicationJson | registerCompanyCompaniesPostResponse422ApplicationProblemJson | registerCompanyCompaniesPostResponse422ApplicationJson) & {
   headers: Headers;
 };
 
@@ -116,7 +141,7 @@ return apiFetch<registerCompanyCompaniesPostResponse>(getRegisterCompanyCompanie
 
 export const getRegisterCompanyCompaniesPostMutationKey = () => ['registerCompanyCompaniesPost'] as const;
 
-export const getRegisterCompanyCompaniesPostMutationOptions = <TError = ErrorType<HTTPValidationError>,
+export const getRegisterCompanyCompaniesPostMutationOptions = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registerCompanyCompaniesPost>>, TError,RegisterCompanyCompaniesPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof registerCompanyCompaniesPost>>, TError,RegisterCompanyCompaniesPostMutationVariables, TContext> => {
 
@@ -145,13 +170,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type RegisterCompanyCompaniesPostMutationResult = NonNullable<Awaited<ReturnType<typeof registerCompanyCompaniesPost>>>
     export type RegisterCompanyCompaniesPostMutationBody = CompanyIn
-    export type RegisterCompanyCompaniesPostMutationError = ErrorType<HTTPValidationError>
+    export type RegisterCompanyCompaniesPostMutationError = ErrorType<ProblemOut>
     export type RegisterCompanyCompaniesPostMutationVariables = {data: CompanyIn}
 
     /**
  * @summary Register Company
  */
-export const useRegisterCompanyCompaniesPost = <TError = ErrorType<HTTPValidationError>,
+export const useRegisterCompanyCompaniesPost = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registerCompanyCompaniesPost>>, TError,RegisterCompanyCompaniesPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof registerCompanyCompaniesPost>>,
@@ -166,12 +191,34 @@ export const useRegisterCompanyCompaniesPost = <TError = ErrorType<HTTPValidatio
   status: 200
 }
 
+export type getMyCompanyCompaniesMeGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type getMyCompanyCompaniesMeGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type getMyCompanyCompaniesMeGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type getMyCompanyCompaniesMeGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
 export type getMyCompanyCompaniesMeGetResponseSuccess = (getMyCompanyCompaniesMeGetResponse200) & {
   headers: Headers;
 };
-;
+export type getMyCompanyCompaniesMeGetResponseError = (getMyCompanyCompaniesMeGetResponse401ApplicationProblemJson | getMyCompanyCompaniesMeGetResponse401ApplicationJson | getMyCompanyCompaniesMeGetResponse403ApplicationProblemJson | getMyCompanyCompaniesMeGetResponse403ApplicationJson) & {
+  headers: Headers;
+};
 
-export type getMyCompanyCompaniesMeGetResponse = (getMyCompanyCompaniesMeGetResponseSuccess)
+export type getMyCompanyCompaniesMeGetResponse = (getMyCompanyCompaniesMeGetResponseSuccess | getMyCompanyCompaniesMeGetResponseError)
 
 export const getGetMyCompanyCompaniesMeGetUrl = () => {
 
@@ -206,7 +253,7 @@ export const getGetMyCompanyCompaniesMeGetQueryKey = () => {
     }
 
 
-export const getGetMyCompanyCompaniesMeGetQueryOptions = <TData = Awaited<ReturnType<typeof getMyCompanyCompaniesMeGet>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyCompanyCompaniesMeGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+export const getGetMyCompanyCompaniesMeGetQueryOptions = <TData = Awaited<ReturnType<typeof getMyCompanyCompaniesMeGet>>, TError = ErrorType<ProblemOut>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyCompanyCompaniesMeGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -225,10 +272,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetMyCompanyCompaniesMeGetQueryResult = NonNullable<Awaited<ReturnType<typeof getMyCompanyCompaniesMeGet>>>
-export type GetMyCompanyCompaniesMeGetQueryError = ErrorType<unknown>
+export type GetMyCompanyCompaniesMeGetQueryError = ErrorType<ProblemOut>
 
 
-export function useGetMyCompanyCompaniesMeGet<TData = Awaited<ReturnType<typeof getMyCompanyCompaniesMeGet>>, TError = ErrorType<unknown>>(
+export function useGetMyCompanyCompaniesMeGet<TData = Awaited<ReturnType<typeof getMyCompanyCompaniesMeGet>>, TError = ErrorType<ProblemOut>>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyCompanyCompaniesMeGet>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getMyCompanyCompaniesMeGet>>,
@@ -238,7 +285,7 @@ export function useGetMyCompanyCompaniesMeGet<TData = Awaited<ReturnType<typeof 
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetMyCompanyCompaniesMeGet<TData = Awaited<ReturnType<typeof getMyCompanyCompaniesMeGet>>, TError = ErrorType<unknown>>(
+export function useGetMyCompanyCompaniesMeGet<TData = Awaited<ReturnType<typeof getMyCompanyCompaniesMeGet>>, TError = ErrorType<ProblemOut>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyCompanyCompaniesMeGet>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getMyCompanyCompaniesMeGet>>,
@@ -248,7 +295,7 @@ export function useGetMyCompanyCompaniesMeGet<TData = Awaited<ReturnType<typeof 
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetMyCompanyCompaniesMeGet<TData = Awaited<ReturnType<typeof getMyCompanyCompaniesMeGet>>, TError = ErrorType<unknown>>(
+export function useGetMyCompanyCompaniesMeGet<TData = Awaited<ReturnType<typeof getMyCompanyCompaniesMeGet>>, TError = ErrorType<ProblemOut>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyCompanyCompaniesMeGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -256,7 +303,7 @@ export function useGetMyCompanyCompaniesMeGet<TData = Awaited<ReturnType<typeof 
  * @summary Get My Company
  */
 
-export function useGetMyCompanyCompaniesMeGet<TData = Awaited<ReturnType<typeof getMyCompanyCompaniesMeGet>>, TError = ErrorType<unknown>>(
+export function useGetMyCompanyCompaniesMeGet<TData = Awaited<ReturnType<typeof getMyCompanyCompaniesMeGet>>, TError = ErrorType<ProblemOut>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyCompanyCompaniesMeGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -278,15 +325,40 @@ export type patchMyCompanyCompaniesMePatchResponse200 = {
   status: 200
 }
 
-export type patchMyCompanyCompaniesMePatchResponse422 = {
-  data: HTTPValidationError
+export type patchMyCompanyCompaniesMePatchResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type patchMyCompanyCompaniesMePatchResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type patchMyCompanyCompaniesMePatchResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type patchMyCompanyCompaniesMePatchResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type patchMyCompanyCompaniesMePatchResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type patchMyCompanyCompaniesMePatchResponse422ApplicationJson = {
+  data: ProblemOut
   status: 422
 }
 
 export type patchMyCompanyCompaniesMePatchResponseSuccess = (patchMyCompanyCompaniesMePatchResponse200) & {
   headers: Headers;
 };
-export type patchMyCompanyCompaniesMePatchResponseError = (patchMyCompanyCompaniesMePatchResponse422) & {
+export type patchMyCompanyCompaniesMePatchResponseError = (patchMyCompanyCompaniesMePatchResponse401ApplicationProblemJson | patchMyCompanyCompaniesMePatchResponse401ApplicationJson | patchMyCompanyCompaniesMePatchResponse403ApplicationProblemJson | patchMyCompanyCompaniesMePatchResponse403ApplicationJson | patchMyCompanyCompaniesMePatchResponse422ApplicationProblemJson | patchMyCompanyCompaniesMePatchResponse422ApplicationJson) & {
   headers: Headers;
 };
 
@@ -334,7 +406,7 @@ return apiFetch<patchMyCompanyCompaniesMePatchResponse>(getPatchMyCompanyCompani
 
 export const getPatchMyCompanyCompaniesMePatchMutationKey = () => ['patchMyCompanyCompaniesMePatch'] as const;
 
-export const getPatchMyCompanyCompaniesMePatchMutationOptions = <TError = ErrorType<HTTPValidationError>,
+export const getPatchMyCompanyCompaniesMePatchMutationOptions = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchMyCompanyCompaniesMePatch>>, TError,PatchMyCompanyCompaniesMePatchMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof patchMyCompanyCompaniesMePatch>>, TError,PatchMyCompanyCompaniesMePatchMutationVariables, TContext> => {
 
@@ -363,13 +435,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type PatchMyCompanyCompaniesMePatchMutationResult = NonNullable<Awaited<ReturnType<typeof patchMyCompanyCompaniesMePatch>>>
     export type PatchMyCompanyCompaniesMePatchMutationBody = CompanyPatch
-    export type PatchMyCompanyCompaniesMePatchMutationError = ErrorType<HTTPValidationError>
+    export type PatchMyCompanyCompaniesMePatchMutationError = ErrorType<ProblemOut>
     export type PatchMyCompanyCompaniesMePatchMutationVariables = {data: CompanyPatch}
 
     /**
  * @summary Patch My Company
  */
-export const usePatchMyCompanyCompaniesMePatch = <TError = ErrorType<HTTPValidationError>,
+export const usePatchMyCompanyCompaniesMePatch = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchMyCompanyCompaniesMePatch>>, TError,PatchMyCompanyCompaniesMePatchMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof patchMyCompanyCompaniesMePatch>>,
@@ -384,15 +456,40 @@ export const usePatchMyCompanyCompaniesMePatch = <TError = ErrorType<HTTPValidat
   status: 201
 }
 
-export type inviteMemberCompaniesMeMembersPostResponse422 = {
-  data: HTTPValidationError
+export type inviteMemberCompaniesMeMembersPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type inviteMemberCompaniesMeMembersPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type inviteMemberCompaniesMeMembersPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type inviteMemberCompaniesMeMembersPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type inviteMemberCompaniesMeMembersPostResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type inviteMemberCompaniesMeMembersPostResponse422ApplicationJson = {
+  data: ProblemOut
   status: 422
 }
 
 export type inviteMemberCompaniesMeMembersPostResponseSuccess = (inviteMemberCompaniesMeMembersPostResponse201) & {
   headers: Headers;
 };
-export type inviteMemberCompaniesMeMembersPostResponseError = (inviteMemberCompaniesMeMembersPostResponse422) & {
+export type inviteMemberCompaniesMeMembersPostResponseError = (inviteMemberCompaniesMeMembersPostResponse401ApplicationProblemJson | inviteMemberCompaniesMeMembersPostResponse401ApplicationJson | inviteMemberCompaniesMeMembersPostResponse403ApplicationProblemJson | inviteMemberCompaniesMeMembersPostResponse403ApplicationJson | inviteMemberCompaniesMeMembersPostResponse422ApplicationProblemJson | inviteMemberCompaniesMeMembersPostResponse422ApplicationJson) & {
   headers: Headers;
 };
 
@@ -440,7 +537,7 @@ return apiFetch<inviteMemberCompaniesMeMembersPostResponse>(getInviteMemberCompa
 
 export const getInviteMemberCompaniesMeMembersPostMutationKey = () => ['inviteMemberCompaniesMeMembersPost'] as const;
 
-export const getInviteMemberCompaniesMeMembersPostMutationOptions = <TError = ErrorType<HTTPValidationError>,
+export const getInviteMemberCompaniesMeMembersPostMutationOptions = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inviteMemberCompaniesMeMembersPost>>, TError,InviteMemberCompaniesMeMembersPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof inviteMemberCompaniesMeMembersPost>>, TError,InviteMemberCompaniesMeMembersPostMutationVariables, TContext> => {
 
@@ -469,13 +566,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type InviteMemberCompaniesMeMembersPostMutationResult = NonNullable<Awaited<ReturnType<typeof inviteMemberCompaniesMeMembersPost>>>
     export type InviteMemberCompaniesMeMembersPostMutationBody = MemberIn
-    export type InviteMemberCompaniesMeMembersPostMutationError = ErrorType<HTTPValidationError>
+    export type InviteMemberCompaniesMeMembersPostMutationError = ErrorType<ProblemOut>
     export type InviteMemberCompaniesMeMembersPostMutationVariables = {data: MemberIn}
 
     /**
  * @summary Invite Member
  */
-export const useInviteMemberCompaniesMeMembersPost = <TError = ErrorType<HTTPValidationError>,
+export const useInviteMemberCompaniesMeMembersPost = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inviteMemberCompaniesMeMembersPost>>, TError,InviteMemberCompaniesMeMembersPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof inviteMemberCompaniesMeMembersPost>>,
