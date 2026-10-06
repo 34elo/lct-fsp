@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 
 import structlog
 from fastapi import APIRouter, Depends, Header, Response
@@ -42,10 +42,12 @@ from app.telegram import service as telegram
 from app.vacancies import service as vacancies
 
 router = APIRouter(tags=["offers"])
+admin_router = APIRouter(prefix="/admin/complaints", tags=["admin"])
 log = structlog.get_logger()
 
 _employer = require_roles("employer")
 _candidate = require_roles("candidate")
+_admin = require_roles("fsp_admin")
 _both = require_roles("employer", "candidate")
 _LIMITS = service.OfferLimits.load()
 _CFG = MatchConfig.load()
@@ -200,6 +202,33 @@ class ComplaintOut(BaseModel):
     reason: str
     status: str
     created_at: datetime
+
+
+class AdminComplaintOut(BaseModel):
+    """Жалоба для админа: без данных жалобщика (кандидат анонимен для компании и логов)."""
+
+    id: uuid.UUID
+    offer_id: uuid.UUID
+    company_id: uuid.UUID
+    company_name: str | None
+    reason: str
+    comment: str | None
+    status: str
+    created_at: datetime
+
+
+class ResolveComplaintIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    decision: Literal["resolved", "dismissed"] = "resolved"
+
+
+def _admin_complaint(row: Any, offer: Offer, company: Any) -> AdminComplaintOut:
+    return AdminComplaintOut(
+        id=row.id, offer_id=offer.id, company_id=offer.company_id,
+        company_name=company.name if company else None, reason=row.reason,
+        comment=row.comment, status=row.status, created_at=row.created_at,
+    )  # fmt: skip
 
 
 async def _base(session: AsyncSession, o: Offer) -> dict[str, Any]:
@@ -559,3 +588,30 @@ async def complain(
         session, offer, user_id=user.id, reason=body.reason, comment=body.comment
     )
     return ComplaintOut.model_validate(row, from_attributes=True)
+
+
+@admin_router.get(
+    "", response_model=list[AdminComplaintOut], responses=problem_responses(401, 403, 422)
+)
+async def admin_complaints(
+    status: Literal["open", "resolved", "dismissed"] | None = None,
+    _: User = Depends(_admin),
+    session: AsyncSession = Depends(get_session),
+) -> Any:
+    rows = await service.list_complaints(session, status)
+    return [_admin_complaint(*r) for r in rows]
+
+
+@admin_router.post(
+    "/{complaint_id}/resolve",
+    response_model=AdminComplaintOut,
+    responses=problem_responses(401, 403, 404, 409, 422),
+)
+async def admin_resolve_complaint(
+    complaint_id: uuid.UUID,
+    body: ResolveComplaintIn | None = None,
+    _: User = Depends(_admin),
+    session: AsyncSession = Depends(get_session),
+) -> Any:
+    decision = (body or ResolveComplaintIn()).decision
+    return _admin_complaint(*await service.resolve_complaint(session, complaint_id, decision))

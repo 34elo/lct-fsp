@@ -547,6 +547,42 @@ async def add_complaint(
     return row
 
 
+COMPLAINT_STATUSES = ("open", "resolved", "dismissed")
+
+
+async def list_complaints(
+    session: AsyncSession, status: str | None = None, limit: int = 100
+) -> list[tuple[Complaint, Offer, Company | None]]:
+    """Жалобы для админа: новые сверху; вместе с оффером и компанией."""
+    q = (
+        select(Complaint, Offer, Company)
+        .join(Offer, Offer.id == Complaint.offer_id)
+        .join(Company, Company.id == Offer.company_id, isouter=True)
+        .order_by(Complaint.created_at.desc(), Complaint.id)
+        .limit(limit)
+    )
+    if status is not None:
+        q = q.where(Complaint.status == status)
+    return [(c, o, co) for c, o, co in (await session.execute(q)).all()]
+
+
+async def resolve_complaint(
+    session: AsyncSession, complaint_id: uuid.UUID, decision: str
+) -> tuple[Complaint, Offer, Company | None]:
+    """`open → resolved|dismissed`; повтор того же решения идемпотентен, смена решения — 409."""
+    row = await session.get(Complaint, complaint_id, with_for_update=True)
+    if row is None:
+        raise ProblemError(404, "complaint_not_found", "Жалоба не найдена")
+    if row.status == "open":
+        row.status = decision
+        await session.flush()
+    elif row.status != decision:
+        raise ProblemError(409, "invalid_status", "Жалоба уже разобрана другим решением")
+    offer = await session.get(Offer, row.offer_id)
+    assert offer is not None
+    return row, offer, await session.get(Company, offer.company_id)
+
+
 async def mark_viewed(session: AsyncSession, offer: Offer, now: datetime | None = None) -> Offer:
     """Первое открытие кандидатом: `sent → viewed`; в остальных статусах ничего не делает."""
     if offer.initiator != OfferInitiator.employer.value:
@@ -635,7 +671,10 @@ __all__ = [
     "TRANSITIONS",
     "OfferLimits",
     "accept",
+    "COMPLAINT_STATUSES",
     "add_complaint",
+    "list_complaints",
+    "resolve_complaint",
     "add_message",
     "apply",
     "briefs_for",
