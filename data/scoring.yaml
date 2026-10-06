@@ -124,18 +124,19 @@ assessment:
     senior: { cut: 1.0 }
   # Априорная сложность b семейства по уровню 1..5 (assessment.md §5).
   b_by_level: { 1: -2.0, 2: -1.0, 3: 0.0, 4: 1.0, 5: 2.0 }
-  # Число оцениваемых заданий в попытке (assessment.md §5): минимум и максимум.
-  items: { min: 6, max: 20 }
+  # Число оцениваемых заданий в попытке (assessment.md §5): минимум и максимум (подбор — ADR-030).
+  items: { min: 10, max: 24 }
   # EAP θ (assessment.md §5): сетка [grid_min, grid_max] с шагом step, априорное N(prior_mean, prior_sd²).
   eap: { grid_min: -4.0, grid_max: 4.0, step: 0.1, prior_mean: 0.0, prior_sd: 1.0 }
   # Калибровка b после попытки (assessment.md §7): K = max(k_min, k0/√(1 + n)); у якорей K = 0.
   calibration: { k0: 0.5, k_min: 0.05 }
   # SPRT у порога cut заявленного грейда (assessment.md §5): θ₀ = cut − delta, θ₁ = cut + delta;
-  # границы ln((1 − β)/α) = +2.197 и ln(β/(1 − α)) = −2.197.
-  sprt: { delta: 0.4, alpha: 0.1, beta: 0.1 }
+  # границы ln((1 − β)/α) = +2.197 и ln(β/(1 − α)) = −2.197. δ = 0.7 — подбор по eval (ADR-030).
+  sprt: { delta: 0.7, alpha: 0.1, beta: 0.1 }
   # Бонусный этап (§5): прошёл за ≤ max_main_items и θ ≥ cut_следующего − margin → до max_items
-  # заданий с SPRT у порога следующего грейда (минимума нет, только границы SPRT).
-  bonus: { max_main_items: 10, margin: 0.5, max_items: 6 }
+  # заданий с SPRT у порога следующего грейда (минимума нет, только границы SPRT). margin 0 и 10
+  # заданий — бонус только при θ̂ ≥ cut_следующего: мягкий бонус давал половину завышений (ADR-030).
+  bonus: { max_main_items: 10, margin: 0.0, max_items: 10 }
   # План теста (§6): доли типов навыков по грейду; внутри типа — пропорционально весам профессии.
   plan_shares:
     junior: { fundamental: 0.35, hard: 0.40, thinking: 0.10, business: 0.05, soft: 0.05, experience: 0.05 }
@@ -159,7 +160,7 @@ assessment:
   rules: { validity_days: 365, change_cooldown_days: 90, retry_days: 30 }
   # Честность (§8): I < threshold → «требует подтверждения»; доказательства `test` тогда не выше
   # unconfirmed_cap (доверие ●●○○, т.е. < 0.6). Сигналы (§8, E24-1): верный ответ (балл ≥ correct_min)
-  # на трудное задание (θ − b < fast_margin) быстрее fast_ratio × медианы семейства — −fast_penalty за
+  # на нелёгкое задание (θ − b < fast_margin, P < 0.62) быстрее fast_ratio × медианы семейства — −fast_penalty за
   # каждый; уход со вкладки > away_min_ms, затем верный ответ — −away_penalty, не больше away_max;
   # person-fit lz < lz_threshold (от lz_min_items ответов) — −lz_penalty; ≥ copy_min_matches неверных
   # ответов вида copy_kinds, совпавших с верным ответом другого кандидата на его вариант, — −copy_penalty.
@@ -167,12 +168,12 @@ assessment:
     threshold: 0.6
     unconfirmed_cap: 0.59
     correct_min: 1.0
-    fast_margin: -0.5
+    fast_margin: 0.5
     fast_ratio: 0.3
     fast_penalty: 0.15
     away_min_ms: 10000
-    away_penalty: 0.1
-    away_max: 0.3
+    away_penalty: 0.15
+    away_max: 0.45
     lz_threshold: -2.0
     lz_penalty: 0.2
     lz_min_items: 6
@@ -187,6 +188,8 @@ assessment:
   # Жизненный цикл семейства (§7). Допуск pilot → active: все пороги + кнопка админа. Сиды делятся на
   # seed_groups групп (seed mod G); DIF — разница средних остатков y − P(θ, b) «с ФСП / без ФСП»,
   # считается, когда в обеих группах ≥ dif_min_group ответов. Тревоги переводят active → quarantine.
+  # Утечка: средний остаток y − P(θ, b) за последние leak_window ответов выше, чем за предыдущие,
+  # на ≥ leak_delta (остаток, а не доля верных: сдвиг состава кандидатов тревогу не даёт, ADR-030).
   lifecycle:
     admit: { min_n: 30, min_rpb: 0.2, max_abs_b: 3.0, max_seed_spread: 0.15, seed_groups: 3, max_dif: 0.1, dif_min_group: 5 }
     alarm: { min_n: 50, min_rpb: 0.05, leak_window: 50, leak_delta: 0.2, appeals: 3 }

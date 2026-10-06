@@ -27,13 +27,13 @@ class AssessmentConfig:
     k0: float = 0.5
     k_min: float = 0.05
     # SPRT (§5): θ₀/θ₁ = cut ∓ sprt_delta, ошибки α и β
-    sprt_delta: float = 0.4
+    sprt_delta: float = 0.7
     sprt_alpha: float = 0.1
     sprt_beta: float = 0.1
     # Бонусный этап (§5)
     bonus_max_main_items: int = 10
-    bonus_margin: float = 0.5
-    bonus_max_items: int = 6
+    bonus_margin: float = 0.0
+    bonus_max_items: int = 10
     # Выбор задания (§6): доли типов навыков по грейду
     plan_shares: dict[str, dict[str, float]] = field(default_factory=dict)
     top_k: int = 3
@@ -99,12 +99,12 @@ def load_config(path: str | None = None) -> AssessmentConfig:
         prior_sd=float(eap.get("prior_sd", 1.0)),
         k0=float(cal.get("k0", 0.5)),
         k_min=float(cal.get("k_min", 0.05)),
-        sprt_delta=float(sprt.get("delta", 0.4)),
+        sprt_delta=float(sprt.get("delta", 0.7)),
         sprt_alpha=float(sprt.get("alpha", 0.1)),
         sprt_beta=float(sprt.get("beta", 0.1)),
         bonus_max_main_items=int(bonus.get("max_main_items", 10)),
-        bonus_margin=float(bonus.get("margin", 0.5)),
-        bonus_max_items=int(bonus.get("max_items", 6)),
+        bonus_margin=float(bonus.get("margin", 0.0)),
+        bonus_max_items=int(bonus.get("max_items", 10)),
         plan_shares={
             g: {t: float(v) for t, v in shares.items()}
             for g, shares in (a.get("plan_shares") or {}).items()
