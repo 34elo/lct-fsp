@@ -47,3 +47,64 @@ class Need(Base):
     created_at: Mapped[datetime] = mapped_column(
         sa.DateTime(timezone=True), default=lambda: datetime.now(UTC), server_default=sa.func.now()
     )
+
+
+class CategorySubscription(Base):
+    """Подписка компании на категорию (E33-4): новый подходящий кандидат → уведомление."""
+
+    __tablename__ = "category_subscriptions"
+    __table_args__ = (sa.Index("ix_category_subs_profession", "profession"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    company_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("companies.id", ondelete="CASCADE"), index=True
+    )
+    profession: Mapped[str] = mapped_column(Text)
+    grades: Mapped[list] = mapped_column(sa.JSON, default=list)  # пусто — любой грейд
+    skills: Mapped[list] = mapped_column(sa.JSON, default=list)  # [{slug, min_level}]
+    salary_max: Mapped[int | None] = mapped_column(default=None)  # бюджет, ₽/мес
+    formats: Mapped[list] = mapped_column(sa.JSON, default=list)
+    only_confirmed: Mapped[bool] = mapped_column(default=False, server_default=sa.false())
+    last_digest_at: Mapped[datetime | None] = mapped_column(
+        sa.DateTime(timezone=True), default=None
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), default=lambda: datetime.now(UTC), server_default=sa.func.now()
+    )
+
+
+class CategorySubscriptionHit(Base):
+    """Подошедший подписке кандидат. PK — дедупликация: один кандидат уведомляет один раз."""
+
+    __tablename__ = "category_subscription_hits"
+
+    subscription_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("category_subscriptions.id", ondelete="CASCADE"), primary_key=True
+    )
+    candidate_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("candidates.user_id", ondelete="CASCADE"), primary_key=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), default=lambda: datetime.now(UTC), server_default=sa.func.now()
+    )
+    notified_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), default=None)
+
+
+class CandidateInterest(Base):
+    """Встречный сигнал: кандидат показал интерес к компании (E33-6).
+
+    PK — дедупликация: один сигнал на пару (candidate_id, company_id).
+    """
+
+    __tablename__ = "candidate_interests"
+    __table_args__ = (sa.Index("ix_candidate_interests_company", "company_id", "created_at"),)
+
+    candidate_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("candidates.user_id", ondelete="CASCADE"), primary_key=True
+    )
+    company_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("companies.id", ondelete="CASCADE"), primary_key=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), default=lambda: datetime.now(UTC), server_default=sa.func.now()
+    )

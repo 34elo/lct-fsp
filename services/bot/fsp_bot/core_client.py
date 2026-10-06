@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from typing import Any
 
 import httpx
@@ -24,6 +25,7 @@ class CoreClient:
         timeout: float = 10.0,
         transport: httpx.AsyncBaseTransport | None = None,
     ):
+        self._tokens: dict[int, tuple[str, float]] = {}  # tg_user_id → (access, годен до)
         self._http = httpx.AsyncClient(
             base_url=base_url,
             timeout=timeout,
@@ -145,3 +147,60 @@ class CoreClient:
     async def offer_message(self, tg_user_id: int, offer_id: str, text: str) -> dict:
         body = {"tg_user_id": tg_user_id, "text": text}
         return await self.request("POST", f"/internal/tg/offers/{offer_id}/messages", json=body)
+
+    # --- тест и регулярные задания: API блока 1 от имени кандидата (E25-3) ----------------
+
+    async def _user_token(self, tg_user_id: int) -> str:
+        cached = self._tokens.get(tg_user_id)
+        if cached and cached[1] > time.monotonic():
+            return cached[0]
+        res = await self.request("POST", "/internal/tg/token", json={"tg_user_id": tg_user_id})
+        ttl = max(int(res.get("expires_in", 300)) - 30, 10)
+        self._tokens[tg_user_id] = (res["access_token"], time.monotonic() + ttl)
+        return res["access_token"]
+
+    async def as_user(self, tg_user_id: int, method: str, path: str, **kwargs: Any) -> Any:
+        """Вызов обычного эндпоинта core с коротким токеном кандидата вместо сервисного."""
+        token = await self._user_token(tg_user_id)
+        return await self.request(
+            method, path, headers={"Authorization": f"Bearer {token}"}, **kwargs
+        )
+
+    async def test_survey(self, tg_user_id: int) -> dict:
+        return await self.as_user(tg_user_id, "GET", "/assessment/survey")
+
+    async def test_professions(self, tg_user_id: int) -> list[dict]:
+        return (await self.as_user(tg_user_id, "GET", "/taxonomy/professions"))["professions"]
+
+    async def test_start(self, tg_user_id: int, profession: str, grade: str) -> dict:
+        """Короткий тест = экспресс-режим того же движка (6–8 заданий, та же шкала)."""
+        body = {"profession": profession, "declared_grade": grade, "mode": "express"}
+        return await self.as_user(tg_user_id, "POST", "/assessment/attempts", json=body)
+
+    async def test_next(self, tg_user_id: int, attempt_id: str) -> dict:
+        return await self.as_user(tg_user_id, "GET", f"/assessment/attempts/{attempt_id}/next")
+
+    async def test_answer(
+        self, tg_user_id: int, attempt_id: str, response_id: str, answer: Any, rt_ms: int
+    ) -> dict:
+        body = {"response_id": response_id, "answer": answer, "rt_ms": rt_ms}
+        return await self.as_user(
+            tg_user_id, "POST", f"/assessment/attempts/{attempt_id}/answers", json=body
+        )
+
+    async def test_attempt(self, tg_user_id: int, attempt_id: str) -> dict:
+        return await self.as_user(tg_user_id, "GET", f"/assessment/attempts/{attempt_id}")
+
+    async def test_upgrade(self, tg_user_id: int, attempt_id: str) -> dict:
+        return await self.as_user(tg_user_id, "POST", f"/assessment/attempts/{attempt_id}/upgrade")
+
+    async def tasks(self, tg_user_id: int) -> list[dict]:
+        return await self.as_user(tg_user_id, "GET", "/assessment/tasks")
+
+    async def task(self, tg_user_id: int, task_id: str) -> dict:
+        return await self.as_user(tg_user_id, "GET", f"/assessment/tasks/{task_id}")
+
+    async def task_answer(self, tg_user_id: int, task_id: str, answer: Any) -> dict:
+        return await self.as_user(
+            tg_user_id, "POST", f"/assessment/tasks/{task_id}/answer", json={"answer": answer}
+        )

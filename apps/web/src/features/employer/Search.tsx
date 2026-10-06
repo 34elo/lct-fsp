@@ -19,6 +19,7 @@ import { useSearchCandidatesSearchCandidatesPost, useSearchParseSearchParsePost 
 import { useGetTaxonomyTaxonomyGet } from "@/api/endpoints/taxonomy/taxonomy";
 import { useListVacanciesVacanciesGet } from "@/api/endpoints/vacancies/vacancies";
 import type { CandidateCard, FilterChip, SearchRequestSort, VacancyOut } from "@/api/model";
+import { OfferDialog } from "@/features/offers/OfferDialog";
 import { QueryBar } from "./QueryBar";
 import { chipActive, EMPTY_FORM, fromParsed, gradeRange, removeChip, toCardData, toFilters, type SearchForm } from "./search-model";
 import { SearchFiltersPanel, selectClass } from "./SearchFiltersPanel";
@@ -58,6 +59,7 @@ export default function Search() {
   const [cursor, setCursor] = useState<string | null>(null);
   const [total, setTotal] = useState<number | null>(null);
   const [failed, setFailed] = useState(false);
+  const [interestFor, setInterestFor] = useState<CandidateCard | null>(null);
   const [shortlisted, setShortlisted] = useState<Set<string>>(() => new Set());
   const [dismissed, setDismissed] = useState<Set<string>>(() => new Set());
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -261,6 +263,7 @@ export default function Search() {
                   onShortlist={() => toggleShortlist(c)}
                   onReject={() => dismiss(c)}
                   onOpen={() => open(c)}
+                  onInterest={() => setInterestFor(c)}
                 />
               </li>
             ))}
@@ -273,6 +276,15 @@ export default function Search() {
           )}
         </section>
       </div>
+      {interestFor && (
+        <OfferDialog
+          open
+          onOpenChange={(v) => !v && setInterestFor(null)}
+          mode="interest"
+          candidate={{ pseudoId: interestFor.pseudo_id, pseudonym: interestFor.pseudonym, salaryMin: interestFor.salary_min ?? null }}
+          vacancyId={vacancyId ?? ""}
+        />
+      )}
     </div>
   );
 }

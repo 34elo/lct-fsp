@@ -116,6 +116,63 @@ def test_responses():
     assert r.time_to_answer.median_s == 60
 
 
+def test_interest_funnel_known_counts():
+    """Встречный оффер: интерес → открыл → пригласили → приняли (E33-8)."""
+    rows = []
+    for i in range(10):
+        a = act(i)
+        rows.append(_row("interest_shown", a))  # 10
+        if i < 8:
+            rows.append(_row("interest_answered", a, {"decision": "opened"}))  # 8
+        if i < 6:
+            rows.append(_row("interest_to_invite", a))  # 6
+        if i < 4:
+            rows.append(_row("invite_answered", a, {"decision": "accepted"}))  # 4 (но < 5)
+    f = {s.id: s for s in metrics.funnel(rows, metrics.INTEREST_STAGES).stages}
+    assert f["shown"].count == 10
+    assert f["opened"].count == 8
+    assert f["invited"].count == 6
+    assert f["accepted"].hidden and f["accepted"].count is None  # 4 < 5: скрыто
+    # конверсии
+    assert f["opened"].pct_of_first == 80.0
+    assert f["invited"].pct_of_previous == 75.0
+
+
+def test_interest_metrics_full_funnel():
+    """Полная воронка интереса с причинами отказов и временами."""
+    rows = []
+    for i in range(20):
+        a = act(i)
+        rows.append(_row("signup_completed", a, ts=NOW))
+        rows.append(_row("interest_shown", a))
+        if i < 16:
+            open_ts = NOW + timedelta(hours=1 + i)
+            rows.append(_row("interest_answered", a, {"decision": "opened"}, ts=open_ts))
+        if i < 12:
+            invite_ts = open_ts + timedelta(hours=2)
+            rows.append(_row("interest_to_invite", a, ts=invite_ts))
+        if i < 10:
+            rows.append(_row("invite_answered", a, {"decision": "accepted"}))
+    # добавим отказы с причинами (>= 5 для видимости)
+    for i in range(16, 21):
+        a = act(i)
+        rows.append(_row("interest_answered", a, {"decision": "declined", "reason": "low_salary"}))
+
+    m = metrics.interests(rows)
+    assert m.shown == 20
+    assert m.opened == 16
+    assert m.invited == 12
+    assert m.accepted == 10
+    assert m.open_rate == 80.0
+    assert m.invite_rate == 75.0
+    assert m.accept_rate == 83.3
+    assert m.first_contact.n == 16 and m.first_contact.median_s > 0
+    assert m.time_to_invite.n == 12 and m.time_to_invite.median_s > 0
+    assert len(m.decline_reasons) == 1
+    assert m.decline_reasons[0].reason == "low_salary"
+    assert m.decline_reasons[0].count == 5
+
+
 def test_endpoint_end_to_end_real_events_no_pii(api):
     h = admin(api)
     ev = []
@@ -131,5 +188,6 @@ def test_endpoint_end_to_end_real_events_no_pii(api):
     assert body["employer_funnel"]["stages"][0]["count"] == 6
     assert body["invites"]["sent"] == 6
     assert body["responses"]["created"] is None  # нет событий: скрыто
+    assert body["interests"]["shown"] is None  # нет событий интереса: скрыто
     assert act(2) not in api.get("/admin/metrics", headers=h).text
     assert "actor" not in api.get("/admin/metrics", headers=h).text

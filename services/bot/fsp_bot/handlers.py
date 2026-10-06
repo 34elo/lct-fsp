@@ -28,6 +28,7 @@ from fsp_bot.account import (
     BTN_STATUS,
     build_account_router,
 )
+from fsp_bot.assessment import BTN_TASKS, build_assessment_router
 from fsp_bot.core_client import CoreClient, CoreError
 from fsp_bot.states import Offer, Onboarding, Resume
 from fsp_bot.templates.render import (
@@ -65,7 +66,7 @@ MENU_KB = ReplyKeyboardMarkup(
         [KeyboardButton(text=BTN_RESUME), KeyboardButton(text=BTN_PROFILE)],
         [KeyboardButton(text=BTN_OFFERS), KeyboardButton(text=BTN_FSP)],
         [KeyboardButton(text=BTN_CATEGORY), KeyboardButton(text=BTN_STATUS)],
-        [KeyboardButton(text=BTN_SETTINGS)],
+        [KeyboardButton(text=BTN_SETTINGS), KeyboardButton(text=BTN_TASKS)],
     ],
     resize_keyboard=True,
 )
@@ -91,7 +92,7 @@ OFFER_ERRORS = {
 }
 ASK_QUESTION = "Напиши вопрос работодателю одним сообщением. Отмена: /cancel"
 NO_OFFERS = "Активных офферов пока нет. Они появятся здесь, как только работодатель ответит."
-MENU_TEXTS = (BTN_RESUME, BTN_PROFILE, BTN_OFFERS, *ACCOUNT_BUTTONS)
+MENU_TEXTS = (BTN_RESUME, BTN_PROFILE, BTN_OFFERS, BTN_TASKS, *ACCOUNT_BUTTONS)
 
 
 def offer_error(exc: CoreError) -> str:
@@ -134,6 +135,7 @@ def build_router(
                 await msg.edit_text(text, parse_mode="HTML")
 
     router.include_router(build_account_router(core, site_button))
+    router.include_router(build_assessment_router(core, site_button, MENU_TEXTS))
 
     @router.message(CommandStart())
     async def start(message: Message, command: CommandObject, state: FSMContext) -> None:

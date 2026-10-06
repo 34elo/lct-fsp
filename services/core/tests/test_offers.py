@@ -963,3 +963,43 @@ def test_verified_badge_is_voluntary(world):
     assert c.get(f"/offers/{oid}", headers=ch).json()["company"]["verified"] is False
     pub = c.get("/vacancies/public").json()
     assert pub[0]["company"]["verified"] is False and pub[0]["salary_basis"] == "gross"
+
+
+def test_salary_hint_forecast_suggests_raise(world):
+    """E33-5: подсказка «поднимите верх до X → Y»; меняется вместе с вилкой."""
+    c, e, vid, ch, pid, uid = world
+    body = {"vacancy_id": vid, "candidate_pseudo_id": pid, "salary_from": 250000}
+    low = c.post("/offers/salary-hint", json=body | {"salary_to": 300000}, headers=e).json()
+    sug = low["suggested_salary_to"]
+    assert low["acceptance_hint"] != "high"
+    assert sug and sug > 300000 and sug % 5000 == 0
+    assert low["suggested_p_accept"] > low["p_accept"]
+    again = c.post("/offers/salary-hint", json=body | {"salary_to": sug}, headers=e).json()
+    assert again["p_accept"] == low["suggested_p_accept"]
+    high = c.post("/offers/salary-hint", json=body | {"salary_to": 500000}, headers=e).json()
+    assert high["suggested_salary_to"] is None and high["suggested_p_accept"] is None
+    assert low["avg_response_hours"] is None  # мало ответов в категории
+
+
+def test_salary_hint_without_vacancy_and_response_time(world):
+    c, e, vid, ch, pid, uid = world
+    body = {"candidate_pseudo_id": pid, "salary_from": 250000, "salary_to": 320000}
+    r = c.post("/offers/salary-hint", json=body, headers=e)
+    assert r.status_code == 200, r.text
+    # три ответа кандидатов роли backend: 2, 4 и 6 часов → среднее 4
+    hs = []
+    for n, hours in enumerate((2, 4, 6), start=2):
+        h, p, u = _candidate(c, f"r{n}@x.ru", n, salary_min=300000)
+        hs.append((h, p, hours))
+    for h, p, hours in hs:
+        o = _offer(c, e, vid, p).json()["id"]
+        assert c.post(f"/offers/{o}/accept", headers=h).status_code == 200
+        _db(
+            c,
+            "update offers set created_at='2026-01-01 00:00:00', invited_at=null,"
+            " responded_at=? where id=?",
+            f"2026-01-01 0{hours}:00:00",
+            o.replace("-", ""),
+        )
+    got = c.post("/offers/salary-hint", json=body, headers=e).json()
+    assert got["avg_response_hours"] == 4.0

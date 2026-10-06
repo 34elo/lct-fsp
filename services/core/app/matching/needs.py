@@ -34,6 +34,8 @@ class NeedsConfig:
     nice_weight: float = 0.5
     max_categories: int = 6
     fallback_top: int = 1
+    subscription_digest_minutes: int = 60  # дайджест подписки не чаще (E33-4)
+    max_subscriptions: int = 20  # подписок на компанию
 
     @classmethod
     def load(cls, path: Path | str | None = None) -> NeedsConfig:
@@ -49,6 +51,10 @@ class NeedsConfig:
             nice_weight=float(src.get("nice_weight", base.nice_weight)),
             max_categories=int(src.get("max_categories", base.max_categories)),
             fallback_top=int(src.get("fallback_top", base.fallback_top)),
+            subscription_digest_minutes=int(
+                src.get("subscription_digest_minutes", base.subscription_digest_minutes)
+            ),
+            max_subscriptions=int(src.get("max_subscriptions", base.max_subscriptions)),
         )
 
 

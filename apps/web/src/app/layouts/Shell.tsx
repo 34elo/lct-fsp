@@ -2,7 +2,7 @@ import { Outlet } from "react-router-dom";
 
 import { cn } from "@fsp/ui";
 
-import { useListOffersOffersGet, useMyOffersCandidatesMeOffersGet } from "@/api/endpoints/offers/offers";
+import { useListOffersOffersGet, useMyInterestsCandidatesMeInterestsGet, useMyOffersCandidatesMeOffersGet } from "@/api/endpoints/offers/offers";
 import { type NavItem } from "@/app/routes";
 import { useAuth } from "@/shared/lib/auth";
 import { AdminSidebar } from "./AdminSidebar";
@@ -18,9 +18,10 @@ function useOfferCounts(variant: "top" | "side"): Record<string, number | undefi
   const { role } = useAuth();
   const employer = useListOffersOffersGet(undefined, { query: { enabled: variant === "top" && role === "employer", retry: false } });
   const candidate = useMyOffersCandidatesMeOffersGet(undefined, { query: { enabled: variant === "top" && role === "candidate", retry: false } });
+  const interests = useMyInterestsCandidatesMeInterestsGet({ query: { enabled: variant === "top" && role === "candidate", retry: false } });
   const n = (q: { data?: { status: number; data: unknown } }) =>
     q.data?.status === 200 && Array.isArray(q.data.data) ? q.data.data.length : undefined;
-  return { "/employer/offers": n(employer), "/me/offers": n(candidate) };
+  return { "/employer/offers": n(employer), "/me/offers": n(candidate), "/me/interests": interests.data?.status === 200 ? interests.data.data.companies : undefined };
 }
 
 /**
