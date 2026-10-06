@@ -30,8 +30,13 @@ from app.graph.trust import EvidenceView, TrustConfig, effective_strength
 from app.matching.p_accept import PAcceptConfig, hint, mutual, p_accept
 from app.matching.rerank import RerankConfig, mmr, multiplier
 from app.matching.scoring import MatchConfig, MatchResult, score_candidate
-from app.matching import service as matching
-from app.matching.service import build_views, load_vacancy, only_visible, visibility_version
+from app.matching.service import (
+    build_views,
+    interested_candidate_ids,
+    load_vacancy,
+    only_visible,
+    visibility_version,
+)
 from app.matching.strength import (
     StrengthConfig,
     StrengthInput,
@@ -100,6 +105,7 @@ class CandidateCard(BaseModel):
     categories: list[CategoryRef] = []  # подтверждённые тестом профессия × грейд (ADR-018)
     strength: StrengthView | None = None  # сила профиля внутри категории (assessment.md §9)
     is_shortlisted: bool = False  # в шорт-листе потребности (E23-5)
+    interested_you: bool = False  # кандидат отметил вашу компанию (E33-6): «вами интересовался»
 
 
 @dataclass(slots=True)
@@ -116,6 +122,7 @@ class Row:
     strength: StrengthResult | None = None  # сила профиля (E23-2)
     rank_on: bool = False  # выбрана категория: порядок по rank = 0.6·match + 0.4·strength
     strength_cfg: StrengthConfig | None = None
+    interest_boost: float = 1.0  # >1 — кандидат отметил эту компанию (E33-6)
 
     def key(self, sort: Sort) -> float:
         if sort == "fresh":
@@ -126,9 +133,10 @@ class Row:
             score = self.tuned if self.tuned is not None else self.result.score
             score = self._ranked(score)
             if sort == "mutual" and self.p_accept is not None:
-                return mutual(score, self.p_accept) * self.mult
-            return score * self.mult
-        return self._ranked(self.tuned if self.tuned is not None else self.relevance) * self.mult
+                return mutual(score, self.p_accept) * self.mult * self.interest_boost
+            return score * self.mult * self.interest_boost
+        base = self._ranked(self.tuned if self.tuned is not None else self.relevance)
+        return base * self.mult * self.interest_boost
 
     def _ranked(self, match: float) -> float:
         if self.rank_on and self.strength is not None and self.strength_cfg is not None:
@@ -223,6 +231,7 @@ def _card(
     interest: str | None = None,
     categories: list[CategoryRef] | None = None,
     strength_view: StrengthView | None = None,
+    interested_you: bool = False,
 ) -> CandidateCard:
     ordered = sorted(skills, key=lambda s: (s.claimed_only, -s.confidence, str(s.skill_id)))
     top = [
@@ -252,6 +261,7 @@ def _card(
         updated_at=c.updated_at,
         categories=categories or [],
         strength=strength_view,
+        interested_you=interested_you,
     )
 
 
@@ -452,12 +462,13 @@ async def search_candidates(
     rr_cfg = rr_cfg or RerankConfig.load()
     st_cfg = strength_cfg or StrengthConfig.load()
     after = decode_cursor(cursor, sort) if cursor else None
+    liked = await interested_candidate_ids(session, company_id)  # встречный сигнал (E33-6)
     key = cache_key(
         await candidates.catalog_version(session) + await visibility_version(session),
         {"company": str(company_id), "f": filters.model_dump(mode="json"), "sort": sort,
          "cat": category.model_dump(mode="json") if category else None,
          "vacancy": [str(vacancy_id), vacancy_version], "limit": limit,
-         "rs": responsibility_score},
+         "rs": responsibility_score, "liked": sorted(str(i) for i in liked)},
         cursor,
     )  # fmt: skip
     tcfg = tuning_cfg or tun.TuningConfig.load()
@@ -519,9 +530,9 @@ async def search_candidates(
                 owned[c.user_id])
         )  # fmt: skip
 
-    # Загрузить интересующихся кандидатов (E33-6)
-    interested_cands = await matching.get_interested_candidate_ids(session, company_id)
-    _INTEREST_BOOST = 1.05  # множитель если кандидат показал интерес (E33-6, scoring.yaml)
+    for r in rows:
+        if r.cand.user_id in liked:
+            r.interest_boost = cfg.interest_boost
 
     query_vec = None
     if vacancy_id is not None and rows:
@@ -533,10 +544,6 @@ async def search_candidates(
             for r, view in zip(rows, views, strict=True):
                 r.result = score_candidate(v, view, adj, cfg)
                 if r.result is not None:
-                    # Применить бус за встречный сигнал (E33-6)
-                    if r.cand.user_id in interested_cands:
-                        r.result.score = min(1.0, r.result.score * _INTEREST_BOOST)
-                        r.result.breakdown["interest_boost"] = _INTEREST_BOOST
                     r.p_accept = p_accept_for(v, r.cand, responsibility_score, pa_cfg)
     if category is not None:  # rank участвует в порядке — сила нужна всем
         await _attach_strength(session, rows, category, nice_ids, must_floor, day, st_cfg)
@@ -595,6 +602,7 @@ async def search_candidates(
             None if r.p_accept is None else hint(r.p_accept, pa_cfg),
             cats.get(r.cand.user_id, []),
             _strength_view(r),
+            r.interest_boost > 1.0,
         ).model_dump(mode="json")
         for r in page
     ]

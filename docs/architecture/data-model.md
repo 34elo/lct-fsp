@@ -488,6 +488,13 @@ CREATE TABLE category_subscription_hits (  -- PK дедуплицирует ув
   created_at timestamptz, notified_at timestamptz,  -- notified_at NULL — ждёт дайджеста
   PRIMARY KEY (subscription_id, candidate_id)
 );
+CREATE TABLE candidate_interests (  -- встречный сигнал «интересна компания» (E33-6); PK — один сигнал на пару
+  candidate_id uuid REFERENCES candidates(user_id) ON DELETE CASCADE,
+  company_id uuid REFERENCES companies ON DELETE CASCADE,
+  created_at timestamptz DEFAULT now(),
+  PRIMARY KEY (candidate_id, company_id)
+);
+CREATE INDEX ON candidate_interests (company_id, created_at);
 
 CREATE TABLE offer_events (id bigserial PRIMARY KEY, offer_id uuid REFERENCES offers(id) ON DELETE CASCADE, from_status text, to_status text, actor text, payload jsonb, created_at timestamptz DEFAULT now());
 CREATE TABLE offer_messages (id uuid PRIMARY KEY, offer_id uuid REFERENCES offers(id) ON DELETE CASCADE, author_side text NOT NULL, author_user_id uuid, text text NOT NULL, created_at timestamptz DEFAULT now(), channel text);

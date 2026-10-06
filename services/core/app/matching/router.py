@@ -21,6 +21,7 @@ from app.graph.trust import TrustConfig
 from app.identity.deps import require_roles
 from app.identity.models import User
 from app.matching import card, navigator, query_llm, query_parser, search, similar, uplift_service
+from app.matching import service as matching
 from app.matching.card import CandidateCardFull
 from app.matching.scoring import MatchConfig
 from app.matching.strength import StrengthConfig
@@ -418,12 +419,10 @@ async def mark_candidate_interest(
     """Кандидат показывает интерес к компании (E33-6)."""
     cand = await candidates.get(session, user.id)
     if cand is None:
-        raise ProblemError(404, code="not_found")
-    company = await companies.get(session, company_id)
-    if company is None:
-        raise ProblemError(404, code="not_found")
-    from app.matching import service as matching
-
+        raise ProblemError(404, "company_not_found", "Компания не найдена")
+    company = await companies.get_company(session, company_id)
+    if company is None or company.status != "verified":
+        raise ProblemError(404, "company_not_found", "Компания не найдена")
     created_at = await matching.set_candidate_interest(session, user.id, company_id)
     await session.commit()
     return {"created_at": created_at}
@@ -442,12 +441,10 @@ async def remove_candidate_interest(
     """Кандидат снимает интерес к компании (E33-6)."""
     cand = await candidates.get(session, user.id)
     if cand is None:
-        raise ProblemError(404, code="not_found")
-    company = await companies.get(session, company_id)
+        raise ProblemError(404, "company_not_found", "Компания не найдена")
+    company = await companies.get_company(session, company_id)
     if company is None:
-        raise ProblemError(404, code="not_found")
-    from app.matching import service as matching
-
+        raise ProblemError(404, "company_not_found", "Компания не найдена")
     removed = await matching.remove_candidate_interest(session, user.id, company_id)
     await session.commit()
     return {"removed": removed}

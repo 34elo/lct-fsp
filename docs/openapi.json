@@ -4735,6 +4735,186 @@
         }
       }
     },
+    "/companies/{company_id}/interest": {
+      "post": {
+        "tags": [
+          "search"
+        ],
+        "summary": "Mark Candidate Interest",
+        "description": "Кандидат показывает интерес к компании (E33-6).",
+        "operationId": "mark_candidate_interest_companies__company_id__interest_post",
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Company Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Mark Candidate Interest Companies  Company Id  Interest Post"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "search"
+        ],
+        "summary": "Remove Candidate Interest",
+        "description": "Кандидат снимает интерес к компании (E33-6).",
+        "operationId": "remove_candidate_interest_companies__company_id__interest_delete",
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Company Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Remove Candidate Interest Companies  Company Id  Interest Delete"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/recs/feedback": {
       "post": {
         "tags": [
@@ -10077,6 +10257,11 @@
             "type": "boolean",
             "title": "Is Shortlisted",
             "default": false
+          },
+          "interested_you": {
+            "type": "boolean",
+            "title": "Interested You",
+            "default": false
           }
         },
         "type": "object",
@@ -10234,6 +10419,11 @@
           "is_shortlisted": {
             "type": "boolean",
             "title": "Is Shortlisted",
+            "default": false
+          },
+          "interested_you": {
+            "type": "boolean",
+            "title": "Interested You",
             "default": false
           },
           "skills": {
@@ -15673,6 +15863,39 @@
             "type": "string",
             "title": "Acceptance Hint"
           },
+          "suggested_salary_to": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggested Salary To"
+          },
+          "suggested_p_accept": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggested P Accept"
+          },
+          "avg_response_hours": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Response Hours"
+          },
           "range_too_wide": {
             "type": "boolean",
             "title": "Range Too Wide"
@@ -15695,8 +15918,15 @@
       "SalaryHintIn": {
         "properties": {
           "vacancy_id": {
-            "type": "string",
-            "format": "uuid",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Vacancy Id"
           },
           "candidate_pseudo_id": {
@@ -15733,7 +15963,6 @@
         "additionalProperties": false,
         "type": "object",
         "required": [
-          "vacancy_id",
           "candidate_pseudo_id"
         ],
         "title": "SalaryHintIn"
@@ -16328,6 +16557,11 @@
           "is_shortlisted": {
             "type": "boolean",
             "title": "Is Shortlisted",
+            "default": false
+          },
+          "interested_you": {
+            "type": "boolean",
+            "title": "Interested You",
             "default": false
           },
           "similarity": {
