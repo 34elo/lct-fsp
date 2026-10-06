@@ -36,6 +36,7 @@ class AssessmentStarted(_Props):
     attempt_id: Slug
     profession: Slug
     declared_grade: Grade
+    mode: Literal["standard", "express"] = "standard"  # E32-4a
 
 
 class AssessmentAnswered(_Props):
@@ -58,6 +59,7 @@ class AssessmentFinished(_Props):
     grade: Grade | None = None
     items: Nat = 0
     duration_s: Nat | None = None
+    mode: Literal["standard", "express"] = "standard"  # E32-4a
 
 
 class FamilyStatusChangedProps(_Props):

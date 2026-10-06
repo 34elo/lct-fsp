@@ -1,4 +1,7 @@
-"""E22-4: грейды, кулдауны, история, приглашение бонусного этапа (ADR-025 п.2), доказательства `test`, события (§5, §11)."""
+"""E22-4: грейды, кулдауны, история, доказательства `test`, события (§5, §11).
+
+ADR-025: приглашение бонусного этапа (п.2), экспресс-режим E32-4a (п.7).
+"""
 
 import uuid
 from datetime import UTC, datetime, timedelta
@@ -167,9 +170,7 @@ async def test_bonus_invites_instead_of_upgrade(api, factory, taxonomy_loaded, f
     assert [(c.profession, c.grade) for c in last.categories] == [("backend", S)]
 
 
-async def test_invited_failure_keeps_grade_and_retry_open(
-    api, factory, taxonomy_loaded, fake_bank
-):
+async def test_invited_failure_keeps_grade_and_retry_open(api, factory, taxonomy_loaded, fake_bank):
     """Провал приглашённого теста не меняет грейд и не закрывает повтор (ADR-025 п.2)."""
     h = register(api)
     uid = _uid(api, h)
@@ -358,3 +359,93 @@ def test_band_position_matches_service():
     for g in (J, M, S):
         for th in (-2.0, -0.7, 0.0, 0.4, 1.0, 1.6, 3.0):
             assert grading.band_position(g, th, CFG) == pytest.approx(svc._band_position(g, th))
+
+
+# --- E32-4a: экспресс-режим (ADR-025 п.7) -----------------------------------------------------
+
+
+def _start_express(api, h, grade="middle"):
+    return api.post(
+        "/assessment/attempts",
+        json={"profession": "backend", "declared_grade": grade, "mode": "express"},
+        headers=h,
+    )
+
+
+def test_express_config_bounds():
+    from app.assessment import sprt
+
+    ex = CFG.for_mode("express")
+    assert (ex.min_items, ex.max_items, ex.bonus_enabled, ex.pilot_slots) == (6, 8, False, 0)
+    lo, hi = sprt.bounds(ex)
+    assert hi == pytest.approx(1.735, abs=1e-3) and lo == pytest.approx(-1.735, abs=1e-3)
+    assert CFG.for_mode("standard") is CFG
+
+
+async def test_express_pass_marks_grade_and_event(api, factory, taxonomy_loaded, fake_bank):
+    h = register(api)
+    uid = _uid(api, h)
+    r = _start_express(api, h)
+    assert r.status_code == 201, r.text
+    assert r.json()["mode"] == "express"
+    aid = r.json()["id"]
+    _run(api, h, aid)
+    out = api.get(f"/assessment/attempts/{aid}", headers=h).json()
+    # 6 заданий (минимум), без бонуса и приглашения
+    assert (out["answered"], out["stage"], out["invited_grade"]) == (6, "main", None)
+    assert out["result"]["grade"] == "middle"
+    async with session_scope(factory) as s:
+        (g,) = await svc.get_grades(s, uid)
+        assert (g.grade, g.mode, g.source) == (M, "express", "test")
+    (fin,) = await _events(factory, "assessment.attempt.finished")
+    f = AttemptFinished.model_validate(fin.payload["payload"])
+    assert (f.mode, f.stage, f.invited_grade, f.grade) == ("express", "main", None, M)
+
+
+async def test_standard_replaces_express_without_cooldown(api, factory, taxonomy_loaded, fake_bank):
+    h = register(api)
+    uid = _uid(api, h)
+    _run(api, h, _start_express(api, h).json()["id"])
+    # обычный тест на грейд ниже: кулдаун смены грейда экспресса не держит, грейд заменяется
+    r = _start(api, h, grade="junior")
+    assert r.status_code == 201, r.text
+    _run(api, h, r.json()["id"])
+    async with session_scope(factory) as s:
+        row = await s.get(Grade, (uid, "backend"))
+        assert (row.grade, row.mode) == ("junior", "standard")
+
+
+async def test_express_does_not_override_standard(api, factory, taxonomy_loaded, fake_bank):
+    h = register(api)
+    uid = _uid(api, h)
+    _run(api, h, _start(api, h).json()["id"])  # обычный middle
+    r = _start_express(api, h, grade="senior")
+    assert (r.status_code, r.json()["code"]) == (409, "cooldown")  # правила грейда те же
+    await _set_cooldown_past(factory, uid)
+    _run(api, h, _start_express(api, h, grade="senior").json()["id"])
+    async with session_scope(factory) as s:
+        row = await s.get(Grade, (uid, "backend"))
+        assert (row.grade, row.mode) == ("middle", "standard")
+
+
+async def test_express_failure_does_not_block_standard(api, factory, taxonomy_loaded, fake_bank):
+    h = register(api)
+    aid = _start_express(api, h).json()["id"]
+    _run(api, h, aid, answer="0")
+    assert api.get(f"/assessment/attempts/{aid}", headers=h).json()["status"] == "failed"
+    again = _start_express(api, h)
+    assert (again.status_code, again.json()["code"]) == (409, "cooldown")
+    assert _start(api, h).status_code == 201
+
+
+async def test_express_disabled_is_422():
+    from dataclasses import replace
+
+    from app.assessment import attempts
+    from fsp_platform.app import ProblemError
+
+    with pytest.raises(ProblemError) as e:
+        await attempts.create_attempt(
+            None, uuid.uuid4(), "backend", M, replace(CFG, express_enabled=False), mode="express"
+        )
+    assert (e.value.status, e.value.code) == (422, "express_disabled")

@@ -54,6 +54,7 @@ export default function Survey() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [grade, setGrade] = useState<TestGrade | "">("");
+  const [express, setExpress] = useState(params.get("mode") === "express"); // E32-4a: вход жюри
   const [touched, setTouched] = useState(false);
   const [done, setDone] = useState(false);
 
@@ -100,7 +101,9 @@ export default function Survey() {
         setDone(true);
         return;
       }
-      const r = await create.mutateAsync({ data: { profession, declared_grade: grade as TestGrade } });
+      const r = await create.mutateAsync({
+        data: { profession, declared_grade: grade as TestGrade, ...(express ? { mode: "express" as const } : {}) },
+      });
       if (r.status === 201) nav(`/me/assessment/attempts/${r.data.id}`);
     } catch {
       // Ошибки показаны через put.error / create.error.
@@ -255,6 +258,19 @@ export default function Survey() {
               ))}
             </div>
             <p className="text-13 text-muted">{T.gradeHint}</p>
+            <label className="flex min-h-11 cursor-pointer items-start gap-3 rounded-lg border border-dashed border-hairline p-3">
+              <input
+                type="checkbox"
+                className="mt-1 size-4 accent-[var(--brand)]"
+                checked={express}
+                onChange={(e) => setExpress(e.target.checked)}
+                data-testid="assessment-express-toggle"
+              />
+              <span className="flex flex-col gap-0.5">
+                <span className="text-14 font-semibold">{T.express}</span>
+                <span className="text-13 text-muted">{T.expressHint}</span>
+              </span>
+            </label>
             {touched && !grade && (
               <p role="alert" className="text-13 text-error" data-testid="assessment-need-grade">
                 {T.needGrade}

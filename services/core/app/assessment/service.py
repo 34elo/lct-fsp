@@ -54,6 +54,7 @@ def _dto(row: Grade) -> CandidateGrade:
         confirmed_at=_aware(row.confirmed_at),
         valid_until=_aware(row.valid_until),
         next_change_at=_aware(row.next_change_at),
+        mode=row.mode or "standard",  # type: ignore[arg-type]
     )
 
 
@@ -321,6 +322,7 @@ async def seed_grade(
     row.needs_confirmation = needs_confirmation
     row.low_confidence = False
     row.source = "seed"
+    row.mode = "standard"
     row.attempt_id = None
     row.confirmed_at = now
     row.valid_until = now + GRADE_VALIDITY

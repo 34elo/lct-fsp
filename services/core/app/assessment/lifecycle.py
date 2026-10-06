@@ -441,6 +441,7 @@ async def _regrade(
     session: AsyncSession, att: Attempt, cfg: AssessmentConfig, withdrawn: set[uuid.UUID], now
 ) -> bool:
     """Пересчитать одну завершённую попытку без выведенных семейств. Истина — грейд изменился."""
+    cfg = cfg.for_mode(att.mode)  # экспресс — свои α/β (E32-4a)
     rows = [
         (r, f)
         for r, f in (

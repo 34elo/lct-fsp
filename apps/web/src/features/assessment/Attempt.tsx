@@ -308,7 +308,9 @@ export default function Attempt() {
               <p className="font-semibold">
                 {GRADE[attempt.declared_grade] ?? attempt.declared_grade} · {title}
               </p>
-              <p className="text-muted">{T.range}</p>
+              <p className="text-muted" data-testid="assessment-range">
+                {attempt.mode === "express" ? T.rangeExpress : T.range}
+              </p>
             </Card>
           )}
         </aside>

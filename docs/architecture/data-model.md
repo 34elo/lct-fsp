@@ -217,6 +217,7 @@ CREATE TABLE grades (
   PRIMARY KEY (candidate_id, profession)
 );
 -- миграция b1_03 (E22-1): grades.attempt_id REFERENCES attempts(id) ON DELETE SET NULL
+-- миграция b1_13 (E32-4a): grades.mode, attempts.mode text NOT NULL DEFAULT 'standard' -- standard | express
 
 -- v2 (миграция b1_03; assessment.md §3): опрос, банк семейств, попытки, ответы
 CREATE TABLE surveys (
