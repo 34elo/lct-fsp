@@ -307,6 +307,10 @@ def test_speed_on_500_candidates(c, market):
                 " top_evidence, claimed_only) values (?,?,?,?,'[\"github\"]','[]',0)",
                 (row["user_id"], c.skills["python"], 0.3 + (i % 7) / 10, 2),
             )
+            con.execute(
+                "insert into consents (user_id, type, version, granted_at) values (?,?,?,?)",
+                (row["user_id"], "profile_publication", "2025-09-01", NOW),
+            )
     t = time.perf_counter()
     r = _search(c, market, sort="trust", filters={"skills_must": [{"slug": "python"}]})
     assert r.status_code == 200 and r.json()["total"] >= 500
