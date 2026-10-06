@@ -9667,6 +9667,182 @@
         }
       }
     },
+    "/admin/demo/two-worlds": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Two Worlds",
+        "operationId": "two_worlds_admin_demo_two_worlds_get",
+        "parameters": [
+          {
+            "name": "family",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 80,
+              "default": "arch_blast_radius",
+              "title": "Family"
+            }
+          },
+          {
+            "name": "seed",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 2147483647,
+              "minimum": 0,
+              "default": 7,
+              "title": "Seed"
+            }
+          },
+          {
+            "name": "domains",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Domains"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TwoWorldsOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/demo/llm-exam": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Llm Exam",
+        "operationId": "llm_exam_admin_demo_llm_exam_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LlmExamOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/admin/professions": {
       "get": {
         "tags": [
@@ -19621,6 +19797,150 @@
         ],
         "title": "Kind"
       },
+      "LlmBankOut": {
+        "properties": {
+          "families": {
+            "type": "integer",
+            "title": "Families"
+          },
+          "measured": {
+            "type": "integer",
+            "title": "Measured"
+          },
+          "solved_by_llm": {
+            "type": "integer",
+            "title": "Solved By Llm"
+          },
+          "top": {
+            "items": {
+              "$ref": "#/components/schemas/LlmFamilyOut"
+            },
+            "type": "array",
+            "title": "Top"
+          }
+        },
+        "type": "object",
+        "required": [
+          "families",
+          "measured",
+          "solved_by_llm",
+          "top"
+        ],
+        "title": "LlmBankOut"
+      },
+      "LlmExamOut": {
+        "properties": {
+          "report": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LlmReportOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "bank": {
+            "$ref": "#/components/schemas/LlmBankOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "bank"
+        ],
+        "title": "LlmExamOut"
+      },
+      "LlmFamilyOut": {
+        "properties": {
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "ai_solvable": {
+            "type": "number",
+            "title": "Ai Solvable"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slug",
+          "status",
+          "ai_solvable"
+        ],
+        "title": "LlmFamilyOut"
+      },
+      "LlmGradeRow": {
+        "properties": {
+          "declared": {
+            "type": "string",
+            "title": "Declared"
+          },
+          "flagged_share": {
+            "type": "number",
+            "title": "Flagged Share"
+          },
+          "granted": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Granted"
+          }
+        },
+        "type": "object",
+        "required": [
+          "declared",
+          "flagged_share",
+          "granted"
+        ],
+        "title": "LlmGradeRow"
+      },
+      "LlmReportOut": {
+        "properties": {
+          "seed": {
+            "type": "integer",
+            "title": "Seed"
+          },
+          "families": {
+            "type": "integer",
+            "title": "Families"
+          },
+          "ai_solvable_share": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai Solvable Share"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/LlmGradeRow"
+            },
+            "type": "array",
+            "title": "Rows"
+          },
+          "simulation": {
+            "type": "boolean",
+            "title": "Simulation",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "seed",
+          "families",
+          "rows"
+        ],
+        "title": "LlmReportOut"
+      },
       "LoginIn": {
         "properties": {
           "email": {
@@ -26095,6 +26415,55 @@
         ],
         "title": "TuningHint"
       },
+      "TwoWorldsOut": {
+        "properties": {
+          "family": {
+            "type": "string",
+            "title": "Family"
+          },
+          "skill": {
+            "type": "string",
+            "title": "Skill"
+          },
+          "level": {
+            "type": "integer",
+            "title": "Level"
+          },
+          "seed": {
+            "type": "integer",
+            "title": "Seed"
+          },
+          "choices": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Choices"
+          },
+          "worlds": {
+            "items": {
+              "$ref": "#/components/schemas/WorldItemOut"
+            },
+            "type": "array",
+            "title": "Worlds"
+          },
+          "same_shape": {
+            "type": "boolean",
+            "title": "Same Shape"
+          }
+        },
+        "type": "object",
+        "required": [
+          "family",
+          "skill",
+          "level",
+          "seed",
+          "choices",
+          "worlds",
+          "same_shape"
+        ],
+        "title": "TwoWorldsOut"
+      },
       "UpliftCombo": {
         "properties": {
           "skills": {
@@ -26978,6 +27347,71 @@
           "remote"
         ],
         "title": "WorkFormat"
+      },
+      "WorldItemOut": {
+        "properties": {
+          "domain": {
+            "type": "string",
+            "title": "Domain"
+          },
+          "domain_title": {
+            "type": "string",
+            "title": "Domain Title"
+          },
+          "company": {
+            "type": "string",
+            "title": "Company"
+          },
+          "scale": {
+            "type": "integer",
+            "title": "Scale"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "stem": {
+            "type": "string",
+            "title": "Stem"
+          },
+          "options": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Options"
+          },
+          "time_limit_s": {
+            "type": "integer",
+            "title": "Time Limit S"
+          },
+          "services": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Services"
+          }
+        },
+        "type": "object",
+        "required": [
+          "domain",
+          "domain_title",
+          "company",
+          "scale",
+          "kind",
+          "stem",
+          "time_limit_s",
+          "services"
+        ],
+        "title": "WorldItemOut"
       },
       "app__analytics__dashboard__Stage": {
         "properties": {
