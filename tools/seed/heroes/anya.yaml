@@ -12,7 +12,7 @@ profile:
   formats: [remote, hybrid]
   employment_types: [full, internship]
   search_status: active
-consents: [pd_processing]
+consents: [pd_processing, profile_publication]
 resume:
   summary: "Студентка 3 курса, пишу на Python, делала пет-проекты. Коммерческого опыта нет."
   skills: [python, git, sql]        # только блок навыков: сила 0.25, доверие ●○○○
