@@ -117,6 +117,7 @@ export const NAV: Record<"candidate" | "employer" | "admin", NavItem[]> = {
   candidate: [
     { to: "/me", label: "Профиль" },
     { to: "/me/offers", label: "Офферы" },
+    { to: "/me/responses", label: "Отклики", desktopOnly: true },
     { to: "/onboarding", label: "Резюме" },
     { to: "/me/graph", label: "Граф" },
     { to: "/me/growth", label: "Рост" },
@@ -127,6 +128,7 @@ export const NAV: Record<"candidate" | "employer" | "admin", NavItem[]> = {
     { to: "/employer/market", label: "Рынок" },
     { to: "/employer/search", label: "Поиск" },
     { to: "/employer/vacancies", label: "Вакансии" },
+    { to: "/employer/responses", label: "Отклики" },
     { to: "/employer/offers", label: "Офферы" },
     { to: "/employer/company", label: "Компания" },
   ],
