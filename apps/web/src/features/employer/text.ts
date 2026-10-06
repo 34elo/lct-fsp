@@ -13,6 +13,67 @@ export const VACANCY_STATUS_LABEL: Record<string, string> = { draft: "Черно
 
 export const SORT_LABEL = { match: "По совпадению", trust: "По доверию", fresh: "По свежести" } as const;
 
+/** Уровень соревнования ФСП в строке протокола. */
+export const FSP_LEVEL_LABEL: Record<string, string> = {
+  regional: "региональный этап",
+  interregional: "межрегиональный этап",
+  national: "всероссийский этап",
+  international: "международный этап",
+};
+
+/** Тексты экрана A (поиск) и E2 («текст → чипсы»). */
+export const SEARCH_TEXT = {
+  title: "Поиск кандидатов",
+  shortlistTitle: (t: string) => `Подборка: ${t}`,
+  anon: "Карточки анонимны: имя, контакты и компании открываются после принятия оффера.",
+  queryLabel: "Кого ищете",
+  queryPlaceholder: "Например: бэкендер на Python, высоконагруженный API, удалёнка, до 220 тыс",
+  find: "Найти",
+  parsing: "Разбираем запрос…",
+  recognized: "Распознано",
+  approxHint: "«~» — понято приблизительно, учитываем смежные навыки",
+  parseFailed: "Не удалось разобрать запрос. Задайте фильтры слева.",
+  nothingRecognized: "Ничего не распознали: уточните запрос или задайте фильтры слева.",
+  filters: "Фильтры",
+  reset: "Сбросить",
+  vacancy: "Вакансия (подборка)",
+  vacancyNone: "Без вакансии: свободный поиск",
+  role: "Роль",
+  any: "Любая",
+  trust: "Минимальный уровень доверия",
+  trustAny: "Любой",
+  trustHint: "Для ключевых навыков запроса",
+  fsp: "Подтверждение ФСП",
+  fspOnly: "Только с подтверждением ФСП",
+  activeOnly: "Только активно ищут",
+  format: "Формат",
+  grade: "Грейд",
+  budget: "Бюджет, ₽ в месяц",
+  budgetAny: "любой",
+  skills: "Обязательные навыки",
+  addSkill: "Добавить навык…",
+  sort: "Сортировка",
+  found: (n: number) => `${n} ${plural(n, "анонимный профиль", "анонимных профиля", "анонимных профилей")}`,
+  searching: "Ищем…",
+  empty: "Никого не нашли",
+  emptyHint: "Ослабьте фильтры или уберите обязательные навыки.",
+  failed: "Не удалось загрузить выдачу",
+  more: "Показать ещё",
+  loadingMore: "Загружаем…",
+} as const;
+
+export const BUDGET_MIN = 50_000;
+export const BUDGET_MAX = 400_000;
+export const BUDGET_STEP = 10_000;
+
+export function plural(n: number, one: string, few: string, many: string): string {
+  const m10 = n % 10;
+  const m100 = n % 100;
+  if (m10 === 1 && m100 !== 11) return one;
+  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return few;
+  return many;
+}
+
 export const SEARCH_STATUS_LABEL: Record<string, string> = {
   active: "Активно ищет",
   open: "Открыт к предложениям",
