@@ -20,6 +20,9 @@
 | `/me/navigator` | C | Навигатор роста (Б2, E12-3): `NavigatorPath`, uplift-карточки, соревнования ФСП; «Пройти тест» ведёт на `/me/assessment?profession=&grade=` |
 | `/jobs`, `/jobs/:id` | — | Публичные вакансии (Б2, E20-7b, J1): фильтры профессия/город/текст, вилка на карточке; отклик с сообщением после входа (состояния: не вошёл, не кандидат, `email_not_verified`, отправлено, `already_applied`). Отдельного публичного `GET` вакансии нет: деталь берётся из `GET /vacancies/public?limit=100` |
 | `/me/responses` | C | Мои отклики (R1): вкладки, отзыв из `sent/viewed`, переход к приглашению |
+| `/employer/needs/new` | E | Потребность текстом (N1): `POST /needs {text}`, 422 `need_empty` → ссылка на форму поиска |
+| `/employer/needs/:id` | E | Рекомендованные категории (N1): `GET /needs/{id}/categories`, чипсы «поняли так» из ответа создания (router state), карточка профессия × грейд со счётчиками |
+| `/employer/categories/:profession/:grade?need_id=` | E | Кандидаты категории (N2): `GET /categories/{p}/{g}/candidates`, «заявлено vs подтверждено» (`card.grade` против `categories`), шорт-лист `POST/DELETE /needs/{id}/shortlist/{pseudo_id}`, фильтры и сортировка на клиенте поверх загруженных карточек (отмеченные не пропадают), «Пригласить» → `/employer/offers/new?candidate=` |
 | `/employer/responses` | E | Отклики на вакансии (R1): `GET /offers?initiator=candidate`, «Пригласить» → `interview`, «Отказать» → `not_hired`. Приглашение без вакансии — в окне оффера (название, описание, способ связи, вилка) |
 | `/me/badge` | C | Open Badge (Q5) |
 | `/me/settings` | C | Статус, зарплата, формат, видимость, стоп-лист, согласия, удаление |

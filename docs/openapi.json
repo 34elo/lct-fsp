@@ -8063,6 +8063,186 @@
           }
         }
       }
+    },
+    "/needs/{need_id}/shortlist/{pseudo_id}": {
+      "post": {
+        "tags": [
+          "needs"
+        ],
+        "summary": "Shortlist Add",
+        "description": "Добавить кандидата в шорт-лист потребности (E23-5). Фильтр не сбрасывает отмеченных.",
+        "operationId": "shortlist_add_needs__need_id__shortlist__pseudo_id__post",
+        "parameters": [
+          {
+            "name": "need_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Need Id"
+            }
+          },
+          {
+            "name": "pseudo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pseudo Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "needs"
+        ],
+        "summary": "Shortlist Remove",
+        "description": "Удалить кандидата из шорт-листа потребности (E23-5).",
+        "operationId": "shortlist_remove_needs__need_id__shortlist__pseudo_id__delete",
+        "parameters": [
+          {
+            "name": "need_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Need Id"
+            }
+          },
+          {
+            "name": "pseudo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pseudo Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -8450,6 +8630,11 @@
                 "type": "null"
               }
             ]
+          },
+          "is_shortlisted": {
+            "type": "boolean",
+            "title": "Is Shortlisted",
+            "default": false
           }
         },
         "type": "object",
@@ -8603,6 +8788,11 @@
                 "type": "null"
               }
             ]
+          },
+          "is_shortlisted": {
+            "type": "boolean",
+            "title": "Is Shortlisted",
+            "default": false
           },
           "skills": {
             "items": {
@@ -11238,6 +11428,14 @@
             "format": "uuid",
             "title": "Need Id"
           },
+          "shortlist": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Shortlist",
+            "default": []
+          },
           "categories": {
             "items": {
               "$ref": "#/components/schemas/NeedCategory"
@@ -11373,6 +11571,14 @@
             },
             "type": "array",
             "title": "Grades"
+          },
+          "shortlist": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Shortlist",
+            "default": []
           },
           "created_at": {
             "type": "string",
@@ -13849,6 +14055,11 @@
                 "type": "null"
               }
             ]
+          },
+          "is_shortlisted": {
+            "type": "boolean",
+            "title": "Is Shortlisted",
+            "default": false
           },
           "similarity": {
             "type": "number",

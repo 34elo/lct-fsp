@@ -5,8 +5,10 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { CardMatch } from './cardMatch';
+import type { CategoryRef } from './categoryRef';
 import type { FspHighlight } from './fspHighlight';
 import type { SkillBrief } from './skillBrief';
+import type { StrengthView } from './strengthView';
 
 /**
  * Единственное представление кандидата для работодателя до принятия оффера.
@@ -28,4 +30,7 @@ export interface CandidateCard {
   search_status: string;
   match?: CardMatch | null;
   updated_at: string;
+  categories?: CategoryRef[];
+  strength?: StrengthView | null;
+  is_shortlisted?: boolean;
 }
