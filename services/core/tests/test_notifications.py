@@ -1,4 +1,4 @@
-"""Уведомления: offer.* и skills.profile.updated → БД, ui.user.*, notify.telegram (E8-3)."""
+"""Уведомления: offer.*, skills.profile.updated, fsp.results.imported, regular_task.published → БД, ui.user.*, notify.telegram (E8-3, E9-6)."""
 
 import asyncio
 import json
@@ -16,7 +16,14 @@ from app.main import build_app
 from app.notifications.handlers import register
 from fastapi.testclient import TestClient
 from fsp_contracts import Envelope, new_envelope
-from fsp_contracts.events import ProfileDiff, SkillLevelChange, SkillsProfileUpdated
+from fsp_contracts.assessment import RegularTaskPublished
+from fsp_contracts.events import (
+    FspResultsImported,
+    ProfileDiff,
+    SkillLevelChange,
+    SkillsProfileUpdated,
+)
+from fsp_contracts.fsp import FspResult
 from fsp_platform.db import make_engine, make_session_factory
 from fsp_platform.messaging import QUEUES, Consumer
 from fsp_platform.ratelimit import RateLimiter
@@ -275,3 +282,121 @@ def test_invite_without_vacancy_notifies_with_title_once(world):
     assert c.post(f"/offers/{oid}/accept", headers=ch).status_code == 200
     _drain(c, types=("offer.accepted",), repeat=2)
     assert [n[1] for n in _notes(c)] == ["offer_new", "offer_accepted"]  # компании — один раз
+
+
+def test_fsp_results_imported_notifies_candidate(world):
+    """E9-6: импорт результатов ФСП отправляет уведомление кандидату."""
+    from datetime import date
+
+    c, e, e_uid, vid, ch, ch_uid = world
+    _link_tg(c, ch, ch_uid)
+    uid = uuid.UUID(ch_uid)
+    consumers = {"core.handlers": Consumer(QUEUES["core.handlers"])}
+    register(consumers, c.factory, None)
+    # Создаём событие импорта ФСП
+    result = FspResult(
+        competition_id="cf123", discipline="algorithmic", stage="final",
+        team_role="individual", place=1, date=date(2026, 10, 1),
+    )  # fmt: skip
+    env = new_envelope(
+        "fsp.results.imported", "fsp-connector",
+        FspResultsImported(candidate_id=uid, participant_id="p123", results=[result]),
+    )  # fmt: skip
+    asyncio.run(consumers["core.handlers"].dispatch(env))
+    assert [n[1] for n in _notes(c)] == ["fsp_imported"]
+    (cmd,) = _tg(c)
+    assert cmd["chat_id"] == CHAT and cmd["template"] == "fsp_imported"
+    assert cmd["data"]["count"] == 1
+
+
+def test_fsp_imported_redelivery_is_idempotent(world):
+    """E9-6: повторная доставка события импорта не дублирует уведомление."""
+    from datetime import date
+
+    c, e, e_uid, vid, ch, ch_uid = world
+    _link_tg(c, ch, ch_uid)
+    uid = uuid.UUID(ch_uid)
+    consumers = {"core.handlers": Consumer(QUEUES["core.handlers"])}
+    register(consumers, c.factory, None)
+    result = FspResult(
+        competition_id="cf123", discipline="algorithmic", stage="final",
+        team_role="individual", place=1, date=date(2026, 10, 1),
+    )  # fmt: skip
+    env = new_envelope(
+        "fsp.results.imported", "fsp-connector",
+        FspResultsImported(candidate_id=uid, participant_id="p123", results=[result]),
+    )  # fmt: skip
+    asyncio.run(consumers["core.handlers"].dispatch(env))
+    asyncio.run(consumers["core.handlers"].dispatch(env))  # повтор
+    assert len(_notes(c)) == 1 and len(_tg(c)) == 1
+
+
+def test_regular_task_published_notifies_candidates(world):
+    """E9-6: публикация регулярного задания отправляет уведомления кандидатам."""
+    c, e, e_uid, vid, ch, ch_uid = world
+    _link_tg(c, ch, ch_uid)
+    uid = uuid.UUID(ch_uid)
+    consumers = {"core.handlers": Consumer(QUEUES["core.handlers"])}
+    register(consumers, c.factory, None)
+    family_id = uuid.uuid4()
+    # Событие публикации задания для кандидата
+    env = new_envelope(
+        "regular_task.published", "core",
+        RegularTaskPublished(
+            family_id=family_id, profession="backend", candidate_ids=[uid]
+        ),
+    )  # fmt: skip
+    asyncio.run(consumers["core.handlers"].dispatch(env))
+    assert [n[1] for n in _notes(c)] == ["regular_task_published"]
+    (cmd,) = _tg(c)
+    assert cmd["chat_id"] == CHAT and cmd["template"] == "regular_task_published"
+    assert cmd["data"]["profession"] == "backend"
+
+
+def test_regular_task_published_multiple_candidates(world):
+    """E9-6: задание может быть отправлено нескольким кандидатам."""
+    c, e, e_uid, vid, ch, ch_uid = world
+    _link_tg(c, ch, ch_uid)
+    # Создаём второго кандидата
+    ch2 = c.post("/auth/register", json={"email": "c2@x.ru", "role": "candidate", "password": PWD})
+    ch2_uid = ch2.json()["user"]["id"]
+    _link_tg(c, {"Authorization": f"Bearer {ch2.json()['access_token']}"}, ch2_uid)
+
+    uid1 = uuid.UUID(ch_uid)
+    uid2 = uuid.UUID(ch2_uid)
+    consumers = {"core.handlers": Consumer(QUEUES["core.handlers"])}
+    register(consumers, c.factory, None)
+    family_id = uuid.uuid4()
+    env = new_envelope(
+        "regular_task.published", "core",
+        RegularTaskPublished(
+            family_id=family_id, profession="backend", candidate_ids=[uid1, uid2]
+        ),
+    )  # fmt: skip
+    asyncio.run(consumers["core.handlers"].dispatch(env))
+    # Две публикации в БД и в Telegram
+    notes = _notes(c)
+    assert len(notes) == 2
+    assert all(n[1] == "regular_task_published" for n in notes)
+    cmds = _tg(c)
+    assert len(cmds) == 2
+    assert all(cmd["template"] == "regular_task_published" for cmd in cmds)
+
+
+def test_regular_task_redelivery_is_idempotent(world):
+    """E9-6: повторная доставка события задания не дублирует уведомления."""
+    c, e, e_uid, vid, ch, ch_uid = world
+    _link_tg(c, ch, ch_uid)
+    uid = uuid.UUID(ch_uid)
+    consumers = {"core.handlers": Consumer(QUEUES["core.handlers"])}
+    register(consumers, c.factory, None)
+    family_id = uuid.uuid4()
+    env = new_envelope(
+        "regular_task.published", "core",
+        RegularTaskPublished(
+            family_id=family_id, profession="backend", candidate_ids=[uid]
+        ),
+    )  # fmt: skip
+    asyncio.run(consumers["core.handlers"].dispatch(env))
+    asyncio.run(consumers["core.handlers"].dispatch(env))  # повтор
+    assert len(_notes(c)) == 1 and len(_tg(c)) == 1

@@ -117,10 +117,20 @@ class FamilyStatusChanged(BaseModel):
     to: str
 
 
+class RegularTaskPublished(BaseModel):
+    """`regular_task.published`: регулярное задание опубликовано для категории."""
+
+    family_id: UUID
+    profession: ProfessionSlug
+    # Список кандидатов, которым отправлено задание (может быть пусто при инкрементальной рассылке)
+    candidate_ids: list[UUID] = Field(default_factory=list)
+
+
 ASSESSMENT_EVENTS: dict[str, type[BaseModel]] = {
     "assessment.attempt.finished": AttemptFinished,
     "candidate.category.changed": CategoryChanged,
     "assessment.family.status_changed": FamilyStatusChanged,
+    "regular_task.published": RegularTaskPublished,
 }
 
 __all__ = [
@@ -134,6 +144,7 @@ __all__ = [
     "FamilyStatusChanged",
     "ProfessionInfo",
     "ProfessionSlug",
+    "RegularTaskPublished",
     "SkillType",
     "TestGrade",
 ]

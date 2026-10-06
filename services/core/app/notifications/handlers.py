@@ -2,6 +2,8 @@
 
 Цепочка (messaging.md §3): запись в `notifications` + `ui.user.<id>` + команда `notify.telegram`.
 Идемпотентность — inbox; команда боту идёт через outbox в той же транзакции.
+
+E9-6: обработчики для FSP и регулярных заданий; E25-1 добавит регулярные задания.
 """
 
 from __future__ import annotations
@@ -11,8 +13,9 @@ from collections.abc import Mapping
 
 import structlog
 from fsp_contracts import Envelope
+from fsp_contracts.assessment import RegularTaskPublished
 from fsp_contracts.enums import OfferStatus
-from fsp_contracts.events import OfferEvent, SkillsProfileUpdated
+from fsp_contracts.events import FspResultsImported, OfferEvent, SkillsProfileUpdated
 from fsp_contracts.hiring import OfferInitiator
 from fsp_contracts.notify import TgButton, TgTemplate
 from fsp_contracts.ui import (
@@ -311,3 +314,34 @@ def register(
             tg=TgTemplate.profile_updated, tg_data={"diff": diff},
         )  # fmt: skip
         await service.push(ui_publish, out)
+
+    # >>> block2 (E9-6)
+    @consumers["core.handlers"].on("fsp.results.imported")
+    @idempotent(session_factory, "notifications.fsp_imported")
+    async def on_fsp_imported(envelope: Envelope, session: AsyncSession) -> None:
+        ev = FspResultsImported.model_validate(envelope.payload)
+        out: list[UiMessage] = []
+        await service.notify(
+            session, ev.candidate_id, type="fsp_imported", title="Новый результат ФСП",
+            payload={}, out=out,
+            tg=TgTemplate.fsp_imported, tg_data={"count": len(ev.results)},
+        )  # fmt: skip
+        await service.push(ui_publish, out)
+
+    @consumers["core.handlers"].on("regular_task.published")
+    @idempotent(session_factory, "notifications.regular_task")
+    async def on_regular_task(envelope: Envelope, session: AsyncSession) -> None:
+        ev = RegularTaskPublished.model_validate(envelope.payload)
+        out: list[UiMessage] = []
+        # Отправляем уведомления каждому кандидату в списке
+        for candidate_id in ev.candidate_ids:
+            await service.notify(
+                session, candidate_id, type="regular_task_published",
+                title=f"Новое задание по {ev.profession}",
+                payload={"family_id": str(ev.family_id), "profession": ev.profession}, out=out,
+                tg=TgTemplate.regular_task_published,
+                tg_data={"profession": ev.profession},
+            )  # fmt: skip
+        await service.push(ui_publish, out)
+
+    # <<< block2
