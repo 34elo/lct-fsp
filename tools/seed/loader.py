@@ -4,7 +4,8 @@
 (`consents`), резюме (`resumes.confirm` → доказательства `resume`/`self`), события ФСП
 (`graph.fsp_ingest.on_*` — те же функции, что у core-worker), доказательства GitHub и тестов
 (`graph.service.upsert_evidence`), пересчёт доверия, категории и грейда (`recompute_profile`),
-компании и вакансии (`companies`, `vacancies`), подбор (`matching.match_vacancy`), офферы и смена
+компании и вакансии (`companies`, `vacancies`), seed-грейды (`grades.seed_grades`),
+подбор (`matching.match_vacancy`), офферы и смена
 их статусов (`offers.create/transition`). Прямые записи остаются там, где сервиса пока нет:
 роль админа демо, `responsibility_score` компаний, provisional-навыки.
 
@@ -125,6 +126,7 @@ class Seeder:
             await self.candidate(c)
         await self.provisional_evidence()
         await self.companies_and_vacancies()
+        await self.grades()  # до подбора: без грейда из теста кандидат не виден (E23-1)
         await self.match_all()
         await self.offer_history()
         await self.close_vacancies()
@@ -404,6 +406,13 @@ class Seeder:
 
     def plan_company(self, idx: int) -> dict[str, Any]:
         return self.plan["companies"][idx]
+
+    async def grades(self) -> None:
+        """Seed-грейды (`tools/seed/grades.py`, блок 1) — идемпотентно, как команда `grades`."""
+        from .grades import seed_grades
+
+        for k, v in (await seed_grades(self.factory, self.plan, self.user_ids)).items():
+            self.stats[k] += v
 
     async def match_all(self) -> None:
         async with session_scope(self.factory) as s:
