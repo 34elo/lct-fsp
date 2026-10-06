@@ -4707,9 +4707,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Record Feedback Recs Feedback Post"
+                  "$ref": "#/components/schemas/FeedbackOut"
                 }
               }
             }
@@ -4770,6 +4768,173 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/recs/sessions/{session_id}": {
+      "get": {
+        "tags": [
+          "recommendations"
+        ],
+        "summary": "Get Session Tuning",
+        "description": "Учтённые подстройки сессии: веса признаков, чипсы «Учли: …», подсказки фильтров.",
+        "operationId": "get_session_tuning_recs_sessions__session_id__get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionTuning"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "recommendations"
+        ],
+        "summary": "Reset Session Tuning",
+        "description": "Сброс подстройки (крестик на чипсе): реакции до сброса больше не учитываются.",
+        "operationId": "reset_session_tuning_recs_sessions__session_id__delete",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -8358,6 +8523,29 @@
         ],
         "title": "CategoryRole"
       },
+      "Chip": {
+        "properties": {
+          "feature": {
+            "type": "string",
+            "title": "Feature"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "change": {
+            "type": "number",
+            "title": "Change"
+          }
+        },
+        "type": "object",
+        "required": [
+          "feature",
+          "text",
+          "change"
+        ],
+        "title": "Chip"
+      },
       "CompanyBrief": {
         "properties": {
           "id": {
@@ -9529,6 +9717,38 @@
         ],
         "title": "ExplanationItem"
       },
+      "FeedbackOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "impression_id": {
+            "type": "integer",
+            "title": "Impression Id"
+          },
+          "event": {
+            "type": "string",
+            "title": "Event"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "tuning": {
+            "$ref": "#/components/schemas/SessionTuning"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "impression_id",
+          "event",
+          "created_at",
+          "tuning"
+        ],
+        "title": "FeedbackOut"
+      },
       "FeedbackRequest": {
         "properties": {
           "session_id": {
@@ -9547,7 +9767,8 @@
           "reason": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "maxLength": 500
               },
               {
                 "type": "null"
@@ -9944,6 +10165,34 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "Hint": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "reason",
+          "text",
+          "count"
+        ],
+        "title": "Hint"
       },
       "LoginIn": {
         "properties": {
@@ -12336,6 +12585,16 @@
             "type": "string",
             "format": "uuid",
             "title": "Session Id"
+          },
+          "tuning": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SearchTuning"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -12425,6 +12684,94 @@
           "dnd"
         ],
         "title": "SearchStatus"
+      },
+      "SearchTuning": {
+        "properties": {
+          "active": {
+            "type": "boolean",
+            "title": "Active"
+          },
+          "signals": {
+            "type": "integer",
+            "title": "Signals"
+          },
+          "chips": {
+            "items": {
+              "$ref": "#/components/schemas/TuningChip"
+            },
+            "type": "array",
+            "title": "Chips"
+          },
+          "hints": {
+            "items": {
+              "$ref": "#/components/schemas/TuningHint"
+            },
+            "type": "array",
+            "title": "Hints"
+          }
+        },
+        "type": "object",
+        "required": [
+          "active",
+          "signals",
+          "chips",
+          "hints"
+        ],
+        "title": "SearchTuning",
+        "description": "Подстройка выдачи в сессии (matching.md §7): включается после ≥ 3 реакций."
+      },
+      "SessionTuning": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active"
+          },
+          "signals": {
+            "type": "integer",
+            "title": "Signals"
+          },
+          "min_signals": {
+            "type": "integer",
+            "title": "Min Signals"
+          },
+          "weights": {
+            "items": {
+              "$ref": "#/components/schemas/WeightOut"
+            },
+            "type": "array",
+            "title": "Weights"
+          },
+          "chips": {
+            "items": {
+              "$ref": "#/components/schemas/Chip"
+            },
+            "type": "array",
+            "title": "Chips"
+          },
+          "hints": {
+            "items": {
+              "$ref": "#/components/schemas/Hint"
+            },
+            "type": "array",
+            "title": "Hints"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "active",
+          "signals",
+          "min_signals",
+          "weights",
+          "chips",
+          "hints"
+        ],
+        "title": "SessionTuning",
+        "description": "Учтённая подстройка сессии (matching.md §7): чипсы «Учли: …» и подсказки фильтров."
       },
       "SimilarCard": {
         "properties": {
@@ -14031,6 +14378,57 @@
         "title": "TrustLevel",
         "description": "○○○○ … ●●●●"
       },
+      "TuningChip": {
+        "properties": {
+          "feature": {
+            "type": "string",
+            "title": "Feature"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "change": {
+            "type": "number",
+            "title": "Change"
+          }
+        },
+        "type": "object",
+        "required": [
+          "feature",
+          "text",
+          "change"
+        ],
+        "title": "TuningChip"
+      },
+      "TuningHint": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "reason",
+          "text",
+          "count"
+        ],
+        "title": "TuningHint"
+      },
       "UpliftCombo": {
         "properties": {
           "skills": {
@@ -14841,6 +15239,34 @@
         "additionalProperties": false,
         "type": "object",
         "title": "VisibilityIn"
+      },
+      "WeightOut": {
+        "properties": {
+          "feature": {
+            "type": "string",
+            "title": "Feature"
+          },
+          "start": {
+            "type": "number",
+            "title": "Start"
+          },
+          "current": {
+            "type": "number",
+            "title": "Current"
+          },
+          "change": {
+            "type": "number",
+            "title": "Change"
+          }
+        },
+        "type": "object",
+        "required": [
+          "feature",
+          "start",
+          "current",
+          "change"
+        ],
+        "title": "WeightOut"
       },
       "WorkFormat": {
         "type": "string",

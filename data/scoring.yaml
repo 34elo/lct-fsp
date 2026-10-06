@@ -294,6 +294,28 @@ employer_emphasis:
   multiplier: 2.0  # doubles the alpha_k
   ceiling_bonus: 0.02  # adds to beta
 
+# Подстройка выдачи в сессии работодателя (matching.md §7, E17-4)
+session_tuning:
+  signal_weights:  # вес реакции; повтор одной реакции на кандидата не суммируется
+    open: 1
+    dwell: 1
+    shortlist: 3
+    offer: 5
+    dismiss: -3
+  min_signals: 3  # подстройка включается после ≥ 3 сигналов
+  session_ttl_hours: 24
+  rocchio_alpha: 0.3  # q' = norm(q + 0.3·mean(emb⁺) − 0.15·mean(emb⁻))
+  rocchio_beta: 0.15
+  extra_weights:  # стартовые веса бинарных признаков (к matching_weights)
+    captain: 0.03
+    github: 0.03
+    active: 0.03
+  learning_rate: 0.1  # шаг онлайн-логрегрессии
+  l2_to_start: 1.0  # L2 к стартовым весам
+  weight_min_ratio: 0.5  # w ∈ [0.5·w₀, 1.5·w₀]
+  weight_max_ratio: 1.5
+  chip_min_change: 0.25  # чип «Учли: …», если вес вырос больше чем на 25%
+
 # Mutual matching: candidate acceptance probability (ml.md §4.1)
 p_accept:
   formula: "σ(b0 + b1·salary_gap + b2·format_match + b3·stack_interest + b4·company_rating + b5·active)"
