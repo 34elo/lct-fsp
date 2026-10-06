@@ -37,6 +37,7 @@ from app.fsp.router import router as fsp_router
 from app.identity.router import router as identity_router
 from app.matching.needs_router import router as needs_router
 from app.matching.router import router as search_router
+from app.matching.subscriptions_router import router as subscriptions_router
 from app.offers.router import admin_router as admin_complaints_router
 from app.offers.router import router as offers_router
 from app.recommendations.router import router as recommendations_router
@@ -107,6 +108,7 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(analytics_dashboard_router)
     app.include_router(analytics_metrics_router)
     app.include_router(needs_router)
+    app.include_router(subscriptions_router)
     app.include_router(views_router)
     app.include_router(credentials_router)
     # <<< block2

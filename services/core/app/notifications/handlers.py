@@ -13,7 +13,7 @@ from collections.abc import Mapping
 
 import structlog
 from fsp_contracts import Envelope
-from fsp_contracts.assessment import RegularTaskPublished
+from fsp_contracts.assessment import CategoryChanged, RegularTaskPublished
 from fsp_contracts.enums import OfferStatus
 from fsp_contracts.events import FspResultsImported, OfferEvent, SkillsProfileUpdated
 from fsp_contracts.hiring import OfferInitiator
@@ -30,6 +30,8 @@ from fsp_platform.messaging import Consumer, idempotent
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.companies import service as companies
+from app.matching import needs as needs_cfg
+from app.matching import subscriptions
 from app.notifications import service
 from app.notifications.service import UiPublish
 from app.offers import service as offers
@@ -378,5 +380,16 @@ def register(
                 tg_data={"profession": ev.profession},
             )  # fmt: skip
         await service.push(ui_publish, out)
+
+    # E33-4: новый подходящий кандидат → подписка компании (SSE + бот, дайджест не чаще раза в час)
+    @consumers["core.handlers"].on("candidate.category.changed")
+    @idempotent(session_factory, "notifications.category_subscription")
+    async def on_category_changed(envelope: Envelope, session: AsyncSession) -> None:
+        ev = CategoryChanged.model_validate(envelope.payload)
+        touched = await subscriptions.register_hits(session, ev.candidate_id, ev.categories)
+        if not touched:
+            return
+        cfg = needs_cfg.NeedsConfig.load()
+        await service.push(ui_publish, await subscriptions.flush_due(session, cfg, only=touched))
 
     # <<< block2
