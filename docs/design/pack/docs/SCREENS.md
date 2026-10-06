@@ -46,6 +46,13 @@
 | 40 | N2 | Работодатель · v2 | `/employer/categories/:profession/:grade` | 1440×1900 | [png](../screens/png/40_N2_CategoryCandidates.png) | [html](../screens/html/N2_CategoryCandidates.html) |
 | 41 | R1 | Отклики · v2 | `/employer/responses, /me/responses` | 1440×1900 | [png](../screens/png/41_R1_Responses.png) | [html](../screens/html/R1_Responses.html) |
 | 42 | J1 | Публичное · v2 | `/jobs, /jobs/:id` | 1440×2100 | [png](../screens/png/42_J1_Jobs.png) | [html](../screens/html/J1_Jobs.html) |
+| 43 | S1 | Кандидат · v2 | `/me/assessment` | 1440×3688 | [png](../screens/png/43_S1_Survey.png) | [html](../screens/html/S1_Survey.html) |
+| 44 | S2 | Кандидат · v2 | `/me/assessment/attempts/:id` | 1440×5082 | [png](../screens/png/44_S2_Test.png) | [html](../screens/html/S2_Test.html) |
+| 45 | S3 | Кандидат · v2 | `/me/assessment/attempts/:id/result` | 1440×4173 | [png](../screens/png/45_S3_Result.png) | [html](../screens/html/S3_Result.html) |
+| 46 | S4 | Кандидат · v2 | `/me/assessment/history` | 1440×3676 | [png](../screens/png/46_S4_History.png) | [html](../screens/html/S4_History.html) |
+| 47 | K1 | Работодатель, админ · v2 | `/employer/families/new` | 1440×5864 | [png](../screens/png/47_K1_Constructor.png) | [html](../screens/html/K1_Constructor.html) |
+| 48 | K2 | Админ · v2 | `/admin/families` | 1440×4021 | [png](../screens/png/48_K2_Admission.png) | [html](../screens/html/K2_Admission.html) |
+| 49 | Z1 | Кандидат, работодатель · v2 | `/me/tasks, /employer/tasks` | 1440×7064 | [png](../screens/png/49_Z1_Tasks.png) | [html](../screens/html/Z1_Tasks.html) |
 
 ## Подробности по экранам
 
@@ -300,3 +307,45 @@
 - Что на экране: Публичный список вакансий с открытой вилкой, карточка вакансии, форма отклика. Состояния кнопки: не вошёл, email не подтверждён, категория ниже требуемой, отклик отправлен.
 - Адаптив: Список 1440; карточка и отклик — 390.
 - Файлы: `screens/png/42_J1_Jobs.png`, `screens/html/J1_Jobs.html`
+
+### S1 · Опрос и выбор грейда
+- Маршрут: `/me/assessment`
+- Что на экране: Опрос по шагам на схемной линии (M1), предзаполнение из резюме, три карточки грейда, кулдаун и «email не подтверждён» блокируют старт.
+- Адаптив и состояния: 1440 + 375 по шагам; кулдаун, email не подтверждён, ошибка вилки, загрузка, тёмная.
+- Файлы: `screens/png/43_S1_Survey.png`, `screens/html/S1_Survey.html`
+
+### S2 · Тест
+- Маршрут: `/me/assessment/attempts/:id`
+- Что на экране: Одно задание на экран, кольцо-таймер, прогресс по числу ответов без показа правильности, назад нельзя; chain — пошагово на схемной линии.
+- Адаптив и состояния: 1440 + 375; kind: exact, estimate, choice, find_bug, order, sjt, chain; таймер на исходе, ошибка отправки, уход со вкладки, тёмная.
+- Файлы: `screens/png/44_S2_Test.png`, `screens/html/S2_Test.html`
+
+### S3 · Результат теста
+- Маршрут: `/me/assessment/attempts/:id/result`
+- Что на экране: Грейд и категория крупно, разбор по навыкам (без раскрытия верных ответов), дата следующей смены, предложение повышения после бонусного этапа.
+- Адаптив и состояния: 1440 + 375; прошёл, повышение, не прошёл + кулдаун, низкая уверенность, загрузка, ошибка, тёмная.
+- Файлы: `screens/png/45_S3_Result.png`, `screens/html/S3_Result.html`
+
+### S4 · История попыток и пересдачи
+- Маршрут: `/me/assessment/history`
+- Что на экране: Карточки кулдаунов по грейдам, таблица попыток и опросов, кнопки пересдачи с датой.
+- Адаптив и состояния: 1440 + 375; пусто, загрузка, ошибка, 409 кулдаун, тёмная.
+- Файлы: `screens/png/46_S4_History.png`, `screens/html/S4_History.html`
+
+### K1 · Конструктор задания
+- Маршрут: `/employer/families/new`
+- Что на экране: Форма FamilySpec (kind, навык, уровень, условие с {{…}}, переменные, ключ), справа примеры по сидам и автопроверка; черновик ключа LLM не используется до утверждения.
+- Адаптив и состояния: 1440 + 375; ошибка выражения, автопроверка идёт и не пройдена, пусто (шаблоны), нет компании, тёмная.
+- Файлы: `screens/png/47_K1_Constructor.png`, `screens/html/K1_Constructor.html`
+
+### K2 · Очередь допуска семейств
+- Маршрут: `/admin/families`
+- Что на экране: Вкладки статусов, статистика пилота, пять порогов допуска, сверка ключа автора, LLM и эмпирического, кнопки допустить, карантин, вывести.
+- Адаптив и состояния: 1440 + 375 (sheet); пороги не выполнены, пусто, загрузка, 403.
+- Файлы: `screens/png/48_K2_Admission.png`, `screens/html/K2_Admission.html`
+
+### Z1 · Регулярные задания
+- Маршрут: `/me/tasks, /employer/tasks`
+- Что на экране: Кандидат: список и один ответ на раунд. Работодатель: задания, ответы без имён, «Пригласить», оценка open по рубрике, создание.
+- Адаптив и состояния: кандидат 1440 + 375, работодатель 1440 + 375; пусто, нет согласия, раунд закрыт, нет компании, повторная рассылка, загрузка, ошибка, тёмная.
+- Файлы: `screens/png/49_Z1_Tasks.png`, `screens/html/Z1_Tasks.html`
