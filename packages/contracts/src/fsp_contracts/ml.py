@@ -156,6 +156,46 @@ class SkillResolveItem(BaseModel):
     reason: str | None = None
 
 
+class SkillCardDraftRequest(BaseModel):
+    """`POST /v1/skills/card-draft`: черновик карточки для нового (provisional) навыка (E16-4)."""
+
+    slug: str = Field(min_length=1, max_length=64)
+    name: str = Field(min_length=1, max_length=120)
+    kind: Literal["hard", "soft", "domain"] = "hard"
+    skill_type: (
+        Literal["fundamental", "hard", "thinking", "business", "soft", "experience"] | None
+    ) = None
+    description: str | None = Field(default=None, max_length=500)
+    aliases: list[str] = Field(default_factory=list, max_length=20)
+
+
+class SkillCardConcept(BaseModel):
+    term: str = Field(min_length=1, max_length=80)
+    note: str = Field(min_length=3, max_length=300)
+
+
+class SkillCardMisconception(BaseModel):
+    claim: str = Field(min_length=3, max_length=300)
+    truth: str = Field(min_length=3, max_length=300)
+
+
+class SkillCardDraft(BaseModel):
+    """Форма карточки `data/skills/cards/*.yaml` (core `taxonomy/cards.py`, `schema_version` 1).
+
+    Это всегда черновик: в `data/skills/cards` он попадает только после проверки человеком.
+    """
+
+    schema_version: Literal[1] = 1
+    skill: str
+    type: Literal["fundamental", "hard", "thinking", "business", "soft", "experience"]
+    summary: str = Field(min_length=10, max_length=400)
+    levels: dict[Literal["junior", "middle", "senior"], list[str]]
+    concepts: list[SkillCardConcept] = Field(min_length=3)
+    misconceptions: list[SkillCardMisconception] = Field(min_length=2)
+    model: str  # чем сделан: имя LLM или `rules-template`
+    draft: Literal[True] = True
+
+
 class MlHealth(BaseModel):
     llm: Literal["up", "down"]
     embedder: Literal["up", "down"]

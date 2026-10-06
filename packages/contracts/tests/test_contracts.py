@@ -225,3 +225,25 @@ def test_analytics_events_validate_and_reject_pii():
     g = validate_event(ev("graph_opened", {"nodes": 12, "from": "card"}), source="web")
     assert g.props == {"nodes": 12, "from": "card"}
     assert len(ANALYTICS_EVENTS) >= 45
+
+
+def test_skill_card_draft_roundtrip():
+    """E16-4: черновик карточки от ml совпадает по форме с карточкой core (`SkillCard`)."""
+    from fsp_contracts.ml import SkillCardDraft, SkillCardDraftRequest
+
+    assert SkillCardDraftRequest(slug="helm", name="Helm").kind == "hard"
+    raw = {
+        "skill": "helm",
+        "type": "hard",
+        "summary": "Описывает приложения чартами.",
+        "levels": {
+            "junior": ["а а а", "б б б"],
+            "middle": ["в в в", "г г г"],
+            "senior": ["д д д", "е е е"],
+        },
+        "concepts": [{"term": t, "note": "поясняющая фраза"} for t in "abc"],
+        "misconceptions": [{"claim": f"claim {i}", "truth": "truth"} for i in range(2)],
+        "model": "rules-template",
+    }
+    d = SkillCardDraft.model_validate(raw)
+    assert d.draft is True and d.schema_version == 1
