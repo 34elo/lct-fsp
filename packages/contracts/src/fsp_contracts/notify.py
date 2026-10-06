@@ -26,6 +26,7 @@ class TgTemplate(StrEnum):
     regular_task_published = "regular_task_published"
     test_result = "test_result"
     uplift = "uplift"
+    category_subscription = "category_subscription"  # работодателю: новые кандидаты (E33-4)
 
 
 class TgButton(BaseModel):
