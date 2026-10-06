@@ -24,7 +24,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.assessment import survey
-from app.assessment.models import Grade
+from app.assessment.models import Grade, TaskSubmission
 from app.candidates.models import Candidate
 
 PRODUCER = "core"
@@ -188,12 +188,19 @@ async def claimed_vs_confirmed(
 async def last_activity_at(session: AsyncSession, candidate_id: uuid.UUID) -> datetime | None:
     """Последний завершённый тест или регулярное задание (для свежести R).
 
-    Пока `attempts`/`task_submissions` нет (блок 1), берём `confirmed_at` грейдов любого срока.
+    Пока завершённые попытки не учитываются, берём `confirmed_at` грейдов любого срока и
+    ответы на регулярные задания (`task_submissions`, E25-1).
     """
-    ts = await session.scalar(
+    graded = await session.scalar(
         select(func.max(Grade.confirmed_at)).where(Grade.candidate_id == candidate_id)
     )
-    return _aware(ts) if ts else None
+    answered = await session.scalar(
+        select(func.max(TaskSubmission.created_at)).where(
+            TaskSubmission.candidate_id == candidate_id
+        )
+    )
+    stamps = [_aware(t) for t in (graded, answered) if t is not None]
+    return max(stamps) if stamps else None
 
 
 async def seed_grade(
