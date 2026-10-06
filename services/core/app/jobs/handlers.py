@@ -14,7 +14,6 @@ from fsp_platform.messaging import Consumer
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from app.candidates.models import Candidate
 from app.companies.models import Company
 from app.offers import service as offers
 from app.offers.models import Offer
@@ -30,19 +29,9 @@ async def _expire_offers(session: AsyncSession) -> None:
 
 
 async def _expire_active_status(session: AsyncSession, now: datetime | None = None) -> None:
-    """Сброс статуса `active` в `open` у кандидатов, чей `active_until` истёк (E8-5)."""
-    now = now or datetime.now(UTC)
-    q = select(Candidate).where(
-        Candidate.search_status == "active",
-        Candidate.active_until <= now,
-    )
-    rows = list(await session.scalars(q))
-    for candidate in rows:
-        candidate.search_status = "open"
-        candidate.active_until = None
-    await session.flush()
-    if rows:
-        log.info("active_status_expired", count=len(rows))
+    """«Активно ищу» истекает на чтении: `candidates.service.effective_status` трактует
+    просроченный `active` как `open`. Таблицу кандидатов (зона Б1) не трогаем (E8-5)."""
+    return None
 
 
 async def _calculate_company_rating(session: AsyncSession, now: datetime | None = None) -> None:
