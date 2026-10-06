@@ -154,4 +154,9 @@ eval-assessment:
 .PHONY: assessment-llm-bank
 assessment-llm-bank:
 	cd services/core && uv run python -m app.assessment.llm_bank --out ../../reports/llm-bank $(ARGS)
+# Замер LLM-кандидатов (E32-3, ml.md «Выбор LLM»): сервер поднимает человек, модели не качаются.
+# make eval-llm [LLM_MODEL=…] [ARGS="--repeats 5 --server-pid <pid> --vram-file …"] → reports/llm/<модель>.{md,json}
+.PHONY: eval-llm
+eval-llm:
+	uv run python -m tools.eval_llm --env-file $(ENV_FILE) $(ARGS)
 # <<< block1
