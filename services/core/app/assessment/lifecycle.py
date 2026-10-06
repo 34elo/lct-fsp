@@ -404,7 +404,11 @@ def _rank(grade: str) -> int:
 
 
 def _granted(status: str, plan: dict) -> str | None:
-    """Грейд, который даёт попытка: заявленный при `passed`, принятое повышение — следующий."""
+    """Грейд, который даёт попытка: заявленный при `passed`.
+
+    Принятое повышение (`upgrade_accepted_at`) — только у попыток до ADR-025 п.2: теперь бонусный
+    этап приглашает на отдельный тест, а не повышает.
+    """
     if status != "passed":
         return None
     offer = plan.get("upgrade_offer")
@@ -481,8 +485,14 @@ async def _regrade(
             "items": len(bonus_rows),
             "llr": bonus_llr,
         }
-        offer_ok = status == "passed" and bonus_d.result == "passed"
-        plan["upgrade_offer"] = bonus["grade"] if offer_ok else None
+        invite_ok = status == "passed" and bonus_d.result == "passed"
+        if not invite_ok:
+            plan.update(invited_grade=None, invite_expires_at=None)
+        elif not plan.get("invited_grade"):  # приглашение (ADR-025 п.2) — от конца попытки
+            from app.assessment import attempts
+
+            finished = grading._aware(att.finished_at or now)
+            plan.update(attempts.invitation(bonus, "passed", cfg, now=finished))
     plan["theta_by_type"] = theta_by_type(obs, cfg)
     plan["recomputed_at"] = now.isoformat()
     att.plan = plan
