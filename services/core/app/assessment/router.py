@@ -10,15 +10,16 @@ from fastapi import APIRouter, Depends, Request
 from fsp_contracts.assessment import ProfessionSlug, TestGrade
 from fsp_contracts.enums import WorkFormat
 from fsp_platform.app import ProblemError
+from fsp_platform.ratelimit import RateLimiter
 from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.assessment import attempts, grading, plan_preview, survey, world
+from app.assessment import attempts, explain, grading, plan_preview, survey, world
 from app.assessment.config import AssessmentConfig, load_config
 from app.assessment.models import Attempt, Grade, Survey
 from app.candidates import service as candidates
-from app.deps import get_session
+from app.deps import get_limiter, get_session
 from app.identity import service as identity
 from app.identity.deps import get_current_user, require_roles
 from app.identity.models import User
@@ -180,6 +181,66 @@ async def upgrade(
     att = await attempts._own_attempt(session, user.id, attempt_id)
     await grading.accept_upgrade(session, att, _cfg(request))
     return await attempts.attempt_summary(session, user.id, attempt_id)
+
+
+# --- «Объясни ответ» (E24-2) ----------------------------------------------------------------------
+
+
+class ExplainIn(BaseModel):
+    self_reason: (
+        Literal["misread", "rushed", "calc_error", "knowledge_gap", "guess", "technical"] | None
+    ) = None  # причина, которую назвал сам кандидат; нигде не хранится
+
+
+class ExplainReasonOut(BaseModel):
+    code: str
+    label: str
+    detail: str | None = None
+
+
+class ExplainMisconceptionOut(BaseModel):
+    claim: str
+    truth: str
+
+
+class ExplainOut(BaseModel):
+    response_id: uuid.UUID
+    seq: int
+    skill: str
+    score: float
+    reason: ExplainReasonOut  # причина по правилам
+    misconception: ExplainMisconceptionOut | None = None  # из карточки навыка
+    text: str
+    source: Literal["template", "llm"]
+    model: str | None = None
+    self_reason: str | None = None
+    self_reason_matches: bool | None = None  # совпала ли самооценка с причиной по правилам
+
+
+@router.post(
+    "/assessment/attempts/{attempt_id}/responses/{response_id}/explain",
+    response_model=ExplainOut,
+    responses=problem_responses(401, 403, 404, 409, 429),
+)
+async def explain_answer(
+    attempt_id: uuid.UUID,
+    response_id: uuid.UUID,
+    request: Request,
+    body: ExplainIn | None = None,
+    user: User = Depends(_candidate),
+    session: AsyncSession = Depends(get_session),
+    limiter: RateLimiter = Depends(get_limiter),
+):
+    """Причина ошибки (правила) и текст объяснения; только после завершения попытки."""
+    await limiter.check(f"assessment_explain:{user.id}", 30, 3600)
+    return await explain.explain_response(
+        session,
+        request.app.state.settings,
+        user.id,
+        attempt_id,
+        response_id,
+        body.self_reason if body else None,
+    )
 
 
 # --- опрос и история (E22-7) ------------------------------------------------------------------
