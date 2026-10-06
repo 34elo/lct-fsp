@@ -23,6 +23,7 @@ from app.matching.card import CandidateCardFull
 from app.matching.scoring import MatchConfig
 from app.matching.uplift import UpliftConfig
 from app.openapi_errors import problem_responses
+from app.recommendations.tuning import TuningConfig
 from app.taxonomy import service as taxonomy
 from app.vacancies import service as vacancies
 from app.views import service as views
@@ -34,6 +35,7 @@ _candidate = require_roles("candidate")
 _CFG = MatchConfig.load()
 _TRUST = TrustConfig.load()
 _UPLIFT = UpliftConfig.load()
+_TUNING = TuningConfig.load()
 
 # Responses for error codes
 _PARSE_RESPONSES = problem_responses(401, 403, 422)
@@ -53,11 +55,34 @@ class SearchRequest(BaseModel):
     session_id: uuid.UUID | None = None
 
 
+class TuningChip(BaseModel):
+    feature: str
+    text: str
+    change: float
+
+
+class TuningHint(BaseModel):
+    kind: str
+    reason: str
+    text: str
+    count: int
+
+
+class SearchTuning(BaseModel):
+    """Подстройка выдачи в сессии (matching.md §7): включается после ≥ 3 реакций."""
+
+    active: bool
+    signals: int
+    chips: list[TuningChip]
+    hints: list[TuningHint]
+
+
 class SearchPage(BaseModel):
     items: list[search.CandidateCard]
     next_cursor: str | None
     total: int
     session_id: uuid.UUID
+    tuning: SearchTuning | None = None
 
 
 class ParseRequest(BaseModel):
@@ -96,12 +121,19 @@ async def search_candidates(
     if body.vacancy_id is not None:  # чужая или несуществующая вакансия → 404
         version = (await vacancies.get_owned(session, user, body.vacancy_id)).version
     sort = body.sort or ("mutual" if body.vacancy_id else "match")
+    signals = None
+    if body.session_id is not None:  # подстройка только по своей сессии (matching.md §7)
+        signals = await rec_service.session_signals(
+            session, redis, user.id, str(body.session_id), _TUNING
+        )
     page = await search.search_candidates(
         session, redis, company_id=company.id, filters=body.filters, sort=sort,
         cursor=body.cursor, limit=body.limit, vacancy_id=body.vacancy_id,
         vacancy_version=version, cfg=_CFG, trust=_TRUST,
-        responsibility_score=company.responsibility_score,
+        responsibility_score=company.responsibility_score, session_signals=signals,
+        tuning_cfg=_TUNING,
     )  # fmt: skip
+    features = page.pop("features", None) or {}
 
     session_id = body.session_id or uuid.uuid4()
     context_type = "vacancy" if body.vacancy_id else "search"
@@ -125,6 +157,7 @@ async def search_candidates(
                 features={
                     "search_filters": body.filters.model_dump(mode="json"),
                     "sort": sort,
+                    "x": features.get(item["pseudo_id"]),
                 },
             )
 

@@ -124,7 +124,7 @@
 | `GET /market/map?metric=candidates|median_salary|fsp_share|verified_share&formats=` | E | `MarketCell[]` |
 | `GET /market/skills?role=` | E | 🚀 Граф навыков рынка |
 | `POST /search/parse` | E | `{text}` → `ParsedQuery` |
-| `POST /search/candidates` | E | `{filters: SearchFilters, sort: match|trust|fresh|mutual, cursor, vacancy_id?, session_id?}` → `Page<CandidateCard>` + `session_id`; пишет показы |
+| `POST /search/candidates` | E | `{filters: SearchFilters, sort: match|trust|fresh|mutual, cursor, vacancy_id?, session_id?}` → `Page<CandidateCard>` + `session_id` + `tuning?` (`{active, signals, chips, hints}`, при своём `session_id` после ≥ 3 реакций выдача переставляется, matching.md §7); пишет показы |
 | `GET /candidates/{pseudo_id}/card?vacancy_id=` | E | `CandidateCardFull` (пишет просмотр) |
 | `POST /vacancies` / `GET /vacancies` / `GET|PATCH|DELETE /vacancies/{id}` | E | CRUD. В теле: роль, грейды, навыки (обязательный, мин. уровень, вес), формат, вилка, `important_qualities` (командные качества, удваивают их вес в подборе) |
 | `POST /vacancies/{id}/publish`, `POST /vacancies/{id}/close` | E | Публикация и закрытие |
@@ -132,8 +132,8 @@
 | `GET /vacancies/{id}/matches?min_trust=&fsp_only=&cursor=` | E | `Page<MatchItem>` + `session_id`; пишет показы |
 | `GET /candidates/{pseudo_id}/similar?limit=` | E | `{items: CandidateCard + similarity, common_skills[], session_id}` (формула — matching.md §11); скрытая анкета — 404 `candidate_not_found`; пишет показы |
 | `GET /candidates/{pseudo_id}/graph?vacancy_id=` | E | Анонимный подграф, подсветка путей под требования вакансии |
-| `POST /recs/feedback` | E | `{session_id, candidate_pseudo_id, event: open|dwell|shortlist|dismiss, reason?}` |
-| `GET /recs/sessions/{id}`, `DELETE /recs/sessions/{id}` | E | Учтённые подстройки (чипсы «Учли: …») / сброс |
+| `POST /recs/feedback` | E | `{session_id, candidate_pseudo_id, event: open|dwell|shortlist|dismiss, reason?}` → `{id, impression_id, event, created_at, tuning: SessionTuning}` (E17-4) |
+| `GET /recs/sessions/{id}`, `DELETE /recs/sessions/{id}` | E | `SessionTuning {session_id, active, signals, min_signals, weights[{feature, start, current, change}], chips[{feature, text, change}], hints[{kind, reason, text, count}]}` — учтённые подстройки (чипсы «Учли: …», matching.md §7) / сброс → 204; чужая или несуществующая сессия — 404 `rec_session_not_found` |
 | `GET /teams?discipline=&min_place=` | E | Команды ФСП, где есть ≥2 видимых кандидата платформы: `[{id, name, competition_title, discipline, best_place, members[{pseudo_id, role, primary_role, grade}]}]` (E15-2) |
 | `GET|POST|DELETE /saved-searches` | E | Подписки на категорию |
 
