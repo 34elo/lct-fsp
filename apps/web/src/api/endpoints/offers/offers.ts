@@ -2068,7 +2068,140 @@ export function useOfferContactsOffersOfferIdContactsGet<TData = Awaited<ReturnT
 
 
 
-export type listEventsOffersOfferIdEventsGetResponse200 = {
+export type revokeContactsOffersOfferIdContactsRevokePostResponse200 = {
+  data: OfferForCandidate
+  status: 200
+}
+
+export type revokeContactsOffersOfferIdContactsRevokePostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type revokeContactsOffersOfferIdContactsRevokePostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type revokeContactsOffersOfferIdContactsRevokePostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type revokeContactsOffersOfferIdContactsRevokePostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type revokeContactsOffersOfferIdContactsRevokePostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type revokeContactsOffersOfferIdContactsRevokePostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type revokeContactsOffersOfferIdContactsRevokePostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type revokeContactsOffersOfferIdContactsRevokePostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type revokeContactsOffersOfferIdContactsRevokePostResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type revokeContactsOffersOfferIdContactsRevokePostResponseSuccess = (revokeContactsOffersOfferIdContactsRevokePostResponse200) & {
+  headers: Headers;
+};
+export type revokeContactsOffersOfferIdContactsRevokePostResponseError = (revokeContactsOffersOfferIdContactsRevokePostResponse401ApplicationProblemJson | revokeContactsOffersOfferIdContactsRevokePostResponse401ApplicationJson | revokeContactsOffersOfferIdContactsRevokePostResponse403ApplicationProblemJson | revokeContactsOffersOfferIdContactsRevokePostResponse403ApplicationJson | revokeContactsOffersOfferIdContactsRevokePostResponse404ApplicationProblemJson | revokeContactsOffersOfferIdContactsRevokePostResponse404ApplicationJson | revokeContactsOffersOfferIdContactsRevokePostResponse409ApplicationProblemJson | revokeContactsOffersOfferIdContactsRevokePostResponse409ApplicationJson | revokeContactsOffersOfferIdContactsRevokePostResponse422) & {
+  headers: Headers;
+};
+
+export type revokeContactsOffersOfferIdContactsRevokePostResponse = (revokeContactsOffersOfferIdContactsRevokePostResponseSuccess | revokeContactsOffersOfferIdContactsRevokePostResponseError)
+
+export const getRevokeContactsOffersOfferIdContactsRevokePostUrl = (offerId: string,) => {
+
+
+
+
+  return `/offers/${offerId}/contacts/revoke`
+}
+
+/**
+ * Отзыв доступа к контактам: компания перестаёт их видеть (E32-5a). Повтор — no-op.
+ * @summary Revoke Contacts
+ */
+export const revokeContactsOffersOfferIdContactsRevokePost = async (offerId: string, options?: Parameters<typeof apiFetch>[1]): Promise<revokeContactsOffersOfferIdContactsRevokePostResponse> => {
+
+  return apiFetch<revokeContactsOffersOfferIdContactsRevokePostResponse>(getRevokeContactsOffersOfferIdContactsRevokePostUrl(offerId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getRevokeContactsOffersOfferIdContactsRevokePostMutationKey = () => ['revokeContactsOffersOfferIdContactsRevokePost'] as const;
+
+export const getRevokeContactsOffersOfferIdContactsRevokePostMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof revokeContactsOffersOfferIdContactsRevokePost>>, TError,RevokeContactsOffersOfferIdContactsRevokePostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof revokeContactsOffersOfferIdContactsRevokePost>>, TError,RevokeContactsOffersOfferIdContactsRevokePostMutationVariables, TContext> => {
+
+const mutationKey = getRevokeContactsOffersOfferIdContactsRevokePostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof revokeContactsOffersOfferIdContactsRevokePost>>, RevokeContactsOffersOfferIdContactsRevokePostMutationVariables> = (props) => {
+          const {offerId} = props ?? {};
+
+          return  revokeContactsOffersOfferIdContactsRevokePost(offerId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RevokeContactsOffersOfferIdContactsRevokePostMutationResult = NonNullable<Awaited<ReturnType<typeof revokeContactsOffersOfferIdContactsRevokePost>>>
+
+    export type RevokeContactsOffersOfferIdContactsRevokePostMutationError = ErrorType<ProblemOut | HTTPValidationError>
+    export type RevokeContactsOffersOfferIdContactsRevokePostMutationVariables = {offerId: string}
+
+    /**
+ * @summary Revoke Contacts
+ */
+export const useRevokeContactsOffersOfferIdContactsRevokePost = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof revokeContactsOffersOfferIdContactsRevokePost>>, TError,RevokeContactsOffersOfferIdContactsRevokePostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof revokeContactsOffersOfferIdContactsRevokePost>>,
+        TError,
+        RevokeContactsOffersOfferIdContactsRevokePostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRevokeContactsOffersOfferIdContactsRevokePostMutationOptions(options), queryClient);
+    }
+    export type listEventsOffersOfferIdEventsGetResponse200 = {
   data: OfferEventOut[]
   status: 200
 }

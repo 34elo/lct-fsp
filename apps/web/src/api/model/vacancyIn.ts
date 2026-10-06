@@ -7,6 +7,7 @@
 import type { EmploymentType } from './employmentType';
 import type { Grade } from './grade';
 import type { RoleSlug } from './roleSlug';
+import type { SalaryBasis } from './salaryBasis';
 import type { SkillReqIn } from './skillReqIn';
 import type { TeamSignalKind } from './teamSignalKind';
 import type { WorkFormat } from './workFormat';
@@ -37,6 +38,7 @@ export interface VacancyIn {
      * @exclusiveMinimum 0
      */
   salary_to: number;
+  salary_basis?: SalaryBasis;
   description?: string | null;
   /** @maxItems 4 */
   important_qualities?: TeamSignalKind[];
