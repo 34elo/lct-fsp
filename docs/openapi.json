@@ -2019,6 +2019,136 @@
         }
       }
     },
+    "/admin/demo/fsp-result": {
+      "post": {
+        "tags": [
+          "fsp"
+        ],
+        "summary": "Admin Demo Create Fsp Result",
+        "description": "Админ: демо-кнопка создания результата ФСП для случайного кандидата (E13-3).\nСоздаёт результат в мок-ФСП и отправляет вебхук для синхронизации.\nДоступно только при DEMO_MODE=true.",
+        "operationId": "admin_demo_create_fsp_result_admin_demo_fsp_result_post",
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректный запрос",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/demo/reset": {
+      "post": {
+        "tags": [
+          "fsp"
+        ],
+        "summary": "Admin Demo Reset Fsp",
+        "description": "Админ: демо-кнопка сброса всех результатов ФСП к снапшоту (E13-3).\nДоступно только при DEMO_MODE=true.",
+        "operationId": "admin_demo_reset_fsp_admin_demo_reset_post",
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректный запрос",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/candidates/me/resumes": {
       "post": {
         "tags": [
