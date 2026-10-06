@@ -30,6 +30,7 @@ from app.graph.trust import TrustConfig
 from app.identity.deps import require_roles
 from app.identity.models import User
 from app.matching import card
+from app.openapi_errors import problem_responses
 from app.resumes import service as resumes
 from app.taxonomy.service import SkillGraphCache
 from app.views import service as views
@@ -185,7 +186,7 @@ async def _cand(request: Request, session: AsyncSession, user: User) -> Candidat
     )
 
 
-@router.get("/profile", response_model=CandidateProfile)
+@router.get("/profile", response_model=CandidateProfile, responses=problem_responses(401, 403))
 async def get_profile(
     request: Request,
     user: User = Depends(owner),
@@ -197,7 +198,9 @@ async def get_profile(
 
 
 @router.get(
-    "/profile.pdf", response_class=Response, responses={200: {"content": {"application/pdf": {}}}}
+    "/profile.pdf",
+    response_class=Response,
+    responses={**problem_responses(401, 403), 200: {"content": {"application/pdf": {}}}},
 )
 async def profile_pdf(
     request: Request,
@@ -220,7 +223,11 @@ async def profile_pdf(
     )
 
 
-@router.get("/skills/{skill_id}/evidence", response_model=list[card.EvidenceBrief])
+@router.get(
+    "/skills/{skill_id}/evidence",
+    response_model=list[card.EvidenceBrief],
+    responses=problem_responses(401, 403, 404),
+)
 async def skill_evidence(
     skill_id: str,
     request: Request,
@@ -235,7 +242,11 @@ async def skill_evidence(
     return items
 
 
-@router.patch("/profile", response_model=CandidateProfile)
+@router.patch(
+    "/profile",
+    response_model=CandidateProfile,
+    responses=problem_responses(401, 403, 422),
+)
 async def patch_profile(
     body: ProfileIn,
     request: Request,
@@ -251,7 +262,11 @@ async def patch_profile(
     return await profile_out(session, cand, request.app.state.settings)
 
 
-@router.patch("/preferences", response_model=CandidateProfile)
+@router.patch(
+    "/preferences",
+    response_model=CandidateProfile,
+    responses=problem_responses(401, 403, 422),
+)
 async def patch_preferences(
     body: PreferencesIn,
     request: Request,
@@ -263,7 +278,11 @@ async def patch_preferences(
     return await profile_out(session, cand, request.app.state.settings)
 
 
-@router.patch("/visibility", response_model=CandidateProfile)
+@router.patch(
+    "/visibility",
+    response_model=CandidateProfile,
+    responses=problem_responses(401, 403, 422),
+)
 async def patch_visibility(
     body: VisibilityIn,
     request: Request,
@@ -286,7 +305,7 @@ async def patch_visibility(
     return await profile_out(session, cand, request.app.state.settings)
 
 
-@router.put("/stoplist", response_model=StoplistIO)
+@router.put("/stoplist", response_model=StoplistIO, responses=problem_responses(401, 403, 422))
 async def put_stoplist(
     body: StoplistIO,
     request: Request,
@@ -298,7 +317,7 @@ async def put_stoplist(
     return StoplistIO(company_ids=[UUID(c) for c in cand.stoplist_company_ids])
 
 
-@router.get("/views")
+@router.get("/views", responses=problem_responses(401, 403))
 async def my_views(
     user: User = Depends(owner), session: AsyncSession = Depends(get_session)
 ) -> dict:
@@ -356,7 +375,7 @@ def _dispute_out(d) -> DisputeOut:
     )  # fmt: skip
 
 
-@router.get("/category", response_model=CategoryExplanation)
+@router.get("/category", response_model=CategoryExplanation, responses=problem_responses(401, 403))
 async def get_category(
     request: Request,
     user: User = Depends(owner),
@@ -379,7 +398,12 @@ async def get_category(
     )  # fmt: skip
 
 
-@router.post("/category/dispute", response_model=DisputeOut, status_code=201)
+@router.post(
+    "/category/dispute",
+    response_model=DisputeOut,
+    status_code=201,
+    responses=problem_responses(401, 403, 422),
+)
 async def dispute_category(
     body: DisputeIn,
     request: Request,
