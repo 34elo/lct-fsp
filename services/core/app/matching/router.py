@@ -19,7 +19,7 @@ from app.deps import get_redis, get_session
 from app.graph.trust import TrustConfig
 from app.identity.deps import require_roles
 from app.identity.models import User
-from app.matching import card, navigator, query_parser, search, similar, uplift_service
+from app.matching import card, navigator, query_llm, query_parser, search, similar, uplift_service
 from app.matching.card import CandidateCardFull
 from app.matching.scoring import MatchConfig
 from app.matching.uplift import UpliftConfig
@@ -86,6 +86,20 @@ class SearchPage(BaseModel):
     tuning: SearchTuning | None = None
 
 
+def _query_llm(request: Request) -> query_llm.QueryLlmClient | None:
+    """Клиент ml-api для разбора запроса; `ML_API_URL` пуст — только правила."""
+    state = request.app.state
+    client = getattr(state, "query_llm", None)
+    if client is None:
+        url = state.settings.ml_api_url
+        if not url:
+            return None
+        client = query_llm.QueryLlmClient(url, timeout=state.settings.query_parse_timeout_seconds)
+        state.query_llm = client
+    client.redis = getattr(state, "redis", None)
+    return client
+
+
 class ParseRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -97,12 +111,27 @@ class ParseRequest(BaseModel):
 )
 async def search_parse(
     body: ParseRequest,
+    request: Request,
     user: User = Depends(_employer),
     session: AsyncSession = Depends(get_session),
 ) -> Any:
-    """Правиловый разбор текста в чипсы-фильтры (E7-5); LLM-уточнение добавит E7-6."""
+    """Разбор текста в чипсы-фильтры: правила (E7-5) + LLM-уточнение и слияние (E7-6).
+
+    LLM недоступна или ответила невалидно — отдаём правиловый результат (`refining=false`).
+    """
     index = await taxonomy.alias_index(session)
-    return query_parser.parse_query(body.text, index.forms, index.names)
+    rule = query_parser.parse_query(body.text, index.forms, index.names)
+    client = _query_llm(request)
+    if client is None:
+        return rule
+    return await query_llm.refine(
+        client,
+        body.text,
+        rule,
+        taxonomy_version=await taxonomy.get_version(session),
+        forms=index.forms,
+        names=index.names,
+    )
 
 
 @router.post(
