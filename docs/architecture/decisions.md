@@ -165,3 +165,9 @@
 - Эталон вида — `docs/design/pack` (PNG экранов, токены, `fsp-ui.tsx`); сверка скриншотами `pnpm shot`.
 - pnpm-workspace в корне (`apps/web`, `packages/ui`), один `pnpm-lock.yaml`; uv-workspace перечисляет Python-пакеты явно, чтобы не принять `packages/ui` за Python-пакет.
 **Последствия:** `apps/web/Dockerfile` и CI собираются из корня. Старые пути `shared/brand`, `shared/ui/button`, `shared/lib/cn` — временные реэкспорты до E19-15.
+
+### ADR-051. Open Badge 3.0 подписываем `eddsa-jcs-2022`, а не `eddsa-rdfc-2022`
+**Статус:** принято · 2026-10-06 (E18-9, блок 2)
+**Решение:** подпись Data Integrity `eddsa-jcs-2022` (JCS RFC 8785 + Ed25519, `proofValue` — multibase base58btc). Издатель `did:web:fsp.patissons.tech`, ключ `OB_SIGNING_KEY`, публичная часть в `/.well-known/did.json` (`Multikey`).
+**Почему:** RDFC требует канонизации RDF (URDNA2015) и загрузки JSON-LD-контекстов, то есть тяжёлую зависимость и сеть при выпуске; JCS на наших документах (строки, целые, массивы) даёт ту же гарантию целостности и входит в спецификацию VC Data Integrity.
+**Последствия:** сторонний валидатор должен поддерживать `eddsa-jcs-2022`; в кредитах нет чисел с плавающей точкой. Отзыв: `revoked_at` в `issued_credentials`, проверка `/verify`.

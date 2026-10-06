@@ -587,10 +587,12 @@ CREATE TABLE interview_kits (                     -- вопросы для ст�
   status text, questions jsonb, created_at timestamptz DEFAULT now()
 );
 
-CREATE TABLE issued_credentials (                 -- Open Badge 3.0
-  id uuid PRIMARY KEY, candidate_id uuid NOT NULL, profile_version int, credential jsonb NOT NULL,  -- подписанный VC
-  issued_at timestamptz DEFAULT now(), revoked_at timestamptz
-);
+CREATE TABLE issued_credentials (                 -- Open Badge 3.0 (b2_07)
+  id uuid PRIMARY KEY, candidate_id uuid NOT NULL REFERENCES candidates(user_id) ON DELETE CASCADE,
+  profession text NOT NULL, grade text NOT NULL, profile_version int NOT NULL DEFAULT 0,
+  credential jsonb NOT NULL,                      -- подписанный VC целиком
+  issued_at timestamptz DEFAULT now(), revoked_at timestamptz, revoke_reason text  -- holder_request | superseded | …
+);                                                -- индекс (candidate_id)
 ```
 
 Дополнения к существующим таблицам: `test_sessions.valid_until` (результат действует 12 месяцев), `offers.p_accept` (снимок на момент отправки).
