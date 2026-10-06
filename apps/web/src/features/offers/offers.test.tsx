@@ -168,3 +168,29 @@ test("M2: детали приглашения без вакансии откры
   expect(screen.getByText("Нужен тимлид")).toBeInTheDocument();
   expect(screen.getByText(/Рекрутинг ML-команды/)).toBeInTheDocument();
 });
+
+test("E32-7: кандидат отзывает доступ к контактам через подтверждение", async () => {
+  stubCandidate([candOffer("o2", "accepted")]);
+  const f = globalThis.fetch as unknown as ReturnType<typeof vi.fn>;
+  const base = f.getMockImplementation()!;
+  f.mockImplementation(async (url: string, init?: RequestInit) => {
+    if (/\/offers\/o2\/contacts\/revoke$/.test(url)) {
+      calls.push({ url, headers: new Headers(init?.headers), body: null });
+      return res(200, candOffer("o2", "accepted", { contacts_revoked_at: "2026-10-05T10:00:00Z" }));
+    }
+    return base(url, init);
+  });
+  mount("/me/offers/o2");
+  fireEvent.click(await screen.findByRole("button", { name: "Отозвать доступ к контактам" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Отозвать" }));
+  await waitFor(() => expect(calls).toHaveLength(1));
+  expect(calls[0].url).toMatch(/\/offers\/o2\/contacts\/revoke$/);
+});
+
+test("E32-7: после отзыва кнопки нет, показана пометка; чат на месте", async () => {
+  stubCandidate([candOffer("o2", "accepted", { contacts_revoked_at: "2026-10-05T10:00:00Z" })]);
+  mount("/me/offers/o2");
+  expect(await screen.findByText(/Вы отозвали доступ к контактам/)).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Отозвать доступ к контактам" })).toBeNull();
+  expect(screen.getByRole("region", { name: "Переписка" })).toBeInTheDocument();
+});

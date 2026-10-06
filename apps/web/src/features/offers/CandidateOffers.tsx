@@ -28,6 +28,7 @@ import {
   useGetOfferOffersOfferIdGet,
   useMyInterestsCandidatesMeInterestsGet,
   useMyOffersCandidatesMeOffersGet,
+  useRevokeContactsOffersOfferIdContactsRevokePost,
 } from "@/api/endpoints/offers/offers";
 import { DeclineReason } from "@/api/model";
 import { ErrorNote } from "@/features/auth/ui";
@@ -142,6 +143,15 @@ export function CandidateOfferDetail() {
     },
   });
   const [sheet, setSheet] = useState(false);
+  const [revokeSheet, setRevokeSheet] = useState(false);
+  const revoke = useRevokeContactsOffersOfferIdContactsRevokePost({
+    mutation: {
+      onSuccess: () => {
+        setRevokeSheet(false);
+        done();
+      },
+    },
+  });
   const chat = useRef<HTMLDivElement>(null);
   const answerable = !!o && isAwaiting(o.status);
   const accepted = !!o && ["accepted", "interview", "hired", "not_hired"].includes(o.status);
@@ -170,6 +180,11 @@ export function CandidateOfferDetail() {
             <section role="status" className="flex flex-col gap-2 rounded-xl border border-success/40 bg-success-bg p-4">
               <h2 className="font-mono text-16 font-semibold text-success">{T.accepted}</h2>
               <p className="text-14">{T.acceptedHint}</p>
+              {o.contacts_revoked_at ? (
+                <p className="text-13 text-muted">{T.revoked(dateOnly(o.contacts_revoked_at))}</p>
+              ) : (
+                <Button variant="outline" size="sm" className="self-start" onClick={() => setRevokeSheet(true)}>{T.revoke}</Button>
+              )}
             </section>
           )}
 
@@ -233,6 +248,18 @@ export function CandidateOfferDetail() {
               </div>
             </div>
           )}
+
+          <Sheet open={revokeSheet} onOpenChange={setRevokeSheet}>
+            <SheetContent side="bottom" className="mx-auto max-w-lg">
+              <SheetTitle className="font-mono text-16">{T.revokeTitle}</SheetTitle>
+              <SheetDescription>{T.revokeHint}</SheetDescription>
+              {revoke.isError && <ErrorNote>{offerErrorText(revoke.error)}</ErrorNote>}
+              <div className="mt-3 grid gap-2">
+                <Button size="lg" loading={revoke.isPending} onClick={() => revoke.mutate({ offerId: o.id })}>{T.revokeConfirm}</Button>
+                <Button variant="link" className="mx-auto flex" onClick={() => setRevokeSheet(false)}>{T.cancel}</Button>
+              </div>
+            </SheetContent>
+          </Sheet>
 
           <Sheet open={sheet} onOpenChange={setSheet}>
             <SheetContent side="bottom" className="mx-auto max-w-lg">

@@ -15,7 +15,7 @@ import { ConstellationAvatar } from "@/shared/brand";
 import { Button } from "@/shared/ui/button";
 import { Conversation, invalidateOffers, Panel, StatusBadge, Timeline } from "./parts";
 import { OfferDialog } from "./OfferDialog";
-import { dateOnly, DECLINE_LABEL, EMP_INT_TEXT as IT, offerErrorText } from "./text";
+import { CONTACTS_REVOKED_TEXT, dateOnly, DECLINE_LABEL, EMP_INT_TEXT as IT, offerErrorText } from "./text";
 
 export { EmployerOffers } from "./EmployerBoard";
 
@@ -88,6 +88,9 @@ export function EmployerOfferDetail() {
             />
           )}
 
+          {o.contacts_revoked_at && !o.contacts && (
+            <p role="status" className="rounded-lg border border-warning-border bg-warning-bg px-3 py-2 text-13 text-warning-fg">{CONTACTS_REVOKED_TEXT}</p>
+          )}
           {o.contacts && (
             <Panel title="Контакты кандидата">
               <p className="text-xs text-muted">Кандидат принял оффер и раскрыл контакты.</p>
