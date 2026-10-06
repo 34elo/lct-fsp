@@ -25,6 +25,8 @@ class Company(Base):
     logo_key: Mapped[str | None] = mapped_column(Text, default=None)
     contacts: Mapped[dict[str, Any] | None] = mapped_column(sa.JSON, default=None)
     direction: Mapped[str | None] = mapped_column(Text, default=None)
+    # E32-5a: добровольная метка «компания проверена» (видна кандидатам, если компания verified)
+    show_verified_badge: Mapped[bool] = mapped_column(default=True, server_default=sa.true())
     status: Mapped[str] = mapped_column(Text, default="pending", server_default="pending")
     responsibility_score: Mapped[float | None] = mapped_column(sa.Float, default=None)
     created_at: Mapped[datetime] = mapped_column(
