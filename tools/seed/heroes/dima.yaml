@@ -10,7 +10,7 @@ profile:
   formats: [remote]
   employment_types: [full]
   search_status: open
-consents: [pd_processing, code_analysis]
+consents: [pd_processing, profile_publication, code_analysis]
 resume:
   summary: "Backend-разработчик на Go, 3 года коммерческого опыта, микросервисы и высоконагруженные API."
   skills: [go, postgresql, docker, rest, git, linux, grpc, redis, microservices, sql]
