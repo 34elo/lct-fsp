@@ -8,6 +8,7 @@ import {
   formatClock,
   initialAnswer,
   isAnswered,
+  missedAnswers,
   move,
   parseListing,
   parseNumber,
@@ -100,5 +101,19 @@ describe("ошибки с машинным code", () => {
   it("404 и неизвестное", () => {
     expect(errorView(new ApiError(404, "not_found", {})).text).toBe("Попытка не найдена");
     expect(errorView(new Error("x")).text).toContain("не так");
+  });
+});
+
+describe("missedAnswers", () => {
+  it("берёт только корректные строки с неполным баллом, по порядку", () => {
+    const rows = missedAnswers([
+      { response_id: "b", seq: 3, skill: "sql", score: 0.5 },
+      { response_id: "a", seq: 1, skill: "python", score: 0 },
+      { response_id: "c", seq: 2, skill: "sql", score: 1 },
+      { seq: 4, score: 0 },
+      null,
+    ]);
+    expect(rows.map((r) => r.responseId)).toEqual(["a", "b"]);
+    expect(missedAnswers(undefined)).toEqual([]);
   });
 });
