@@ -8113,6 +8113,16 @@
             "type": "array",
             "title": "Categories",
             "default": []
+          },
+          "strength": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StrengthView"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -8256,6 +8266,16 @@
             "type": "array",
             "title": "Categories",
             "default": []
+          },
+          "strength": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StrengthView"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "skills": {
             "items": {
@@ -13292,6 +13312,16 @@
             "title": "Categories",
             "default": []
           },
+          "strength": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StrengthView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "similarity": {
             "type": "number",
             "title": "Similarity"
@@ -13678,6 +13708,66 @@
           "company_ids"
         ],
         "title": "StoplistIO"
+      },
+      "StrengthPart": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "weight": {
+            "type": "number",
+            "title": "Weight"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "text",
+          "value",
+          "weight"
+        ],
+        "title": "StrengthPart"
+      },
+      "StrengthView": {
+        "properties": {
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "rank": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank"
+          },
+          "top": {
+            "items": {
+              "$ref": "#/components/schemas/StrengthPart"
+            },
+            "type": "array",
+            "title": "Top",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "value"
+        ],
+        "title": "StrengthView"
       },
       "SusIn": {
         "properties": {
