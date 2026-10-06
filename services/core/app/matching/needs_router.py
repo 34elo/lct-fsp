@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import time
 import uuid
 from datetime import datetime
 from typing import Any
@@ -15,6 +16,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.analytics import service as analytics
 from app.companies import service as companies
 from app.deps import get_redis, get_session
 from app.graph.trust import TrustConfig
@@ -101,7 +103,22 @@ async def create_need(
         raise ProblemError(422, "need_empty", "Опишите потребность текстом или фильтрами")
     filters = needs_service.merge_filters(parsed, body.filters)
     need = await needs_service.create(session, company.id, body.text, filters, _NEEDS)
+    t0 = time.perf_counter()
     cats = await needs_service.categories(session, company.id, need, _NEEDS)
+    latency_ms = int((time.perf_counter() - t0) * 1000)
+    salt = request.app.state.settings.analytics_salt
+    track = analytics.track_employer
+    await track(
+        session, salt, company.id, "need_created",
+        {
+            "need_id": str(need.id), "skills": len(need.weights),
+            "has_vacancy": False, "grade": need.grades[0] if len(need.grades) == 1 else None,
+        },
+    )  # fmt: skip
+    await track(
+        session, salt, company.id, "need_categories_shown",
+        {"need_id": str(need.id), "categories": len(cats), "latency_ms": latency_ms},
+    )  # fmt: skip
     await session.commit()
     return NeedOut(
         id=need.id, text=need.text, filters=filters, skills=need.weights, grades=need.grades,
@@ -116,12 +133,22 @@ async def create_need(
 )
 async def need_categories(
     need_id: uuid.UUID,
+    request: Request,
     user: User = Depends(_employer),
     session: AsyncSession = Depends(get_session),
 ) -> Any:
     company, _ = await companies.require_company(session, user.id)
     need = await needs_service.get_owned(session, company.id, need_id)
+    t0 = time.perf_counter()
     cats = await needs_service.categories(session, company.id, need, _NEEDS)
+    await analytics.track_employer(
+        session, request.app.state.settings.analytics_salt, company.id, "need_categories_shown",
+        {
+            "need_id": str(need.id), "categories": len(cats),
+            "latency_ms": int((time.perf_counter() - t0) * 1000),
+        },
+    )  # fmt: skip
+    await session.commit()
     return {"need_id": need.id, "shortlist": need.shortlist, "categories": cats}
 
 
@@ -133,6 +160,7 @@ async def need_categories(
 async def category_candidates(
     profession: str,
     grade: str,
+    request: Request,
     need_id: uuid.UUID | None = None,
     cursor: str | None = Query(default=None, max_length=200),
     limit: int = Query(default=20, ge=1, le=search.MAX_LIMIT),
@@ -159,7 +187,25 @@ async def category_candidates(
     for item in page["items"]:
         item["is_shortlisted"] = item["pseudo_id"] in shortlist
 
+    if cursor is None:  # просмотр категории считаем по первой странице
+        await analytics.track_employer(
+            session, request.app.state.settings.analytics_salt, company.id, "category_viewed",
+            {
+                "profession": profession, "grade": grade, "candidates": page["total"],
+                "need_id": str(need.id) if need else None,
+            },
+        )  # fmt: skip
+        await session.commit()
     return {k: page[k] for k in ("items", "next_cursor", "total")}
+
+
+async def _track_shortlist(
+    request: Request, session: AsyncSession, company_id: uuid.UUID, need: Any, name: str
+) -> None:
+    await analytics.track_employer(
+        session, request.app.state.settings.analytics_salt, company_id, name,
+        {"need_id": str(need.id), "size": len(need.shortlist)},
+    )  # fmt: skip
 
 
 @router.post(
@@ -170,6 +216,7 @@ async def category_candidates(
 async def shortlist_add(
     need_id: uuid.UUID,
     pseudo_id: str,
+    request: Request,
     user: User = Depends(_employer),
     session: AsyncSession = Depends(get_session),
 ) -> None:
@@ -188,7 +235,9 @@ async def shortlist_add(
         raise ProblemError(404, "candidate_not_found", "Кандидат не найден")
     # Добавить в шорт-лист, если там ещё нет
     if pseudo_id not in need.shortlist:
-        need.shortlist.append(pseudo_id)
+        # переприсвоение: изменение JSON-списка на месте SQLAlchemy не видит
+        need.shortlist = [*need.shortlist, pseudo_id]
+        await _track_shortlist(request, session, company.id, need, "shortlist_added")
         await session.commit()
 
 
@@ -200,6 +249,7 @@ async def shortlist_add(
 async def shortlist_remove(
     need_id: uuid.UUID,
     pseudo_id: str,
+    request: Request,
     user: User = Depends(_employer),
     session: AsyncSession = Depends(get_session),
 ) -> None:
@@ -208,5 +258,6 @@ async def shortlist_remove(
     need = await needs_service.get_owned(session, company.id, need_id)
     # Удалить из шорт-листа, если там есть
     if pseudo_id in need.shortlist:
-        need.shortlist.remove(pseudo_id)
+        need.shortlist = [p for p in need.shortlist if p != pseudo_id]
+        await _track_shortlist(request, session, company.id, need, "shortlist_removed")
         await session.commit()

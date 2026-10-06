@@ -359,6 +359,8 @@ CREATE INDEX ON analytics_events (run_id) WHERE run_id IS NOT NULL;
 
 **Онлайн (источник — события)**
 
+Откуда пишутся события Б2 (E31-2b, `app/analytics/hiring.py`): `offer.*` (приглашение, `initiator=employer`) → `invite_sent`, `invite_answered` (`accepted`/`declined`/`expired`); `offer.*` (`initiator=candidate`) → `response_created`, `response_answered` (`interview` → `accepted`, `not_hired` → `declined`); `candidate.category.changed` → `category_changed` на каждую категорию набора; потребности и шорт-лист (`need_created`, `need_categories_shown`, `category_viewed` по первой странице, `shortlist_added/removed` только при реальном изменении) пишут эндпоинты `matching/needs_router` через `analytics.service.track_employer`. Повторная доставка не дублирует (inbox). Пока не пишутся: `time_to_respond_s`, `time_since_need_s`, `p_accept`, `below_min`, `category_match` (нет в доменном событии) и `shortlist_refined` (нет эндпоинта уточнения).
+
 Серверные события блока 1 (`survey.saved`, `attempt.*`, `item.answered`, `family.status_changed`, `appeal.created`, `task.*`) пишет Б1 (E31-2a, префиксы `survey_*`, `assessment_*`, `family_*`, `regular_task_*`); строки с ними Б1 дописывает в эту таблицу.
 
 | Метрика | Формула | События (источник) | Блок |
