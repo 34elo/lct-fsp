@@ -205,7 +205,7 @@
 | `GET /public/credentials/{id}/verify` | Проверка подписи и отзыва (для работодателя вне платформы) |
 | `GET /.well-known/did.json` | Публичный ключ издателя (`did:web:fsp.patissons.tech`) |
 | `POST /track` | Батч событий интерфейса, см. [metrics.md](metrics.md). Тело `{events[1..50]{event, ts, session_id?, run_id?, app_version?, props}, batch_id?, access_token?}` (`actor`, `role`, `channel` от клиента не принимаются → `422`). Авторизация необязательна: роль и псевдоним берутся из Bearer-токена, для `sendBeacon` (без заголовков) токен можно передать в теле; без токена событие анонимное. `202 {accepted, rejected, duplicate}`: событие с неизвестным именем, не из источника `web` или с лишним полем в `props` отклоняется (`rejected`), остальные пишутся. Повтор того же `batch_id` за 10 минут не пишет события (`duplicate: true`). 120 запросов в минуту на пользователя или IP, `429` |
-| `GET /public/profiles/{slug}` | Публичный профиль (если кандидат включил) |
+| `GET /public/profiles/{slug}` | Публичный профиль (JSON без ПДн). `404`, если нет `public_profile`, согласия `profile_publication` или действующего грейда (то же для бейджа) |
 | `GET /athlete/{slug}` | Краулерам (Telegram, VK, Slack по User-Agent) — HTML с OG-тегами, людям — редирект на `dashboard.fsp…/athlete/{slug}` |
 | `GET /taxonomy` | `{version, skills[{slug,name,kind,group,testable}], roles[{slug,name}], disciplines[{slug,name}], grades[], formats[], employment_types[]}` (только `active` навыки). `ETag` `W/"tax-<version>-<хеш статики>"`, `If-None-Match` → 304, `Cache-Control: public, max-age=300` |
 | `POST /integrations/fsp/webhook` | Вебхук ФСП/мока (HMAC `X-Signature`) |
