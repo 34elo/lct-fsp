@@ -276,3 +276,21 @@ def test_problem_responses_in_openapi():
         assert "application/problem+json" in op[code]["content"]
     assert "ProblemOut" in app.openapi()["components"]["schemas"]
     assert problem_responses() == {}
+
+
+async def test_claimed_vs_confirmed_resume_old_scale(factory):
+    """Старая шкала резюме сворачивается к шкале теста; опрос приоритетнее резюме."""
+    async with session_scope(factory) as s:
+        lead = await _cand(s, primary_role="backend", grade="lead")
+        await svc.seed_grade(s, lead, "backend", "middle", 0.5)
+        plus = await _cand(s, primary_role="backend", grade="middle_plus")
+        await svc.seed_grade(s, plus, "backend", "middle", 0.5)
+        jp = await _cand(s, primary_role="backend", grade="junior_plus")
+        await svc.seed_grade(s, jp, "backend", "middle", 0.5)
+    async with session_scope(factory) as s:
+        (r,) = await svc.claimed_vs_confirmed(s, lead)
+        assert (r.status, r.resume_grade) == ("overclaimed", "lead")
+        (r,) = await svc.claimed_vs_confirmed(s, plus)
+        assert r.status == "confirmed"
+        (r,) = await svc.claimed_vs_confirmed(s, jp)
+        assert r.status == "underclaimed"
