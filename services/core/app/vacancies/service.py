@@ -17,7 +17,7 @@ from fsp_contracts.enums import CompanyStatus, Grade
 from fsp_contracts.events import VacancyEvent
 from fsp_platform.app import ProblemError
 from fsp_platform.outbox import add_to_outbox
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.companies import service as companies
@@ -95,6 +95,23 @@ async def get(session: AsyncSession, vacancy_id: uuid.UUID) -> Vacancy | None:
 async def list_published(session: AsyncSession) -> list[Vacancy]:
     """Все опубликованные вакансии — для подбора под кандидата."""
     return list(await session.scalars(select(Vacancy).where(Vacancy.status == "published")))
+
+
+async def list_public(
+    session: AsyncSession, *, role: str | None = None, city: str | None = None,
+    q: str | None = None, limit: int = 50, offset: int = 0,
+) -> list[Vacancy]:  # fmt: skip
+    """Опубликованные вакансии для кандидатов и лендинга (E20-3), свежие первыми."""
+    stmt = select(Vacancy).where(Vacancy.status == VacancyStatus.published.value)
+    if role:
+        stmt = stmt.where(Vacancy.role == role)
+    if city:
+        stmt = stmt.where(Vacancy.city == city)
+    if q:
+        like = f"%{q.strip().lower()}%"
+        stmt = stmt.where(func.lower(Vacancy.title).like(like))
+    stmt = stmt.order_by(Vacancy.published_at.desc(), Vacancy.id).limit(limit).offset(offset)
+    return list(await session.scalars(stmt))
 
 
 async def skills_of(session: AsyncSession, vacancy_ids: list[uuid.UUID]) -> dict:
