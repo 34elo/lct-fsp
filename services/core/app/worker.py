@@ -28,6 +28,7 @@ from app.graph import fsp_links
 from app.graph import handlers as graph_handlers
 from app.graph.embedding import MlEmbedder
 from app.graph.trust import TrustConfig
+from app.jobs import handlers as jobs_handlers
 from app.matching import handlers as matching_handlers
 from app.matching.scoring import MatchConfig
 from app.notifications import handlers as notification_handlers
@@ -89,6 +90,7 @@ class Worker:
         # <<< block1
         # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
         fsp_links.register(self.consumers, self.session_factory)
+        jobs_handlers.register(self.consumers, self.session_factory)
         # <<< block2
         self.relay = OutboxRelay(
             self.session_factory,
