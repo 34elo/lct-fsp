@@ -30,7 +30,9 @@ from app.taxonomy.models import (
     Skill,
     SkillAlias,
     SkillBlocklist,
+    SkillCardDraftRow,
     SkillDistinct,
+    SkillMention,
     SkillRelation,
 )
 
@@ -554,3 +556,81 @@ async def skill_kinds(session: AsyncSession, skill_ids: list[uuid.UUID]) -> dict
         return {}
     rows = await session.execute(select(Skill.id, Skill.kind).where(Skill.id.in_(skill_ids)))
     return {sid: kind for sid, kind in rows.all()}
+
+
+# --- конвейер навыков: журнал решений и черновики карточек (E16-4) ---
+
+
+def _clean_norm(norm: str) -> str | None:
+    """ПДн и инъекции в справочник не пишем: ml маскирует `norm` как «[скрыто]»."""
+    return None if not norm or norm == "[скрыто]" else norm
+
+
+async def record_mention(
+    session: AsyncSession,
+    item: dict[str, Any],
+    *,
+    context: str | None = None,
+    model_version: str | None = None,
+) -> SkillMention | None:
+    """Пишет решение ml (`SkillResolveItem` как dict) в журнал. None — писать нельзя (ПДн)."""
+    norm = _clean_norm(item.get("norm", ""))
+    if norm is None:
+        return None
+    skill = None
+    if slug := item.get("skill_slug"):
+        skill = await session.scalar(select(Skill.id).where(Skill.slug == slug))
+    rel = item.get("relation")
+    row = SkillMention(
+        raw=item.get("raw", norm),
+        norm=norm,
+        context=context,
+        decision=item["decision"],
+        skill_id=skill,
+        relation=f"{rel['type']}:{rel['to_slug']}" if rel else None,
+        scores={"confidence": rel["confidence"]} if rel else None,
+        model_version=model_version,
+    )
+    session.add(row)
+    await session.flush()
+    return row
+
+
+async def cached_decision(session: AsyncSession, norm: str) -> SkillMention | None:
+    """Кеш решений: последнее не отклонённое по ПДн решение для `norm` (повторное упоминание
+    не идёт в ml). Пара-ловушка `skill_distinct` проверяется ml до записи, здесь не нужна."""
+    return await session.scalar(
+        select(SkillMention)
+        .where(SkillMention.norm == norm)
+        .order_by(SkillMention.id.desc())
+        .limit(1)
+    )
+
+
+async def save_card_draft(
+    session: AsyncSession, slug: str, draft: dict[str, Any]
+) -> SkillCardDraftRow:
+    """Сохраняет черновик карточки ml для навыка. Схема — `taxonomy/cards.py` (`SkillCard`).
+
+    Тип карточки обязан совпасть с типом навыка в справочнике, если он задан. Ревью человеком
+    обязательно: статус `draft` в каталог `data/skills/cards` сам не попадает.
+    """
+    from app.taxonomy.cards import SkillCard
+
+    skill = await session.scalar(select(Skill).where(Skill.slug == slug))
+    if skill is None:
+        raise ValueError(f"навыка {slug!r} нет в справочнике")
+    body = {k: v for k, v in draft.items() if k not in ("model", "draft")}
+    body["skill"] = slug
+    card = SkillCard.model_validate(body)
+    if skill.skill_type and card.type.value != skill.skill_type:
+        raise ValueError(f"type={card.type.value}, в справочнике {skill.skill_type}")
+    row = await session.get(SkillCardDraftRow, skill.id)
+    payload = card.model_dump(mode="json")
+    if row is None:
+        row = SkillCardDraftRow(skill_id=skill.id, card=payload, model=draft.get("model", ""))
+        session.add(row)
+    else:
+        row.card, row.model, row.status = payload, draft.get("model", ""), "draft"
+    await session.flush()
+    return row

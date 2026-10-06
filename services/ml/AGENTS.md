@@ -9,8 +9,9 @@
 - `uv run ruff check services/ml` — линтер
 
 ## Ключевые файлы
-- `fsp_ml/main.py` — ml-api: `/v1/query/parse`, `/v1/embeddings`, `/v1/skills/resolve`, `/v1/families/key-draft` (`family_key.py`, E30-1), `/healthz`
+- `fsp_ml/main.py` — ml-api: `/v1/query/parse`, `/v1/embeddings`, `/v1/skills/resolve`, `/v1/skills/card-draft`, `/v1/families/key-draft` (`family_key.py`, E30-1), `/healthz`
 - `fsp_ml/normalize.py`, `taxonomy.py` — нормализация и быстрый путь resolve (снимок графа из core); `embedder.py` — bge-m3 или фейк
+- `fsp_ml/skill_moderation.py`, `skill_pipeline.py`, `skill_card.py` — конвейер навыков (E16-4): модерация, судья, кеш, черновик карточки; метрики — `tests/test_skill_pipeline.py`, `fixtures/skill_eval.yaml`
 - `fsp_ml/fake.py` — детерминированные ответы по контрактам `fsp_contracts.ml`
 - `fsp_ml/handlers.py` — команда → события `ml.*.completed/failed` (`HANDLERS`, `handle`; `resume_parse_llm` — реальный)
 - `fsp_ml/llm.py` — OpenAI-совместимый клиент (JSON-схема); `resume_text.py`, `resume_rules.py`, `resume_parser.py` — разбор резюме; промпты — `prompts/<task>/v<N>.j2`

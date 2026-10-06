@@ -10,15 +10,19 @@ from fsp_contracts.ml import (
     MlHealth,
     ParsedQuery,
     QueryParseRequest,
+    SkillCardDraft,
+    SkillCardDraftRequest,
     SkillResolveItem,
     SkillsResolveRequest,
 )
 from fsp_platform.app import ProblemError, create_app
 from fsp_platform.logging import configure_logging
 
-from fsp_ml import fake, family_key
+from fsp_ml import fake, family_key, skill_card
 from fsp_ml.config import Settings
 from fsp_ml.embedder import Embedder, embed, load_embedder
+from fsp_ml.llm import LlmClient, OpenAiLlm
+from fsp_ml.skill_pipeline import SkillPipeline
 from fsp_ml.taxonomy import TaxonomyProvider
 
 
@@ -26,6 +30,7 @@ def build_app(
     settings: Settings | None = None,
     embedder: Embedder | None = None,
     taxonomy: TaxonomyProvider | None = None,
+    llm: LlmClient | None = None,
 ) -> FastAPI:
     settings = settings or Settings()
     configure_logging(settings.service_name, settings.log_level)
@@ -34,6 +39,16 @@ def build_app(
         settings.embedding_model_path, settings.embedding_model, settings.embedding_dim
     )
     taxonomy = taxonomy or TaxonomyProvider(settings.core_url, settings.service_token_ml)
+    # LLM нужен только при ML_FAKE=false и LLM_ENABLED=true; иначе конвейер навыков идёт по правилам
+    if llm is None and not settings.ml_fake and settings.llm_enabled and settings.llm_base_url:
+        llm = OpenAiLlm(
+            settings.llm_base_url,
+            settings.llm_api_key,
+            settings.llm_model,
+            timeout=settings.llm_timeout,
+            max_tokens=settings.llm_max_tokens,
+        )
+    pipeline = SkillPipeline(llm=llm, embedder=real, llm_model=settings.llm_model)
     # >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
     app.include_router(family_key.build_router(settings))  # E30-1: черновик ключа задания
     # <<< block1
@@ -65,12 +80,13 @@ def build_app(
         index = await taxonomy.get(req.taxonomy_version)
         if index is None:
             require_fake()
-        out: list[SkillResolveItem] = []
-        for m in req.mentions:
-            hit = index.resolve(m) if index else None
-            # остальной конвейер (модерация, судья) — E16-4; до него заглушка
-            out.append(hit or fake.resolve_skill(m.raw))
-        return out
+        if index is None:  # снимка графа нет (ML_FAKE): заглушка
+            return [fake.resolve_skill(m.raw) for m in req.mentions]
+        return await pipeline.resolve(req.mentions, index)
+
+    @app.post("/v1/skills/card-draft")
+    async def skills_card_draft(req: SkillCardDraftRequest) -> SkillCardDraft:
+        return await skill_card.draft_card(llm, req, settings.llm_model)
 
     @app.get("/healthz")
     async def healthz() -> MlHealth:

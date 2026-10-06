@@ -131,3 +131,39 @@ class ScoringConfig(Base):
     updated_at: Mapped[datetime] = mapped_column(
         sa.DateTime(timezone=True), default=utcnow, onupdate=utcnow
     )
+
+
+class SkillMention(Base):
+    """Журнал и кеш решений конвейера навыков ml (skills.md §3.3): ключ кеша — `norm`."""
+
+    __tablename__ = "skill_mentions"
+    __table_args__ = (sa.Index("ix_skill_mentions_norm", "norm"),)
+
+    id: Mapped[int] = mapped_column(
+        sa.BigInteger().with_variant(sa.Integer, "sqlite"), primary_key=True
+    )
+    raw: Mapped[str] = mapped_column(Text)
+    norm: Mapped[str] = mapped_column(Text)
+    context: Mapped[str | None] = mapped_column(Text, default=None)  # resume|vacancy|repo|query
+    decision: Mapped[str] = mapped_column(Text)  # alias|fuzzy|new|same_pending|rejected
+    skill_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("skills.id"), default=None)
+    relation: Mapped[str | None] = mapped_column(Text, default=None)
+    scores: Mapped[dict | None] = mapped_column(sa.JSON, default=None)
+    model_version: Mapped[str | None] = mapped_column(Text, default=None)
+    created_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), default=utcnow, server_default=sa.func.now()
+    )
+
+
+class SkillCardDraftRow(Base):
+    """Черновик карточки нового навыка от ml (E16-4). В `data/skills/cards` — после ревью."""
+
+    __tablename__ = "skill_card_drafts"
+
+    skill_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("skills.id"), primary_key=True)
+    card: Mapped[dict] = mapped_column(sa.JSON)  # форма `SkillCard`, schema_version 1
+    model: Mapped[str] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(Text, default="draft", server_default="draft")
+    created_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), default=utcnow, server_default=sa.func.now()
+    )
