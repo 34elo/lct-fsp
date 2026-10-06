@@ -1,0 +1,167 @@
+/** Чистые функции экрана теста: форма ответа по `kind`, таймер, разбор стема, доли по навыкам. */
+
+export type ItemKind = "exact" | "estimate" | "choice" | "find_bug" | "order" | "sjt";
+
+export interface TestItem {
+  kind: string;
+  stem: string;
+  options?: string[] | null;
+}
+
+/** Значение ответа в форме: строка (exact/estimate), индекс (choice), список номеров (find_bug, order, sjt). */
+export type AnswerValue = string | number | number[] | null;
+
+export function initialAnswer(item: TestItem): AnswerValue {
+  switch (item.kind) {
+    case "exact":
+    case "estimate":
+      return "";
+    case "choice":
+      return null;
+    case "find_bug":
+      return [];
+    case "order":
+    case "sjt":
+      return (item.options ?? []).map((_, i) => i);
+    default:
+      return null;
+  }
+}
+
+export function isAnswered(item: TestItem, v: AnswerValue): boolean {
+  switch (item.kind) {
+    case "exact":
+    case "estimate":
+      return typeof v === "string" && v.trim() !== "";
+    case "choice":
+      return typeof v === "number";
+    case "find_bug":
+      return Array.isArray(v) && v.length > 0;
+    case "order":
+    case "sjt":
+      return Array.isArray(v) && v.length > 0;
+    default:
+      return false;
+  }
+}
+
+/** Число из «3 000 000», «1,5e6», «10^5». Пусто или мусор → null (сервер даст 0 баллов). */
+export function parseNumber(s: string): number | null {
+  const t = s.trim().replace(/\s+/g, "").replace(",", ".");
+  const pow = /^10\^(-?\d+)$/.exec(t);
+  const n = pow ? Math.pow(10, Number(pow[1])) : Number(t);
+  return t !== "" && Number.isFinite(n) ? n : null;
+}
+
+/** Что уходит в `answer`: exact — строка как есть, estimate — число, остальное — индексы. */
+export function toPayload(item: TestItem, v: AnswerValue): unknown {
+  if (item.kind === "estimate") return typeof v === "string" ? parseNumber(v) : null;
+  if (item.kind === "exact") return typeof v === "string" ? v.trim() : null;
+  if (item.kind === "find_bug") return Array.isArray(v) ? [...v].sort((a, b) => a - b) : [];
+  return v;
+}
+
+export interface CodeLine {
+  no: number;
+  text: string;
+}
+
+const LINE = /^\s*(\d+) \| ?(.*)$/;
+
+/** `find_bug`: условие и листинг приходят одним текстом («NN | код»); номера строк — ответ. */
+export function parseListing(stem: string): { prose: string; lines: CodeLine[] } {
+  const rows = stem.split("\n");
+  const first = rows.findIndex((r) => LINE.test(r));
+  if (first < 0) return { prose: stem, lines: [] };
+  const lines: CodeLine[] = [];
+  for (const r of rows.slice(first)) {
+    const m = LINE.exec(r);
+    if (m) lines.push({ no: Number(m[1]), text: m[2] ?? "" });
+  }
+  return { prose: rows.slice(0, first).join("\n").trim(), lines };
+}
+
+/** Код в условии `exact`: блок после пустой строки показываем моноширинным. */
+export function splitStem(stem: string): { prose: string; code: string | null } {
+  const at = stem.indexOf("\n\n");
+  if (at < 0) return { prose: stem, code: null };
+  return { prose: stem.slice(0, at).trim(), code: stem.slice(at + 2).trim() || null };
+}
+
+export function toggleLine(v: number[], no: number): number[] {
+  return v.includes(no) ? v.filter((x) => x !== no) : [...v, no].sort((a, b) => a - b);
+}
+
+/** Сдвиг элемента списка на `delta` (−1 вверх, +1 вниз). Выход за границы — без изменений. */
+export function move(list: number[], at: number, delta: -1 | 1): number[] {
+  const to = at + delta;
+  if (to < 0 || to >= list.length) return list;
+  const out = [...list];
+  [out[at], out[to]] = [out[to]!, out[at]!];
+  return out;
+}
+
+export function formatClock(sec: number): string {
+  const s = Math.max(0, Math.ceil(sec));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+}
+
+/** Шаги `chain` из ответа `next`: неизвестная форма отбрасывается. */
+export function chainSteps(steps: unknown): TestItem[] {
+  if (!Array.isArray(steps)) return [];
+  return steps
+    .filter((s): s is Record<string, unknown> => !!s && typeof s === "object")
+    .map((s) => ({
+      kind: typeof s.kind === "string" ? s.kind : "choice",
+      stem: typeof s.stem === "string" ? s.stem : "",
+      options: Array.isArray(s.options) ? (s.options as unknown[]).map(String) : null,
+    }));
+}
+
+export interface SkillRow {
+  skill: string;
+  items: number;
+  share: number;
+}
+
+export const HOLDS_SHARE = 0.6;
+
+/** `by_skill` приходит как свободный словарь: берём только корректные строки. */
+export function skillRows(raw: unknown): SkillRow[] {
+  if (!Array.isArray(raw)) return [];
+  const rows: SkillRow[] = [];
+  for (const r of raw) {
+    if (!r || typeof r !== "object") continue;
+    const { skill, items, share } = r as Record<string, unknown>;
+    if (typeof skill === "string" && typeof share === "number") {
+      rows.push({ skill, items: typeof items === "number" ? items : 0, share });
+    }
+  }
+  return rows;
+}
+
+export const holds = (share: number): boolean => share >= HOLDS_SHARE;
+
+/** Подтверждение действует 12 месяцев с даты завершения. */
+export function validUntil(finishedAt: string | null | undefined): string | null {
+  if (!finishedAt) return null;
+  const d = new Date(finishedAt);
+  if (Number.isNaN(d.getTime())) return null;
+  d.setUTCFullYear(d.getUTCFullYear() + 1);
+  return d.toISOString();
+}
+
+export const isFuture = (iso: string, now = Date.now()): boolean => new Date(iso).getTime() > now;
+
+/** Стек: нижний регистр, без пробелов по краям и дублей, не больше 30. */
+export function addStack(stack: string[], raw: string): string[] {
+  const s = raw.trim().toLowerCase();
+  if (!s || stack.includes(s) || stack.length >= 30) return stack;
+  return [...stack, s];
+}
+
+export function salaryError(from: string, to: string): boolean {
+  const a = Number(from);
+  const b = Number(to);
+  return from !== "" && to !== "" && Number.isFinite(a) && Number.isFinite(b) && a > b;
+}
