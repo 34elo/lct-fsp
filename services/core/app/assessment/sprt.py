@@ -85,6 +85,8 @@ def bonus_eligible(
 ) -> TestGrade | None:
     """Следующий грейд для бонусного этапа или `None`: прошёл за ≤ 10 и θ ≥ cut_след − margin."""
     nxt = next_grade(grade)
+    if not cfg.bonus_enabled:  # экспресс-режим без бонуса (E32-4a)
+        return None
     if nxt is None or decision.result != "passed" or n_main > cfg.bonus_max_main_items:
         return None
     return nxt if theta >= cfg.cuts[nxt.value] - cfg.bonus_margin else None

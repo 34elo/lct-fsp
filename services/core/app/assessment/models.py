@@ -35,6 +35,8 @@ class Grade(Base):
     needs_confirmation: Mapped[bool] = mapped_column(default=False, server_default=sa.false())
     low_confidence: Mapped[bool] = mapped_column(default=False, server_default=sa.false())
     source: Mapped[str] = mapped_column(Text)  # test | seed
+    # standard | express — экспресс-грейд показывается меткой (ADR-025 п.7, E32-4a)
+    mode: Mapped[str] = mapped_column(Text, default="standard", server_default="standard")
     attempt_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("attempts.id", ondelete="SET NULL"), default=None
     )
@@ -112,6 +114,7 @@ class Attempt(Base):
     profession: Mapped[str] = mapped_column(Text)
     declared_grade: Mapped[str] = mapped_column(Text)
     stage: Mapped[str] = mapped_column(Text, default="main")  # main | bonus
+    mode: Mapped[str] = mapped_column(Text, default="standard", server_default="standard")
     status: Mapped[str] = mapped_column(Text, default="active")  # active|passed|failed|abandoned
     plan: Mapped[dict] = mapped_column(sa.JSON, default=dict)
     theta: Mapped[float | None] = mapped_column(sa.Float, default=None)

@@ -317,3 +317,40 @@ def test_e32_declared_grade_and_compatible_fields():
     assert ev2.invited_grade == TestGrade.middle and ev2.grade == TestGrade.junior
     env = new_event("assessment.attempt.finished", "core", ev2)
     assert parse_payload(type(env).model_validate_json(env.model_dump_json())) == ev2
+
+
+def test_assessment_mode_fields_are_optional():
+    """E32-4a: `mode` в событиях и аналитике необязателен (совместимо), `express` принимается."""
+    from uuid import uuid4
+
+    import pytest
+    from fsp_contracts.analytics_assessment import AssessmentFinished, AssessmentStarted
+    from fsp_contracts.assessment import AttemptFinished
+    from pydantic import ValidationError
+
+    base = {"attempt_id": "a", "profession": "backend", "declared_grade": "middle"}
+    assert AssessmentStarted(**base).mode == "standard"
+    assert AssessmentStarted(**base, mode="express").mode == "express"
+    with pytest.raises(ValidationError):
+        AssessmentStarted(**base, mode="turbo")
+    fin = {**base, "stage": "main", "result": "passed"}
+    assert AssessmentFinished(**fin, mode="express").mode == "express"
+    ev = AttemptFinished.model_validate(
+        {
+            "candidate_id": str(uuid4()),
+            "attempt_id": str(uuid4()),
+            "profession": "backend",
+            "declared_grade": "middle",
+            "stage": "main",
+            "result": "passed",
+            "grade": "middle",
+            "theta": 0.3,
+            "se": 0.4,
+            "integrity": 1.0,
+            "needs_confirmation": False,
+            "low_confidence": False,
+            "finished_at": "2026-10-06T10:00:00Z",
+            "profile_version": 1,
+        }
+    )
+    assert (ev.mode, ev.invited_grade) == ("standard", None)

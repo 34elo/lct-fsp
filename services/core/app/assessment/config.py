@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from functools import lru_cache
 from pathlib import Path
 
@@ -34,6 +34,13 @@ class AssessmentConfig:
     bonus_max_main_items: int = 10
     bonus_margin: float = 0.0
     bonus_max_items: int = 10
+    bonus_enabled: bool = True
+    # Экспресс-режим для жюри (ADR-025 п.7, E32-4a): короче, грубее, без бонуса и пилотов
+    express_enabled: bool = True
+    express_min_items: int = 6
+    express_max_items: int = 8
+    express_alpha: float = 0.15
+    express_beta: float = 0.15
     # Выбор задания (§6): доли типов навыков по грейду
     plan_shares: dict[str, dict[str, float]] = field(default_factory=dict)
     top_k: int = 3
@@ -71,6 +78,20 @@ class AssessmentConfig:
     def prior_b(self, level: int) -> float:
         return self.b_by_level[level]
 
+    def for_mode(self, mode: str | None) -> AssessmentConfig:
+        """Параметры попытки режима `mode`: у `express` — длина и α/β свои, без бонуса и пилотов."""
+        if mode != "express":
+            return self
+        return replace(
+            self,
+            min_items=self.express_min_items,
+            max_items=self.express_max_items,
+            sprt_alpha=self.express_alpha,
+            sprt_beta=self.express_beta,
+            bonus_enabled=False,
+            pilot_slots=0,
+        )
+
 
 @lru_cache(maxsize=4)
 def load_config(path: str | None = None) -> AssessmentConfig:
@@ -84,6 +105,7 @@ def load_config(path: str | None = None) -> AssessmentConfig:
     pilot = a.get("pilot") or {}
     rules = a.get("rules") or {}
     integ = a.get("integrity") or {}
+    express = a.get("express") or {}
     evid = a.get("evidence") or {}
     life = a.get("lifecycle") or {}
     adm = life.get("admit") or {}
@@ -106,6 +128,11 @@ def load_config(path: str | None = None) -> AssessmentConfig:
         bonus_max_main_items=int(bonus.get("max_main_items", 10)),
         bonus_margin=float(bonus.get("margin", 0.0)),
         bonus_max_items=int(bonus.get("max_items", 10)),
+        express_enabled=bool(express.get("enabled", True)),
+        express_min_items=int(express.get("min_items", 6)),
+        express_max_items=int(express.get("max_items", 8)),
+        express_alpha=float(express.get("alpha", 0.15)),
+        express_beta=float(express.get("beta", 0.15)),
         plan_shares={
             g: {t: float(v) for t, v in shares.items()}
             for g, shares in (a.get("plan_shares") or {}).items()

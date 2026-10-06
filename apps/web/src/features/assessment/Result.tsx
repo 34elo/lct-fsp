@@ -113,7 +113,13 @@ export default function Result() {
               {T.notConfirmed}
             </Badge>
           )}
+          {attempt.mode === "express" && (
+            <Badge variant="dashed" data-testid="assessment-express">
+              {T.expressBadge}
+            </Badge>
+          )}
         </div>
+        {attempt.mode === "express" && <p className="text-13 text-muted">{T.expressResult}</p>}
         {grade && until && <p className="text-14 text-muted">{T.validUntil(dateShort(until))}</p>}
         {!grade && <p className="text-14 text-muted">{T.failedText}</p>}
         <dl className="grid grid-cols-3 gap-3 text-center">

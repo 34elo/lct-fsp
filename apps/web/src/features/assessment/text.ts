@@ -51,6 +51,12 @@ export const T = {
   gradeHint:
     "Грейд на профиле будет «предварительно» (пунктир), пока ты не пройдёшь тест. Завысить можно, но тест остановится раньше: честнее выбирать то, что ты правда тянешь.",
   historyHint: "Каждое сохранение — новая запись, история остаётся в «Истории попыток».",
+  // экспресс-режим для жюри (E32-4a, ADR-025 п.7)
+  express: "Экспресс-режим · 3–5 минут",
+  expressHint: "6–8 заданий вместо 10–24. Оценка грубее, грейд получит метку «экспресс»; обычный тест заменит его в любой момент.",
+  expressBadge: "экспресс",
+  rangeExpress: "Экспресс-режим: от 6 до 8 заданий, 3–5 минут. Грейд будет с меткой «экспресс».",
+  expressResult: "Экспресс-оценка: грейд помечен «экспресс». Обычный тест уточнит и заменит его без кулдауна.",
   next: "Дальше",
   back: "Назад",
   save: "Сохранить опрос",
@@ -207,6 +213,7 @@ export const T = {
   noItems: "Для этой профессии и грейда пока нет заданий. Попробуйте позже.",
   attemptFinished: "Попытка уже завершена.",
   unknownProfession: "Такой профессии нет в справочнике.",
+  expressDisabled: "Экспресс-режим сейчас выключен.",
   noInvite: "Приглашения по этой попытке нет.",
   inviteStale: "Приглашение неактуально: грейд уже не ниже.",
   generic: "Что-то пошло не так. Попробуйте ещё раз.",
@@ -257,6 +264,8 @@ export function errorView(e: unknown): ErrorView {
       return { code: e.code, text: T.attemptFinished };
     case "unknown_profession":
       return { code: e.code, text: T.unknownProfession };
+    case "express_disabled":
+      return { code: e.code, text: T.expressDisabled };
     case "no_invite":
       return { code: e.code, text: T.noInvite };
     case "invite_expired":

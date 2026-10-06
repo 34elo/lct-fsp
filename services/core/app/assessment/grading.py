@@ -8,6 +8,9 @@
   поля, влияющие на силу профиля, изменились, — `candidate.category.changed` (всегда полный набор).
 - Бонусный этап грейд не повышает (ADR-025 п.2): прошёл — в событии `invited_grade`, а тест по
   приглашению (`attempts.start_invited`) идёт без кулдаунов; его провал повтор не закрывает.
+- Экспресс (ADR-025 п.7, E32-4a): грейд пишется с `mode = express` и сверх метки прав не даёт:
+  обычный грейд не перекрывает; обычный тест заменяет экспресс-грейд (в том числе ниже) без
+  кулдауна смены грейда, а неудачи экспресса повтор обычного теста не закрывают.
 
 Функции не делают `commit`: события пишутся в outbox в транзакции вызывающего.
 """
@@ -68,9 +71,13 @@ class Cooldown:
 
 
 async def _failed_attempts(
-    session: AsyncSession, candidate_id: uuid.UUID, profession: str
+    session: AsyncSession, candidate_id: uuid.UUID, profession: str, mode: str = "express"
 ) -> list[Attempt]:
-    """Неудачи, которые закрывают повтор. Провал теста по приглашению не считается (ADR-025 п.2)."""
+    """Неудачи, которые закрывают повтор попытки в режиме `mode`.
+
+    Провал теста по приглашению не считается (ADR-025 п.2); для обычного теста не считаются и
+    неудачи экспресса (E32-4a). По умолчанию (`express`) — все остальные неудачи.
+    """
     rows = list(
         await session.scalars(
             select(Attempt)
@@ -83,7 +90,11 @@ async def _failed_attempts(
             .order_by(Attempt.finished_at.desc())
         )
     )
-    return [a for a in rows if not (a.plan or {}).get("invited_by")]
+    return [
+        a
+        for a in rows
+        if not (a.plan or {}).get("invited_by") and not (mode == "standard" and a.mode == "express")
+    ]
 
 
 async def cooldowns(
@@ -121,16 +132,20 @@ async def check_cooldown(
     declared: TestGrade,
     cfg: AssessmentConfig,
     now: datetime | None = None,
+    *,
+    mode: str = "standard",
 ) -> None:
     """`409 cooldown` с датой следующей попытки, если попытка на `declared` сейчас запрещена."""
     now = now or datetime.now(UTC)
-    failed = await _failed_attempts(session, candidate_id, profession)
+    failed = await _failed_attempts(session, candidate_id, profession, mode)
     for att in failed:  # повтор того же грейда после неудачи — через retry_days
         until = _aware(att.finished_at) + timedelta(days=cfg.retry_days)
         if att.declared_grade == declared.value and until > now:
             raise _cooldown_error(until, "повтор грейда после неудачи")
     row = await session.get(Grade, (candidate_id, profession))
     if row is None or _aware(row.valid_until) <= now or row.grade == declared.value:
+        return
+    if mode == "standard" and row.mode == "express":  # экспресс-грейд не держит кулдаун (E32-4a)
         return
     until = _aware(row.next_change_at)
     if until <= now:
@@ -190,6 +205,7 @@ def _snapshot(row: Grade | None) -> tuple | None:
         round(row.integrity, 6),
         row.needs_confirmation,
         _aware(row.valid_until),
+        row.mode,
     )
 
 
@@ -219,6 +235,7 @@ async def _write_grade(
     row.needs_confirmation = row.integrity < cfg.integrity_threshold
     row.low_confidence = low_confidence
     row.source = "test"
+    row.mode = att.mode or "standard"
     row.attempt_id = att.id
     row.confirmed_at = now
     row.valid_until = now + timedelta(days=cfg.validity_days)
@@ -304,7 +321,14 @@ async def on_finished(
         declared = TestGrade(att.declared_grade)
         row = await session.get(Grade, (att.candidate_id, att.profession))
         active = row is not None and _aware(row.valid_until) > now
-        if not active or _rank(declared.value) >= _rank(row.grade):  # грейд не понижается
+        express = att.mode == "express"
+        if active and express and row.mode != "express":
+            pass  # экспресс обычный грейд не перекрывает (E32-4a)
+        elif (
+            not active
+            or (not express and row.mode == "express")  # обычный тест заменяет экспресс-грейд
+            or _rank(declared.value) >= _rank(row.grade)  # грейд не понижается
+        ):
             category_changed = await _write_grade(
                 session, att, declared, cfg, now, low_confidence=low
             )
@@ -330,6 +354,7 @@ async def on_finished(
         finished_at=_aware(att.finished_at or now),
         profile_version=await _profile_version(session, att.candidate_id),
         invited_grade=TestGrade(plan["invited_grade"]) if plan.get("invited_grade") else None,
+        mode=att.mode or "standard",
     )
     await add_to_outbox(
         session, new_event("assessment.attempt.finished", PRODUCER, event), att.candidate_id
@@ -353,6 +378,7 @@ async def on_finished(
             )
             if att.started_at
             else None,
+            "mode": att.mode or "standard",
         },
         now=now,
     )
