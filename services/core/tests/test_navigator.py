@@ -45,7 +45,14 @@ async def test_compute_path_to_next_grade(session):
     py = Skill(slug=f"py-{uuid.uuid4().hex[:4]}", name="Python", kind="hard", source="core")
     dk = Skill(slug=f"dk-{uuid.uuid4().hex[:4]}", name="Docker", kind="hard", source="core",
                testable=True)  # fmt: skip
-    session.add_all([py, dk, Role(slug="backend", name="Бэкенд"), Discipline(slug="dev", name="D")])
+    session.add_all(
+        [
+            py,
+            dk,
+            Role(slug="backend", name="Бэкенд", is_profession=True),
+            Discipline(slug="dev", name="D"),
+        ]
+    )
     await session.flush()
     session.add_all([
         RoleSkill(role="backend", skill_id=py.id, weight=1.0),
