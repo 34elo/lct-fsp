@@ -36,6 +36,9 @@
 | `GET /auth/fsp/callback` | P/C | Обмен кода → `fsp_links` → `fsp_sync` |
 | `GET /me` | любая | `{user, role, candidate?, company?, consents, telegram_linked}` |
 | `GET /me/consents`, `PUT /me/consents` | любая | Список и выдача/отзыв согласий |
+| `POST /me/credentials` | кандидат | Выпустить Open Badge `{profession?}` на действующую категорию. `201 {id, profession, grade, url, issued_at, valid_until, revoked_at, credential}`; тот же грейд повторно — тот же бейдж, новый грейд — старый отзывается (`superseded`). `404 grade_not_found`, `409 publication_required` (нет `public_profile` или согласия `profile_publication`) |
+| `GET /me/credentials` | кандидат | Свои бейджи (в т.ч. отозванные) |
+| `POST /me/credentials/{id}/revoke` | кандидат | Отозвать бейдж; идемпотентно, чужой или несуществующий → `404 credential_not_found` |
 | `POST /me/telegram/link` | C, E | → `{deep_link}` вида `https://t.me/<bot>?start=link_<token>` (токен 15 мин, одноразовый); `503 telegram_disabled`, если имя бота не задано |
 
 Коды ошибок `/auth/*`: `email_taken` (409), `invalid_credentials` (401, одинаков для неверного пароля и неизвестного email), `refresh_reused` (401, повторное использование refresh — вся семья отозвана, cookie сбрасывается), `unauthorized` (401), `rate_limited` (429), `forbidden_origin` (403, `Origin` не из `ALLOWED_ORIGINS` на `/auth/refresh` и `/auth/logout`). Саморегистрация — только `candidate` и `employer`. `GET /me` пока возвращает `{id, email, role, consents[]}` (`consents` — типы действующих согласий).
@@ -201,9 +204,10 @@
 |---|---|
 | `GET /public/stats` | Счётчики для лендинга: кандидатов, с ФСП, компаний, офферов |
 | `GET /public/badge/{slug}.svg` | Бейдж «Подтверждено ФСП · Middle Backend · ●●●●». Кеш 1 ч |
-| `GET /public/credentials/{id}` | **Open Badge 3.0** (W3C Verifiable Credential, JSON-LD, подпись Ed25519 `eddsa-rdfc-2022`): достижение «Подтверждено ФСП» с навыками ●●●● и фактами-основаниями |
-| `GET /public/credentials/{id}/verify` | Проверка подписи и отзыва (для работодателя вне платформы) |
-| `GET /.well-known/did.json` | Публичный ключ издателя (`did:web:fsp.patissons.tech`) |
+| `GET /public/credentials/{id}` | **Open Badge 3.0** (W3C VC 2.0, `application/ld+json`, `OpenBadgeCredential`): достижение «Подтверждено ФСП» с категорией и доверием ●●●●. Подпись Data Integrity `eddsa-jcs-2022` (Ed25519, JCS; ADR-051). `404 credential_not_found`, если не выпущен, отозван или профиль не публичный (нет `public_profile` или согласия `profile_publication`). Кеш 60 с |
+| `GET /public/credentials/{id}/verify` | Проверка подписи, отзыва и срока: `{id, valid, signature_valid, known, revoked, expired, issuer, checked_at}`. Отозванный бейдж: `200 {valid:false, revoked:true}`; неизвестный или скрытый владельцем: `404` |
+| `POST /public/credentials/verify` | Проверка предъявленного документа (тело — сам кредит): подпись по ключу издателя + статус в базе. Подделка, снятая подпись, чужой ключ → `200 {valid:false, signature_valid:false}` |
+| `GET /.well-known/did.json` | DID-документ издателя (`did:web:fsp.patissons.tech`), `Multikey` `#key-1` с `publicKeyMultibase`. Ключ — `OB_SIGNING_KEY` (seed Ed25519, base64url; пусто — временный ключ процесса, только для разработки) |
 | `POST /track` | Батч событий интерфейса, см. [metrics.md](metrics.md). Тело `{events[1..50]{event, ts, session_id?, run_id?, app_version?, props}, batch_id?, access_token?}` (`actor`, `role`, `channel` от клиента не принимаются → `422`). Авторизация необязательна: роль и псевдоним берутся из Bearer-токена, для `sendBeacon` (без заголовков) токен можно передать в теле; без токена событие анонимное. `202 {accepted, rejected, duplicate}`: событие с неизвестным именем, не из источника `web` или с лишним полем в `props` отклоняется (`rejected`), остальные пишутся. Повтор того же `batch_id` за 10 минут не пишет события (`duplicate: true`). 120 запросов в минуту на пользователя или IP, `429` |
 | `GET /public/profiles/{slug}` | Публичный профиль (JSON без ПДн). `404`, если нет `public_profile`, согласия `profile_publication` или действующего грейда (то же для бейджа) |
 | `GET /athlete/{slug}` | Краулерам (Telegram, VK, Slack по User-Agent) — HTML с OG-тегами, людям — редирект на `dashboard.fsp…/athlete/{slug}` |

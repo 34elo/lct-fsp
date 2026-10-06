@@ -10,6 +10,7 @@ dependencies = [
     "alembic>=1.14",
     "apscheduler>=3.10,<4",
     "argon2-cffi>=23.1",
+    "cryptography>=43",
     "pyyaml>=6",
     "python-multipart>=0.0.12",
 ]

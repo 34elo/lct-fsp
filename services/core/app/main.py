@@ -29,6 +29,7 @@ from app.companies.router import admin_router as admin_companies_router
 from app.companies.router import router as companies_router
 from app.config import Settings
 from app.consents.router import router as consents_router
+from app.credentials.router import router as credentials_router
 from app.events_stream import UiHub
 from app.events_stream import router as events_router
 from app.fsp.router import router as fsp_router
@@ -105,6 +106,7 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(analytics_dashboard_router)
     app.include_router(needs_router)
     app.include_router(views_router)
+    app.include_router(credentials_router)
     # <<< block2
 
     @app.get("/readyz", include_in_schema=False)
