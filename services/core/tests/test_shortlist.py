@@ -23,8 +23,7 @@ def market_with_shortlist(c):
             for slug, w in weights.items():
                 if slug in c.skills:
                     con.execute(
-                        "insert into role_skills (role, skill_id, weight, source) "
-                        "values (?,?,?,?)",
+                        "insert into role_skills (role, skill_id, weight, source) values (?,?,?,?)",
                         (role, c.skills[slug], w, "seed"),
                     )
     # Создать кандидатов с подтверждённым грейдом
@@ -60,8 +59,9 @@ def _get_candidates(c, h, profession, grade, need_id=None):
 
 def test_shortlist_is_shown_in_candidates(c, market_with_shortlist):
     """Флаг is_shortlisted присутствует в выдаче кандидатов (E23-5 критерий)."""
-    need_resp = _create_need(c, market_with_shortlist,
-                              filters={"skills_must": [{"slug": "python"}]})
+    need_resp = _create_need(
+        c, market_with_shortlist, filters={"skills_must": [{"slug": "python"}]}
+    )
     assert need_resp.status_code == 201
     need_id = need_resp.json()["id"]
     assert need_resp.json()["shortlist"] == []
@@ -80,8 +80,9 @@ def test_shortlist_is_shown_in_candidates(c, market_with_shortlist):
 
 def test_shortlist_endpoint_add_returns_204(c, market_with_shortlist):
     """Эндпоинт POST /needs/{id}/shortlist/{pseudo_id} возвращает 204."""
-    need_resp = _create_need(c, market_with_shortlist,
-                              filters={"skills_must": [{"slug": "python"}]})
+    need_resp = _create_need(
+        c, market_with_shortlist, filters={"skills_must": [{"slug": "python"}]}
+    )
     need_id = need_resp.json()["id"]
 
     # Получить кандидата
@@ -89,15 +90,17 @@ def test_shortlist_endpoint_add_returns_204(c, market_with_shortlist):
     pseudo_id = cands_resp.json()["items"][0]["pseudo_id"]
 
     # Добавить в шорт-лист
-    add_resp = c.post(f"/needs/{need_id}/shortlist/{pseudo_id}",
-                      headers=_hdr(market_with_shortlist))
+    add_resp = c.post(
+        f"/needs/{need_id}/shortlist/{pseudo_id}", headers=_hdr(market_with_shortlist)
+    )
     assert add_resp.status_code == 204
 
 
 def test_shortlist_endpoint_delete_returns_204(c, market_with_shortlist):
     """Эндпоинт DELETE /needs/{id}/shortlist/{pseudo_id} возвращает 204."""
-    need_resp = _create_need(c, market_with_shortlist,
-                              filters={"skills_must": [{"slug": "python"}]})
+    need_resp = _create_need(
+        c, market_with_shortlist, filters={"skills_must": [{"slug": "python"}]}
+    )
     need_id = need_resp.json()["id"]
 
     # Получить кандидата
@@ -105,27 +108,29 @@ def test_shortlist_endpoint_delete_returns_204(c, market_with_shortlist):
     pseudo_id = cands_resp.json()["items"][0]["pseudo_id"]
 
     # Удалить из шорт-листа (даже если не добавлен)
-    del_resp = c.delete(f"/needs/{need_id}/shortlist/{pseudo_id}",
-                        headers=_hdr(market_with_shortlist))
+    del_resp = c.delete(
+        f"/needs/{need_id}/shortlist/{pseudo_id}", headers=_hdr(market_with_shortlist)
+    )
     assert del_resp.status_code == 204
 
 
 def test_shortlist_not_found_for_nonexistent_candidate(c, market_with_shortlist):
     """Добавление несуществующего кандидата → 404."""
-    need_resp = _create_need(c, market_with_shortlist,
-                              filters={"skills_must": [{"slug": "python"}]})
+    need_resp = _create_need(
+        c, market_with_shortlist, filters={"skills_must": [{"slug": "python"}]}
+    )
     need_id = need_resp.json()["id"]
 
-    resp = c.post(f"/needs/{need_id}/shortlist/fake_pseudo_id",
-                  headers=_hdr(market_with_shortlist))
+    resp = c.post(f"/needs/{need_id}/shortlist/fake_pseudo_id", headers=_hdr(market_with_shortlist))
     assert resp.status_code == 404
     assert resp.json()["code"] == "candidate_not_found"
 
 
 def test_shortlist_ownership_check(c, market_with_shortlist):
     """Работодатель не может управлять потребностью другого работодателя."""
-    need_resp = _create_need(c, market_with_shortlist,
-                              filters={"skills_must": [{"slug": "python"}]})
+    need_resp = _create_need(
+        c, market_with_shortlist, filters={"skills_must": [{"slug": "python"}]}
+    )
     need_id = need_resp.json()["id"]
 
     # Получить кандидата
@@ -136,7 +141,6 @@ def test_shortlist_ownership_check(c, market_with_shortlist):
     other = _employer(c, "other@x.ru", name="Other Corp")
 
     # Попытаться добавить с другим работодателем
-    resp = c.post(f"/needs/{need_id}/shortlist/{pseudo_id}",
-                  headers=_hdr(other))
+    resp = c.post(f"/needs/{need_id}/shortlist/{pseudo_id}", headers=_hdr(other))
     assert resp.status_code == 404
     assert resp.json()["code"] == "need_not_found"
