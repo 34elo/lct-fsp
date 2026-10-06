@@ -80,7 +80,7 @@ test("подборка под вакансию: запрос с vacancy_id, matc
   const tile = await screen.findByRole("article", { name: "Candidate #1" });
   expect(within(tile).getByRole("img", { name: "Совпадение 82 процентов" })).toBeInTheDocument();
   expect(within(tile).getByText("Python подтверждён кодом")).toBeInTheDocument();
-  expect(bodies.at(-1)).toMatchObject({ vacancy_id: "v1", sort: "match", filters: { roles: ["backend"], grade_min: "middle", grade_max: "middle_plus" } });
+  expect(bodies.at(-1)).toMatchObject({ vacancy_id: "v1", sort: "mutual", filters: { roles: ["backend"], grade_min: "middle", grade_max: "middle_plus" } });
 });
 
 test("свободный поиск: галочка формата попадает в запрос", async () => {
@@ -149,4 +149,37 @@ test("карточка кандидата: тёмная, навыки без п�
   expect(within(screen.getByRole("region", { name: "Навыки" })).getAllByText("Python")).toHaveLength(1);
   expect(screen.getByText("ещё 1 без подтверждения")).toBeInTheDocument();
   expect(screen.getAllByText(/Кубок · всероссийский этап/)).toHaveLength(1);
+});
+
+test("E4: интерес кандидата, переключатель сортировки и кнопка «Оффер»", async () => {
+  const f = fetch as unknown as ReturnType<typeof vi.fn>;
+  const prev = f.getMockImplementation()!;
+  f.mockImplementation(async (url: string, init?: RequestInit) => {
+    if (url.includes("/search/candidates")) {
+      bodies.push(JSON.parse(String(init?.body)));
+      const items = Array.from({ length: 6 }, (_, i) => ({ ...card, pseudo_id: `p${i + 1}`, pseudonym: `Backend #${i + 1}`, match: { ...card.match, interest: "high" } }));
+      return res(200, { items, next_cursor: null, total: 6, session_id: "s1" });
+    }
+    return prev(url, init);
+  });
+  mount("/employer/vacancies/v1/shortlist");
+  const first = await screen.findByRole("article", { name: "Backend #1" });
+  expect(within(first).getByText("Интерес кандидата: высокий")).toBeInTheDocument();
+  // обоснование открыто у первых пяти, у шестого свёрнуто
+  expect(within(first).getByText("Почему подходит")).toBeInTheDocument();
+  const sixth = screen.getByRole("article", { name: "Backend #6" });
+  expect(within(sixth).queryByText("Почему подходит")).toBeNull();
+  fireEvent.click(within(sixth).getByRole("button", { name: "Показать обоснование: Backend #6" }));
+  expect(within(sixth).getByText("Почему подходит")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Только по соответствию" }));
+  await vi.waitFor(() => expect(bodies.at(-1)).toMatchObject({ sort: "match", vacancy_id: "v1" }));
+  fireEvent.click(within(first).getByRole("button", { name: "Оффер" }));
+  await vi.waitFor(() => expect(feedback.at(-1)).toMatchObject({ candidate_pseudo_id: "p1", event: "shortlist" }));
+});
+
+test("E3: список вакансий строками, из строки — в подборку", async () => {
+  mount("/employer/vacancies");
+  const list = await screen.findByRole("list", { name: "Вакансии" });
+  expect(within(list).getByText("Backend (Python)")).toBeInTheDocument();
+  expect(within(list).getByRole("link", { name: "Подборка" })).toHaveAttribute("href", "/employer/vacancies/v1/shortlist");
 });
