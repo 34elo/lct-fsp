@@ -65,6 +65,17 @@ async def _overexposed(
     return {fid for fid, cnt in rows.all() if cnt / tests >= cfg.exposure_max}
 
 
+async def _seen_competitions(
+    session: AsyncSession, candidate_id: uuid.UUID, rows: Iterable[FamilyRow]
+) -> set[str]:
+    """Соревнования ФСП кандидата — только если среди кандидатов есть задачи соревнований."""
+    if not any(r.competition_id for r in rows):
+        return set()
+    from app.graph import service as graph  # граф читает ФСП-модели Б2 через свой service
+
+    return await graph.fsp_competitions_of(session, candidate_id)
+
+
 async def eligible(
     session: AsyncSession,
     candidate_id: uuid.UUID,
@@ -85,10 +96,14 @@ async def eligible(
     )
     shown = await _shown_to_candidate(session, candidate_id, now - timedelta(days=cfg.repeat_days))
     hot = await _overexposed(session, now, cfg) if status == "active" else set()
+    rows = list(rows)
+    seen_comps = await _seen_competitions(session, candidate_id, rows)
     out: dict[str, list[FamilyRow]] = {}
     for r in rows:
         if r.id in shown or r.id in hot:
             continue
+        if r.competition_id and r.competition_id in seen_comps:
+            continue  # участнику соревнования его задачи не даём (E32-6)
         if grade is not None and not sel.level_ok(r.level, grade, cfg):
             continue
         out.setdefault(by_id[r.skill_id], []).append(r)

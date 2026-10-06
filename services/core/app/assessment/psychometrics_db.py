@@ -40,7 +40,17 @@ async def finalize_attempt(session: AsyncSession, att: Attempt, cfg: AssessmentC
     att.theta = est.theta
     att.se = est.se
     att.plan = {**(att.plan or {}), "theta_by_type": theta_by_type(obs, cfg)}
+    fsp_known: bool | None = None  # у кандидата есть доказательства ФСП (считаем лениво)
     for r, f in answered:
+        if f.source == "fsp":
+            # Шкала задач ФСП задаётся остальной аудиторией (E32-6): ответы тех, у кого есть
+            # ФСП, на `b` не влияют — иначе «решаемость среди олимпиадников» занизила бы b.
+            if fsp_known is None:
+                from app.graph import service as graph
+
+                fsp_known = await graph.has_source(session, att.candidate_id, "fsp")
+            if fsp_known:
+                continue
         f.b = calibrate_b(f.b, f.n, est.theta, r.score or 0.0, cfg, anchor=f.anchor)
         f.n += 1
     await session.flush()

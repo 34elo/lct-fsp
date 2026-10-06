@@ -136,8 +136,13 @@ def compute_stats(
     )
 
 
-def admission_failures(stats: FamilyStats, b: float, cfg: AssessmentConfig) -> list[str]:
-    """Невыполненные пороги допуска `pilot → active` (пусто — можно допускать)."""
+def admission_failures(
+    stats: FamilyStats, b: float, cfg: AssessmentConfig, *, need_dif: bool = False
+) -> list[str]:
+    """Невыполненные пороги допуска `pilot → active` (пусто — можно допускать).
+
+    `need_dif` — задачи ФСП (E32-6): без измеренного DIF «с ФСП / без ФСП» допуска нет.
+    """
     out: list[str] = []
     if stats.n < cfg.admit_min_n:
         out.append("n")
@@ -149,6 +154,8 @@ def admission_failures(stats: FamilyStats, b: float, cfg: AssessmentConfig) -> l
         out.append("seed_spread")
     if stats.dif is not None and stats.dif > cfg.admit_max_dif:
         out.append("dif")
+    elif stats.dif is None and need_dif:
+        out.append("dif_unmeasured")
     return out
 
 
@@ -306,7 +313,7 @@ async def approve(
         raise ProblemError(409, "key_not_approved", "Ключ семейства не утверждён")
     if row.status == "pilot":
         stats = await refresh_stats(session, row, cfg, with_dif=True)
-        failed = admission_failures(stats, row.b, cfg)
+        failed = admission_failures(stats, row.b, cfg, need_dif=row.source == "fsp")
         if failed:
             raise ProblemError(
                 409,
@@ -347,7 +354,9 @@ async def queue(
     out = []
     for row in rows:
         stats = await refresh_stats(session, row, cfg, with_dif=True)
-        out.append((row, stats, admission_failures(stats, row.b, cfg)))
+        out.append(
+            (row, stats, admission_failures(stats, row.b, cfg, need_dif=row.source == "fsp"))
+        )
     await session.flush()
     return out
 
