@@ -18,7 +18,7 @@ from fsp_contracts.ml import (
 from fsp_platform.app import ProblemError, create_app
 from fsp_platform.logging import configure_logging
 
-from fsp_ml import fake, family_bank, family_key, skill_card
+from fsp_ml import answer_explain, fake, family_bank, family_key, skill_card
 from fsp_ml.config import Settings
 from fsp_ml.embedder import Embedder, embed, load_embedder
 from fsp_ml.llm import LlmClient, OpenAiLlm
@@ -52,6 +52,7 @@ def build_app(
     # >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
     app.include_router(family_key.build_router(settings))  # E30-1: черновик ключа задания
     app.include_router(family_bank.build_router(settings))  # E26-4: генератор и решатель
+    app.include_router(answer_explain.build_router(settings))  # E24-2: «Объясни ответ»
     # <<< block1
     # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
     # <<< block2
