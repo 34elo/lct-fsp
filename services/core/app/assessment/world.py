@@ -687,6 +687,9 @@ def _metrics(rng: Random, dom: str, scale: int) -> tuple[Metric, ...]:
         series = tuple(
             round(base * (1 + rng.uniform(-0.05, 0.05)), digits) for _ in range(HISTORY_DAYS)
         )
+        # Clamp metrics with unit "доля" (fraction) to [0.0, 1.0] to avoid noise exceeding bounds.
+        if unit == "доля":
+            series = tuple(max(0.0, min(1.0, v)) for v in series)
         if digits == 0:
             series = tuple(float(int(v)) for v in series)
         out.append(Metric(name, unit, title, series))
