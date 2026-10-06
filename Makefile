@@ -1,4 +1,4 @@
-.PHONY: demo-snapshot demo-reset demo-warm demo-env logs ps seed seed-plan seed-fsp-mock synth taxonomy-load up down dev-core compose-config sync lint fmt test test-py test-web test-integration new-service web-install asyncapi api-gen
+.PHONY: demo-snapshot demo-reset demo-warm demo-env logs ps seed seed-plan seed-fsp-mock synth eval eval-quick taxonomy-load up down dev-core compose-config sync lint fmt test test-py test-web test-integration new-service web-install asyncapi api-gen
 
 sync:
 	uv sync --all-packages
@@ -91,6 +91,13 @@ taxonomy-load:
 SPLIT ?= dev
 synth:
 	uv run python tools/synth/synth.py --split $(SPLIT) --out reports/synth/$(SPLIT)
+
+# Стенд оценки (evaluation.md §5): подбор против BM25 на синтетическом рынке → reports/eval/eval.{md,json}
+eval:
+	uv run python tools/eval/run.py --split $(SPLIT) --out reports/eval
+
+eval-quick:
+	uv run python tools/eval/run.py --quick --out reports/eval-quick
 
 # Демо-витрина (evaluation.md §4): make seed [SEED=42]. Пишет данные fsp-mock в reports/seed/fsp-mock.json
 # (compose монтирует каталог в fsp-mock, сервис пересоздаётся), наполняет БД core сервисными слоями
