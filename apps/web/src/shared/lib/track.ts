@@ -8,12 +8,36 @@ export const FLUSH_MS = 5000;
 export const SESSION_IDLE_MS = 30 * 60 * 1000;
 const MAX_QUEUE = 500;
 
+const RUN_KEY = "fsp_run_id";
+let runId: string | null = null;
+
+/** Метка живого прогона (metrics.md §3): все события вкладки получают `run_id`. Живёт в sessionStorage вкладки. */
+export function setRunId(id: string | null) {
+  runId = id;
+  try {
+    if (id) sessionStorage.setItem(RUN_KEY, id);
+    else sessionStorage.removeItem(RUN_KEY);
+  } catch {
+    // приватный режим: метка живёт только в памяти
+  }
+}
+
+export function getRunId(): string | null {
+  if (runId) return runId;
+  try {
+    return sessionStorage.getItem(RUN_KEY);
+  } catch {
+    return null;
+  }
+}
+
 export type TrackProps = Record<string, string | number | boolean | null | undefined>;
 
 interface QueuedEvent {
   event: string;
   ts: string;
   session_id: string;
+  run_id?: string;
   app_version?: string;
   props: Record<string, string | number | boolean>;
 }
@@ -110,6 +134,7 @@ export function createTracker(opts: TrackerOptions = {}) {
       event,
       ts: new Date(now()).toISOString(),
       session_id: session(),
+      ...(getRunId() ? { run_id: getRunId()! } : {}),
       ...(opts.appVersion ? { app_version: opts.appVersion } : {}),
       props: clean(props),
     });

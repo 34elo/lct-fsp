@@ -5,9 +5,11 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { CandidateCard } from './candidateCard';
-import type { Contacts } from './contacts';
+import type { ContactMethod } from './contactMethod';
+import type { ContactsOutput } from './contactsOutput';
 import type { Decline } from './decline';
 import type { MatchSnapshot } from './matchSnapshot';
+import type { OfferInitiator } from './offerInitiator';
 import type { OfferStatus } from './offerStatus';
 import type { VacancyBrief } from './vacancyBrief';
 
@@ -16,7 +18,11 @@ export interface OfferForCompany {
   status: OfferStatus;
   created_at: string;
   expires_at: string;
-  vacancy: VacancyBrief;
+  vacancy?: VacancyBrief | null;
+  title?: string | null;
+  description?: string | null;
+  contact_method?: ContactMethod | null;
+  initiator?: OfferInitiator;
   salary_from: number;
   salary_to: number;
   message?: string | null;
@@ -25,5 +31,5 @@ export interface OfferForCompany {
   decline?: Decline | null;
   awaiting_reply_from?: string | null;
   candidate?: CandidateCard | null;
-  contacts?: Contacts | null;
+  contacts?: ContactsOutput | null;
 }

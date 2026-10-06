@@ -102,9 +102,10 @@ export function FspLinkPanel({ next, onLinked }: { next: string; onLinked?: () =
     }
   }
 
-  const linked = overview.data?.data.link.linked ?? false;
-  const verified = overview.data?.data.link.verified ?? false;
-  const teams = overview.data?.data.teams ?? [];
+  const ov = overview.data?.status === 200 ? overview.data.data : undefined;
+  const linked = ov?.link.linked ?? false;
+  const verified = ov?.link.verified ?? false;
+  const teams = ov?.teams ?? [];
 
   const notes = (
     <>
@@ -136,8 +137,8 @@ export function FspLinkPanel({ next, onLinked }: { next: string; onLinked?: () =
       <div className="flex flex-col gap-2" onClickCapture={dismissBack}>
         <p className="flex flex-wrap items-center gap-2 text-sm">
           <span className="font-semibold">{verified ? "ФСП подтверждена" : "ФСП привязана без подтверждения"}</span>
-          {overview.data?.data.link.participant_id && (
-            <span className="font-mono text-xs text-muted">{overview.data.data.link.participant_id}</span>
+          {ov?.link.participant_id && (
+            <span className="font-mono text-xs text-muted">{ov.link.participant_id}</span>
           )}
           {teams.length > 0 && <span className="text-xs text-muted">команды: {teams.map((t) => t.name).join(", ")}</span>}
         </p>

@@ -5,8 +5,10 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { CompanyBrief } from './companyBrief';
+import type { ContactMethod } from './contactMethod';
 import type { Decline } from './decline';
 import type { MatchSnapshot } from './matchSnapshot';
+import type { OfferInitiator } from './offerInitiator';
 import type { OfferStatus } from './offerStatus';
 import type { VacancyBrief } from './vacancyBrief';
 
@@ -15,7 +17,11 @@ export interface OfferForCandidate {
   status: OfferStatus;
   created_at: string;
   expires_at: string;
-  vacancy: VacancyBrief;
+  vacancy?: VacancyBrief | null;
+  title?: string | null;
+  description?: string | null;
+  contact_method?: ContactMethod | null;
+  initiator?: OfferInitiator;
   salary_from: number;
   salary_to: number;
   message?: string | null;

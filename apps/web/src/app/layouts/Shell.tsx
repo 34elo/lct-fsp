@@ -17,7 +17,7 @@ export { ThemeToggle } from "./AppHeader";
 function useOfferCounts(variant: "top" | "side"): Record<string, number | undefined> {
   const { role } = useAuth();
   const employer = useListOffersOffersGet(undefined, { query: { enabled: variant === "top" && role === "employer", retry: false } });
-  const candidate = useMyOffersCandidatesMeOffersGet({ query: { enabled: variant === "top" && role === "candidate", retry: false } });
+  const candidate = useMyOffersCandidatesMeOffersGet(undefined, { query: { enabled: variant === "top" && role === "candidate", retry: false } });
   const n = (q: { data?: { status: number; data: unknown } }) =>
     q.data?.status === 200 && Array.isArray(q.data.data) ? q.data.data.length : undefined;
   return { "/employer/offers": n(employer), "/me/offers": n(candidate) };

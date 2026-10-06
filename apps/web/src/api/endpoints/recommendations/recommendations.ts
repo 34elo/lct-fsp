@@ -16,7 +16,7 @@ import type {
 
 import type {
   FeedbackRequest,
-  HTTPValidationError,
+  ProblemOut,
   RecordFeedbackRecsFeedbackPost200
 } from '../../model';
 
@@ -33,15 +33,50 @@ export type recordFeedbackRecsFeedbackPostResponse200 = {
   status: 200
 }
 
-export type recordFeedbackRecsFeedbackPostResponse422 = {
-  data: HTTPValidationError
+export type recordFeedbackRecsFeedbackPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type recordFeedbackRecsFeedbackPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type recordFeedbackRecsFeedbackPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type recordFeedbackRecsFeedbackPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type recordFeedbackRecsFeedbackPostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type recordFeedbackRecsFeedbackPostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type recordFeedbackRecsFeedbackPostResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type recordFeedbackRecsFeedbackPostResponse422ApplicationJson = {
+  data: ProblemOut
   status: 422
 }
 
 export type recordFeedbackRecsFeedbackPostResponseSuccess = (recordFeedbackRecsFeedbackPostResponse200) & {
   headers: Headers;
 };
-export type recordFeedbackRecsFeedbackPostResponseError = (recordFeedbackRecsFeedbackPostResponse422) & {
+export type recordFeedbackRecsFeedbackPostResponseError = (recordFeedbackRecsFeedbackPostResponse401ApplicationProblemJson | recordFeedbackRecsFeedbackPostResponse401ApplicationJson | recordFeedbackRecsFeedbackPostResponse403ApplicationProblemJson | recordFeedbackRecsFeedbackPostResponse403ApplicationJson | recordFeedbackRecsFeedbackPostResponse404ApplicationProblemJson | recordFeedbackRecsFeedbackPostResponse404ApplicationJson | recordFeedbackRecsFeedbackPostResponse422ApplicationProblemJson | recordFeedbackRecsFeedbackPostResponse422ApplicationJson) & {
   headers: Headers;
 };
 
@@ -96,7 +131,7 @@ return apiFetch<recordFeedbackRecsFeedbackPostResponse>(getRecordFeedbackRecsFee
 
 export const getRecordFeedbackRecsFeedbackPostMutationKey = () => ['recordFeedbackRecsFeedbackPost'] as const;
 
-export const getRecordFeedbackRecsFeedbackPostMutationOptions = <TError = ErrorType<HTTPValidationError>,
+export const getRecordFeedbackRecsFeedbackPostMutationOptions = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordFeedbackRecsFeedbackPost>>, TError,RecordFeedbackRecsFeedbackPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof recordFeedbackRecsFeedbackPost>>, TError,RecordFeedbackRecsFeedbackPostMutationVariables, TContext> => {
 
@@ -125,13 +160,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type RecordFeedbackRecsFeedbackPostMutationResult = NonNullable<Awaited<ReturnType<typeof recordFeedbackRecsFeedbackPost>>>
     export type RecordFeedbackRecsFeedbackPostMutationBody = FeedbackRequest
-    export type RecordFeedbackRecsFeedbackPostMutationError = ErrorType<HTTPValidationError>
+    export type RecordFeedbackRecsFeedbackPostMutationError = ErrorType<ProblemOut>
     export type RecordFeedbackRecsFeedbackPostMutationVariables = {data: FeedbackRequest}
 
     /**
  * @summary Record Feedback
  */
-export const useRecordFeedbackRecsFeedbackPost = <TError = ErrorType<HTTPValidationError>,
+export const useRecordFeedbackRecsFeedbackPost = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordFeedbackRecsFeedbackPost>>, TError,RecordFeedbackRecsFeedbackPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof recordFeedbackRecsFeedbackPost>>,

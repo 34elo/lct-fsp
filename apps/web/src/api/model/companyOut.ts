@@ -5,6 +5,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { CompanyMemberRole } from './companyMemberRole';
+import type { CompanyOutContacts } from './companyOutContacts';
 import type { CompanyStatus } from './companyStatus';
 
 export interface CompanyOut {
@@ -14,6 +15,8 @@ export interface CompanyOut {
   site: string | null;
   description: string | null;
   logo_key: string | null;
+  contacts: CompanyOutContacts;
+  direction: string | null;
   status: CompanyStatus;
   responsibility_score: number | null;
   created_at: string;
