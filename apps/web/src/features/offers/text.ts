@@ -131,3 +131,38 @@ export const BOARD_TEXT = {
   } as Record<string, string>,
   openVacancies: "Открыть вакансии",
 };
+
+/** Тексты экрана M2 (офферы кандидата). */
+export const CAND_TEXT = {
+  title: "Офферы",
+  newCount: (n: number) => `${n} ${n % 10 === 1 && n % 100 !== 11 ? "новый" : "новых"}`,
+  empty: "Офферов пока нет",
+  emptyHint: "Они приходят сюда и в Telegram, когда компании находят ваш профиль.",
+  loadError: "Не удалось загрузить офферы.",
+  past: "Прошлые офферы",
+  pastSummary: (a: number, d: number, e: number) => `принято ${a} · отклонено ${d} · истёк ${e}`,
+  invite: "Приглашение без вакансии",
+  response: "Ваш отклик",
+  back: "Все офферы",
+  notFound: "Оффер не найден.",
+  salaryLabel: "Вилка в месяц",
+  fromCompany: "Сообщение компании",
+  description: "О приглашении",
+  contactVia: (m: string) => `Связь: ${m}`,
+  why: "Почему вы подходите",
+  accept: "Принять",
+  decline: "Не подходит",
+  ask: "Задать вопрос",
+  sheetTitle: "Почему не подходит?",
+  sheetHint: "Один тап. Компания увидит причину без имени и контактов.",
+  cancel: "Отмена",
+  accepted: "Оффер принят",
+  acceptedHint: "Компания получила ваши контакты и свяжется с вами. Пока можно общаться здесь.",
+  next: "Что дальше",
+  yourDecline: (r: string) => `Ваш отказ: ${r}`,
+  below: (from: string) => `Ниже ваших ожиданий (от ${from})`,
+  belowPlain: "Ниже ваших ожиданий",
+  replyBy: (d: string, n: number) => `${d} · осталось ${n} дн.`,
+};
+
+export const CONTACT_LABEL: Record<string, string> = { platform: "через платформу", email: "email", phone: "телефон", telegram: "Telegram" };
