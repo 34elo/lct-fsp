@@ -4249,7 +4249,7 @@
           "search"
         ],
         "summary": "Search Parse",
-        "description": "Правиловый разбор текста в чипсы-фильтры (E7-5); LLM-уточнение добавит E7-6.",
+        "description": "Разбор текста в чипсы-фильтры: правила (E7-5) + LLM-уточнение и слияние (E7-6).\n\nLLM недоступна или ответила невалидно — отдаём правиловый результат (`refining=false`).",
         "operationId": "search_parse_search_parse_post",
         "requestBody": {
           "content": {
