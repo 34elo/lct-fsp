@@ -150,6 +150,9 @@ async def test_explain_unanswered_and_rate_limit(api, factory, taxonomy_loaded):
     h = register(api)
     aid = _start(api, h)
     ids = _finish_wrong(api, h, aid)
+    final = api.get(f"/assessment/attempts/{aid}", headers=h).json()["result"]
+    assert [a["response_id"] for a in final["answers"]] == ids
+    assert set(final["answers"][0]) == {"response_id", "seq", "skill", "score"}
     url = f"/assessment/attempts/{aid}/responses/{ids[0]}/explain"
     for _ in range(30):
         assert api.post(url, headers=h).status_code == 200

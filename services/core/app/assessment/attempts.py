@@ -456,6 +456,35 @@ async def _by_skill(session: AsyncSession, attempt_id: uuid.UUID) -> list[dict[s
     ]
 
 
+async def _answers(session: AsyncSession, attempt_id: uuid.UUID) -> list[dict[str, Any]]:
+    """Оцениваемые ответы завершённой попытки: id для «Объясни ответ», навык и балл (без ключей)."""
+    rows = (
+        await session.execute(
+            select(Response, FamilyRow)
+            .join(FamilyRow, FamilyRow.id == Response.family_id)
+            .where(
+                Response.attempt_id == attempt_id,
+                Response.answered_at.is_not(None),
+                Response.is_pilot.is_(False),
+            )
+            .order_by(Response.seq)
+        )
+    ).all()
+    out = []
+    for resp, row in rows:
+        fam = family_of(row)
+        if fam is not None:
+            out.append(
+                {
+                    "response_id": resp.id,
+                    "seq": resp.seq,
+                    "skill": fam.skill,
+                    "score": resp.score or 0.0,
+                }
+            )
+    return out
+
+
 async def attempt_summary(
     session: AsyncSession, candidate_id: uuid.UUID, attempt_id: uuid.UUID
 ) -> dict[str, Any]:
@@ -491,5 +520,6 @@ async def attempt_summary(
             "integrity": integrity,
             "needs_confirmation": confirmed and bool(grade_row.needs_confirmation),
             "by_skill": await _by_skill(session, att.id),
+            "answers": await _answers(session, att.id),
         }
     return out

@@ -50,6 +50,7 @@ class AttemptResultOut(BaseModel):
     integrity: float = 1.0
     needs_confirmation: bool = False
     by_skill: list[dict[str, Any]] = Field(default_factory=list)  # {skill, items, share}
+    answers: list[dict[str, Any]] = Field(default_factory=list)  # {response_id, seq, skill, score}
 
 
 class AttemptOut(BaseModel):
