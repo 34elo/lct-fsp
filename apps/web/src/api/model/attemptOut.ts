@@ -20,7 +20,9 @@ export interface AttemptOut {
   started_at: string;
   finished_at: string | null;
   low_confidence?: boolean;
-  upgrade_offer?: TestGrade | null;
-  upgrade_accepted?: boolean;
+  invited_grade?: TestGrade | null;
+  invite_expires_at?: string | null;
+  invite_attempt_id?: string | null;
+  invited_by?: string | null;
   result?: AttemptResultOut | null;
 }
