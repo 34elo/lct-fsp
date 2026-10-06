@@ -167,3 +167,20 @@ class SkillCardDraftRow(Base):
     created_at: Mapped[datetime] = mapped_column(
         sa.DateTime(timezone=True), default=utcnow, server_default=sa.func.now()
     )
+
+
+class SkillMerge(Base):
+    """Журнал слияний (skills.md §6): по `moved` слияние откатывается (разделение)."""
+
+    __tablename__ = "skill_merges"
+    __table_args__ = (sa.Index("ix_skill_merges_from", "from_skill"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    from_skill: Mapped[uuid.UUID] = mapped_column(ForeignKey("skills.id"))
+    into_skill: Mapped[uuid.UUID] = mapped_column(ForeignKey("skills.id"))
+    actor: Mapped[str] = mapped_column(Text)  # admin:<user_id> | pipeline
+    moved: Mapped[dict] = mapped_column(sa.JSON)
+    created_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), default=utcnow, server_default=sa.func.now()
+    )
+    reverted_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), default=None)
