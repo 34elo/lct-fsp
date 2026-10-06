@@ -70,6 +70,13 @@ def _cand(c, n):
             "insert into consents (user_id, type, version, granted_at) values (?,?,?,?)",
             (uid, "profile_publication", "2025-09-01", NOW),
         )
+        con.execute(
+            "insert into grades (candidate_id, profession, grade, theta, band_position,"
+            " theta_by_type, integrity, needs_confirmation, low_confidence, source, confirmed_at,"
+            " valid_until, next_change_at, updated_at)"
+            " values (?,?,?,0.5,0.5,'{}',1.0,0,0,'seed',?,'2999-01-01 00:00:00',?,?)",
+            (uid, "backend", "middle", NOW, NOW, NOW),
+        )  # грейд из теста: без него кандидат не виден (E23-1)
     return uid
 
 

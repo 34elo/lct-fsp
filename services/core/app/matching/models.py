@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 
 import sqlalchemy as sa
 from fsp_platform.db import Base
@@ -28,3 +28,22 @@ class Match(Base):
     candidate_version: Mapped[int]
     vacancy_version: Mapped[int]
     computed_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True))
+
+
+class Need(Base):
+    """Потребность работодателя (assessment.md §9, E23-4): текст, фильтры и веса навыков."""
+
+    __tablename__ = "needs"
+    __table_args__ = (sa.Index("ix_needs_company", "company_id", "created_at"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    company_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("companies.id", ondelete="CASCADE"))
+    text: Mapped[str | None] = mapped_column(Text, default=None)
+    filters: Mapped[dict] = mapped_column(sa.JSON)  # SearchFilters
+    weights: Mapped[dict] = mapped_column(sa.JSON)  # slug навыка → вес потребности
+    grades: Mapped[list] = mapped_column(sa.JSON)  # грейды теста из потребности
+    # pseudo_id кандидатов в шорт-листе (E23-5)
+    shortlist: Mapped[list[str]] = mapped_column(sa.JSON, default=list)
+    created_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), default=lambda: datetime.now(UTC), server_default=sa.func.now()
+    )

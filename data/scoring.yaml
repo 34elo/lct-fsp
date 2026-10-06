@@ -335,6 +335,24 @@ p_accept:
 
 ## 4. Limits and operational parameters
 
+# Сила профиля внутри категории и итоговый rank (assessment.md §9, E23-2)
+strength:
+  weights: {T: 0.5, F: 0.2, S: 0.15, R: 0.1, C: 0.05}
+  integrity_threshold: 0.6  # честность прохождения ниже порога → strength × integrity_mult
+  integrity_mult: 0.8
+  recency_days: 180  # R = exp(−дней / 180)
+  rank_match: 0.6  # rank = 0.6·match + 0.4·strength
+  rank_strength: 0.4
+  top_explanations: 3
+
+# Потребность → категории (assessment.md §9, E23-4)
+needs:
+  affinity_min: 0.4  # показываем профессии с affinity ≥ порога
+  must_weight: 1.0  # вес навыка «обязательно» в потребности
+  nice_weight: 0.5  # вес навыка «желательно»
+  max_categories: 6  # сколько профессий вернуть
+  fallback_top: 1  # ни одна не прошла порог — взять столько лучших с affinity > 0
+
 limits:
   # Response times
   search_p95_ms: 300  # на 500 кандидатах

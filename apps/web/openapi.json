@@ -757,16 +757,6 @@
               }
             }
           },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          },
           "503": {
             "description": "Зависимость недоступна",
             "content": {
@@ -778,6 +768,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -2430,16 +2430,6 @@
               }
             }
           },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          },
           "429": {
             "description": "Слишком много запросов",
             "content": {
@@ -2451,6 +2441,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -2908,7 +2908,7 @@
           "search"
         ],
         "summary": "Search Parse",
-        "description": "Правиловый разбор текста в чипсы-фильтры (E7-5); LLM-уточнение добавит E7-6.",
+        "description": "Разбор текста в чипсы-фильтры: правила (E7-5) + LLM-уточнение и слияние (E7-6).\n\nLLM недоступна или ответила невалидно — отдаём правиловый результат (`refining=false`).",
         "operationId": "search_parse_search_parse_post",
         "requestBody": {
           "content": {
@@ -5318,16 +5318,6 @@
               }
             }
           },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          },
           "429": {
             "description": "Слишком много запросов",
             "content": {
@@ -5339,6 +5329,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -6016,16 +6016,6 @@
               }
             }
           },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          },
           "429": {
             "description": "Слишком много запросов",
             "content": {
@@ -6037,6 +6027,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -6104,16 +6104,6 @@
               }
             }
           },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          },
           "429": {
             "description": "Слишком много запросов",
             "content": {
@@ -6125,6 +6115,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -6309,6 +6309,530 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/needs": {
+      "post": {
+        "tags": [
+          "needs"
+        ],
+        "summary": "Create Need",
+        "operationId": "create_need_needs_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NeedCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NeedOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/needs/{need_id}/categories": {
+      "get": {
+        "tags": [
+          "needs"
+        ],
+        "summary": "Need Categories",
+        "operationId": "need_categories_needs__need_id__categories_get",
+        "parameters": [
+          {
+            "name": "need_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Need Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NeedCategories"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/categories/{profession}/{grade}/candidates": {
+      "get": {
+        "tags": [
+          "needs"
+        ],
+        "summary": "Category Candidates",
+        "description": "Анонимные карточки категории по `rank = 0.6·match + 0.4·strength` с объяснением.",
+        "operationId": "category_candidates_categories__profession___grade__candidates_get",
+        "parameters": [
+          {
+            "name": "profession",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Profession"
+            }
+          },
+          {
+            "name": "grade",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Grade"
+            }
+          },
+          {
+            "name": "need_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Need Id"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryPage"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/needs/{need_id}/shortlist/{pseudo_id}": {
+      "post": {
+        "tags": [
+          "needs"
+        ],
+        "summary": "Shortlist Add",
+        "description": "Добавить кандидата в шорт-лист потребности (E23-5). Фильтр не сбрасывает отмеченных.",
+        "operationId": "shortlist_add_needs__need_id__shortlist__pseudo_id__post",
+        "parameters": [
+          {
+            "name": "need_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Need Id"
+            }
+          },
+          {
+            "name": "pseudo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pseudo Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "needs"
+        ],
+        "summary": "Shortlist Remove",
+        "description": "Удалить кандидата из шорт-листа потребности (E23-5).",
+        "operationId": "shortlist_remove_needs__need_id__shortlist__pseudo_id__delete",
+        "parameters": [
+          {
+            "name": "need_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Need Id"
+            }
+          },
+          {
+            "name": "pseudo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pseudo Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -6684,6 +7208,29 @@
             "type": "string",
             "format": "date-time",
             "title": "Updated At"
+          },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryRef"
+            },
+            "type": "array",
+            "title": "Categories",
+            "default": []
+          },
+          "strength": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StrengthView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "is_shortlisted": {
+            "type": "boolean",
+            "title": "Is Shortlisted",
+            "default": false
           }
         },
         "type": "object",
@@ -6820,6 +7367,29 @@
             "format": "date-time",
             "title": "Updated At"
           },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryRef"
+            },
+            "type": "array",
+            "title": "Categories",
+            "default": []
+          },
+          "strength": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StrengthView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "is_shortlisted": {
+            "type": "boolean",
+            "title": "Is Shortlisted",
+            "default": false
+          },
           "skills": {
             "items": {
               "$ref": "#/components/schemas/SkillWithTrust"
@@ -6844,6 +7414,14 @@
             },
             "type": "array",
             "title": "Offers From You"
+          },
+          "claimed_vs_confirmed": {
+            "items": {
+              "$ref": "#/components/schemas/ClaimedVsConfirmed"
+            },
+            "type": "array",
+            "title": "Claimed Vs Confirmed",
+            "default": []
           }
         },
         "type": "object",
@@ -7131,6 +7709,63 @@
         "title": "CategoryExplanation",
         "description": "`CategoryExplanation` (api.md §3): почему такая категория и как подняться."
       },
+      "CategoryPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CandidateCard"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "session_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Session Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "next_cursor",
+          "total",
+          "session_id"
+        ],
+        "title": "CategoryPage"
+      },
+      "CategoryRef": {
+        "properties": {
+          "profession": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{1,31}$",
+            "title": "Profession"
+          },
+          "grade": {
+            "$ref": "#/components/schemas/TestGrade"
+          }
+        },
+        "type": "object",
+        "required": [
+          "profession",
+          "grade"
+        ],
+        "title": "CategoryRef"
+      },
       "CategoryRole": {
         "properties": {
           "role": {
@@ -7176,6 +7811,62 @@
           "change"
         ],
         "title": "Chip"
+      },
+      "ClaimedVsConfirmed": {
+        "properties": {
+          "profession": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{1,31}$",
+            "title": "Profession"
+          },
+          "declared_grade": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TestGrade"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "resume_grade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resume Grade"
+          },
+          "confirmed_grade": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TestGrade"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "confirmed",
+              "overclaimed",
+              "underclaimed",
+              "unconfirmed"
+            ],
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "profession",
+          "status"
+        ],
+        "title": "ClaimedVsConfirmed"
       },
       "CompanyBrief": {
         "properties": {
@@ -7817,7 +8508,7 @@
             "anyOf": [
               {
                 "type": "integer",
-                "maximum": 100000000
+                "maximum": 100000000.0
               },
               {
                 "type": "null"
@@ -7829,7 +8520,7 @@
             "anyOf": [
               {
                 "type": "integer",
-                "maximum": 100000000
+                "maximum": 100000000.0
               },
               {
                 "type": "null"
@@ -8440,8 +9131,8 @@
           },
           "confidence": {
             "type": "number",
-            "maximum": 1,
-            "minimum": 0,
+            "maximum": 1.0,
+            "minimum": 0.0,
             "title": "Confidence"
           }
         },
@@ -9332,6 +10023,190 @@
         ],
         "title": "NavigatorOut"
       },
+      "NeedCategories": {
+        "properties": {
+          "need_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Need Id"
+          },
+          "shortlist": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Shortlist",
+            "default": []
+          },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/NeedCategory"
+            },
+            "type": "array",
+            "title": "Categories"
+          }
+        },
+        "type": "object",
+        "required": [
+          "need_id",
+          "categories"
+        ],
+        "title": "NeedCategories"
+      },
+      "NeedCategory": {
+        "properties": {
+          "profession": {
+            "type": "string",
+            "title": "Profession"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "grade": {
+            "type": "string",
+            "title": "Grade"
+          },
+          "affinity": {
+            "type": "number",
+            "title": "Affinity"
+          },
+          "candidates": {
+            "type": "integer",
+            "title": "Candidates"
+          },
+          "median_salary": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median Salary"
+          },
+          "fsp_share": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fsp Share"
+          }
+        },
+        "type": "object",
+        "required": [
+          "profession",
+          "title",
+          "grade",
+          "affinity",
+          "candidates"
+        ],
+        "title": "NeedCategory"
+      },
+      "NeedCreate": {
+        "properties": {
+          "text": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "filters": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SearchFilters"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "NeedCreate",
+        "description": "Потребность текстом, формой (`filters`) или обоими: поля формы перекрывают текст."
+      },
+      "NeedOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "filters": {
+            "$ref": "#/components/schemas/SearchFilters"
+          },
+          "skills": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Skills"
+          },
+          "grades": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Grades"
+          },
+          "shortlist": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Shortlist",
+            "default": []
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/NeedCategory"
+            },
+            "type": "array",
+            "title": "Categories"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "text",
+          "filters",
+          "skills",
+          "grades",
+          "created_at",
+          "categories"
+        ],
+        "title": "NeedOut"
+      },
       "NextGrade": {
         "properties": {
           "grade": {
@@ -9862,7 +10737,7 @@
           },
           "total_experience_months": {
             "type": "integer",
-            "minimum": 0,
+            "minimum": 0.0,
             "title": "Total Experience Months",
             "default": 0
           },
@@ -9993,8 +10868,8 @@
             "anyOf": [
               {
                 "type": "integer",
-                "maximum": 100000000,
-                "minimum": 0
+                "maximum": 100000000.0,
+                "minimum": 0.0
               },
               {
                 "type": "null"
@@ -10661,8 +11536,8 @@
           },
           "confidence": {
             "type": "number",
-            "maximum": 1,
-            "minimum": 0,
+            "maximum": 1.0,
+            "minimum": 0.0,
             "title": "Confidence"
           }
         },
@@ -11121,7 +11996,7 @@
           "vs_category_median": {
             "type": "number",
             "title": "Vs Category Median",
-            "default": 0
+            "default": 0.0
           },
           "p_accept": {
             "type": "number",
@@ -11167,7 +12042,7 @@
             "anyOf": [
               {
                 "type": "integer",
-                "maximum": 100000000
+                "maximum": 100000000.0
               },
               {
                 "type": "null"
@@ -11179,7 +12054,7 @@
             "anyOf": [
               {
                 "type": "integer",
-                "maximum": 100000000
+                "maximum": 100000000.0
               },
               {
                 "type": "null"
@@ -11208,7 +12083,7 @@
             "anyOf": [
               {
                 "type": "integer",
-                "maximum": 100000000
+                "maximum": 100000000.0
               },
               {
                 "type": "null"
@@ -11220,7 +12095,7 @@
             "anyOf": [
               {
                 "type": "integer",
-                "maximum": 100000000
+                "maximum": 100000000.0
               },
               {
                 "type": "null"
@@ -11332,7 +12207,7 @@
             "anyOf": [
               {
                 "type": "integer",
-                "minimum": 0
+                "minimum": 0.0
               },
               {
                 "type": "null"
@@ -11480,6 +12355,16 @@
           "filters": {
             "$ref": "#/components/schemas/SearchFilters"
           },
+          "category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CategoryRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "sort": {
             "anyOf": [
               {
@@ -11511,8 +12396,8 @@
           },
           "limit": {
             "type": "integer",
-            "maximum": 100,
-            "minimum": 1,
+            "maximum": 100.0,
+            "minimum": 1.0,
             "title": "Limit",
             "default": 20
           },
@@ -11755,6 +12640,29 @@
             "format": "date-time",
             "title": "Updated At"
           },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryRef"
+            },
+            "type": "array",
+            "title": "Categories",
+            "default": []
+          },
+          "strength": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StrengthView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "is_shortlisted": {
+            "type": "boolean",
+            "title": "Is Shortlisted",
+            "default": false
+          },
           "similarity": {
             "type": "number",
             "title": "Similarity"
@@ -11880,17 +12788,17 @@
           },
           "min_level": {
             "type": "integer",
-            "maximum": 4,
-            "minimum": 1,
+            "maximum": 4.0,
+            "minimum": 1.0,
             "title": "Min Level",
             "default": 2
           },
           "weight": {
             "type": "number",
-            "maximum": 3,
-            "exclusiveMinimum": 0,
+            "maximum": 3.0,
+            "exclusiveMinimum": 0.0,
             "title": "Weight",
-            "default": 1
+            "default": 1.0
           }
         },
         "additionalProperties": false,
@@ -12142,13 +13050,73 @@
         ],
         "title": "StoplistIO"
       },
+      "StrengthPart": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "weight": {
+            "type": "number",
+            "title": "Weight"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "text",
+          "value",
+          "weight"
+        ],
+        "title": "StrengthPart"
+      },
+      "StrengthView": {
+        "properties": {
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "rank": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank"
+          },
+          "top": {
+            "items": {
+              "$ref": "#/components/schemas/StrengthPart"
+            },
+            "type": "array",
+            "title": "Top",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "value"
+        ],
+        "title": "StrengthView"
+      },
       "SusIn": {
         "properties": {
           "answers": {
             "items": {
               "type": "integer",
-              "maximum": 5,
-              "minimum": 1
+              "maximum": 5.0,
+              "minimum": 1.0
             },
             "type": "array",
             "maxItems": 10,
@@ -12456,6 +13424,16 @@
           "growth"
         ],
         "title": "TeamSignalKind"
+      },
+      "TestGrade": {
+        "type": "string",
+        "enum": [
+          "junior",
+          "middle",
+          "senior"
+        ],
+        "title": "TestGrade",
+        "description": "Грейды v2. Значения совпадают с `enums.Grade`, других грейдов v2 не использует."
       },
       "TgCategoryItem": {
         "properties": {
@@ -13002,8 +13980,8 @@
             "anyOf": [
               {
                 "type": "integer",
-                "maximum": 100000000,
-                "minimum": 0
+                "maximum": 100000000.0,
+                "minimum": 0.0
               },
               {
                 "type": "null"
@@ -13596,14 +14574,14 @@
           },
           "salary_from": {
             "type": "integer",
-            "maximum": 100000000,
-            "exclusiveMinimum": 0,
+            "maximum": 100000000.0,
+            "exclusiveMinimum": 0.0,
             "title": "Salary From"
           },
           "salary_to": {
             "type": "integer",
-            "maximum": 100000000,
-            "exclusiveMinimum": 0,
+            "maximum": 100000000.0,
+            "exclusiveMinimum": 0.0,
             "title": "Salary To"
           },
           "description": {
@@ -13868,8 +14846,8 @@
             "anyOf": [
               {
                 "type": "integer",
-                "maximum": 100000000,
-                "exclusiveMinimum": 0
+                "maximum": 100000000.0,
+                "exclusiveMinimum": 0.0
               },
               {
                 "type": "null"
@@ -13881,8 +14859,8 @@
             "anyOf": [
               {
                 "type": "integer",
-                "maximum": 100000000,
-                "exclusiveMinimum": 0
+                "maximum": 100000000.0,
+                "exclusiveMinimum": 0.0
               },
               {
                 "type": "null"
