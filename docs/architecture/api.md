@@ -60,9 +60,9 @@
 | `POST /candidates/me/resumes` | multipart `file` (PDF/DOCX по сигнатуре, до 10 МБ; 10 в сутки) → `202 {resume_id, job_id}`. Ошибки: `413 file_too_large`, `415 unsupported_file_type`, `422 empty_file`, `429` |
 | `GET /candidates/me/resumes/{id}` | `{status: queued|parsing|parsed|confirmed|failed, parsed: ParsedResume, error}`; чужое → 404 |
 | `POST /candidates/me/resumes/{id}/confirm` | `{edits: ParsedResumeEdits}` → профиль пересчитывается. Повтор безвреден; до разбора `409 resume_not_parsed`; неизвестный `add_skills` → `422 unknown_skill` |
-| `GET /candidates/me/skills` | `SkillWithTrust[]` |
-| `POST /candidates/me/skills` | `{skill_id}` — заявить навык самому (`source=self`) |
-| `DELETE /candidates/me/skills/{skill_id}` | Убрать свой `self`/`resume` навык (доказательства ФСП/кода/тестов не удаляются) |
+| `GET /candidates/me/skills` | **Не реализовано** (отдельной ручки нет, навыки приходят в `GET /candidates/me/profile` и `/graph`). План: `SkillWithTrust[]` |
+| `POST /candidates/me/skills` | **Не реализовано:** заявить навык можно через `PATCH /candidates/me/profile` (`stack`, источник `self`). План: `{skill_id}` |
+| `DELETE /candidates/me/skills/{skill_id}` | **Не реализовано:** убрать навык можно через `PATCH /candidates/me/profile` (полный `stack`). План: убрать свой `self`/`resume` навык (доказательства ФСП/кода/тестов не удаляются) |
 | `GET /candidates/me/skills/{skill_id}/evidence` | `Evidence[]` — «откуда взялся навык» |
 | `GET /candidates/me/category` | `CategoryExplanation`: роли, грейд, разбивка, уверенность, как подняться |
 | `POST /candidates/me/category/dispute` | `{claimed_role, claimed_grade, comment}` |
@@ -70,17 +70,19 @@
 | `POST /candidates/me/fsp/verify` | `{code}` |
 | `POST /candidates/me/fsp/sync` | `202` — ручное обновление (не чаще раза в 10 минут) |
 | `GET /candidates/me/fsp` | `{link, achievements: FspAchievement[], ranks, teams}` |
-| `POST /candidates/me/github` | `{login}` → `202 {analysis_id}` |
-| `GET /candidates/me/code-analysis` | Последний `CodeAnalysis` |
+| `POST /candidates/me/github` | **Не реализовано** (E10-1 «ДНК кода» вне прототипа). План: `{login}` → `202 {analysis_id}` |
+| `GET /candidates/me/code-analysis` | **Не реализовано** (вместе с анализом GitHub, E10-1). План: последний `CodeAnalysis` |
 | `GET /candidates/me/navigator` | `Navigator` |
 | `GET /candidates/me/uplift` | `Uplift` — какой навык подтвердить, чтобы подходить под N% больше вакансий ([matching.md §6](matching.md#6-uplift-для-кандидата-какой-навык-добавить)) |
 | `GET /candidates/me/graph?skills=top|all&depth=facts|competitions` | `Subgraph` — граф доказательств (в т.ч. тесты `test`) для визуализации ([graph.md §6](graph.md#6-api-подграфа)) |
-| `POST /candidates/me/navigator/clicks` | `{competition_id, skill_id}` — учёт переходов на соревнования |
+| `POST /candidates/me/navigator/clicks` | **Не реализовано** (ручки в коде нет). План: `{competition_id, skill_id}` |
 | `GET /candidates/me/views` | `{total_30d, companies_30d, by_day[]}` |
 | `GET /candidates/me/offers?initiator=` | `OfferForCandidate[]` (приглашения и отклики; `initiator=employer|candidate` фильтрует) |
 | `GET /candidates/me/applications` | `OfferForCandidate[]` — мои отклики (E20-3) |
 | `POST /candidates/me/applications/{id}/withdraw` | Отозвать свой отклик из `sent/viewed`; приглашение или чужой оффер — 404 |
-| `DELETE /candidates/me` | Удаление профиля (F13) |
+| `DELETE /candidates/me` | Удаление профиля (F13, 152-ФЗ), необратимо. Тело подтверждения: `{password}` (если у аккаунта есть пароль) или `{confirm: "УДАЛИТЬ"}` (вход через Telegram, пароля нет). `204`. Неверное подтверждение → `403 confirmation_failed`; 5 попыток в час (`429`); не `candidate` → `403`; повтор и удалённый профиль → `404 candidate_not_found`. Требует только токен (согласие `pd_processing` не нужно) |
+
+Удаление профиля (F13): в одной транзакции стираются резюме (записи и файлы в хранилище), опыт, образование, доказательства и навыки, попытки, ответы, грейды, опросы и ответы на регулярные задания, оспаривания категории; согласия отзываются; в `candidates` остаётся обезличенная строка с псевдонимом (на неё ссылаются офферы и таблицы блока 2), `deleted_at` скрывает её из подбора, `profile_version` растёт. В `users` обнуляются email и пароль, `is_active=false`, `deleted_at`, refresh-токены и коды подтверждения удаляются, токен доступа перестаёт действовать (`401`), email можно зарегистрировать заново. Событие `candidate.deleted` `{candidate_id}` уходит в outbox: по нему аналитика удаляет сырые события, остальные модули блока 2 (подбор, офферы, Telegram, ФСП, бейджи, просмотры) чистят свои данные сами.
 
 Реализовано (E4-6): `GET /candidates/me/category` → `CategoryExplanation` `{primary_role, roles[{role, weight, score}], primary_stack, explanation[{skill, weight, confidence, level, sources, contribution}], grade: GradeInfo, dispute?}` (объяснение считается по `candidate_skills`, ml.md §4; `grade.next_grade.hints` — «как подняться»). `POST /candidates/me/category/dispute` `{claimed_role, claimed_grade, comment?≤2000}` (согласие `pd_processing`; неизвестная роль/грейд — 422) → 201 `{id, claimed_role, claimed_grade, comment, status: open, created_at}` в `category_disputes`, событие `category.disputed` в outbox (без комментария); пока есть неразобранное оспаривание — 409 `dispute_exists`. Разбор админом — позже (E12).
 
@@ -90,14 +92,32 @@
 
 ### 2.3. Проверка навыков
 
+Тест v2 — адаптивный, по профессии и заявленному грейду ([assessment.md](assessment.md) §3–5, §10). Схемы и коды ошибок каждой строки — в assessment.md §10; здесь каталог путей. Чужая попытка, задание или семейство → 404.
+
 | Метод и путь | Роль | Назначение |
 |---|---|---|
-| `GET /assessment/skills` | C | Навыки с банком вопросов + когда можно пересдать |
-| `POST /assessment/tests` | C | `{skill_id}` → `{session_id, question: TestQuestion, progress}` |
-| `POST /assessment/tests/{id}/answer` | C | `{question_id, option_id}` → `{next_question?: TestQuestion, result?: TestResult}` |
-| `POST /assessment/interviews` | C | `{repo_id?}` → `202 {interview_id}` |
-| `GET /assessment/interviews/{id}` | C | `{status, questions[], grades?}` |
-| `POST /assessment/interviews/{id}/answers` | C | `{question_id, text}` |
+| `GET /assessment/survey`, `PUT /assessment/survey` | C | Опрос о себе: профессия, заявленный грейд, стек, ожидания (история — новые записи) |
+| `POST /assessment/attempts` | C | `{profession, declared_grade, mode?}` → `201` попытка. `409 cooldown` / `attempt_active`, `403 email_not_verified` / `consent_required`, `422 unknown_profession`. `mode=express` — экспресс-режим |
+| `GET /assessment/attempts/{id}` | C | Итог: грейд, θ по типам, разбор ошибок, честность |
+| `GET /assessment/attempts/{id}/next` | C | Следующее задание без ключа: `{response_id, kind, stem, options?, time_limit_s, steps?}` или итог |
+| `POST /assessment/attempts/{id}/answers` | C | `{response_id, answer, rt_ms, telemetry}`; повтор с тем же `response_id` идемпотентен |
+| `POST /assessment/attempts/{id}/upgrade` | C | Тест следующего грейда по приглашению бонусного этапа (ADR-025): `201`, новая попытка |
+| `POST /assessment/attempts/{id}/responses/{response_id}/explain` | C | «Объясни ответ» после завершения попытки: `{self_reason?}` → причина ошибки по правилам |
+| `GET /assessment/history` | C | История опросов и попыток, даты кулдаунов |
+| `POST /assessment/plan/preview` | C, E | `{vacancy_id \| skills}` → план теста и 3 примера заданий (демо «вакансия → тест»); ключей в ответе нет |
+| `GET /assessment/tasks`, `GET /assessment/tasks/{task_id}` | C | Открытые регулярные задания действующих категорий; вариант без ключа и рубрики |
+| `POST /assessment/tasks/{task_id}/answer` | C | `{answer}` — один ответ на раунд, повтор возвращает принятый |
+| `POST /families`, `GET /families`, `GET /families/{family_id}` | E, A | Конструктор заданий: черновик семейства, свои семейства (E30-1) |
+| `POST /employer/tasks`, `GET /employer/tasks`, `GET /employer/tasks/{task_id}` | E | Регулярные задания работодателя (E25-1): черновик, список, карточка со счётчиками |
+| `POST /employer/tasks/{task_id}/publish`, `POST /employer/tasks/{task_id}/close` | E | Рассылка по категории (событие `regular_task.published`), закрытие |
+| `GET /employer/tasks/{task_id}/submissions` | E | Ответы: только `pseudo_id` и `invite_url` |
+| `PUT /employer/tasks/{task_id}/submissions/{submission_id}/score` | E | `{marks: [bool]}` — оценка рубрики открытого задания |
+| `GET /admin/families`, `POST /admin/families/{family_id}/approve\|pilot\|quarantine\|retire` | A | Очередь допуска семейств со статистикой и решение админа |
+| `POST /admin/families/{family_id}/key` | A | Утвердить ключ задания конструктора |
+| `GET /admin/demo/two-worlds`, `GET /admin/demo/llm-exam` | A | Демо-экраны качества теста (E34-3). Демо ФСП (`/admin/demo/fsp-result`, `/reset`) — §2.6 |
+| `GET /assessment/interviews/{id}` и `POST /assessment/interviews`, `…/answers` | C | **Не реализовано:** ИИ-интервью по репозиторию (E11-3/E11-4, вне прототипа). Формат: `{repo_id?}` → `202 {interview_id}`; `{status, questions[], grades?}`; `{question_id, text}` |
+
+Каталог `/admin/professions*`, `/admin/skill-cards*`, `/admin/skills/*` (справочник, E13-1a) — §2.6, публичные `/taxonomy`, `/taxonomy/professions` — §2.7. Пути v1 `/assessment/skills`, `/assessment/tests`, `/assessment/tests/{id}/answer` удалены: заменены попытками `/assessment/attempts*` (assessment.md §10).
 
 ### 2.4. Офферы (обе стороны)
 

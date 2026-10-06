@@ -25,10 +25,11 @@ from app.candidates.models import Candidate
 from app.config import Settings
 from app.consents import service as consents
 from app.consents.deps import require_consent
-from app.deps import get_session
+from app.deps import get_limiter, get_session, get_storage
 from app.graph.category import load_category
 from app.graph.trust import TrustConfig
-from app.identity.deps import require_roles
+from app.identity import service as identity
+from app.identity.deps import get_user_even_deleted, require_roles
 from app.identity.models import User
 from app.matching import card
 from app.openapi_errors import problem_responses
@@ -425,3 +426,45 @@ async def dispute_category(
         comment=body.comment,
     )  # fmt: skip
     return _dispute_out(row)
+
+
+DELETE_CONFIRM_PHRASE = "УДАЛИТЬ"
+
+
+class DeleteIn(BaseModel):
+    """Подтверждение необратимого удаления: пароль; без пароля (вход через Telegram) — фраза."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    password: str | None = Field(default=None, max_length=256)
+    confirm: str | None = Field(default=None, max_length=32)
+
+
+@router.delete("", status_code=204, responses=problem_responses(401, 403, 404, 429))
+async def delete_me(
+    body: DeleteIn,
+    user: User = Depends(get_user_even_deleted),
+    session: AsyncSession = Depends(get_session),
+    storage=Depends(get_storage),
+    limiter=Depends(get_limiter),
+):
+    """Удаление профиля (F13, 152-ФЗ): необратимо, ПДн стираются, остаётся псевдоним в офферах.
+
+    Подтверждение: `password` (если он задан у аккаунта) или `confirm="УДАЛИТЬ"`. Повторный
+    вызов и чужая/удалённая анкета — 404.
+    """
+    if user.role != "candidate":
+        raise ProblemError(403, "forbidden", "Недостаточно прав")
+    if user.deleted_at is not None:
+        raise ProblemError(404, "candidate_not_found", "Профиль не найден")
+    await limiter.check(f"delete_account:{user.id}", 5, 3600)
+    if user.password_hash:
+        confirmed = body.password is not None and identity.password_matches(user, body.password)
+    else:
+        confirmed = body.confirm == DELETE_CONFIRM_PHRASE
+    if not confirmed:
+        raise ProblemError(
+            403, "confirmation_failed", "Удаление не подтверждено", "Неверный пароль или фраза"
+        )
+    await service.erase(session, storage, user)
+    return Response(status_code=204)

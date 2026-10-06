@@ -367,3 +367,11 @@ async def upcoming_competitions(
         .order_by(FspCompetitionRow.start_date, FspCompetitionRow.id)
     )
     return list(await session.scalars(stmt))
+
+
+async def erase_candidate(session: AsyncSession, candidate_id: uuid.UUID) -> None:
+    """Удаление профиля (F13): доказательства и агрегат навыков кандидата. Без событий."""
+    await session.execute(sa.delete(Evidence).where(Evidence.candidate_id == candidate_id))
+    await session.execute(
+        sa.delete(CandidateSkill).where(CandidateSkill.candidate_id == candidate_id)
+    )

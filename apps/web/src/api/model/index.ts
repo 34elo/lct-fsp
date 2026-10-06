@@ -114,6 +114,7 @@ export * from './decline';
 export * from './declineIn';
 export * from './declineReason';
 export * from './deepLinkOut';
+export * from './deleteIn';
 export * from './disciplineHint';
 export * from './disputeIn';
 export * from './disputeOut';
