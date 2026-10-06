@@ -15,5 +15,6 @@ export {
   Trophy,
   User,
   X,
+  Zap,
   type LucideIcon,
 } from "lucide-react";

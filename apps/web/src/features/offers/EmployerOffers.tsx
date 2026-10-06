@@ -1,10 +1,8 @@
-import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 
 import {
   useGetOfferOffersOfferIdGet,
-  useListOffersOffersGet,
   useSetOfferStatusOffersOfferIdStatusPost,
   useWithdrawOfferOffersOfferIdWithdrawPost,
 } from "@/api/endpoints/offers/offers";
@@ -17,62 +15,7 @@ import { Button } from "@/shared/ui/button";
 import { Conversation, invalidateOffers, Panel, StatusBadge, Timeline } from "./parts";
 import { dateOnly, DECLINE_LABEL, offerErrorText } from "./text";
 
-const FILTERS: { id: string; label: string; match: (s: string) => boolean }[] = [
-  { id: "all", label: "Все", match: () => true },
-  { id: "open", label: "Ждут ответа", match: (s) => s === "sent" || s === "viewed" },
-  { id: "work", label: "В работе", match: (s) => ["accepted", "interview"].includes(s) },
-  { id: "done", label: "Закрытые", match: (s) => ["hired", "not_hired", "declined", "expired", "withdrawn"].includes(s) },
-];
-
-function Row({ o }: { o: OfferForCompany }) {
-  const c = o.candidate;
-  return (
-    <li className="flex flex-col gap-2 rounded-xl border border-hairline bg-card p-4 shadow-card">
-      <div className="flex items-start gap-3">
-        {c && <ConstellationAvatar seed={c.avatar_seed} size={44} />}
-        <div className="flex min-w-0 flex-1 flex-col">
-          <h2 className="break-words font-mono text-[17px] font-semibold">{c?.pseudonym ?? "Кандидат удалил анкету"}</h2>
-          <p className="text-[13px] text-muted">{o.vacancy.title}</p>
-        </div>
-        <StatusBadge status={o.status} />
-      </div>
-      <p className="font-mono text-sm font-semibold">{rub(o.salary_from)} – {rub(o.salary_to)}</p>
-      <p className="flex flex-wrap gap-x-3 text-xs text-muted">
-        <span>Отправлен {dateOnly(o.created_at)}</span>
-        {o.decline && <span>Причина: {DECLINE_LABEL[o.decline.reason] ?? o.decline.reason}</span>}
-        {o.awaiting_reply_from === "company" && <b className="text-brand-fg">Ждёт вашего ответа</b>}
-      </p>
-      <Link to={`/employer/offers/${o.id}`} className="inline-flex h-9 items-center self-start rounded-lg border border-brand-fg px-3 text-sm font-semibold text-brand-fg hover:bg-tint-50">Открыть</Link>
-    </li>
-  );
-}
-
-/** Мои офферы (экран E5, упрощённо: список со статусами и фильтрами). */
-export function EmployerOffers() {
-  const q = useListOffersOffersGet();
-  const [f, setF] = useState("all");
-  const list = (q.data?.status === 200 ? q.data.data : []).filter((o) => FILTERS.find((x) => x.id === f)!.match(o.status));
-  return (
-    <main className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4 md:p-6">
-      <h1 className="font-mono text-2xl font-semibold">Мои офферы</h1>
-      <div role="tablist" aria-label="Статусы" className="flex flex-wrap gap-2">
-        {FILTERS.map((x) => (
-          <button key={x.id} role="tab" aria-selected={f === x.id} onClick={() => setF(x.id)} className={`h-9 rounded-lg px-3 text-sm font-semibold ${f === x.id ? "bg-brand text-on-brand" : "border border-hairline hover:bg-tint-50"}`}>
-            {x.label}
-          </button>
-        ))}
-      </div>
-      {q.isPending && <p role="status" className="text-muted">Загрузка…</p>}
-      {q.isError && <ErrorNote>Не удалось загрузить офферы.</ErrorNote>}
-      {q.isSuccess && list.length === 0 && (
-        <p className="rounded-xl border border-hairline bg-card p-5 text-sm">
-          Офферов здесь пока нет. Найдите кандидата в <Link className="font-semibold text-brand-fg" to="/employer/search">поиске</Link> и отправьте первый.
-        </p>
-      )}
-      <ul className="grid gap-3 md:grid-cols-2">{list.map((o) => <Row key={o.id} o={o} />)}</ul>
-    </main>
-  );
-}
+export { EmployerOffers } from "./EmployerBoard";
 
 const NEXT: Record<string, { to: "interview" | "hired" | "not_hired"; label: string }[]> = {
   accepted: [{ to: "interview", label: "Пригласить на интервью" }, { to: "not_hired", label: "Не нанимаем" }],
