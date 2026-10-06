@@ -28,6 +28,7 @@ from app.assessment import families as registry
 from app.assessment import selection as sel
 from app.assessment.config import AssessmentConfig
 from app.assessment.families.base import Family, Item
+from app.assessment.families.spec import SpecFamily
 from app.assessment.models import Attempt, FamilyRow, Grade, Response
 from app.assessment.psychometrics_db import finalize_attempt
 from app.assessment.world import DOMAINS, World, domain_for_profession
@@ -169,10 +170,19 @@ async def _issued(session: AsyncSession, attempt_id: uuid.UUID) -> list[Response
 
 async def _family(session: AsyncSession, fam_id: uuid.UUID) -> Family:
     row = await session.get(FamilyRow, fam_id)
-    fam = registry.get(row.slug) if row is not None and row.source == "code" else None
-    if fam is None:  # spec-семейства (конструктор) появятся позже
+    fam = family_of(row) if row is not None else None
+    if fam is None:
         raise ProblemError(503, "family_unavailable", "Семейство заданий недоступно")
     return fam
+
+
+def family_of(row: FamilyRow) -> Family | None:
+    """Кодовое семейство из реестра или спецификация конструктора (E30-1)."""
+    if row.source == "code":
+        return registry.get(row.slug)
+    if row.source == "spec" and row.spec:
+        return SpecFamily.from_row(row)
+    return None
 
 
 def _stage_grade(att: Attempt) -> TestGrade:
@@ -400,7 +410,7 @@ async def _by_skill(session: AsyncSession, attempt_id: uuid.UUID) -> list[dict[s
     """Разбор по навыкам: сколько оцениваемых заданий и какая доля набрана (без ключей)."""
     rows = (
         await session.execute(
-            select(Response.score, FamilyRow.slug)
+            select(Response.score, FamilyRow)
             .join(FamilyRow, FamilyRow.id == Response.family_id)
             .where(
                 Response.attempt_id == attempt_id,
@@ -410,8 +420,8 @@ async def _by_skill(session: AsyncSession, attempt_id: uuid.UUID) -> list[dict[s
         )
     ).all()
     acc: dict[str, list[float]] = {}
-    for score, fam_slug in rows:
-        fam = registry.get(fam_slug)
+    for score, row in rows:
+        fam = family_of(row)
         if fam is not None:
             acc.setdefault(fam.skill, []).append(score or 0.0)
     return [
