@@ -13,6 +13,7 @@ from redis.asyncio import Redis
 from sqlalchemy import text
 
 from app.analytics.dashboard_router import router as analytics_dashboard_router
+from app.analytics.metrics_router import router as analytics_metrics_router
 from app.analytics.router import internal as analytics_internal_router
 from app.analytics.router import router as analytics_router
 from app.analytics.runs_router import admin as live_runs_admin_router
@@ -104,6 +105,7 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(live_runs_admin_router)
     app.include_router(live_runs_public_router)
     app.include_router(analytics_dashboard_router)
+    app.include_router(analytics_metrics_router)
     app.include_router(needs_router)
     app.include_router(views_router)
     app.include_router(credentials_router)
