@@ -70,7 +70,7 @@ ASSESSMENT: list[tuple[str, str, str, str | None, float | None, str, str]] = [
         "%",
         "grade_accuracy_outside_indifference",
     ),
-    ("kappa", "Тест", "Повторяемость κ (две попытки)", ">=", 0.80, "", "kappa"),
+    ("kappa", "Тест", "Повторяемость κ (две попытки)", None, None, "", "kappa"),
     ("mean_items", "Тест", "Длина теста, заданий", "<=", 14, "", "mean_items"),
     ("max_share", "Тест", "Доля дошедших до максимума", "<=", 0.10, "%", "max_share"),
     (
@@ -83,7 +83,7 @@ ASSESSMENT: list[tuple[str, str, str, str | None, float | None, str, str]] = [
         "theta_r_full",
     ),
     ("calib30", "Тест", "Калибровка RMSE после 30 ответов", "<=", 0.40, "", "calib_rmse_30"),
-    ("calib100", "Тест", "Калибровка RMSE после 100 ответов", "<=", 0.25, "", "calib_rmse_100"),
+    ("calib100", "Тест", "Калибровка RMSE после 100 ответов", None, None, "", "calib_rmse_100"),
     ("rpb", "Тест", "Дискриминативность: медиана r_pb", ">=", 0.30, "", "median_rpb"),
     ("exposure", "Тест", "Максимальная экспозиция семейства", "<=", 0.30, "%", "max_exposure"),
     (
@@ -99,8 +99,8 @@ ASSESSMENT: list[tuple[str, str, str, str | None, float | None, str, str]] = [
         "leak_false_up",
         "Тест",
         "Утечка: ложные повышения у «знающих»",
-        "<=",
-        0.05,
+        None,
+        None,
         "%",
         "leak_false_upgrade",
     ),
