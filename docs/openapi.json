@@ -7737,6 +7737,87 @@
         }
       }
     },
+    "/admin/metrics": {
+      "get": {
+        "tags": [
+          "admin-metrics"
+        ],
+        "summary": "Get Metrics",
+        "description": "Воронки кандидата и работодателя, приглашения (время до первого, доля принятых,\nответ за 72 ч, причины отказов), отклики. Ячейки меньше 5 скрыты.",
+        "operationId": "get_metrics_admin_metrics_get",
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 180,
+              "minimum": 1,
+              "default": 30,
+              "title": "Days"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetricsOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/needs": {
       "post": {
         "tags": [
@@ -10636,7 +10717,7 @@
           },
           "funnel": {
             "items": {
-              "$ref": "#/components/schemas/Stage"
+              "$ref": "#/components/schemas/app__analytics__dashboard__Stage"
             },
             "type": "array",
             "title": "Funnel"
@@ -11356,6 +11437,22 @@
         ],
         "title": "FspTeam"
       },
+      "Funnel": {
+        "properties": {
+          "stages": {
+            "items": {
+              "$ref": "#/components/schemas/app__analytics__metrics__Stage"
+            },
+            "type": "array",
+            "title": "Stages"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stages"
+        ],
+        "title": "Funnel"
+      },
       "Grade": {
         "type": "string",
         "enum": [
@@ -11507,6 +11604,126 @@
           "count"
         ],
         "title": "Hint"
+      },
+      "InviteMetrics": {
+        "properties": {
+          "sent": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sent"
+          },
+          "answered": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answered"
+          },
+          "accepted": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accepted"
+          },
+          "declined": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Declined"
+          },
+          "expired": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expired"
+          },
+          "accept_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accept Rate"
+          },
+          "respond_72h_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Respond 72H Rate"
+          },
+          "first_invite": {
+            "$ref": "#/components/schemas/Timing"
+          },
+          "invited_within_14d_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invited Within 14D Pct"
+          },
+          "need_to_invite": {
+            "$ref": "#/components/schemas/Timing"
+          },
+          "decline_reasons": {
+            "items": {
+              "$ref": "#/components/schemas/ReasonShare"
+            },
+            "type": "array",
+            "title": "Decline Reasons"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sent",
+          "answered",
+          "accepted",
+          "declined",
+          "expired",
+          "accept_rate",
+          "respond_72h_rate",
+          "first_invite",
+          "invited_within_14d_pct",
+          "need_to_invite",
+          "decline_reasons"
+        ],
+        "title": "InviteMetrics"
       },
       "LoginIn": {
         "properties": {
@@ -11776,6 +11993,46 @@
           "created_at"
         ],
         "title": "MessageOut"
+      },
+      "MetricsOut": {
+        "properties": {
+          "since": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Since"
+          },
+          "days": {
+            "type": "integer",
+            "title": "Days"
+          },
+          "min_cell": {
+            "type": "integer",
+            "title": "Min Cell"
+          },
+          "candidate_funnel": {
+            "$ref": "#/components/schemas/Funnel"
+          },
+          "employer_funnel": {
+            "$ref": "#/components/schemas/Funnel"
+          },
+          "invites": {
+            "$ref": "#/components/schemas/InviteMetrics"
+          },
+          "responses": {
+            "$ref": "#/components/schemas/ResponseMetrics"
+          }
+        },
+        "type": "object",
+        "required": [
+          "since",
+          "days",
+          "min_cell",
+          "candidate_funnel",
+          "employer_funnel",
+          "invites",
+          "responses"
+        ],
+        "title": "MetricsOut"
       },
       "NavCompetition": {
         "properties": {
@@ -13180,6 +13437,24 @@
         "title": "Ratio",
         "description": "Доля: числитель `count` (уникальные люди) и `pct` от знаменателя `of`."
       },
+      "ReasonShare": {
+        "properties": {
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reason",
+          "count"
+        ],
+        "title": "ReasonShare"
+      },
       "RegisterIn": {
         "properties": {
           "email": {
@@ -13227,6 +13502,78 @@
         "additionalProperties": false,
         "type": "object",
         "title": "ResolveComplaintIn"
+      },
+      "ResponseMetrics": {
+        "properties": {
+          "created": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created"
+          },
+          "answered": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answered"
+          },
+          "accepted": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accepted"
+          },
+          "answer_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answer Rate"
+          },
+          "accept_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accept Rate"
+          },
+          "time_to_answer": {
+            "$ref": "#/components/schemas/Timing"
+          }
+        },
+        "type": "object",
+        "required": [
+          "created",
+          "answered",
+          "accepted",
+          "answer_rate",
+          "accept_rate",
+          "time_to_answer"
+        ],
+        "title": "ResponseMetrics"
       },
       "ResumeAccepted": {
         "properties": {
@@ -14910,65 +15257,6 @@
         ],
         "title": "SkillWithTrust"
       },
-      "Stage": {
-        "properties": {
-          "count": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Count"
-          },
-          "hidden": {
-            "type": "boolean",
-            "title": "Hidden"
-          },
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "title": {
-            "type": "string",
-            "title": "Title"
-          },
-          "pct_of_registered": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Pct Of Registered"
-          },
-          "pct_of_previous": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Pct Of Previous"
-          }
-        },
-        "type": "object",
-        "required": [
-          "count",
-          "hidden",
-          "id",
-          "title",
-          "pct_of_registered",
-          "pct_of_previous"
-        ],
-        "title": "Stage"
-      },
       "StartIn": {
         "properties": {
           "tg_user_id": {
@@ -16075,6 +16363,44 @@
         ],
         "title": "TgStatusIn"
       },
+      "Timing": {
+        "properties": {
+          "n": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "N"
+          },
+          "median_s": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median S"
+          },
+          "hidden": {
+            "type": "boolean",
+            "title": "Hidden"
+          }
+        },
+        "type": "object",
+        "required": [
+          "n",
+          "median_s",
+          "hidden"
+        ],
+        "title": "Timing",
+        "description": "Время до события: медиана в секундах и число наблюдений (малые выборки скрыты)."
+      },
       "TrackEventIn": {
         "properties": {
           "event": {
@@ -17115,6 +17441,129 @@
           "remote"
         ],
         "title": "WorkFormat"
+      },
+      "app__analytics__dashboard__Stage": {
+        "properties": {
+          "count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Count"
+          },
+          "hidden": {
+            "type": "boolean",
+            "title": "Hidden"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "pct_of_registered": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pct Of Registered"
+          },
+          "pct_of_previous": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pct Of Previous"
+          }
+        },
+        "type": "object",
+        "required": [
+          "count",
+          "hidden",
+          "id",
+          "title",
+          "pct_of_registered",
+          "pct_of_previous"
+        ],
+        "title": "Stage"
+      },
+      "app__analytics__metrics__Stage": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "available": {
+            "type": "boolean",
+            "title": "Available"
+          },
+          "count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Count"
+          },
+          "hidden": {
+            "type": "boolean",
+            "title": "Hidden"
+          },
+          "pct_of_first": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pct Of First"
+          },
+          "pct_of_previous": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pct Of Previous"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "available",
+          "count",
+          "hidden",
+          "pct_of_first",
+          "pct_of_previous"
+        ],
+        "title": "Stage"
       },
       "app__consents__router__ConsentsIn": {
         "properties": {
