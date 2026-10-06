@@ -125,3 +125,28 @@ test("карточка кандидата: навыки и доказатель�
   expect(await screen.findByRole("heading", { name: "Candidate #1" })).toBeInTheDocument();
   expect(await screen.findByText(/Кубок ФСП, финал/)).toBeInTheDocument();
 });
+
+test("карточка кандидата: тёмная, навыки без повторов, заявленные свёрнуты", async () => {
+  const base = (await (fetch as unknown as (u: string) => Promise<Response>)("/candidates/p1/card").then((r) => r.json())) as typeof card & { skills: unknown[] };
+  const py = base.skills[0] as Record<string, unknown>;
+  const claimed = { ...py, skill: { slug: "redis", name: "Redis", group: "db" }, claimed_only: true, level: 0, sources: ["resume"], top_evidence: [] };
+  const f = fetch as unknown as ReturnType<typeof vi.fn>;
+  const prev = f.getMockImplementation()!;
+  f.mockImplementation(async (url: string, init?: RequestInit) =>
+    url.includes("/candidates/p1/card")
+      ? res(200, { ...base, skills: [py, { ...py }, claimed, { ...claimed }], fsp_highlights: [{ title: "Кубок", level: "national", place: 2, of: 40, year: 2025 }, { title: "Кубок", level: "national", place: 2, of: 40, year: 2025 }] })
+      : prev(url, init),
+  );
+  const { container } = render(
+    <MemoryRouter initialEntries={["/employer/candidates/p1"]}>
+      <Providers client={makeQueryClient()}>
+        <App />
+      </Providers>
+    </MemoryRouter>,
+  );
+  await screen.findByRole("heading", { name: "Candidate #1" });
+  expect(container.querySelector('[data-theme-scope="dark"]')).not.toBeNull();
+  expect(within(screen.getByRole("region", { name: "Навыки" })).getAllByText("Python")).toHaveLength(1);
+  expect(screen.getByText("ещё 1 без подтверждения")).toBeInTheDocument();
+  expect(screen.getAllByText(/Кубок · всероссийский этап/)).toHaveLength(1);
+});
