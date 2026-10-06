@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import html
 import uuid
 from datetime import UTC, datetime, timedelta
 
@@ -68,8 +69,8 @@ def generate_badge_svg(profession: str, grade: str, integrity: float = 1.0) -> s
         SVG-контент
     """
     # Формируем текст профессии с большой буквы и заменяем _ на пробелы
-    profession_title = profession.replace("_", " ").title()
-    grade_title = grade.title()
+    profession_title = html.escape(profession.replace("_", " ").title())
+    grade_title = html.escape(grade.title())
 
     # Определяем количество заполненных кружков (от 0 до 4)
     filled_dots = int(round(integrity * 4))

@@ -8243,6 +8243,47 @@
           }
         }
       }
+    },
+    "/public/profiles/{slug}": {
+      "get": {
+        "tags": [
+          "public"
+        ],
+        "summary": "Get Public Profile",
+        "description": "Публичный профиль кандидата (если он включил видимость).",
+        "operationId": "get_public_profile_public_profiles__slug__get",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
