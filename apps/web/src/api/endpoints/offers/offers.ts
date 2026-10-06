@@ -28,8 +28,10 @@ import type {
   ComplaintOut,
   ContactsOutput,
   CreateOffer,
+  CreateTeamOffer,
   DeclineIn,
   HTTPValidationError,
+  ListFspTeamsTeamsGetParams,
   ListOffersOffersGetParams,
   MessageIn,
   MessageOut,
@@ -40,7 +42,9 @@ import type {
   ProblemOut,
   SalaryHint,
   SalaryHintIn,
-  StatusIn
+  StatusIn,
+  TeamOfferOut,
+  TeamOut
 } from '../../model';
 
 import { apiFetch } from '../../mutator';
@@ -516,7 +520,316 @@ export function useListOffersOffersGet<TData = Awaited<ReturnType<typeof listOff
 
 
 
-export type myOffersCandidatesMeOffersGetResponse200 = {
+export type listFspTeamsTeamsGetResponse200 = {
+  data: TeamOut[]
+  status: 200
+}
+
+export type listFspTeamsTeamsGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type listFspTeamsTeamsGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type listFspTeamsTeamsGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type listFspTeamsTeamsGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type listFspTeamsTeamsGetResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type listFspTeamsTeamsGetResponseSuccess = (listFspTeamsTeamsGetResponse200) & {
+  headers: Headers;
+};
+export type listFspTeamsTeamsGetResponseError = (listFspTeamsTeamsGetResponse401ApplicationProblemJson | listFspTeamsTeamsGetResponse401ApplicationJson | listFspTeamsTeamsGetResponse403ApplicationProblemJson | listFspTeamsTeamsGetResponse403ApplicationJson | listFspTeamsTeamsGetResponse422) & {
+  headers: Headers;
+};
+
+export type listFspTeamsTeamsGetResponse = (listFspTeamsTeamsGetResponseSuccess | listFspTeamsTeamsGetResponseError)
+
+export const getListFspTeamsTeamsGetUrl = (params?: ListFspTeamsTeamsGetParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/teams?${stringifiedParams}` : `/teams`
+}
+
+/**
+ * Команды ФСП, где есть минимум два видимых кандидата платформы (анонимно, E15-2).
+ * @summary List Fsp Teams
+ */
+export const listFspTeamsTeamsGet = async (params?: ListFspTeamsTeamsGetParams, options?: Parameters<typeof apiFetch>[1]): Promise<listFspTeamsTeamsGetResponse> => {
+
+  return apiFetch<listFspTeamsTeamsGetResponse>(getListFspTeamsTeamsGetUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListFspTeamsTeamsGetQueryKey = (params?: ListFspTeamsTeamsGetParams,) => {
+    return [
+    `/teams`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListFspTeamsTeamsGetQueryOptions = <TData = Awaited<ReturnType<typeof listFspTeamsTeamsGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(params?: ListFspTeamsTeamsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listFspTeamsTeamsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListFspTeamsTeamsGetQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listFspTeamsTeamsGet>>> = ({ signal }) => listFspTeamsTeamsGet(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listFspTeamsTeamsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListFspTeamsTeamsGetQueryResult = NonNullable<Awaited<ReturnType<typeof listFspTeamsTeamsGet>>>
+export type ListFspTeamsTeamsGetQueryError = ErrorType<ProblemOut | HTTPValidationError>
+
+
+export function useListFspTeamsTeamsGet<TData = Awaited<ReturnType<typeof listFspTeamsTeamsGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ params: undefined |  ListFspTeamsTeamsGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listFspTeamsTeamsGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listFspTeamsTeamsGet>>,
+          TError,
+          Awaited<ReturnType<typeof listFspTeamsTeamsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListFspTeamsTeamsGet<TData = Awaited<ReturnType<typeof listFspTeamsTeamsGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ params?: ListFspTeamsTeamsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listFspTeamsTeamsGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listFspTeamsTeamsGet>>,
+          TError,
+          Awaited<ReturnType<typeof listFspTeamsTeamsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListFspTeamsTeamsGet<TData = Awaited<ReturnType<typeof listFspTeamsTeamsGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ params?: ListFspTeamsTeamsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listFspTeamsTeamsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Fsp Teams
+ */
+
+export function useListFspTeamsTeamsGet<TData = Awaited<ReturnType<typeof listFspTeamsTeamsGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ params?: ListFspTeamsTeamsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listFspTeamsTeamsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListFspTeamsTeamsGetQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type createTeamOfferTeamOffersPostResponse201 = {
+  data: TeamOfferOut
+  status: 201
+}
+
+export type createTeamOfferTeamOffersPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type createTeamOfferTeamOffersPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type createTeamOfferTeamOffersPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type createTeamOfferTeamOffersPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type createTeamOfferTeamOffersPostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type createTeamOfferTeamOffersPostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type createTeamOfferTeamOffersPostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type createTeamOfferTeamOffersPostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type createTeamOfferTeamOffersPostResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type createTeamOfferTeamOffersPostResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type createTeamOfferTeamOffersPostResponse429ApplicationProblemJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type createTeamOfferTeamOffersPostResponse429ApplicationJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type createTeamOfferTeamOffersPostResponseSuccess = (createTeamOfferTeamOffersPostResponse201) & {
+  headers: Headers;
+};
+export type createTeamOfferTeamOffersPostResponseError = (createTeamOfferTeamOffersPostResponse401ApplicationProblemJson | createTeamOfferTeamOffersPostResponse401ApplicationJson | createTeamOfferTeamOffersPostResponse403ApplicationProblemJson | createTeamOfferTeamOffersPostResponse403ApplicationJson | createTeamOfferTeamOffersPostResponse404ApplicationProblemJson | createTeamOfferTeamOffersPostResponse404ApplicationJson | createTeamOfferTeamOffersPostResponse409ApplicationProblemJson | createTeamOfferTeamOffersPostResponse409ApplicationJson | createTeamOfferTeamOffersPostResponse422ApplicationProblemJson | createTeamOfferTeamOffersPostResponse422ApplicationJson | createTeamOfferTeamOffersPostResponse429ApplicationProblemJson | createTeamOfferTeamOffersPostResponse429ApplicationJson) & {
+  headers: Headers;
+};
+
+export type createTeamOfferTeamOffersPostResponse = (createTeamOfferTeamOffersPostResponseSuccess | createTeamOfferTeamOffersPostResponseError)
+
+export const getCreateTeamOfferTeamOffersPostUrl = () => {
+
+
+
+
+  return `/team-offers`
+}
+
+/**
+ * Командный оффер: по офферу на участника с общим `team_offer_id`, вилка у каждого своя.
+ * @summary Create Team Offer
+ */
+export const createTeamOfferTeamOffersPost = async (createTeamOffer: CreateTeamOffer, options?: Parameters<typeof apiFetch>[1]): Promise<createTeamOfferTeamOffersPostResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<createTeamOfferTeamOffersPostResponse>(getCreateTeamOfferTeamOffersPostUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(createTeamOffer)
+  }
+);}
+
+
+
+
+
+export const getCreateTeamOfferTeamOffersPostMutationKey = () => ['createTeamOfferTeamOffersPost'] as const;
+
+export const getCreateTeamOfferTeamOffersPostMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTeamOfferTeamOffersPost>>, TError,CreateTeamOfferTeamOffersPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createTeamOfferTeamOffersPost>>, TError,CreateTeamOfferTeamOffersPostMutationVariables, TContext> => {
+
+const mutationKey = getCreateTeamOfferTeamOffersPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createTeamOfferTeamOffersPost>>, CreateTeamOfferTeamOffersPostMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createTeamOfferTeamOffersPost(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateTeamOfferTeamOffersPostMutationResult = NonNullable<Awaited<ReturnType<typeof createTeamOfferTeamOffersPost>>>
+    export type CreateTeamOfferTeamOffersPostMutationBody = CreateTeamOffer
+    export type CreateTeamOfferTeamOffersPostMutationError = ErrorType<ProblemOut>
+    export type CreateTeamOfferTeamOffersPostMutationVariables = {data: CreateTeamOffer}
+
+    /**
+ * @summary Create Team Offer
+ */
+export const useCreateTeamOfferTeamOffersPost = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTeamOfferTeamOffersPost>>, TError,CreateTeamOfferTeamOffersPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createTeamOfferTeamOffersPost>>,
+        TError,
+        CreateTeamOfferTeamOffersPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateTeamOfferTeamOffersPostMutationOptions(options), queryClient);
+    }
+    export type myOffersCandidatesMeOffersGetResponse200 = {
   data: OfferForCandidate[]
   status: 200
 }

@@ -27,6 +27,7 @@ import { Stub } from "@/pages/Stub";
 import Landing from "@/features/landing/Landing";
 import FederationDashboard from "@/features/admin/Dashboard";
 import FederationModeration from "@/features/admin/Moderation";
+import Navigator from "@/features/navigator/Navigator";
 // <<< block2 imports
 
 // Разделы по ролям грузятся лениво (frontend.md: «ленивые разделы»).
@@ -37,7 +38,7 @@ const AdminLayout = lazy(() => import("@/app/layouts/AdminLayout"));
 const RunPage = lazy(() => import("@/features/runs/RunPage"));
 
 // Эти пути уже реализованы настоящими страницами (E1-4).
-const IMPLEMENTED = new Set(["/", "/login", "/register", "/auth/magic", "/consents", "/onboarding", "/me", "/me/skills/:slug", "/employer/search", "/employer/candidates/:id", "/employer/vacancies", "/employer/vacancies/new", "/employer/vacancies/:id", "/employer/company", "/employer/vacancies/:id/shortlist", "/employer/offers/new", "/employer/offers", "/employer/offers/:id", "/me/offers", "/me/offers/:id", "/run/:token", "/federation", "/federation/moderation"]);
+const IMPLEMENTED = new Set(["/", "/login", "/register", "/auth/magic", "/consents", "/onboarding", "/me", "/me/skills/:slug", "/employer/search", "/employer/candidates/:id", "/employer/vacancies", "/employer/vacancies/new", "/employer/vacancies/:id", "/employer/company", "/employer/vacancies/:id/shortlist", "/employer/offers/new", "/employer/offers", "/employer/offers/:id", "/me/offers", "/me/offers/:id", "/me/navigator", "/run/:token", "/federation", "/federation/moderation"]);
 
 const stubs = (section: string) =>
   ROUTES.filter((r) => r.section === section && !IMPLEMENTED.has(r.path)).map((r) => (
@@ -59,6 +60,7 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
             {/* >>> block1 (candidate) */}
             {/* <<< block1 (candidate) */}
             {/* >>> block2 (candidate) */}
+            <Route path="/me/navigator" element={<Navigator />} />
             {/* <<< block2 (candidate) */}
           </>
         )}

@@ -22,6 +22,7 @@ export interface OfferForCandidate {
   description?: string | null;
   contact_method?: ContactMethod | null;
   initiator?: OfferInitiator;
+  team_offer_id?: string | null;
   salary_from: number;
   salary_to: number;
   message?: string | null;
