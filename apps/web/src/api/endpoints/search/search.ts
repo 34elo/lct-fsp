@@ -114,7 +114,9 @@ export const getSearchParseSearchParsePostUrl = () => {
 }
 
 /**
- * Правиловый разбор текста в чипсы-фильтры (E7-5); LLM-уточнение добавит E7-6.
+ * Разбор текста в чипсы-фильтры: правила (E7-5) + LLM-уточнение и слияние (E7-6).
+ *
+ * LLM недоступна или ответила невалидно — отдаём правиловый результат (`refining=false`).
  * @summary Search Parse
  */
 export const searchParseSearchParsePost = async (parseRequest: ParseRequest, options?: Parameters<typeof apiFetch>[1]): Promise<searchParseSearchParsePostResponse> => {
