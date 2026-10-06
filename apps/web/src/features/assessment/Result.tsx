@@ -1,6 +1,6 @@
 import { Badge, Button, Card, GradeBadge, SectionLabel, Skeleton, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, buttonVariants } from "@fsp/ui";
 import { useQueryClient } from "@tanstack/react-query";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useState } from "react";
 
 import {
@@ -23,8 +23,9 @@ export default function Result() {
   const aq = useGetAttemptAssessmentAttemptsAttemptIdGet(id, { query: { retry: retryServerOnly } });
   const hq = useHistoryAssessmentHistoryGet();
   const pq = useGetProfessionsTaxonomyProfessionsGet();
-  const upgrade = useUpgradeAssessmentAttemptsAttemptIdUpgradePost();
-  const [kept, setKept] = useState(false);
+  const nav = useNavigate();
+  const invite = useUpgradeAssessmentAttemptsAttemptIdUpgradePost();
+  const [later, setLater] = useState(false);
 
   const attempt = aq.data?.status === 200 ? aq.data.data : undefined;
   const history = hq.data?.status === 200 ? hq.data.data : undefined;
@@ -70,15 +71,19 @@ export default function Result() {
   const until = validUntil(attempt.finished_at);
   const nextChange = history?.cooldowns.find((c) => c.profession === attempt.profession && isFuture(c.next_change_at));
   const retry = history?.retries?.find((c) => c.profession === attempt.profession && isFuture(c.next_attempt_at));
-  const offer = attempt.upgrade_offer && !attempt.upgrade_accepted ? attempt.upgrade_offer : null;
+  // ADR-025 п.2: бонусный этап приглашает на отдельный тест следующего грейда, а не повышает.
+  const invited = attempt.invited_grade ?? null;
+  const inviteLive = !!invited && (!attempt.invite_expires_at || isFuture(attempt.invite_expires_at));
+  const invitedAttempt = attempt.invite_attempt_id ?? null;
 
-  const accept = () =>
-    upgrade.mutate(
+  const startInvited = () =>
+    invite.mutate(
       { attemptId: id },
       {
-        onSuccess: () => {
+        onSuccess: (res) => {
           void qc.invalidateQueries({ queryKey: getGetAttemptAssessmentAttemptsAttemptIdGetQueryKey(id) });
           void qc.invalidateQueries({ queryKey: getHistoryAssessmentHistoryGetQueryKey() });
+          if (res.status === 201) nav(`/me/assessment/attempts/${res.data.id}`);
         },
       },
     );
@@ -137,32 +142,45 @@ export default function Result() {
         )}
       </Card>
 
-      {attempt.upgrade_accepted && (
-        <p role="status" className="rounded-lg bg-success-bg px-3 py-2 text-14 text-success" data-testid="assessment-upgrade-done">
-          {T.upgradeDone}
+      {attempt.invited_by && (
+        <p className="text-13 text-muted" data-testid="assessment-invited-attempt">
+          {T.invitedAttempt}
         </p>
       )}
-      {offer && !kept && (
-        <Card className="flex flex-col gap-3 border-brand p-5" data-testid="assessment-upgrade">
-          <SectionLabel>{T.upgradeTitle}</SectionLabel>
-          <h2 className="text-18 font-semibold">
-            {T.upgradeAvailable(`${GRADE[offer] ?? offer} · ${title}`)}
-          </h2>
-          <p className="text-14 text-muted">{T.upgradeText}</p>
-          {upgrade.isError && <ErrorLine error={upgrade.error} data-testid="assessment-upgrade-error" />}
+      {invited && invitedAttempt && (
+        <Link to={`/me/assessment/attempts/${invitedAttempt}`} className={buttonVariants({ variant: "outline" })} data-testid="assessment-invite-open">
+          {T.inviteOpen}
+        </Link>
+      )}
+      {invited && !invitedAttempt && !inviteLive && (
+        <p className="text-13 text-muted" data-testid="assessment-invite-expired">
+          {T.inviteExpired}
+        </p>
+      )}
+      {invited && !invitedAttempt && inviteLive && !later && (
+        <Card className="flex flex-col gap-3 border-brand p-5" data-testid="assessment-invite">
+          <SectionLabel>{T.inviteTitle}</SectionLabel>
+          <h2 className="text-18 font-semibold">{T.inviteAvailable(`${GRADE[invited] ?? invited} · ${title}`)}</h2>
+          <p className="text-14 text-muted">{T.inviteText}</p>
+          {attempt.invite_expires_at && (
+            <p className="text-13 text-muted" data-testid="assessment-invite-until">
+              {T.inviteUntil(dateShort(attempt.invite_expires_at))}
+            </p>
+          )}
+          {invite.isError && <ErrorLine error={invite.error} data-testid="assessment-invite-error" />}
           <div className="flex flex-wrap gap-2">
-            <Button loading={upgrade.isPending} onClick={accept} data-testid="assessment-upgrade-accept">
-              {T.upgradeAccept(GRADE[offer] ?? offer)}
+            <Button loading={invite.isPending} onClick={startInvited} data-testid="assessment-invite-start">
+              {T.inviteStart(GRADE[invited] ?? invited)}
             </Button>
-            <Button variant="outline" disabled={upgrade.isPending} onClick={() => setKept(true)} data-testid="assessment-upgrade-keep">
-              {T.upgradeKeep(grade ? (GRADE[grade] ?? grade) : GRADE[attempt.declared_grade]!)}
+            <Button variant="outline" disabled={invite.isPending} onClick={() => setLater(true)} data-testid="assessment-invite-later">
+              {T.inviteLater}
             </Button>
           </div>
         </Card>
       )}
-      {kept && (
-        <p role="status" className="text-13 text-muted" data-testid="assessment-upgrade-kept">
-          {T.upgradeKept}
+      {later && (
+        <p role="status" className="text-13 text-muted" data-testid="assessment-invite-later-text">
+          {T.inviteLaterText}
         </p>
       )}
 
