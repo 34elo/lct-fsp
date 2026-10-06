@@ -10,9 +10,11 @@ import uuid
 from datetime import UTC, date, datetime
 from typing import Any
 
+from fsp_contracts.assessment import ClaimedVsConfirmed
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.assessment import service as assessment
 from app.candidates import service as candidates
 from app.candidates.models import Candidate
 from app.graph import service as graph
@@ -22,7 +24,7 @@ from app.graph.trust import EvidenceView, TrustConfig, effective_strength
 from app.matching import search
 from app.matching.p_accept import PAcceptConfig, hint
 from app.matching.scoring import MatchConfig
-from app.matching.service import build_views, load_vacancy
+from app.matching.service import build_views, load_vacancy, visible_ids
 from app.offers import service as offers
 from app.resumes import service as resumes
 from app.taxonomy import service as taxonomy
@@ -118,6 +120,7 @@ class CandidateCardFull(search.CandidateCard):
     grade_info: GradeInfo
     experience: list[ExperienceBrief]
     offers_from_you: list[dict[str, Any]]
+    claimed_vs_confirmed: list[ClaimedVsConfirmed] = []  # заявлено vs подтверждено тестом
 
 
 def _months(start: str | None, end: str | None, today: date) -> int:
@@ -170,7 +173,7 @@ def _brief(ev: Any, trust: TrustConfig, today: date) -> EvidenceBrief:
 async def get_visible(
     session: AsyncSession, pseudo_id: str, company_id: uuid.UUID
 ) -> Candidate | None:
-    """Карточка доступна, если анкета видна в поиске (не dnd, есть роль, нет стоп-листа)."""
+    """Анкета доступна компании: не dnd, есть роль, нет стоп-листа (офферы и карточка)."""
     c = await candidates.get_by_pseudo_id(session, pseudo_id)
     if (
         c is None
@@ -178,6 +181,17 @@ async def get_visible(
         or c.primary_role is None
         or str(company_id) in (c.stoplist_company_ids or ())
     ):
+        return None
+    return c
+
+
+async def get_listed(
+    session: AsyncSession, pseudo_id: str, company_id: uuid.UUID
+) -> Candidate | None:
+    """Как `get_visible`, плюс видимость выдачи (blocks.md §4.5): действующий грейд из теста
+    и согласие `profile_publication`. Для карточки и «похожих»."""
+    c = await get_visible(session, pseudo_id, company_id)
+    if c is None or c.user_id not in await visible_ids(session, [c.user_id]):
         return None
     return c
 
@@ -211,7 +225,8 @@ async def build_card(
             if result is not None:
                 pa = PAcceptConfig.load()
                 interest = hint(search.p_accept_for(v, c, responsibility_score, pa), pa)
-    base = search._card(c, owned, names, highlights, result, interest)
+    categories = (await search.categories_of(session, [c.user_id])).get(c.user_id, [])
+    base = search._card(c, owned, names, highlights, result, interest, categories)
 
     ev_ids = [uuid.UUID(e) for s in owned for e in (s.top_evidence or ())[:TOP_EVIDENCE]]
     evidence = {e.id: e for e in await graph.evidence_by_ids(session, ev_ids)}
@@ -252,6 +267,7 @@ async def build_card(
         offers_from_you=(
             await offers.briefs_for(session, company_id, c.user_id) if company_id else []
         ),
+        claimed_vs_confirmed=await assessment.claimed_vs_confirmed(session, c.user_id),
     )
 
 

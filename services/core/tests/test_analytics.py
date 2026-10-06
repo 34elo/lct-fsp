@@ -80,8 +80,8 @@ def test_offer_sent_writes_two_events_without_pii(db):
     ev = _offer(OfferStatus.sent)
     _dispatch(c, new_event("offer.sent", "core", ev))
     rows = _rows(path)
-    assert [r[0] for r in rows] == ["offer_sent", "offer_received"]
-    assert [r[2] for r in rows] == ["employer", "candidate"]
+    assert [r[0] for r in rows] == ["offer_sent", "offer_received", "invite_sent"]
+    assert [r[2] for r in rows] == ["employer", "candidate", "employer"]
     dump = json.dumps(rows)
     assert str(ev.candidate_id) not in dump and str(ev.company_id) not in dump
     assert rows[1][1] == service.pseudonym(SALT, ev.candidate_id)
@@ -95,7 +95,8 @@ def test_redelivery_does_not_duplicate(db):
     env = new_event("offer.declined", "core", offer)
     _dispatch(c, env, times=3)
     rows = _rows(path)
-    assert len(rows) == 1 and json.loads(rows[0][3])["reason"] == "low_salary"
+    assert [r[0] for r in rows] == ["offer_declined", "invite_answered"]
+    assert all(json.loads(r[3])["reason"] == "low_salary" for r in rows)
 
 
 def test_offer_message_only_from_candidate(db):

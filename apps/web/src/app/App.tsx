@@ -45,6 +45,9 @@ import Jobs from "@/features/jobs/Jobs";
 import JobDetail from "@/features/jobs/JobDetail";
 import CandidateResponses from "@/features/responses/CandidateResponses";
 import EmployerResponses from "@/features/responses/EmployerResponses";
+import NeedNew from "@/features/needs/NeedNew";
+import NeedCategories from "@/features/needs/NeedCategories";
+import CategoryCandidates from "@/features/needs/CategoryCandidates";
 // <<< block2 imports
 
 // Разделы по ролям грузятся лениво (frontend.md: «ленивые разделы»).
@@ -55,7 +58,7 @@ const AdminLayout = lazy(() => import("@/app/layouts/AdminLayout"));
 const RunPage = lazy(() => import("@/features/runs/RunPage"));
 
 // Эти пути уже реализованы настоящими страницами (E1-4).
-const IMPLEMENTED = new Set(["/", "/login", "/register", "/auth/magic", "/consents", "/onboarding", "/me", "/me/skills/:slug", "/employer/search", "/employer/candidates/:id", "/employer/vacancies", "/employer/vacancies/new", "/employer/vacancies/:id", "/employer/company", "/employer/vacancies/:id/shortlist", "/employer/offers/new", "/employer/offers", "/employer/offers/:id", "/me/offers", "/me/offers/:id", "/me/navigator", "/verify-email", "/me/profile/edit", "/me/responses", "/employer/responses", "/jobs", "/jobs/:id", "/run/:token", "/federation", "/federation/moderation", "/me/tasks", "/employer/tasks", "/employer/families/new", "/admin/families", "/admin/professions", "/admin/skills"]);
+const IMPLEMENTED = new Set(["/", "/login", "/register", "/auth/magic", "/consents", "/onboarding", "/me", "/me/skills/:slug", "/employer/search", "/employer/candidates/:id", "/employer/vacancies", "/employer/vacancies/new", "/employer/vacancies/:id", "/employer/company", "/employer/vacancies/:id/shortlist", "/employer/offers/new", "/employer/offers", "/employer/offers/:id", "/me/offers", "/me/offers/:id", "/me/navigator", "/verify-email", "/me/profile/edit", "/me/responses", "/employer/responses", "/jobs", "/jobs/:id", "/run/:token", "/federation", "/federation/moderation", "/me/tasks", "/employer/tasks", "/employer/families/new", "/admin/families", "/admin/professions", "/admin/skills", "/employer/needs/new", "/employer/needs/:id", "/employer/categories/:profession/:grade"]);
 
 // Б1: страницы теста (E22-8).
 ["/me/graph", "/me/assessment", "/me/assessment/history", "/me/assessment/attempts/:id", "/me/assessment/attempts/:id/result"].forEach((p) => IMPLEMENTED.add(p));
@@ -110,6 +113,9 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
             {/* <<< block1 (employer) */}
             {/* >>> block2 (employer) */}
             <Route path="/employer/responses" element={<EmployerResponses />} />
+            <Route path="/employer/needs/new" element={<NeedNew />} />
+            <Route path="/employer/needs/:id" element={<NeedCategories />} />
+            <Route path="/employer/categories/:profession/:grade" element={<CategoryCandidates />} />
             {/* <<< block2 (employer) */}
           </>
         )}

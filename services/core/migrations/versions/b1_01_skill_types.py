@@ -1,14 +1,14 @@
 """skills.skill_type и roles.is_profession: типы навыков и профессии теста (E21-1).
 
 Revision ID: b1_01
-Revises: b2_04
+Revises: b2_08
 """
 
 import sqlalchemy as sa
 from alembic import op
 
 revision = "b1_01"
-down_revision = "b2_04"
+down_revision = "b2_08"
 branch_labels = None
 depends_on = None
 
