@@ -331,6 +331,28 @@ async def on_finished(
     await add_to_outbox(
         session, new_event("assessment.attempt.finished", PRODUCER, event), att.candidate_id
     )
+    from app.assessment import track  # E31-2a
+
+    await track.emit(
+        session,
+        "assessment_finished",
+        att.candidate_id,
+        {
+            "attempt_id": str(att.id),
+            "profession": att.profession,
+            "declared_grade": att.declared_grade,
+            "stage": att.stage,
+            "result": "passed" if passed else "failed",
+            "grade": current.value if current else None,
+            "items": int((plan.get("main") or {}).get("items") or 0),
+            "duration_s": int(
+                (_aware(att.finished_at or now) - _aware(att.started_at)).total_seconds()
+            )
+            if att.started_at
+            else None,
+        },
+        now=now,
+    )
     from app.assessment import lifecycle  # тревоги семейств после попытки (E22-9)
 
     await lifecycle.watch_attempt(session, att, cfg)

@@ -14,6 +14,9 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from fsp_contracts.analytics_assessment import ASSESSMENT_ANALYTICS_EVENTS
+from fsp_contracts.analytics_hiring import HIRING_ANALYTICS_EVENTS
+
 Role = Literal["candidate", "employer", "fsp_admin", "anon"]
 Channel = Literal["web", "tg", "system"]
 Source = Literal["server", "web", "bot"]
@@ -330,6 +333,9 @@ ANALYTICS_EVENTS: dict[str, tuple[type[_Props], tuple[Source, ...]]] = {
     "skill_promoted": (SkillPromoted, _S),
     "recompute_done": (RecomputeDone, _S),
     "matches_computed": (MatchesComputed, _S),
+    # v2: словари блоков (blocks.md §4.7, §5.3)
+    **ASSESSMENT_ANALYTICS_EVENTS,
+    **HIRING_ANALYTICS_EVENTS,
 }
 
 MAX_TRACK_BATCH = 50  # metrics.md §2.1: до 50 событий в запросе

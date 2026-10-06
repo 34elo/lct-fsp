@@ -137,3 +137,62 @@ def test_family_llm_bank_contracts():
     for v in (2, 2.5, "42", [1, 0]):
         a = FamilySolveAnswer.model_validate({"answer": v})
         assert a.answer == v and type(a.answer) is type(v)
+
+
+def test_assessment_analytics_props_strict():
+    from fsp_contracts.analytics import AnalyticsEvent, UnknownAnalyticsEvent, validate_event
+    from pydantic import ValidationError
+
+    def ev(name, props):
+        return AnalyticsEvent(event=name, ts=datetime.now(UTC), props=props)
+
+    ok = validate_event(
+        ev(
+            "assessment_answered",
+            {
+                "attempt_id": str(uuid4()),
+                "seq": 3,
+                "stage": "main",
+                "is_pilot": False,
+                "score": 0.5,
+                "rt_ms": 1200,
+            },
+        )
+    )
+    assert ok.props["score"] == 0.5
+    with pytest.raises(ValidationError):  # текст ответа в props запрещён
+        validate_event(
+            ev(
+                "assessment_answered",
+                {
+                    "attempt_id": "a",
+                    "seq": 1,
+                    "stage": "main",
+                    "is_pilot": False,
+                    "score": 1,
+                    "answer": "def f(): pass",
+                },
+            )
+        )
+    with pytest.raises(ValidationError):  # свободный текст не проходит как slug
+        validate_event(ev("survey_saved", {"profession": "Backend Dev text"}))
+    with pytest.raises(ValidationError):
+        validate_event(
+            ev(
+                "family_status_changed",
+                {"family": "f", "from_status": "draft", "to_status": "bogus"},
+            )
+        )
+    with pytest.raises(UnknownAnalyticsEvent):  # веб не шлёт серверные события
+        validate_event(
+            ev(
+                "assessment_started",
+                {"attempt_id": "a", "profession": "backend", "declared_grade": "middle"},
+            ),
+            "web",
+        )
+    assert set(ASSESSMENT_ANALYTICS_EVENTS) <= set(ANALYTICS_EVENTS)
+    assert all(
+        n.split("_")[0] in ("survey", "assessment", "family", "regular")
+        for n in ASSESSMENT_ANALYTICS_EVENTS
+    )
