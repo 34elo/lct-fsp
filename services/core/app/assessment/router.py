@@ -77,6 +77,7 @@ class NextOut(BaseModel):
     stem: str | None = None
     options: list[str] | None = None
     time_limit_s: int | None = None
+    steps: list[dict[str, Any]] | None = None  # шаги `chain` (E26-3): {kind, stem, options, …}
 
 
 class AnswerIn(BaseModel):
@@ -336,6 +337,7 @@ class PlanExampleOut(BaseModel):
     stem: str
     options: list[str] | None = None
     time_limit_s: int
+    steps: list[dict[str, Any]] | None = None  # шаги `chain` (E26-3)
 
 
 class PlanPreviewOut(BaseModel):

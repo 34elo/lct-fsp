@@ -25,12 +25,16 @@ class Kind(StrEnum):
     find_bug = "find_bug"
     order = "order"
     sjt = "sjt"
+    chain = "chain"  # цепочка шагов (E26-3): ответ — список ответов шагов, балл — средний
     open = "open"  # только регулярные задания, в θ не идёт
 
 
 @dataclass(frozen=True)
 class Item:
-    """Вариант задания. `key` и `meta` на клиент не уходят."""
+    """Вариант задания. `key` и `meta` на клиент не уходят.
+
+    У `chain` шаги — свои `Item` (без `chain` и `open` внутри), ключ — список ключей шагов.
+    """
 
     kind: Kind
     stem: str
@@ -38,14 +42,18 @@ class Item:
     options: list[str] | None = None
     time_limit_s: int = 120
     meta: dict[str, Any] = field(default_factory=dict)
+    steps: tuple[Item, ...] = ()
 
     def public(self) -> dict[str, Any]:
-        return {
+        out: dict[str, Any] = {
             "kind": self.kind.value,
             "stem": self.stem,
             "options": self.options,
             "time_limit_s": self.time_limit_s,
         }
+        if self.steps:
+            out["steps"] = [s.public() for s in self.steps]
+        return out
 
 
 @runtime_checkable
@@ -113,6 +121,14 @@ def score_order(key: list[int], answer: Any) -> float:
     return 1.0 - d / d_max if d_max else 1.0
 
 
+def score_chain(steps: tuple[Item, ...], answer: Any) -> float:
+    """Средний балл шагов: ответ — список ответов по шагам; неполный список — недостающие 0."""
+    if not steps or not isinstance(answer, list) or len(answer) > len(steps):
+        return 0.0
+    got = [SCORERS[s.kind](s.key, a) for s, a in zip(steps, answer, strict=False)]
+    return sum(got) / len(steps)
+
+
 SCORERS = {
     Kind.exact: score_exact,
     Kind.estimate: score_estimate,
@@ -140,4 +156,6 @@ class BaseFamily:
         raise NotImplementedError
 
     def score(self, item: Item, answer: Any) -> float:
+        if item.kind == Kind.chain:
+            return score_chain(item.steps, answer)
         return SCORERS[item.kind](item.key, answer)
