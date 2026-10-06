@@ -1,18 +1,16 @@
+import { Button, Field, FieldInput, Label, RadioGroup, RadioGroupItem, cn } from "@fsp/ui";
 import { useState, type FormEvent } from "react";
 import { Link, Navigate, useLocation } from "react-router-dom";
 
 import { authErrorText } from "@/features/auth/errors";
-import { AuthCard, ErrorNote, fieldClass } from "@/features/auth/ui";
+import { authText } from "@/features/auth/text";
+import { AuthCard, ErrorNote } from "@/features/auth/ui";
 import { postAuthPath, useAuth } from "@/shared/lib/auth";
-import { cn } from "@/shared/lib/cn";
-import { Button } from "@/shared/ui/button";
+
+const t = authText.register;
 
 type SignupRole = "candidate" | "employer";
-
-const ROLES: { value: SignupRole; title: string; hint: string }[] = [
-  { value: "candidate", title: "Я ищу работу", hint: "Собрать профиль из доказательств" },
-  { value: "employer", title: "Я ищу людей", hint: "Искать проверенных кандидатов" },
-];
+const ROLES: SignupRole[] = ["candidate", "employer"];
 
 export default function Register() {
   const { register, me, status } = useAuth();
@@ -31,66 +29,61 @@ export default function Register() {
     try {
       await register(String(f.get("email")).trim(), String(f.get("password")), role);
     } catch (err) {
-      setError(authErrorText(err, "Не удалось зарегистрироваться, попробуйте позже"));
+      setError(authErrorText(err, t.fallbackError));
       setBusy(false);
     }
   }
 
   return (
-    <AuthCard title="Регистрация" lead="Дальше попросим согласия на обработку данных — каждое отдельно.">
-      <form onSubmit={onSubmit} className="flex flex-col gap-3">
-        <fieldset className="flex flex-col gap-2">
-          <legend className="mb-1 text-sm">Кто вы</legend>
-          {ROLES.map((r) => (
-            <label
-              key={r.value}
-              className={cn(
-                "flex cursor-pointer flex-col rounded-lg border px-3 py-2 has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-brand",
-                role === r.value ? "border-brand bg-tint-50" : "border-hairline bg-card",
-              )}
-            >
-              <input
-                type="radio"
-                name="role"
-                value={r.value}
-                checked={role === r.value}
-                onChange={() => setRole(r.value)}
-                className="sr-only"
-              />
-              <span className="font-semibold">{r.title}</span>
-              <span className="text-sm text-muted">{r.hint}</span>
-            </label>
-          ))}
-        </fieldset>
-        <label className="flex flex-col gap-1 text-sm">
-          Почта
-          <input name="email" type="email" required autoComplete="email" maxLength={254} className={fieldClass} />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          Пароль
-          <input
+    <AuthCard title={t.title} lead={t.lead}>
+      <form onSubmit={onSubmit} className="flex flex-col gap-3" data-testid="auth-register-form">
+        <div className="flex flex-col gap-1.5">
+          <span id="role-legend" className="text-13 font-medium">
+            {t.role}
+          </span>
+          <RadioGroup value={role} onValueChange={(v) => setRole(v as SignupRole)} aria-labelledby="role-legend">
+            {ROLES.map((r) => (
+              <Label
+                key={r}
+                htmlFor={`role-${r}`}
+                data-testid={`auth-role-${r}`}
+                className={cn(
+                  "flex min-h-11 cursor-pointer items-start gap-3 rounded-lg border px-3 py-2",
+                  role === r ? "border-brand bg-tint-50" : "border-hairline bg-card",
+                )}
+              >
+                <RadioGroupItem id={`role-${r}`} value={r} className="mt-0.5" />
+                <span className="flex flex-col">
+                  <span className="font-semibold">{t.roles[r].title}</span>
+                  <span className="text-14 font-normal text-muted">{t.roles[r].hint}</span>
+                </span>
+              </Label>
+            ))}
+          </RadioGroup>
+        </div>
+        <Field label={t.email}>
+          <FieldInput name="email" type="email" required autoComplete="email" maxLength={254} data-testid="auth-email" />
+        </Field>
+        <Field label={t.password} hint={t.passwordHint}>
+          <FieldInput
             name="password"
             type="password"
             required
             minLength={8}
             maxLength={128}
             autoComplete="new-password"
-            aria-describedby="pw-hint"
-            className={fieldClass}
+            data-testid="auth-password"
           />
-          <span id="pw-hint" className="text-xs text-muted">
-            Не короче 8 символов
-          </span>
-        </label>
+        </Field>
         {error && <ErrorNote>{error}</ErrorNote>}
-        <Button type="submit" disabled={busy}>
-          {busy ? "Создаём…" : "Создать аккаунт"}
+        <Button type="submit" size="lg" loading={busy} data-testid="auth-submit">
+          {busy ? t.busy : t.submit}
         </Button>
       </form>
-      <p className="text-sm text-muted">
-        Уже есть аккаунт?{" "}
-        <Link to="/login" state={{ from }} className="font-semibold text-brand-fg">
-          Войти
+      <p className="text-14 text-muted">
+        {t.haveAccount}{" "}
+        <Link to="/login" state={{ from }} className="font-semibold text-brand-fg" data-testid="auth-to-login">
+          {t.toLogin}
         </Link>
       </p>
     </AuthCard>
