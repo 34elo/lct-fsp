@@ -130,7 +130,7 @@ test("лог сборки растёт по job.progress, затем «вот ч
   expect(edits.add_skills).toEqual(["redis"]);
   expect(edits.experience).toMatchObject([{ title: "Разработчик", company: "Вымысел" }]);
   expect(edits.education).toBeUndefined(); // не трогали — не отправляем
-  expect(await screen.findByText("навыков: 3")).toBeInTheDocument(); // Python + Redis + Pydantic (новый); FastAPI убран
+  expect(await screen.findByText(/навыков: 3/)).toBeInTheDocument(); // Python + Redis + Pydantic (новый); FastAPI убран
   fireEvent.click(await screen.findByRole("button", { name: "Пропустить" }));
   fireEvent.click(await screen.findByRole("button", { name: "Пропустить" }));
   expect(await screen.findByRole("link", { name: "Смотреть мой профиль" })).toHaveAttribute("href", "/me");
@@ -184,5 +184,17 @@ test("шаги можно пропустить до конца", async () => {
   fireEvent.click(await screen.findByRole("button", { name: "Пропустить" }));
   fireEvent.click(await screen.findByRole("button", { name: "Пропустить" }));
   expect(await screen.findByRole("link", { name: "Смотреть мой профиль" })).toBeInTheDocument();
-  expect(screen.getAllByText("пропущено")).toHaveLength(3);
+  expect(screen.getAllByText(/пропущено/)).toHaveLength(3);
+  expect(screen.getByTestId("onboarding-to-profile")).toBeInTheDocument();
+});
+
+test("один шаг на экран: схемная линия отмечает текущий шаг, остальные шаги не показаны", async () => {
+  mount();
+  expect(await screen.findByTestId("onboarding-step-resume")).toBeInTheDocument();
+  expect(screen.queryByTestId("onboarding-step-fsp")).not.toBeInTheDocument();
+  const current = screen.getByRole("list", { name: "Этапы" }).querySelector('[aria-current="step"]');
+  expect(current).toHaveTextContent("Резюме");
+  fireEvent.click(screen.getByTestId("onboarding-skip"));
+  expect(await screen.findByTestId("onboarding-step-fsp")).toBeInTheDocument();
+  expect(screen.queryByTestId("onboarding-step-resume")).not.toBeInTheDocument();
 });

@@ -8,7 +8,12 @@
     parent:      [{child, parent, weight}]   # иерархия, коэффициент наследования
     distinct:    [[a, b], ...]               # «точно разные»
     blocklist:   [{norm, reason?}]
-    roles:       [{slug, name, skills: {slug: weight}}]
+    roles:       [{slug, name, profession?, skills: {slug: weight}}]
+    skill_types: [{type, skills: [slug, ...]}]  # типы навыков (assessment.md §2), переопределения
+
+Тип навыка без явного указания: kind soft → soft; group fundamentals → fundamental;
+group product/analysis/design → business; остальное → hard. `profession: true` — роль является
+профессией теста; такая профессия обязана иметь навыки всех шести типов.
 """
 
 from __future__ import annotations
@@ -19,11 +24,13 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from fsp_contracts.enums import RoleSlug
+from fsp_contracts.assessment import TEST_GRADE_ORDER, SkillType
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 SKILL_KINDS = ("hard", "soft", "domain")
 _SLUG = re.compile(r"^[a-z0-9][a-z0-9_.+#-]*$")
+_ROLE_SLUG = re.compile(r"^[a-z][a-z0-9_]{1,31}$")  # ProfessionSlug (blocks.md §4.1)
+_BUSINESS_GROUPS = ("product", "analysis", "design")
 
 
 class TaxonomyError(ValueError):
@@ -86,12 +93,14 @@ class BlockIn(_Strict):
 class RoleIn(_Strict):
     slug: str
     name: str = Field(min_length=1)
+    profession: bool = False
     skills: dict[str, float] = Field(default_factory=dict)
 
     @field_validator("slug")
     @classmethod
     def _role(cls, v: str) -> str:
-        RoleSlug(v)  # роль должна быть в контракте
+        if not _ROLE_SLUG.match(v):
+            raise ValueError(f"недопустимый slug роли {v!r}")
         return v
 
     @field_validator("skills")
@@ -103,6 +112,23 @@ class RoleIn(_Strict):
         return v
 
 
+class SkillTypesIn(_Strict):
+    type: SkillType
+    skills: list[str] = Field(min_length=1)
+
+
+def default_skill_type(skill: SkillIn) -> SkillType:
+    if skill.kind == "soft":
+        return SkillType.soft
+    if skill.group == "fundamentals":
+        return SkillType.fundamental
+    if skill.group == "experience":
+        return SkillType.experience
+    if skill.group in _BUSINESS_GROUPS:
+        return SkillType.business
+    return SkillType.hard
+
+
 @dataclass
 class TaxonomyData:
     skills: list[SkillIn] = field(default_factory=list)
@@ -111,6 +137,7 @@ class TaxonomyData:
     distinct: list[tuple[str, str]] = field(default_factory=list)
     blocklist: list[BlockIn] = field(default_factory=list)
     roles: list[RoleIn] = field(default_factory=list)
+    skill_types: dict[str, SkillType] = field(default_factory=dict)  # slug → тип, для всех навыков
     # дисциплина → [(slug навыка, вес, трек|None)]
     discipline_rules: dict[str, list[tuple[str, float, str | None]]] = field(default_factory=dict)
 
@@ -121,7 +148,15 @@ def _merge_yaml(directory: Path) -> dict[str, list]:
         doc = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
         if not isinstance(doc, dict):
             raise TaxonomyError(f"{path.name}: ожидается словарь верхнего уровня")
-        for key in ("skills", "adjacent", "parent", "distinct", "blocklist", "roles"):
+        for key in (
+            "skills",
+            "adjacent",
+            "parent",
+            "distinct",
+            "blocklist",
+            "roles",
+            "skill_types",
+        ):
             if key in doc:
                 if not isinstance(doc[key], list):
                     raise TaxonomyError(f"{path.name}: {key} должен быть списком")
@@ -172,6 +207,14 @@ def load_taxonomy(directory: Path, discipline_rules: Path | None = None) -> Taxo
         blocklist=_build(BlockIn, raw.get("blocklist", []), "blocklist"),
         roles=_build(RoleIn, raw.get("roles", []), "roles"),
     )
+    overrides: dict[str, SkillType] = {}
+    for i, item in enumerate(_build(SkillTypesIn, raw.get("skill_types", []), "skill_types")):
+        for slug in item.skills:
+            if overrides.setdefault(slug, item.type) != item.type:
+                raise TaxonomyError(f"skill_types[{i}]: у {slug} два разных типа")
+    data.skill_types = {s.slug: overrides.get(s.slug, default_skill_type(s)) for s in data.skills}
+    if unknown := sorted(set(overrides) - data.skill_types.keys()):
+        raise TaxonomyError(f"skill_types: неизвестные навыки {unknown}")
     for i, pair in enumerate(raw.get("distinct", [])):
         if not (isinstance(pair, list | tuple) and len(pair) == 2):
             raise TaxonomyError(f"distinct[{i}]: ожидается пара [a, b]")
@@ -234,3 +277,23 @@ def _validate(d: TaxonomyData) -> None:
             need(s, f"roles.{role.slug}")
     if len({r.slug for r in d.roles}) != len(d.roles):
         raise TaxonomyError("roles: дубликат роли")
+    for role in d.roles:
+        if role.profession:
+            have = {d.skill_types[s] for s in role.skills}
+            if missing := [t.value for t in SkillType if t not in have]:
+                raise TaxonomyError(f"roles.{role.slug}: нет навыков типов {missing}")
+
+
+def load_grade_cuts(scoring_path: Path) -> dict[str, float]:
+    """Пороги θ грейдов v2 из `scoring.yaml` (`assessment.grades.<грейд>.cut`)."""
+    doc = yaml.safe_load(scoring_path.read_text(encoding="utf-8")) or {}
+    grades = (doc.get("assessment") or {}).get("grades") or {}
+    cuts = {}
+    for grade in TEST_GRADE_ORDER:
+        try:
+            cuts[grade.value] = float(grades[grade.value]["cut"])
+        except (KeyError, TypeError, ValueError) as exc:
+            raise TaxonomyError(f"scoring.yaml: нет assessment.grades.{grade.value}.cut") from exc
+    if list(cuts.values()) != sorted(cuts.values()):
+        raise TaxonomyError("scoring.yaml: пороги cut должны расти от junior к senior")
+    return cuts

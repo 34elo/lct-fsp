@@ -20,7 +20,12 @@ from app.analytics.runs_router import admin as live_runs_admin_router
 from app.analytics.runs_router import public as live_runs_public_router
 
 # >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
+from app.assessment.admin_router import router as admin_families_router
+from app.assessment.constructor_router import router as families_router
+from app.assessment.demo_router import router as admin_demo_router
 from app.assessment.router import router as assessment_router
+from app.assessment.tasks_router import candidate_router as candidate_tasks_router
+from app.assessment.tasks_router import employer_router as employer_tasks_router
 
 # <<< block1
 # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
@@ -34,6 +39,7 @@ from app.credentials.router import router as credentials_router
 from app.events_stream import UiHub
 from app.events_stream import router as events_router
 from app.fsp.router import router as fsp_router
+from app.graph.router import router as graph_router
 from app.identity.router import router as identity_router
 from app.matching.needs_router import router as needs_router
 from app.matching.router import router as search_router
@@ -42,7 +48,9 @@ from app.offers.router import admin_router as admin_complaints_router
 from app.offers.router import router as offers_router
 from app.recommendations.router import router as recommendations_router
 from app.resumes.router import router as resumes_router
+from app.taxonomy.admin_router import router as admin_taxonomy_router
 from app.taxonomy.router import router as taxonomy_router
+from app.taxonomy.skills_router import router as admin_skills_router
 from app.telegram.router import internal as telegram_internal_router
 from app.telegram.router import router as telegram_router
 from app.vacancies.router import router as vacancies_router
@@ -99,6 +107,14 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(admin_complaints_router)
     # >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
     app.include_router(assessment_router)
+    app.include_router(admin_families_router)
+    app.include_router(admin_demo_router)
+    app.include_router(admin_taxonomy_router)
+    app.include_router(admin_skills_router)
+    app.include_router(families_router)
+    app.include_router(employer_tasks_router)
+    app.include_router(candidate_tasks_router)
+    app.include_router(graph_router)  # /candidates/me/graph раньше {pseudo_id}
     # <<< block1
     # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
     app.include_router(analytics_router)

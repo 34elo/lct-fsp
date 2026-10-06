@@ -30,6 +30,8 @@
 | `POST /auth/login` | P | `{email, password}` → `{access_token, user}` + cookie |
 | `POST /auth/refresh` | P (cookie) | Ротация refresh, новый access |
 | `POST /auth/logout` | любая | Отзыв семьи refresh-токенов |
+| `POST /auth/email/send` | U | Повторная отправка кода подтверждения → 204. Не чаще раза в минуту (409 `cooldown`, дата в `detail`), 5 в час (429). Новый код аннулирует старый |
+| `POST /auth/email/verify` | U | `{code}` → 204, ставит `email_verified_at`. Неверный код → 400 `invalid_code`; истёк (15 мин) → 400 `code_expired`; 5 неверных попыток → 429 `too_many_attempts`. Повтор после успеха — 204 |
 | `POST /auth/telegram` | P | Поля Telegram Login Widget как есть (`id`, `auth_date`, `hash`, …) → `{access_token, user}` + cookie. Подпись HMAC и `auth_date` ≤ 24 ч; нового пользователя создаёт кандидатом без email. Ошибки: `401 invalid_telegram_auth`, `401 telegram_auth_expired`, `503 telegram_login_disabled` (нет токена бота) |
 | `POST /auth/magic` | P | `{token}` из ссылки бота → `{access_token, user}` + cookie. Токен одноразовый (5 мин); иначе `401 invalid_magic_token` |
 | `GET /auth/fsp/start` | P/C | Редирект на OAuth ФСП (мок). Для вошедшего кандидата это привязка, иначе вход |
@@ -41,7 +43,7 @@
 | `POST /me/credentials/{id}/revoke` | кандидат | Отозвать бейдж; идемпотентно, чужой или несуществующий → `404 credential_not_found` |
 | `POST /me/telegram/link` | C, E | → `{deep_link}` вида `https://t.me/<bot>?start=link_<token>` (токен 15 мин, одноразовый); `503 telegram_disabled`, если имя бота не задано |
 
-Коды ошибок `/auth/*`: `email_taken` (409), `invalid_credentials` (401, одинаков для неверного пароля и неизвестного email), `refresh_reused` (401, повторное использование refresh — вся семья отозвана, cookie сбрасывается), `unauthorized` (401), `rate_limited` (429), `forbidden_origin` (403, `Origin` не из `ALLOWED_ORIGINS` на `/auth/refresh` и `/auth/logout`). Саморегистрация — только `candidate` и `employer`. `GET /me` пока возвращает `{id, email, role, consents[]}` (`consents` — типы действующих согласий).
+Коды ошибок `/auth/*`: `email_taken` (409), `invalid_credentials` (401, одинаков для неверного пароля и неизвестного email), `refresh_reused` (401, повторное использование refresh — вся семья отозвана, cookie сбрасывается), `unauthorized` (401), `rate_limited` (429), `forbidden_origin` (403, `Origin` не из `ALLOWED_ORIGINS` на `/auth/refresh` и `/auth/logout`). Саморегистрация — только `candidate` и `employer`. Код подтверждения (E20-1, 6 цифр, хранится хешем) уходит на email при регистрации по SMTP (`SMTP_*`; пустой `SMTP_HOST` — письмо не отправляется, регистрация не падает; dev — Mailpit, профиль `dev`, UI `:28025`). `EMAIL_VERIFICATION_REQUIRED` (по умолчанию `false`) включает проверку `require_verified_email` там, где она вызывается. `user` в ответах `/auth/*` и `/me` содержит `email_verified`. `GET /me` пока возвращает `{id, email, role, email_verified, consents[]}` (`consents` — типы действующих согласий).
 
 `GET /me/consents` → массив по всем `consent_type`: `{type, required, granted, version, current_version, granted_at}`. `PUT /me/consents` `{consents:[{type, granted, version?}]}` → тот же массив; идемпотентно. Выдача с устаревшей `version` → 409 `consent_version_mismatch`. Эндпоинты, требующие согласия, отвечают 403 `consent_required` (зависимость `require_consent(type)`).
 
@@ -49,7 +51,9 @@
 
 | Метод и путь | Назначение |
 |---|---|
-| `GET /candidates/me/profile` | Полный профиль владельца: `CandidateProfile` |
+| `GET /candidates/me/profile` | Полный профиль владельца: `CandidateProfile` (в нём `claimed_vs_confirmed: ClaimedVsConfirmed[]` — заявлено в опросе/резюме против грейда из теста, E23-3) |
+| `PATCH /candidates/me/profile` | Ручная форма (E20-4), частичное обновление: `{contacts: {email, phone, telegram} | null, stack: [{slug, years?}], experience_months, desired_roles: RoleSlug[] (≤5), soft_skills: slug[], age_group: adult|minor, parent_consent: bool}` → `CandidateProfile` (в нём `contacts` — только владельцу, `desired_roles`, `experience_months`). Стек — полный список: доказательства `self` (сила 0.15, «заявлено»), убранные выключаются; софт-навыки → `claimed_soft`. Контакты шифруются (`contacts_enc`, Fernet). Изменение стека, стажа, софт-навыков → пересчёт и рост `profile_version`. Возраст (E32-5b): `age_group` — `adult` или `minor` (15–17 лет), дата рождения не собирается; `parent_consent: true` только при `minor` (иначе `422`), `false` — отзыв; смена на `adult` сбрасывает согласие. В профиле: `age_group`, `parent_consent`, `publishable` (`false` у `minor` без согласия родителя — анкета не попадает в каталог и подбор). Ошибки: `422 unknown_skill` (нет в справочнике, софт в стеке, не софт в `soft_skills`) |
+| `GET /candidates/me/profile.pdf` | PDF-профиль владельца (E20-6, HTML → WeasyPrint, A4, кириллица, бренд): категория, грейд и его состав, результаты теста (действующие грейды), навыки с доверием ●●●○, ФСП, опыт, свои контакты. `application/pdf`, `Content-Disposition: attachment`, `Cache-Control: private, no-store`. Не кешируется (рендер ~1 с); только `candidate` (чужого профиля нет — отдельного ресурса нет). Ошибки: `401`, `403` |
 | `PATCH /candidates/me/preferences` | `{salary_min, formats, employment_types, city, relocation, search_status}`. `search_status=active` выставляет `active_until=+7д` |
 | `PATCH /candidates/me/visibility` | `{companies, education, repos, public_profile}` |
 | `PUT /candidates/me/stoplist` | `{company_ids[]}` |
@@ -70,7 +74,7 @@
 | `GET /candidates/me/code-analysis` | Последний `CodeAnalysis` |
 | `GET /candidates/me/navigator` | `Navigator` |
 | `GET /candidates/me/uplift` | `Uplift` — какой навык подтвердить, чтобы подходить под N% больше вакансий ([matching.md §6](matching.md#6-uplift-для-кандидата-какой-навык-добавить)) |
-| `GET /candidates/me/graph?skills=top|all&vacancy_id=` | `Subgraph` — граф доказательств для визуализации ([graph.md §6](graph.md#6-api-подграфа)) |
+| `GET /candidates/me/graph?skills=top|all&depth=facts|competitions` | `Subgraph` — граф доказательств (в т.ч. тесты `test`) для визуализации ([graph.md §6](graph.md#6-api-подграфа)) |
 | `POST /candidates/me/navigator/clicks` | `{competition_id, skill_id}` — учёт переходов на соревнования |
 | `GET /candidates/me/views` | `{total_30d, companies_30d, by_day[]}` |
 | `GET /candidates/me/offers?initiator=` | `OfferForCandidate[]` (приглашения и отклики; `initiator=employer|candidate` фильтрует) |
@@ -189,9 +193,12 @@
 | Метод и путь | Назначение |
 |---|---|
 | `GET|POST|PATCH /admin/skills`, `…/aliases`, `…/relations` | Граф навыков: вершины, синонимы, связи |
-| `GET /admin/skills/queue` | Спорные решения конвейера: предложенные слияния, новые вершины с низкой уверенностью |
-| `POST /admin/skills/{id}/approve|reject`, `POST /admin/skills/merge {from, into}`, `POST /admin/skills/merges/{id}/revert` | Решения админа по графу навыков |
-| `GET|POST|DELETE /admin/skills/distinct`, `GET|POST|DELETE /admin/skills/blocklist` | «Точно разные» пары и стоп-лист |
+| `GET /admin/skills/queue` | Очередь слияний («то же», уверенность 0.6–0.9) с превью «что объединится»; `POST /admin/skills/queue/{slug}/approve` — слить в предложенный навык, `…/reject {mark_distinct}` — оставить отдельным (E16-7) |
+| `POST /admin/skills/{slug}/approve|reject`, `POST /admin/skills/merge {from, into}`, `GET /admin/skills/merges`, `POST /admin/skills/merges/{id}/revert`, `GET /admin/skills/provisional` | Решения админа по графу: временный навык (с черновиком карточки), ручное слияние, журнал и откат. Нет навыка/слияния → 404, пара «точно разные» → 409 `merge_forbidden_distinct`; роль `fsp_admin` |
+| `GET|POST /admin/skills/distinct`, `DELETE /admin/skills/distinct?a=&b=`, `GET|POST /admin/skills/blocklist`, `DELETE /admin/skills/blocklist?norm=` | «Точно разные» пары и стоп-лист |
+| `GET /admin/skills/hints` | Подсказки экспертам (`taxonomy_hints`): правила дисциплин и кандидаты в новые профессии |
+| `GET|POST /admin/professions`, `GET|PATCH|DELETE /admin/professions/{slug}` | Профессии теста и веса навыков (E13-1a, `fsp_admin`). POST `{slug, title, skill_weights{slug:вес}}` → 201; PATCH `{title?, skill_weights?}` (веса заменяются целиком); DELETE снимает признак профессии (веса остаются). Веса в (0, 1], навыки живые, покрыты все 6 типов: иначе 422 `invalid_weight` / `unknown_skill` / `missing_skill_types`; повтор слага — 409 `profession_exists`. Ответ — `ProfessionInfo` + `taxonomy_version` |
+| `GET /admin/skill-cards`, `GET|PUT /admin/skill-cards/{slug}` | Карточки навыков (E13-1a). `source`: `admin` (правка в `scoring_config`, ключ `skill_card:<slug>`, своя `version`), `file` (`data/skills/cards`), `draft` (ml). PUT принимает `SkillCard`; `skill` ≠ путь → 422 `card_skill_mismatch`, `type` ≠ типу навыка → 422 `card_type_mismatch` |
 | `GET /admin/skills/growth` | Рост графа: новые вершины и связи за период, доля автоматических решений |
 | `GET /admin/discipline-rules/suggestions` | Предложения добавить навык в правило дисциплины (lift по участникам) |
 | `GET|PUT /admin/discipline-rules` | Правила «дисциплина → навыки» |
@@ -227,6 +234,7 @@
 | `GET /public/profiles/{slug}` | Публичный профиль (JSON без ПДн). `404`, если нет `public_profile`, согласия `profile_publication` или действующего грейда (то же для бейджа) |
 | `GET /athlete/{slug}` | Краулерам (Telegram, VK, Slack по User-Agent) — HTML с OG-тегами, людям — редирект на `dashboard.fsp…/athlete/{slug}` |
 | `GET /taxonomy` | `{version, skills[{slug,name,kind,group,testable}], roles[{slug,name}], disciplines[{slug,name}], grades[], formats[], employment_types[]}` (только `active` навыки). `ETag` `W/"tax-<version>-<хеш статики>"`, `If-None-Match` → 304, `Cache-Control: public, max-age=300` |
+| `GET /taxonomy/professions` | Публичный (E21-1). `{professions[{slug,title,skill_weights{slug:вес},skill_types{slug:тип}}], skill_types[6], grades[{grade,cut}]}`; профессии — роли с `profession: true`, каждая покрывает все 6 типов навыков; `cut` — минимальный θ грейда из `scoring.yaml` `assessment.grades` |
 | `POST /integrations/fsp/webhook` | Вебхук ФСП/мока (HMAC `X-Signature`) |
 | `GET /healthz`, `GET /readyz` | Проверки живости и готовности |
 
@@ -260,7 +268,7 @@
 | `POST /internal/tg/tests`, `…/{id}/answer` | bot | Адаптивный тест |
 | `GET /internal/tg/navigator?tg_user_id=` | bot | Навигатор кратко |
 | `PATCH /internal/tg/status` | bot | Статус поиска |
-| `GET /internal/taxonomy/snapshot` | ml | `Authorization: Service <SERVICE_TOKEN_ML>` (пустой токен = закрыто, иначе 401). `{version, skills[{id,slug,name,kind,group,status,testable,description,aliases[]}], adjacent[{a,b,weight}], parent[{child,parent,weight}], distinct[[a,b]], roles[{slug,name,skills{}}], disciplines[{slug,name,rules[{skill,weight,track}]}]}`; вершины `active` и `provisional`, кеш Redis `c:tax:{version}` |
+| `GET /internal/taxonomy/snapshot` | ml | `Authorization: Service <SERVICE_TOKEN_ML>` (пустой токен = закрыто, иначе 401). `{version, skills[{id,slug,name,kind,group,status,testable,description,aliases[]}], adjacent[{a,b,weight}], parent[{child,parent,weight}], distinct[[a,b]], roles[{slug,name,profession,skills{}}], disciplines[{slug,name,rules[{skill,weight,track}]}]}`; вершины `active` и `provisional`, кеш Redis `c:tax:{version}` |
 
 **Internal fsp-connector** (вызывает core-api):
 
@@ -280,6 +288,11 @@
 | `POST /v1/query/parse` | `{text, rule_hint?: SearchFilters, taxonomy_version}` | `ParsedQuery` |
 | `POST /v1/embeddings` | `{texts[], kind: "query"|"passage"}` | `{model, dim, vectors[][]}` |
 | `POST /v1/skills/resolve` | `{mentions: [{raw, context}], taxonomy_version}` (до 50) | `[{raw, norm, decision: alias|fuzzy|new|same_pending|rejected, skill_slug?, kind: hard|soft|domain|not_skill, relation?: {type, to_slug, confidence}, reason?}]` ([skills.md §3](skills.md#3-конвейер-для-нового-упоминания)) |
+| `POST /v1/skills/card-draft` | `{slug, name, kind: hard|soft|domain, skill_type?, description?, aliases[]}` | `SkillCardDraft`: форма карточки `data/skills/cards/*.yaml` (`schema_version`, `skill`, `type`, `summary`, `levels`, `concepts`, `misconceptions`) + `model` и `draft: true`. Всегда черновик; без LLM — шаблон `model=rules-template` ([skills.md §3.5](skills.md#35-реализация-в-ml-e16-4)) |
+| `POST /v1/families/key-draft` | `FamilyKeyDraftRequest`: `{kind, stem, options[], lines[], actions[], steps[], rubric[]}` — пример варианта задания конструктора без ключа | `FamilyKeyDraft`: `{correct?, bug_lines?, scores?, answer?, rubric?, rationale?, model}` — черновик (E30-1, [assessment.md §10](assessment.md#10-api-v2)); `ML_FAKE` — заглушка, `LLM_ENABLED=false` — `503 llm_disabled` |
+| `POST /v1/assessment/explain` | `AnswerExplainRequest`: `{kind, skill, stem, reason_code, reason_label, misconception?, truth?}` — причину определил core, без ключа и ответа кандидата | `AnswerExplain`: `{text, model}` — формулировка (E24-2, [assessment.md §10](assessment.md#10-api-v2)); `ML_FAKE` — шаблон, `LLM_ENABLED=false` — `503 llm_disabled` (core берёт свой шаблон) |
+| `POST /v1/families/generate` | `FamilyGenerateRequest`: `{skill, skill_type?, kind, level 1–5, domain?, n 1–5}` | `FamilyGenerateResponse`: `{specs[], model}` — черновики форм конструктора `FamilySpec` (`kind`, `skill`, `level` — из заказа); core проверяет схемой и автопроверкой (E26-4, [assessment.md §7](assessment.md#7-жизненный-цикл-семейства-и-калибровка)); `ML_FAKE` — шаблоны по `kind`, `LLM_ENABLED=false` — `503 llm_disabled` |
+| `POST /v1/families/solve` | `FamilySolveRequest`: `{kind, stem, options[]}` — вариант, как его видит кандидат (без ключа) | `FamilySolveAnswer`: `{answer, model}` — ответ в формате кандидата (число/строка, индекс, строки, порядок); вне границ варианта — `503 llm_invalid`. `ML_FAKE` — детерминированный «наугад» (E26-4) |
 | `GET /healthz` | — | `{llm: up|down, embedder: up|down, model, queue_depth}` |
 
 ## 3. Ключевые схемы (TypeScript-нотация)

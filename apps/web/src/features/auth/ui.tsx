@@ -1,3 +1,4 @@
+import { Card } from "@fsp/ui";
 import type { ReactNode } from "react";
 
 import { cn } from "@/shared/lib/cn";
@@ -5,22 +6,22 @@ import { cn } from "@/shared/lib/cn";
 export const fieldClass =
   "h-11 w-full rounded-lg border border-hairline bg-card px-3 text-ink placeholder:text-muted";
 
-/** Карточка формы входа/регистрации: узкая колонка, на 375 px — во всю ширину. */
+/** Карточка формы входа/регистрации (M1/DS3): колонка 440 px, на 375 px — во всю ширину. */
 export function AuthCard({ title, lead, children }: { title: string; lead?: string; children: ReactNode }) {
   return (
-    <section className="mx-auto flex w-full max-w-sm flex-col gap-4 rounded-2xl border border-hairline bg-card p-5 md:p-6">
+    <Card data-testid="auth-card" className="mx-auto flex w-full max-w-[440px] flex-col gap-4 p-5 md:p-6">
       <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold">{title}</h1>
-        {lead && <p className="text-sm text-muted">{lead}</p>}
+        <h1 className="text-24 font-bold">{title}</h1>
+        {lead && <p className="text-14 text-muted">{lead}</p>}
       </header>
       {children}
-    </section>
+    </Card>
   );
 }
 
-export function ErrorNote({ children, className }: { children: ReactNode; className?: string }) {
+export function ErrorNote({ children, className, ...rest }: { children: ReactNode; className?: string; "data-testid"?: string }) {
   return (
-    <p role="alert" className={cn("rounded-lg bg-error-bg px-3 py-2 text-sm text-error", className)}>
+    <p role="alert" className={cn("rounded-lg bg-error-bg px-3 py-2 text-sm text-error", className)} {...rest}>
       {children}
     </p>
   );

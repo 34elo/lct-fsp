@@ -5,6 +5,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { Funnel } from './funnel';
+import type { InterestMetrics } from './interestMetrics';
 import type { InviteMetrics } from './inviteMetrics';
 import type { ResponseMetrics } from './responseMetrics';
 
@@ -16,4 +17,5 @@ export interface MetricsOut {
   employer_funnel: Funnel;
   invites: InviteMetrics;
   responses: ResponseMetrics;
+  interests: InterestMetrics;
 }

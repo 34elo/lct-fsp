@@ -1,4 +1,4 @@
-.PHONY: demo-snapshot demo-reset demo-warm demo-env logs ps seed seed-plan seed-fsp-mock synth eval eval-quick load taxonomy-load up down dev-core compose-config sync lint fmt test test-py test-web test-integration new-service web-install asyncapi api-gen
+.PHONY: up-lite demo-snapshot demo-reset demo-warm demo-env logs ps seed seed-plan seed-fsp-mock synth eval eval-quick load taxonomy-load up down dev-core compose-config sync lint fmt test test-py test-web test-integration new-service web-install asyncapi api-gen
 
 sync:
 	uv sync --all-packages
@@ -135,3 +135,57 @@ demo-reset:
 	COMPOSE="$(COMPOSE)" sh infra/scripts/demo.sh reset
 demo-warm:
 	GATEWAY_PORT=$$(sed -n 's/^GATEWAY_PORT=//p' $(ENV_FILE)) COMPOSE="$(COMPOSE)" sh infra/scripts/demo.sh warm
+
+# >>> block1 (lite)
+# Профиль lite (ADR-023): ядро и ML без LLM (LLM_ENABLED=false, ML_FAKE=false), малая модель эмбеддингов, ≤ 1.5 ГБ на сервисы приложения
+LITE_ENV = LLM_ENABLED=false ML_FAKE=false EMBEDDING_MODEL=$${EMBEDDING_MODEL:-multilingual-e5-small}
+up-lite: demo-env
+	$(LITE_ENV) docker compose --env-file $(ENV_FILE) --profile core --profile ml $(BOT_PROFILE) up -d --build --wait
+# Автопроверка кодовых семейств заданий (assessment.md §4): ключи, исполнение, ручки, детерминизм
+.PHONY: families-check
+families-check:
+	uv run python -m app.assessment.families.check --seeds 1000
+# Майнинг мутаций открытого кода → семейства find_bug (E30-3, assessment.md §4). Код проектов только
+# читается (AST + песочница), не импортируется и не запускается. SRC — имя из
+# data/questions/mutations/sources.yaml; DIR — локальная копия (без неё нужен MUTMINE_GITHUB=1)
+.PHONY: assessment-mutations-mine assessment-mutations-check assessment-mutations-import
+assessment-mutations-mine:
+	cd services/core && uv run python -m app.assessment.mining mine --source $(SRC) $(if $(DIR),--dir $(abspath $(DIR)))
+assessment-mutations-check:
+	cd services/core && uv run python -m app.assessment.mining check ../../data/questions/mutations/*.json
+# Банк → families (draft); PILOT=1 — сразу в pilot (в active — только админ по статистике пилота)
+assessment-mutations-import:
+	cd services/core && uv run python -m app.assessment.mining import ../../data/questions/mutations/*.json $(if $(PILOT),--pilot)
+# Задачи соревнований ФСП в банке (E32-6, assessment.md §4): проверка и импорт data/questions/fsp/*.yaml
+.PHONY: assessment-fsp-check assessment-fsp-import
+assessment-fsp-check:
+	cd services/core && uv run python -m app.assessment.fsp_bank check
+assessment-fsp-import:
+	cd services/core && uv run python -m app.assessment.fsp_bank import $(if $(PILOT),--pilot)
+# Схема карточек навыков data/skills/cards (assessment.md §2)
+.PHONY: cards-check
+cards-check:
+	cd services/core && uv run python -m app.taxonomy.cards
+# Валидация теста на синтетике (E27-1, metrics.md §9.1): make eval-assessment [SEED=42] → reports/eval-assessment/report.{md,json}
+.PHONY: eval-assessment
+eval-assessment:
+	uv run python -m tools.eval_assessment --seed $(or $(SEED),42) --out reports/eval-assessment
+# Офлайн-конвейер LLM-заданий (E26-4): генератор → автопроверки → draft в очереди допуска; LLM как
+# кандидат → families.ai_solvable. Только через ml-api (ML_API_URL), LLM_ENABLED=false — ничего не делает.
+# ARGS — флаги CLI (--skills, --kinds, --levels, --n, --k, --skip-propose, --skip-solve)
+.PHONY: assessment-llm-bank
+assessment-llm-bank:
+	cd services/core && uv run python -m app.assessment.llm_bank --out ../../reports/llm-bank $(ARGS)
+# Замер LLM-кандидатов (E32-3, ml.md «Выбор LLM»): сервер поднимает человек, модели не качаются.
+# make eval-llm [LLM_MODEL=…] [ARGS="--repeats 5 --server-pid <pid> --vram-file …"] → reports/llm/<модель>.{md,json}
+.PHONY: eval-llm
+eval-llm:
+	uv run python -m tools.eval_llm --env-file $(ENV_FILE) $(ARGS)
+# Документ сдачи (E27-4): список библиотек из lock-файлов → docs/libraries.md; PDF из docs/submission.md
+# (WeasyPrint из зависимостей core) → reports/submission/submission.pdf (reports/ не коммитим)
+.PHONY: submission-libs submission-pdf
+submission-libs:
+	python3 tools/submission/libs.py --out docs/libraries.md
+submission-pdf:
+	uv run python tools/submission/build_pdf.py --src docs/submission.md --out reports/submission/submission.pdf
+# <<< block1

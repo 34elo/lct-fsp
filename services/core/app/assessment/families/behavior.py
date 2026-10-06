@@ -1,0 +1,189 @@
+"""Семейства на софт и опыт (E22-6): ситуационные задания (`sjt`) и порядок действий (`order`).
+
+`sjt`: у вариантов авторские оценки эффективности (все разные), ключ — индексы вариантов по
+убыванию оценки. После пилота админ сверит его с эмпирическим ключом (assessment.md §7).
+`order`: шаги идут в каноническом порядке; семейство берёт упорядоченную подвыборку и
+перемешивает её, ключ — индексы показанных вариантов в правильном порядке.
+"""
+
+from __future__ import annotations
+
+from random import Random
+
+from fsp_contracts.assessment import SkillType
+
+from app.assessment.families.base import BaseFamily, Item, Kind
+from app.assessment.world import World
+
+# Ситуация: (условие с {svc}, [(действие, оценка эффективности 1..4)])
+Scenario = tuple[str, list[tuple[str, int]]]
+
+_CODE_REVIEW: list[Scenario] = [
+    (
+        "Коллега прислал PR в сервис {svc} на 1200 строк: в нём рефакторинг и новая функция, "
+        "которая нужна к завтрашнему релизу.",
+        [
+            ("Попросить разбить PR на две части и сначала отревьюить функцию к релизу", 4),
+            (
+                "Отревьюить весь PR целиком с комментариями по существу, даже если релиз сдвинется",
+                3,
+            ),
+            ("Поставить approve, проверив только, что тесты зелёные", 2),
+            ("Отклонить PR без комментариев: слишком большой", 1),
+        ],
+    ),
+    (
+        "Новичок прислал PR в сервис {svc}: код работает, но нарушает принятые соглашения "
+        "об именовании и не покрыт тестами.",
+        [
+            (
+                "Оставить комментарии с объяснением, зачем соглашения и тесты, и примером; "
+                "предложить созвониться, если неясно",
+                4,
+            ),
+            ("Попросить добавить тесты и поправить именование, перечислив места", 3),
+            ("Самому дописать тесты и переименовать, чтобы не задерживать задачу", 2),
+            ("Написать в общий чат команды, что PR не соответствует стандартам", 1),
+        ],
+    ),
+]
+
+_CONFLICT: list[Scenario] = [
+    (
+        "Два разработчика третий день спорят в треде, какую базу данных взять для сервиса {svc}. "
+        "Задача стоит.",
+        [
+            (
+                "Собрать короткий созвон: договориться о критериях (нагрузка, опыт команды, "
+                "стоимость), сравнить варианты по ним и записать решение в ADR",
+                4,
+            ),
+            ("Попросить каждого письменно описать плюсы и минусы и вынести вопрос техлиду", 3),
+            ("Выбрать вариант, за который больше голосов в треде", 2),
+            ("Не вмешиваться: спор разрешится сам", 1),
+        ],
+    ),
+    (
+        "Менеджер просит добавить функцию в сервис {svc} к пятнице. Вы считаете, что без "
+        "ущерба качеству к этому сроку не успеть.",
+        [
+            (
+                "Показать оценку по частям и предложить выбор: урезанный объём к пятнице "
+                "или полный позже",
+                4,
+            ),
+            ("Сказать, что срок нереалистичен, и назвать свою дату", 3),
+            ("Согласиться и доделать за выходные", 2),
+            ("Согласиться, а к пятнице сдать без тестов", 1),
+        ],
+    ),
+]
+
+
+class _Sjt(BaseFamily):
+    kind = Kind.sjt
+    bank: list[Scenario]
+
+    def generate(self, rng: Random, world: World) -> Item:
+        text, acts = rng.choice(self.bank)
+        shown = rng.sample(acts, k=len(acts))
+        options = [a for a, _ in shown]
+        key = sorted(range(len(shown)), key=lambda i: -shown[i][1])
+        return Item(
+            kind=self.kind,
+            stem=text.format(svc=world.services[0])
+            + "\n\nРасставьте действия от самого эффективного к наименее эффективному.",
+            options=options,
+            key=key,
+            time_limit_s=180,
+            meta={"ratings": [r for _, r in shown]},
+        )
+
+
+class SjtCodeReview(_Sjt):
+    slug = "sjt_code_review"
+    skill = "code_review"
+    skill_type = SkillType.soft
+    level = 2
+    bank = _CODE_REVIEW
+
+
+class SjtConflict(_Sjt):
+    slug = "sjt_conflict"
+    skill = "conflict_resolution"
+    skill_type = SkillType.soft
+    level = 3
+    bank = _CONFLICT
+
+
+_INCIDENT = [
+    "Подтвердить алерт и взять инцидент на себя",
+    "Оценить масштаб: какие пользователи и функции {svc} затронуты",
+    "Откатить последний релиз {svc} или выключить фича-флаг, чтобы снять влияние",
+    "Убедиться по метрикам, что влияние снято",
+    "Найти первопричину",
+    "Провести разбор инцидента и завести задачи, чтобы не повторилось",
+]
+
+_OSS = [
+    "Найти issue и написать в нём, что берёте задачу",
+    "Сделать форк репозитория",
+    "Создать ветку под исправление",
+    "Внести изменения и прогнать тесты локально",
+    "Отправить ветку в свой форк (push)",
+    "Открыть pull request с описанием и ссылкой на issue",
+    "Ответить на замечания ревьюера",
+]
+
+
+class _Order(BaseFamily):
+    kind = Kind.order
+    steps: list[str]
+    min_steps: int
+    prompt: str  # условие с {svc} и {company}
+    knob_bounds = {"n_steps": (4, 6)}
+
+    def generate(self, rng: Random, world: World) -> Item:
+        n = rng.randint(self.min_steps, min(6, len(self.steps)))
+        picked = sorted(rng.sample(range(len(self.steps)), k=n))  # канонический порядок
+        shown = rng.sample(picked, k=n)
+        svc = world.services[1]
+        return Item(
+            kind=self.kind,
+            stem=self.prompt.format(svc=svc, company=world.company),
+            options=[self.steps[i].format(svc=svc) for i in shown],
+            key=[shown.index(i) for i in picked],
+            time_limit_s=150,
+            meta={"knobs": {"n_steps": n}},
+        )
+
+
+class IncidentOrder(_Order):
+    slug = "incident_order"
+    skill = "production_support"
+    skill_type = SkillType.experience
+    level = 2
+    steps = _INCIDENT
+    min_steps = 4
+    prompt = (
+        "Вы дежурите в компании «{company}». Ночью сервис {svc} начал отвечать ошибками "
+        "после релиза. "
+        "Расставьте шаги в правильном порядке."
+    )
+
+
+class OssContributionOrder(_Order):
+    slug = "oss_contribution_order"
+    skill = "open_source"
+    skill_type = SkillType.experience
+    level = 1
+    steps = _OSS
+    min_steps = 4
+    prompt = (
+        "Вы хотите исправить ошибку в открытой библиотеке, которой пользуется "
+        "компания «{company}». "
+        "Расставьте шаги в правильном порядке."
+    )
+
+
+FAMILIES = [SjtCodeReview(), SjtConflict(), IncidentOrder(), OssContributionOrder()]

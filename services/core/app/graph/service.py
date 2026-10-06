@@ -22,7 +22,13 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.candidates.models import Candidate
-from app.graph.fsp_models import FspCompetitionRow, FspRankRow, FspResultRow
+from app.graph.fsp_models import (
+    FspCompetitionRow,
+    FspRankRow,
+    FspResultRow,
+    FspTeamMember,
+    FspTeamRow,
+)
 from app.graph.models import CandidateSkill, Evidence
 
 
@@ -139,8 +145,9 @@ async def deactivate(
     source: EvidenceSource | str | None = None,
     fact_type: str | None = None,
     fact_id: uuid.UUID | None = None,
+    skill_ids: set[uuid.UUID] | None = None,
 ) -> int:
-    """Мягко выключить доказательства по фильтру (минимум один фильтр). Возвращает число."""
+    """Мягко выключить доказательства по фильтру (нужен source или fact_*). Возвращает число."""
     if source is None and fact_type is None and fact_id is None:
         raise ValueError("нужен хотя бы один фильтр")
     stmt = select(Evidence).where(Evidence.candidate_id == candidate_id, Evidence.is_active)
@@ -150,6 +157,8 @@ async def deactivate(
         stmt = stmt.where(Evidence.fact_type == fact_type)
     if fact_id is not None:
         stmt = stmt.where(Evidence.fact_id == fact_id)
+    if skill_ids is not None:
+        stmt = stmt.where(Evidence.skill_id.in_(skill_ids))
     rows = list(await session.scalars(stmt))
     for r in rows:
         r.is_active = False
@@ -324,6 +333,24 @@ async def has_source(session: AsyncSession, candidate_id: uuid.UUID, source: str
         .limit(1)
     )
     return (await session.scalar(stmt)) is not None
+
+
+async def fsp_competitions_of(session: AsyncSession, candidate_id: uuid.UUID) -> set[str]:
+    """Соревнования ФСП, где кандидат участвовал: результат или состав команды (E32-6)."""
+    out: set[str] = set()
+    rows = await session.scalars(
+        select(FspResultRow.competition_id).where(
+            FspResultRow.candidate_id == candidate_id, FspResultRow.is_active.is_(True)
+        )
+    )
+    out.update(c for c in rows if c)
+    teams = await session.scalars(
+        select(FspTeamRow.competition_id)
+        .join(FspTeamMember, FspTeamMember.team_id == FspTeamRow.id)
+        .where(FspTeamMember.candidate_id == candidate_id)
+    )
+    out.update(c for c in teams if c)
+    return out
 
 
 async def upcoming_competitions(
