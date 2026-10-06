@@ -94,7 +94,9 @@ test("без вакансии название обязательно, уход�
   expect(sendBtn()).toBeDisabled();
   fireEvent.change(screen.getByLabelText(/Название приглашения/), { target: { value: "Бэкенд" } });
   expect(sendBtn()).toBeEnabled();
+  fireEvent.change(screen.getByLabelText(/О чём приглашение/), { target: { value: "Команда платформы" } });
+  fireEvent.change(screen.getByLabelText(/Как связаться/), { target: { value: "telegram" } });
   fireEvent.click(sendBtn());
   await waitFor(() => expect(posts).toHaveLength(1));
-  expect(posts[0].body).toMatchObject({ vacancy_id: null, title: "Бэкенд", salary_from: 200000, salary_to: 240000 });
+  expect(posts[0].body).toMatchObject({ vacancy_id: null, title: "Бэкенд", description: "Команда платформы", contact_method: "telegram", salary_from: 200000, salary_to: 240000 });
 });

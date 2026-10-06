@@ -28,6 +28,10 @@ import Landing from "@/features/landing/Landing";
 import FederationDashboard from "@/features/admin/Dashboard";
 import FederationModeration from "@/features/admin/Moderation";
 import Navigator from "@/features/navigator/Navigator";
+import Jobs from "@/features/jobs/Jobs";
+import JobDetail from "@/features/jobs/JobDetail";
+import CandidateResponses from "@/features/responses/CandidateResponses";
+import EmployerResponses from "@/features/responses/EmployerResponses";
 // <<< block2 imports
 
 // Разделы по ролям грузятся лениво (frontend.md: «ленивые разделы»).
@@ -38,7 +42,7 @@ const AdminLayout = lazy(() => import("@/app/layouts/AdminLayout"));
 const RunPage = lazy(() => import("@/features/runs/RunPage"));
 
 // Эти пути уже реализованы настоящими страницами (E1-4).
-const IMPLEMENTED = new Set(["/", "/login", "/register", "/auth/magic", "/consents", "/onboarding", "/me", "/me/skills/:slug", "/employer/search", "/employer/candidates/:id", "/employer/vacancies", "/employer/vacancies/new", "/employer/vacancies/:id", "/employer/company", "/employer/vacancies/:id/shortlist", "/employer/offers/new", "/employer/offers", "/employer/offers/:id", "/me/offers", "/me/offers/:id", "/me/navigator", "/run/:token", "/federation", "/federation/moderation"]);
+const IMPLEMENTED = new Set(["/", "/login", "/register", "/auth/magic", "/consents", "/onboarding", "/me", "/me/skills/:slug", "/employer/search", "/employer/candidates/:id", "/employer/vacancies", "/employer/vacancies/new", "/employer/vacancies/:id", "/employer/company", "/employer/vacancies/:id/shortlist", "/employer/offers/new", "/employer/offers", "/employer/offers/:id", "/me/offers", "/me/offers/:id", "/me/navigator", "/me/responses", "/employer/responses", "/jobs", "/jobs/:id", "/run/:token", "/federation", "/federation/moderation"]);
 
 const stubs = (section: string) =>
   ROUTES.filter((r) => r.section === section && !IMPLEMENTED.has(r.path)).map((r) => (
@@ -61,6 +65,7 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
             {/* <<< block1 (candidate) */}
             {/* >>> block2 (candidate) */}
             <Route path="/me/navigator" element={<Navigator />} />
+            <Route path="/me/responses" element={<CandidateResponses />} />
             {/* <<< block2 (candidate) */}
           </>
         )}
@@ -79,6 +84,7 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
             {/* >>> block1 (employer) */}
             {/* <<< block1 (employer) */}
             {/* >>> block2 (employer) */}
+            <Route path="/employer/responses" element={<EmployerResponses />} />
             {/* <<< block2 (employer) */}
           </>
         )}
@@ -117,6 +123,8 @@ export function App() {
           {/* >>> block2 (public) */}
           <Route path="/" element={<Landing />} />
           <Route path="/run/:token" element={<RunPage />} />
+          <Route path="/jobs" element={<Jobs />} />
+          <Route path="/jobs/:id" element={<JobDetail />} />
           {/* <<< block2 (public) */}
         </Route>
         {guarded("candidate", CandidateLayout)}
