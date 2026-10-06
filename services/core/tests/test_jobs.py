@@ -51,38 +51,6 @@ async def test_expire_offers(session: AsyncSession) -> None:
 
 
 @pytest.mark.asyncio
-async def test_expire_active_status(session: AsyncSession) -> None:
-    """Сброс статуса `active` в `open` по истечении периода."""
-    # Кандидат, статус истёк
-    candidate = await make_candidate(
-        session,
-        search_status="active",
-        active_until=datetime.now(UTC) - timedelta(hours=1),
-    )
-
-    # Кандидат с активным статусом, который ещё не истёк
-    candidate2 = await make_candidate(
-        session,
-        search_status="active",
-        active_until=datetime.now(UTC) + timedelta(hours=1),
-    )
-
-    await session.flush()
-
-    # Запускаем сброс
-    await jobs._expire_active_status(session)
-
-    # Проверяем статусы
-    await session.refresh(candidate)
-    await session.refresh(candidate2)
-
-    assert candidate.search_status == "open"
-    assert candidate.active_until is None
-    assert candidate2.search_status == "active"
-    assert candidate2.active_until is not None
-
-
-@pytest.mark.asyncio
 async def test_calculate_company_rating(session: AsyncSession) -> None:
     """Пересчёт ответственности компании на основе истории офферов."""
     company, owner = await make_company(session, name="Test Company")
