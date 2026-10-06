@@ -56,6 +56,7 @@ async def seed_core(plan: dict) -> dict:
     from app.config import Settings
     from fsp_platform.db import make_engine, make_session_factory
 
+    from .jury import seed_jury
     from .loader import Seeder
 
     cfg = load_config()
@@ -69,7 +70,15 @@ async def seed_core(plan: dict) -> dict:
             pseudo_secret=settings.pseudo_id_secret,
             analytics_salt=settings.analytics_salt,
         )
-        return await seeder.run()
+        stats = await seeder.run()
+        stats.update(
+            await seed_jury(
+                make_session_factory(engine),
+                password=cfg["demo"]["password"],
+                pseudo_secret=settings.pseudo_id_secret,
+            )
+        )
+        return stats
     finally:
         await engine.dispose()
 
@@ -154,6 +163,7 @@ def print_accounts(plan: dict) -> None:
     )
     print("  работодатели:", ", ".join(owners), "и др. (hr{NN}@demo.fsp.test)")
     print("  админ:", cfg["demo"]["admin_email"])
+    print("  жюри:", cfg["demo"]["jury_candidate_email"], cfg["demo"]["jury_employer_email"])
 
 
 def main(argv: list[str] | None = None) -> int:

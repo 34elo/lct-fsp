@@ -15,6 +15,8 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.companies.models import Company
+from app.matching import needs as needs_cfg
+from app.matching import subscriptions
 from app.offers import service as offers
 from app.offers.models import Offer
 
@@ -95,6 +97,8 @@ def register(
         """Периодическое истечение офферов (каждые 5 минут, messaging.md §4)."""
         # CoreJob.model_validate(envelope.payload)  # пусто, но валидируем
         await _expire_offers(session)
+        # E33-4: отложенные дайджесты подписок на категории (интервал проверяет flush_due)
+        await subscriptions.flush_due(session, needs_cfg.NeedsConfig.load())
 
     @consumers["core.jobs"].on("active_status.expire")
     async def on_active_status_expire(envelope: Envelope, session: AsyncSession) -> None:

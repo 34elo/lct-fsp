@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 import math
-from collections.abc import Collection
+from collections.abc import Callable, Collection
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -27,16 +27,24 @@ class PAcceptConfig:
     active_seeking: float = 0.5
     low: float = 0.35
     high: float = 0.65
+    raise_step: float = 0.05  # шаг подсказки «поднимите верх вилки», доля текущего верха
+    raise_max_steps: int = 8
+    raise_round: int = 5_000
+    response_min_sample: int = 3
 
     @classmethod
     def load(cls, path: Path | None = None) -> PAcceptConfig:
         raw = yaml.safe_load((path or DEFAULT_SCORING_PATH).read_text(encoding="utf-8"))
         sec = raw["p_accept"]
         k, t = sec["coefficients"], sec["thresholds"]
+        f = sec.get("forecast", {})
         return cls(
             intercept=k["intercept"], salary_gap=k["salary_gap"], format_match=k["format_match"],
             stack_interest=k["stack_interest"], company_rating=k["company_rating"],
             active_seeking=k["active_seeking"], low=t["low"], high=t["high"],
+            raise_step=f.get("raise_step", 0.05), raise_max_steps=f.get("raise_max_steps", 8),
+            raise_round=f.get("raise_round", 5_000),
+            response_min_sample=f.get("response_min_sample", 3),
         )  # fmt: skip
 
 
@@ -76,6 +84,25 @@ def p_accept(
 def hint(p: float, cfg: PAcceptConfig) -> str:
     """`low` < 0.35 ≤ `medium` ≤ 0.65 < `high`."""
     return "low" if p < cfg.low else "high" if p > cfg.high else "medium"
+
+
+def suggest_raise(
+    salary_to: int, p_now: float, compute: Callable[[int], float], cfg: PAcceptConfig
+) -> tuple[int, float] | None:
+    """Минимальный верх вилки (шаг `raise_step`, округление `raise_round`), при котором
+    `p_accept` достигает порога `high`; если недостижим — порога `low` (уровень «средняя»).
+    Уже высокая или ничего не достигается — `None`."""
+    if p_now >= cfg.high:
+        return None
+    steps = []
+    for i in range(1, cfg.raise_max_steps + 1):
+        to = int(-(-salary_to * (1 + cfg.raise_step * i) // cfg.raise_round) * cfg.raise_round)
+        steps.append((to, compute(to)))
+    for target in (cfg.high, cfg.low) if p_now < cfg.low else (cfg.high,):
+        for to, p in steps:
+            if p >= target:
+                return to, p
+    return None
 
 
 def mutual(score: float, p: float) -> float:

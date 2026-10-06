@@ -6,6 +6,7 @@ import { Button, ErrorState, SectionLabel, Skeleton, SkillChip, formatRubRange }
 
 import { useListPublicVacanciesVacanciesPublicGet } from "@/api/endpoints/vacancies/vacancies";
 import { useApplyToVacancyVacanciesVacancyIdApplyPost } from "@/api/endpoints/vacancies/vacancies";
+import { useMarkCandidateInterestCompaniesCompanyIdInterestPost, useRemoveCandidateInterestCompaniesCompanyIdInterestDelete } from "@/api/endpoints/search/search";
 import { ErrorNote, fieldClass } from "@/features/auth/ui";
 import { FORMAT_LABEL } from "@/features/employer/text";
 import { roleLabel } from "@/features/profile/text";
@@ -71,6 +72,32 @@ function ApplyBox({ vacancyId }: { vacancyId: string }) {
   );
 }
 
+/** Встречный сигнал кандидата (E33-6): «интересна компания». Только для кандидата; снимается. */
+function CompanyInterest({ companyId }: { companyId: string }) {
+  const { status, role } = useAuth();
+  const [marked, setMarked] = useState(false);
+  const mark = useMarkCandidateInterestCompaniesCompanyIdInterestPost({ mutation: { onSuccess: () => setMarked(true) } });
+  const unmark = useRemoveCandidateInterestCompaniesCompanyIdInterestDelete({ mutation: { onSuccess: () => setMarked(false) } });
+  if (status !== "authenticated" || role !== "candidate") return null;
+  const err = mark.isError || unmark.isError;
+  return (
+    <section aria-label={T.companyInterest} className="flex flex-col gap-2 rounded-xl border border-hairline bg-card p-4">
+      {marked ? (
+        <>
+          <p role="status" className="text-14">{T.companyInterestOn}</p>
+          <Button variant="outline" loading={unmark.isPending} onClick={() => unmark.mutate({ companyId })}>{T.companyInterestOff}</Button>
+        </>
+      ) : (
+        <>
+          <p className="text-13 text-muted">{T.companyInterestHint}</p>
+          <Button variant="outline" loading={mark.isPending} onClick={() => mark.mutate({ companyId })}>{T.companyInterest}</Button>
+        </>
+      )}
+      {err && <ErrorNote>{T.companyInterestError}</ErrorNote>}
+    </section>
+  );
+}
+
 /** Вакансия (J1, /jobs/:id). Отдельного публичного эндпоинта нет: ищем в публичной выдаче. */
 export default function JobDetail() {
   const { id = "" } = useParams();
@@ -107,6 +134,7 @@ export default function JobDetail() {
             </section>
           )}
           <ApplyBox vacancyId={v.id} />
+          <CompanyInterest companyId={v.company.id} />
         </>
       )}
     </div>
