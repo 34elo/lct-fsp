@@ -73,10 +73,38 @@ class CoreClient:
     async def profile(self, tg_user_id: int) -> dict:
         return await self.request("GET", "/internal/tg/profile", params={"tg_user_id": tg_user_id})
 
-    async def set_status(self, tg_user_id: int, status: str) -> None:
-        await self.request(
+    async def set_status(self, tg_user_id: int, status: str) -> dict:
+        return await self.request(
             "PATCH", "/internal/tg/status", json={"tg_user_id": tg_user_id, "status": status}
         )
+
+    async def settings(self, tg_user_id: int) -> dict:
+        return await self.request("GET", "/internal/tg/settings", params={"tg_user_id": tg_user_id})
+
+    async def update_settings(self, tg_user_id: int, **changes: Any) -> dict:
+        """`salary_min` и `formats`; не переданное не меняется, `salary_min=None` очищает."""
+        return await self.request(
+            "PATCH", "/internal/tg/settings", json={"tg_user_id": tg_user_id, **changes}
+        )
+
+    async def category(self, tg_user_id: int) -> dict:
+        return await self.request("GET", "/internal/tg/category", params={"tg_user_id": tg_user_id})
+
+    async def fsp(self, tg_user_id: int) -> dict:
+        return await self.request("GET", "/internal/tg/fsp", params={"tg_user_id": tg_user_id})
+
+    async def fsp_link(self, tg_user_id: int, value: str) -> dict:
+        """Email (есть `@`) или ID участника."""
+        key = "email" if "@" in value else "participant_id"
+        body = {"tg_user_id": tg_user_id, key: value}
+        return await self.request("POST", "/internal/tg/fsp/link", json=body)
+
+    async def fsp_verify(self, tg_user_id: int, code: str) -> dict:
+        body = {"tg_user_id": tg_user_id, "code": code}
+        return await self.request("POST", "/internal/tg/fsp/verify", json=body)
+
+    async def fsp_sync(self, tg_user_id: int) -> None:
+        await self.request("POST", "/internal/tg/fsp/sync", json={"tg_user_id": tg_user_id})
 
     async def upload_resume(self, tg_user_id: int, filename: str, data: bytes) -> dict:
         """Файл не сохраняется в боте: байты уходят в core как multipart и забываются."""
