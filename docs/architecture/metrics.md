@@ -384,3 +384,18 @@ CREATE INDEX ON analytics_events (run_id) WHERE run_id IS NOT NULL;
 Реализация онлайн-метрик (E31-4): `app/analytics/metrics.py`, `GET /admin/metrics` ([api.md](api.md)). Считается на лету по `analytics_events` (без материализованных представлений, как дашборд ФСП, одинаково в SQLite и PostgreSQL); ячейки меньше 5 скрыты. Пока события не пишутся (`email_verified`, `survey_*`, `assessment_*` блока 1; `time_to_respond_s`, `time_since_need_s`), соответствующие шаги и времена показываются как недоступные или скрытые; калибровка `p_accept` и сохранение подборки при уточнении ждут своих событий.
 
 Все события — без текста ответов, текста потребностей и ПДн: только числа, флаги, перечисления и slug'и.
+
+## Нагрузочный стенд (E29-2)
+
+`make load` запускает [locust](https://locust.io) (`tools/load/locustfile.py`, зависимость только в группе `load` корневого `pyproject.toml`, в сервисы не попадает) против живого стека с демо-витриной (`make up && make seed`). Параметры: `LOAD_USERS` (50), `LOAD_TIME` (3m), `LOAD_HOST` (`http://127.0.0.1:28080`); `LOAD_EMPLOYERS`/`LOAD_CANDIDATES` задают, сколько демо-аккаунтов `hr{NN}`/`cand{NNNN}` ротируются.
+
+| Роль (вес) | Запросы (имя в отчёте) |
+|---|---|
+| Работодатель (3) | `POST /search/candidates` (`search`), `GET /vacancies/{id}/matches` (`matches`) |
+| Кандидат (2) | `GET /candidates/me/profile` (`profile`), `/category`, `POST /assessment/attempts` + `GET .../next` (`test_start`, `test_next`; 403/409 кулдаун и согласия — штатно, 404 — ручки нет, тест отключается) |
+
+Пороги проверяет `tools/load/report.py` по `reports/load/load_stats.csv` и пишет `reports/load/load.md`: p95 `search` ≤ 1 с, p95 `matches` ≤ 1 с, доля ошибок ≤ 1 %; отсутствие запросов `search`/`matches` — тоже нарушение. Цифры прогона на домашнем сервере вносить сюда после первого запуска.
+
+| Дата | Стенд | Пользователей | p95 search | p95 matches | Ошибки |
+|---|---|---|---|---|---|
+| — | прогон на стеке ещё не выполнялся | 50 | — | — | — |
