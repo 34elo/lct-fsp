@@ -27,6 +27,7 @@ from app.consents.router import router as consents_router
 from app.events_stream import UiHub
 from app.events_stream import router as events_router
 from app.fsp.router import router as fsp_router
+from app.graph.router import router as graph_router
 from app.identity.router import router as identity_router
 from app.matching.router import router as search_router
 from app.offers.router import router as offers_router
@@ -88,6 +89,7 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     # >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
     app.include_router(assessment_router)
     app.include_router(admin_families_router)
+    app.include_router(graph_router)  # /candidates/me/graph раньше {pseudo_id}
     # <<< block1
     # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
     # <<< block2
