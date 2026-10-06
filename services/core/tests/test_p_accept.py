@@ -48,3 +48,19 @@ def test_mutual_is_harmonic_mean():
     assert math.isclose(mutual(0.8, 0.4), 2 * 0.8 * 0.4 / 1.2)
     assert mutual(0.6, 0.6) == 0.6 and mutual(0.0, 0.0) == 0.0
     assert mutual(0.9, 0.1) < 0.5  # низкий интерес тянет H вниз сильнее среднего
+
+
+def test_suggest_raise_ladder():
+    from app.matching.p_accept import suggest_raise
+
+    def compute(to):
+        return min(0.9, to / 1_000_000)
+
+    # достигает high: первый шаг с p ≥ 0.65, верх округлён до 5000
+    to, p = suggest_raise(500_000, 0.5, compute, CFG)
+    assert p >= CFG.high and to % CFG.raise_round == 0 and to < 500_000 * 1.45
+    assert suggest_raise(700_000, 0.7, compute, CFG) is None  # уже высокая
+    # high недостижим, но из «низкой» можно подняться до «средней»
+    to, p = suggest_raise(300_000, 0.3, lambda t: 0.36, CFG)
+    assert CFG.low <= p < CFG.high and to == 315_000
+    assert suggest_raise(300_000, 0.3, lambda t: 0.3, CFG) is None

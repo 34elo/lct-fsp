@@ -15,4 +15,5 @@ export const DeclineReason = {
   wrong_grade: 'wrong_grade',
   not_looking: 'not_looking',
   other: 'other',
+  wrong_company: 'wrong_company',
 } as const;

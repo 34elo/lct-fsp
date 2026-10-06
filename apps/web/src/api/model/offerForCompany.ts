@@ -34,6 +34,9 @@ export interface OfferForCompany {
   match_snapshot?: MatchSnapshot | null;
   decline?: Decline | null;
   awaiting_reply_from?: string | null;
+  interest_at?: string | null;
+  interest_opened_at?: string | null;
+  invited_at?: string | null;
   candidate?: CandidateCard | null;
   contacts?: ContactsOutput | null;
 }

@@ -53,6 +53,13 @@ class Offer(Base):
     team_offer_id: Mapped[uuid.UUID | None] = mapped_column(default=None)
     idempotency_key: Mapped[str | None] = mapped_column(Text, default=None)
     expires_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True))
+    # ADR-026 (E33-1): оффер начался с интереса (`interest_at`), кандидат открыл интерес,
+    # компания отправила приглашение (`invited_at`). Интерес без приглашения: invited_at пуст.
+    interest_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), default=None)
+    interest_opened_at: Mapped[datetime | None] = mapped_column(
+        sa.DateTime(timezone=True), default=None
+    )
+    invited_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), default=None)
     viewed_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), default=None)
     responded_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), default=None)
     created_at: Mapped[datetime] = mapped_column(
@@ -122,6 +129,32 @@ class Complaint(Base):
     reason: Mapped[str] = mapped_column(Text)
     comment: Mapped[str | None] = mapped_column(Text, default=None)
     status: Mapped[str] = mapped_column(Text, default="open", server_default="open")
+    created_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), default=utcnow, server_default=sa.func.now()
+    )
+
+
+class OfferTask(Base):
+    """Задача в приглашении (E33-3, ADR-026): одна на оффер, видна только его сторонам.
+
+    Семейство (`family_id`) лежит в банке блока 1 — связи по внешнему ключу нет, доступ только
+    через порт `offers/invite_task.py`. Ответ один; повтор возвращает принятый.
+    """
+
+    __tablename__ = "offer_tasks"
+
+    offer_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("offers.id", ondelete="CASCADE"), primary_key=True
+    )
+    company_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("companies.id"))
+    family_id: Mapped[uuid.UUID] = mapped_column()
+    title: Mapped[str] = mapped_column(Text)
+    kind: Mapped[str] = mapped_column(Text, default="")
+    minutes: Mapped[int]
+    deadline_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True))
+    answer: Mapped[dict | None] = mapped_column(sa.JSON, default=None)  # {"value": ...}
+    score: Mapped[float | None] = mapped_column(default=None)
+    answered_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), default=None)
     created_at: Mapped[datetime] = mapped_column(
         sa.DateTime(timezone=True), default=utcnow, server_default=sa.func.now()
     )

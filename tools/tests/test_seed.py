@@ -294,6 +294,45 @@ async def test_seed_grades_core_and_idempotent(factory):
         assert await assessment.category_counts(s) == counts
 
 
+def test_jury_accounts_in_config():
+    """E32-4b: демо-аккаунты жюри заданы в config.yaml и не пересекаются с планом витрины."""
+    from tools.seed.jury import jury_emails
+
+    emails = jury_emails()
+    assert emails["candidate"] != emails["employer"]
+    plan = build_plan(seed=7, anchor=ANCHOR)
+    taken = {c["email"] for c in plan["candidates"]} | {co["email"] for co in plan["companies"]}
+    assert not set(emails.values()) & taken
+
+
+async def test_seed_jury_idempotent(factory):
+    """E32-4b: аккаунты жюри создаются один раз, кандидат без грейда, компания проверена."""
+    from app.assessment import service as assessment
+    from app.companies import service as companies
+    from app.identity import service as identity
+    from app.identity.models import User
+    from fsp_platform.db import session_scope
+    from sqlalchemy import select
+
+    from tools.seed.jury import jury_emails, seed_jury
+
+    emails = jury_emails()
+    first = await seed_jury(factory, password="demo-pass-1234", pseudo_secret="t")
+    assert first == {"jury_candidate": 1, "jury_employer": 1}
+    assert await seed_jury(factory, password="demo-pass-1234", pseudo_secret="t") == {
+        "jury_candidate": 0,
+        "jury_employer": 0,
+    }
+    async with session_scope(factory) as s:
+        cand = await s.scalar(select(User).where(User.email == emails["candidate"]))
+        hr = await s.scalar(select(User).where(User.email == emails["employer"]))
+        assert (cand.role, hr.role) == ("candidate", "employer")
+        assert await assessment.get_grades(s, cand.id) == []
+        company = await companies.membership(s, hr.id)
+        assert company is not None
+        assert identity.normalize_email(emails["candidate"]) == cand.email
+
+
 def test_demo_v2_data_consistent(plan):
     """E34-1: герои v2 покрывают сценарии, ссылки в данных замкнуты, email уникальны."""
     from tools.seed.demo_v2 import load_data, plan_attempts

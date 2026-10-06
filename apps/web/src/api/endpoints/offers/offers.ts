@@ -27,10 +27,13 @@ import type {
   ComplaintIn,
   ComplaintOut,
   ContactsOutput,
+  CreateInterest,
   CreateOffer,
   CreateTeamOffer,
   DeclineIn,
   HTTPValidationError,
+  InterestsSummary,
+  InviteFromInterest,
   ListFspTeamsTeamsGetParams,
   ListOffersOffersGetParams,
   MessageIn,
@@ -520,7 +523,742 @@ export function useListOffersOffersGet<TData = Awaited<ReturnType<typeof listOff
 
 
 
-export type listFspTeamsTeamsGetResponse200 = {
+export type createInterestInterestsPostResponse201 = {
+  data: OfferForCompany
+  status: 201
+}
+
+export type createInterestInterestsPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type createInterestInterestsPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type createInterestInterestsPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type createInterestInterestsPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type createInterestInterestsPostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type createInterestInterestsPostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type createInterestInterestsPostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type createInterestInterestsPostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type createInterestInterestsPostResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type createInterestInterestsPostResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type createInterestInterestsPostResponse429ApplicationProblemJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type createInterestInterestsPostResponse429ApplicationJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type createInterestInterestsPostResponseSuccess = (createInterestInterestsPostResponse201) & {
+  headers: Headers;
+};
+export type createInterestInterestsPostResponseError = (createInterestInterestsPostResponse401ApplicationProblemJson | createInterestInterestsPostResponse401ApplicationJson | createInterestInterestsPostResponse403ApplicationProblemJson | createInterestInterestsPostResponse403ApplicationJson | createInterestInterestsPostResponse404ApplicationProblemJson | createInterestInterestsPostResponse404ApplicationJson | createInterestInterestsPostResponse409ApplicationProblemJson | createInterestInterestsPostResponse409ApplicationJson | createInterestInterestsPostResponse422ApplicationProblemJson | createInterestInterestsPostResponse422ApplicationJson | createInterestInterestsPostResponse429ApplicationProblemJson | createInterestInterestsPostResponse429ApplicationJson) & {
+  headers: Headers;
+};
+
+export type createInterestInterestsPostResponse = (createInterestInterestsPostResponseSuccess | createInterestInterestsPostResponseError)
+
+export const getCreateInterestInterestsPostUrl = () => {
+
+
+
+
+  return `/interests`
+}
+
+/**
+ * Интерес к анонимному кандидату. Повтор отметки возвращает открытый интерес.
+ * @summary Create Interest
+ */
+export const createInterestInterestsPost = async (createInterest: CreateInterest, options?: Parameters<typeof apiFetch>[1]): Promise<createInterestInterestsPostResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<createInterestInterestsPostResponse>(getCreateInterestInterestsPostUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(createInterest)
+  }
+);}
+
+
+
+
+
+export const getCreateInterestInterestsPostMutationKey = () => ['createInterestInterestsPost'] as const;
+
+export const getCreateInterestInterestsPostMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createInterestInterestsPost>>, TError,CreateInterestInterestsPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createInterestInterestsPost>>, TError,CreateInterestInterestsPostMutationVariables, TContext> => {
+
+const mutationKey = getCreateInterestInterestsPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createInterestInterestsPost>>, CreateInterestInterestsPostMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createInterestInterestsPost(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateInterestInterestsPostMutationResult = NonNullable<Awaited<ReturnType<typeof createInterestInterestsPost>>>
+    export type CreateInterestInterestsPostMutationBody = CreateInterest
+    export type CreateInterestInterestsPostMutationError = ErrorType<ProblemOut>
+    export type CreateInterestInterestsPostMutationVariables = {data: CreateInterest}
+
+    /**
+ * @summary Create Interest
+ */
+export const useCreateInterestInterestsPost = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createInterestInterestsPost>>, TError,CreateInterestInterestsPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createInterestInterestsPost>>,
+        TError,
+        CreateInterestInterestsPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateInterestInterestsPostMutationOptions(options), queryClient);
+    }
+    export type inviteFromInterestInterestsOfferIdInvitePostResponse200 = {
+  data: OfferForCompany
+  status: 200
+}
+
+export type inviteFromInterestInterestsOfferIdInvitePostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type inviteFromInterestInterestsOfferIdInvitePostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type inviteFromInterestInterestsOfferIdInvitePostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type inviteFromInterestInterestsOfferIdInvitePostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type inviteFromInterestInterestsOfferIdInvitePostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type inviteFromInterestInterestsOfferIdInvitePostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type inviteFromInterestInterestsOfferIdInvitePostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type inviteFromInterestInterestsOfferIdInvitePostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type inviteFromInterestInterestsOfferIdInvitePostResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type inviteFromInterestInterestsOfferIdInvitePostResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type inviteFromInterestInterestsOfferIdInvitePostResponseSuccess = (inviteFromInterestInterestsOfferIdInvitePostResponse200) & {
+  headers: Headers;
+};
+export type inviteFromInterestInterestsOfferIdInvitePostResponseError = (inviteFromInterestInterestsOfferIdInvitePostResponse401ApplicationProblemJson | inviteFromInterestInterestsOfferIdInvitePostResponse401ApplicationJson | inviteFromInterestInterestsOfferIdInvitePostResponse403ApplicationProblemJson | inviteFromInterestInterestsOfferIdInvitePostResponse403ApplicationJson | inviteFromInterestInterestsOfferIdInvitePostResponse404ApplicationProblemJson | inviteFromInterestInterestsOfferIdInvitePostResponse404ApplicationJson | inviteFromInterestInterestsOfferIdInvitePostResponse409ApplicationProblemJson | inviteFromInterestInterestsOfferIdInvitePostResponse409ApplicationJson | inviteFromInterestInterestsOfferIdInvitePostResponse422ApplicationProblemJson | inviteFromInterestInterestsOfferIdInvitePostResponse422ApplicationJson) & {
+  headers: Headers;
+};
+
+export type inviteFromInterestInterestsOfferIdInvitePostResponse = (inviteFromInterestInterestsOfferIdInvitePostResponseSuccess | inviteFromInterestInterestsOfferIdInvitePostResponseError)
+
+export const getInviteFromInterestInterestsOfferIdInvitePostUrl = (offerId: string,) => {
+
+
+
+
+  return `/interests/${offerId}/invite`
+}
+
+/**
+ * Кандидат открыл интерес → приглашение (`interest_opened → sent`).
+ * @summary Invite From Interest
+ */
+export const inviteFromInterestInterestsOfferIdInvitePost = async (offerId: string,
+    inviteFromInterestNull?: InviteFromInterest | null, options?: Parameters<typeof apiFetch>[1]): Promise<inviteFromInterestInterestsOfferIdInvitePostResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<inviteFromInterestInterestsOfferIdInvitePostResponse>(getInviteFromInterestInterestsOfferIdInvitePostUrl(offerId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(inviteFromInterestNull)
+  }
+);}
+
+
+
+
+
+export const getInviteFromInterestInterestsOfferIdInvitePostMutationKey = () => ['inviteFromInterestInterestsOfferIdInvitePost'] as const;
+
+export const getInviteFromInterestInterestsOfferIdInvitePostMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inviteFromInterestInterestsOfferIdInvitePost>>, TError,InviteFromInterestInterestsOfferIdInvitePostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof inviteFromInterestInterestsOfferIdInvitePost>>, TError,InviteFromInterestInterestsOfferIdInvitePostMutationVariables, TContext> => {
+
+const mutationKey = getInviteFromInterestInterestsOfferIdInvitePostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof inviteFromInterestInterestsOfferIdInvitePost>>, InviteFromInterestInterestsOfferIdInvitePostMutationVariables> = (props) => {
+          const {offerId,data} = props ?? {};
+
+          return  inviteFromInterestInterestsOfferIdInvitePost(offerId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InviteFromInterestInterestsOfferIdInvitePostMutationResult = NonNullable<Awaited<ReturnType<typeof inviteFromInterestInterestsOfferIdInvitePost>>>
+    export type InviteFromInterestInterestsOfferIdInvitePostMutationBody = InviteFromInterest | null | undefined
+    export type InviteFromInterestInterestsOfferIdInvitePostMutationError = ErrorType<ProblemOut>
+    export type InviteFromInterestInterestsOfferIdInvitePostMutationVariables = {offerId: string;data?: InviteFromInterest | null}
+
+    /**
+ * @summary Invite From Interest
+ */
+export const useInviteFromInterestInterestsOfferIdInvitePost = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inviteFromInterestInterestsOfferIdInvitePost>>, TError,InviteFromInterestInterestsOfferIdInvitePostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof inviteFromInterestInterestsOfferIdInvitePost>>,
+        TError,
+        InviteFromInterestInterestsOfferIdInvitePostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getInviteFromInterestInterestsOfferIdInvitePostMutationOptions(options), queryClient);
+    }
+    export type myInterestsCandidatesMeInterestsGetResponse200 = {
+  data: InterestsSummary
+  status: 200
+}
+
+export type myInterestsCandidatesMeInterestsGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type myInterestsCandidatesMeInterestsGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type myInterestsCandidatesMeInterestsGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type myInterestsCandidatesMeInterestsGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type myInterestsCandidatesMeInterestsGetResponseSuccess = (myInterestsCandidatesMeInterestsGetResponse200) & {
+  headers: Headers;
+};
+export type myInterestsCandidatesMeInterestsGetResponseError = (myInterestsCandidatesMeInterestsGetResponse401ApplicationProblemJson | myInterestsCandidatesMeInterestsGetResponse401ApplicationJson | myInterestsCandidatesMeInterestsGetResponse403ApplicationProblemJson | myInterestsCandidatesMeInterestsGetResponse403ApplicationJson) & {
+  headers: Headers;
+};
+
+export type myInterestsCandidatesMeInterestsGetResponse = (myInterestsCandidatesMeInterestsGetResponseSuccess | myInterestsCandidatesMeInterestsGetResponseError)
+
+export const getMyInterestsCandidatesMeInterestsGetUrl = () => {
+
+
+
+
+  return `/candidates/me/interests`
+}
+
+/**
+ * @summary My Interests
+ */
+export const myInterestsCandidatesMeInterestsGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<myInterestsCandidatesMeInterestsGetResponse> => {
+
+  return apiFetch<myInterestsCandidatesMeInterestsGetResponse>(getMyInterestsCandidatesMeInterestsGetUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getMyInterestsCandidatesMeInterestsGetQueryKey = () => {
+    return [
+    `/candidates/me/interests`
+    ] as const;
+    }
+
+
+export const getMyInterestsCandidatesMeInterestsGetQueryOptions = <TData = Awaited<ReturnType<typeof myInterestsCandidatesMeInterestsGet>>, TError = ErrorType<ProblemOut>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myInterestsCandidatesMeInterestsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMyInterestsCandidatesMeInterestsGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof myInterestsCandidatesMeInterestsGet>>> = ({ signal }) => myInterestsCandidatesMeInterestsGet({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof myInterestsCandidatesMeInterestsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type MyInterestsCandidatesMeInterestsGetQueryResult = NonNullable<Awaited<ReturnType<typeof myInterestsCandidatesMeInterestsGet>>>
+export type MyInterestsCandidatesMeInterestsGetQueryError = ErrorType<ProblemOut>
+
+
+export function useMyInterestsCandidatesMeInterestsGet<TData = Awaited<ReturnType<typeof myInterestsCandidatesMeInterestsGet>>, TError = ErrorType<ProblemOut>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof myInterestsCandidatesMeInterestsGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof myInterestsCandidatesMeInterestsGet>>,
+          TError,
+          Awaited<ReturnType<typeof myInterestsCandidatesMeInterestsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMyInterestsCandidatesMeInterestsGet<TData = Awaited<ReturnType<typeof myInterestsCandidatesMeInterestsGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myInterestsCandidatesMeInterestsGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof myInterestsCandidatesMeInterestsGet>>,
+          TError,
+          Awaited<ReturnType<typeof myInterestsCandidatesMeInterestsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMyInterestsCandidatesMeInterestsGet<TData = Awaited<ReturnType<typeof myInterestsCandidatesMeInterestsGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myInterestsCandidatesMeInterestsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary My Interests
+ */
+
+export function useMyInterestsCandidatesMeInterestsGet<TData = Awaited<ReturnType<typeof myInterestsCandidatesMeInterestsGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myInterestsCandidatesMeInterestsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMyInterestsCandidatesMeInterestsGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type openInterestInterestsOfferIdOpenPostResponse200 = {
+  data: OfferForCandidate
+  status: 200
+}
+
+export type openInterestInterestsOfferIdOpenPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type openInterestInterestsOfferIdOpenPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type openInterestInterestsOfferIdOpenPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type openInterestInterestsOfferIdOpenPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type openInterestInterestsOfferIdOpenPostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type openInterestInterestsOfferIdOpenPostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type openInterestInterestsOfferIdOpenPostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type openInterestInterestsOfferIdOpenPostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type openInterestInterestsOfferIdOpenPostResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type openInterestInterestsOfferIdOpenPostResponseSuccess = (openInterestInterestsOfferIdOpenPostResponse200) & {
+  headers: Headers;
+};
+export type openInterestInterestsOfferIdOpenPostResponseError = (openInterestInterestsOfferIdOpenPostResponse401ApplicationProblemJson | openInterestInterestsOfferIdOpenPostResponse401ApplicationJson | openInterestInterestsOfferIdOpenPostResponse403ApplicationProblemJson | openInterestInterestsOfferIdOpenPostResponse403ApplicationJson | openInterestInterestsOfferIdOpenPostResponse404ApplicationProblemJson | openInterestInterestsOfferIdOpenPostResponse404ApplicationJson | openInterestInterestsOfferIdOpenPostResponse409ApplicationProblemJson | openInterestInterestsOfferIdOpenPostResponse409ApplicationJson | openInterestInterestsOfferIdOpenPostResponse422) & {
+  headers: Headers;
+};
+
+export type openInterestInterestsOfferIdOpenPostResponse = (openInterestInterestsOfferIdOpenPostResponseSuccess | openInterestInterestsOfferIdOpenPostResponseError)
+
+export const getOpenInterestInterestsOfferIdOpenPostUrl = (offerId: string,) => {
+
+
+
+
+  return `/interests/${offerId}/open`
+}
+
+/**
+ * «Открыть»: компания получает уведомление и может отправить приглашение. Повтор — no-op.
+ * @summary Open Interest
+ */
+export const openInterestInterestsOfferIdOpenPost = async (offerId: string, options?: Parameters<typeof apiFetch>[1]): Promise<openInterestInterestsOfferIdOpenPostResponse> => {
+
+  return apiFetch<openInterestInterestsOfferIdOpenPostResponse>(getOpenInterestInterestsOfferIdOpenPostUrl(offerId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getOpenInterestInterestsOfferIdOpenPostMutationKey = () => ['openInterestInterestsOfferIdOpenPost'] as const;
+
+export const getOpenInterestInterestsOfferIdOpenPostMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof openInterestInterestsOfferIdOpenPost>>, TError,OpenInterestInterestsOfferIdOpenPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof openInterestInterestsOfferIdOpenPost>>, TError,OpenInterestInterestsOfferIdOpenPostMutationVariables, TContext> => {
+
+const mutationKey = getOpenInterestInterestsOfferIdOpenPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof openInterestInterestsOfferIdOpenPost>>, OpenInterestInterestsOfferIdOpenPostMutationVariables> = (props) => {
+          const {offerId} = props ?? {};
+
+          return  openInterestInterestsOfferIdOpenPost(offerId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type OpenInterestInterestsOfferIdOpenPostMutationResult = NonNullable<Awaited<ReturnType<typeof openInterestInterestsOfferIdOpenPost>>>
+
+    export type OpenInterestInterestsOfferIdOpenPostMutationError = ErrorType<ProblemOut | HTTPValidationError>
+    export type OpenInterestInterestsOfferIdOpenPostMutationVariables = {offerId: string}
+
+    /**
+ * @summary Open Interest
+ */
+export const useOpenInterestInterestsOfferIdOpenPost = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof openInterestInterestsOfferIdOpenPost>>, TError,OpenInterestInterestsOfferIdOpenPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof openInterestInterestsOfferIdOpenPost>>,
+        TError,
+        OpenInterestInterestsOfferIdOpenPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getOpenInterestInterestsOfferIdOpenPostMutationOptions(options), queryClient);
+    }
+    export type declineInterestInterestsOfferIdDeclinePostResponse200 = {
+  data: OfferForCandidate
+  status: 200
+}
+
+export type declineInterestInterestsOfferIdDeclinePostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type declineInterestInterestsOfferIdDeclinePostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type declineInterestInterestsOfferIdDeclinePostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type declineInterestInterestsOfferIdDeclinePostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type declineInterestInterestsOfferIdDeclinePostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type declineInterestInterestsOfferIdDeclinePostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type declineInterestInterestsOfferIdDeclinePostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type declineInterestInterestsOfferIdDeclinePostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type declineInterestInterestsOfferIdDeclinePostResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type declineInterestInterestsOfferIdDeclinePostResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type declineInterestInterestsOfferIdDeclinePostResponseSuccess = (declineInterestInterestsOfferIdDeclinePostResponse200) & {
+  headers: Headers;
+};
+export type declineInterestInterestsOfferIdDeclinePostResponseError = (declineInterestInterestsOfferIdDeclinePostResponse401ApplicationProblemJson | declineInterestInterestsOfferIdDeclinePostResponse401ApplicationJson | declineInterestInterestsOfferIdDeclinePostResponse403ApplicationProblemJson | declineInterestInterestsOfferIdDeclinePostResponse403ApplicationJson | declineInterestInterestsOfferIdDeclinePostResponse404ApplicationProblemJson | declineInterestInterestsOfferIdDeclinePostResponse404ApplicationJson | declineInterestInterestsOfferIdDeclinePostResponse409ApplicationProblemJson | declineInterestInterestsOfferIdDeclinePostResponse409ApplicationJson | declineInterestInterestsOfferIdDeclinePostResponse422ApplicationProblemJson | declineInterestInterestsOfferIdDeclinePostResponse422ApplicationJson) & {
+  headers: Headers;
+};
+
+export type declineInterestInterestsOfferIdDeclinePostResponse = (declineInterestInterestsOfferIdDeclinePostResponseSuccess | declineInterestInterestsOfferIdDeclinePostResponseError)
+
+export const getDeclineInterestInterestsOfferIdDeclinePostUrl = (offerId: string,) => {
+
+
+
+
+  return `/interests/${offerId}/decline`
+}
+
+/**
+ * «Не интересно» с причиной (вилка, формат, компания, не ищу). Повтор — no-op.
+ * @summary Decline Interest
+ */
+export const declineInterestInterestsOfferIdDeclinePost = async (offerId: string,
+    declineIn: DeclineIn, options?: Parameters<typeof apiFetch>[1]): Promise<declineInterestInterestsOfferIdDeclinePostResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<declineInterestInterestsOfferIdDeclinePostResponse>(getDeclineInterestInterestsOfferIdDeclinePostUrl(offerId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(declineIn)
+  }
+);}
+
+
+
+
+
+export const getDeclineInterestInterestsOfferIdDeclinePostMutationKey = () => ['declineInterestInterestsOfferIdDeclinePost'] as const;
+
+export const getDeclineInterestInterestsOfferIdDeclinePostMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof declineInterestInterestsOfferIdDeclinePost>>, TError,DeclineInterestInterestsOfferIdDeclinePostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof declineInterestInterestsOfferIdDeclinePost>>, TError,DeclineInterestInterestsOfferIdDeclinePostMutationVariables, TContext> => {
+
+const mutationKey = getDeclineInterestInterestsOfferIdDeclinePostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof declineInterestInterestsOfferIdDeclinePost>>, DeclineInterestInterestsOfferIdDeclinePostMutationVariables> = (props) => {
+          const {offerId,data} = props ?? {};
+
+          return  declineInterestInterestsOfferIdDeclinePost(offerId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeclineInterestInterestsOfferIdDeclinePostMutationResult = NonNullable<Awaited<ReturnType<typeof declineInterestInterestsOfferIdDeclinePost>>>
+    export type DeclineInterestInterestsOfferIdDeclinePostMutationBody = DeclineIn
+    export type DeclineInterestInterestsOfferIdDeclinePostMutationError = ErrorType<ProblemOut>
+    export type DeclineInterestInterestsOfferIdDeclinePostMutationVariables = {offerId: string;data: DeclineIn}
+
+    /**
+ * @summary Decline Interest
+ */
+export const useDeclineInterestInterestsOfferIdDeclinePost = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof declineInterestInterestsOfferIdDeclinePost>>, TError,DeclineInterestInterestsOfferIdDeclinePostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof declineInterestInterestsOfferIdDeclinePost>>,
+        TError,
+        DeclineInterestInterestsOfferIdDeclinePostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeclineInterestInterestsOfferIdDeclinePostMutationOptions(options), queryClient);
+    }
+    export type listFspTeamsTeamsGetResponse200 = {
   data: TeamOut[]
   status: 200
 }

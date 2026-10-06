@@ -28,10 +28,12 @@ import type {
   CandidateCardFull,
   CandidateSimilarCandidatesPseudoIdSimilarGetParams,
   HTTPValidationError,
+  MarkCandidateInterestCompaniesCompanyIdInterestPost200,
   NavigatorOut,
   ParseRequest,
   ParsedQuery,
   ProblemOut,
+  RemoveCandidateInterestCompaniesCompanyIdInterestDelete200,
   SearchPage,
   SearchRequest,
   SimilarPage,
@@ -935,3 +937,249 @@ export function useMyUpliftCandidatesMeUpliftGet<TData = Awaited<ReturnType<type
 
 
 
+export type markCandidateInterestCompaniesCompanyIdInterestPostResponse200 = {
+  data: MarkCandidateInterestCompaniesCompanyIdInterestPost200
+  status: 200
+}
+
+export type markCandidateInterestCompaniesCompanyIdInterestPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type markCandidateInterestCompaniesCompanyIdInterestPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type markCandidateInterestCompaniesCompanyIdInterestPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type markCandidateInterestCompaniesCompanyIdInterestPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type markCandidateInterestCompaniesCompanyIdInterestPostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type markCandidateInterestCompaniesCompanyIdInterestPostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type markCandidateInterestCompaniesCompanyIdInterestPostResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type markCandidateInterestCompaniesCompanyIdInterestPostResponseSuccess = (markCandidateInterestCompaniesCompanyIdInterestPostResponse200) & {
+  headers: Headers;
+};
+export type markCandidateInterestCompaniesCompanyIdInterestPostResponseError = (markCandidateInterestCompaniesCompanyIdInterestPostResponse401ApplicationProblemJson | markCandidateInterestCompaniesCompanyIdInterestPostResponse401ApplicationJson | markCandidateInterestCompaniesCompanyIdInterestPostResponse403ApplicationProblemJson | markCandidateInterestCompaniesCompanyIdInterestPostResponse403ApplicationJson | markCandidateInterestCompaniesCompanyIdInterestPostResponse404ApplicationProblemJson | markCandidateInterestCompaniesCompanyIdInterestPostResponse404ApplicationJson | markCandidateInterestCompaniesCompanyIdInterestPostResponse422) & {
+  headers: Headers;
+};
+
+export type markCandidateInterestCompaniesCompanyIdInterestPostResponse = (markCandidateInterestCompaniesCompanyIdInterestPostResponseSuccess | markCandidateInterestCompaniesCompanyIdInterestPostResponseError)
+
+export const getMarkCandidateInterestCompaniesCompanyIdInterestPostUrl = (companyId: string,) => {
+
+
+
+
+  return `/companies/${companyId}/interest`
+}
+
+/**
+ * Кандидат показывает интерес к компании (E33-6).
+ * @summary Mark Candidate Interest
+ */
+export const markCandidateInterestCompaniesCompanyIdInterestPost = async (companyId: string, options?: Parameters<typeof apiFetch>[1]): Promise<markCandidateInterestCompaniesCompanyIdInterestPostResponse> => {
+
+  return apiFetch<markCandidateInterestCompaniesCompanyIdInterestPostResponse>(getMarkCandidateInterestCompaniesCompanyIdInterestPostUrl(companyId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getMarkCandidateInterestCompaniesCompanyIdInterestPostMutationKey = () => ['markCandidateInterestCompaniesCompanyIdInterestPost'] as const;
+
+export const getMarkCandidateInterestCompaniesCompanyIdInterestPostMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markCandidateInterestCompaniesCompanyIdInterestPost>>, TError,MarkCandidateInterestCompaniesCompanyIdInterestPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof markCandidateInterestCompaniesCompanyIdInterestPost>>, TError,MarkCandidateInterestCompaniesCompanyIdInterestPostMutationVariables, TContext> => {
+
+const mutationKey = getMarkCandidateInterestCompaniesCompanyIdInterestPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof markCandidateInterestCompaniesCompanyIdInterestPost>>, MarkCandidateInterestCompaniesCompanyIdInterestPostMutationVariables> = (props) => {
+          const {companyId} = props ?? {};
+
+          return  markCandidateInterestCompaniesCompanyIdInterestPost(companyId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MarkCandidateInterestCompaniesCompanyIdInterestPostMutationResult = NonNullable<Awaited<ReturnType<typeof markCandidateInterestCompaniesCompanyIdInterestPost>>>
+
+    export type MarkCandidateInterestCompaniesCompanyIdInterestPostMutationError = ErrorType<ProblemOut | HTTPValidationError>
+    export type MarkCandidateInterestCompaniesCompanyIdInterestPostMutationVariables = {companyId: string}
+
+    /**
+ * @summary Mark Candidate Interest
+ */
+export const useMarkCandidateInterestCompaniesCompanyIdInterestPost = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markCandidateInterestCompaniesCompanyIdInterestPost>>, TError,MarkCandidateInterestCompaniesCompanyIdInterestPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof markCandidateInterestCompaniesCompanyIdInterestPost>>,
+        TError,
+        MarkCandidateInterestCompaniesCompanyIdInterestPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getMarkCandidateInterestCompaniesCompanyIdInterestPostMutationOptions(options), queryClient);
+    }
+    export type removeCandidateInterestCompaniesCompanyIdInterestDeleteResponse200 = {
+  data: RemoveCandidateInterestCompaniesCompanyIdInterestDelete200
+  status: 200
+}
+
+export type removeCandidateInterestCompaniesCompanyIdInterestDeleteResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type removeCandidateInterestCompaniesCompanyIdInterestDeleteResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type removeCandidateInterestCompaniesCompanyIdInterestDeleteResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type removeCandidateInterestCompaniesCompanyIdInterestDeleteResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type removeCandidateInterestCompaniesCompanyIdInterestDeleteResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type removeCandidateInterestCompaniesCompanyIdInterestDeleteResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type removeCandidateInterestCompaniesCompanyIdInterestDeleteResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type removeCandidateInterestCompaniesCompanyIdInterestDeleteResponseSuccess = (removeCandidateInterestCompaniesCompanyIdInterestDeleteResponse200) & {
+  headers: Headers;
+};
+export type removeCandidateInterestCompaniesCompanyIdInterestDeleteResponseError = (removeCandidateInterestCompaniesCompanyIdInterestDeleteResponse401ApplicationProblemJson | removeCandidateInterestCompaniesCompanyIdInterestDeleteResponse401ApplicationJson | removeCandidateInterestCompaniesCompanyIdInterestDeleteResponse403ApplicationProblemJson | removeCandidateInterestCompaniesCompanyIdInterestDeleteResponse403ApplicationJson | removeCandidateInterestCompaniesCompanyIdInterestDeleteResponse404ApplicationProblemJson | removeCandidateInterestCompaniesCompanyIdInterestDeleteResponse404ApplicationJson | removeCandidateInterestCompaniesCompanyIdInterestDeleteResponse422) & {
+  headers: Headers;
+};
+
+export type removeCandidateInterestCompaniesCompanyIdInterestDeleteResponse = (removeCandidateInterestCompaniesCompanyIdInterestDeleteResponseSuccess | removeCandidateInterestCompaniesCompanyIdInterestDeleteResponseError)
+
+export const getRemoveCandidateInterestCompaniesCompanyIdInterestDeleteUrl = (companyId: string,) => {
+
+
+
+
+  return `/companies/${companyId}/interest`
+}
+
+/**
+ * Кандидат снимает интерес к компании (E33-6).
+ * @summary Remove Candidate Interest
+ */
+export const removeCandidateInterestCompaniesCompanyIdInterestDelete = async (companyId: string, options?: Parameters<typeof apiFetch>[1]): Promise<removeCandidateInterestCompaniesCompanyIdInterestDeleteResponse> => {
+
+  return apiFetch<removeCandidateInterestCompaniesCompanyIdInterestDeleteResponse>(getRemoveCandidateInterestCompaniesCompanyIdInterestDeleteUrl(companyId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getRemoveCandidateInterestCompaniesCompanyIdInterestDeleteMutationKey = () => ['removeCandidateInterestCompaniesCompanyIdInterestDelete'] as const;
+
+export const getRemoveCandidateInterestCompaniesCompanyIdInterestDeleteMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeCandidateInterestCompaniesCompanyIdInterestDelete>>, TError,RemoveCandidateInterestCompaniesCompanyIdInterestDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof removeCandidateInterestCompaniesCompanyIdInterestDelete>>, TError,RemoveCandidateInterestCompaniesCompanyIdInterestDeleteMutationVariables, TContext> => {
+
+const mutationKey = getRemoveCandidateInterestCompaniesCompanyIdInterestDeleteMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removeCandidateInterestCompaniesCompanyIdInterestDelete>>, RemoveCandidateInterestCompaniesCompanyIdInterestDeleteMutationVariables> = (props) => {
+          const {companyId} = props ?? {};
+
+          return  removeCandidateInterestCompaniesCompanyIdInterestDelete(companyId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RemoveCandidateInterestCompaniesCompanyIdInterestDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof removeCandidateInterestCompaniesCompanyIdInterestDelete>>>
+
+    export type RemoveCandidateInterestCompaniesCompanyIdInterestDeleteMutationError = ErrorType<ProblemOut | HTTPValidationError>
+    export type RemoveCandidateInterestCompaniesCompanyIdInterestDeleteMutationVariables = {companyId: string}
+
+    /**
+ * @summary Remove Candidate Interest
+ */
+export const useRemoveCandidateInterestCompaniesCompanyIdInterestDelete = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeCandidateInterestCompaniesCompanyIdInterestDelete>>, TError,RemoveCandidateInterestCompaniesCompanyIdInterestDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof removeCandidateInterestCompaniesCompanyIdInterestDelete>>,
+        TError,
+        RemoveCandidateInterestCompaniesCompanyIdInterestDeleteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRemoveCandidateInterestCompaniesCompanyIdInterestDeleteMutationOptions(options), queryClient);
+    }

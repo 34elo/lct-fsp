@@ -79,6 +79,14 @@ evidence_sources:
     stage_coefficients:
       final: 1.00
       qualifying: 0.85
+    # Слагаемое F силы профиля (ADR-025 п. 3): результативность, уровни соревнований равны
+    f_term:
+      tiers: {winner: 1.0, prize: 0.85, finalist: 0.55, participant: 0.25, no_result: 0.05}
+      finalist_share: 0.25      # топ-25% или выход в финал
+      diminish: 0.5             # i-е по силе соревнование входит с коэффициентом 0.5^i
+      decay_floor: 0.6          # давность — мягкий множитель в [0.6, 1]
+      decay_half_life_years: 3
+      unverified: 0.5
 
   codeforces:
     decay_half_life_years: 2
@@ -293,6 +301,7 @@ matching_weights:
   salary_fit: 0.10  # попадание в вилку
   fsp_strength: 0.10  # сила подтверждения ФСП
   team_signals: 0.03  # максимум вклад связей
+  candidate_interest_boost: 1.05  # множитель если кандидат показал интерес (E33-6)
 
 # Grade fit scoring
 grade_fit_scoring:
@@ -420,6 +429,12 @@ p_accept:
     medium_min: 0.35
     medium_max: 0.65
     high: 0.65
+  # Прогноз ответа до отправки (E33-5): подсказка «поднимите верх вилки до X → Y %»
+  forecast:
+    raise_step: 0.05  # шаг перебора верха вилки, доля от текущего верха
+    raise_max_steps: 8  # до +40 %
+    raise_round: 5000  # округление предложенного верха вверх, ₽
+    response_min_sample: 3  # меньше ответов в категории — средний срок ответа не показываем
 
 ## 4. Limits and operational parameters
 
@@ -440,6 +455,8 @@ needs:
   nice_weight: 0.5  # вес навыка «желательно»
   max_categories: 6  # сколько профессий вернуть
   fallback_top: 1  # ни одна не прошла порог — взять столько лучших с affinity > 0
+  subscription_digest_minutes: 60  # подписка на категорию: уведомление не чаще (E33-4)
+  max_subscriptions: 20  # подписок на компанию
 
 limits:
   # Response times
@@ -459,6 +476,8 @@ limits:
   offer_company_per_day: 20  # офферов за скользящие 24 ч от одной компании
   offer_candidate_per_day: 10  # входящих офферов за 24 ч одному кандидату
   offer_validity_days: 7  # срок жизни оффера до expired (flows.md F8)
+  interest_company_per_week: 30  # интересов (E33-1, ADR-026) от компании за скользящие 7 дней
+  interest_validity_days: 7  # срок интереса до expired
   salary_range_too_wide_ratio: 1.6  # salary_to / salary_from > 1.6 → warning (EU directive)
 
   # Profile freshness

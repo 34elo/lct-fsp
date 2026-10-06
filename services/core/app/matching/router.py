@@ -21,6 +21,7 @@ from app.graph.trust import TrustConfig
 from app.identity.deps import require_roles
 from app.identity.models import User
 from app.matching import card, navigator, query_llm, query_parser, search, similar, uplift_service
+from app.matching import service as matching
 from app.matching.card import CandidateCardFull
 from app.matching.scoring import MatchConfig
 from app.matching.strength import StrengthConfig
@@ -403,3 +404,47 @@ async def my_uplift(
     out = await uplift_service.compute(session, redis, cand, _CFG, _TRUST, _UPLIFT)
     out.setdefault("combo", None)
     return out
+
+
+@router.post(
+    "/companies/{company_id}/interest",
+    response_model=dict,
+    responses=problem_responses(401, 403, 404),
+)
+async def mark_candidate_interest(
+    company_id: uuid.UUID,
+    user: User = Depends(_candidate),
+    session: AsyncSession = Depends(get_session),
+) -> Any:
+    """Кандидат показывает интерес к компании (E33-6)."""
+    cand = await candidates.get(session, user.id)
+    if cand is None:
+        raise ProblemError(404, "company_not_found", "Компания не найдена")
+    company = await companies.get_company(session, company_id)
+    if company is None or company.status != "verified":
+        raise ProblemError(404, "company_not_found", "Компания не найдена")
+    created_at = await matching.set_candidate_interest(session, user.id, company_id)
+    await session.commit()
+    return {"created_at": created_at}
+
+
+@router.delete(
+    "/companies/{company_id}/interest",
+    response_model=dict,
+    responses=problem_responses(401, 403, 404),
+)
+async def remove_candidate_interest(
+    company_id: uuid.UUID,
+    user: User = Depends(_candidate),
+    session: AsyncSession = Depends(get_session),
+) -> Any:
+    """Кандидат снимает интерес к компании (E33-6)."""
+    cand = await candidates.get(session, user.id)
+    if cand is None:
+        raise ProblemError(404, "company_not_found", "Компания не найдена")
+    company = await companies.get_company(session, company_id)
+    if company is None:
+        raise ProblemError(404, "company_not_found", "Компания не найдена")
+    removed = await matching.remove_candidate_interest(session, user.id, company_id)
+    await session.commit()
+    return {"removed": removed}

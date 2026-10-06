@@ -1002,6 +1002,66 @@
         }
       }
     },
+    "/internal/tg/token": {
+      "post": {
+        "tags": [
+          "internal"
+        ],
+        "summary": "Tg User Token",
+        "description": "Короткий access-токен кандидата: бот ходит с ним в `/assessment/*` блока 1 (E25-3).\n\nТот же JWT, что и после входа, но живёт `BOT_USER_TOKEN_TTL` (5 минут), refresh не выдаётся.",
+        "operationId": "tg_user_token_internal_tg_token_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserTokenIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserTokenOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/internal/tg/resumes": {
       "post": {
         "tags": [
@@ -5739,6 +5799,186 @@
         }
       }
     },
+    "/companies/{company_id}/interest": {
+      "post": {
+        "tags": [
+          "search"
+        ],
+        "summary": "Mark Candidate Interest",
+        "description": "Кандидат показывает интерес к компании (E33-6).",
+        "operationId": "mark_candidate_interest_companies__company_id__interest_post",
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Company Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Mark Candidate Interest Companies  Company Id  Interest Post"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "search"
+        ],
+        "summary": "Remove Candidate Interest",
+        "description": "Кандидат снимает интерес к компании (E33-6).",
+        "operationId": "remove_candidate_interest_companies__company_id__interest_delete",
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Company Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Remove Candidate Interest Companies  Company Id  Interest Delete"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/recs/feedback": {
       "post": {
         "tags": [
@@ -6345,6 +6585,528 @@
         }
       }
     },
+    "/interests": {
+      "post": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Create Interest",
+        "description": "Интерес к анонимному кандидату. Повтор отметки возвращает открытый интерес.",
+        "operationId": "create_interest_interests_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInterest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferForCompany"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Конфликт (в том числе cooldown)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Слишком много запросов",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/interests/{offer_id}/invite": {
+      "post": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Invite From Interest",
+        "description": "Кандидат открыл интерес → приглашение (`interest_opened → sent`).",
+        "operationId": "invite_from_interest_interests__offer_id__invite_post",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/InviteFromInterest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferForCompany"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Конфликт (в том числе cooldown)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/candidates/me/interests": {
+      "get": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "My Interests",
+        "operationId": "my_interests_candidates_me_interests_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterestsSummary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/interests/{offer_id}/open": {
+      "post": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Open Interest",
+        "description": "«Открыть»: компания получает уведомление и может отправить приглашение. Повтор — no-op.",
+        "operationId": "open_interest_interests__offer_id__open_post",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferForCandidate"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Конфликт (в том числе cooldown)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/interests/{offer_id}/decline": {
+      "post": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Decline Interest",
+        "description": "«Не интересно» с причиной (вилка, формат, компания, не ищу). Повтор — no-op.",
+        "operationId": "decline_interest_interests__offer_id__decline_post",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeclineIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferForCandidate"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Конфликт (в том числе cooldown)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/teams": {
       "get": {
         "tags": [
@@ -6919,6 +7681,244 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/offers/{offer_id}/task": {
+      "get": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Get Offer Task",
+        "description": "Задача приглашения: вариант без ключа. Чужой оффер или без задачи — 404.",
+        "operationId": "get_offer_task_offers__offer_id__task_get",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskView"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Зависимость недоступна",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/offers/{offer_id}/task/answer": {
+      "post": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Answer Offer Task",
+        "description": "Один ответ на задачу; повтор возвращает принятый (`Idempotent-Replay: true`).",
+        "operationId": "answer_offer_task_offers__offer_id__task_answer_post",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskAnswerIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskBrief"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Конфликт (в том числе cooldown)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Зависимость недоступна",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
                 }
               }
             }
@@ -14578,6 +15578,261 @@
         }
       }
     },
+    "/subscriptions": {
+      "get": {
+        "tags": [
+          "subscriptions"
+        ],
+        "summary": "List Subscriptions",
+        "operationId": "list_subscriptions_subscriptions_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SubscriptionOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Subscriptions Subscriptions Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "subscriptions"
+        ],
+        "summary": "Create Subscription",
+        "operationId": "create_subscription_subscriptions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubscriptionCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Слишком много запросов",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/subscriptions/{subscription_id}": {
+      "delete": {
+        "tags": [
+          "subscriptions"
+        ],
+        "summary": "Delete Subscription",
+        "operationId": "delete_subscription_subscriptions__subscription_id__delete",
+        "parameters": [
+          {
+            "name": "subscription_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Subscription Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/public/profiles/{slug}": {
       "get": {
         "tags": [
@@ -15918,6 +17173,11 @@
             "type": "boolean",
             "title": "Is Shortlisted",
             "default": false
+          },
+          "interested_you": {
+            "type": "boolean",
+            "title": "Interested You",
+            "default": false
           }
         },
         "type": "object",
@@ -16075,6 +17335,11 @@
           "is_shortlisted": {
             "type": "boolean",
             "title": "Is Shortlisted",
+            "default": false
+          },
+          "interested_you": {
+            "type": "boolean",
+            "title": "Interested You",
             "default": false
           },
           "skills": {
@@ -16926,6 +18191,16 @@
           "verified": {
             "type": "boolean",
             "title": "Verified"
+          },
+          "reliability": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CompanyReliability"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -17240,6 +18515,50 @@
         "additionalProperties": false,
         "type": "object",
         "title": "CompanyPatch"
+      },
+      "CompanyReliability": {
+        "properties": {
+          "responsibility_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Responsibility Score"
+          },
+          "response_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Response Rate"
+          },
+          "avg_response_hours": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Response Hours"
+          },
+          "sample": {
+            "type": "integer",
+            "title": "Sample",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "CompanyReliability"
       },
       "CompanyStatus": {
         "type": "string",
@@ -17619,6 +18938,93 @@
         ],
         "title": "CooldownOut"
       },
+      "CreateInterest": {
+        "properties": {
+          "candidate_pseudo_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Candidate Pseudo Id"
+          },
+          "salary_from": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100000000.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary From"
+          },
+          "salary_to": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100000000.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary To"
+          },
+          "salary_basis": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SalaryBasis"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "vacancy_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vacancy Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "candidate_pseudo_id"
+        ],
+        "title": "CreateInterest",
+        "description": "Отметка «интересен»: вилка обязательна, сообщение до 300 символов, вакансия — по желанию."
+      },
       "CreateOffer": {
         "properties": {
           "vacancy_id": {
@@ -17713,6 +19119,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/ContactMethod"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "task": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaskAttach"
               },
               {
                 "type": "null"
@@ -17999,7 +19415,8 @@
           "wrong_format",
           "wrong_grade",
           "not_looking",
-          "other"
+          "other",
+          "wrong_company"
         ],
         "title": "DeclineReason"
       },
@@ -19634,6 +21051,247 @@
         ],
         "title": "HistoryOut"
       },
+      "InterestMetrics": {
+        "properties": {
+          "shown": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shown"
+          },
+          "opened": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opened"
+          },
+          "invited": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invited"
+          },
+          "accepted": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accepted"
+          },
+          "open_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Open Rate"
+          },
+          "invite_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invite Rate"
+          },
+          "accept_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accept Rate"
+          },
+          "first_contact": {
+            "$ref": "#/components/schemas/Timing"
+          },
+          "time_to_invite": {
+            "$ref": "#/components/schemas/Timing"
+          },
+          "decline_reasons": {
+            "items": {
+              "$ref": "#/components/schemas/ReasonShare"
+            },
+            "type": "array",
+            "title": "Decline Reasons"
+          }
+        },
+        "type": "object",
+        "required": [
+          "shown",
+          "opened",
+          "invited",
+          "accepted",
+          "open_rate",
+          "invite_rate",
+          "accept_rate",
+          "first_contact",
+          "time_to_invite",
+          "decline_reasons"
+        ],
+        "title": "InterestMetrics",
+        "description": "Метрики встречного оффера (интерес кандидата): интерес → открыл → приглашение → принял."
+      },
+      "InterestsSummary": {
+        "properties": {
+          "companies": {
+            "type": "integer",
+            "title": "Companies"
+          },
+          "salary_from_min": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary From Min"
+          },
+          "salary_to_max": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary To Max"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OfferForCandidate"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "companies",
+          "items"
+        ],
+        "title": "InterestsSummary",
+        "description": "«K компаний интересуются вами, вилки …» и карточки без контактов."
+      },
+      "InviteFromInterest": {
+        "properties": {
+          "salary_from": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100000000.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary From"
+          },
+          "salary_to": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100000000.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary To"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 4000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "contact_method": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContactMethod"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "task": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaskAttach"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "InviteFromInterest",
+        "description": "Приглашение по открытому интересу; пустые поля берутся из интереса."
+      },
       "InviteMetrics": {
         "properties": {
           "sent": {
@@ -20406,6 +22064,9 @@
           },
           "responses": {
             "$ref": "#/components/schemas/ResponseMetrics"
+          },
+          "interests": {
+            "$ref": "#/components/schemas/InterestMetrics"
           }
         },
         "type": "object",
@@ -20416,7 +22077,8 @@
           "candidate_funnel",
           "employer_funnel",
           "invites",
-          "responses"
+          "responses",
+          "interests"
         ],
         "title": "MetricsOut"
       },
@@ -21276,8 +22938,64 @@
             ],
             "title": "Awaiting Reply From"
           },
+          "interest_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interest At"
+          },
+          "interest_opened_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interest Opened At"
+          },
+          "invited_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invited At"
+          },
           "company": {
             "$ref": "#/components/schemas/CompanyBrief"
+          },
+          "why_you": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WhyYou"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "task": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaskBrief"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -21441,6 +23159,42 @@
             ],
             "title": "Awaiting Reply From"
           },
+          "interest_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interest At"
+          },
+          "interest_opened_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interest Opened At"
+          },
+          "invited_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invited At"
+          },
           "candidate": {
             "anyOf": [
               {
@@ -21455,6 +23209,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/Contacts-Output"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "task": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaskResult"
               },
               {
                 "type": "null"
@@ -21494,7 +23258,9 @@
           "withdrawn",
           "interview",
           "hired",
-          "not_hired"
+          "not_hired",
+          "interest",
+          "interest_opened"
         ],
         "title": "OfferStatus"
       },
@@ -23748,6 +25514,39 @@
             "type": "string",
             "title": "Acceptance Hint"
           },
+          "suggested_salary_to": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggested Salary To"
+          },
+          "suggested_p_accept": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggested P Accept"
+          },
+          "avg_response_hours": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Response Hours"
+          },
           "range_too_wide": {
             "type": "boolean",
             "title": "Range Too Wide"
@@ -23770,8 +25569,15 @@
       "SalaryHintIn": {
         "properties": {
           "vacancy_id": {
-            "type": "string",
-            "format": "uuid",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Vacancy Id"
           },
           "candidate_pseudo_id": {
@@ -23808,7 +25614,6 @@
         "additionalProperties": false,
         "type": "object",
         "required": [
-          "vacancy_id",
           "candidate_pseudo_id"
         ],
         "title": "SalaryHintIn"
@@ -24405,6 +26210,11 @@
             "title": "Is Shortlisted",
             "default": false
           },
+          "interested_you": {
+            "type": "boolean",
+            "title": "Interested You",
+            "default": false
+          },
           "similarity": {
             "type": "number",
             "title": "Similarity"
@@ -24606,6 +26416,29 @@
           "group"
         ],
         "title": "SkillInfo"
+      },
+      "SkillMin": {
+        "properties": {
+          "slug": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Slug"
+          },
+          "min_level": {
+            "type": "integer",
+            "maximum": 4.0,
+            "minimum": 1.0,
+            "title": "Min Level",
+            "default": 2
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "slug"
+        ],
+        "title": "SkillMin"
       },
       "SkillReqIn": {
         "properties": {
@@ -25037,6 +26870,129 @@
         ],
         "title": "SubmissionOut"
       },
+      "SubscriptionCreate": {
+        "properties": {
+          "profession": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Profession"
+          },
+          "grades": {
+            "items": {
+              "$ref": "#/components/schemas/TestGrade"
+            },
+            "type": "array",
+            "maxItems": 3,
+            "title": "Grades"
+          },
+          "skills": {
+            "items": {
+              "$ref": "#/components/schemas/SkillMin"
+            },
+            "type": "array",
+            "maxItems": 10,
+            "title": "Skills"
+          },
+          "salary_max": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary Max"
+          },
+          "formats": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 5,
+            "title": "Formats"
+          },
+          "only_confirmed": {
+            "type": "boolean",
+            "title": "Only Confirmed",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "profession"
+        ],
+        "title": "SubscriptionCreate"
+      },
+      "SubscriptionOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "profession": {
+            "type": "string",
+            "title": "Profession"
+          },
+          "grades": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Grades"
+          },
+          "skills": {
+            "items": {
+              "$ref": "#/components/schemas/SkillMin"
+            },
+            "type": "array",
+            "title": "Skills"
+          },
+          "salary_max": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary Max"
+          },
+          "formats": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Formats"
+          },
+          "only_confirmed": {
+            "type": "boolean",
+            "title": "Only Confirmed"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "profession",
+          "grades",
+          "skills",
+          "salary_max",
+          "formats",
+          "only_confirmed",
+          "created_at"
+        ],
+        "title": "SubscriptionOut"
+      },
       "SurveyIn": {
         "properties": {
           "industry": {
@@ -25262,6 +27218,90 @@
         ],
         "title": "SusIn"
       },
+      "TaskAnswerIn": {
+        "properties": {
+          "answer": {
+            "title": "Answer"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "answer"
+        ],
+        "title": "TaskAnswerIn"
+      },
+      "TaskAttach": {
+        "properties": {
+          "family_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Family Id"
+          },
+          "deadline_days": {
+            "type": "integer",
+            "maximum": 14.0,
+            "minimum": 1.0,
+            "title": "Deadline Days",
+            "default": 3
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "family_id"
+        ],
+        "title": "TaskAttach",
+        "description": "Задача в приглашении (E33-3): семейство из конструктора компании или банка, ≤ 15 минут."
+      },
+      "TaskBrief": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "minutes": {
+            "type": "integer",
+            "title": "Minutes"
+          },
+          "deadline_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Deadline At"
+          },
+          "answered_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answered At"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "minutes",
+          "deadline_at"
+        ],
+        "title": "TaskBrief",
+        "description": "Задача в приглашении глазами кандидата (вариант — `GET /offers/{id}/task`)."
+      },
       "TaskIn": {
         "properties": {
           "family_id": {
@@ -25305,6 +27345,99 @@
           "grade"
         ],
         "title": "TaskIn"
+      },
+      "TaskResult": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "minutes": {
+            "type": "integer",
+            "title": "Minutes"
+          },
+          "deadline_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Deadline At"
+          },
+          "answered_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answered At"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "family_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Family Id"
+          },
+          "answer": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "minutes",
+          "deadline_at",
+          "family_id"
+        ],
+        "title": "TaskResult",
+        "description": "То же для компании этого оффера + ответ кандидата. Другим компаниям не отдаётся."
+      },
+      "TaskView": {
+        "properties": {
+          "task": {
+            "$ref": "#/components/schemas/TaskBrief"
+          },
+          "item": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item"
+          },
+          "can_answer": {
+            "type": "boolean",
+            "title": "Can Answer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "task",
+          "can_answer"
+        ],
+        "title": "TaskView",
+        "description": "`GET /offers/{id}/task`: вариант без ключа и состояние решения."
       },
       "TeamFactBrief": {
         "properties": {
@@ -26681,6 +28814,37 @@
         ],
         "title": "UserOut"
       },
+      "UserTokenIn": {
+        "properties": {
+          "tg_user_id": {
+            "type": "integer",
+            "title": "Tg User Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tg_user_id"
+        ],
+        "title": "UserTokenIn"
+      },
+      "UserTokenOut": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "expires_in": {
+            "type": "integer",
+            "title": "Expires In"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "expires_in"
+        ],
+        "title": "UserTokenOut"
+      },
       "VacancyBrief": {
         "properties": {
           "id": {
@@ -27338,6 +29502,51 @@
           "change"
         ],
         "title": "WeightOut"
+      },
+      "WhyFactor": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "weight": {
+            "type": "number",
+            "title": "Weight"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "text",
+          "weight"
+        ],
+        "title": "WhyFactor"
+      },
+      "WhyYou": {
+        "properties": {
+          "factors": {
+            "items": {
+              "$ref": "#/components/schemas/WhyFactor"
+            },
+            "type": "array",
+            "title": "Factors",
+            "default": []
+          },
+          "unconfirmed": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Unconfirmed",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "WhyYou"
       },
       "WorkFormat": {
         "type": "string",
