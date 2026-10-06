@@ -121,9 +121,21 @@ async def category_counts(session: AsyncSession) -> dict[tuple[str, str], int]:
     return {(p, g): n for p, g, n in rows}
 
 
+# Старая шкала резюме (enums.Grade) → тестовая: «плюс» и крайние ступени сворачиваются.
+_RESUME_TO_TEST = {
+    "intern": TestGrade.junior,
+    "junior": TestGrade.junior,
+    "junior_plus": TestGrade.junior,
+    "middle": TestGrade.middle,
+    "middle_plus": TestGrade.middle,
+    "senior": TestGrade.senior,
+    "lead": TestGrade.senior,
+}
+
+
 def _rank(grade: str) -> int | None:
     try:
-        return TEST_GRADE_ORDER.index(TestGrade(grade))
+        return TEST_GRADE_ORDER.index(_RESUME_TO_TEST.get(grade) or TestGrade(grade))
     except ValueError:
         return None
 
@@ -135,7 +147,8 @@ async def claimed_vs_confirmed(
 
     Заявленное — последний опрос (`declared_grade`) по профессии; из резюме — `candidates.grade`
     по `primary_role` (старая шкала).
-    Сравнение идёт с `declared_grade`, а без него — с `resume_grade`, если он junior/middle/senior.
+    Сравнение идёт с `declared_grade` (опрос приоритетнее), а без него — с `resume_grade`,
+    сведённым к шкале теста (`junior_plus→junior`, `middle_plus→middle`, `lead→senior`).
     """
     grades = {g.profession: g for g in await get_grades(session, candidate_id)}
     cand = await session.get(Candidate, candidate_id)

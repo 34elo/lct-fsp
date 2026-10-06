@@ -91,5 +91,12 @@ async def test_prefill_from_resume_and_claimed(api, factory, taxonomy_loaded):
     async with session_scope(factory) as s:
         (r,) = await svc.claimed_vs_confirmed(s, uid)
     assert (r.declared_grade, r.status) == ("senior", "overclaimed")
+    # то же самое видит владелец в профиле (E23-3)
+    async with session_scope(factory) as s:
+        (await s.get(Candidate, uid)).formats = ["remote"]  # профиль не принимает «bogus»
+    cvc = api.get("/candidates/me/profile", headers=h).json()["claimed_vs_confirmed"]
+    assert [
+        (x["profession"], x["declared_grade"], x["confirmed_grade"], x["status"]) for x in cvc
+    ] == [("backend", "senior", "middle", "overclaimed")]
     hist = api.get("/assessment/history", headers=h).json()
     assert hist["cooldowns"][0]["profession"] == "backend"
