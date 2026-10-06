@@ -25,6 +25,8 @@ export const ROUTES: RouteDef[] = [
   // >>> block2 (public)
   { path: "/jobs", title: "Вакансии", section: "public", owner: "b2" },
   { path: "/jobs/:id", title: "Вакансия", section: "public", owner: "b2" },
+  { path: "/terms", title: "Условия", section: "public", owner: "b2" },
+  { path: "/privacy", title: "Приватность", section: "public", owner: "b2" },
   // <<< block2 (public)
 
   { path: "/login", title: "Вход", section: "auth", owner: "b1" },
