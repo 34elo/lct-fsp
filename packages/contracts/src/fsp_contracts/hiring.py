@@ -26,6 +26,19 @@ class ContactMethod(StrEnum):
     telegram = "telegram"
 
 
+class SalaryBasis(StrEnum):
+    """Вилка до НДФЛ (`gross`, по умолчанию) или на руки (`net`) — E32-5a."""
+
+    gross = "gross"
+    net = "net"
+
+
 HIRING_EVENTS: dict[str, type[BaseModel]] = {}
 
-__all__ = ["HIRING_EVENTS", "OFFER_SCHEMA_VERSION", "ContactMethod", "OfferInitiator"]
+__all__ = [
+    "HIRING_EVENTS",
+    "OFFER_SCHEMA_VERSION",
+    "ContactMethod",
+    "OfferInitiator",
+    "SalaryBasis",
+]
