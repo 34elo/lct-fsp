@@ -189,7 +189,7 @@ async def _log(
     await session.flush()
 
 
-async def _find_by_key(session: AsyncSession, company_id: uuid.UUID, key: str) -> Offer | None:
+async def find_by_key(session: AsyncSession, company_id: uuid.UUID, key: str) -> Offer | None:
     return await session.scalar(
         select(Offer).where(Offer.company_id == company_id, Offer.idempotency_key == key)
     )
@@ -210,6 +210,7 @@ async def create(
     title: str | None = None,
     description: str | None = None,
     contact_method: ContactMethod | None = None,
+    team_offer_id: uuid.UUID | None = None,
     now: datetime | None = None,
 ) -> tuple[Offer, bool]:
     """Новый оффер (приглашение работодателя, ADR-022: вакансия необязательна).
@@ -217,7 +218,7 @@ async def create(
     Возвращает `(оффер, replay)`: `replay=True` — это повтор по тому же ключу.
     """
     now = now or datetime.now(UTC)
-    existing = await _find_by_key(session, company.id, idempotency_key)
+    existing = await find_by_key(session, company.id, idempotency_key)
     if existing is not None:
         return _replay(existing, vacancy, candidate), True
 
@@ -270,7 +271,7 @@ async def create(
         initiator=OfferInitiator.employer.value, status=S.sent.value,
         awaiting_reply_from="candidate", match_snapshot=snapshot,
         below_candidate_min=candidate.salary_min is not None and hi < candidate.salary_min,
-        idempotency_key=idempotency_key, created_at=now,
+        idempotency_key=idempotency_key, created_at=now, team_offer_id=team_offer_id,
         expires_at=now + timedelta(days=limits.validity_days),
     )  # fmt: skip
     try:
@@ -278,7 +279,7 @@ async def create(
             session.add(offer)
             await session.flush()
     except IntegrityError as exc:  # параллельный запрос успел раньше
-        existing = await _find_by_key(session, company.id, idempotency_key)
+        existing = await find_by_key(session, company.id, idempotency_key)
         if existing is not None:
             return _replay(existing, vacancy, candidate), True
         raise ProblemError(
