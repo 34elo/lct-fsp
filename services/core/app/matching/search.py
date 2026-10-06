@@ -26,6 +26,7 @@ from app.assessment import service as assessment
 from app.candidates import service as candidates
 from app.candidates.models import Candidate
 from app.graph import service as graph
+from app.graph.fsp_strength import FspResultIn, FspStrengthConfig, fsp_term
 from app.graph.trust import EvidenceView, TrustConfig, effective_strength
 from app.matching.p_accept import PAcceptConfig, hint, mutual, p_accept
 from app.matching.rerank import RerankConfig, mmr, multiplier
@@ -285,6 +286,22 @@ def _strength_view(r: Row) -> StrengthView | None:
     return view(r.strength, r.strength_cfg, match)
 
 
+async def _fsp_results(
+    session: AsyncSession, ids: list[uuid.UUID]
+) -> dict[uuid.UUID, list[FspResultIn]]:
+    """Результаты ФСП по кандидатам: один факт даёт несколько навыков, берём его один раз."""
+    out: dict[uuid.UUID, dict[uuid.UUID, FspResultIn]] = {}
+    for ev in await graph.evidence_of(session, ids, source="fsp"):
+        if ev.fact_type != "fsp_result":
+            continue
+        d = ev.details or {}
+        out.setdefault(ev.candidate_id, {})[ev.fact_id] = FspResultIn(
+            place=d.get("place"), total=d.get("participants"), final=bool(d.get("final")),
+            observed_at=ev.observed_at, verified=ev.verified,
+        )  # fmt: skip
+    return {cid: list(per.values()) for cid, per in out.items()}
+
+
 async def _attach_strength(
     session: AsyncSession,
     rows: list[Row],
@@ -293,15 +310,18 @@ async def _attach_strength(
     must_floor: dict[Any, int],
     day: date,
     cfg: StrengthConfig,
+    fsp_cfg: FspStrengthConfig,
 ) -> None:
     """Сила профиля (assessment.md §9) по грейду выбранной категории, иначе по профессии
     `primary_role`, иначе по лучшему грейду. Без действующего грейда силы нет.
 
-    F — наибольшее доверие по навыкам с источником `fsp` (нет ФСП — 0, без штрафа);
+    F — результативность в ФСП (`fsp_term`: победитель/призёр/финалист/участник, убывающая отдача
+    по числу соревнований, без учёта уровня; нет ФСП — 0, без штрафа);
     S — среднее доверие по навыкам запроса, без запроса — `trust_of`; R — свежесть теста
     по `confirmed_at`; C — полнота анкеты."""
     grades = await assessment.get_grades_many(session, [r.cand.user_id for r in rows])
     need = [k for k in must_floor if k] + nice_ids
+    fsp_facts = await _fsp_results(session, [r.cand.user_id for r in rows])
     for r in rows:
         gs = grades.get(r.cand.user_id) or []
         if category is not None:
@@ -313,7 +333,7 @@ async def _attach_strength(
         if g is None:
             continue
         held = {s.skill_id: s for s in r.skills}
-        fsp = max((s.confidence for s in r.skills if "fsp" in s.sources), default=0.0)
+        fsp = fsp_term(fsp_facts.get(r.cand.user_id, ()), day, fsp_cfg)
         s_val = (
             sum(min(1.0, held[k].confidence) if k in held else 0.0 for k in need) / len(need)
             if need
@@ -546,7 +566,9 @@ async def search_candidates(
                 if r.result is not None:
                     r.p_accept = p_accept_for(v, r.cand, responsibility_score, pa_cfg)
     if category is not None:  # rank участвует в порядке — сила нужна всем
-        await _attach_strength(session, rows, category, nice_ids, must_floor, day, st_cfg)
+        await _attach_strength(
+            session, rows, category, nice_ids, must_floor, day, st_cfg, trust.fsp
+        )
     for r in rows:
         if vacancy_id is None or r.result is not None:  # не прошедших фильтры не подстраиваем
             r.x = features_of(r)
@@ -584,7 +606,7 @@ async def search_candidates(
     )
 
     if category is None:  # без категории сила только в карточках страницы
-        await _attach_strength(session, page, None, nice_ids, must_floor, day, st_cfg)
+        await _attach_strength(session, page, None, nice_ids, must_floor, day, st_cfg, trust.fsp)
     page_ids = [r.cand.user_id for r in page]
     sids = list({s.skill_id for r in page for s in r.skills})
     slug_of = await taxonomy.skill_slugs(session, sids)

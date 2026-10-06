@@ -79,6 +79,14 @@ evidence_sources:
     stage_coefficients:
       final: 1.00
       qualifying: 0.85
+    # Слагаемое F силы профиля (ADR-025 п. 3): результативность, уровни соревнований равны
+    f_term:
+      tiers: {winner: 1.0, prize: 0.85, finalist: 0.55, participant: 0.25, no_result: 0.05}
+      finalist_share: 0.25      # топ-25% или выход в финал
+      diminish: 0.5             # i-е по силе соревнование входит с коэффициентом 0.5^i
+      decay_floor: 0.6          # давность — мягкий множитель в [0.6, 1]
+      decay_half_life_years: 3
+      unverified: 0.5
 
   codeforces:
     decay_half_life_years: 2

@@ -7,8 +7,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
+from datetime import date
 
 
 @dataclass(frozen=True, slots=True)
@@ -29,6 +30,21 @@ class FspStrengthConfig:
     participated: float = 0.55
     prize_places: int = 3
     stage_k: Mapping[str, float] = field(default_factory=lambda: {"final": 1.00, "qualifier": 0.85})
+    # слагаемое F силы профиля (assessment.md §9, ADR-025 п. 3): по результативности, без уровней
+    f_tier: Mapping[str, float] = field(
+        default_factory=lambda: {
+            "winner": 1.0,
+            "prize": 0.85,
+            "finalist": 0.55,
+            "participant": 0.25,
+            "no_result": 0.05,
+        }
+    )
+    f_finalist_share: float = 0.25  # место в верхней четверти или выход в финал — финалист
+    f_diminish: float = 0.5  # каждое следующее соревнование даёт вдвое меньше
+    f_decay_floor: float = 0.6  # давность — мягкий множитель: старый результат не ниже 0.6
+    f_decay_half_life_years: float = 3.0
+    f_unverified: float = 0.5
 
     @classmethod
     def from_dict(cls, data: Mapping | None) -> FspStrengthConfig:
@@ -38,7 +54,16 @@ class FspStrengthConfig:
         base = cls()
         res = src.get("result_coefficients", {})
         stage = src.get("stage_coefficients", {})
+        f = src.get("f_term", {})
         return cls(
+            f_tier={k: float(v) for k, v in f.get("tiers", base.f_tier).items()},
+            f_finalist_share=float(f.get("finalist_share", base.f_finalist_share)),
+            f_diminish=float(f.get("diminish", base.f_diminish)),
+            f_decay_floor=float(f.get("decay_floor", base.f_decay_floor)),
+            f_decay_half_life_years=float(
+                f.get("decay_half_life_years", base.f_decay_half_life_years)
+            ),
+            f_unverified=float(f.get("unverified", base.f_unverified)),
             max_strength=float(src.get("max_strength", base.max_strength)),
             level_k={k: float(v) for k, v in src.get("level_coefficients", base.level_k).items()},
             prize=float(res.get("1_to_3", base.prize)),
@@ -86,3 +111,43 @@ def result_strength(
 ) -> float:
     s = weight * k_level(level, cfg) * k_result(place, total, cfg) * k_stage(stage, cfg)
     return round(min(cfg.max_strength, s), 6)
+
+
+@dataclass(frozen=True, slots=True)
+class FspResultIn:
+    """Результат участия для слагаемого F: только то, что говорит о результативности."""
+
+    place: int | None
+    total: int | None
+    final: bool
+    observed_at: date
+    verified: bool = True
+
+
+def result_tier(r: FspResultIn, cfg: FspStrengthConfig) -> str:
+    """winner | prize | finalist | participant | no_result; уровень соревнования не смотрим."""
+    if r.place is None:
+        return "finalist" if r.final else "no_result"
+    if r.place <= 1:
+        return "winner"
+    if r.place <= cfg.prize_places:
+        return "prize"
+    if r.final or (r.total and r.total > 0 and r.place / r.total <= cfg.f_finalist_share):
+        return "finalist"
+    return "participant"
+
+
+def fsp_term(results: Iterable[FspResultIn], today: date, cfg: FspStrengthConfig) -> float:
+    """F ∈ [0, max_strength]: лучший результат полностью, каждый следующий — с коэффициентом
+    `diminish^i` (убывающая отдача). Давность — мягкий множитель в [floor, 1]. Нет результатов — 0,
+    без штрафа."""
+    vals: list[float] = []
+    for r in results:
+        age = max(0.0, (today - r.observed_at).days / 365.25)
+        decay = cfg.f_decay_floor + (1 - cfg.f_decay_floor) * 0.5 ** (
+            age / cfg.f_decay_half_life_years
+        )
+        v = cfg.f_tier.get(result_tier(r, cfg), 0.0) * decay
+        vals.append(v if r.verified else v * cfg.f_unverified)
+    total = sum(v * cfg.f_diminish**i for i, v in enumerate(sorted(vals, reverse=True)))
+    return round(min(cfg.max_strength, total), 6)
