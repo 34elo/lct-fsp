@@ -6598,6 +6598,87 @@
           }
         }
       }
+    },
+    "/admin/dashboard": {
+      "get": {
+        "tags": [
+          "admin-dashboard"
+        ],
+        "summary": "Get Dashboard",
+        "description": "Воронка регистрация → тест → категория → приглашение → ответ, доля с ФСП,\nконверсия навигатор → соревнование. Ячейки меньше 5 человек скрыты.",
+        "operationId": "get_dashboard_admin_dashboard_get",
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 180,
+              "minimum": 1,
+              "default": 30,
+              "title": "Days"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -8151,6 +8232,46 @@
         ],
         "title": "CreateOffer",
         "description": "Приглашение работодателя. Без `vacancy_id` (ADR-022) обязателен `title`."
+      },
+      "DashboardOut": {
+        "properties": {
+          "since": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Since"
+          },
+          "days": {
+            "type": "integer",
+            "title": "Days"
+          },
+          "min_cell": {
+            "type": "integer",
+            "title": "Min Cell"
+          },
+          "funnel": {
+            "items": {
+              "$ref": "#/components/schemas/Stage"
+            },
+            "type": "array",
+            "title": "Funnel"
+          },
+          "fsp_share": {
+            "$ref": "#/components/schemas/Ratio"
+          },
+          "navigator_to_competition": {
+            "$ref": "#/components/schemas/Ratio"
+          }
+        },
+        "type": "object",
+        "required": [
+          "since",
+          "days",
+          "min_cell",
+          "funnel",
+          "fsp_share",
+          "navigator_to_competition"
+        ],
+        "title": "DashboardOut"
       },
       "Decline": {
         "properties": {
@@ -10116,6 +10237,56 @@
         "title": "PublicVacancyOut",
         "description": "Вакансия для кандидата: без служебных полей (`version`, `created_at`)."
       },
+      "Ratio": {
+        "properties": {
+          "count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Count"
+          },
+          "hidden": {
+            "type": "boolean",
+            "title": "Hidden"
+          },
+          "pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pct"
+          },
+          "of": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Of"
+          }
+        },
+        "type": "object",
+        "required": [
+          "count",
+          "hidden",
+          "pct",
+          "of"
+        ],
+        "title": "Ratio",
+        "description": "Доля: числитель `count` (уникальные люди) и `pct` от знаменателя `of`."
+      },
       "RegisterIn": {
         "properties": {
           "email": {
@@ -11674,6 +11845,65 @@
           "top_evidence"
         ],
         "title": "SkillWithTrust"
+      },
+      "Stage": {
+        "properties": {
+          "count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Count"
+          },
+          "hidden": {
+            "type": "boolean",
+            "title": "Hidden"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "pct_of_registered": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pct Of Registered"
+          },
+          "pct_of_previous": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pct Of Previous"
+          }
+        },
+        "type": "object",
+        "required": [
+          "count",
+          "hidden",
+          "id",
+          "title",
+          "pct_of_registered",
+          "pct_of_previous"
+        ],
+        "title": "Stage"
       },
       "StartIn": {
         "properties": {
