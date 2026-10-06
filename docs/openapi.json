@@ -5124,6 +5124,249 @@
         }
       }
     },
+    "/teams": {
+      "get": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "List Fsp Teams",
+        "description": "Команды ФСП, где есть минимум два видимых кандидата платформы (анонимно, E15-2).",
+        "operationId": "list_fsp_teams_teams_get",
+        "parameters": [
+          {
+            "name": "discipline",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 64
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Discipline"
+            }
+          },
+          {
+            "name": "min_place",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Min Place"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TeamOut"
+                  },
+                  "title": "Response List Fsp Teams Teams Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/team-offers": {
+      "post": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Create Team Offer",
+        "description": "Командный оффер: по офферу на участника с общим `team_offer_id`, вилка у каждого своя.",
+        "operationId": "create_team_offer_team_offers_post",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTeamOffer"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamOfferOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Конфликт (в том числе cooldown)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Слишком много запросов",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/candidates/me/offers": {
       "get": {
         "tags": [
@@ -8830,6 +9073,50 @@
         "title": "CreateOffer",
         "description": "Приглашение работодателя. Без `vacancy_id` (ADR-022) обязателен `title`."
       },
+      "CreateTeamOffer": {
+        "properties": {
+          "vacancy_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Vacancy Id"
+          },
+          "fsp_team_id": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Fsp Team Id"
+          },
+          "salary_per_member": {
+            "items": {
+              "$ref": "#/components/schemas/SalaryPerMember"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Salary Per Member"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "vacancy_id",
+          "fsp_team_id",
+          "salary_per_member"
+        ],
+        "title": "CreateTeamOffer"
+      },
       "DashboardOut": {
         "properties": {
           "since": {
@@ -10059,6 +10346,18 @@
             "$ref": "#/components/schemas/OfferInitiator",
             "default": "employer"
           },
+          "team_offer_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Team Offer Id"
+          },
           "salary_from": {
             "type": "integer",
             "title": "Salary From"
@@ -10195,6 +10494,18 @@
           "initiator": {
             "$ref": "#/components/schemas/OfferInitiator",
             "default": "employer"
+          },
+          "team_offer_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Team Offer Id"
           },
           "salary_from": {
             "type": "integer",
@@ -11767,6 +12078,46 @@
         ],
         "title": "SalaryHintIn"
       },
+      "SalaryPerMember": {
+        "properties": {
+          "candidate_pseudo_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Candidate Pseudo Id"
+          },
+          "salary_from": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100000000.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary From"
+          },
+          "salary_to": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100000000.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary To"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "candidate_pseudo_id"
+        ],
+        "title": "SalaryPerMember"
+      },
       "SearchFilters": {
         "properties": {
           "roles": {
@@ -12698,6 +13049,156 @@
           "title"
         ],
         "title": "TeamFactBrief"
+      },
+      "TeamMemberOut": {
+        "properties": {
+          "pseudo_id": {
+            "type": "string",
+            "title": "Pseudo Id"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          },
+          "primary_role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primary Role"
+          },
+          "grade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pseudo_id"
+        ],
+        "title": "TeamMemberOut",
+        "description": "Участник команды: только псевдоним, без ПДн."
+      },
+      "TeamOfferOut": {
+        "properties": {
+          "team_offer_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Team Offer Id"
+          },
+          "fsp_team_id": {
+            "type": "string",
+            "title": "Fsp Team Id"
+          },
+          "team_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Team Name"
+          },
+          "offers": {
+            "items": {
+              "$ref": "#/components/schemas/OfferForCompany"
+            },
+            "type": "array",
+            "title": "Offers"
+          }
+        },
+        "type": "object",
+        "required": [
+          "team_offer_id",
+          "fsp_team_id",
+          "offers"
+        ],
+        "title": "TeamOfferOut"
+      },
+      "TeamOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "competition_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Competition Title"
+          },
+          "discipline": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Discipline"
+          },
+          "best_place": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Best Place"
+          },
+          "members": {
+            "items": {
+              "$ref": "#/components/schemas/TeamMemberOut"
+            },
+            "type": "array",
+            "title": "Members"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "members"
+        ],
+        "title": "TeamOut"
       },
       "TeamSignal": {
         "properties": {
