@@ -60,6 +60,11 @@ async def require_company(
     return found
 
 
+def badge_visible(company: Company) -> bool:
+    """Метка «компания проверена» для кандидатов: verified и компания не скрыла её (E32-5a)."""
+    return company.status == "verified" and bool(company.show_verified_badge)
+
+
 async def update_company(session: AsyncSession, company: Company, changes: dict) -> Company:
     for key, value in changes.items():
         setattr(company, key, value)

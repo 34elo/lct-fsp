@@ -6392,6 +6392,110 @@
         }
       }
     },
+    "/offers/{offer_id}/contacts/revoke": {
+      "post": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Revoke Contacts",
+        "description": "Отзыв доступа к контактам: компания перестаёт их видеть (E32-5a). Повтор — no-op.",
+        "operationId": "revoke_contacts_offers__offer_id__contacts_revoke_post",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferForCandidate"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Конфликт (в том числе cooldown)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/offers/{offer_id}/events": {
       "get": {
         "tags": [
@@ -9944,6 +10048,11 @@
               }
             ],
             "title": "Direction"
+          },
+          "show_verified_badge": {
+            "type": "boolean",
+            "title": "Show Verified Badge",
+            "default": true
           }
         },
         "additionalProperties": false,
@@ -10041,6 +10150,11 @@
           },
           "status": {
             "$ref": "#/components/schemas/CompanyStatus"
+          },
+          "show_verified_badge": {
+            "type": "boolean",
+            "title": "Show Verified Badge",
+            "default": true
           },
           "responsibility_score": {
             "anyOf": [
@@ -10157,6 +10271,17 @@
               }
             ],
             "title": "Direction"
+          },
+          "show_verified_badge": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Show Verified Badge"
           }
         },
         "additionalProperties": false,
@@ -10492,6 +10617,16 @@
               }
             ],
             "title": "Salary To"
+          },
+          "salary_basis": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SalaryBasis"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "message": {
             "anyOf": [
@@ -12631,6 +12766,22 @@
             "type": "integer",
             "title": "Salary To"
           },
+          "salary_basis": {
+            "$ref": "#/components/schemas/SalaryBasis",
+            "default": "gross"
+          },
+          "contacts_revoked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contacts Revoked At"
+          },
           "message": {
             "anyOf": [
               {
@@ -12779,6 +12930,22 @@
           "salary_to": {
             "type": "integer",
             "title": "Salary To"
+          },
+          "salary_basis": {
+            "$ref": "#/components/schemas/SalaryBasis",
+            "default": "gross"
+          },
+          "contacts_revoked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contacts Revoked At"
           },
           "message": {
             "anyOf": [
@@ -13356,6 +13523,9 @@
             "type": "integer",
             "title": "Salary To"
           },
+          "salary_basis": {
+            "$ref": "#/components/schemas/SalaryBasis"
+          },
           "description": {
             "anyOf": [
               {
@@ -13402,6 +13572,7 @@
           "city",
           "salary_from",
           "salary_to",
+          "salary_basis",
           "description",
           "skills",
           "published_at",
@@ -14326,6 +14497,15 @@
           "done"
         ],
         "title": "RunTaskPublic"
+      },
+      "SalaryBasis": {
+        "type": "string",
+        "enum": [
+          "gross",
+          "net"
+        ],
+        "title": "SalaryBasis",
+        "description": "Вилка до НДФЛ (`gross`, по умолчанию) или на руки (`net`) — E32-5a."
       },
       "SalaryHint": {
         "properties": {
@@ -16113,6 +16293,11 @@
             "type": "integer",
             "title": "Salary To"
           },
+          "salary_basis": {
+            "type": "string",
+            "title": "Salary Basis",
+            "default": "gross"
+          },
           "message": {
             "anyOf": [
               {
@@ -16925,6 +17110,10 @@
             "exclusiveMinimum": 0.0,
             "title": "Salary To"
           },
+          "salary_basis": {
+            "$ref": "#/components/schemas/SalaryBasis",
+            "default": "gross"
+          },
           "description": {
             "anyOf": [
               {
@@ -17022,6 +17211,9 @@
             "type": "integer",
             "title": "Salary To"
           },
+          "salary_basis": {
+            "$ref": "#/components/schemas/SalaryBasis"
+          },
           "range_too_wide": {
             "type": "boolean",
             "title": "Range Too Wide"
@@ -17089,6 +17281,7 @@
           "city",
           "salary_from",
           "salary_to",
+          "salary_basis",
           "range_too_wide",
           "description",
           "status",
@@ -17208,6 +17401,16 @@
               }
             ],
             "title": "Salary To"
+          },
+          "salary_basis": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SalaryBasis"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "description": {
             "anyOf": [

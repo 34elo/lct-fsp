@@ -909,3 +909,57 @@ def test_application_notifies_company_not_candidate(world):
     c.post(f"/vacancies/{vid}/apply", headers=ch)
     rows = _db(c, "select type from notifications order by rowid")
     assert not rows or all(t[0] != "offer_new" for t in rows)
+
+
+def test_salary_basis_default_inherit_and_override(world):
+    """E32-5a: вилка «до НДФЛ» по умолчанию, берётся из вакансии, можно задать в приглашении."""
+    c, e, vid, ch, pid, uid = world
+    assert c.get(f"/vacancies/{vid}", headers=e).json()["salary_basis"] == "gross"
+    v2 = c.post("/vacancies", headers=e, json={
+        "title": "Net", "role": "backend", "grade_min": "middle", "grade_max": "senior",
+        "formats": ["remote"], "employment_type": "full", "salary_from": 100000,
+        "salary_to": 150000, "salary_basis": "net", "skills": [{"slug": "python"}],
+    }).json()  # fmt: skip
+    assert v2["salary_basis"] == "net"
+    c.post(f"/vacancies/{v2['id']}/publish", headers=e)
+    o1 = _offer(c, e, v2["id"], pid).json()
+    assert o1["salary_basis"] == "net"
+    assert c.get(f"/offers/{o1['id']}", headers=ch).json()["salary_basis"] == "net"
+    ch2, pid2, _ = _candidate(c, "c2@x.ru", 2)
+    o2 = _offer(c, e, vid, pid2, salary_basis="net").json()
+    assert o2["salary_basis"] == "net"
+    _, pid3, _ = _candidate(c, "c3@x.ru", 3)
+    assert _offer(c, e, vid, pid3).json()["salary_basis"] == "gross"
+    assert _offer(c, e, vid, pid3, salary_basis="bogus").status_code == 422
+
+
+def test_revoke_contacts(world):
+    """E32-5a: отзыв скрывает контакты у компании; чужой оффер и роль — проверки прав."""
+    c, e, vid, ch, pid, uid = world
+    oid = _offer(c, e, vid, pid).json()["id"]
+    r = c.post(f"/offers/{oid}/contacts/revoke", headers=ch)
+    assert r.status_code == 409 and r.json()["code"] == "contacts_not_revealed"
+    c.post(f"/offers/{oid}/accept", headers=ch)
+    assert c.get(f"/offers/{oid}/contacts", headers=e).status_code == 200
+    assert c.post(f"/offers/{oid}/contacts/revoke", headers=e).status_code == 403
+    other_ch, _, _ = _candidate(c, "c9@x.ru", 9)
+    assert c.post(f"/offers/{oid}/contacts/revoke", headers=other_ch).status_code == 404
+    r = c.post(f"/offers/{oid}/contacts/revoke", headers=ch)
+    assert r.status_code == 200 and r.json()["contacts_revoked_at"]
+    assert c.post(f"/offers/{oid}/contacts/revoke", headers=ch).status_code == 200  # повтор
+    r = c.get(f"/offers/{oid}/contacts", headers=e)
+    assert r.status_code == 409 and r.json()["code"] == "contacts_revoked"
+    assert c.get(f"/offers/{oid}", headers=e).json()["contacts"] is None
+    assert _db(c, "select count(*) from contact_reveals") == [(1,)]
+
+
+def test_verified_badge_is_voluntary(world):
+    """E32-5a: компания сама решает, показывать ли метку «проверена» кандидатам."""
+    c, e, vid, ch, pid, uid = world
+    oid = _offer(c, e, vid, pid).json()["id"]
+    assert c.get(f"/offers/{oid}", headers=ch).json()["company"]["verified"] is True
+    r = c.patch("/companies/me", json={"show_verified_badge": False}, headers=e)
+    assert r.status_code == 200 and r.json()["show_verified_badge"] is False
+    assert c.get(f"/offers/{oid}", headers=ch).json()["company"]["verified"] is False
+    pub = c.get("/vacancies/public").json()
+    assert pub[0]["company"]["verified"] is False and pub[0]["salary_basis"] == "gross"

@@ -69,7 +69,8 @@ def offer_new(d: dict) -> str:
         f"{mark}{rating}",
         f"<b>{_e(d.get('vacancy_title') or '')}</b>",
     ]
-    money = f"💰 <b>{_money(d['salary_from'])} – {_money(d['salary_to'])} ₽</b> на руки"
+    basis = "на руки" if d.get("salary_basis") == "net" else "до НДФЛ"
+    money = f"💰 <b>{_money(d['salary_from'])} – {_money(d['salary_to'])} ₽</b> {basis}"
     extra = [_FORMATS.get(f, f) for f in d.get("formats") or []]
     if d.get("employment_type"):
         extra.append(_EMPLOYMENT.get(d["employment_type"], d["employment_type"]))
