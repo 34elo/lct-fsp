@@ -88,3 +88,23 @@ class CategorySubscriptionHit(Base):
         sa.DateTime(timezone=True), default=lambda: datetime.now(UTC), server_default=sa.func.now()
     )
     notified_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), default=None)
+
+
+class CandidateInterest(Base):
+    """Встречный сигнал: кандидат показал интерес к компании (E33-6).
+
+    PK — дедупликация: один сигнал на пару (candidate_id, company_id).
+    """
+
+    __tablename__ = "candidate_interests"
+    __table_args__ = (sa.Index("ix_candidate_interests_company", "company_id", "created_at"),)
+
+    candidate_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("candidates.user_id", ondelete="CASCADE"), primary_key=True
+    )
+    company_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("companies.id", ondelete="CASCADE"), primary_key=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), default=lambda: datetime.now(UTC), server_default=sa.func.now()
+    )

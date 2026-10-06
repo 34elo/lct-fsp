@@ -205,6 +205,7 @@ matching_weights:
   salary_fit: 0.10  # попадание в вилку
   fsp_strength: 0.10  # сила подтверждения ФСП
   team_signals: 0.03  # максимум вклад связей
+  candidate_interest_boost: 1.05  # множитель если кандидат показал интерес (E33-6)
 
 # Grade fit scoring
 grade_fit_scoring:

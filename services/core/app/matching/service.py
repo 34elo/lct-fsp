@@ -391,3 +391,69 @@ async def snapshot(
     """`{score, explanation}` подборки на сейчас — для `offers.match_snapshot`."""
     m = await session.get(Match, (vacancy_id, candidate_id))
     return None if m is None else {"score": m.score, "explanation": m.explanation}
+
+
+async def set_candidate_interest(
+    session: AsyncSession, candidate_id: uuid.UUID, company_id: uuid.UUID
+) -> datetime:
+    """Кандидат показал интерес к компании (E33-6). Возвращает created_at."""
+    from app.matching.models import CandidateInterest
+
+    interest = await session.get(CandidateInterest, (candidate_id, company_id))
+    if interest is not None:
+        return interest.created_at
+    interest = CandidateInterest(candidate_id=candidate_id, company_id=company_id)
+    session.add(interest)
+    await session.flush()
+    return interest.created_at
+
+
+async def remove_candidate_interest(
+    session: AsyncSession, candidate_id: uuid.UUID, company_id: uuid.UUID
+) -> bool:
+    """Кандидат снял интерес к компании. Возвращает True если был удалён."""
+    from app.matching.models import CandidateInterest
+
+    result = await session.execute(
+        delete(CandidateInterest).where(
+            (CandidateInterest.candidate_id == candidate_id)
+            & (CandidateInterest.company_id == company_id)
+        )
+    )
+    return result.rowcount > 0
+
+
+async def has_candidate_interest(
+    session: AsyncSession, candidate_id: uuid.UUID, company_id: uuid.UUID
+) -> bool:
+    """Проверить, есть ли интерес кандидата к компании."""
+    from app.matching.models import CandidateInterest
+
+    return await session.scalar(
+        select(True).where(
+            (CandidateInterest.candidate_id == candidate_id)
+            & (CandidateInterest.company_id == company_id)
+        )
+    ) is not None
+
+
+async def get_candidate_interests(
+    session: AsyncSession, candidate_id: uuid.UUID
+) -> list[uuid.UUID]:
+    """Все компании, в которых заинтересован кандидат."""
+    from app.matching.models import CandidateInterest
+
+    return await session.scalars(
+        select(CandidateInterest.company_id).where(CandidateInterest.candidate_id == candidate_id)
+    )
+
+
+async def get_interested_candidate_ids(
+    session: AsyncSession, company_id: uuid.UUID
+) -> set[uuid.UUID]:
+    """Кандидаты, показавшие интерес к компании."""
+    from app.matching.models import CandidateInterest
+
+    return await session.scalars(
+        select(CandidateInterest.candidate_id).where(CandidateInterest.company_id == company_id)
+    )
