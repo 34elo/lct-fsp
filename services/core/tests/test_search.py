@@ -23,6 +23,7 @@ CARD_FIELDS = {
     "pseudo_id", "pseudonym", "avatar_seed", "primary_role", "grade", "grade_preliminary",
     "primary_stack", "top_skills", "fsp_highlights", "salary_min", "formats", "city",
     "relocation", "search_status", "match", "updated_at", "categories", "strength",
+    "is_shortlisted",
 }  # fmt: skip
 TEST_GRADE = {"junior": "junior", "middle": "middle", "senior": "senior", "lead": "senior"}
 
