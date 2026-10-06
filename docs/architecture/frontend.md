@@ -36,6 +36,7 @@
 | `/employer/company` | EA | Компания, участники, статус модерации |
 | `/federation`, `/federation/matrix`, `/federation/moderation`, `/federation/demo` | A | Дашборд ФСП, матрица «дисциплина → навыки», модерация, демо-пульт (F1–F4) |
 | `/admin/skills` | A | Граф навыков: очередь, слияния, рост (G3) |
+| `/admin/demo/two-worlds`, `/admin/demo/llm-exam`, `/admin/demo/new-profession` | A | Вау-экраны питча: два мира, LLM сдаёт тест, новая профессия (E34-3) |
 | `/admin/quality`, `/admin/quality/fairness`, `/admin/quality/runs`, `/admin/health` | A | Качество, справедливость, живые прогоны, здоровье (Q1–Q3, Q6) |
 | `/run/:token` | испытатель | Живой прогон + SUS (Q3) |
 | `/athlete/:id` | все | Публичная карточка (P1); OG-картинка — бэкенд |

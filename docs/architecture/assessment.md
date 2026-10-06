@@ -295,6 +295,8 @@ rank = 0.6·match + 0.4·strength
 | `POST /families` | Конструктор: черновик семейства (работодатель, эксперт, админ) |
 | `GET /admin/families?status=pilot` | Очередь допуска со статистикой |
 | `POST /admin/families/{id}/approve \| quarantine \| retire` | Решение админа |
+| `GET /admin/demo/two-worlds?family=&seed=&domains=` | Вау-экран E34-3: одно семейство и сид в двух доменах мира (ключа нет), `same_shape` |
+| `GET /admin/demo/llm-exam` | Вау-экран E34-3: отчёт `make eval-assessment` (файл `reports/eval-assessment/report.json` или `EVAL_ASSESSMENT_REPORT`, пометка «симуляция») + `ai_solvable` банка; нет отчёта — `report = null` |
 | `POST /needs`, `GET /needs/{id}/categories` | Потребность → рекомендованные категории |
 | `GET /categories/{profession}/{grade}/candidates?need_id=&confirmed_only=true` | Анонимные карточки по `rank` с объяснением. `confirmed_only=false` добавляет «не подтверждён» (ADR-025) |
 

@@ -35,6 +35,9 @@ import Constructor from "@/features/constructor/Constructor";
 import AdmissionQueue from "@/features/constructor/AdmissionQueue";
 import AdminSkills from "@/features/admin-taxonomy/AdminSkills";
 import AdminTaxonomy from "@/features/admin-taxonomy/AdminTaxonomy";
+import DemoLlmExam from "@/features/demo/LlmExam";
+import DemoNewProfession from "@/features/demo/NewProfession";
+import DemoTwoWorlds from "@/features/demo/TwoWorlds";
 // <<< block1 imports
 // >>> block2 imports
 import Landing from "@/features/landing/Landing";
@@ -61,7 +64,7 @@ const RunPage = lazy(() => import("@/features/runs/RunPage"));
 const IMPLEMENTED = new Set(["/", "/login", "/register", "/auth/magic", "/consents", "/onboarding", "/me", "/me/skills/:slug", "/employer/search", "/employer/candidates/:id", "/employer/vacancies", "/employer/vacancies/new", "/employer/vacancies/:id", "/employer/company", "/employer/vacancies/:id/shortlist", "/employer/offers/new", "/employer/offers", "/employer/offers/:id", "/me/offers", "/me/offers/:id", "/me/navigator", "/verify-email", "/me/profile/edit", "/me/responses", "/employer/responses", "/jobs", "/jobs/:id", "/run/:token", "/federation", "/federation/moderation", "/me/tasks", "/employer/tasks", "/employer/families/new", "/admin/families", "/admin/professions", "/admin/skills", "/employer/needs/new", "/employer/needs/:id", "/employer/categories/:profession/:grade"]);
 
 // Б1: страницы теста (E22-8).
-["/me/graph", "/me/assessment", "/me/assessment/history", "/me/assessment/attempts/:id", "/me/assessment/attempts/:id/result"].forEach((p) => IMPLEMENTED.add(p));
+["/me/graph", "/me/assessment", "/me/assessment/history", "/me/assessment/attempts/:id", "/me/assessment/attempts/:id/result", "/admin/demo/two-worlds", "/admin/demo/llm-exam", "/admin/demo/new-profession"].forEach((p) => IMPLEMENTED.add(p));
 
 const stubs = (section: string) =>
   ROUTES.filter((r) => r.section === section && !IMPLEMENTED.has(r.path)).map((r) => (
@@ -125,6 +128,9 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
             <Route path="/admin/families" element={<AdmissionQueue />} />
             <Route path="/admin/professions" element={<AdminTaxonomy />} />
             <Route path="/admin/skills" element={<AdminSkills />} />
+            <Route path="/admin/demo/two-worlds" element={<DemoTwoWorlds />} />
+            <Route path="/admin/demo/llm-exam" element={<DemoLlmExam />} />
+            <Route path="/admin/demo/new-profession" element={<DemoNewProfession />} />
             {/* <<< block1 (admin) */}
             {/* >>> block2 (admin) */}
             <Route path="/federation" element={<FederationDashboard />} />
