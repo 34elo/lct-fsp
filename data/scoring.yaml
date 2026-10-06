@@ -345,6 +345,14 @@ strength:
   rank_strength: 0.4
   top_explanations: 3
 
+# Потребность → категории (assessment.md §9, E23-4)
+needs:
+  affinity_min: 0.4  # показываем профессии с affinity ≥ порога
+  must_weight: 1.0  # вес навыка «обязательно» в потребности
+  nice_weight: 0.5  # вес навыка «желательно»
+  max_categories: 6  # сколько профессий вернуть
+  fallback_top: 1  # ни одна не прошла порог — взять столько лучших с affinity > 0
+
 limits:
   # Response times
   search_p95_ms: 300  # на 500 кандидатах
