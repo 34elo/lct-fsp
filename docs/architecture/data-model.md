@@ -573,6 +573,7 @@ CREATE TABLE analytics.analytics_events (id bigserial, ts timestamptz NOT NULL, 
 
 CREATE TABLE live_runs (                          -- живые прогоны (metrics-and-analytics.md §3)
   id uuid PRIMARY KEY, scenario text NOT NULL, token text UNIQUE NOT NULL, tasks jsonb NOT NULL,
+  actor text,                                    -- псевдоним испытателя (привязывается по первому событию с run_id)
   invited_at timestamptz DEFAULT now(), started_at timestamptz, finished_at timestamptz,
   sus_answers jsonb, sus_score real, category_agree boolean, notes text
 );

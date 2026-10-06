@@ -177,8 +177,12 @@
 | `GET /admin/quality`, `GET /admin/quality/{run_id}` | Страница качества (eval_runs) |
 | `POST /admin/quality/runs` | Загрузка результата `make eval` (роль A или сервисный токен) |
 | `GET /admin/quality/fairness` | Панель справедливости: impact ratio по группам (синтетика + демо-показы) |
-| `GET|POST /admin/live-runs`, `GET /admin/live-runs/{id}` | Живые прогоны: создать приглашение, результаты (задания, время, SUS) |
-| `GET /run/{token}`, `POST /run/{token}/sus` | Для испытателя: старт прогона, анкета SUS |
+| `POST /admin/live-runs` | Создать прогон: `{scenario: candidate|employer, tasks?: [id], notes?}` → `RunOut` с `token` и `path` (`/run/<token>`) |
+| `GET /admin/live-runs?scenario=` | Прогоны и сводка `summary`: успешность заданий, медианное время, медианный SUS, согласие с категорией |
+| `GET /admin/live-runs/{id}` | Прогон: задания (счётчик, время), шаги, общее время, затык (`stuck_task`), SUS, согласие с категорией |
+| `GET /run/{token}` | Для испытателя (без входа): задания и их выполнение; по токену, неверный токен → 404; лимит 60/мин на IP |
+| `POST /run/{token}/start` | Для испытателя: запускает таймер и привязывает псевдоним вошедшего пользователя (идемпотентно) |
+| `POST /run/{token}/sus` | Для испытателя: `{answers: [1..5]×10, category_agree?, notes?}`, завершает прогон; повтор → 409 `run_finished` |
 | `GET /admin/health` | SLO, очереди, DLQ, GPU (блок «Здоровье») |
 | `POST /admin/demo/fsp-result` | Демо: создать результат в моке → вебхук (F11) |
 | `POST /admin/demo/reset` | Только при `DEMO_MODE=true`: сброс к снапшоту |

@@ -3,7 +3,7 @@
 from fsp_platform.db import Base
 from fsp_platform.outbox import InboxRecord, OutboxRecord  # noqa: F401
 
-from app.analytics.models import AnalyticsEventRow  # noqa: F401
+from app.analytics.models import AnalyticsEventRow, LiveRun  # noqa: F401
 
 # >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
 from app.assessment.models import Grade  # noqa: F401
