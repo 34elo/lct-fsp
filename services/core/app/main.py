@@ -33,6 +33,7 @@ from app.events_stream import UiHub
 from app.events_stream import router as events_router
 from app.fsp.router import router as fsp_router
 from app.identity.router import router as identity_router
+from app.matching.needs_router import router as needs_router
 from app.matching.router import router as search_router
 from app.offers.router import admin_router as admin_complaints_router
 from app.offers.router import router as offers_router
@@ -101,6 +102,7 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(live_runs_admin_router)
     app.include_router(live_runs_public_router)
     app.include_router(analytics_dashboard_router)
+    app.include_router(needs_router)
     # <<< block2
 
     @app.get("/readyz", include_in_schema=False)
