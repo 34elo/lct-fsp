@@ -21,7 +21,7 @@ def _bearer(request: Request) -> str | None:
     return None
 
 
-async def get_current_user(request: Request, session: AsyncSession = Depends(get_session)) -> User:
+async def _user_by_token(request: Request, session: AsyncSession) -> User:
     unauthorized = ProblemError(401, "unauthorized", "Нужна авторизация")
     token = _bearer(request)
     if not token:
@@ -31,9 +31,23 @@ async def get_current_user(request: Request, session: AsyncSession = Depends(get
     except (TokenError, ValueError, KeyError) as exc:
         raise unauthorized from exc
     user = await session.get(User, user_id)
-    if user is None or not user.is_active or user.deleted_at is not None:
+    if user is None:
         raise unauthorized
     return user
+
+
+async def get_current_user(request: Request, session: AsyncSession = Depends(get_session)) -> User:
+    user = await _user_by_token(request, session)
+    if not user.is_active or user.deleted_at is not None:
+        raise ProblemError(401, "unauthorized", "Нужна авторизация")
+    return user
+
+
+async def get_user_even_deleted(
+    request: Request, session: AsyncSession = Depends(get_session)
+) -> User:
+    """Как `get_current_user`, но удалённого отдаёт как есть: повтор удаления профиля → 404."""
+    return await _user_by_token(request, session)
 
 
 def require_roles(*roles: str) -> Callable[..., User]:

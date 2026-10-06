@@ -36,7 +36,7 @@ ml-worker ─────► │ ui.user.<user_id> (прогресс задач)
 |---|---|---|
 | `candidate.registered` | core | `{candidate_id, channel}` |
 | `candidate.preferences.updated` | core | `{candidate_id, fields[]}` |
-| `candidate.deleted` | core | `{candidate_id}` |
+| `candidate.deleted` | core | `{candidate_id}`. Отправляет `DELETE /candidates/me` ([api.md](api.md) §2.2) после стирания данных блока 1. Потребители обязаны удалить свои данные кандидата и скрыть его: аналитика (сырые события по псевдониму) — есть; подбор, офферы (остаётся псевдоним), Telegram, ФСП, бейджи, просмотры — блок 2 (blocks.md §13.1, З-1-10). Идемпотентно |
 | `resume.parsed` / `resume.confirmed` | core | `{resume_id, candidate_id}` |
 | `evidence.changed` | core | `{candidate_id, sources[]}` |
 | `skills.profile.updated` | core | `{candidate_id, profile_version, diff: {skills_up, skills_new, grade, category}}` |
