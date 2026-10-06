@@ -7,6 +7,7 @@
 
 export type CategoryCandidatesCategoriesProfessionGradeCandidatesGetParams = {
 need_id?: string | null;
+session_id?: string | null;
 cursor?: string | null;
 /**
  * @minimum 1

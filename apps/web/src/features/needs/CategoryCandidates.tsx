@@ -24,7 +24,11 @@ import {
   useShortlistAddNeedsNeedIdShortlistPseudoIdPost,
   useShortlistRemoveNeedsNeedIdShortlistPseudoIdDelete,
 } from "@/api/endpoints/needs/needs";
-import type { CandidateCard } from "@/api/model";
+import {
+  useRecordFeedbackRecsFeedbackPost,
+  useResetSessionTuningRecsSessionsSessionIdDelete,
+} from "@/api/endpoints/recommendations/recommendations";
+import type { CandidateCard, Chip } from "@/api/model";
 import { ApiError } from "@/api/mutator";
 import { toCardData } from "@/features/employer/search-model";
 import {
@@ -182,13 +186,17 @@ export default function CategoryCandidates() {
   const [shortlist, setShortlist] = useState<Set<string>>(new Set());
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [shortlistError, setShortlistError] = useState(false);
+  const [chips, setChips] = useState<Chip[]>([]);
   const seq = useRef(0);
+  const session = useRef<string | null>(null);
 
   const cats = useNeedCategoriesNeedsNeedIdCategoriesGet(needId ?? "", { query: { enabled: !!needId } });
   const catList = cats.data?.status === 200 ? cats.data.data.categories : undefined;
   const title = `${professionTitle(profession, catList)} · ${gradeTitle(grade)}`;
 
   const add = useShortlistAddNeedsNeedIdShortlistPseudoIdPost();
+  const feedback = useRecordFeedbackRecsFeedbackPost();
+  const resetTuning = useResetSessionTuningRecsSessionsSessionIdDelete();
   const remove = useShortlistRemoveNeedsNeedIdShortlistPseudoIdDelete();
 
   const load = useCallback(
@@ -197,8 +205,15 @@ export default function CategoryCandidates() {
       setLoading(true);
       setFailed(null);
       try {
-        const r = await categoryCandidatesCategoriesProfessionGradeCandidatesGet(profession, grade, { need_id: needId, cursor: next, limit: PAGE });
+        const r = await categoryCandidatesCategoriesProfessionGradeCandidatesGet(profession, grade, {
+          need_id: needId,
+          session_id: next ? session.current : null,
+          cursor: next,
+          limit: PAGE,
+        });
         if (n !== seq.current || r.status !== 200) return;
+        session.current = r.data.session_id;
+        if (!next) setChips([]);
         setItems((old) => (next ? [...old, ...r.data.items] : r.data.items));
         setCursor(r.data.next_cursor);
         setTotal(r.data.total);
@@ -219,9 +234,23 @@ export default function CategoryCandidates() {
     void load(null);
   }, [load]);
 
+  // Реакции уходят в POST /recs/feedback; ответ несёт чипсы «Учли: …» (matching.md §7). Сбой не мешает работе.
+  const react = (id: string, event: "open" | "shortlist" | "dismiss") => {
+    if (!session.current) return;
+    feedback.mutate(
+      { data: { session_id: session.current, candidate_pseudo_id: id, event } },
+      { onSuccess: (r) => r.status === 200 && setChips(r.data.tuning.chips) },
+    );
+  };
+  const resetChips = () => {
+    if (session.current) resetTuning.mutate({ sessionId: session.current });
+    setChips([]);
+  };
+
   const toggleShortlist = (id: string) => {
     if (!needId) return;
     const on = !shortlist.has(id);
+    if (on) react(id, "shortlist");
     setShortlistError(false);
     setShortlist((s) => {
       const n = new Set(s);
@@ -337,6 +366,25 @@ export default function CategoryCandidates() {
 
         <section className="grid min-w-0 gap-4">
           {failed === "load" && <ErrorState title={T.failed} onRetry={() => void load(null)} />}
+          {chips.length > 0 && (
+            <ul aria-label={T.tuned} className="flex flex-wrap items-center gap-2">
+              {chips.map((c) => (
+                <li key={c.feature} className="flex items-center gap-1 rounded-full border border-tint-200 bg-tint-50 py-1 pl-3 pr-1 text-13">
+                  <span>
+                    {T.tuned}: {c.text}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label={T.tunedReset}
+                    onClick={resetChips}
+                    className="flex size-8 items-center justify-center rounded-full text-muted hover:bg-tint-100"
+                  >
+                    ×
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
           {shortlistError && (
             <p role="alert" className="text-13 text-error">
               {T.shortlistFailed}
@@ -362,8 +410,14 @@ export default function CategoryCandidates() {
                   canShortlist={!!needId}
                   onToggleShortlist={() => toggleShortlist(c.pseudo_id)}
                   onInvite={() => navigate(`/employer/offers/new?candidate=${c.pseudo_id}`)}
-                  onDismiss={() => setDismissed((s) => new Set(s).add(c.pseudo_id))}
-                  onOpen={() => navigate(`/employer/candidates/${c.pseudo_id}?source=match`)}
+                  onDismiss={() => {
+                    react(c.pseudo_id, "dismiss");
+                    setDismissed((s) => new Set(s).add(c.pseudo_id));
+                  }}
+                  onOpen={() => {
+                    react(c.pseudo_id, "open");
+                    navigate(`/employer/candidates/${c.pseudo_id}?source=match`);
+                  }}
                 />
               ))}
             </ol>

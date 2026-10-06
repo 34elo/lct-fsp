@@ -6540,6 +6540,23 @@
             }
           },
           {
+            "name": "session_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
+            }
+          },
+          {
             "name": "cursor",
             "in": "query",
             "required": false,
@@ -7715,13 +7732,19 @@
           "total": {
             "type": "integer",
             "title": "Total"
+          },
+          "session_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Session Id"
           }
         },
         "type": "object",
         "required": [
           "items",
           "next_cursor",
-          "total"
+          "total",
+          "session_id"
         ],
         "title": "CategoryPage"
       },

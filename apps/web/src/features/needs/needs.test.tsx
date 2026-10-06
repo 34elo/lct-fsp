@@ -25,10 +25,12 @@ const cards = [
 ];
 const calls: { method: string; url: string; body?: unknown }[] = [];
 let createStatus = 201;
+let tuned = false;
 
 beforeEach(() => {
   calls.length = 0;
   createStatus = 201;
+  tuned = false;
   setAccessToken(null);
   vi.stubGlobal("EventSource", class { addEventListener() {} close() {} });
   vi.stubGlobal(
@@ -41,7 +43,12 @@ beforeEach(() => {
       if (url.endsWith("/needs") && method === "POST") return createStatus === 201 ? res(201, need) : res(422, { type: "x", title: "x", status: 422, code: "need_empty" });
       if (url.includes("/needs/n1/categories")) return res(200, { need_id: "n1", shortlist: [], categories: [category, fewCategory] });
       if (url.includes("/needs/n1/shortlist/")) return res(method === "DELETE" ? 204 : 204);
-      if (url.includes("/categories/backend/middle/candidates")) return res(200, { items: cards, next_cursor: null, total: 3 });
+      if (url.includes("/categories/backend/middle/candidates")) return res(200, { items: cards, next_cursor: null, total: 3, session_id: "s1" });
+      if (url.endsWith("/recs/feedback")) {
+        const chips = tuned ? [{ feature: "fsp", text: "чаще выбираете кандидатов с подтверждением ФСП ×1.3", change: 0.3 }] : [];
+        return res(200, { id: 1, impression_id: 1, event: "dismiss", created_at: "2026-10-06T00:00:00Z", tuning: { session_id: "s1", active: tuned, signals: 3, min_signals: 3, weights: [], chips, hints: [] } });
+      }
+      if (url.endsWith("/recs/sessions/s1") && method === "DELETE") return res(204);
       return res(404);
     }),
   );
@@ -113,4 +120,21 @@ test("«не подходит» скрывает карточку, пригла�
   fireEvent.click(within(screen.getByRole("article", { name: "Backend #3077" })).getByRole("button", { name: "Не подходит" }));
   expect(screen.queryByRole("article", { name: "Backend #3077" })).toBeNull();
   expect(within(first).getByRole("button", { name: "Пригласить" })).toBeInTheDocument();
+});
+
+test("реакции уходят в /recs/feedback, чипсы «Учли» появляются и сбрасываются", async () => {
+  mount("/employer/categories/backend/middle?need_id=n1");
+  const first = await screen.findByRole("article", { name: "Backend #4821" });
+  tuned = true;
+  fireEvent.click(within(first).getByRole("button", { name: "В шорт-лист" }));
+  await vi.waitFor(() =>
+    expect(calls.find((c) => c.url.endsWith("/recs/feedback"))?.body).toEqual({ session_id: "s1", candidate_pseudo_id: "p1", event: "shortlist" }),
+  );
+  fireEvent.click(within(screen.getByRole("article", { name: "Backend #3077" })).getByRole("button", { name: "Не подходит" }));
+  await vi.waitFor(() => expect(calls.filter((c) => c.url.endsWith("/recs/feedback")).map((c) => (c.body as { event: string }).event)).toEqual(["shortlist", "dismiss"]));
+  const chips = await screen.findByRole("list", { name: "Учли" });
+  expect(chips).toHaveTextContent("Учли: чаще выбираете кандидатов с подтверждением ФСП");
+  fireEvent.click(within(chips).getByRole("button", { name: "Сбросить подстройку" }));
+  await vi.waitFor(() => expect(calls.some((c) => c.method === "DELETE" && c.url.endsWith("/recs/sessions/s1"))).toBe(true));
+  expect(screen.queryByRole("list", { name: "Учли" })).toBeNull();
 });
