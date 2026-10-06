@@ -9,4 +9,5 @@ export interface UserOut {
   id: string;
   email: string | null;
   role: string;
+  email_verified?: boolean;
 }
