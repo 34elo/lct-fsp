@@ -30,6 +30,7 @@ from app.graph.trust import EvidenceView, TrustConfig, effective_strength
 from app.matching.p_accept import PAcceptConfig, hint, mutual, p_accept
 from app.matching.rerank import RerankConfig, mmr, multiplier
 from app.matching.scoring import MatchConfig, MatchResult, score_candidate
+from app.matching import service as matching
 from app.matching.service import build_views, load_vacancy, only_visible, visibility_version
 from app.matching.strength import (
     StrengthConfig,
@@ -518,6 +519,10 @@ async def search_candidates(
                 owned[c.user_id])
         )  # fmt: skip
 
+    # Загрузить интересующихся кандидатов (E33-6)
+    interested_cands = await matching.get_interested_candidate_ids(session, company_id)
+    _INTEREST_BOOST = 1.05  # множитель если кандидат показал интерес (E33-6, scoring.yaml)
+
     query_vec = None
     if vacancy_id is not None and rows:
         loaded = await load_vacancy(session, vacancy_id)
@@ -528,6 +533,10 @@ async def search_candidates(
             for r, view in zip(rows, views, strict=True):
                 r.result = score_candidate(v, view, adj, cfg)
                 if r.result is not None:
+                    # Применить бус за встречный сигнал (E33-6)
+                    if r.cand.user_id in interested_cands:
+                        r.result.score = min(1.0, r.result.score * _INTEREST_BOOST)
+                        r.result.breakdown["interest_boost"] = _INTEREST_BOOST
                     r.p_accept = p_accept_for(v, r.cand, responsibility_score, pa_cfg)
     if category is not None:  # rank участвует в порядке — сила нужна всем
         await _attach_strength(session, rows, category, nice_ids, must_floor, day, st_cfg)
