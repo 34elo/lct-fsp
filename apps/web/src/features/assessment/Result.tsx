@@ -11,6 +11,7 @@ import {
   useUpgradeAssessmentAttemptsAttemptIdUpgradePost,
 } from "@/api/endpoints/assessment/assessment";
 import { useGetProfessionsTaxonomyProfessionsGet } from "@/api/endpoints/taxonomy/taxonomy";
+import { ExplainAnswers } from "./Explain";
 import { holds, isFuture, skillRows, validUntil } from "./model";
 import { GRADE, T, dateShort } from "./text";
 import { ErrorLine, LoadError, Page, retryServerOnly } from "./ui";
@@ -195,6 +196,8 @@ export default function Result() {
           </Card>
         )}
       </section>
+
+      <ExplainAnswers attemptId={id} answers={r.answers} />
 
       <Card className="flex flex-col gap-2 p-4 text-14" data-testid="assessment-cooldown">
         {nextChange && <p className="font-semibold">{T.nextChange(dateShort(nextChange.next_change_at))}</p>}

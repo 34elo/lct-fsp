@@ -53,6 +53,10 @@ const finished = {
       { skill: "python", items: 6, share: 0.83 },
       { skill: "system_design", items: 4, share: 0.5 },
     ],
+    answers: [
+      { response_id: "r1", seq: 1, skill: "python", score: 1 },
+      { response_id: "r2", seq: 2, skill: "system_design", score: 0 },
+    ],
   },
 };
 
@@ -322,5 +326,47 @@ describe("история (S4)", () => {
   it("пусто: подсказка и ссылка на опрос", async () => {
     mount("/me/assessment/history", (url) => (url.endsWith("/assessment/history") ? res(200, { surveys: [], attempts: [], cooldowns: [] }) : undefined));
     expect(await screen.findByText("Попыток пока нет")).toBeInTheDocument();
+  });
+});
+
+describe("«Объясни ответ» (E24-2)", () => {
+  const explainOut = {
+    response_id: "r2",
+    seq: 2,
+    skill: "system_design",
+    score: 0,
+    reason: { code: "misconception", label: "Ложное представление о теме", detail: null },
+    misconception: { claim: "Кэш всегда ускоряет.", truth: "Кэш добавляет рассинхрон." },
+    text: "Похоже на распространённое заблуждение по этой теме.",
+    source: "template",
+    model: null,
+    self_reason: "guess",
+    self_reason_matches: false,
+  };
+
+  it("показывает только неверные ответы и объясняет по кнопке, без ключа", async () => {
+    const calls = mount("/me/assessment/attempts/a1/result", (url, init) => {
+      if (url.includes("/attempts/a1/responses/r2/explain") && init?.method === "POST") return res(200, explainOut);
+      if (url.endsWith("/attempts/a1")) return res(200, finished);
+      if (url.endsWith("/assessment/history")) return res(200, { surveys: [], attempts: [finished], cooldowns: [], retries: [] });
+    });
+    expect(await tid("assessment-explain")).toBeInTheDocument();
+    expect(screen.queryByTestId("assessment-explain-1")).not.toBeInTheDocument(); // верный ответ
+    fireEvent.change(screen.getByTestId("assessment-explain-self-2"), { target: { value: "guess" } });
+    fireEvent.click(screen.getByTestId("assessment-explain-ask-2"));
+    expect(await tid("assessment-explain-out-2")).toHaveTextContent("Кэш добавляет рассинхрон.");
+    expect(screen.getByTestId("assessment-explain-reason-2")).toHaveTextContent("Ложное представление о теме");
+    const post = calls.find((c) => c.url.includes("/explain"))!;
+    expect(post.body).toEqual({ self_reason: "guess" });
+  });
+
+  it("ошибка лимита показывается строкой", async () => {
+    mount("/me/assessment/attempts/a1/result", (url, init) => {
+      if (url.includes("/explain") && init?.method === "POST") return res(429, { code: "rate_limited" });
+      if (url.endsWith("/attempts/a1")) return res(200, finished);
+      if (url.endsWith("/assessment/history")) return res(200, { surveys: [], attempts: [finished], cooldowns: [], retries: [] });
+    });
+    fireEvent.click(await tid("assessment-explain-ask-2"));
+    expect(await tid("assessment-explain-error-2")).toHaveTextContent("Слишком много запросов");
   });
 });
