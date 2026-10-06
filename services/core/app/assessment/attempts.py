@@ -178,10 +178,10 @@ async def _family(session: AsyncSession, fam_id: uuid.UUID) -> Family:
 
 
 def family_of(row: FamilyRow) -> Family | None:
-    """Кодовое семейство из реестра, спецификация конструктора (E30-1) или майнинг (E30-3)."""
+    """Кодовое семейство из реестра, спецификация (конструктор E30-1, LLM E26-4) или майнинг."""
     if row.source == "code":
         return registry.get(row.slug)
-    if row.source == "spec" and row.spec:
+    if row.source in ("spec", "llm") and row.spec:  # llm — офлайн-конвейер E26-4
         return SpecFamily.from_row(row)
     if row.source == "mutation" and row.spec:
         return MinedFamily.from_row(row)
