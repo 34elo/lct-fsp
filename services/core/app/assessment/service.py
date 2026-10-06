@@ -367,3 +367,15 @@ def _band_position(grade: TestGrade, theta: float) -> float:
     lo = _CUT[grade]
     hi = _CUT[TEST_GRADE_ORDER[idx + 1]] if idx + 1 < len(TEST_GRADE_ORDER) else lo + 1.0
     return min(1.0, max(0.0, (theta - lo) / (hi - lo)))
+
+
+async def erase_candidate(session: AsyncSession, candidate_id: uuid.UUID) -> None:
+    """Удаление профиля (F13): попытки, ответы, грейды, опросы и ответы на регулярные задания."""
+    from sqlalchemy import delete
+
+    from app.assessment.models import Attempt, Response
+
+    attempt_ids = select(Attempt.id).where(Attempt.candidate_id == candidate_id)
+    await session.execute(delete(Response).where(Response.attempt_id.in_(attempt_ids)))
+    for model in (Attempt, Grade, Survey, TaskSubmission):
+        await session.execute(delete(model).where(model.candidate_id == candidate_id))
