@@ -45,6 +45,7 @@ from app.recommendations.router import router as recommendations_router
 from app.resumes.router import router as resumes_router
 from app.taxonomy.admin_router import router as admin_taxonomy_router
 from app.taxonomy.router import router as taxonomy_router
+from app.taxonomy.skills_router import router as admin_skills_router
 from app.telegram.router import internal as telegram_internal_router
 from app.telegram.router import router as telegram_router
 from app.vacancies.router import router as vacancies_router
@@ -102,6 +103,7 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(assessment_router)
     app.include_router(admin_families_router)
     app.include_router(admin_taxonomy_router)
+    app.include_router(admin_skills_router)
     app.include_router(families_router)
     app.include_router(employer_tasks_router)
     app.include_router(candidate_tasks_router)
