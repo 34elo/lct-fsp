@@ -1002,6 +1002,66 @@
         }
       }
     },
+    "/internal/tg/token": {
+      "post": {
+        "tags": [
+          "internal"
+        ],
+        "summary": "Tg User Token",
+        "description": "Короткий access-токен кандидата: бот ходит с ним в `/assessment/*` блока 1 (E25-3).\n\nТот же JWT, что и после входа, но живёт `BOT_USER_TOKEN_TTL` (5 минут), refresh не выдаётся.",
+        "operationId": "tg_user_token_internal_tg_token_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserTokenIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserTokenOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/internal/tg/resumes": {
       "post": {
         "tags": [
@@ -7621,6 +7681,244 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/offers/{offer_id}/task": {
+      "get": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Get Offer Task",
+        "description": "Задача приглашения: вариант без ключа. Чужой оффер или без задачи — 404.",
+        "operationId": "get_offer_task_offers__offer_id__task_get",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskView"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Зависимость недоступна",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/offers/{offer_id}/task/answer": {
+      "post": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Answer Offer Task",
+        "description": "Один ответ на задачу; повтор возвращает принятый (`Idempotent-Replay: true`).",
+        "operationId": "answer_offer_task_offers__offer_id__task_answer_post",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskAnswerIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskBrief"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Конфликт (в том числе cooldown)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Зависимость недоступна",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
                 }
               }
             }
@@ -18826,6 +19124,16 @@
                 "type": "null"
               }
             ]
+          },
+          "task": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaskAttach"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -20967,6 +21275,16 @@
                 "type": "null"
               }
             ]
+          },
+          "task": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaskAttach"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -22668,6 +22986,16 @@
                 "type": "null"
               }
             ]
+          },
+          "task": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaskBrief"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -22881,6 +23209,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/Contacts-Output"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "task": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaskResult"
               },
               {
                 "type": "null"
@@ -26880,6 +27218,90 @@
         ],
         "title": "SusIn"
       },
+      "TaskAnswerIn": {
+        "properties": {
+          "answer": {
+            "title": "Answer"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "answer"
+        ],
+        "title": "TaskAnswerIn"
+      },
+      "TaskAttach": {
+        "properties": {
+          "family_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Family Id"
+          },
+          "deadline_days": {
+            "type": "integer",
+            "maximum": 14.0,
+            "minimum": 1.0,
+            "title": "Deadline Days",
+            "default": 3
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "family_id"
+        ],
+        "title": "TaskAttach",
+        "description": "Задача в приглашении (E33-3): семейство из конструктора компании или банка, ≤ 15 минут."
+      },
+      "TaskBrief": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "minutes": {
+            "type": "integer",
+            "title": "Minutes"
+          },
+          "deadline_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Deadline At"
+          },
+          "answered_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answered At"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "minutes",
+          "deadline_at"
+        ],
+        "title": "TaskBrief",
+        "description": "Задача в приглашении глазами кандидата (вариант — `GET /offers/{id}/task`)."
+      },
       "TaskIn": {
         "properties": {
           "family_id": {
@@ -26923,6 +27345,99 @@
           "grade"
         ],
         "title": "TaskIn"
+      },
+      "TaskResult": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "minutes": {
+            "type": "integer",
+            "title": "Minutes"
+          },
+          "deadline_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Deadline At"
+          },
+          "answered_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answered At"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "family_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Family Id"
+          },
+          "answer": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "minutes",
+          "deadline_at",
+          "family_id"
+        ],
+        "title": "TaskResult",
+        "description": "То же для компании этого оффера + ответ кандидата. Другим компаниям не отдаётся."
+      },
+      "TaskView": {
+        "properties": {
+          "task": {
+            "$ref": "#/components/schemas/TaskBrief"
+          },
+          "item": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item"
+          },
+          "can_answer": {
+            "type": "boolean",
+            "title": "Can Answer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "task",
+          "can_answer"
+        ],
+        "title": "TaskView",
+        "description": "`GET /offers/{id}/task`: вариант без ключа и состояние решения."
       },
       "TeamFactBrief": {
         "properties": {
@@ -28298,6 +28813,37 @@
           "role"
         ],
         "title": "UserOut"
+      },
+      "UserTokenIn": {
+        "properties": {
+          "tg_user_id": {
+            "type": "integer",
+            "title": "Tg User Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tg_user_id"
+        ],
+        "title": "UserTokenIn"
+      },
+      "UserTokenOut": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "expires_in": {
+            "type": "integer",
+            "title": "Expires In"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "expires_in"
+        ],
+        "title": "UserTokenOut"
       },
       "VacancyBrief": {
         "properties": {
