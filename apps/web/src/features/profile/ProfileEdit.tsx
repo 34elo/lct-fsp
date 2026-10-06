@@ -88,6 +88,9 @@ function Form({ p, skills }: { p: CandidateProfile; skills: TaxSkill[] }) {
   const [stackTouched, setStackTouched] = useState(false);
   const [soft, setSoft] = useState<string[]>(initialSoft);
   const [softTouched, setSoftTouched] = useState(false);
+  const [minor, setMinor] = useState(p.age_group === "minor");
+  const [parent, setParent] = useState(!!p.parent_consent);
+  const [ageTouched, setAgeTouched] = useState(false);
   const [query, setQuery] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [note, setNote] = useState<"saved" | string | null>(null);
@@ -123,6 +126,10 @@ function Form({ p, skills }: { p: CandidateProfile; skills: TaxSkill[] }) {
     };
     if (stackTouched) body.stack = stack;
     if (softTouched) body.soft_skills = soft;
+    if (ageTouched) {
+      body.age_group = minor ? "minor" : "adult";
+      body.parent_consent = minor && parent;
+    }
     try {
       await patch.mutateAsync({ data: body });
       await qc.invalidateQueries({ queryKey: getGetProfileCandidatesMeProfileGetQueryKey() });
@@ -243,6 +250,47 @@ function Form({ p, skills }: { p: CandidateProfile; skills: TaxSkill[] }) {
           </div>
         </Card>
       )}
+
+      <Card className="flex flex-col gap-3 p-5" data-testid="profile-edit-age">
+        <h2 className="font-mono text-17 font-semibold">{E.ageTitle}</h2>
+        <p className="text-13 text-muted">{E.ageHint}</p>
+        <label className="flex min-h-11 items-center gap-2 text-14">
+          <input
+            type="checkbox"
+            className="size-5 accent-brand"
+            checked={minor}
+            onChange={(e) => {
+              setMinor(e.target.checked);
+              if (!e.target.checked) setParent(false);
+              setAgeTouched(true);
+            }}
+            data-testid="profile-edit-age-minor"
+          />
+          {E.ageMinor}
+        </label>
+        {minor && (
+          <>
+            <label className="flex min-h-11 items-center gap-2 text-14">
+              <input
+                type="checkbox"
+                className="size-5 shrink-0 accent-brand"
+                checked={parent}
+                onChange={(e) => {
+                  setParent(e.target.checked);
+                  setAgeTouched(true);
+                }}
+                data-testid="profile-edit-age-parent"
+              />
+              {E.ageParent}
+            </label>
+            {!parent && (
+              <p className="rounded-lg bg-tint-50 px-3 py-2 text-13" data-testid="profile-edit-age-hidden">
+                {E.ageHidden}
+              </p>
+            )}
+          </>
+        )}
+      </Card>
 
       {note === "saved" && (
         <p role="status" data-testid="profile-edit-saved" className="rounded-lg bg-tint-50 px-3 py-2 text-14">
