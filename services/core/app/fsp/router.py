@@ -227,19 +227,24 @@ async def fsp_overview(
     )
 
 
-# -------------------------------------------------------------------------- демо
+# -------------------------------------------------------------------------- админ: демо (E13-3)
+_admin = require_roles("fsp_admin")
+
+
 @router.post(
-    "/internal/demo/fsp/results",
+    "/admin/demo/fsp-result",
     status_code=202,
-    responses=problem_responses(400, 503),
-    include_in_schema=False,
+    responses=problem_responses(400, 401, 403),
 )
-async def demo_create_fsp_result(
+async def admin_demo_create_fsp_result(
     request: Request,
+    user: User = Depends(_admin),
     session: AsyncSession = Depends(get_session),
     connector: ConnectorClient = Depends(get_connector),
 ):
-    """Демо-кнопка: создать результат ФСП для случайного кандидата. Только в DEMO_MODE."""
+    """Админ: демо-кнопка создания результата ФСП для случайного кандидата (E13-3).
+    Создаёт результат в мок-ФСП и отправляет вебхук для синхронизации.
+    Доступно только при DEMO_MODE=true."""
     if not request.app.state.settings.demo_mode:
         raise ProblemError(400, "demo_disabled", "Демо-режим отключен")
     await service.demo_create_result(session, connector)
@@ -247,17 +252,18 @@ async def demo_create_fsp_result(
 
 
 @router.post(
-    "/internal/demo/fsp/reset",
+    "/admin/demo/reset",
     status_code=202,
-    responses=problem_responses(400, 503),
-    include_in_schema=False,
+    responses=problem_responses(400, 401, 403),
 )
-async def demo_reset_fsp(
+async def admin_demo_reset_fsp(
     request: Request,
+    user: User = Depends(_admin),
     session: AsyncSession = Depends(get_session),
     connector: ConnectorClient = Depends(get_connector),
 ):
-    """Демо-кнопка: очистить результаты ФСП. Только в DEMO_MODE."""
+    """Админ: демо-кнопка сброса всех результатов ФСП к снапшоту (E13-3).
+    Доступно только при DEMO_MODE=true."""
     if not request.app.state.settings.demo_mode:
         raise ProblemError(400, "demo_disabled", "Демо-режим отключен")
     await service.demo_reset(session, connector)
