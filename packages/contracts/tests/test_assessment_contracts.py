@@ -139,6 +139,28 @@ def test_family_llm_bank_contracts():
         assert a.answer == v and type(a.answer) is type(v)
 
 
+def test_regular_task_published_contract():
+    """E25-1: событие рассылки регулярного задания (E9-6 у блока 2 читает его)."""
+    from fsp_contracts.assessment import RegularTaskPublished
+
+    assert ASSESSMENT_EVENTS["regular_task.published"] is RegularTaskPublished
+    payload = {
+        "task_id": str(uuid4()),
+        "company_id": str(uuid4()),
+        "profession": "backend",
+        "grade": "middle",
+        "round": 1,
+        "period_days": 14,
+        "recipients": [str(uuid4())],
+        "published_at": datetime.now(UTC).isoformat(),
+    }
+    ev = RegularTaskPublished.model_validate(payload)
+    assert RegularTaskPublished.model_validate(ev.model_dump(mode="json")) == ev
+    assert RegularTaskPublished.model_validate({**payload, "recipients": []}).recipients == []
+    with pytest.raises(ValidationError):
+        RegularTaskPublished.model_validate({**payload, "round": 0})
+
+
 def test_assessment_analytics_props_strict():
     from fsp_contracts.analytics import AnalyticsEvent, UnknownAnalyticsEvent, validate_event
     from pydantic import ValidationError

@@ -16,6 +16,8 @@ from sqlalchemy import text
 from app.assessment.admin_router import router as admin_families_router
 from app.assessment.constructor_router import router as families_router
 from app.assessment.router import router as assessment_router
+from app.assessment.tasks_router import candidate_router as candidate_tasks_router
+from app.assessment.tasks_router import employer_router as employer_tasks_router
 
 # <<< block1
 # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
@@ -93,6 +95,8 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(admin_families_router)
     app.include_router(admin_taxonomy_router)
     app.include_router(families_router)
+    app.include_router(employer_tasks_router)
+    app.include_router(candidate_tasks_router)
     app.include_router(graph_router)  # /candidates/me/graph раньше {pseudo_id}
     # <<< block1
     # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)

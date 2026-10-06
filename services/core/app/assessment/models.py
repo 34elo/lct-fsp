@@ -149,3 +149,53 @@ class Response(Base):
         sa.UniqueConstraint("attempt_id", "seq", name="uq_responses_attempt_seq"),
         sa.UniqueConstraint("attempt_id", "family_id", name="uq_responses_attempt_family"),
     )
+
+
+class RegularTask(Base):
+    """Регулярное задание компании кандидатам её категории (assessment.md §3, E25-1)."""
+
+    __tablename__ = "regular_tasks"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    company_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("companies.id", ondelete="CASCADE"), index=True
+    )
+    author_id: Mapped[uuid.UUID] = mapped_column()
+    family_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("families.id"))
+    profession: Mapped[str] = mapped_column(Text)  # ProfessionSlug
+    grade: Mapped[str] = mapped_column(Text)  # TestGrade
+    title: Mapped[str] = mapped_column(Text)
+    rubric: Mapped[list | None] = mapped_column(sa.JSON, default=None)  # пункты, только `open`
+    period_days: Mapped[int] = mapped_column(default=14, server_default="14")
+    status: Mapped[str] = mapped_column(Text, default="draft")  # draft | open | closed
+    round: Mapped[int] = mapped_column(default=0, server_default="0")  # номер рассылки
+    published_at: Mapped[datetime | None] = mapped_column(
+        sa.DateTime(timezone=True), default=None
+    )  # последняя рассылка
+    created_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), default=utcnow)
+
+
+class TaskSubmission(Base):
+    """Ответ кандидата на регулярное задание; один на (задание, кандидат, рассылка)."""
+
+    __tablename__ = "task_submissions"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    task_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("regular_tasks.id", ondelete="CASCADE"), index=True
+    )
+    candidate_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("candidates.user_id", ondelete="CASCADE"), index=True
+    )
+    round: Mapped[int] = mapped_column()
+    seed: Mapped[int] = mapped_column(sa.BigInteger)
+    answer: Mapped[Any] = mapped_column(sa.JSON, default=None)
+    score: Mapped[float | None] = mapped_column(sa.Float, default=None)  # None — ждёт оценки
+    rubric_marks: Mapped[list | None] = mapped_column(sa.JSON, default=None)
+    scored_by: Mapped[str | None] = mapped_column(Text, default=None)  # auto|llm_draft|employer
+    created_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), default=utcnow)
+    scored_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), default=None)
+
+    __table_args__ = (
+        sa.UniqueConstraint("task_id", "candidate_id", "round", name="uq_task_submissions_round"),
+    )
