@@ -4,10 +4,12 @@
  * core
  * OpenAPI spec version: 0.1.0
  */
+import type { AttemptInMode } from './attemptInMode';
 import type { TestGrade } from './testGrade';
 
 export interface AttemptIn {
   /** @pattern ^[a-z][a-z0-9_]{1,31}$ */
   profession: string;
   declared_grade: TestGrade;
+  mode?: AttemptInMode;
 }
