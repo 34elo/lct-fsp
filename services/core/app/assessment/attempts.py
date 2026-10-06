@@ -23,7 +23,7 @@ from fsp_platform.app import ProblemError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.assessment import engine, grading, sprt, telemetry
+from app.assessment import engine, grading, sprt, telemetry, track
 from app.assessment import families as registry
 from app.assessment import selection as sel
 from app.assessment.config import AssessmentConfig
@@ -158,6 +158,16 @@ async def create_attempt(
     }
     session.add(att)
     await session.flush()
+    await track.emit(
+        session,
+        "assessment_started",
+        candidate_id,
+        {
+            "attempt_id": str(att.id),
+            "profession": profession,
+            "declared_grade": declared_grade.value,
+        },
+    )
     return att
 
 
@@ -375,6 +385,19 @@ async def submit_answer(
         resp.telemetry = telemetry
         resp.answered_at = datetime.now(UTC)
         await session.flush()
+        await track.emit(
+            session,
+            "assessment_answered",
+            candidate_id,
+            {
+                "attempt_id": str(att.id),
+                "seq": resp.seq,
+                "stage": att.stage,
+                "is_pilot": resp.is_pilot,
+                "score": resp.score,
+                "rt_ms": max(0, rt_ms) if rt_ms is not None else None,
+            },
+        )
         if not resp.is_pilot:  # пилот не влияет на θ и LLR
             await _after_scored(session, att, resp, cfg)
     return {"response_id": resp.id, "accepted": True, "done": att.status != "active"}

@@ -318,7 +318,22 @@ CREATE INDEX ON analytics_events (run_id) WHERE run_id IS NOT NULL;
 | Выход на контакт | Время до первого приглашения; доля кандидатов с приглашением за 14 дней; доля ответов за 72 ч; доля принятых; причины отказов | `offer.*` |
 | Работодатель | Потребность → просмотр категории → приглашение; время до первого приглашения | `need.created`, `category.viewed`, `offer.sent` |
 | Калибровка `p_accept` | Доля принятых по корзинам прогноза | `offer.*` |
-| Регулярные задания | Доля ответивших; ответ → приглашение | `task.*` |
+| Регулярные задания | Доля ответивших; ответ → приглашение | `regular_task_sent` / `regular_task_answered`, `invite_*` |
 | Отклики | Отклик → ответ компании → принятие | `application.*` |
 | UX | SUS; доля выполненных заданий прогона без подсказок; время задания | Живые прогоны (§3) |
 | Техника | 5xx, p95 латентности, длина очередей | Контур D (§4) |
+
+### 9.3. События аналитики блока 1 (E31-2a)
+
+Props — только числа, флаги, перечисления и slug'и, без текста ответов и ПДн (`fsp_contracts/analytics_assessment.py`). Отправка — `app/assessment/track.py` через `analytics.service`.
+
+| Событие | Источник | Props |
+|---|---|---|
+| `survey_saved` | сервер | `profession`, `declared_grade`, `stack_size`, `formats_count`, `has_salary` (только при изменении опроса) |
+| `assessment_started` | сервер | `attempt_id`, `profession`, `declared_grade` |
+| `assessment_answered` | сервер | `attempt_id`, `seq`, `stage`, `is_pilot`, `score`, `rt_ms` (содержимого ответа нет) |
+| `assessment_finished` | сервер | `attempt_id`, `profession`, `declared_grade`, `stage`, `result`, `grade`, `items`, `duration_s` |
+| `family_status_changed` | сервер | `family`, `from_status`, `to_status`, `reason` (autocheck/admin/alarm/other) |
+| `regular_task_sent` | сервер | `profession`, `grade` (одно событие на рассылку) |
+| `regular_task_answered` | сервер, веб, бот | `task_kind`, `profession`, `grade`, `latency_h` |
+| `regular_task_skipped` | сервер, веб, бот | схема есть; отправка — вместе с напоминаниями E9-6 |

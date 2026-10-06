@@ -100,3 +100,28 @@ async def test_prefill_from_resume_and_claimed(api, factory, taxonomy_loaded):
     ] == [("backend", "senior", "middle", "overclaimed")]
     hist = api.get("/assessment/history", headers=h).json()
     assert hist["cooldowns"][0]["profession"] == "backend"
+
+
+async def test_survey_analytics_event_once_without_pii(api, factory, taxonomy_loaded):
+    """E31-2a: `survey_saved` пишется один раз на изменение, без стека и вилки."""
+    from app.analytics.models import AnalyticsEventRow
+    from sqlalchemy import select
+
+    h = register(api)
+    assert api.put("/assessment/survey", json=BODY, headers=h).status_code == 200
+    api.put("/assessment/survey", json=BODY, headers=h)  # повтор без изменений
+    async with session_scope(factory) as s:
+        rows = list(
+            await s.scalars(
+                select(AnalyticsEventRow).where(AnalyticsEventRow.event == "survey_saved")
+            )
+        )
+    assert len(rows) == 1
+    assert rows[0].props == {
+        "profession": "backend",
+        "declared_grade": "middle",
+        "stack_size": 2,
+        "formats_count": 2,
+        "has_salary": True,
+    }
+    assert rows[0].actor.startswith("a_") and rows[0].role == "candidate"
