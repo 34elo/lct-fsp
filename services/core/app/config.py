@@ -40,4 +40,6 @@ class Settings(BaseServiceSettings):
     llm_enabled: bool = True
     # <<< block1
     # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
+    # демо-кнопки для ФСП (E13-3): создание результатов и сброс
+    demo_mode: bool = False
     # <<< block2

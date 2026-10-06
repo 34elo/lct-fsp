@@ -420,6 +420,13 @@ def build_app(settings: Settings | None = None, store: Store | None = None) -> F
             for c in st.codes[-20:]
         ]
 
+    @app.post("/mock/reset", dependencies=auth, include_in_schema=False)
+    async def mock_reset() -> dict[str, str]:
+        """Админ: очистить результаты ФСП (демо-кнопка E13-3)."""
+        st.results.clear()
+        st.sent_events.clear()
+        return {"status": "reset"}
+
     return app
 
 

@@ -225,3 +225,40 @@ async def fsp_overview(
         ranks=own.ranks if own else [],
         teams=[FspTeam(**t) for t in await service.teams_of(session, user.id)],
     )
+
+
+# -------------------------------------------------------------------------- демо
+@router.post(
+    "/internal/demo/fsp/results",
+    status_code=202,
+    responses=problem_responses(400, 503),
+    include_in_schema=False,
+)
+async def demo_create_fsp_result(
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+    connector: ConnectorClient = Depends(get_connector),
+):
+    """Демо-кнопка: создать результат ФСП для случайного кандидата. Только в DEMO_MODE."""
+    if not request.app.state.settings.demo_mode:
+        raise ProblemError(400, "demo_disabled", "Демо-режим отключен")
+    await service.demo_create_result(session, connector)
+    return {"status": "accepted"}
+
+
+@router.post(
+    "/internal/demo/fsp/reset",
+    status_code=202,
+    responses=problem_responses(400, 503),
+    include_in_schema=False,
+)
+async def demo_reset_fsp(
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+    connector: ConnectorClient = Depends(get_connector),
+):
+    """Демо-кнопка: очистить результаты ФСП. Только в DEMO_MODE."""
+    if not request.app.state.settings.demo_mode:
+        raise ProblemError(400, "demo_disabled", "Демо-режим отключен")
+    await service.demo_reset(session, connector)
+    return {"status": "accepted"}
