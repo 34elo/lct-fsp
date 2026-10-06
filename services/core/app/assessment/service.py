@@ -16,6 +16,7 @@ from fsp_contracts.assessment import (
     CategoryChanged,
     CategoryRef,
     ClaimedVsConfirmed,
+    DeclaredGrade,
     TestGrade,
 )
 from fsp_contracts.registry import new_event
@@ -24,7 +25,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.assessment import survey
-from app.assessment.models import Grade, TaskSubmission
+from app.assessment.models import Grade, Survey, TaskSubmission
 from app.candidates.models import Candidate
 
 PRODUCER = "core"
@@ -183,6 +184,95 @@ async def claimed_vs_confirmed(
             )
         )
     return out
+
+
+# --- заявленный грейд без подтверждения (ADR-025, E32-1) ---
+
+
+def _declared_rows(now: datetime | None = None):
+    """Последний опрос с `declared_grade` по (кандидат, профессия), где нет действующего грейда."""
+    ranked = (
+        select(
+            Survey.candidate_id,
+            Survey.profession,
+            Survey.declared_grade,
+            Survey.created_at,
+            func.row_number()
+            .over(
+                partition_by=(Survey.candidate_id, Survey.profession),
+                order_by=(Survey.created_at.desc(), Survey.id.desc()),
+            )
+            .label("rn"),
+        )
+        .where(Survey.declared_grade.is_not(None))
+        .subquery()
+    )
+    confirmed = (
+        select(Grade.candidate_id)
+        .where(
+            Grade.candidate_id == ranked.c.candidate_id,
+            Grade.profession == ranked.c.profession,
+            _active(now),
+        )
+        .exists()
+    )
+    return ranked, (ranked.c.rn == 1) & ~confirmed
+
+
+def _declared_dto(r) -> DeclaredGrade:
+    return DeclaredGrade(
+        candidate_id=r.candidate_id,
+        profession=r.profession,
+        grade=TestGrade(r.declared_grade),
+        declared_at=_aware(r.created_at),
+    )
+
+
+async def declared_grades_many(
+    session: AsyncSession, candidate_ids: Iterable[uuid.UUID]
+) -> dict[uuid.UUID, list[DeclaredGrade]]:
+    """Заявленные в опросе грейды по профессиям без действующего подтверждения.
+
+    Каждый запрошенный кандидат есть в словаре (без заявленного — пустой список). Согласия и
+    видимость не учитываются: их проверяет Б2.
+    """
+    ids = list(set(candidate_ids))
+    out: dict[uuid.UUID, list[DeclaredGrade]] = {i: [] for i in ids}
+    if not ids:
+        return out
+    ranked, cond = _declared_rows()
+    rows = await session.execute(
+        select(ranked)
+        .where(cond, ranked.c.candidate_id.in_(ids))
+        .order_by(ranked.c.candidate_id, ranked.c.profession)
+    )
+    for r in rows:
+        out[r.candidate_id].append(_declared_dto(r))
+    return out
+
+
+async def declared_members(
+    session: AsyncSession, profession: str, grade: TestGrade | str
+) -> list[uuid.UUID]:
+    """Кандидаты, заявившие ровно `grade` по профессии и не имеющие по ней действующего грейда."""
+    ranked, cond = _declared_rows()
+    rows = await session.scalars(
+        select(ranked.c.candidate_id)
+        .where(cond, ranked.c.profession == profession, ranked.c.declared_grade == str(grade))
+        .order_by(ranked.c.candidate_id)
+    )
+    return list(rows)
+
+
+async def declared_counts(session: AsyncSession) -> dict[tuple[str, str], int]:
+    """`(profession, grade) → число` неподтверждённых заявленных грейдов, без учёта согласий."""
+    ranked, cond = _declared_rows()
+    rows = await session.execute(
+        select(ranked.c.profession, ranked.c.declared_grade, func.count())
+        .where(cond)
+        .group_by(ranked.c.profession, ranked.c.declared_grade)
+    )
+    return {(p, g): n for p, g, n in rows}
 
 
 async def last_activity_at(session: AsyncSession, candidate_id: uuid.UUID) -> datetime | None:

@@ -264,3 +264,56 @@ def test_hiring_analytics_events_validate_and_reject_pii():
         validate_event(
             ev("category_viewed", {"profession": "Иван", "grade": "mid", "candidates": 1})
         )
+
+
+def test_e32_declared_grade_and_compatible_fields():
+    """E32-1 (ADR-025): заявленный грейд, режим «экспресс», приглашение после бонуса.
+
+    Старые payload без новых полей валидны: изменение совместимое (blocks.md §5.3).
+    """
+    from fsp_contracts.assessment import DeclaredGrade
+
+    now = datetime.now(UTC)
+    d = DeclaredGrade(candidate_id=uuid4(), profession="backend", grade="middle", declared_at=now)
+    assert DeclaredGrade.model_validate(d.model_dump(mode="json")) == d
+    with pytest.raises(ValidationError):
+        DeclaredGrade(candidate_id=uuid4(), profession="backend", grade="lead", declared_at=now)
+
+    old_grade = {
+        "candidate_id": str(uuid4()),
+        "profession": "frontend",
+        "grade": "junior",
+        "theta": -0.5,
+        "band_position": 0.5,
+        "source": "test",
+        "confirmed_at": now.isoformat(),
+        "valid_until": (now + timedelta(days=365)).isoformat(),
+        "next_change_at": (now + timedelta(days=90)).isoformat(),
+    }
+    assert CandidateGrade.model_validate(old_grade).mode == "standard"
+    assert CandidateGrade.model_validate({**old_grade, "mode": "express"}).mode == "express"
+    with pytest.raises(ValidationError):
+        CandidateGrade.model_validate({**old_grade, "mode": "fast"})
+
+    old_finished = {
+        "candidate_id": str(uuid4()),
+        "attempt_id": str(uuid4()),
+        "profession": "ml",
+        "declared_grade": "junior",
+        "stage": "bonus",
+        "result": "passed",
+        "grade": "junior",
+        "theta": 0.3,
+        "se": 0.3,
+        "integrity": 1.0,
+        "needs_confirmation": False,
+        "low_confidence": False,
+        "finished_at": now.isoformat(),
+        "profile_version": 2,
+    }
+    ev = AttemptFinished.model_validate(old_finished)
+    assert ev.mode == "standard" and ev.invited_grade is None
+    ev2 = AttemptFinished.model_validate({**old_finished, "invited_grade": "middle"})
+    assert ev2.invited_grade == TestGrade.middle and ev2.grade == TestGrade.junior
+    env = new_event("assessment.attempt.finished", "core", ev2)
+    assert parse_payload(type(env).model_validate_json(env.model_dump_json())) == ev2

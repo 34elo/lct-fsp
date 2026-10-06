@@ -34,6 +34,9 @@ class TestGrade(StrEnum):
 
 TEST_GRADE_ORDER: tuple[TestGrade, ...] = (TestGrade.junior, TestGrade.middle, TestGrade.senior)
 
+# Режим теста: обычный или экспресс для жюри (ADR-025, E32-4a). Экспресс — короче и грубее.
+AttemptMode = Literal["standard", "express"]
+
 # Профессия — данные (создаёт админ), не enum. Slug из data/taxonomy/roles.yaml.
 ProfessionSlug = Annotated[str, Field(pattern=r"^[a-z][a-z0-9_]{1,31}$")]
 
@@ -59,6 +62,20 @@ class CandidateGrade(BaseModel):
     confirmed_at: datetime
     valid_until: datetime
     next_change_at: datetime
+    mode: AttemptMode = "standard"  # ADR-025: «экспресс» показывается меткой
+
+
+class DeclaredGrade(BaseModel):
+    """Заявленный в опросе грейд без действующего подтверждения тестом (ADR-025).
+
+    Есть только по профессиям, где у кандидата нет действующей строки `grades`. В выдаче
+    показывается с меткой «не подтверждён» и ниже подтверждённых; видимость и согласия — Б2.
+    """
+
+    candidate_id: UUID
+    profession: ProfessionSlug
+    grade: TestGrade
+    declared_at: datetime  # дата опроса
 
 
 class ClaimedVsConfirmed(BaseModel):
@@ -97,6 +114,9 @@ class AttemptFinished(BaseModel):
     low_confidence: bool
     finished_at: datetime
     profile_version: int
+    mode: AttemptMode = "standard"
+    # ADR-025: бонусный этап не повышает, а приглашает на отдельный тест этого грейда
+    invited_grade: TestGrade | None = None
 
 
 class CategoryChanged(BaseModel):
@@ -160,10 +180,12 @@ __all__ = [
     "ASSESSMENT_EVENTS",
     "TEST_GRADE_ORDER",
     "AttemptFinished",
+    "AttemptMode",
     "CandidateGrade",
     "CategoryChanged",
     "CategoryRef",
     "ClaimedVsConfirmed",
+    "DeclaredGrade",
     "FamilyStatusChanged",
     "ProfessionInfo",
     "ProfessionSlug",

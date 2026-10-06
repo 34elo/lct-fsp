@@ -294,3 +294,48 @@ async def test_claimed_vs_confirmed_resume_old_scale(factory):
         assert r.status == "confirmed"
         (r,) = await svc.claimed_vs_confirmed(s, jp)
         assert r.status == "underclaimed"
+
+
+async def test_declared_grades_unconfirmed(factory):
+    """E32-1 (ADR-025): заявленный грейд из последнего опроса виден, пока нет подтверждения."""
+    from app.assessment.models import Survey
+
+    async with session_scope(factory) as s:
+        a, b, c = await _cand(s), await _cand(s), await _cand(s)
+        # a: middle по backend (последний опрос), подтверждения нет; по ml — подтверждён
+        s.add(
+            Survey(
+                candidate_id=a,
+                profession="backend",
+                declared_grade="junior",
+                created_at=NOW - timedelta(days=2),
+            )
+        )
+        s.add(
+            Survey(
+                candidate_id=a,
+                profession="backend",
+                declared_grade="middle",
+                created_at=NOW - timedelta(days=1),
+            )
+        )
+        s.add(Survey(candidate_id=a, profession="ml", declared_grade="senior", created_at=NOW))
+        await svc.seed_grade(s, a, "ml", "middle", 0.5)
+        # b: middle по backend, но грейд истёк — снова «не подтверждён»
+        s.add(Survey(candidate_id=b, profession="backend", declared_grade="middle", created_at=NOW))
+        await svc.seed_grade(s, b, "backend", "junior", -0.5, now=NOW - timedelta(days=400))
+        # c: опрос без заявленного грейда
+        s.add(Survey(candidate_id=c, profession="frontend", declared_grade=None, created_at=NOW))
+    async with session_scope(factory) as s:
+        many = await svc.declared_grades_many(s, [a, b, c])
+        assert set(many) == {a, b, c} and many[c] == []
+        assert [(d.profession, d.grade) for d in many[a]] == [("backend", TestGrade.middle)]
+        assert many[a][0].declared_at.tzinfo is not None
+        assert [(d.profession, d.grade) for d in many[b]] == [("backend", TestGrade.middle)]
+        assert await svc.declared_grades_many(s, []) == {}
+        assert sorted(await svc.declared_members(s, "backend", "middle")) == sorted([a, b])
+        assert await svc.declared_members(s, "backend", TestGrade.junior) == []
+        assert await svc.declared_members(s, "ml", "senior") == []  # ml подтверждён
+        assert await svc.declared_counts(s) == {("backend", "middle"): 2}
+        # подтверждённые категории не смешиваются с заявленными
+        assert await svc.category_counts(s) == {("ml", "middle"): 1}
