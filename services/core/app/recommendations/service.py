@@ -4,12 +4,14 @@
 Работодатель может отправить rec_feedback на любую impression.
 """
 
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.recommendations import tuning
 from app.recommendations.models import Impression, RecFeedback
 
 
@@ -132,3 +134,113 @@ async def shown_without_action(
         .group_by(Impression.candidate_id)
     )
     return {cid: n for cid, n in (await session.execute(q)).all()}
+
+
+# --- подстройка в сессии (E17-4, matching.md §7) -------------------------------------------
+
+RESET_KEY = "s:rec:{user}:{session}"
+
+
+async def session_owned(session: AsyncSession, user_id: UUID, session_id: str) -> bool:
+    """Сессия принадлежит пользователю работодателя: в ней есть его показы."""
+    hit = await session.scalar(
+        select(Impression.id)
+        .where(Impression.user_id == user_id, Impression.session_id == session_id)
+        .limit(1)
+    )
+    return hit is not None
+
+
+async def _reset_after(redis: Any, user_id: UUID, session_id: str) -> int:
+    if redis is None:
+        return 0
+    try:
+        raw = await redis.get(RESET_KEY.format(user=user_id, session=session_id))
+    except Exception:  # noqa: BLE001 — без Redis сброса просто нет
+        return 0
+    return int(raw) if raw else 0
+
+
+async def session_signals(
+    session: AsyncSession,
+    redis: Any,
+    user_id: UUID,
+    session_id: str,
+    cfg: tuning.TuningConfig,
+    now: datetime | None = None,
+) -> tuple[list[tuning.Signal], dict[str, dict[str, float]]]:
+    """Сигналы сессии (за `session_ttl_hours`, после сброса) и снимки признаков показов.
+
+    Ключ кандидата — `str(candidate_id)`. Снимок — последний показ кандидата в сессии.
+    """
+    since = (now or datetime.now(UTC)) - timedelta(hours=cfg.session_ttl_hours)
+    after = await _reset_after(redis, user_id, session_id)
+    rows = (
+        await session.scalars(
+            select(RecFeedback)
+            .where(
+                RecFeedback.user_id == user_id,
+                RecFeedback.session_id == session_id,
+                RecFeedback.id > after,
+            )
+            .order_by(RecFeedback.id)
+        )
+    ).all()
+    signals = [
+        tuning.Signal(str(f.candidate_id), f.event, f.reason)
+        for f in rows
+        if _utc(f.created_at) >= since
+    ]
+    imps = (
+        await session.scalars(
+            select(Impression)
+            .where(Impression.user_id == user_id, Impression.session_id == session_id)
+            .order_by(Impression.id)
+        )
+    ).all()
+    features: dict[str, dict[str, float]] = {}
+    for imp in imps:
+        x = (imp.features or {}).get("x")
+        if isinstance(x, dict):
+            features[str(imp.candidate_id)] = {k: float(v) for k, v in x.items()}
+    return signals, features
+
+
+async def reset_session(session: AsyncSession, redis: Any, user_id: UUID, session_id: str) -> None:
+    """Сброс подстройки: учитываются только реакции после текущей последней."""
+    last = await session.scalar(
+        select(func.max(RecFeedback.id)).where(
+            RecFeedback.user_id == user_id, RecFeedback.session_id == session_id
+        )
+    )
+    cfg_ttl = tuning.TuningConfig.load().session_ttl_hours
+    await redis.set(
+        RESET_KEY.format(user=user_id, session=session_id), str(last or 0), ex=cfg_ttl * 3600
+    )
+
+
+def summary(
+    signals: list[tuning.Signal], features: dict[str, dict[str, float]], cfg: tuning.TuningConfig
+) -> dict[str, Any]:
+    """Состояние подстройки для чипсов «Учли: …» (без вектора Роккио — он считается в выдаче)."""
+    t = tuning.build(signals, features, cfg)
+    return {
+        "active": t.active,
+        "signals": t.signals,
+        "min_signals": cfg.min_signals,
+        "weights": [
+            {
+                "feature": k,
+                "start": cfg.w0[k],
+                "current": t.weights[k],
+                "change": round(t.weights[k] / cfg.w0[k] - 1, 4) if cfg.w0[k] else 0.0,
+            }
+            for k in tuning.FEATURES
+        ],  # fmt: skip
+        "chips": tuning.chips(t.weights, cfg) if t.active else [],
+        "hints": t.hints,
+    }
+
+
+def _utc(d: datetime) -> datetime:
+    return d if d.tzinfo else d.replace(tzinfo=UTC)

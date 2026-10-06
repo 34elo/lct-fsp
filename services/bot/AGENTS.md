@@ -13,6 +13,7 @@
 - `fsp_bot/limiter.py` — token bucket 25/с глобально и 1/с на чат
 - `fsp_bot/core_client.py` — httpx-клиент core с `Authorization: Service <SERVICE_TOKEN_BOT>`
 - `fsp_bot/handlers.py` — `/start`, согласия (`c:ok`/`c:no`), меню, резюме файлом (сигнатура и 10 МБ в боте и в core, опрос статуса, `r:ok:<id>`), профиль, офферы (`o:v|a|d|r|q|b:<id>`, причины отказа, вопрос работодателю через FSM `Offer.awaiting_question`); остальное — E9-4 и далее
+- `fsp_bot/account.py` — 🏆 ФСП (привязка по ID/email + код, обновление), 🎯 категория и статус теста (заглушка «скоро» до E25-3), 🔥 статус `s:*`, ⚙️ настройки `g:*` (зарплата через FSM `Settings.awaiting_salary`, форматы); GitHub (E10-3) и короткий тест (E25-3) ещё не подключены
 - `fsp_bot/templates/` — HTML-шаблоны по `TgTemplate`, клавиатуры; `fsp_bot/states.py` — FSM
 
 ## Правила

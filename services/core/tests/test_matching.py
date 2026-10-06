@@ -11,6 +11,7 @@ import pytest
 from app.candidates.models import Candidate
 from app.companies.models import Company
 from app.config import Settings
+from app.consents.models import Consent
 from app.graph.models import CandidateSkill, Evidence
 from app.graph.team_signals import TeamConfig, k_soft
 from app.graph.trust import TrustConfig
@@ -307,6 +308,7 @@ async def _seed(factory):
                           formats=kw.pop("formats", ["remote"]), grade=kw.pop("grade", "middle"),
                           **kw)  # fmt: skip
             s.add(c)
+            s.add(Consent(user_id=uid, type="profile_publication", version="2025-09-01"))
             await s.flush()
             for slug, conf, lvl, src in skills:
                 ev = Evidence(

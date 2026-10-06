@@ -1,0 +1,37 @@
+import type { SkillWithTrust } from "@/api/model";
+import { dedupeExperience, dedupeSkills, fspResults, groupSkills, radarAxes, yearsLabel } from "./candidate-model";
+
+const sk = (slug: string, group: string, level: number, claimed = false, ev: string[] = []): SkillWithTrust => ({
+  skill: { slug, name: slug, group },
+  confidence: 0.5,
+  level,
+  sources: [claimed ? "resume" : "fsp"],
+  claimed_only: claimed,
+  status: "active",
+  top_evidence: ev.map((id) => ({ id, source: "fsp", strength: 0.9, observed_at: "2026-01-10", title: id, verified: true })),
+});
+
+test("навык с одним slug показывается один раз, источники и доказательства объединяются", () => {
+  const r = dedupeSkills([sk("python", "language", 2, true), sk("python", "language", 3, false, ["e1"]), sk("python", "language", 3, false, ["e1", "e2"])]);
+  expect(r).toHaveLength(1);
+  expect(r[0].level).toBe(3);
+  expect(r[0].claimed_only).toBe(false);
+  expect(r[0].sources.sort()).toEqual(["fsp", "resume"]);
+  expect(r[0].top_evidence.map((e) => e.id)).toEqual(["e1", "e2"]);
+});
+
+test("группы: подтверждённые по группам, заявленные отдельно", () => {
+  const g = groupSkills([sk("python", "language", 3), sk("fastapi", "backend", 2), sk("redis", "db", 0, true), sk("go", "language", 4)]);
+  expect(g.claimed.map((s) => s.skill.slug)).toEqual(["redis"]);
+  expect(g.groups[0].label).toBe("Языки и алгоритмы");
+  expect(g.groups[0].skills.map((s) => s.skill.slug)).toEqual(["go", "python"]);
+  expect(radarAxes(g.groups)).toEqual([{ label: "Языки и алгоритмы", value: 4 }, { label: "Бэкенд и API", value: 2 }]);
+});
+
+test("повторы в ФСП и опыте убираются", () => {
+  const h = { title: "Кубок", level: "national", place: 2, of: 40, year: 2025 };
+  expect(fspResults([h, { ...h }])).toEqual([{ discipline: "Кубок", tournament: "всероссийский этап", place: 2, total: 40, year: 2025 }]);
+  const e = { title: "Backend", company: null, months: 20, skills: [] };
+  expect(dedupeExperience([e, { ...e }])).toHaveLength(1);
+  expect(yearsLabel(20)).toBe("1 г 8 мес");
+});

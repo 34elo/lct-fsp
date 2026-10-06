@@ -4,6 +4,7 @@
  * core
  * OpenAPI spec version: 0.1.0
  */
+import type { ContactsInput } from './contactsInput';
 
 export interface CompanyIn {
   /**
@@ -14,4 +15,6 @@ export interface CompanyIn {
   inn?: string | null;
   site?: string | null;
   description?: string | null;
+  contacts?: ContactsInput | null;
+  direction?: string | null;
 }

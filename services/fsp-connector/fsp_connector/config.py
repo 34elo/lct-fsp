@@ -27,3 +27,5 @@ class Settings(BaseServiceSettings):
     # привязка по коду (fsp.md §4)
     fsp_code_ttl_seconds: int = 600
     fsp_code_max_attempts: int = 5
+    # демо-кнопки для ФСП (E13-3): создание результатов и сброс
+    demo_mode: bool = False

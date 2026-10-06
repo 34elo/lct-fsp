@@ -42,6 +42,10 @@
 | 36 | H2 | Передача во фронтенд | `—` | 1440×1300 | [png](../screens/png/36_H2_Catalog.png) | [html](../screens/html/H2_Catalog.html) |
 | 37 | H3 | Передача во фронтенд | `—` | 1440×1700 | [png](../screens/png/37_H3_Screens.png) | [html](../screens/html/H3_Screens.html) |
 | 38 | H4 | Передача во фронтенд | `—` | 1440×3200 | [png](../screens/png/38_H4_Code.png) | [html](../screens/html/H4_Code.html) |
+| 39 | N1 | Работодатель · v2 | `/employer/needs/:id` | 1440×1440 | [png](../screens/png/39_N1_Needs.png) | [html](../screens/html/N1_Needs.html) |
+| 40 | N2 | Работодатель · v2 | `/employer/categories/:profession/:grade` | 1440×1900 | [png](../screens/png/40_N2_CategoryCandidates.png) | [html](../screens/html/N2_CategoryCandidates.html) |
+| 41 | R1 | Отклики · v2 | `/employer/responses, /me/responses` | 1440×1900 | [png](../screens/png/41_R1_Responses.png) | [html](../screens/html/R1_Responses.html) |
+| 42 | J1 | Публичное · v2 | `/jobs, /jobs/:id` | 1440×2100 | [png](../screens/png/42_J1_Jobs.png) | [html](../screens/html/J1_Jobs.html) |
 
 ## Подробности по экранам
 
@@ -273,3 +277,26 @@
 - Адаптив: —
 - Файлы: `screens/png/38_H4_Code.png`, `screens/html/H4_Code.html`
 
+### N1 · Потребность → категории
+- Маршрут: `/employer/needs/:id`
+- Что на экране: Потребность текстом или формой превращается в чипсы; карточки категорий: совпадение (affinity ≥ 0.4), число кандидатов, медиана, доля с ФСП, доля с подтверждённым тестом. Состояния: загрузка, пусто, ошибка разбора.
+- Адаптив: Колонки 3 → 2 → 1 (карточки стопкой на 390).
+- Файлы: `screens/png/39_N1_Needs.png`, `screens/html/N1_Needs.html`
+
+### N2 · Кандидаты категории
+- Маршрут: `/employer/categories/:profession/:grade`
+- Что на экране: Карточки по рангу 0.6·match + 0.4·strength. Блок «Заявлено vs подтверждено» с 4 статусами: confirmed, overclaimed, underclaimed, unconfirmed. Кнопки «Пригласить», «В шорт-лист», «Не подходит».
+- Адаптив: ≤1024 фильтры в Sheet; 390 — карточки без колонки кольца.
+- Файлы: `screens/png/40_N2_CategoryCandidates.png`, `screens/html/N2_CategoryCandidates.html`
+
+### R1 · Отклики
+- Маршрут: `/employer/responses, /me/responses`
+- Что на экране: Отклики работодателя (таблица, статусы, контакты открыты при отклике) и кандидата (карточки с таймлайном, отзыв отклика). Состояния: пусто, email не подтверждён, повторный отклик.
+- Адаптив: Кандидатский вид — 390, табы статусов.
+- Файлы: `screens/png/41_R1_Responses.png`, `screens/html/R1_Responses.html`
+
+### J1 · Публичные вакансии
+- Маршрут: `/jobs, /jobs/:id`
+- Что на экране: Публичный список вакансий с открытой вилкой, карточка вакансии, форма отклика. Состояния кнопки: не вошёл, email не подтверждён, категория ниже требуемой, отклик отправлен.
+- Адаптив: Список 1440; карточка и отклик — 390.
+- Файлы: `screens/png/42_J1_Jobs.png`, `screens/html/J1_Jobs.html`

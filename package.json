@@ -1,0 +1,12 @@
+{
+  "name": "fsp-monorepo",
+  "private": true,
+  "packageManager": "pnpm@10.34.6",
+  "scripts": {
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "build": "pnpm -r build",
+    "shot": "node packages/ui/scripts/shot.mjs"
+  }
+}

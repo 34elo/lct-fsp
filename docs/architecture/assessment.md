@@ -65,9 +65,13 @@ matching ── категория = профессия × грейд; сила 
 
 ```python
 class Family(Protocol):
-    slug: str; kind: Kind; skill: str; level: int
-    def generate(self, rng: Random, world: World) -> Item: ...   # условие, варианты, ключ, meta
-    def score(self, item: Item, answer: Any) -> float: ...        # 0..1
+    slug: str
+    kind: Kind
+    skill: str
+    level: int
+
+    def generate(self, rng: Random, world: World) -> Item: ...  # условие, варианты, ключ, meta
+    def score(self, item: Item, answer: Any) -> float: ...  # 0..1
 ```
 
 - **Кодовые** (`services/core/app/assessment/families/*.py`): трассировка кода, мутации, расчёты, архитектура как граф, анализ данных с известной истиной.

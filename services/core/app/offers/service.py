@@ -7,7 +7,11 @@
   кандидат — `offer_candidate_per_day` (scoring.yaml `limits`);
 - `Idempotency-Key` уникален в паре с компанией; повтор того же запроса возвращает исходный
   оффер, тот же ключ с другим запросом — 409;
-- чужой оффер → 404; каждый переход пишет `offer_events` и `offer.*` в outbox в одной транзакции.
+- чужой оффер → 404; каждый переход пишет `offer_events` и `offer.*` в outbox в одной транзакции;
+- приглашение без вакансии (ADR-022): нужен `title`; второе открытое приглашение без вакансии
+  тому же кандидату от той же компании — 409; события `offer.*` идут со schema_version 2;
+- отклик (E20-3, `initiator = candidate`): `apply`, вилка из вакансии, контакты раскрыты сразу,
+  ответ компании — `APPLICATION_TRANSITIONS`, повтор → 409 `already_applied`.
 """
 
 from __future__ import annotations
@@ -22,6 +26,7 @@ import yaml
 from fsp_contracts import new_envelope
 from fsp_contracts.enums import CompanyStatus, DeclineReason, OfferStatus
 from fsp_contracts.events import OfferEvent as OfferEventPayload
+from fsp_contracts.hiring import OFFER_SCHEMA_VERSION, ContactMethod, OfferInitiator
 from fsp_platform.app import ProblemError
 from fsp_platform.outbox import add_to_outbox
 from sqlalchemy import func, select
@@ -56,6 +61,21 @@ TRANSITIONS: dict[tuple[OfferStatus, OfferStatus], str] = {
     (S.interview, S.hired): "company",
     (S.interview, S.not_hired): "company",
 }
+# отклик кандидата (ADR-022, `initiator = candidate`): ответчик - компания, принятие не нужно
+# (контакты кандидата раскрываются сразу при отклике), отозвать может сам кандидат
+APPLICATION_TRANSITIONS: dict[tuple[OfferStatus, OfferStatus], str] = {
+    (S.sent, S.viewed): "company",
+    (S.sent, S.interview): "company",
+    (S.viewed, S.interview): "company",
+    (S.sent, S.not_hired): "company",
+    (S.viewed, S.not_hired): "company",
+    (S.sent, S.withdrawn): "candidate",
+    (S.viewed, S.withdrawn): "candidate",
+    (S.sent, S.expired): "system",
+    (S.viewed, S.expired): "system",
+    (S.interview, S.hired): "company",
+    (S.interview, S.not_hired): "company",
+}
 # статусы, которые работодатель выставляет вручную (`POST /offers/{id}/status`)
 COMPANY_SET = (S.interview, S.hired, S.not_hired)
 _EVENT = {
@@ -69,6 +89,7 @@ class OfferLimits:
     company_per_day: int = 20
     candidate_per_day: int = 10
     validity_days: int = 7
+    applications_per_day: int = 20
 
     @classmethod
     def load(cls, path: Path | str | None = None) -> OfferLimits:
@@ -79,6 +100,9 @@ class OfferLimits:
             company_per_day=int(lim.get("offer_company_per_day", base.company_per_day)),
             candidate_per_day=int(lim.get("offer_candidate_per_day", base.candidate_per_day)),
             validity_days=int(lim.get("offer_validity_days", base.validity_days)),
+            applications_per_day=int(
+                lim.get("application_candidate_per_day", base.applications_per_day)
+            ),
         )
 
 
@@ -106,7 +130,7 @@ def validate_range(salary_from: int | None, salary_to: int | None) -> tuple[int,
 
 async def _count_since(session: AsyncSession, column: Any, value: uuid.UUID, since: datetime):
     q = select(func.count(), func.min(Offer.created_at)).where(
-        column == value, Offer.created_at >= since
+        column == value, Offer.created_at >= since, Offer.initiator == OfferInitiator.employer.value
     )
     count, oldest = (await session.execute(q)).one()
     return count, oldest
@@ -122,6 +146,7 @@ async def open_counts(
         select(Offer.candidate_id, func.count())
         .where(
             Offer.candidate_id.in_(candidate_ids),
+            Offer.initiator == OfferInitiator.employer.value,
             Offer.status.in_(OPEN),
             Offer.expires_at > datetime.now(UTC),
         )
@@ -141,9 +166,14 @@ async def _emit(session: AsyncSession, offer: Offer, to: OfferStatus, *, prev, a
     name = _EVENT.get(to, "offer.status_changed")
     payload = OfferEventPayload(
         offer_id=offer.id, candidate_id=offer.candidate_id, company_id=offer.company_id,
-        vacancy_id=offer.vacancy_id, status=to, prev_status=prev, actor=actor, **extra,
+        vacancy_id=offer.vacancy_id, status=to, prev_status=prev, actor=actor,
+        initiator=OfferInitiator(offer.initiator), **extra,
     )  # fmt: skip
-    await add_to_outbox(session, new_envelope(name, "core", payload), offer.id)
+    await add_to_outbox(session, _envelope(name, payload), offer.id)
+
+
+def _envelope(name: str, payload: OfferEventPayload):
+    return new_envelope(name, "core", payload, schema_version=OFFER_SCHEMA_VERSION)
 
 
 async def _log(
@@ -159,7 +189,7 @@ async def _log(
     await session.flush()
 
 
-async def _find_by_key(session: AsyncSession, company_id: uuid.UUID, key: str) -> Offer | None:
+async def find_by_key(session: AsyncSession, company_id: uuid.UUID, key: str) -> Offer | None:
     return await session.scalar(
         select(Offer).where(Offer.company_id == company_id, Offer.idempotency_key == key)
     )
@@ -170,33 +200,51 @@ async def create(
     *,
     company: Company,
     user_id: uuid.UUID,
-    vacancy: Vacancy,
+    vacancy: Vacancy | None,
     candidate: Candidate,
     salary_from: int | None,
     salary_to: int | None,
     message: str | None,
     idempotency_key: str,
     limits: OfferLimits,
+    title: str | None = None,
+    description: str | None = None,
+    contact_method: ContactMethod | None = None,
+    team_offer_id: uuid.UUID | None = None,
     now: datetime | None = None,
 ) -> tuple[Offer, bool]:
-    """Новый оффер. Возвращает `(оффер, replay)`: `replay=True` — это повтор по тому же ключу."""
+    """Новый оффер (приглашение работодателя, ADR-022: вакансия необязательна).
+
+    Возвращает `(оффер, replay)`: `replay=True` — это повтор по тому же ключу.
+    """
     now = now or datetime.now(UTC)
-    existing = await _find_by_key(session, company.id, idempotency_key)
+    existing = await find_by_key(session, company.id, idempotency_key)
     if existing is not None:
         return _replay(existing, vacancy, candidate), True
 
     if company.status != CompanyStatus.verified.value:
         raise ProblemError(403, "company_not_verified", "Компания не прошла верификацию")
-    if vacancy.status != VacancyStatus.published.value:
+    title = (title or "").strip() or None
+    if vacancy is None and title is None:
+        raise ProblemError(
+            422, "title_required", "Укажите название приглашения",
+            errors=[{"field": "title", "message": "без вакансии название обязательно"}],
+        )  # fmt: skip
+    if vacancy is not None and vacancy.status != VacancyStatus.published.value:
         raise ProblemError(409, "vacancy_not_published", "Вакансия не опубликована")
     lo, hi = validate_range(salary_from, salary_to)
 
-    dup = await session.scalar(
-        select(Offer.id).where(
+    if vacancy is not None:
+        dup_q = select(Offer.id).where(
             Offer.vacancy_id == vacancy.id, Offer.candidate_id == candidate.user_id
         )
-    )
-    if dup is not None:
+    else:  # без вакансии: одно открытое приглашение от компании кандидату
+        dup_q = select(Offer.id).where(
+            Offer.vacancy_id.is_(None), Offer.company_id == company.id,
+            Offer.candidate_id == candidate.user_id, Offer.status.in_(OPEN),
+            Offer.expires_at > now,
+        )  # fmt: skip
+    if await session.scalar(dup_q.limit(1)) is not None:
         raise ProblemError(409, "offer_exists", "Оффер этому кандидату по вакансии уже отправлен")
 
     since = now - WINDOW
@@ -213,14 +261,17 @@ async def create(
             headers=_retry_after(oldest, now),
         )  # fmt: skip
 
+    snapshot = await matching.snapshot(session, vacancy.id, candidate.user_id) if vacancy else None
     offer = Offer(
-        id=uuid.uuid4(), vacancy_id=vacancy.id, candidate_id=candidate.user_id,
-        company_id=company.id, created_by=user_id, salary_from=lo, salary_to=hi,
-        message=(message or "").strip() or None, status=S.sent.value,
-        awaiting_reply_from="candidate",
-        match_snapshot=await matching.snapshot(session, vacancy.id, candidate.user_id),
+        id=uuid.uuid4(), vacancy_id=vacancy.id if vacancy else None,
+        candidate_id=candidate.user_id, company_id=company.id, created_by=user_id,
+        salary_from=lo, salary_to=hi, message=(message or "").strip() or None,
+        title=title, description=(description or "").strip() or None,
+        contact_method=contact_method.value if contact_method else None,
+        initiator=OfferInitiator.employer.value, status=S.sent.value,
+        awaiting_reply_from="candidate", match_snapshot=snapshot,
         below_candidate_min=candidate.salary_min is not None and hi < candidate.salary_min,
-        idempotency_key=idempotency_key, created_at=now,
+        idempotency_key=idempotency_key, created_at=now, team_offer_id=team_offer_id,
         expires_at=now + timedelta(days=limits.validity_days),
     )  # fmt: skip
     try:
@@ -228,7 +279,7 @@ async def create(
             session.add(offer)
             await session.flush()
     except IntegrityError as exc:  # параллельный запрос успел раньше
-        existing = await _find_by_key(session, company.id, idempotency_key)
+        existing = await find_by_key(session, company.id, idempotency_key)
         if existing is not None:
             return _replay(existing, vacancy, candidate), True
         raise ProblemError(
@@ -239,8 +290,61 @@ async def create(
     return offer, False
 
 
-def _replay(existing: Offer, vacancy: Vacancy, candidate: Candidate) -> Offer:
-    if existing.vacancy_id != vacancy.id or existing.candidate_id != candidate.user_id:
+async def apply(
+    session: AsyncSession, *, vacancy: Vacancy, candidate: Candidate, message: str | None,
+    limits: OfferLimits, now: datetime | None = None,
+) -> Offer:  # fmt: skip
+    """Отклик кандидата на опубликованную вакансию (ADR-022, `initiator = candidate`).
+
+    Вилка берётся из вакансии. Контакты кандидата раскрываются компании сразу: отклик - его
+    согласие (solution.md §2). Повторный отклик -> 409 `already_applied`.
+    """
+    now = now or datetime.now(UTC)
+    if vacancy.status != VacancyStatus.published.value:
+        raise ProblemError(404, "vacancy_not_found", "Вакансия не найдена")
+    if str(vacancy.company_id) in (candidate.stoplist_company_ids or []):
+        raise ProblemError(409, "company_in_stoplist", "Компания в вашем стоп-листе")
+    dup = await session.scalar(
+        select(Offer.id).where(
+            Offer.vacancy_id == vacancy.id, Offer.candidate_id == candidate.user_id
+        ).limit(1)
+    )  # fmt: skip
+    if dup is not None:
+        raise ProblemError(409, "already_applied", "Вы уже откликались на эту вакансию")
+    n = await session.scalar(
+        select(func.count()).where(
+            Offer.candidate_id == candidate.user_id,
+            Offer.initiator == OfferInitiator.candidate.value,
+            Offer.created_at >= now - WINDOW,
+        )
+    )
+    if (n or 0) >= limits.applications_per_day:
+        raise ProblemError(429, "application_limit_exceeded", "Лимит откликов на сутки исчерпан")
+    offer = Offer(
+        id=uuid.uuid4(), vacancy_id=vacancy.id, candidate_id=candidate.user_id,
+        company_id=vacancy.company_id, created_by=candidate.user_id,
+        salary_from=vacancy.salary_from, salary_to=vacancy.salary_to,
+        message=(message or "").strip() or None, title=vacancy.title,
+        initiator=OfferInitiator.candidate.value, status=S.sent.value,
+        awaiting_reply_from="company", created_at=now,
+        match_snapshot=await matching.snapshot(session, vacancy.id, candidate.user_id),
+        below_candidate_min=False, expires_at=now + timedelta(days=limits.validity_days),
+    )  # fmt: skip
+    try:
+        async with session.begin_nested():
+            session.add(offer)
+            await session.flush()
+    except IntegrityError as exc:  # параллельный повтор
+        raise ProblemError(409, "already_applied", "Вы уже откликались на эту вакансию") from exc
+    await _log(session, offer, None, S.sent, "candidate", {"initiator": "candidate"})
+    await _reveal(session, offer, now)
+    await _emit(session, offer, S.sent, prev=None, actor="candidate")
+    return offer
+
+
+def _replay(existing: Offer, vacancy: Vacancy | None, candidate: Candidate) -> Offer:
+    vacancy_id = vacancy.id if vacancy else None
+    if existing.vacancy_id != vacancy_id or existing.candidate_id != candidate.user_id:
         raise ProblemError(
             409, "idempotency_key_reused", "Idempotency-Key уже использован для другого оффера"
         )
@@ -274,9 +378,11 @@ async def get_for_candidate(
 
 async def list_for_company(
     session: AsyncSession, company_id: uuid.UUID, *, status: str | None = None,
-    vacancy_id: uuid.UUID | None = None, limit: int = 100,
+    vacancy_id: uuid.UUID | None = None, initiator: str | None = None, limit: int = 100,
 ) -> list[Offer]:  # fmt: skip
     q = select(Offer).where(Offer.company_id == company_id)
+    if initiator:
+        q = q.where(Offer.initiator == initiator)
     if status:
         q = q.where(Offer.status == status)
     if vacancy_id:
@@ -284,8 +390,12 @@ async def list_for_company(
     return list(await session.scalars(q.order_by(Offer.created_at.desc()).limit(limit)))
 
 
-async def list_for_candidate(session: AsyncSession, candidate_id: uuid.UUID) -> list[Offer]:
+async def list_for_candidate(
+    session: AsyncSession, candidate_id: uuid.UUID, *, initiator: str | None = None
+) -> list[Offer]:
     q = select(Offer).where(Offer.candidate_id == candidate_id)
+    if initiator:
+        q = q.where(Offer.initiator == initiator)
     return list(await session.scalars(q.order_by(Offer.created_at.desc())))
 
 
@@ -313,7 +423,8 @@ async def transition(
     """Единственная точка смены статуса. Запрещённый переход → 409 `invalid_transition`."""
     now = now or datetime.now(UTC)
     prev = OfferStatus(offer.status)
-    allowed = TRANSITIONS.get((prev, to))
+    is_application = offer.initiator == OfferInitiator.candidate.value
+    allowed = (APPLICATION_TRANSITIONS if is_application else TRANSITIONS).get((prev, to))
     if allowed is None or allowed != actor:
         raise ProblemError(
             409, "invalid_transition", f"Переход {prev.value} → {to.value} невозможен"
@@ -325,7 +436,8 @@ async def transition(
         offer.viewed_at = now
     if to in (S.accepted, S.declined, S.withdrawn, S.expired):
         offer.responded_at = now
-    offer.awaiting_reply_from = "candidate" if to in (S.sent, S.viewed) else None
+    waiting = "company" if is_application else "candidate"
+    offer.awaiting_reply_from = waiting if to in (S.sent, S.viewed) else None
     await session.flush()
     await _log(session, offer, prev, to, actor, payload)
     if to == S.accepted:
@@ -409,9 +521,9 @@ async def add_message(
     payload = OfferEventPayload(
         offer_id=offer.id, candidate_id=offer.candidate_id, company_id=offer.company_id,
         vacancy_id=offer.vacancy_id, status=OfferStatus(offer.status), actor=side,
-        message_id=msg.id,
+        message_id=msg.id, initiator=OfferInitiator(offer.initiator),
     )  # fmt: skip
-    await add_to_outbox(session, new_envelope("offer.message", "core", payload), offer.id)
+    await add_to_outbox(session, _envelope("offer.message", payload), offer.id)
     return msg
 
 
@@ -436,11 +548,72 @@ async def add_complaint(
     return row
 
 
+COMPLAINT_STATUSES = ("open", "resolved", "dismissed")
+
+
+async def list_complaints(
+    session: AsyncSession, status: str | None = None, limit: int = 100
+) -> list[tuple[Complaint, Offer, Company | None]]:
+    """Жалобы для админа: новые сверху; вместе с оффером и компанией."""
+    q = (
+        select(Complaint, Offer, Company)
+        .join(Offer, Offer.id == Complaint.offer_id)
+        .join(Company, Company.id == Offer.company_id, isouter=True)
+        .order_by(Complaint.created_at.desc(), Complaint.id)
+        .limit(limit)
+    )
+    if status is not None:
+        q = q.where(Complaint.status == status)
+    return [(c, o, co) for c, o, co in (await session.execute(q)).all()]
+
+
+async def resolve_complaint(
+    session: AsyncSession, complaint_id: uuid.UUID, decision: str
+) -> tuple[Complaint, Offer, Company | None]:
+    """`open → resolved|dismissed`; повтор того же решения идемпотентен, смена решения — 409."""
+    row = await session.get(Complaint, complaint_id, with_for_update=True)
+    if row is None:
+        raise ProblemError(404, "complaint_not_found", "Жалоба не найдена")
+    if row.status == "open":
+        row.status = decision
+        await session.flush()
+    elif row.status != decision:
+        raise ProblemError(409, "invalid_status", "Жалоба уже разобрана другим решением")
+    offer = await session.get(Offer, row.offer_id)
+    assert offer is not None
+    return row, offer, await session.get(Company, offer.company_id)
+
+
 async def mark_viewed(session: AsyncSession, offer: Offer, now: datetime | None = None) -> Offer:
     """Первое открытие кандидатом: `sent → viewed`; в остальных статусах ничего не делает."""
+    if offer.initiator != OfferInitiator.employer.value:
+        return offer
     if offer.status == S.sent.value and not _is_expired(offer, now or datetime.now(UTC)):
         await transition(session, offer, S.viewed, actor="candidate", now=now)
     return offer
+
+
+async def mark_viewed_by_company(
+    session: AsyncSession, offer: Offer, now: datetime | None = None
+) -> Offer:
+    """Компания открыла отклик: `sent -> viewed` (виден кандидату)."""
+    now = now or datetime.now(UTC)
+    if (
+        offer.initiator == OfferInitiator.candidate.value
+        and offer.status == S.sent.value
+        and not _is_expired(offer, now)
+    ):
+        await transition(session, offer, S.viewed, actor="company", now=now)
+    return offer
+
+
+async def withdraw_application(
+    session: AsyncSession, offer: Offer, now: datetime | None = None
+) -> Offer:
+    """Кандидат отзывает свой отклик (только `initiator = candidate`)."""
+    if offer.initiator != OfferInitiator.candidate.value:
+        raise not_found()
+    return await transition(session, offer, S.withdrawn, actor="candidate", now=now)
 
 
 async def accept(session: AsyncSession, offer: Offer, now: datetime | None = None) -> Offer:
@@ -451,7 +624,9 @@ async def decline(
     session: AsyncSession, offer: Offer, reason: DeclineReason, comment: str | None,
     now: datetime | None = None,
 ) -> Offer:  # fmt: skip
-    if OfferStatus(offer.status) not in (S.sent, S.viewed):
+    if OfferStatus(offer.status) not in (S.sent, S.viewed) or (
+        offer.initiator == OfferInitiator.candidate.value
+    ):
         raise ProblemError(
             409, "invalid_transition", f"Переход {offer.status} → declined невозможен"
         )
@@ -491,13 +666,18 @@ __all__ = [
     "COMPANY_SET",
     "COMPLAINT_REASONS",
     "MESSAGES_PER_HOUR",
+    "APPLICATION_TRANSITIONS",
     "OPEN",
     "REVEALED",
     "TRANSITIONS",
     "OfferLimits",
     "accept",
+    "COMPLAINT_STATUSES",
     "add_complaint",
+    "list_complaints",
+    "resolve_complaint",
     "add_message",
+    "apply",
     "briefs_for",
     "create",
     "decline",
@@ -509,9 +689,11 @@ __all__ = [
     "list_for_company",
     "list_messages",
     "mark_viewed",
+    "mark_viewed_by_company",
     "require_revealed",
     "set_status",
     "transition",
     "validate_range",
     "withdraw",
+    "withdraw_application",
 ]

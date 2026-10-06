@@ -1,6 +1,26 @@
-import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useRef, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
+
+import {
+  Button,
+  CircuitLine,
+  EmptyState,
+  ErrorState,
+  MatchWhy,
+  OfferCard,
+  SalaryRange,
+  SectionLabel,
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetTitle,
+  Skeleton,
+  StatusBadge,
+  type OfferCardData,
+  type OfferStatus,
+  type WhyItem,
+} from "@fsp/ui";
 
 import {
   useAcceptOfferOffersOfferIdAcceptPost,
@@ -8,140 +28,216 @@ import {
   useGetOfferOffersOfferIdGet,
   useMyOffersCandidatesMeOffersGet,
 } from "@/api/endpoints/offers/offers";
-import { DeclineReason, type OfferForCandidate } from "@/api/model";
-import { ErrorNote, fieldClass } from "@/features/auth/ui";
-import { FORMAT_LABEL, percent, rub, splitExplanation } from "@/features/employer/text";
+import { DeclineReason } from "@/api/model";
+import { ErrorNote } from "@/features/auth/ui";
+import { FORMAT_LABEL, percent } from "@/features/employer/text";
 import { GRADE_LABEL } from "@/features/profile/text";
-import { cn } from "@/shared/lib/cn";
-import { Button } from "@/shared/ui/button";
-import { Conversation, invalidateOffers, Panel, StatusBadge, Timeline } from "./parts";
-import { ACTIVE_STATUSES, daysLeft, dateOnly, DECLINE_LABEL, offerErrorText } from "./text";
+import { Conversation, invalidateOffers, Panel, Timeline } from "./parts";
+import { isAwaiting, nextSteps, offerTitle, pastSummary, type CandidateOffer } from "./offer-model";
+import { ACTIVE_STATUSES, CAND_TEXT as T, CONTACT_LABEL, daysLeft, dateOnly, DECLINE_LABEL, offerErrorText } from "./text";
 
-function Row({ o }: { o: OfferForCandidate }) {
-  const active = o.status === "sent" || o.status === "viewed";
+function cardData(o: CandidateOffer): OfferCardData {
+  const tags = o.vacancy ? o.vacancy.formats.map((f) => FORMAT_LABEL[f] ?? f) : [T.invite];
+  if (o.initiator === "candidate") tags.unshift(T.response);
+  return {
+    company: o.company.name,
+    rating: o.company.responsibility_score ?? undefined,
+    verified: o.company.verified,
+    from: o.salary_from,
+    to: o.salary_to,
+    title: offerTitle(o),
+    tags,
+    match: o.match_snapshot ? percent(o.match_snapshot.score) : undefined,
+    status: o.status as OfferStatus,
+    deadline: isAwaiting(o.status) ? `${dateOnly(o.expires_at)} · осталось ${daysLeft(o.expires_at)} дн.` : undefined,
+  };
+}
+
+function OfferItem({ o, past }: { o: CandidateOffer; past?: boolean }) {
+  const nav = useNavigate();
   return (
-    <li className="flex flex-col gap-2 rounded-xl border border-hairline bg-card p-4 shadow-card">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h2 className="break-words font-mono text-[17px] font-semibold">{o.company.name}</h2>
-          <p className="text-[13px] text-muted">
-            {o.company.responsibility_score != null ? `${o.company.responsibility_score.toFixed(1)} / 5 ответственность` : "Рейтинг ещё не сформирован"}
-          </p>
-        </div>
-        <StatusBadge status={o.status} />
-      </div>
-      <p className="text-xs uppercase tracking-wide text-muted">Вилка в месяц</p>
-      <p className="font-mono text-xl font-semibold">{rub(o.salary_from)} – {rub(o.salary_to)}</p>
-      <p className="text-sm">{o.vacancy.title} · {o.vacancy.formats.map((f) => FORMAT_LABEL[f] ?? f).join(", ")}{o.match_snapshot ? ` · ${percent(o.match_snapshot.score)}%` : ""}</p>
-      {o.below_candidate_min && <p className="rounded-lg bg-warning-bg px-3 py-1.5 text-sm text-warning-fg">Ниже ваших ожиданий</p>}
-      <p className="text-xs text-muted">{active ? `Ответить до ${dateOnly(o.expires_at)} · осталось ${daysLeft(o.expires_at)} дн.` : `Получен ${dateOnly(o.created_at)}`}</p>
-      <Link to={`/me/offers/${o.id}`} className="inline-flex h-11 items-center justify-center rounded-lg bg-brand px-4 font-semibold text-on-brand hover:bg-brand-deep md:self-start">Открыть оффер</Link>
+    <li className={past ? "opacity-80" : undefined}>
+      <OfferCard
+        o={cardData(o)}
+        onOpen={() => nav(`/me/offers/${o.id}`)}
+        extra={
+          <>
+            {o.below_candidate_min && (
+              <p role="status" className="rounded-lg border border-warning-border bg-warning-bg px-3 py-2 text-13 font-semibold text-warning-fg">{T.belowPlain}</p>
+            )}
+            {!isAwaiting(o.status) && <p className="text-12 text-muted">Получен {dateOnly(o.created_at)}</p>}
+          </>
+        }
+        className={isAwaiting(o.status) ? "border-brand" : undefined}
+      />
     </li>
   );
 }
 
-/** Офферы кандидата (M2): активные сверху, прошлые ниже. */
+/** Офферы кандидата (M2): ждущие ответа сверху, прошлые ниже. На 1440 — сетка карточек в ширину контейнера. */
 export function CandidateOffers() {
   const q = useMyOffersCandidatesMeOffersGet();
-  const all = q.data?.status === 200 ? q.data.data : [];
-  const active = all.filter((o) => ACTIVE_STATUSES.includes(o.status));
-  const past = all.filter((o) => !ACTIVE_STATUSES.includes(o.status));
+  const all = (q.data?.status === 200 ? q.data.data : []) as unknown as CandidateOffer[];
+  const sorted = [...all].sort((a, b) => b.created_at.localeCompare(a.created_at));
+  const open = sorted.filter((o) => ACTIVE_STATUSES.includes(o.status));
+  const past = sorted.filter((o) => !ACTIVE_STATUSES.includes(o.status));
+  const fresh = all.filter((o) => o.status === "sent").length;
+  const ps = pastSummary(past);
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4 md:p-6">
-      <h1 className="font-mono text-2xl font-semibold">Офферы</h1>
-      {q.isPending && <p role="status" className="text-muted">Загрузка…</p>}
-      {q.isError && <ErrorNote>Не удалось загрузить офферы.</ErrorNote>}
-      {q.isSuccess && all.length === 0 && <p className="rounded-xl border border-hairline bg-card p-5 text-sm">Офферов пока нет. Они приходят сюда и в Telegram, когда компании находят ваш профиль.</p>}
-      <ul className="flex flex-col gap-3">{active.map((o) => <Row key={o.id} o={o} />)}</ul>
+    <main className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4 md:p-6">
+      <header className="flex items-center justify-between gap-3">
+        <h1 className="font-mono text-24 font-semibold">{T.title}</h1>
+        {fresh > 0 && <span className="rounded-full bg-brand px-2.5 py-0.5 font-mono text-12 font-semibold text-on-brand">{T.newCount(fresh)}</span>}
+      </header>
+      {q.isPending && (
+        <div role="status" aria-label="Загрузка" className="grid gap-3 md:grid-cols-2">
+          <Skeleton className="h-64" />
+          <Skeleton className="h-64" />
+        </div>
+      )}
+      {q.isError && <ErrorState title={T.loadError} onRetry={() => void q.refetch()} />}
+      {q.isSuccess && all.length === 0 && <EmptyState title={T.empty} description={T.emptyHint} />}
+      {open.length > 0 && <ul className="grid gap-3 md:grid-cols-2">{open.map((o) => <OfferItem key={o.id} o={o} />)}</ul>}
       {past.length > 0 && (
         <>
-          <h2 className="font-mono text-[17px] font-semibold text-muted">Прошлые офферы</h2>
-          <ul className="flex flex-col gap-3">{past.map((o) => <Row key={o.id} o={o} />)}</ul>
+          <p className="text-center text-13 text-muted">{T.past}: {T.pastSummary(ps.accepted, ps.declined, ps.expired)}</p>
+          <ul className="grid gap-3 md:grid-cols-2">{past.map((o) => <OfferItem key={o.id} o={o} past />)}</ul>
         </>
       )}
     </main>
   );
 }
 
+function whyItems(o: CandidateOffer): WhyItem[] {
+  if (!o.match_snapshot) return [];
+  return o.match_snapshot.explanation.map((i) => ({ kind: i.kind === "plus" ? "ok" : "warn", text: i.text }));
+}
+
 export function CandidateOfferDetail() {
   const { id = "" } = useParams();
   const qc = useQueryClient();
   const q = useGetOfferOffersOfferIdGet(id, { query: { retry: false } });
-  const o = q.data?.status === 200 ? (q.data.data as OfferForCandidate) : null;
+  const o = q.data?.status === 200 ? (q.data.data as unknown as CandidateOffer) : null;
   const done = () => void invalidateOffers(qc);
   const accept = useAcceptOfferOffersOfferIdAcceptPost({ mutation: { onSuccess: done } });
-  const decline = useDeclineOfferOffersOfferIdDeclinePost({ mutation: { onSuccess: () => { setSheet(false); done(); } } });
+  const decline = useDeclineOfferOffersOfferIdDeclinePost({
+    mutation: {
+      onSuccess: () => {
+        setSheet(false);
+        done();
+      },
+    },
+  });
   const [sheet, setSheet] = useState(false);
-  const [reason, setReason] = useState<DeclineReason | null>(null);
-  const [comment, setComment] = useState("");
-  const answerable = o && (o.status === "sent" || o.status === "viewed");
-  const ex = o?.match_snapshot ? splitExplanation(o.match_snapshot.explanation) : null;
-  const err = accept.error ?? decline.error;
+  const chat = useRef<HTMLDivElement>(null);
+  const answerable = !!o && isAwaiting(o.status);
+  const accepted = !!o && ["accepted", "interview", "hired", "not_hired"].includes(o.status);
+  const why = o ? whyItems(o) : [];
+  const err = accept.error;
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4 md:p-6">
-      <Link to="/me/offers" className="text-sm font-semibold text-brand-fg hover:underline">← Все офферы</Link>
-      {q.isPending && <p role="status" className="text-muted">Загрузка…</p>}
-      {q.isError && <ErrorNote>Оффер не найден.</ErrorNote>}
+      <Link to="/me/offers" className="text-sm font-semibold text-brand-fg hover:underline">← {T.back}</Link>
+      {q.isPending && <Skeleton role="status" aria-label="Загрузка" className="h-64" />}
+      {q.isError && <ErrorNote>{T.notFound}</ErrorNote>}
       {o && (
         <>
-          <section className="flex flex-col gap-3 rounded-xl border border-hairline bg-card p-4 md:p-5">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <h1 className="break-words font-mono text-2xl font-semibold">{o.company.name}</h1>
-                <p className="text-sm text-muted">
-                  {o.vacancy.title} · {GRADE_LABEL[o.vacancy.grade_min]}–{GRADE_LABEL[o.vacancy.grade_max]} · {o.vacancy.formats.map((f) => FORMAT_LABEL[f] ?? f).join(", ")}
-                </p>
-              </div>
-              <StatusBadge status={o.status} />
-            </div>
-            <p className="text-xs uppercase tracking-wide text-muted">Вилка в месяц</p>
-            <p className="font-mono text-3xl font-semibold">{rub(o.salary_from)} – {rub(o.salary_to)}</p>
-            {o.below_candidate_min && <p className="rounded-lg bg-warning-bg px-3 py-2 text-sm text-warning-fg">Ниже ваших ожиданий.</p>}
-            {o.message && (<><p className="text-xs uppercase tracking-wide text-muted">Сообщение компании</p><p className="whitespace-pre-wrap break-words rounded-lg bg-tint-50 p-3 text-sm">{o.message}</p></>)}
-            <p className="text-xs text-muted">{answerable ? `Ответить до ${dateOnly(o.expires_at)} · осталось ${daysLeft(o.expires_at)} дн.` : `Получен ${dateOnly(o.created_at)}`}</p>
-            {o.decline && <p className="text-sm text-muted">Ваш отказ: {DECLINE_LABEL[o.decline.reason] ?? o.decline.reason}</p>}
-            {(o.status === "accepted" || o.status === "interview") && (
-              <p role="status" className="rounded-lg bg-success-bg px-3 py-2 text-sm text-success">
-                Вы приняли оффер. Компания теперь видит ваши контакты и свяжется с вами; пока можно общаться здесь.
+          <header className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="break-words font-mono text-20 font-semibold">{o.company.name}</h1>
+              <p className="text-13 text-muted">
+                {offerTitle(o)}
+                {o.vacancy ? ` · ${GRADE_LABEL[o.vacancy.grade_min]}–${GRADE_LABEL[o.vacancy.grade_max]}` : ` · ${T.invite.toLowerCase()}`}
               </p>
-            )}
-            {err && <ErrorNote>{offerErrorText(err)}</ErrorNote>}
-            {answerable && !sheet && (
-              <div className="flex flex-wrap gap-2">
-                <Button size="lg" disabled={accept.isPending} onClick={() => accept.mutate({ offerId: o.id })}>Принять</Button>
-                <Button size="lg" variant="outline" onClick={() => setSheet(true)}>Не подходит</Button>
-              </div>
-            )}
-            {answerable && sheet && (
-              <div role="group" aria-label="Причина отказа" className="flex flex-col gap-2 rounded-xl border border-hairline p-3">
-                <p className="font-semibold">Почему не подходит?</p>
-                <p className="text-xs text-muted">Компания увидит причину без имени и контактов.</p>
-                <div className="flex flex-wrap gap-2">
-                  {Object.values(DeclineReason).map((r) => (
-                    <button key={r} type="button" aria-pressed={reason === r} onClick={() => setReason(r)} className={cn("h-10 rounded-lg px-3 text-sm font-semibold", reason === r ? "bg-brand text-on-brand" : "border border-hairline hover:bg-tint-50")}>
-                      {DECLINE_LABEL[r]}
-                    </button>
-                  ))}
-                </div>
-                <label className="sr-only" htmlFor="decline-comment">Комментарий</label>
-                <textarea id="decline-comment" value={comment} onChange={(e) => setComment(e.target.value)} maxLength={1000} rows={2} placeholder="Комментарий (необязательно)" className={cn(fieldClass, "h-auto py-2")} />
-                <div className="flex gap-2">
-                  <Button disabled={!reason || decline.isPending} onClick={() => reason && decline.mutate({ offerId: o.id, data: { reason, comment: comment.trim() || null } })}>Отклонить оффер</Button>
-                  <Button variant="ghost" onClick={() => setSheet(false)}>Назад</Button>
-                </div>
-              </div>
-            )}
-          </section>
-          {ex && (ex.pluses.length > 0 || ex.others.length > 0) && (
-            <Panel title="Почему вы подходите">
-              <ul className="flex flex-col gap-1.5 text-sm">
-                {ex.pluses.map((i, n) => <li key={`p${n}`} className="flex gap-2"><span aria-hidden className="text-success">+</span>{i.text}</li>)}
-                {ex.others.map((i, n) => <li key={`w${n}`} className="flex gap-2 text-muted"><span aria-hidden className="text-warning">!</span>{i.text}</li>)}
-              </ul>
+            </div>
+            <StatusBadge status={o.status as OfferStatus} />
+          </header>
+
+          {accepted && (
+            <section role="status" className="flex flex-col gap-2 rounded-xl border border-success/40 bg-success-bg p-4">
+              <h2 className="font-mono text-16 font-semibold text-success">{T.accepted}</h2>
+              <p className="text-14">{T.acceptedHint}</p>
+            </section>
+          )}
+
+          <SalaryRange from={o.salary_from} to={o.salary_to} size="offer" label={T.salaryLabel} />
+          <p className="text-13 text-muted">
+            {o.vacancy ? o.vacancy.formats.map((f) => FORMAT_LABEL[f] ?? f).join(", ") : T.invite}
+            {o.contact_method ? ` · ${T.contactVia(CONTACT_LABEL[o.contact_method] ?? o.contact_method)}` : ""}
+            {answerable ? ` · ответить до ${dateOnly(o.expires_at)}` : ` · получен ${dateOnly(o.created_at)}`}
+          </p>
+          {o.below_candidate_min && (
+            <p role="status" className="rounded-lg border border-warning-border bg-warning-bg px-3 py-2 text-13 font-semibold text-warning-fg">{T.belowPlain}</p>
+          )}
+          {o.decline && <p className="text-14 text-muted">{T.yourDecline(DECLINE_LABEL[o.decline.reason] ?? o.decline.reason)}</p>}
+
+          {(o.message || o.description) && (
+            <section className="flex flex-col gap-2 rounded-xl border border-hairline bg-card p-4">
+              {o.message && (
+                <>
+                  <SectionLabel>{T.fromCompany}</SectionLabel>
+                  <p className="whitespace-pre-wrap break-words text-14">{o.message}</p>
+                </>
+              )}
+              {o.description && (
+                <>
+                  <SectionLabel>{T.description}</SectionLabel>
+                  <p className="whitespace-pre-wrap break-words text-14">{o.description}</p>
+                </>
+              )}
+            </section>
+          )}
+
+          {why.length > 0 && (
+            <Panel title={T.why}>
+              <MatchWhy items={why} />
             </Panel>
           )}
-          <Conversation offerId={o.id} side="candidate" canWrite={ACTIVE_STATUSES.includes(o.status)} />
+
+          {accepted && (
+            <Panel title={T.next}>
+              <CircuitLine steps={nextSteps(o.status)} />
+            </Panel>
+          )}
+
+          <div ref={chat}>
+            <Conversation offerId={o.id} side="candidate" canWrite={ACTIVE_STATUSES.includes(o.status)} />
+          </div>
           <Timeline offerId={o.id} />
+
+          {err && <ErrorNote>{offerErrorText(err)}</ErrorNote>}
+          {answerable && (
+            <div className="sticky bottom-0 -mx-4 grid gap-2 border-t border-hairline bg-page p-4 md:static md:mx-0 md:border-0 md:bg-transparent md:p-0">
+              <Button size="lg" loading={accept.isPending} onClick={() => accept.mutate({ offerId: o.id })}>{T.accept}</Button>
+              <div className="grid grid-cols-2 gap-2">
+                <Button size="lg" variant="outline" onClick={() => setSheet(true)}>{T.decline}</Button>
+                <Button size="lg" variant="ghost" onClick={() => chat.current?.scrollIntoView({ behavior: "smooth" })}>{T.ask}</Button>
+              </div>
+            </div>
+          )}
+
+          <Sheet open={sheet} onOpenChange={setSheet}>
+            <SheetContent side="bottom" className="mx-auto max-w-lg">
+              <SheetTitle className="font-mono text-16">{T.sheetTitle}</SheetTitle>
+              <SheetDescription>{T.sheetHint}</SheetDescription>
+              <ul className="mt-3 divide-y divide-hairline">
+                {Object.values(DeclineReason).map((r) => (
+                  <li key={r}>
+                    <button
+                      type="button"
+                      disabled={decline.isPending}
+                      onClick={() => decline.mutate({ offerId: o.id, data: { reason: r, comment: null } })}
+                      className="flex h-14 w-full items-center justify-between text-left text-14 hover:bg-tint-50 disabled:opacity-50"
+                    >
+                      {DECLINE_LABEL[r]}
+                      <span aria-hidden className="text-muted">›</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              {decline.isError && <ErrorNote>{offerErrorText(decline.error)}</ErrorNote>}
+              <Button variant="link" className="mx-auto mt-3 flex" onClick={() => setSheet(false)}>{T.cancel}</Button>
+            </SheetContent>
+          </Sheet>
         </>
       )}
     </main>

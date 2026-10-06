@@ -4,9 +4,13 @@
  * core
  * OpenAPI spec version: 0.1.0
  */
+import type { ContactMethod } from './contactMethod';
 
+/**
+ * Приглашение работодателя. Без `vacancy_id` (ADR-022) обязателен `title`.
+ */
 export interface CreateOffer {
-  vacancy_id: string;
+  vacancy_id?: string | null;
   /**
      * @minLength 1
      * @maxLength 64
@@ -15,4 +19,7 @@ export interface CreateOffer {
   salary_from?: number | null;
   salary_to?: number | null;
   message?: string | null;
+  title?: string | null;
+  description?: string | null;
+  contact_method?: ContactMethod | null;
 }

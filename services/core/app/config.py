@@ -27,6 +27,8 @@ class Settings(BaseServiceSettings):
     embed_model: str = "BAAI/bge-m3"
     embed_dim: int = 1024
     embed_timeout_seconds: float = 10.0
+    # разбор текстового запроса через LLM (E7-6): таймаут, после него — только правила
+    query_parse_timeout_seconds: float = 5.0
     # соль псевдонимов аналитики HMAC(id, ANALYTICS_SALT) (metrics.md §7); в проде из .env
     analytics_salt: str = "dev-only-analytics-salt"
     # fsp-connector (api.md §2.9): OAuth и привязка ФСП; пусто — эндпоинты отвечают 503
@@ -53,4 +55,6 @@ class Settings(BaseServiceSettings):
     assessment_key_draft_timeout_seconds: float = 30.0
     # <<< block1
     # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
+    # демо-кнопки для ФСП (E13-3): создание результатов и сброс
+    demo_mode: bool = False
     # <<< block2
