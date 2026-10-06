@@ -450,6 +450,7 @@ CREATE TABLE companies (
   id uuid PRIMARY KEY, name text NOT NULL, inn text, site text, description text, logo_key text,
   contacts json,                                                -- {name, email, phone, telegram}
   direction text,                                               -- направление деятельности
+  show_verified_badge bool NOT NULL DEFAULT true,               -- добровольная метка «компания проверена» (E32-5a)
   status text NOT NULL DEFAULT 'pending', responsibility_score real, created_at timestamptz DEFAULT now()
 );
 CREATE TABLE company_members (company_id uuid REFERENCES companies(id) ON DELETE CASCADE, user_id uuid REFERENCES users(id) ON DELETE CASCADE, role text NOT NULL, PRIMARY KEY (company_id, user_id));
@@ -458,6 +459,7 @@ CREATE TABLE vacancies (
   title text NOT NULL, role text NOT NULL, grade_min text NOT NULL, grade_max text NOT NULL,
   formats text[] NOT NULL, employment_type text NOT NULL, city text,
   salary_from int NOT NULL, salary_to int NOT NULL CHECK (salary_to >= salary_from),
+  salary_basis text NOT NULL DEFAULT 'gross',                -- gross (до НДФЛ) | net (на руки), E32-5a
   description text, status text NOT NULL DEFAULT 'draft',   -- draft | published | closed
   important_qualities text[] NOT NULL DEFAULT '{}',          -- team_signal[]: удваивают α в K_soft (skills.md §8.3)
   embedding vector(1024),                                    -- добавит матчинг (E7-x); в E6-2 колонки нет
@@ -491,6 +493,7 @@ CREATE TABLE offers (
   company_id uuid NOT NULL REFERENCES companies(id),
   created_by uuid NOT NULL REFERENCES users(id),
   salary_from int NOT NULL, salary_to int NOT NULL CHECK (salary_to >= salary_from),
+  salary_basis text NOT NULL DEFAULT 'gross',   -- gross | net (E32-5a)
   message text,
   title text, description text,          -- без вакансии title обязателен (проверка в core)
   contact_method text,                   -- platform | email | phone | telegram
@@ -512,7 +515,7 @@ CREATE INDEX ON offers (status, expires_at) WHERE status IN ('sent','viewed');
 
 CREATE TABLE offer_events (id bigserial PRIMARY KEY, offer_id uuid REFERENCES offers(id) ON DELETE CASCADE, from_status text, to_status text, actor text, payload jsonb, created_at timestamptz DEFAULT now());
 CREATE TABLE offer_messages (id uuid PRIMARY KEY, offer_id uuid REFERENCES offers(id) ON DELETE CASCADE, author_side text NOT NULL, author_user_id uuid, text text NOT NULL, created_at timestamptz DEFAULT now(), channel text);
-CREATE TABLE contact_reveals (offer_id uuid PRIMARY KEY REFERENCES offers(id), candidate_id uuid, company_id uuid, revealed_at timestamptz DEFAULT now());
+CREATE TABLE contact_reveals (offer_id uuid PRIMARY KEY REFERENCES offers(id), candidate_id uuid, company_id uuid, revealed_at timestamptz DEFAULT now(), revoked_at timestamptz);  -- revoked_at: отзыв кандидатом (E32-5a)
 CREATE TABLE complaints (id uuid PRIMARY KEY, offer_id uuid REFERENCES offers(id), reporter_user_id uuid, reason text, comment text, status text DEFAULT 'open', created_at timestamptz DEFAULT now());
 CREATE TABLE profile_views (id bigserial PRIMARY KEY, candidate_id uuid REFERENCES candidates(user_id) ON DELETE CASCADE, company_id uuid, viewer_user_id uuid, source text, vacancy_id uuid, viewed_at timestamptz DEFAULT now());
 CREATE INDEX ON profile_views (candidate_id, viewed_at DESC);
@@ -629,10 +632,12 @@ CREATE TABLE interview_kits (                     -- вопросы для ст�
   status text, questions jsonb, created_at timestamptz DEFAULT now()
 );
 
-CREATE TABLE issued_credentials (                 -- Open Badge 3.0
-  id uuid PRIMARY KEY, candidate_id uuid NOT NULL, profile_version int, credential jsonb NOT NULL,  -- подписанный VC
-  issued_at timestamptz DEFAULT now(), revoked_at timestamptz
-);
+CREATE TABLE issued_credentials (                 -- Open Badge 3.0 (b2_07)
+  id uuid PRIMARY KEY, candidate_id uuid NOT NULL REFERENCES candidates(user_id) ON DELETE CASCADE,
+  profession text NOT NULL, grade text NOT NULL, profile_version int NOT NULL DEFAULT 0,
+  credential jsonb NOT NULL,                      -- подписанный VC целиком
+  issued_at timestamptz DEFAULT now(), revoked_at timestamptz, revoke_reason text  -- holder_request | superseded | …
+);                                                -- индекс (candidate_id)
 ```
 
 Дополнения к существующим таблицам: `test_sessions.valid_until` (результат действует 12 месяцев), `offers.p_accept` (снимок на момент отправки).

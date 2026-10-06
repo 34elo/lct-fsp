@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import html
 import uuid
 from datetime import UTC, datetime, timedelta
 
@@ -56,4 +57,59 @@ async def stats(
     }
 
 
-__all__ = ["SOURCES", "record", "stats"]
+def generate_badge_svg(profession: str, grade: str, integrity: float = 1.0) -> str:
+    """Генерирует SVG бейдж «Подтверждено ФСП · Профессия · Грейд · ●●●●».
+
+    Args:
+        profession: Slug профессии (e.g., 'backend')
+        grade: Грейд (junior|middle|senior)
+        integrity: Коэффициент честности 0..1, определяет заполненность кружков
+
+    Returns:
+        SVG-контент
+    """
+    # Формируем текст профессии с большой буквы и заменяем _ на пробелы
+    profession_title = html.escape(profession.replace("_", " ").title())
+    grade_title = html.escape(grade.title())
+
+    # Определяем количество заполненных кружков (от 0 до 4)
+    filled_dots = int(round(integrity * 4))
+    filled_dots = max(0, min(4, filled_dots))  # Зажимаем между 0 и 4
+
+    # Создаём кружки
+    dots = ""
+    for i in range(4):
+        if i < filled_dots:
+            # Заполненный кружок
+            dots += f'<circle cx="{300 + i * 25}" cy="40" r="6" fill="#000" />'
+        else:
+            # Пустой кружок
+            dots += (
+                f'<circle cx="{300 + i * 25}" cy="40" r="6" fill="none" '
+                'stroke="#ddd" stroke-width="2" />'
+            )
+
+    # SVG шаблон
+    svg = f"""<svg width="400" height="80" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    text {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }}
+    .title {{ font-size: 16px; font-weight: bold; }}
+    .subtitle {{ font-size: 12px; fill: #666; }}
+  </style>
+
+  <rect width="400" height="80" fill="#fff" stroke="#e0e0e0" stroke-width="1" rx="8" />
+
+  <!-- Заголовок -->
+  <text x="12" y="25" class="title">Подтверждено ФСП</text>
+
+  <!-- Профессия и грейд -->
+  <text x="12" y="45" class="subtitle">{profession_title} · {grade_title}</text>
+
+  <!-- Кружки честности -->
+  {dots}
+</svg>"""
+
+    return svg
+
+
+__all__ = ["SOURCES", "record", "stats", "generate_badge_svg"]

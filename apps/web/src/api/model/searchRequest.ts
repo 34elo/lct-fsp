@@ -4,11 +4,13 @@
  * core
  * OpenAPI spec version: 0.1.0
  */
+import type { CategoryRef } from './categoryRef';
 import type { SearchFilters } from './searchFilters';
 import type { SearchRequestSort } from './searchRequestSort';
 
 export interface SearchRequest {
   filters?: SearchFilters;
+  category?: CategoryRef | null;
   sort?: SearchRequestSort;
   cursor?: string | null;
   /**

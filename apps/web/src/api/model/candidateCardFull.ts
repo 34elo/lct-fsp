@@ -6,11 +6,14 @@
  */
 import type { CandidateCardFullOffersFromYouItem } from './candidateCardFullOffersFromYouItem';
 import type { CardMatch } from './cardMatch';
+import type { CategoryRef } from './categoryRef';
+import type { ClaimedVsConfirmed } from './claimedVsConfirmed';
 import type { ExperienceBrief } from './experienceBrief';
 import type { FspHighlight } from './fspHighlight';
 import type { GradeInfo } from './gradeInfo';
 import type { SkillBrief } from './skillBrief';
 import type { SkillWithTrust } from './skillWithTrust';
+import type { StrengthView } from './strengthView';
 
 export interface CandidateCardFull {
   pseudo_id: string;
@@ -29,8 +32,12 @@ export interface CandidateCardFull {
   search_status: string;
   match?: CardMatch | null;
   updated_at: string;
+  categories?: CategoryRef[];
+  strength?: StrengthView | null;
+  is_shortlisted?: boolean;
   skills: SkillWithTrust[];
   grade_info: GradeInfo;
   experience: ExperienceBrief[];
   offers_from_you: CandidateCardFullOffersFromYouItem[];
+  claimed_vs_confirmed?: ClaimedVsConfirmed[];
 }

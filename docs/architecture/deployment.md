@@ -221,6 +221,7 @@ OB_ISSUER_DID=did:web:fsp.patissons.tech
 | `make demo-reset` | Восстановить снапшот, `FLUSHDB` кешей (очереди не трогаем), перезапуск воркеров, `demo-warm` |
 | `make demo-warm` | Прогрев кешей героев демо ([messaging.md §7](messaging.md#6-кеши)) |
 | `make eval` | Пересчёт метрик → отчёт → страница качества |
+| `make load` | Нагрузка locust (E29-2): 50 пользователей, 3 мин, против `LOAD_HOST` (по умолчанию gateway `:28080`) после `make seed`; отчёт `reports/load/`, код выхода 1 при нарушении порога ([metrics.md](metrics.md#нагрузочный-стенд-e29-2)) |
 | `make api-gen` | OpenAPI → клиент фронта |
 | `make test` / `make lint` | Тесты и линтеры всех сервисов |
 | `make backup` | `pg_dump` с ротацией 7 дней |

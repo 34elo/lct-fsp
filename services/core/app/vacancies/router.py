@@ -5,6 +5,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, Response
 from fsp_contracts.enums import EmploymentType, Grade, RoleSlug, TeamSignalKind, WorkFormat
+from fsp_contracts.hiring import SalaryBasis
 from fsp_platform.app import ProblemError
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -57,6 +58,7 @@ class VacancyIn(BaseModel):
     city: str | None = Field(default=None, max_length=100)
     salary_from: int = Field(gt=0, le=100_000_000)
     salary_to: int = Field(gt=0, le=100_000_000)
+    salary_basis: SalaryBasis = SalaryBasis.gross
     description: str | None = Field(default=None, max_length=10000)
     important_qualities: list[TeamSignalKind] = Field(default_factory=list, max_length=4)
     skills: list[SkillReqIn] = Field(default_factory=list, max_length=40)
@@ -74,6 +76,7 @@ class VacancyPatch(BaseModel):
     city: str | None = Field(default=None, max_length=100)
     salary_from: int | None = Field(default=None, gt=0, le=100_000_000)
     salary_to: int | None = Field(default=None, gt=0, le=100_000_000)
+    salary_basis: SalaryBasis | None = None
     description: str | None = Field(default=None, max_length=10000)
     important_qualities: list[TeamSignalKind] | None = Field(default=None, max_length=4)
     skills: list[SkillReqIn] | None = Field(default=None, max_length=40)
@@ -98,6 +101,7 @@ class VacancyOut(BaseModel):
     city: str | None
     salary_from: int
     salary_to: int
+    salary_basis: SalaryBasis
     range_too_wide: bool
     description: str | None
     status: VacancyStatus
@@ -123,6 +127,7 @@ def vacancy_out(v: Vacancy, skills: list, cfg: VacancyConfig | None = None) -> V
         city=v.city,
         salary_from=v.salary_from,
         salary_to=v.salary_to,
+        salary_basis=SalaryBasis(v.salary_basis),
         range_too_wide=service.range_too_wide(v.salary_from, v.salary_to, cfg),
         description=v.description,
         status=VacancyStatus(v.status),
@@ -178,6 +183,7 @@ class PublicVacancyOut(BaseModel):
     city: str | None
     salary_from: int
     salary_to: int
+    salary_basis: SalaryBasis
     description: str | None
     skills: list[SkillReqOut]
     published_at: datetime | None
@@ -214,7 +220,7 @@ async def list_public_vacancies(
                 company=PublicCompany(
                     id=v.company_id,
                     name=co.name if co else "",
-                    verified=bool(co and co.status == "verified"),
+                    verified=bool(co and companies.badge_visible(co)),
                     responsibility_score=co.responsibility_score if co else None,
                 ),
             )

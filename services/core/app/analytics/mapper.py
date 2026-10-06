@@ -26,6 +26,7 @@ from fsp_contracts.events import (
 )
 from fsp_contracts.hiring import OfferInitiator
 
+from app.analytics import hiring
 from app.analytics.service import pseudonym
 
 Mapped = list[AnalyticsEvent]
@@ -106,10 +107,14 @@ def _interview(c: _Ctx, p: MlInterviewGraded) -> Mapped:
 
 
 def _offer(c: _Ctx, p: OfferEvent) -> Mapped:
+    if p.initiator == OfferInitiator.candidate:  # отклики в метрики офферов не входят
+        return hiring.offer_events(c, p)
+    return [*_offer_legacy(c, p), *hiring.offer_events(c, p)]
+
+
+def _offer_legacy(c: _Ctx, p: OfferEvent) -> Mapped:
     oid = str(p.offer_id)
     cand = p.candidate_id
-    if p.initiator == OfferInitiator.candidate:  # отклики в метрики офферов не входят
-        return []
     match c.envelope.type:
         case "offer.sent":
             return [
@@ -155,6 +160,10 @@ MAPPERS: dict[str, Callable[[_Ctx, Any], Mapped]] = {
     "offer.accepted": _offer,
     "offer.declined": _offer,
     "offer.message": _offer,
+    "offer.expired": _offer,
+    "offer.withdrawn": _offer,
+    "offer.status_changed": _offer,
+    "candidate.category.changed": hiring.category_events,
     "vacancy.published": _vacancy_published,
     "matches.ready": _matches,
 }
