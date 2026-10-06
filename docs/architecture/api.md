@@ -161,6 +161,8 @@
 | `GET /admin/skills/queue` | Спорные решения конвейера: предложенные слияния, новые вершины с низкой уверенностью |
 | `POST /admin/skills/{id}/approve|reject`, `POST /admin/skills/merge {from, into}`, `POST /admin/skills/merges/{id}/revert` | Решения админа по графу навыков |
 | `GET|POST|DELETE /admin/skills/distinct`, `GET|POST|DELETE /admin/skills/blocklist` | «Точно разные» пары и стоп-лист |
+| `GET|POST /admin/professions`, `GET|PATCH|DELETE /admin/professions/{slug}` | Профессии теста и веса навыков (E13-1a, `fsp_admin`). POST `{slug, title, skill_weights{slug:вес}}` → 201; PATCH `{title?, skill_weights?}` (веса заменяются целиком); DELETE снимает признак профессии (веса остаются). Веса в (0, 1], навыки живые, покрыты все 6 типов: иначе 422 `invalid_weight` / `unknown_skill` / `missing_skill_types`; повтор слага — 409 `profession_exists`. Ответ — `ProfessionInfo` + `taxonomy_version` |
+| `GET /admin/skill-cards`, `GET|PUT /admin/skill-cards/{slug}` | Карточки навыков (E13-1a). `source`: `admin` (правка в `scoring_config`, ключ `skill_card:<slug>`, своя `version`), `file` (`data/skills/cards`), `draft` (ml). PUT принимает `SkillCard`; `skill` ≠ путь → 422 `card_skill_mismatch`, `type` ≠ типу навыка → 422 `card_type_mismatch` |
 | `GET /admin/skills/growth` | Рост графа: новые вершины и связи за период, доля автоматических решений |
 | `GET /admin/discipline-rules/suggestions` | Предложения добавить навык в правило дисциплины (lift по участникам) |
 | `GET|PUT /admin/discipline-rules` | Правила «дисциплина → навыки» |
