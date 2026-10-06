@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from app.assessment.families import behavior, code, reasoning, starter
+from app.assessment.families import behavior, code, reasoning, starter, world_tasks
 from app.assessment.families.base import BaseFamily, Family, Item, Kind
 
-_MODULES = [starter, code, reasoning, behavior]
+_MODULES = [starter, code, reasoning, behavior, world_tasks]
 
 REGISTRY: dict[str, Family] = {}
 
