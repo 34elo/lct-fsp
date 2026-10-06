@@ -79,7 +79,7 @@ class FamilyRow(Base):
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     slug: Mapped[str] = mapped_column(Text, unique=True)
     kind: Mapped[str] = mapped_column(Text)
-    source: Mapped[str] = mapped_column(Text)  # code | spec | mutation | llm
+    source: Mapped[str] = mapped_column(Text)  # code | spec | mutation | llm | fsp
     skill_id: Mapped[uuid.UUID] = mapped_column()  # taxonomy.service.skill_id(slug)
     skill_type: Mapped[str] = mapped_column(Text)  # SkillType
     level: Mapped[int] = mapped_column(sa.SmallInteger)
@@ -91,6 +91,7 @@ class FamilyRow(Base):
     key_status: Mapped[str] = mapped_column(Text, default="approved", server_default="approved")
     author_id: Mapped[uuid.UUID | None] = mapped_column(default=None)
     company_id: Mapped[uuid.UUID | None] = mapped_column(default=None)
+    competition_id: Mapped[str | None] = mapped_column(Text, default=None)  # source = fsp (E32-6)
     ai_solvable: Mapped[float] = mapped_column(sa.Float, default=0.0, server_default="0")
     stats: Mapped[dict] = mapped_column(sa.JSON, default=dict)
     version: Mapped[int] = mapped_column(default=1, server_default="1")
@@ -99,7 +100,10 @@ class FamilyRow(Base):
         sa.DateTime(timezone=True), default=utcnow, onupdate=utcnow
     )
 
-    __table_args__ = (sa.Index("ix_families_status_type", "status", "skill_type"),)
+    __table_args__ = (
+        sa.Index("ix_families_status_type", "status", "skill_type"),
+        sa.Index("ix_families_competition", "competition_id"),
+    )
 
 
 class Attempt(Base):

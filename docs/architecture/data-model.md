@@ -228,12 +228,13 @@ CREATE TABLE surveys (
 CREATE TABLE families (
   id uuid PRIMARY KEY,                   -- у кодовых семейств uuid5 от slug
   slug text UNIQUE NOT NULL, kind text NOT NULL,
-  source text NOT NULL,                  -- code | spec | mutation | llm
+  source text NOT NULL,                  -- code | spec | mutation | llm | fsp
   skill_id uuid NOT NULL,                -- taxonomy.service.skill_id(slug), без FK
   skill_type text NOT NULL, level smallint NOT NULL, b float NOT NULL, n int NOT NULL DEFAULT 0,
   anchor boolean NOT NULL DEFAULT false,
   status text NOT NULL DEFAULT 'draft',  -- draft | pilot | active | quarantine | retired
   spec jsonb, key_status text NOT NULL DEFAULT 'approved', author_id uuid, company_id uuid,
+  competition_id text,                   -- source = fsp: соревнование ФСП (E32-6), индекс
   ai_solvable float NOT NULL DEFAULT 0, stats jsonb NOT NULL DEFAULT '{}', version int NOT NULL DEFAULT 1,
   created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now()
 );

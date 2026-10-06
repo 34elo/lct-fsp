@@ -9,6 +9,8 @@
 - ручки в границах уровня (`knob_bounds` ↔ `meta["knobs"]`);
 - детерминизм: повторная генерация и два прогона в подпроцессах с разным `PYTHONHASHSEED`.
 
+Банки задач ФСП (`data/questions/fsp`, E32-6) — лицензия, ключ, автопроверка (`fsp_bank`).
+
 По банку: каждый тип навыка покрыт ≥ 2 семействами, каждый `kind` (кроме `open`) — хотя бы одним,
 навык семейства есть в `data/taxonomy` и его тип совпадает, есть якорные семейства.
 
@@ -222,6 +224,13 @@ def run(families: Sequence[Family], n: int, taxonomy_dir: Path | None = TAXONOMY
     return errs
 
 
+def check_fsp_banks() -> list[str]:
+    """Банки задач ФСП `data/questions/fsp/*.yaml` (E32-6): лицензия, ключ, автопроверка."""
+    from app.assessment import fsp_bank
+
+    return fsp_bank.check_files(fsp_bank.bank_files())
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument("--seeds", type=int, default=1000)
@@ -234,6 +243,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     errs = run(families, args.seeds, args.taxonomy) + check_hashseed(args.seeds)
+    errs += check_fsp_banks()
     for f in sorted(families, key=lambda f: (SkillType(f.skill_type).value, f.slug)):
         anchor = " anchor" if getattr(f, "anchor", False) else ""
         print(f"  {f.skill_type:<11} {f.kind.value:<9} L{f.level} {f.slug} ({f.skill}){anchor}")

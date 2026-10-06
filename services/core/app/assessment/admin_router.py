@@ -101,7 +101,9 @@ async def _decide(action, family_id, request, user, session) -> AdminFamilyOut:
     cfg = _cfg(request)
     row = await action(session, family_id, user.id, cfg)
     stats = lifecycle._stats_of(row)
-    return _out(row, stats, lifecycle.admission_failures(stats, row.b, cfg))
+    return _out(
+        row, stats, lifecycle.admission_failures(stats, row.b, cfg, need_dif=row.source == "fsp")
+    )
 
 
 @router.post(
@@ -170,7 +172,9 @@ async def approve_key(
     cfg = _cfg(request)
     row = await constructor.approve_key(session, family_id, user.id, body.source, body.spec)
     stats = lifecycle._stats_of(row)
-    return _out(row, stats, lifecycle.admission_failures(stats, row.b, cfg))
+    return _out(
+        row, stats, lifecycle.admission_failures(stats, row.b, cfg, need_dif=row.source == "fsp")
+    )
 
 
 @router.post(
