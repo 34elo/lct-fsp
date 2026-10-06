@@ -131,7 +131,12 @@ async def email_verify(
     return Response(status_code=204)
 
 
-@router.post("/auth/register", status_code=201, response_model=AuthOut)
+@router.post(
+    "/auth/register",
+    status_code=201,
+    response_model=AuthOut,
+    responses=problem_responses(400, 409, 422, 429),
+)
 async def register(
     body: RegisterIn,
     request: Request,
@@ -149,7 +154,7 @@ async def register(
     return tokens_out(request, response, issued)
 
 
-@router.post("/auth/login", response_model=AuthOut)
+@router.post("/auth/login", response_model=AuthOut, responses=problem_responses(400, 401, 429))
 async def login(
     body: LoginIn,
     request: Request,
@@ -171,7 +176,7 @@ class MagicIn(BaseModel):
     token: str = Field(min_length=1, max_length=256)
 
 
-@router.post("/auth/telegram", response_model=AuthOut)
+@router.post("/auth/telegram", response_model=AuthOut, responses=problem_responses(400, 401, 429))
 async def auth_telegram(
     body: dict[str, Any],
     request: Request,
@@ -189,7 +194,7 @@ async def auth_telegram(
     return tokens_out(request, response, issued)
 
 
-@router.post("/auth/magic", response_model=AuthOut)
+@router.post("/auth/magic", response_model=AuthOut, responses=problem_responses(400, 401, 429))
 async def auth_magic(
     body: MagicIn,
     request: Request,
@@ -209,7 +214,7 @@ async def auth_magic(
     return tokens_out(request, response, issued)
 
 
-@router.post("/auth/refresh", response_model=AuthOut)
+@router.post("/auth/refresh", response_model=AuthOut, responses=problem_responses(401))
 async def refresh(
     request: Request,
     response: Response,
@@ -230,7 +235,7 @@ async def refresh(
     return tokens_out(request, response, issued)
 
 
-@router.post("/auth/logout", status_code=204)
+@router.post("/auth/logout", status_code=204, responses=problem_responses(401))
 async def logout(request: Request, session: AsyncSession = Depends(get_session)):
     _check_origin(request)
     await service.logout(session, request.cookies.get(REFRESH_COOKIE))
@@ -252,7 +257,7 @@ class MeOut(UserOut):
     company: MeCompany | None = None
 
 
-@router.get("/me", response_model=MeOut)
+@router.get("/me", response_model=MeOut, responses=problem_responses(401))
 async def me(user: User = Depends(get_current_user), session: AsyncSession = Depends(get_session)):
     """consents — действующие типы; company — E6-1; candidate — E3-1."""
     found = await companies.my_company(session, user.id) if user.role == "employer" else None

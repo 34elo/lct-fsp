@@ -16,6 +16,7 @@ from app.graph import subgraph
 from app.graph.trust import TrustConfig
 from app.identity.deps import require_roles
 from app.identity.models import User
+from app.openapi_errors import problem_responses
 from app.vacancies import service as vacancies
 
 router = APIRouter(tags=["graph"])
@@ -28,7 +29,10 @@ Depth = Literal["facts", "competitions"]
 
 
 @router.get(
-    "/candidates/me/graph", response_model=subgraph.Subgraph, response_model_exclude_none=True
+    "/candidates/me/graph",
+    response_model=subgraph.Subgraph,
+    response_model_exclude_none=True,
+    responses=problem_responses(401, 403),
 )
 async def my_graph(
     request: Request,
@@ -50,6 +54,7 @@ async def my_graph(
     "/candidates/{pseudo_id}/graph",
     response_model=subgraph.Subgraph,
     response_model_exclude_none=True,
+    responses=problem_responses(401, 403, 404),
 )
 async def candidate_graph(
     pseudo_id: str,
