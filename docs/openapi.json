@@ -14761,6 +14761,31 @@
             ],
             "title": "Experience Months"
           },
+          "age_group": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "adult",
+                  "minor"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Age Group"
+          },
+          "parent_consent": {
+            "type": "boolean",
+            "title": "Parent Consent",
+            "default": false
+          },
+          "publishable": {
+            "type": "boolean",
+            "title": "Publishable",
+            "default": true
+          },
           "fsp": {
             "anyOf": [
               {
@@ -20187,6 +20212,32 @@
               }
             ],
             "title": "Soft Skills"
+          },
+          "age_group": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "adult",
+                  "minor"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Age Group"
+          },
+          "parent_consent": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Consent"
           }
         },
         "additionalProperties": false,
