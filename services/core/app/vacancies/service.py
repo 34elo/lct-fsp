@@ -11,7 +11,9 @@ import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
+from pathlib import Path
 
+import yaml
 from fsp_contracts import new_envelope
 from fsp_contracts.enums import CompanyStatus, Grade
 from fsp_contracts.events import VacancyEvent
@@ -22,16 +24,33 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.companies import service as companies
 from app.identity.models import User
+from app.matching.scoring import DEFAULT_SCORING_PATH
 from app.taxonomy.models import Skill
 from app.vacancies.models import Vacancy, VacancySkill
-
-RANGE_TOO_WIDE_RATIO = 1.6  # ml.md §7: salary_to / salary_from
 
 
 class VacancyStatus(StrEnum):
     draft = "draft"
     published = "published"
     closed = "closed"
+
+
+@dataclass(frozen=True, slots=True)
+class VacancyConfig:
+    """Конфигурация вакансий из scoring.yaml."""
+
+    salary_range_too_wide_ratio: float = 1.6  # ml.md §7: salary_to / salary_from (EU directive)
+
+    @classmethod
+    def load(cls, path: Path | str | None = None) -> VacancyConfig:
+        data = yaml.safe_load(Path(path or DEFAULT_SCORING_PATH).read_text(encoding="utf-8"))
+        lim = (data or {}).get("limits", {})
+        base = cls()
+        return cls(
+            salary_range_too_wide_ratio=float(
+                lim.get("salary_range_too_wide_ratio", base.salary_range_too_wide_ratio)
+            ),
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -42,8 +61,10 @@ class SkillReq:
     weight: float = 1.0
 
 
-def range_too_wide(salary_from: int, salary_to: int) -> bool:
-    return salary_from > 0 and salary_to / salary_from > RANGE_TOO_WIDE_RATIO
+def range_too_wide(salary_from: int, salary_to: int, cfg: VacancyConfig | None = None) -> bool:
+    if cfg is None:
+        cfg = VacancyConfig.load()
+    return salary_from > 0 and salary_to / salary_from > cfg.salary_range_too_wide_ratio
 
 
 def _not_found() -> ProblemError:
