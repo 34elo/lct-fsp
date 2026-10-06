@@ -28,7 +28,9 @@ def upgrade() -> None:
             "created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()
         ),
     )  # fmt: skip
-    op.create_index("ix_candidate_interests_company", "candidate_interests", ["company_id", "created_at"])
+    op.create_index(
+        "ix_candidate_interests_company", "candidate_interests", ["company_id", "created_at"]
+    )
 
 
 def downgrade() -> None:

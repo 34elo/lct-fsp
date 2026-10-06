@@ -72,21 +72,24 @@ def test_interest_404_on_unknown_company(world):
     c, ch, uid, _ = world
     ghost = str(uuid.uuid4())
     r = _mark_interest(c, ch, ghost)
-    assert (r.status_code, r.json()["code"]) == (404, "not_found")
+    assert (r.status_code, r.json()["code"]) == (404, "company_not_found")
 
 
-def test_candidate_only_can_mark_interest():
+def test_candidate_only_can_mark_interest(world):
     """Только кандидат может отмечать интерес."""
-    c = template_db()
-    ch, _, _ = _candidate(c, "c@x.ru", 1)
-    _, company_id = _employer(c, "e@x.ru", "Acme Labs")
-    # Безавторизованный
-    r = c.post(f"/companies/{company_id}/interest")
-    assert r.status_code == 401
-    # Работодатель
+    c, ch, uid, company_id = world
+    assert c.post(f"/companies/{company_id}/interest").status_code == 401
     eh, _ = _employer(c, "e2@x.ru", "Beta")
-    r = c.post(f"/companies/{company_id}/interest", headers=eh)
-    assert r.status_code == 403
+    assert c.post(f"/companies/{company_id}/interest", headers=eh).status_code == 403
+    assert c.delete(f"/companies/{company_id}/interest", headers=eh).status_code == 403
+
+
+def test_interest_unverified_company_404(world):
+    """Неподтверждённая компания для кандидата не существует."""
+    c, ch, uid, company_id = world
+    _db(c, "update companies set status='pending' where id=?", company_id.replace("-", ""))
+    r = _mark_interest(c, ch, company_id)
+    assert (r.status_code, r.json()["code"]) == (404, "company_not_found")
 
 
 def test_multiple_interests(world):
