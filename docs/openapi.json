@@ -10205,6 +10205,1341 @@
         }
       }
     },
+    "/admin/skills/queue": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Get Queue",
+        "description": "Предложенные слияния («то же», уверенность 0.6–0.9) с превью.",
+        "operationId": "get_queue_admin_skills_queue_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/QueueItem"
+                  },
+                  "type": "array",
+                  "title": "Response Get Queue Admin Skills Queue Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/skills/queue/{slug}/approve": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Approve Queue",
+        "description": "Подтверждает слияние: временный навык вливается в целевой.",
+        "operationId": "approve_queue_admin_skills_queue__slug__approve_post",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MergeOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Конфликт (в том числе cooldown)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/skills/queue/{slug}/reject": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Reject Queue",
+        "description": "Отклоняет слияние: навык остаётся отдельным, пара уходит из очереди.",
+        "operationId": "reject_queue_admin_skills_queue__slug__reject_post",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/RejectBody"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Конфликт (в том числе cooldown)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/skills/merge": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Merge Skills",
+        "description": "Ручное слияние `from` → `into` (запрещено для пары «точно разные»).",
+        "operationId": "merge_skills_admin_skills_merge_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MergeBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MergeOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Конфликт (в том числе cooldown)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/skills/merges": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "List Merges",
+        "description": "Журнал слияний; откатываются те, у которых нет `reverted_at`.",
+        "operationId": "list_merges_admin_skills_merges_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MergeRow"
+                  },
+                  "type": "array",
+                  "title": "Response List Merges Admin Skills Merges Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/skills/merges/{merge_id}/revert": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Revert Merge",
+        "operationId": "revert_merge_admin_skills_merges__merge_id__revert_post",
+        "parameters": [
+          {
+            "name": "merge_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Merge Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Конфликт (в том числе cooldown)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/skills/distinct": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "List Distinct",
+        "operationId": "list_distinct_admin_skills_distinct_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DistinctPair"
+                  },
+                  "title": "Response List Distinct Admin Skills Distinct Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Add Distinct",
+        "operationId": "add_distinct_admin_skills_distinct_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DistinctIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DistinctSaved"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Конфликт (в том числе cooldown)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Remove Distinct",
+        "description": "Пара не найдена → 404.",
+        "operationId": "remove_distinct_admin_skills_distinct_delete",
+        "parameters": [
+          {
+            "name": "a",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "A"
+            }
+          },
+          {
+            "name": "b",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "B"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DistinctSaved"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/skills/blocklist": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "List Blocklist",
+        "operationId": "list_blocklist_admin_skills_blocklist_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BlockItem"
+                  },
+                  "title": "Response List Blocklist Admin Skills Blocklist Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Add Blocklist",
+        "operationId": "add_blocklist_admin_skills_blocklist_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BlockIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlockItem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Конфликт (в том числе cooldown)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Remove Blocklist",
+        "operationId": "remove_blocklist_admin_skills_blocklist_delete",
+        "parameters": [
+          {
+            "name": "norm",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Norm"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/skills/provisional": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "List Provisional",
+        "description": "Временные навыки с карточками-черновиками ml.",
+        "operationId": "list_provisional_admin_skills_provisional_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProvisionalOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Provisional Admin Skills Provisional Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/skills/hints": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Get Hints",
+        "description": "`taxonomy_hints`: правила дисциплин и кандидаты в новые профессии (ночной рост).",
+        "operationId": "get_hints_admin_skills_hints_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HintsOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/skills/{slug}/approve": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Approve Skill",
+        "description": "Временный навык становится активным.",
+        "operationId": "approve_skill_admin_skills__slug__approve_post",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSkillBrief"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Конфликт (в том числе cooldown)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/skills/{slug}/reject": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Reject Skill",
+        "description": "Временный навык отклоняется и скрывается.",
+        "operationId": "reject_skill_admin_skills__slug__reject_post",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSkillBrief"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Конфликт (в том числе cooldown)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/families": {
       "get": {
         "tags": [
@@ -12539,6 +13874,39 @@
         ],
         "title": "AdminFamilyOut"
       },
+      "AdminSkillBrief": {
+        "properties": {
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "support_candidates": {
+            "type": "integer",
+            "title": "Support Candidates"
+          },
+          "support_vacancies": {
+            "type": "integer",
+            "title": "Support Vacancies"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slug",
+          "name",
+          "status",
+          "support_candidates",
+          "support_vacancies"
+        ],
+        "title": "AdminSkillBrief"
+      },
       "AnswerOut": {
         "properties": {
           "response_id": {
@@ -12790,6 +14158,63 @@
           "user"
         ],
         "title": "AuthOut"
+      },
+      "BlockIn": {
+        "properties": {
+          "norm": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Norm"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "norm"
+        ],
+        "title": "BlockIn"
+      },
+      "BlockItem": {
+        "properties": {
+          "norm": {
+            "type": "string",
+            "title": "Norm"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "norm",
+          "created_at"
+        ],
+        "title": "BlockItem"
       },
       "Body_tg_resume_upload_internal_tg_resumes_post": {
         "properties": {
@@ -14876,6 +16301,45 @@
         ],
         "title": "DeepLinkOut"
       },
+      "DisciplineHint": {
+        "properties": {
+          "discipline": {
+            "type": "string",
+            "title": "Discipline"
+          },
+          "discipline_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Discipline Name"
+          },
+          "skill": {
+            "type": "string",
+            "title": "Skill"
+          },
+          "lift": {
+            "type": "number",
+            "title": "Lift"
+          },
+          "support": {
+            "type": "integer",
+            "title": "Support"
+          }
+        },
+        "type": "object",
+        "required": [
+          "discipline",
+          "skill",
+          "lift",
+          "support"
+        ],
+        "title": "DisciplineHint"
+      },
       "DisputeIn": {
         "properties": {
           "claimed_role": {
@@ -14951,6 +16415,72 @@
           "created_at"
         ],
         "title": "DisputeOut"
+      },
+      "DistinctIn": {
+        "properties": {
+          "a": {
+            "type": "string",
+            "minLength": 1,
+            "title": "A"
+          },
+          "b": {
+            "type": "string",
+            "minLength": 1,
+            "title": "B"
+          }
+        },
+        "type": "object",
+        "required": [
+          "a",
+          "b"
+        ],
+        "title": "DistinctIn"
+      },
+      "DistinctPair": {
+        "properties": {
+          "a": {
+            "type": "string",
+            "title": "A"
+          },
+          "b": {
+            "type": "string",
+            "title": "B"
+          },
+          "a_name": {
+            "type": "string",
+            "title": "A Name"
+          },
+          "b_name": {
+            "type": "string",
+            "title": "B Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "a",
+          "b",
+          "a_name",
+          "b_name"
+        ],
+        "title": "DistinctPair"
+      },
+      "DistinctSaved": {
+        "properties": {
+          "taxonomy_version": {
+            "type": "integer",
+            "title": "Taxonomy Version"
+          },
+          "changed": {
+            "type": "boolean",
+            "title": "Changed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "taxonomy_version",
+          "changed"
+        ],
+        "title": "DistinctSaved"
       },
       "Edge": {
         "properties": {
@@ -16299,6 +17829,41 @@
         ],
         "title": "Hint"
       },
+      "HintsOut": {
+        "properties": {
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "discipline_rules": {
+            "items": {
+              "$ref": "#/components/schemas/DisciplineHint"
+            },
+            "type": "array",
+            "title": "Discipline Rules"
+          },
+          "profession_candidates": {
+            "items": {
+              "$ref": "#/components/schemas/ProfessionCandidate"
+            },
+            "type": "array",
+            "title": "Profession Candidates"
+          }
+        },
+        "type": "object",
+        "required": [
+          "discipline_rules",
+          "profession_candidates"
+        ],
+        "title": "HintsOut"
+      },
       "HistoryOut": {
         "properties": {
           "surveys": {
@@ -16615,6 +18180,153 @@
           "role"
         ],
         "title": "MemberOut"
+      },
+      "MergeBody": {
+        "properties": {
+          "from": {
+            "type": "string",
+            "minLength": 1,
+            "title": "From"
+          },
+          "into": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Into"
+          }
+        },
+        "type": "object",
+        "required": [
+          "from",
+          "into"
+        ],
+        "title": "MergeBody"
+      },
+      "MergeOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "from_skill": {
+            "type": "string",
+            "title": "From Skill"
+          },
+          "into_skill": {
+            "type": "string",
+            "title": "Into Skill"
+          },
+          "taxonomy_version": {
+            "type": "integer",
+            "title": "Taxonomy Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "from_skill",
+          "into_skill",
+          "taxonomy_version"
+        ],
+        "title": "MergeOut"
+      },
+      "MergePreview": {
+        "properties": {
+          "aliases": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Aliases"
+          },
+          "relations": {
+            "type": "integer",
+            "title": "Relations"
+          },
+          "support_candidates": {
+            "type": "integer",
+            "title": "Support Candidates"
+          },
+          "support_vacancies": {
+            "type": "integer",
+            "title": "Support Vacancies"
+          }
+        },
+        "type": "object",
+        "required": [
+          "aliases",
+          "relations",
+          "support_candidates",
+          "support_vacancies"
+        ],
+        "title": "MergePreview"
+      },
+      "MergeRow": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "from_skill": {
+            "type": "string",
+            "title": "From Skill"
+          },
+          "from_name": {
+            "type": "string",
+            "title": "From Name"
+          },
+          "into_skill": {
+            "type": "string",
+            "title": "Into Skill"
+          },
+          "into_name": {
+            "type": "string",
+            "title": "Into Name"
+          },
+          "actor": {
+            "type": "string",
+            "title": "Actor"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "reverted_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reverted At"
+          },
+          "aliases_added": {
+            "type": "integer",
+            "title": "Aliases Added"
+          },
+          "rows_moved": {
+            "type": "integer",
+            "title": "Rows Moved"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "from_skill",
+          "from_name",
+          "into_skill",
+          "into_name",
+          "actor",
+          "created_at",
+          "aliases_added",
+          "rows_moved"
+        ],
+        "title": "MergeRow"
       },
       "MessageIn": {
         "properties": {
@@ -18205,6 +19917,32 @@
         "title": "ProblemOut",
         "description": "RFC 9457 + машинный `code` (api.md §1)."
       },
+      "ProfessionCandidate": {
+        "properties": {
+          "skills": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Skills"
+          },
+          "support": {
+            "type": "integer",
+            "title": "Support"
+          },
+          "covered_by_professions": {
+            "type": "number",
+            "title": "Covered By Professions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "skills",
+          "support",
+          "covered_by_professions"
+        ],
+        "title": "ProfessionCandidate"
+      },
       "ProfessionIn": {
         "properties": {
           "slug": {
@@ -18456,6 +20194,66 @@
         "title": "ProfileIn",
         "description": "`PATCH /candidates/me/profile`: частичное обновление ручной формы (E20-4)."
       },
+      "ProvisionalOut": {
+        "properties": {
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "support_candidates": {
+            "type": "integer",
+            "title": "Support Candidates"
+          },
+          "support_vacancies": {
+            "type": "integer",
+            "title": "Support Vacancies"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "draft": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SkillCard"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "slug",
+          "name",
+          "status",
+          "support_candidates",
+          "support_vacancies",
+          "created_at"
+        ],
+        "title": "ProvisionalOut"
+      },
       "PublicCompany": {
         "properties": {
           "id": {
@@ -18594,6 +20392,62 @@
         "title": "PublicVacancyOut",
         "description": "Вакансия для кандидата: без служебных полей (`version`, `created_at`)."
       },
+      "QueueItem": {
+        "properties": {
+          "skill": {
+            "type": "string",
+            "title": "Skill"
+          },
+          "skill_name": {
+            "type": "string",
+            "title": "Skill Name"
+          },
+          "into": {
+            "type": "string",
+            "title": "Into"
+          },
+          "into_name": {
+            "type": "string",
+            "title": "Into Name"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
+          },
+          "norm": {
+            "type": "string",
+            "title": "Norm"
+          },
+          "from": {
+            "$ref": "#/components/schemas/AdminSkillBrief"
+          },
+          "target": {
+            "$ref": "#/components/schemas/AdminSkillBrief"
+          },
+          "preview": {
+            "$ref": "#/components/schemas/MergePreview"
+          }
+        },
+        "type": "object",
+        "required": [
+          "skill",
+          "skill_name",
+          "into",
+          "into_name",
+          "norm",
+          "from",
+          "target",
+          "preview"
+        ],
+        "title": "QueueItem"
+      },
       "Ratio": {
         "properties": {
           "count": {
@@ -18675,6 +20529,17 @@
           "role"
         ],
         "title": "RegisterIn"
+      },
+      "RejectBody": {
+        "properties": {
+          "mark_distinct": {
+            "type": "boolean",
+            "title": "Mark Distinct",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "RejectBody"
       },
       "ResolveComplaintIn": {
         "properties": {
@@ -22813,6 +24678,19 @@
           "verified"
         ],
         "title": "VerifyOut"
+      },
+      "VersionOut": {
+        "properties": {
+          "taxonomy_version": {
+            "type": "integer",
+            "title": "Taxonomy Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "taxonomy_version"
+        ],
+        "title": "VersionOut"
       },
       "Visibility": {
         "properties": {
