@@ -313,12 +313,18 @@ async def create_offer(
 async def list_offers(
     status: OfferStatus | None = None,
     vacancy_id: uuid.UUID | None = None,
+    initiator: OfferInitiator | None = None,
     user: User = Depends(_employer),
     session: AsyncSession = Depends(get_session),
 ) -> Any:
+    """Офферы компании; `initiator=candidate` - отклики на её вакансии."""
     company, _ = await companies.require_company(session, user.id)
     rows = await service.list_for_company(
-        session, company.id, status=status.value if status else None, vacancy_id=vacancy_id
+        session,
+        company.id,
+        status=status.value if status else None,
+        vacancy_id=vacancy_id,
+        initiator=initiator.value if initiator else None,
     )
     return [await for_company(session, o) for o in rows]
 
@@ -329,11 +335,43 @@ async def list_offers(
     responses=problem_responses(401, 403),
 )
 async def my_offers(
+    initiator: OfferInitiator | None = None,
+    user: User = Depends(_candidate),
+    session: AsyncSession = Depends(get_session),
+) -> Any:
+    rows = await service.list_for_candidate(
+        session, user.id, initiator=initiator.value if initiator else None
+    )
+    return [await for_candidate(session, o) for o in rows]
+
+
+@router.get(
+    "/candidates/me/applications",
+    response_model=list[OfferForCandidate],
+    responses=problem_responses(401, 403),
+)
+async def my_applications(
     user: User = Depends(_candidate), session: AsyncSession = Depends(get_session)
 ) -> Any:
-    return [
-        await for_candidate(session, o) for o in await service.list_for_candidate(session, user.id)
-    ]
+    """Мои отклики на вакансии (`initiator = candidate`) со статусами."""
+    rows = await service.list_for_candidate(
+        session, user.id, initiator=OfferInitiator.candidate.value
+    )
+    return [await for_candidate(session, o) for o in rows]
+
+
+@router.post(
+    "/candidates/me/applications/{offer_id}/withdraw",
+    response_model=OfferForCandidate,
+    responses=problem_responses(401, 403, 404, 409),
+)
+async def withdraw_application(
+    offer_id: uuid.UUID, user: User = Depends(_candidate),
+    session: AsyncSession = Depends(get_session),
+) -> Any:  # fmt: skip
+    offer = await service.get_for_candidate(session, user.id, offer_id, lock=True)
+    await service.withdraw_application(session, offer)
+    return await for_candidate(session, offer)
 
 
 @router.get(
@@ -351,9 +389,10 @@ async def get_offer(
         await service.mark_viewed(session, offer)
         return await for_candidate(session, offer)
     company, _ = await companies.require_company(session, user.id)
-    offer = await service.get_for_company(session, company.id, offer_id)
+    offer = await service.get_for_company(session, company.id, offer_id, lock=True)
+    await service.mark_viewed_by_company(session, offer)  # отклик: sent -> viewed
     out = await for_company(session, offer)
-    if offer.status in service.REVEALED and await service.is_revealed(session, offer):
+    if await service.is_revealed(session, offer):
         out.contacts = await _contacts(session, offer, user)
     return out
 

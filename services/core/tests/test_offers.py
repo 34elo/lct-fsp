@@ -727,3 +727,129 @@ def test_invite_requires_verified_email_when_enabled(world, monkeypatch):
     assert (r.status_code, r.json()["code"]) == (403, "email_not_verified")
     _db(c, "update users set email_verified_at=? where email='e@x.ru'", _past(minutes=1))
     assert _invite(c, e, pid).status_code == 201
+
+
+# --- отклики кандидатов (E20-3, ADR-022) --------------------------------------------------
+
+
+def _set_status(c, h, oid, status):
+    return c.post(f"/offers/{oid}/status", json={"status": status}, headers=h).status_code
+
+
+def test_public_vacancies_list(world):
+    c, e, vid, ch, pid, uid = world
+    draft = _vacancy(c, e, publish=False)
+    r = c.get("/vacancies/public")  # без авторизации
+    assert r.status_code == 200
+    ids = [v["id"] for v in r.json()]
+    assert vid in ids and draft not in ids
+    v = r.json()[0]
+    assert v["company"]["name"] == "Acme Labs" and "version" not in v
+    assert c.get("/vacancies/public", params={"role": "frontend"}).json() == []
+    assert c.get("/vacancies/public", params={"q": "back"}).json() != []
+
+
+def test_apply_flow_and_statuses_visible_to_both(world):
+    c, e, vid, ch, pid, uid = world
+    r = c.post(f"/vacancies/{vid}/apply", json={"message": "Беру!"}, headers=ch)
+    assert r.status_code == 201, r.text
+    oid = r.json()["id"]
+    assert r.json()["initiator"] == "candidate" and r.json()["status"] == "sent"
+    assert (r.json()["salary_from"], r.json()["salary_to"]) == (200000, 300000)
+    assert r.json()["awaiting_reply_from"] == "company"
+    assert _events(c) == ["offer.sent"]
+    # контакты раскрыты сразу
+    assert _db(c, "select count(*) from contact_reveals") == [(1,)]
+    # у кандидата: в откликах, а не среди приглашений
+    assert [o["id"] for o in c.get("/candidates/me/applications", headers=ch).json()] == [oid]
+    assert c.get("/candidates/me/offers?initiator=employer", headers=ch).json() == []
+    # у компании: фильтр по инициатору, контакты, статус viewed после открытия
+    lst = c.get("/offers", params={"initiator": "candidate"}, headers=e).json()
+    assert [o["id"] for o in lst] == [oid] and lst[0]["status"] == "sent"
+    full = c.get(f"/offers/{oid}", headers=e).json()
+    assert full["status"] == "viewed" and full["contacts"]["email"] == "c@x.ru"
+    assert c.get(f"/offers/{oid}/contacts", headers=e).status_code == 200
+    assert c.get(f"/offers/{oid}", headers=ch).json()["status"] == "viewed"  # видно обеим
+    assert c.get(f"/offers/{oid}", headers=ch).json()["status"] == "viewed"
+    # компания продвигает отклик
+    assert _set_status(c, e, oid, "interview") == 200
+    assert _set_status(c, e, oid, "hired") == 200
+    assert c.get("/candidates/me/applications", headers=ch).json()[0]["status"] == "hired"
+
+
+def test_apply_twice_is_409(world):
+    c, e, vid, ch, pid, uid = world
+    assert c.post(f"/vacancies/{vid}/apply", headers=ch).status_code == 201
+    r = c.post(f"/vacancies/{vid}/apply", headers=ch)
+    assert r.status_code == 409 and r.json()["code"] == "already_applied"
+    assert _db(c, "select count(*) from offers") == [(1,)]
+    assert _events(c) == ["offer.sent"]
+
+
+def test_apply_after_invitation_is_409(world):
+    c, e, vid, ch, pid, uid = world
+    assert _offer(c, e, vid, pid).status_code == 201
+    assert c.post(f"/vacancies/{vid}/apply", headers=ch).status_code == 409
+
+
+def test_apply_checks(world):
+    c, e, vid, ch, pid, uid = world
+    draft = _vacancy(c, e, publish=False)
+    assert c.post(f"/vacancies/{draft}/apply", headers=ch).status_code == 404
+    assert c.post(f"/vacancies/{uuid.uuid4()}/apply", headers=ch).status_code == 404
+    assert c.post(f"/vacancies/{vid}/apply", headers=e).status_code == 403
+    assert c.post(f"/vacancies/{vid}/apply").status_code == 401
+    (company_id,) = _db(c, "select company_id from vacancies where id=?", vid.replace("-", ""))[0]
+    cid = str(uuid.UUID(company_id))
+    assert (
+        c.put("/candidates/me/stoplist", json={"company_ids": [cid]}, headers=ch).status_code == 200
+    )
+    r = c.post(f"/vacancies/{vid}/apply", headers=ch)
+    assert r.status_code == 409 and r.json()["code"] == "company_in_stoplist"
+
+
+def test_foreign_application_is_404(world):
+    c, e, vid, ch, pid, uid = world
+    oid = c.post(f"/vacancies/{vid}/apply", headers=ch).json()["id"]
+    e2 = _employer(c, "e2@x.ru", name="Other", inn="7736050003")
+    ch2, _, _ = _candidate(c, "c2@x.ru", 2)
+    for h in (e2, ch2):
+        assert c.get(f"/offers/{oid}", headers=h).status_code == 404
+    assert c.get(f"/offers/{oid}/contacts", headers=e2).status_code == 404
+    assert c.post(f"/candidates/me/applications/{oid}/withdraw", headers=ch2).status_code == 404
+    assert _set_status(c, e2, oid, "interview") == 404
+    assert c.get("/offers?initiator=candidate", headers=e2).json() == []
+    assert c.get("/candidates/me/applications", headers=ch2).json() == []
+    assert _db(c, "select status from offers") == [("sent",)]  # чужие попытки ничего не изменили
+
+
+def test_application_state_rules(world):
+    c, e, vid, ch, pid, uid = world
+    oid = c.post(f"/vacancies/{vid}/apply", headers=ch).json()["id"]
+    assert c.post(f"/offers/{oid}/accept", headers=ch).status_code == 409  # не приглашение
+    d = c.post(f"/offers/{oid}/decline", json={"reason": "other"}, headers=ch)
+    assert d.status_code == 409
+    assert c.post(f"/offers/{oid}/withdraw", headers=e).status_code == 409  # компания не отзывает
+    # приглашение нельзя отозвать как отклик
+    oid2 = _offer(c, e, _vacancy(c, e), pid).json()["id"]
+    assert c.post(f"/candidates/me/applications/{oid2}/withdraw", headers=ch).status_code == 404
+    # кандидат отзывает отклик, дальше менять нельзя
+    r = c.post(f"/candidates/me/applications/{oid}/withdraw", headers=ch)
+    assert r.status_code == 200 and r.json()["status"] == "withdrawn"
+    assert c.post(f"/candidates/me/applications/{oid}/withdraw", headers=ch).status_code == 409
+    assert _set_status(c, e, oid, "interview") == 409
+
+
+def test_applications_do_not_count_toward_invitation_limits(world, monkeypatch):
+    c, e, vid, ch, pid, uid = world
+    monkeypatch.setattr(offers_router, "_LIMITS", service.OfferLimits(1, 1, 7))
+    assert c.post(f"/vacancies/{vid}/apply", headers=ch).status_code == 201
+    v2 = _vacancy(c, e)
+    assert _offer(c, e, v2, pid).status_code == 201  # лимит приглашений не съеден откликом
+
+
+def test_application_notifies_company_not_candidate(world):
+    c, e, vid, ch, pid, uid = world
+    c.post(f"/vacancies/{vid}/apply", headers=ch)
+    rows = _db(c, "select type from notifications order by rowid")
+    assert not rows or all(t[0] != "offer_new" for t in rows)

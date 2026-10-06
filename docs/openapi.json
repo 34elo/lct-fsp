@@ -2950,6 +2950,258 @@
         }
       }
     },
+    "/vacancies/public": {
+      "get": {
+        "tags": [
+          "vacancies"
+        ],
+        "summary": "List Public Vacancies",
+        "description": "Опубликованные вакансии без авторизации: название, вилка, компания, навыки.",
+        "operationId": "list_public_vacancies_vacancies_public_get",
+        "parameters": [
+          {
+            "name": "role",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/RoleSlug"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Role"
+            }
+          },
+          {
+            "name": "city",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "City"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PublicVacancyOut"
+                  },
+                  "title": "Response List Public Vacancies Vacancies Public Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/vacancies/{vacancy_id}/apply": {
+      "post": {
+        "tags": [
+          "vacancies"
+        ],
+        "summary": "Apply To Vacancy",
+        "description": "Отклик кандидата (ADR-022): оффер с `initiator = candidate`, контакты сразу у компании.",
+        "operationId": "apply_to_vacancy_vacancies__vacancy_id__apply_post",
+        "parameters": [
+          {
+            "name": "vacancy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Vacancy Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/ApplyIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferForCandidate"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Конфликт (в том числе cooldown)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Слишком много запросов",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/vacancies/{vacancy_id}": {
       "get": {
         "tags": [
@@ -4164,6 +4416,7 @@
           "offers"
         ],
         "summary": "List Offers",
+        "description": "Офферы компании; `initiator=candidate` - отклики на её вакансии.",
         "operationId": "list_offers_offers_get",
         "parameters": [
           {
@@ -4197,6 +4450,22 @@
                 }
               ],
               "title": "Vacancy Id"
+            }
+          },
+          {
+            "name": "initiator",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/OfferInitiator"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Initiator"
             }
           }
         ],
@@ -4265,16 +4534,34 @@
         ],
         "summary": "My Offers",
         "operationId": "my_offers_candidates_me_offers_get",
+        "parameters": [
+          {
+            "name": "initiator",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/OfferInitiator"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Initiator"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
+                  "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/OfferForCandidate"
                   },
-                  "type": "array",
                   "title": "Response My Offers Candidates Me Offers Get"
                 }
               }
@@ -4306,6 +4593,175 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/candidates/me/applications": {
+      "get": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "My Applications",
+        "description": "Мои отклики на вакансии (`initiator = candidate`) со статусами.",
+        "operationId": "my_applications_candidates_me_applications_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/OfferForCandidate"
+                  },
+                  "type": "array",
+                  "title": "Response My Applications Candidates Me Applications Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/candidates/me/applications/{offer_id}/withdraw": {
+      "post": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Withdraw Application",
+        "operationId": "withdraw_application_candidates_me_applications__offer_id__withdraw_post",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferForCandidate"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Конфликт (в том числе cooldown)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -5275,6 +5731,25 @@
   },
   "components": {
     "schemas": {
+      "ApplyIn": {
+        "properties": {
+          "message": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ApplyIn"
+      },
       "AuthOut": {
         "properties": {
           "access_token": {
@@ -8447,6 +8922,144 @@
         ],
         "title": "ProblemOut",
         "description": "RFC 9457 + машинный `code` (api.md §1)."
+      },
+      "PublicCompany": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "verified": {
+            "type": "boolean",
+            "title": "Verified"
+          },
+          "responsibility_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Responsibility Score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "verified"
+        ],
+        "title": "PublicCompany"
+      },
+      "PublicVacancyOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "role": {
+            "$ref": "#/components/schemas/RoleSlug"
+          },
+          "grade_min": {
+            "$ref": "#/components/schemas/Grade"
+          },
+          "grade_max": {
+            "$ref": "#/components/schemas/Grade"
+          },
+          "formats": {
+            "items": {
+              "$ref": "#/components/schemas/WorkFormat"
+            },
+            "type": "array",
+            "title": "Formats"
+          },
+          "employment_type": {
+            "$ref": "#/components/schemas/EmploymentType"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "salary_from": {
+            "type": "integer",
+            "title": "Salary From"
+          },
+          "salary_to": {
+            "type": "integer",
+            "title": "Salary To"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "skills": {
+            "items": {
+              "$ref": "#/components/schemas/SkillReqOut"
+            },
+            "type": "array",
+            "title": "Skills"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "company": {
+            "$ref": "#/components/schemas/PublicCompany"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "role",
+          "grade_min",
+          "grade_max",
+          "formats",
+          "employment_type",
+          "city",
+          "salary_from",
+          "salary_to",
+          "description",
+          "skills",
+          "published_at",
+          "company"
+        ],
+        "title": "PublicVacancyOut",
+        "description": "Вакансия для кандидата: без служебных полей (`version`, `created_at`)."
       },
       "RegisterIn": {
         "properties": {

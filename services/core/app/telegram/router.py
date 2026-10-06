@@ -334,8 +334,10 @@ async def _offer_out(session: AsyncSession, offer) -> TgOfferOut:
 async def tg_offers(tg_user_id: int, session: AsyncSession = Depends(get_session)):
     """Активные офферы кандидата (меню «Офферы»): новые первыми, не больше 10."""
     user = await _candidate_by_tg(session, tg_user_id)
-    rows = [
-        o for o in await offers.list_for_candidate(session, user.id) if o.status in ACTIVE_OFFERS
+    rows = [  # свои отклики (ADR-022) в меню «Офферы» не показываем
+        o
+        for o in await offers.list_for_candidate(session, user.id, initiator="employer")
+        if o.status in ACTIVE_OFFERS
     ]
     return [await _offer_out(session, o) for o in rows[:TG_OFFERS_LIMIT]]
 
