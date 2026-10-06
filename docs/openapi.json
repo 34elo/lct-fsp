@@ -8413,7 +8413,7 @@
           "assessment"
         ],
         "summary": "Upgrade",
-        "description": "Принять повышение после бонусного этапа (повтор идемпотентен).",
+        "description": "Начать тест следующего грейда по приглашению бонусного этапа (ADR-025 п.2).\n\nВозвращает новую попытку; без кулдаунов; повтор возвращает уже начатую. Грейд не меняется,\nпока не пройден сам приглашённый тест. `409 no_invite`, `invite_expired`, `invite_stale`.",
         "operationId": "upgrade_assessment_attempts__attempt_id__upgrade_post",
         "parameters": [
           {
@@ -8428,7 +8428,7 @@
           }
         ],
         "responses": {
-          "200": {
+          "201": {
             "description": "Successful Response",
             "content": {
               "application/json": {
@@ -8499,11 +8499,31 @@
             }
           },
           "422": {
-            "description": "Validation Error",
+            "description": "Ошибка валидации",
             "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Зависимость недоступна",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
                 }
               }
             }
@@ -14030,7 +14050,7 @@
             "title": "Low Confidence",
             "default": false
           },
-          "upgrade_offer": {
+          "invited_grade": {
             "anyOf": [
               {
                 "$ref": "#/components/schemas/TestGrade"
@@ -14040,10 +14060,41 @@
               }
             ]
           },
-          "upgrade_accepted": {
-            "type": "boolean",
-            "title": "Upgrade Accepted",
-            "default": false
+          "invite_expires_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invite Expires At"
+          },
+          "invite_attempt_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invite Attempt Id"
+          },
+          "invited_by": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invited By"
           },
           "result": {
             "anyOf": [

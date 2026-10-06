@@ -673,9 +673,9 @@ export const useAnswerAssessmentAttemptsAttemptIdAnswersPost = <TError = ErrorTy
       > => {
       return useMutation(getAnswerAssessmentAttemptsAttemptIdAnswersPostMutationOptions(options), queryClient);
     }
-    export type upgradeAssessmentAttemptsAttemptIdUpgradePostResponse200 = {
+    export type upgradeAssessmentAttemptsAttemptIdUpgradePostResponse201 = {
   data: AttemptOut
-  status: 200
+  status: 201
 }
 
 export type upgradeAssessmentAttemptsAttemptIdUpgradePostResponse401ApplicationProblemJson = {
@@ -718,15 +718,30 @@ export type upgradeAssessmentAttemptsAttemptIdUpgradePostResponse409ApplicationJ
   status: 409
 }
 
-export type upgradeAssessmentAttemptsAttemptIdUpgradePostResponse422 = {
-  data: HTTPValidationError
+export type upgradeAssessmentAttemptsAttemptIdUpgradePostResponse422ApplicationProblemJson = {
+  data: ProblemOut
   status: 422
 }
 
-export type upgradeAssessmentAttemptsAttemptIdUpgradePostResponseSuccess = (upgradeAssessmentAttemptsAttemptIdUpgradePostResponse200) & {
+export type upgradeAssessmentAttemptsAttemptIdUpgradePostResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type upgradeAssessmentAttemptsAttemptIdUpgradePostResponse503ApplicationProblemJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type upgradeAssessmentAttemptsAttemptIdUpgradePostResponse503ApplicationJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type upgradeAssessmentAttemptsAttemptIdUpgradePostResponseSuccess = (upgradeAssessmentAttemptsAttemptIdUpgradePostResponse201) & {
   headers: Headers;
 };
-export type upgradeAssessmentAttemptsAttemptIdUpgradePostResponseError = (upgradeAssessmentAttemptsAttemptIdUpgradePostResponse401ApplicationProblemJson | upgradeAssessmentAttemptsAttemptIdUpgradePostResponse401ApplicationJson | upgradeAssessmentAttemptsAttemptIdUpgradePostResponse403ApplicationProblemJson | upgradeAssessmentAttemptsAttemptIdUpgradePostResponse403ApplicationJson | upgradeAssessmentAttemptsAttemptIdUpgradePostResponse404ApplicationProblemJson | upgradeAssessmentAttemptsAttemptIdUpgradePostResponse404ApplicationJson | upgradeAssessmentAttemptsAttemptIdUpgradePostResponse409ApplicationProblemJson | upgradeAssessmentAttemptsAttemptIdUpgradePostResponse409ApplicationJson | upgradeAssessmentAttemptsAttemptIdUpgradePostResponse422) & {
+export type upgradeAssessmentAttemptsAttemptIdUpgradePostResponseError = (upgradeAssessmentAttemptsAttemptIdUpgradePostResponse401ApplicationProblemJson | upgradeAssessmentAttemptsAttemptIdUpgradePostResponse401ApplicationJson | upgradeAssessmentAttemptsAttemptIdUpgradePostResponse403ApplicationProblemJson | upgradeAssessmentAttemptsAttemptIdUpgradePostResponse403ApplicationJson | upgradeAssessmentAttemptsAttemptIdUpgradePostResponse404ApplicationProblemJson | upgradeAssessmentAttemptsAttemptIdUpgradePostResponse404ApplicationJson | upgradeAssessmentAttemptsAttemptIdUpgradePostResponse409ApplicationProblemJson | upgradeAssessmentAttemptsAttemptIdUpgradePostResponse409ApplicationJson | upgradeAssessmentAttemptsAttemptIdUpgradePostResponse422ApplicationProblemJson | upgradeAssessmentAttemptsAttemptIdUpgradePostResponse422ApplicationJson | upgradeAssessmentAttemptsAttemptIdUpgradePostResponse503ApplicationProblemJson | upgradeAssessmentAttemptsAttemptIdUpgradePostResponse503ApplicationJson) & {
   headers: Headers;
 };
 
@@ -741,7 +756,10 @@ export const getUpgradeAssessmentAttemptsAttemptIdUpgradePostUrl = (attemptId: s
 }
 
 /**
- * Принять повышение после бонусного этапа (повтор идемпотентен).
+ * Начать тест следующего грейда по приглашению бонусного этапа (ADR-025 п.2).
+ *
+ * Возвращает новую попытку; без кулдаунов; повтор возвращает уже начатую. Грейд не меняется,
+ * пока не пройден сам приглашённый тест. `409 no_invite`, `invite_expired`, `invite_stale`.
  * @summary Upgrade
  */
 export const upgradeAssessmentAttemptsAttemptIdUpgradePost = async (attemptId: string, options?: Parameters<typeof apiFetch>[1]): Promise<upgradeAssessmentAttemptsAttemptIdUpgradePostResponse> => {
@@ -761,7 +779,7 @@ export const upgradeAssessmentAttemptsAttemptIdUpgradePost = async (attemptId: s
 
 export const getUpgradeAssessmentAttemptsAttemptIdUpgradePostMutationKey = () => ['upgradeAssessmentAttemptsAttemptIdUpgradePost'] as const;
 
-export const getUpgradeAssessmentAttemptsAttemptIdUpgradePostMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+export const getUpgradeAssessmentAttemptsAttemptIdUpgradePostMutationOptions = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upgradeAssessmentAttemptsAttemptIdUpgradePost>>, TError,UpgradeAssessmentAttemptsAttemptIdUpgradePostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof upgradeAssessmentAttemptsAttemptIdUpgradePost>>, TError,UpgradeAssessmentAttemptsAttemptIdUpgradePostMutationVariables, TContext> => {
 
@@ -790,13 +808,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type UpgradeAssessmentAttemptsAttemptIdUpgradePostMutationResult = NonNullable<Awaited<ReturnType<typeof upgradeAssessmentAttemptsAttemptIdUpgradePost>>>
 
-    export type UpgradeAssessmentAttemptsAttemptIdUpgradePostMutationError = ErrorType<ProblemOut | HTTPValidationError>
+    export type UpgradeAssessmentAttemptsAttemptIdUpgradePostMutationError = ErrorType<ProblemOut>
     export type UpgradeAssessmentAttemptsAttemptIdUpgradePostMutationVariables = {attemptId: string}
 
     /**
  * @summary Upgrade
  */
-export const useUpgradeAssessmentAttemptsAttemptIdUpgradePost = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+export const useUpgradeAssessmentAttemptsAttemptIdUpgradePost = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upgradeAssessmentAttemptsAttemptIdUpgradePost>>, TError,UpgradeAssessmentAttemptsAttemptIdUpgradePostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof upgradeAssessmentAttemptsAttemptIdUpgradePost>>,
