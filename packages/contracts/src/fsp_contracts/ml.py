@@ -392,3 +392,39 @@ class FamilyKeyDraft(BaseModel):
     rubric: list[str] | None = None  # open: пункты рубрики
     rationale: str | None = Field(default=None, max_length=1000)
     model: str = ""
+
+
+# --- Офлайн-конвейер LLM-заданий (E26-4, ADR-024, assessment.md §7) ---
+
+
+class FamilyGenerateRequest(BaseModel):
+    """Заказ генератору: предложить `n` спецификаций семейства для навыка, `kind` и уровня."""
+
+    skill: str = Field(min_length=1, max_length=80)  # slug из data/taxonomy
+    skill_type: str = Field(default="", max_length=40)  # SkillType навыка (подсказка генератору)
+    kind: FamilyKind
+    level: int = Field(ge=1, le=5)
+    domain: str | None = Field(default=None, max_length=40)  # e-commerce, fintech…
+    n: int = Field(default=1, ge=1, le=5)
+
+
+class FamilyGenerateResponse(BaseModel):
+    """Черновики форм конструктора (`FamilySpec`); core проверяет их схемой и автопроверкой."""
+
+    specs: list[dict[str, Any]] = Field(default_factory=list, max_length=5)
+    model: str = ""
+
+
+class FamilySolveRequest(BaseModel):
+    """Вариант задания так, как его видит кандидат (без ключа): LLM решает его как кандидат."""
+
+    kind: FamilyKind
+    stem: str = Field(max_length=6000)
+    options: list[str] = Field(default_factory=list, max_length=10)  # choice, order, sjt
+
+
+class FamilySolveAnswer(BaseModel):
+    """Ответ LLM в формате ответа кандидата: число/строка, индекс, строки дефекта, порядок."""
+
+    answer: int | float | str | list[int] | None = None
+    model: str = ""
