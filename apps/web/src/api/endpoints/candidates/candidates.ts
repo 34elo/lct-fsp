@@ -26,6 +26,7 @@ import type {
 import type {
   CandidateProfile,
   CategoryExplanation,
+  DeleteIn,
   DisputeIn,
   DisputeOut,
   EvidenceBrief,
@@ -1403,4 +1404,154 @@ export const useDisputeCategoryCandidatesMeCategoryDisputePost = <TError = Error
         TContext
       > => {
       return useMutation(getDisputeCategoryCandidatesMeCategoryDisputePostMutationOptions(options), queryClient);
+    }
+    export type deleteMeCandidatesMeDeleteResponse204 = {
+  data: void
+  status: 204
+}
+
+export type deleteMeCandidatesMeDeleteResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type deleteMeCandidatesMeDeleteResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type deleteMeCandidatesMeDeleteResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type deleteMeCandidatesMeDeleteResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type deleteMeCandidatesMeDeleteResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type deleteMeCandidatesMeDeleteResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type deleteMeCandidatesMeDeleteResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type deleteMeCandidatesMeDeleteResponse429ApplicationProblemJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type deleteMeCandidatesMeDeleteResponse429ApplicationJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type deleteMeCandidatesMeDeleteResponseSuccess = (deleteMeCandidatesMeDeleteResponse204) & {
+  headers: Headers;
+};
+export type deleteMeCandidatesMeDeleteResponseError = (deleteMeCandidatesMeDeleteResponse401ApplicationProblemJson | deleteMeCandidatesMeDeleteResponse401ApplicationJson | deleteMeCandidatesMeDeleteResponse403ApplicationProblemJson | deleteMeCandidatesMeDeleteResponse403ApplicationJson | deleteMeCandidatesMeDeleteResponse404ApplicationProblemJson | deleteMeCandidatesMeDeleteResponse404ApplicationJson | deleteMeCandidatesMeDeleteResponse422 | deleteMeCandidatesMeDeleteResponse429ApplicationProblemJson | deleteMeCandidatesMeDeleteResponse429ApplicationJson) & {
+  headers: Headers;
+};
+
+export type deleteMeCandidatesMeDeleteResponse = (deleteMeCandidatesMeDeleteResponseSuccess | deleteMeCandidatesMeDeleteResponseError)
+
+export const getDeleteMeCandidatesMeDeleteUrl = () => {
+
+
+
+
+  return `/candidates/me`
+}
+
+/**
+ * Удаление профиля (F13, 152-ФЗ): необратимо, ПДн стираются, остаётся псевдоним в офферах.
+ *
+ * Подтверждение: `password` (если он задан у аккаунта) или `confirm="УДАЛИТЬ"`. Повторный
+ * вызов и чужая/удалённая анкета — 404.
+ * @summary Delete Me
+ */
+export const deleteMeCandidatesMeDelete = async (deleteIn: DeleteIn, options?: Parameters<typeof apiFetch>[1]): Promise<deleteMeCandidatesMeDeleteResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<deleteMeCandidatesMeDeleteResponse>(getDeleteMeCandidatesMeDeleteUrl(),
+  {
+    ...options,
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(deleteIn)
+  }
+);}
+
+
+
+
+
+export const getDeleteMeCandidatesMeDeleteMutationKey = () => ['deleteMeCandidatesMeDelete'] as const;
+
+export const getDeleteMeCandidatesMeDeleteMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMeCandidatesMeDelete>>, TError,DeleteMeCandidatesMeDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteMeCandidatesMeDelete>>, TError,DeleteMeCandidatesMeDeleteMutationVariables, TContext> => {
+
+const mutationKey = getDeleteMeCandidatesMeDeleteMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteMeCandidatesMeDelete>>, DeleteMeCandidatesMeDeleteMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  deleteMeCandidatesMeDelete(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteMeCandidatesMeDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof deleteMeCandidatesMeDelete>>>
+    export type DeleteMeCandidatesMeDeleteMutationBody = DeleteIn
+    export type DeleteMeCandidatesMeDeleteMutationError = ErrorType<ProblemOut | HTTPValidationError>
+    export type DeleteMeCandidatesMeDeleteMutationVariables = {data: DeleteIn}
+
+    /**
+ * @summary Delete Me
+ */
+export const useDeleteMeCandidatesMeDelete = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMeCandidatesMeDelete>>, TError,DeleteMeCandidatesMeDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteMeCandidatesMeDelete>>,
+        TError,
+        DeleteMeCandidatesMeDeleteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteMeCandidatesMeDeleteMutationOptions(options), queryClient);
     }

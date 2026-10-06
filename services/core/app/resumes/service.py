@@ -380,3 +380,22 @@ async def experience_for_profile(session: AsyncSession, candidate_id: uuid.UUID)
         }
         for r in rows
     ]
+
+
+async def erase_candidate(
+    session: AsyncSession, storage: ObjectStorage, candidate_id: uuid.UUID
+) -> None:
+    """Удаление профиля (F13): файлы резюме в хранилище и записи резюме, опыта, образования.
+
+    Сбой хранилища не прерывает удаление записей: ключи пишем в лог (без ПДн), файл добьёт очистка.
+    """
+    keys = (
+        await session.scalars(select(Resume.file_key).where(Resume.candidate_id == candidate_id))
+    ).all()
+    for key in keys:
+        try:
+            await storage.delete(key)
+        except Exception:  # noqa: BLE001 — хранилище недоступно: не блокируем право на удаление
+            structlog.get_logger().warning("resume_file_delete_failed", file_key=key)
+    for model in (Resume, Experience, Education):
+        await session.execute(delete(model).where(model.candidate_id == candidate_id))

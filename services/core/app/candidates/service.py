@@ -424,3 +424,56 @@ async def add_dispute(
     )  # fmt: skip
     await add_to_outbox(session, new_envelope("category.disputed", "core", event), cand.user_id)
     return row
+
+
+# --- удаление профиля (F13, 152-ФЗ) -------------------------------------------------------
+
+
+async def erase(session: AsyncSession, storage, user) -> Candidate:
+    """Необратимо удалить профиль: ПДн и доказательства стираются, анкета остаётся обезличенной.
+
+    Строка `candidates` сохраняется как «надгробие» с псевдонимом: на неё ссылаются офферы и
+    таблицы блока 2 (в офферах остаётся только псевдоним, flows.md F13). `deleted_at` скрывает
+    кандидата из подбора. Чужие зоны (подбор, офферы, Telegram, ФСП, бейджи, просмотры, кеши)
+    чистят свои данные по событию `candidate.deleted`. Повторный вызов — 404 (в роутере).
+    """
+    from fsp_contracts import new_envelope
+    from fsp_contracts.enums import ConsentType
+    from fsp_contracts.events import CandidateDeleted
+    from fsp_platform.outbox import add_to_outbox
+
+    from app.assessment import service as assessment
+    from app.consents import service as consents
+    from app.identity import service as identity
+    from app.resumes import service as resumes
+
+    cand = await session.get(Candidate, user.id, with_for_update=True)
+    if cand is None or cand.deleted_at is not None:
+        raise ProblemError(404, "candidate_not_found", "Профиль не найден")
+    cid = cand.user_id
+    await resumes.erase_candidate(session, storage, cid)
+    await assessment.erase_candidate(session, cid)
+    await graph.erase_candidate(session, cid)
+    await session.execute(sa.delete(CategoryDispute).where(CategoryDispute.candidate_id == cid))
+    active = await consents.active(session, cid)
+    await consents.set_consents(session, cid, [(ConsentType(t), False, None) for t in active])
+    for col in (
+        "city", "salary_min", "active_until", "primary_role", "roles", "primary_stack", "grade",
+        "grade_score", "grade_confidence", "grade_breakdown", "grade_next", "experience_months",
+        "profile_text", "profile_text_sha", "embedding", "embedding_model", "team_signals",
+        "claimed_soft", "contacts_enc", "desired_roles", "age_group", "parent_consent_at",
+        "recompute_requested_at", "recomputed_at",
+    ):  # fmt: skip
+        setattr(cand, col, None)
+    cand.formats, cand.employment_types, cand.stoplist_company_ids = [], [], []
+    cand.relocation = False
+    cand.search_status = "dnd"
+    cand.visibility = {k: False for k in DEFAULT_VISIBILITY}
+    cand.profile_version += 1
+    cand.deleted_at = utcnow()
+    await identity.erase_user(session, user)
+    await add_to_outbox(
+        session, new_envelope("candidate.deleted", "core", CandidateDeleted(candidate_id=cid)), cid
+    )
+    await session.flush()
+    return cand

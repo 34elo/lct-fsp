@@ -12,13 +12,13 @@ from argon2 import PasswordHasher
 from argon2.exceptions import InvalidHashError, VerifyMismatchError
 from fsp_platform.app import ProblemError
 from fsp_platform.jwt import encode_token
-from sqlalchemy import select, update
+from sqlalchemy import delete, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import Settings
 from app.identity.mailer import Mailer
-from app.identity.models import EmailVerification, RefreshToken, User
+from app.identity.models import EmailVerification, RefreshToken, User, utcnow
 
 REFRESH_TTL = timedelta(days=30)
 ACCESS_TTL = timedelta(minutes=15)
@@ -239,3 +239,26 @@ async def verify_code(
     user.email_verified_at = now
     await session.delete(row)
     return True
+
+
+def password_matches(user: User, password: str) -> bool:
+    """Проверка пароля владельца (подтверждение необратимых действий)."""
+    if not user.password_hash:
+        return False
+    try:
+        _hasher.verify(user.password_hash, password)
+    except (VerifyMismatchError, InvalidHashError):
+        return False
+    return True
+
+
+async def erase_user(session: AsyncSession, user: User) -> None:
+    """Удаление профиля (F13): обезличить учётную запись, закрыть сессии и коды."""
+    await session.execute(delete(RefreshToken).where(RefreshToken.user_id == user.id))
+    await session.execute(delete(EmailVerification).where(EmailVerification.user_id == user.id))
+    user.email = None
+    user.password_hash = None
+    user.email_verified_at = None
+    user.is_active = False
+    user.deleted_at = utcnow()
+    await session.flush()
