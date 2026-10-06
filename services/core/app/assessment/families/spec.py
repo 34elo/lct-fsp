@@ -111,6 +111,8 @@ class FamilySpec(BaseModel):
             Kind.order: "steps",
             Kind.sjt: "actions",
         }.get(self.kind)
+        if self.kind == Kind.chain:
+            raise ValueError("chain (цепочки-инциденты) — только кодовые семейства")
         if need and getattr(self, need) is None:
             raise ValueError(f"для kind={self.kind.value} нужно поле {need}")
         if self.kind == Kind.choice and self.correct is not None:
