@@ -16,20 +16,21 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from typing import Any, Literal
 
+from fsp_contracts.assessment import CategoryRef
 from fsp_contracts.ml import ExplanationItem, SearchFilters
 from pydantic import BaseModel
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.assessment import service as assessment
 from app.candidates import service as candidates
 from app.candidates.models import Candidate
-from app.consents import service as consents
 from app.graph import service as graph
 from app.graph.trust import EvidenceView, TrustConfig, effective_strength
 from app.matching.p_accept import PAcceptConfig, hint, mutual, p_accept
 from app.matching.rerank import RerankConfig, mmr, multiplier
 from app.matching.scoring import MatchConfig, MatchResult, score_candidate
-from app.matching.service import build_views, load_vacancy, only_published
+from app.matching.service import build_views, load_vacancy, only_visible, visibility_version
 from app.offers import service as offers
 from app.recommendations import service as recs
 from app.recommendations import tuning as tun
@@ -85,6 +86,7 @@ class CandidateCard(BaseModel):
     search_status: str
     match: CardMatch | None = None
     updated_at: datetime
+    categories: list[CategoryRef] = []  # подтверждённые тестом профессия × грейд (ADR-018)
 
 
 @dataclass(slots=True)
@@ -197,6 +199,7 @@ def _card(
     highlights: list[FspHighlight],
     result: MatchResult | None,
     interest: str | None = None,
+    categories: list[CategoryRef] | None = None,
 ) -> CandidateCard:
     ordered = sorted(skills, key=lambda s: (s.claimed_only, -s.confidence, str(s.skill_id)))
     top = [
@@ -224,7 +227,19 @@ def _card(
         if result
         else None,
         updated_at=c.updated_at,
+        categories=categories or [],
     )
+
+
+async def categories_of(
+    session: AsyncSession, ids: list[uuid.UUID]
+) -> dict[uuid.UUID, list[CategoryRef]]:
+    """Категории карточек пачкой (blocks.md §4.3, `get_grades_many`): профессия × грейд."""
+    grades = await assessment.get_grades_many(session, ids)
+    return {
+        cid: [CategoryRef(profession=g.profession, grade=g.grade) for g in gs]
+        for cid, gs in grades.items()
+    }
 
 
 def features_of(r: Row) -> dict[str, float]:
@@ -341,8 +356,11 @@ async def search_candidates(
     rr_cfg: RerankConfig | None = None,
     session_signals: tuple[list[tun.Signal], dict[str, dict[str, float]]] | None = None,
     tuning_cfg: tun.TuningConfig | None = None,
+    category: CategoryRef | None = None,
 ) -> dict[str, Any]:
     """Страница выдачи `{items, next_cursor, total, features, tuning}`.
+
+    `category` — фильтр «профессия × грейд» по действующим грейдам (`category_members`).
 
     `items` — JSON-словари `CandidateCard`; `features` — признаки показанных (по `pseudo_id`)
     для снимка в `impressions`; `tuning` — состояние подстройки сессии (`session_signals`).
@@ -354,8 +372,9 @@ async def search_candidates(
     rr_cfg = rr_cfg or RerankConfig.load()
     after = decode_cursor(cursor, sort) if cursor else None
     key = cache_key(
-        await candidates.catalog_version(session) + await consents.publication_version(session),
+        await candidates.catalog_version(session) + await visibility_version(session),
         {"company": str(company_id), "f": filters.model_dump(mode="json"), "sort": sort,
+         "cat": category.model_dump(mode="json") if category else None,
          "vacancy": [str(vacancy_id), vacancy_version], "limit": limit,
          "rs": responsibility_score},
         cursor,
@@ -374,13 +393,18 @@ async def search_candidates(
 
     day = today or datetime.now(UTC).date()
     f = filters
-    pool = await only_published(session, await candidates.search_pool(
+    pool = await only_visible(session, await candidates.search_pool(
         session, company_id=company_id, roles=[str(r) for r in f.roles] if f.roles else None,
         grades=grades_between(f.grade_min, f.grade_max), salary_max=f.salary_max,
         formats=[str(x) for x in f.formats] if f.formats else None,
         employment_types=[str(x) for x in f.employment_types] if f.employment_types else None,
         cities=f.cities, relocation_ok=f.relocation_ok, active_only=bool(f.active_only),
     ))  # fmt: skip
+    if category is not None:
+        members = set(
+            await assessment.category_members(session, category.profession, category.grade)
+        )
+        pool = [c for c in pool if c.user_id in members]
     ids = [c.user_id for c in pool]
     owned = await graph.all_skills_of(session, ids)
 
@@ -467,6 +491,7 @@ async def search_candidates(
     name_of = await taxonomy.skill_names(session, sids)
     names = {sid: (slug_of[sid], name_of.get(sid, slug_of[sid])) for sid in slug_of}
     highlights = await _fsp_highlights(session, page_ids, trust, day)
+    cats = await categories_of(session, page_ids)
     items = [
         _card(
             r.cand,
@@ -475,6 +500,7 @@ async def search_candidates(
             highlights.get(r.cand.user_id, []),
             r.result,
             None if r.p_accept is None else hint(r.p_accept, pa_cfg),
+            cats.get(r.cand.user_id, []),
         ).model_dump(mode="json")
         for r in page
     ]

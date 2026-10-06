@@ -8,6 +8,7 @@ from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
 import pytest
+from app.assessment.models import Grade
 from app.candidates.models import Candidate
 from app.companies.models import Company
 from app.config import Settings
@@ -309,6 +310,10 @@ async def _seed(factory):
                           **kw)  # fmt: skip
             s.add(c)
             s.add(Consent(user_id=uid, type="profile_publication", version="2025-09-01"))
+            s.add(Grade(candidate_id=uid, profession="backend", grade="middle", theta=0.5,
+                        band_position=0.5, source="seed", confirmed_at=datetime.now(UTC),
+                        valid_until=datetime(2999, 1, 1, tzinfo=UTC),
+                        next_change_at=datetime.now(UTC)))  # fmt: skip
             await s.flush()
             for slug, conf, lvl, src in skills:
                 ev = Evidence(

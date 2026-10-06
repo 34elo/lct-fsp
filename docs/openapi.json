@@ -8105,6 +8105,14 @@
             "type": "string",
             "format": "date-time",
             "title": "Updated At"
+          },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryRef"
+            },
+            "type": "array",
+            "title": "Categories",
+            "default": []
           }
         },
         "type": "object",
@@ -8241,6 +8249,14 @@
             "format": "date-time",
             "title": "Updated At"
           },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryRef"
+            },
+            "type": "array",
+            "title": "Categories",
+            "default": []
+          },
           "skills": {
             "items": {
               "$ref": "#/components/schemas/SkillWithTrust"
@@ -8265,6 +8281,14 @@
             },
             "type": "array",
             "title": "Offers From You"
+          },
+          "claimed_vs_confirmed": {
+            "items": {
+              "$ref": "#/components/schemas/ClaimedVsConfirmed"
+            },
+            "type": "array",
+            "title": "Claimed Vs Confirmed",
+            "default": []
           }
         },
         "type": "object",
@@ -8552,6 +8576,24 @@
         "title": "CategoryExplanation",
         "description": "`CategoryExplanation` (api.md §3): почему такая категория и как подняться."
       },
+      "CategoryRef": {
+        "properties": {
+          "profession": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{1,31}$",
+            "title": "Profession"
+          },
+          "grade": {
+            "$ref": "#/components/schemas/TestGrade"
+          }
+        },
+        "type": "object",
+        "required": [
+          "profession",
+          "grade"
+        ],
+        "title": "CategoryRef"
+      },
       "CategoryRole": {
         "properties": {
           "role": {
@@ -8597,6 +8639,62 @@
           "change"
         ],
         "title": "Chip"
+      },
+      "ClaimedVsConfirmed": {
+        "properties": {
+          "profession": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{1,31}$",
+            "title": "Profession"
+          },
+          "declared_grade": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TestGrade"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "resume_grade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resume Grade"
+          },
+          "confirmed_grade": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TestGrade"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "confirmed",
+              "overclaimed",
+              "underclaimed",
+              "unconfirmed"
+            ],
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "profession",
+          "status"
+        ],
+        "title": "ClaimedVsConfirmed"
       },
       "CompanyBrief": {
         "properties": {
@@ -12901,6 +12999,16 @@
           "filters": {
             "$ref": "#/components/schemas/SearchFilters"
           },
+          "category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CategoryRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "sort": {
             "anyOf": [
               {
@@ -13175,6 +13283,14 @@
             "type": "string",
             "format": "date-time",
             "title": "Updated At"
+          },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryRef"
+            },
+            "type": "array",
+            "title": "Categories",
+            "default": []
           },
           "similarity": {
             "type": "number",
@@ -13877,6 +13993,16 @@
           "growth"
         ],
         "title": "TeamSignalKind"
+      },
+      "TestGrade": {
+        "type": "string",
+        "enum": [
+          "junior",
+          "middle",
+          "senior"
+        ],
+        "title": "TestGrade",
+        "description": "Грейды v2. Значения совпадают с `enums.Grade`, других грейдов v2 не использует."
       },
       "TgCategoryItem": {
         "properties": {

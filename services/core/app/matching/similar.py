@@ -20,7 +20,7 @@ from app.graph import service as graph
 from app.graph.trust import TrustConfig
 from app.matching import search
 from app.matching.scoring import cosine
-from app.matching.service import only_published
+from app.matching.service import only_visible
 from app.taxonomy import service as taxonomy
 
 W_SKILLS = 0.7
@@ -73,7 +73,7 @@ async def find_similar(
     day = today or datetime.now(UTC).date()
     pool = [
         c
-        for c in await only_published(
+        for c in await only_visible(
             session, await candidates.search_pool(session, company_id=company_id)
         )
         if c.user_id != base.user_id
@@ -96,12 +96,16 @@ async def find_similar(
     briefs = await taxonomy.skill_briefs(session, list(sids))
     names = {sid: (b[0], b[1]) for sid, b in briefs.items()}
     hl = await search._fsp_highlights(session, ids, trust, day)
+    cats = await search.categories_of(session, ids)
     out: list[dict[str, Any]] = []
     for s, c in top:
         common = sorted(
             names[k][1] for k in mine.keys() & _held(owned[c.user_id]).keys() if k in names
         )
-        card = search._card(c, owned[c.user_id], names, hl.get(c.user_id, []), None)
+        card = search._card(
+            c, owned[c.user_id], names, hl.get(c.user_id, []), None,
+            categories=cats.get(c.user_id, []),
+        )  # fmt: skip
         out.append(
             SimilarCard(**card.model_dump(), similarity=s, common_skills=common).model_dump(
                 mode="json"

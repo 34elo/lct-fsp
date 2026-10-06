@@ -92,13 +92,24 @@ def _vacancy(c, h, *, publish=True):
 def _candidate(c, email, n, **kw):
     r = c.post("/auth/register", json={"email": email, "password": PWD, "role": "candidate"})
     h = {"Authorization": f"Bearer {r.json()['access_token']}"}
-    body = {"consents": [{"type": "pd_processing", "granted": True}]}
+    body = {"consents": [{"type": "pd_processing", "granted": True},
+                         {"type": "profile_publication", "granted": True}]}  # fmt: skip
     assert c.put("/me/consents", json=body, headers=h).status_code == 200
     assert c.get("/candidates/me/profile", headers=h).status_code == 200
     (uid,) = _db(c, "select user_id from candidates order by rowid desc limit 1")[0]
     cols = {"primary_role": "backend", "grade": "middle", "pseudo_id": f"pid{n:04d}"} | kw
     sets = ", ".join(f"{k}=?" for k in cols)
     _db(c, f"update candidates set {sets} where user_id=?", *cols.values(), uid)
+    _db(
+        c,
+        "insert into grades (candidate_id, profession, grade, theta, band_position,"
+        " theta_by_type, integrity, needs_confirmation, low_confidence, source, confirmed_at,"
+        " valid_until, next_change_at) values (?,?,?,0.5,0.5,'{}',1.0,0,0,'seed',"
+        "'2026-01-01 00:00:00','2999-01-01 00:00:00','2026-01-01 00:00:00')",
+        uid,
+        "backend",
+        "middle",
+    )  # грейд из теста: без него карточки нет (E23-1)
     return h, f"pid{n:04d}", uid
 
 
