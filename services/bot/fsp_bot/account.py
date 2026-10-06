@@ -1,7 +1,6 @@
 """ФСП, категория и статус теста, статус поиска, настройки (telegram.md §2, E9-4).
 
-Без бизнес-логики: данные и действия идут через core `/internal/tg/*`. Короткий тест в боте
-(E25-3) и GitHub (E10-3) здесь пока заглушки со ссылкой на сайт.
+Без бизнес-логики: данные и действия идут через core `/internal/tg/*`. Тест — в `assessment.py`.
 """
 
 from __future__ import annotations
@@ -63,7 +62,7 @@ _CLAIM_TEXT = {
 MAX_SALARY = 100_000_000
 CODE_RE = re.compile(r"^\d{6}$")
 
-SOON_TEST = "🧪 Тест: короткий тест в боте скоро. Пока его можно пройти на сайте."
+TEST_HINT = "🧪 Категорию подтверждает тест: короткий (6–8 заданий) можно пройти прямо здесь."
 
 
 def _e(value: object) -> str:
@@ -138,7 +137,7 @@ def category_status(d: dict) -> str:
     if not cats:
         lines.append("Категория определяется тестом. Подтверждённой категории пока нет.")
     lines.append("")
-    lines.append(SOON_TEST)
+    lines.append(TEST_HINT)
     return "\n".join(lines)
 
 
@@ -303,7 +302,8 @@ def build_account_router(core: CoreClient, site_button: SiteButton) -> Router:
         except CoreError as exc:
             await message.answer(error_text(exc))
             return
-        kb = await with_site(user.id, [], "🧪 Пройти тест на сайте", "/me/assessment")
+        rows = [[InlineKeyboardButton(text="🧪 Короткий тест в боте", callback_data="t:s")]]
+        kb = await with_site(user.id, rows, "🌐 Полный тест на сайте", "/me/assessment")
         await message.answer(category_status(data), parse_mode="HTML", reply_markup=kb)
 
     # Статус поиска -----------------------------------------------------------------------

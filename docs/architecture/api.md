@@ -257,6 +257,7 @@
 | `GET /internal/tg/profile?tg_user_id=` | bot | Краткий профиль для сообщения: `{primary_role, grade, grade_preliminary, skills[≤6]: {name, level, claimed_only}, fsp[≤3]}` |
 | `GET /internal/tg/fsp?tg_user_id=` | bot | `{linked, verified, participant_id, achievements[≤6], teams[]}` (E9-4) |
 | `POST /internal/tg/fsp/link`, `…/verify`, `…/sync` | bot | `{tg_user_id, participant_id? \| email?}` → `{method, masked_contact}`; `{tg_user_id, code}` → `{verified}`; `{tg_user_id}` → `202`. Правила и лимиты как у `/candidates/me/fsp/*` (10 попыток / 10 мин, sync раз в 10 мин, нужно `pd_processing`); ошибки connector пробрасываются с тем же `code` |
+| `POST /internal/tg/token` | bot | `{tg_user_id}` → `{access_token, expires_in: 300}`: короткий JWT кандидата (без refresh) для вызовов бота в `/assessment/*` и `/assessment/tasks*` блока 1 (E25-3); не кандидат → `403`, неизвестный Telegram → `404` |
 | `GET /internal/tg/category?tg_user_id=` | bot | `{categories[{profession, title, grade, needs_confirmation, valid_until}], claims[{profession, title, status, declared_grade, confirmed_grade}]}` — через `assessment.service` (`get_grades`, `claimed_vs_confirmed`), без своей логики |
 | `GET\|PATCH /internal/tg/settings` | bot | `{salary_min, formats[], search_status}`; PATCH `{tg_user_id, salary_min?, formats?}` частичный, `salary_min: null` очищает; запись требует `pd_processing` |
 | `PATCH /internal/tg/status` | bot | `{tg_user_id, status: active\|open\|dnd}` → настройки; `active` на 7 дней, как `PATCH /candidates/me/preferences` |
