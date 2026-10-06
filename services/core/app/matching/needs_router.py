@@ -53,12 +53,14 @@ class NeedOut(BaseModel):
     filters: SearchFilters
     skills: dict[str, float]  # slug навыка → вес потребности
     grades: list[str]
+    shortlist: list[str] = []  # pseudo_id кандидатов в шорт-листе (E23-5)
     created_at: datetime
     categories: list[NeedCategory]
 
 
 class NeedCategories(BaseModel):
     need_id: uuid.UUID
+    shortlist: list[str] = []  # pseudo_id кандидатов в шорт-листе (E23-5)
     categories: list[NeedCategory]
 
 
@@ -103,7 +105,7 @@ async def create_need(
     await session.commit()
     return NeedOut(
         id=need.id, text=need.text, filters=filters, skills=need.weights, grades=need.grades,
-        created_at=need.created_at, categories=cats,
+        shortlist=need.shortlist, created_at=need.created_at, categories=cats,
     )  # fmt: skip
 
 
@@ -120,7 +122,7 @@ async def need_categories(
     company, _ = await companies.require_company(session, user.id)
     need = await needs_service.get_owned(session, company.id, need_id)
     cats = await needs_service.categories(session, company.id, need, _NEEDS)
-    return {"need_id": need.id, "categories": cats}
+    return {"need_id": need.id, "shortlist": need.shortlist, "categories": cats}
 
 
 @router.get(
@@ -151,4 +153,60 @@ async def category_candidates(
         cfg=_CFG, trust=_TRUST, responsibility_score=company.responsibility_score,
         category=category, strength_cfg=_STRENGTH,
     )  # fmt: skip
+
+    # Mark shortlisted candidates (E23-5)
+    shortlist = set(need.shortlist) if need else set()
+    for item in page["items"]:
+        item["is_shortlisted"] = item["pseudo_id"] in shortlist
+
     return {k: page[k] for k in ("items", "next_cursor", "total")}
+
+
+@router.post(
+    "/needs/{need_id}/shortlist/{pseudo_id}",
+    status_code=204,
+    responses=problem_responses(401, 403, 404),
+)
+async def shortlist_add(
+    need_id: uuid.UUID,
+    pseudo_id: str,
+    user: User = Depends(_employer),
+    session: AsyncSession = Depends(get_session),
+) -> None:
+    """Добавить кандидата в шорт-лист потребности (E23-5). Фильтр не сбрасывает отмеченных."""
+    company, _ = await companies.require_company(session, user.id)
+    need = await needs_service.get_owned(session, company.id, need_id)
+    # Проверить, что кандидат существует
+    from sqlalchemy import select
+
+    from app.candidates.models import Candidate
+
+    result = await session.execute(
+        select(Candidate.user_id).where(Candidate.pseudo_id == pseudo_id)
+    )
+    if result.scalar_one_or_none() is None:
+        raise ProblemError(404, "candidate_not_found", "Кандидат не найден")
+    # Добавить в шорт-лист, если там ещё нет
+    if pseudo_id not in need.shortlist:
+        need.shortlist.append(pseudo_id)
+        await session.commit()
+
+
+@router.delete(
+    "/needs/{need_id}/shortlist/{pseudo_id}",
+    status_code=204,
+    responses=problem_responses(401, 403, 404),
+)
+async def shortlist_remove(
+    need_id: uuid.UUID,
+    pseudo_id: str,
+    user: User = Depends(_employer),
+    session: AsyncSession = Depends(get_session),
+) -> None:
+    """Удалить кандидата из шорт-листа потребности (E23-5)."""
+    company, _ = await companies.require_company(session, user.id)
+    need = await needs_service.get_owned(session, company.id, need_id)
+    # Удалить из шорт-листа, если там есть
+    if pseudo_id in need.shortlist:
+        need.shortlist.remove(pseudo_id)
+        await session.commit()

@@ -42,6 +42,8 @@ class Need(Base):
     filters: Mapped[dict] = mapped_column(sa.JSON)  # SearchFilters
     weights: Mapped[dict] = mapped_column(sa.JSON)  # slug навыка → вес потребности
     grades: Mapped[list] = mapped_column(sa.JSON)  # грейды теста из потребности
+    # pseudo_id кандидатов в шорт-листе (E23-5)
+    shortlist: Mapped[list[str]] = mapped_column(sa.JSON, default=list)
     created_at: Mapped[datetime] = mapped_column(
         sa.DateTime(timezone=True), default=lambda: datetime.now(UTC), server_default=sa.func.now()
     )
