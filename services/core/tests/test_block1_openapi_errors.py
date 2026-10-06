@@ -35,8 +35,16 @@ def _is_block1_route(path: str) -> bool:
 
     # Остальные маршруты /me/* это другие модули (telegram, offers и т.д.) - Б2
     b1_me_paths = {
-        "profile", "assessment", "resumes", "category", "skills", "graph",
-        "views", "preferences", "visibility", "stoplist"
+        "profile",
+        "assessment",
+        "resumes",
+        "category",
+        "skills",
+        "graph",
+        "views",
+        "preferences",
+        "visibility",
+        "stoplist",
     }
     if path.startswith("/me/") and not any(p in path for p in b1_me_paths):
         return False  # это Б2 маршруты
@@ -76,19 +84,14 @@ def test_block1_endpoints_have_error_responses(api: TestClient):
         responses = details.get("responses", {})
 
         # Проверяем, что есть хотя бы одна ошибка (4xx или 5xx)
-        has_error = any(
-            int(code) >= 400
-            for code in responses.keys()
-            if code != "default"
-        )
+        has_error = any(int(code) >= 400 for code in responses.keys() if code != "default")
 
         if not has_error:
             routes_without_responses.append((path, method))
 
-    assert (
-        not routes_without_responses
-    ), "Следующие маршруты Б1 не имеют responses= с ошибками:\n" + "\n".join(
-        f"  {method} {path}" for path, method in routes_without_responses
+    assert not routes_without_responses, (
+        "Следующие маршруты Б1 не имеют responses= с ошибками:\n"
+        + "\n".join(f"  {method} {path}" for path, method in routes_without_responses)
     )
 
 
