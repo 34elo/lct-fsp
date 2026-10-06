@@ -8,6 +8,7 @@ export * from './consents/consents';
 export * from './events/events';
 export * from './fsp/fsp';
 export * from './live-runs/live-runs';
+export * from './needs/needs';
 export * from './offers/offers';
 export * from './recommendations/recommendations';
 export * from './resumes/resumes';
