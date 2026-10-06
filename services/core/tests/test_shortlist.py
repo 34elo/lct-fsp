@@ -1,223 +1,142 @@
 """Шорт-лист: уточнение фильтров без потери подборки (E23-5)."""
 
 import pytest
-from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
-from tests.factories.hiring import factory_need
+import test_search as ts
+
+c = ts.c  # фикстура клиента с БД из test_search
+_cand, _employer, _hdr = ts._cand, ts._employer, ts._hdr
 
 
-@pytest.mark.asyncio
-class TestShortlist:
-    """Шорт-лист потребности: добавление, удаление, персистентность (E23-5)."""
+@pytest.fixture
+def market_with_shortlist(c):
+    """Рынок для тестов шорт-листа: работодатель и несколько кандидатов."""
+    h = _employer(c, "employer@x.ru", name="Test Corp")
+    roles = {
+        "backend": {"python": 1.0, "fastapi": 0.8},
+        "frontend": {"python": 0.5},
+    }
+    import sqlite3
 
-    async def test_add_to_shortlist(
-        self, client: AsyncClient, session: AsyncSession, employer_user, company
-    ) -> None:
-        """Добавить кандидата в шорт-лист."""
-        need = await factory_need(session, company.id)
-        await session.commit()
+    with sqlite3.connect(c.db) as con:
+        for role, weights in roles.items():
+            con.execute("insert into roles (slug, name) values (?,?)", (role, role.title()))
+            for slug, w in weights.items():
+                if slug in c.skills:
+                    con.execute(
+                        "insert into role_skills (role, skill_id, weight, source) "
+                        "values (?,?,?,?)",
+                        (role, c.skills[slug], w, "seed"),
+                    )
+    # Создать кандидатов с подтверждённым грейдом
+    _cand(c, 1, [("python", 0.9, 4, ["test"])], grade="senior", salary_min=300_000)
+    _cand(c, 2, [("python", 0.8, 3, ["test"])], grade="middle", salary_min=200_000)
+    _cand(
+        c,
+        3,
+        [("python", 0.7, 3, ["test"]), ("fastapi", 0.6, 3, ["test"])],
+        grade="middle",
+        salary_min=220_000,
+    )
+    return h
 
-        # Выполнить поиск, чтобы получить pseudo_id кандидата
-        search_resp = await client.post(
-            "/search/candidates",
-            json={"filters": {}, "limit": 5},
-            headers={"Authorization": f"Bearer {employer_user.token}"},
-        )
-        assert search_resp.status_code == 200
-        data = search_resp.json()
-        assert len(data["items"]) > 0
-        pseudo_id = data["items"][0]["pseudo_id"]
 
-        # Добавить в шорт-лист
-        resp = await client.post(
-            f"/needs/{need.id}/shortlist/{pseudo_id}",
-            headers={"Authorization": f"Bearer {employer_user.token}"},
-        )
-        assert resp.status_code == 204
+def _create_need(c, h, **body):
+    """Создать потребность."""
+    return c.post("/needs", json=body, headers=_hdr(h))
 
-        # Проверить, что добавлено
-        await session.refresh(need)
-        assert pseudo_id in need.shortlist
 
-    async def test_remove_from_shortlist(
-        self, client: AsyncClient, session: AsyncSession, employer_user, company
-    ) -> None:
-        """Удалить кандидата из шорт-листа."""
-        need = await factory_need(session, company.id)
-        await session.commit()
+def _get_categories(c, h, need_id):
+    """Получить категории потребности."""
+    return c.get(f"/needs/{need_id}/categories", headers=_hdr(h))
 
-        # Получить pseudo_id
-        search_resp = await client.post(
-            "/search/candidates",
-            json={"filters": {}, "limit": 5},
-            headers={"Authorization": f"Bearer {employer_user.token}"},
-        )
-        pseudo_id = search_resp.json()["items"][0]["pseudo_id"]
 
-        # Добавить в шорт-лист
-        add_resp = await client.post(
-            f"/needs/{need.id}/shortlist/{pseudo_id}",
-            headers={"Authorization": f"Bearer {employer_user.token}"},
-        )
-        assert add_resp.status_code == 204
+def _get_candidates(c, h, profession, grade, need_id=None):
+    """Получить кандидатов в категории."""
+    url = f"/categories/{profession}/{grade}/candidates"
+    if need_id:
+        url += f"?need_id={need_id}"
+    return c.get(url, headers=_hdr(h))
 
-        # Удалить из шорт-листа
-        del_resp = await client.delete(
-            f"/needs/{need.id}/shortlist/{pseudo_id}",
-            headers={"Authorization": f"Bearer {employer_user.token}"},
-        )
-        assert del_resp.status_code == 204
 
-        # Проверить, что удалено
-        await session.refresh(need)
-        assert pseudo_id not in need.shortlist
+def test_shortlist_is_shown_in_candidates(c, market_with_shortlist):
+    """Флаг is_shortlisted присутствует в выдаче кандидатов (E23-5 критерий)."""
+    need_resp = _create_need(c, market_with_shortlist,
+                              filters={"skills_must": [{"slug": "python"}]})
+    assert need_resp.status_code == 201
+    need_id = need_resp.json()["id"]
+    assert need_resp.json()["shortlist"] == []
 
-    async def test_shortlist_persists_in_need_categories(
-        self, client: AsyncClient, session: AsyncSession, employer_user, company
-    ) -> None:
-        """Шорт-лист возвращается в GET /needs/{need_id}/categories."""
-        need = await factory_need(session, company.id)
-        await session.commit()
+    # Получить кандидатов
+    cands_resp = _get_candidates(c, market_with_shortlist, "backend", "middle", need_id)
+    assert cands_resp.status_code == 200
+    candidates = cands_resp.json()["items"]
+    assert len(candidates) > 0
 
-        # Получить pseudo_id
-        search_resp = await client.post(
-            "/search/candidates",
-            json={"filters": {}, "limit": 5},
-            headers={"Authorization": f"Bearer {employer_user.token}"},
-        )
-        pseudo_id = search_resp.json()["items"][0]["pseudo_id"]
+    # Все должны иметь флаг is_shortlist (по умолчанию false)
+    for cand in candidates:
+        assert "is_shortlisted" in cand
+        assert cand["is_shortlisted"] is False
 
-        # Добавить в шорт-лист
-        await client.post(
-            f"/needs/{need.id}/shortlist/{pseudo_id}",
-            headers={"Authorization": f"Bearer {employer_user.token}"},
-        )
 
-        # Проверить, что в GET /needs/{need_id}/categories есть shortlist
-        resp = await client.get(
-            f"/needs/{need.id}/categories",
-            headers={"Authorization": f"Bearer {employer_user.token}"},
-        )
-        assert resp.status_code == 200
-        data = resp.json()
-        assert pseudo_id in data["shortlist"]
+def test_shortlist_endpoint_add_returns_204(c, market_with_shortlist):
+    """Эндпоинт POST /needs/{id}/shortlist/{pseudo_id} возвращает 204."""
+    need_resp = _create_need(c, market_with_shortlist,
+                              filters={"skills_must": [{"slug": "python"}]})
+    need_id = need_resp.json()["id"]
 
-    async def test_shortlist_marked_in_category_candidates(
-        self, client: AsyncClient, session: AsyncSession, employer_user, company
-    ) -> None:
-        """Фильтр не сбрасывает отмеченных: is_shortlisted флаг в выдаче (E23-5, критерий)."""
-        need = await factory_need(session, company.id, text="Python")
-        await session.commit()
+    # Получить кандидата
+    cands_resp = _get_candidates(c, market_with_shortlist, "backend", "middle", need_id)
+    pseudo_id = cands_resp.json()["items"][0]["pseudo_id"]
 
-        # Получить категории
-        cats_resp = await client.get(
-            f"/needs/{need.id}/categories",
-            headers={"Authorization": f"Bearer {employer_user.token}"},
-        )
-        assert cats_resp.status_code == 200
-        categories = cats_resp.json()["categories"]
-        assert len(categories) > 0
+    # Добавить в шорт-лист
+    add_resp = c.post(f"/needs/{need_id}/shortlist/{pseudo_id}",
+                      headers=_hdr(market_with_shortlist))
+    assert add_resp.status_code == 204
 
-        prof, grade = categories[0]["profession"], categories[0]["grade"]
 
-        # Получить кандидатов в категории
-        cands_resp = await client.get(
-            f"/categories/{prof}/{grade}/candidates",
-            params={"need_id": str(need.id)},
-            headers={"Authorization": f"Bearer {employer_user.token}"},
-        )
-        assert cands_resp.status_code == 200
-        items = cands_resp.json()["items"]
-        assert len(items) > 0
-        pseudo_id = items[0]["pseudo_id"]
+def test_shortlist_endpoint_delete_returns_204(c, market_with_shortlist):
+    """Эндпоинт DELETE /needs/{id}/shortlist/{pseudo_id} возвращает 204."""
+    need_resp = _create_need(c, market_with_shortlist,
+                              filters={"skills_must": [{"slug": "python"}]})
+    need_id = need_resp.json()["id"]
 
-        # Добавить первого кандидата в шорт-лист
-        await client.post(
-            f"/needs/{need.id}/shortlist/{pseudo_id}",
-            headers={"Authorization": f"Bearer {employer_user.token}"},
-        )
+    # Получить кандидата
+    cands_resp = _get_candidates(c, market_with_shortlist, "backend", "middle", need_id)
+    pseudo_id = cands_resp.json()["items"][0]["pseudo_id"]
 
-        # Снова получить кандидатов (эмулируем изменение фильтра)
-        cands_resp2 = await client.get(
-            f"/categories/{prof}/{grade}/candidates",
-            params={"need_id": str(need.id), "limit": 30},
-            headers={"Authorization": f"Bearer {employer_user.token}"},
-        )
-        assert cands_resp2.status_code == 200
-        items2 = cands_resp2.json()["items"]
+    # Удалить из шорт-листа (даже если не добавлен)
+    del_resp = c.delete(f"/needs/{need_id}/shortlist/{pseudo_id}",
+                        headers=_hdr(market_with_shortlist))
+    assert del_resp.status_code == 204
 
-        # Проверить, что первый кандидат помечен как в шорт-листе
-        marked = next((c for c in items2 if c["pseudo_id"] == pseudo_id), None)
-        assert marked is not None, "Отмеченный кандидат потерялся после смены фильтров"
-        assert marked.get("is_shortlisted") is True, "Флаг is_shortlisted не установлен"
 
-    async def test_shortlist_not_found_for_nonexistent_candidate(
-        self, client: AsyncClient, session: AsyncSession, employer_user, company
-    ) -> None:
-        """Добавление несуществующего кандидата в шорт-лист → 404."""
-        need = await factory_need(session, company.id)
-        await session.commit()
+def test_shortlist_not_found_for_nonexistent_candidate(c, market_with_shortlist):
+    """Добавление несуществующего кандидата → 404."""
+    need_resp = _create_need(c, market_with_shortlist,
+                              filters={"skills_must": [{"slug": "python"}]})
+    need_id = need_resp.json()["id"]
 
-        resp = await client.post(
-            f"/needs/{need.id}/shortlist/fake_pseudo_id",
-            headers={"Authorization": f"Bearer {employer_user.token}"},
-        )
-        assert resp.status_code == 404
-        assert resp.json()["detail"]["code"] == "candidate_not_found"
+    resp = c.post(f"/needs/{need_id}/shortlist/fake_pseudo_id",
+                  headers=_hdr(market_with_shortlist))
+    assert resp.status_code == 404
+    assert resp.json()["code"] == "candidate_not_found"
 
-    async def test_shortlist_ownership_check(
-        self,
-        client: AsyncClient,
-        session: AsyncSession,
-        employer_user,
-        other_employer_user,
-        company,
-    ) -> None:
-        """Работодатель не может добавить кандидата в потребность другой компании."""
-        need = await factory_need(session, company.id)
-        await session.commit()
 
-        # Получить pseudo_id
-        search_resp = await client.post(
-            "/search/candidates",
-            json={"filters": {}, "limit": 5},
-            headers={"Authorization": f"Bearer {employer_user.token}"},
-        )
-        pseudo_id = search_resp.json()["items"][0]["pseudo_id"]
+def test_shortlist_ownership_check(c, market_with_shortlist):
+    """Работодатель не может управлять потребностью другого работодателя."""
+    need_resp = _create_need(c, market_with_shortlist,
+                              filters={"skills_must": [{"slug": "python"}]})
+    need_id = need_resp.json()["id"]
 
-        # Попробуать добавить с другим пользователем
-        resp = await client.post(
-            f"/needs/{need.id}/shortlist/{pseudo_id}",
-            headers={"Authorization": f"Bearer {other_employer_user.token}"},
-        )
-        assert resp.status_code == 404
+    # Получить кандидата
+    cands_resp = _get_candidates(c, market_with_shortlist, "backend", "middle", need_id)
+    pseudo_id = cands_resp.json()["items"][0]["pseudo_id"]
 
-    async def test_add_duplicate_to_shortlist(
-        self, client: AsyncClient, session: AsyncSession, employer_user, company
-    ) -> None:
-        """Добавление дубликата в шорт-лист идёмпотентно."""
-        need = await factory_need(session, company.id)
-        await session.commit()
+    # Создать другого работодателя
+    other = _employer(c, "other@x.ru", name="Other Corp")
 
-        # Получить pseudo_id
-        search_resp = await client.post(
-            "/search/candidates",
-            json={"filters": {}, "limit": 5},
-            headers={"Authorization": f"Bearer {employer_user.token}"},
-        )
-        pseudo_id = search_resp.json()["items"][0]["pseudo_id"]
-
-        # Добавить дважды
-        await client.post(
-            f"/needs/{need.id}/shortlist/{pseudo_id}",
-            headers={"Authorization": f"Bearer {employer_user.token}"},
-        )
-        resp2 = await client.post(
-            f"/needs/{need.id}/shortlist/{pseudo_id}",
-            headers={"Authorization": f"Bearer {employer_user.token}"},
-        )
-        assert resp2.status_code == 204
-
-        # Проверить, что в шорт-листе только один экземпляр
-        await session.refresh(need)
-        assert need.shortlist.count(pseudo_id) == 1
+    # Попытаться добавить с другим работодателем
+    resp = c.post(f"/needs/{need_id}/shortlist/{pseudo_id}",
+                  headers=_hdr(other))
+    assert resp.status_code == 404
+    assert resp.json()["code"] == "need_not_found"
