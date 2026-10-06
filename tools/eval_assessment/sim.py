@@ -95,6 +95,7 @@ class SimConfig:
     cheat_item_p: float = 0.5  # доля заданий, где «списывающий» списывает
     honest_away_p: float = 0.03  # честный ушёл со вкладки > 10 с
     rt_sigma: float = 0.35  # лог-разброс времени ответа
+    mode: str = "standard"  # standard | express (E32-4a: --mode express)
 
 
 @dataclass
@@ -430,7 +431,7 @@ def _r(x: float | None) -> float | None:
 
 
 def run(sc: SimConfig, cfg: AssessmentConfig | None = None) -> dict[str, Any]:
-    cfg = cfg or load_config()
+    cfg = (cfg or load_config()).for_mode(sc.mode)
     icfg = load_integrity_config()
     rng = random.Random(sc.seed)
     bank = Bank(sc, cfg, rng)

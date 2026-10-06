@@ -406,9 +406,9 @@ Props — только числа, флаги, перечисления и slug'
 | Событие | Источник | Props |
 |---|---|---|
 | `survey_saved` | сервер | `profession`, `declared_grade`, `stack_size`, `formats_count`, `has_salary` (только при изменении опроса) |
-| `assessment_started` | сервер | `attempt_id`, `profession`, `declared_grade` |
+| `assessment_started` | сервер | `attempt_id`, `profession`, `declared_grade`, `mode` (`standard`/`express`, E32-4a) |
 | `assessment_answered` | сервер | `attempt_id`, `seq`, `stage`, `is_pilot`, `score`, `rt_ms` (содержимого ответа нет) |
-| `assessment_finished` | сервер | `attempt_id`, `profession`, `declared_grade`, `stage`, `result`, `grade`, `items`, `duration_s` |
+| `assessment_finished` | сервер | `attempt_id`, `profession`, `declared_grade`, `stage`, `result`, `grade`, `items`, `duration_s`, `mode` |
 | `family_status_changed` | сервер | `family`, `from_status`, `to_status`, `reason` (autocheck/admin/alarm/other) |
 | `regular_task_sent` | сервер | `profession`, `grade` (одно событие на рассылку) |
 | `regular_task_answered` | сервер, веб, бот | `task_kind`, `profession`, `grade`, `latency_h` |

@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, Request
-from fsp_contracts.assessment import ProfessionSlug, TestGrade
+from fsp_contracts.assessment import AttemptMode, ProfessionSlug, TestGrade
 from fsp_contracts.enums import WorkFormat
 from fsp_platform.app import ProblemError
 from fsp_platform.ratelimit import RateLimiter
@@ -38,6 +38,8 @@ def _cfg(request: Request) -> AssessmentConfig:
 class AttemptIn(BaseModel):
     profession: ProfessionSlug
     declared_grade: TestGrade
+    # E32-4a: `express` — экспресс для жюри (6–8 заданий, α = β = 0.15), грейд с меткой «экспресс»
+    mode: AttemptMode = "standard"
 
 
 class AttemptResultOut(BaseModel):
@@ -58,6 +60,7 @@ class AttemptOut(BaseModel):
     profession: str
     declared_grade: TestGrade
     stage: Literal["main", "bonus"]
+    mode: AttemptMode = "standard"  # E32-4a
     status: Literal["active", "passed", "failed", "abandoned"]
     answered: int
     target: int
@@ -113,7 +116,7 @@ async def create_attempt(
     identity.require_verified_email(user)
     await candidates.get_or_create(session, user.id, request.app.state.settings.pseudo_id_secret)
     att = await attempts.create_attempt(
-        session, user.id, body.profession, body.declared_grade, _cfg(request)
+        session, user.id, body.profession, body.declared_grade, _cfg(request), mode=body.mode
     )
     return await attempts.attempt_summary(session, user.id, att.id)
 

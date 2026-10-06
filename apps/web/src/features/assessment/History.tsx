@@ -153,6 +153,11 @@ export default function History() {
                             <TableCell>{dateShort(a.finished_at ?? a.started_at)}</TableCell>
                             <TableCell>
                               {name(a.profession)} · {GRADE[a.declared_grade] ?? a.declared_grade}
+                              {a.mode === "express" && (
+                                <Badge variant="dashed" className="ml-2">
+                                  {T.expressBadge}
+                                </Badge>
+                              )}
                             </TableCell>
                             <TableCell>
                               <Badge variant={o.variant}>{o.label}</Badge>

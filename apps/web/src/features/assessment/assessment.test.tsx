@@ -114,6 +114,25 @@ describe("опрос (S1)", () => {
     expect(calls.find((c) => c.url.endsWith("/assessment/attempts") && c.method === "POST")!.body).toEqual({ profession: "backend", declared_grade: "middle" });
   });
 
+  it("экспресс-режим (E32-4a): ?mode=express включает переключатель, попытка создаётся с mode", async () => {
+    const calls = mount("/me/assessment?mode=express", (url, init) => {
+      if (url.endsWith("/assessment/survey") && (init?.method ?? "GET") === "GET") return res(200, survey);
+      if (url.endsWith("/assessment/survey")) return res(200, { ...survey, id: "s1", prefilled: false });
+      if (url.endsWith("/assessment/history")) return res(200, { surveys: [], attempts: [], cooldowns: [] });
+      if (url.endsWith("/assessment/attempts") && init?.method === "POST") return res(201, { ...attemptBase, mode: "express", target: 6 });
+      if (url.includes("/attempts/a1/next")) return res(200, { done: false, response_id: "r1", seq: 1, kind: "exact", stem: "Что выведет?", time_limit_s: 120 });
+      if (url.endsWith("/attempts/a1")) return res(200, { ...attemptBase, mode: "express", target: 6 });
+    });
+    expect(await tid("assessment-express-toggle")).toBeChecked();
+    fireEvent.click(screen.getByTestId("assessment-start"));
+    expect(await tid("assessment-range")).toHaveTextContent("от 6 до 8");
+    expect(calls.find((c) => c.url.endsWith("/assessment/attempts") && c.method === "POST")!.body).toEqual({
+      profession: "backend",
+      declared_grade: "middle",
+      mode: "express",
+    });
+  });
+
   it("без грейда тест не начинается, перевёрнутая вилка блокирует сохранение", async () => {
     const calls = mount("/me/assessment", (url) => (url.endsWith("/assessment/survey") ? res(200, { ...survey, declared_grade: null }) : undefined));
     await tid("assessment-survey");
@@ -283,6 +302,15 @@ describe("результат (S3)", () => {
     fireEvent.click(screen.getByTestId("assessment-invite-start"));
     await waitFor(() => expect(calls.n).toBe(1));
     expect(await tid("assessment-item")).toBeInTheDocument();
+  });
+
+  it("экспресс-результат помечен меткой", async () => {
+    mount("/me/assessment/attempts/a1/result", (url) => {
+      if (url.endsWith("/attempts/a1")) return res(200, { ...finished, mode: "express", invited_grade: null });
+      if (url.endsWith("/assessment/history")) return res(200, { surveys: [], attempts: [], cooldowns: [], retries: [] });
+    });
+    expect(await tid("assessment-express")).toHaveTextContent("экспресс");
+    expect(screen.getByTestId("assessment-confirmed")).toBeInTheDocument();
   });
 
   it("не прошёл: нейтральный текст без красного акцента", async () => {

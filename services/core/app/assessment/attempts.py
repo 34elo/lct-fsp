@@ -19,7 +19,7 @@ from datetime import UTC, datetime, timedelta
 from random import Random
 from typing import Any
 
-from fsp_contracts.assessment import SkillType, TestGrade
+from fsp_contracts.assessment import AttemptMode, SkillType, TestGrade
 from fsp_platform.app import ProblemError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -118,9 +118,13 @@ async def create_attempt(
     cfg: AssessmentConfig,
     *,
     invited_by: uuid.UUID | None = None,
+    mode: AttemptMode = "standard",
 ) -> Attempt:
     """Новая попытка. `invited_by` — попытка, чей бонусный этап пригласил на этот тест
-    (ADR-025 п.2): такой тест идёт без кулдаунов."""
+    (ADR-025 п.2): такой тест идёт без кулдаунов. `mode = express` — экспресс для жюри (E32-4a)."""
+    if mode == "express" and not cfg.express_enabled:
+        raise ProblemError(422, "express_disabled", "Экспресс-режим выключен")
+    cfg = cfg.for_mode(mode)
     prof = await _profession(session, profession)
     if prof is None:
         raise ProblemError(
@@ -130,7 +134,9 @@ async def create_attempt(
             errors=[{"field": "profession", "message": profession}],
         )
     if invited_by is None:
-        await grading.check_cooldown(session, candidate_id, profession, declared_grade, cfg)
+        await grading.check_cooldown(
+            session, candidate_id, profession, declared_grade, cfg, mode=mode
+        )
     active = await session.scalar(
         select(Attempt.id).where(
             Attempt.candidate_id == candidate_id,
@@ -152,6 +158,7 @@ async def create_attempt(
         profession=profession,
         declared_grade=declared_grade.value,
         stage="main",
+        mode=mode,
         status="active",
         llr=0.0,
     )
@@ -174,6 +181,7 @@ async def create_attempt(
             "attempt_id": str(att.id),
             "profession": profession,
             "declared_grade": declared_grade.value,
+            "mode": mode,
         },
     )
     return att
@@ -388,6 +396,7 @@ async def next_item(
 ) -> dict[str, Any]:
     """Текущее неотвеченное задание или новое; `{done: true}`, если попытка завершена."""
     att = await _own_attempt(session, candidate_id, attempt_id)
+    cfg = cfg.for_mode(att.mode)
     for _ in range(2):  # второй проход — первое задание бонусного этапа
         if att.status != "active":
             return {"done": True}
@@ -425,6 +434,7 @@ async def submit_answer(
 ) -> dict[str, Any]:
     """Проверка на сервере пересборкой; SPRT после оцениваемого ответа. Повтор ничего не меняет."""
     att = await _own_attempt(session, candidate_id, attempt_id)
+    cfg = cfg.for_mode(att.mode)
     resp = await session.get(Response, response_id)
     if resp is None or resp.attempt_id != att.id:
         raise ProblemError(404, "not_found", "Задание не найдено")
@@ -554,6 +564,7 @@ async def attempt_summary(
         "profession": att.profession,
         "declared_grade": TestGrade(att.declared_grade),
         "stage": att.stage,
+        "mode": att.mode or "standard",
         "status": att.status,
         "answered": len(answered),
         "target": att.plan.get("target", 0),
