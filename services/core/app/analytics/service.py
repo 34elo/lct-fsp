@@ -65,7 +65,7 @@ async def record(
         try:
             ev = validate_event(ev, source)
         except ValueError as exc:  # UnknownAnalyticsEvent и pydantic.ValidationError
-            log.warning("analytics_event_rejected", event=ev.event, error=type(exc).__name__)
+            log.warning("analytics_event_rejected", name=ev.event, error=type(exc).__name__)
             continue
         rows.append(ev.model_dump(mode="python"))
     for ts in {r["ts"] for r in rows}:
