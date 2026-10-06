@@ -80,5 +80,7 @@ export const CAT_TEXT = {
   invalid: "Такой категории нет",
   back: "К категориям",
   shortlistCount: (n: number) => `В шорт-листе: ${n}`,
+  tuned: "Учли",
+  tunedReset: "Сбросить подстройку",
   filterNote: "Фильтры применяются к загруженным карточкам. Отмеченные в шорт-лист остаются в списке.",
 } as const;
