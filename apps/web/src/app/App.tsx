@@ -33,6 +33,7 @@ import CandidateTasks from "@/features/tasks/CandidateTasks";
 import EmployerTasks from "@/features/tasks/EmployerTasks";
 import Constructor from "@/features/constructor/Constructor";
 import AdmissionQueue from "@/features/constructor/AdmissionQueue";
+import AdminSkills from "@/features/admin-taxonomy/AdminSkills";
 import AdminTaxonomy from "@/features/admin-taxonomy/AdminTaxonomy";
 // <<< block1 imports
 // >>> block2 imports
@@ -54,7 +55,7 @@ const AdminLayout = lazy(() => import("@/app/layouts/AdminLayout"));
 const RunPage = lazy(() => import("@/features/runs/RunPage"));
 
 // Эти пути уже реализованы настоящими страницами (E1-4).
-const IMPLEMENTED = new Set(["/", "/login", "/register", "/auth/magic", "/consents", "/onboarding", "/me", "/me/skills/:slug", "/employer/search", "/employer/candidates/:id", "/employer/vacancies", "/employer/vacancies/new", "/employer/vacancies/:id", "/employer/company", "/employer/vacancies/:id/shortlist", "/employer/offers/new", "/employer/offers", "/employer/offers/:id", "/me/offers", "/me/offers/:id", "/me/navigator", "/verify-email", "/me/profile/edit", "/me/responses", "/employer/responses", "/jobs", "/jobs/:id", "/run/:token", "/federation", "/federation/moderation", "/me/tasks", "/employer/tasks", "/employer/families/new", "/admin/families", "/admin/professions"]);
+const IMPLEMENTED = new Set(["/", "/login", "/register", "/auth/magic", "/consents", "/onboarding", "/me", "/me/skills/:slug", "/employer/search", "/employer/candidates/:id", "/employer/vacancies", "/employer/vacancies/new", "/employer/vacancies/:id", "/employer/company", "/employer/vacancies/:id/shortlist", "/employer/offers/new", "/employer/offers", "/employer/offers/:id", "/me/offers", "/me/offers/:id", "/me/navigator", "/verify-email", "/me/profile/edit", "/me/responses", "/employer/responses", "/jobs", "/jobs/:id", "/run/:token", "/federation", "/federation/moderation", "/me/tasks", "/employer/tasks", "/employer/families/new", "/admin/families", "/admin/professions", "/admin/skills"]);
 
 // Б1: страницы теста (E22-8).
 ["/me/graph", "/me/assessment", "/me/assessment/history", "/me/assessment/attempts/:id", "/me/assessment/attempts/:id/result"].forEach((p) => IMPLEMENTED.add(p));
@@ -117,6 +118,7 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
             {/* >>> block1 (admin) */}
             <Route path="/admin/families" element={<AdmissionQueue />} />
             <Route path="/admin/professions" element={<AdminTaxonomy />} />
+            <Route path="/admin/skills" element={<AdminSkills />} />
             {/* <<< block1 (admin) */}
             {/* >>> block2 (admin) */}
             <Route path="/federation" element={<FederationDashboard />} />
