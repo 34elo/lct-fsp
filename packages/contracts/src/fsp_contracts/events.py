@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field
 from fsp_contracts.assessment import ASSESSMENT_EVENTS
 from fsp_contracts.enums import DeclineReason, Grade, OfferStatus, RoleSlug, TrustLevel
 from fsp_contracts.fsp import FspCompetition, FspRank, FspResult, FspTeam
-from fsp_contracts.hiring import HIRING_EVENTS
+from fsp_contracts.hiring import HIRING_EVENTS, OfferInitiator
 from fsp_contracts.ml import (
     CodeAnalysisResult,
     InterviewGrade,
@@ -130,6 +130,8 @@ class OfferEvent(BaseModel):
     """Все `offer.*`.
 
     Для `offer.message` заполнен `message_id`, для `offer.declined` — `decline_reason`.
+    С schema_version 2 (ADR-022): `vacancy_id` пуст у приглашения без вакансии,
+    `initiator` — кто начал (`employer` — приглашение, `candidate` — отклик).
     """
 
     offer_id: UUID
@@ -141,6 +143,7 @@ class OfferEvent(BaseModel):
     actor: Literal["candidate", "company", "system"] = "system"
     message_id: UUID | None = None
     decline_reason: DeclineReason | None = None
+    initiator: OfferInitiator = OfferInitiator.employer
 
 
 # --- fsp.* (fsp-connector) ---

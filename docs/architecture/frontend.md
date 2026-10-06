@@ -17,6 +17,10 @@
 | `/me/skills/:slug` | C | Доказательства навыка |
 | `/me/offers`, `/me/offers/:id` | C | Офферы и переписка (M2) |
 | `/me/growth` | C | Uplift, путь к грейду, соревнования, адаптивный тест (M3) |
+| `/me/navigator` | C | Навигатор роста (Б2, E12-3): `NavigatorPath`, uplift-карточки, соревнования ФСП; «Пройти тест» ведёт на `/me/assessment?profession=&grade=` |
+| `/jobs`, `/jobs/:id` | — | Публичные вакансии (Б2, E20-7b, J1): фильтры профессия/город/текст, вилка на карточке; отклик с сообщением после входа (состояния: не вошёл, не кандидат, `email_not_verified`, отправлено, `already_applied`). Отдельного публичного `GET` вакансии нет: деталь берётся из `GET /vacancies/public?limit=100` |
+| `/me/responses` | C | Мои отклики (R1): вкладки, отзыв из `sent/viewed`, переход к приглашению |
+| `/employer/responses` | E | Отклики на вакансии (R1): `GET /offers?initiator=candidate`, «Пригласить» → `interview`, «Отказать» → `not_hired`. Приглашение без вакансии — в окне оффера (название, описание, способ связи, вилка) |
 | `/me/badge` | C | Open Badge (Q5) |
 | `/me/settings` | C | Статус, зарплата, формат, видимость, стоп-лист, согласия, удаление |
 | `/employer/market` | E | Рынок талантов (E1) |
@@ -38,20 +42,33 @@
 
 ## 2. Структура проекта
 
+pnpm-workspace в корне репозитория (`package.json`, `pnpm-workspace.yaml`, один `pnpm-lock.yaml`): `apps/web` и `packages/ui`. Команды из корня: `pnpm install`, `pnpm -r lint|typecheck|test|build`, `pnpm shot`. Решение — [ADR-050](decisions.md).
+
 ```
+packages/ui/              # @fsp/ui — дизайн-система, без сборки (экспорт из src/index.ts)
+├── src/
+│   ├── styles/           # tokens.css (CSS-переменные), index.css (@theme для Tailwind 4) → "@fsp/ui/styles.css"
+│   ├── primitives/       # базовые компоненты (Button…)
+│   ├── brand/            # TrustDots, SkillChip, ConstellationAvatar, MatchRing, Logo
+│   ├── lib/cn.ts
+│   └── index.ts
+├── playground/           # витрина: Токены / Базовые / Фирменные, светлая и тёмная тема (порт 28174)
+└── scripts/shot.mjs      # pnpm shot <маршрут> [--as candidate|employer|admin] [--playground]
+                          #   → reports/shots/<имя>-<1440|1024|390>-<light|dark>.png
+
 apps/web/
 ├── src/
 │   ├── app/              # роутер, провайдеры (QueryClient, Auth, Theme, SSE), layout'ы по ролям
 │   ├── api/              # сгенерировано orval: hooks + zod (не редактировать руками)
 │   ├── shared/
-│   │   ├── ui/           # shadcn/ui-компоненты в токенах ФСП
-│   │   ├── brand/        # TrustDots, ConstellationAvatar, CircuitLine, Logo, GradeBadge
+│   │   ├── ui/, brand/   # временные реэкспорты из @fsp/ui (уберёт E19-15)
 │   │   ├── charts/       # Heatmap, Radar, Funnel, RussiaMap (ECharts-обёртки)
 │   │   ├── lib/          # format (деньги, даты, грейды), sse, auth
 │   │   └── i18n/         # словари перечислений: роли, грейды, причины отказа
 │   ├── features/         # бизнес-фичи: resume-upload, fsp-link, github-link, offer-create, nl-search, test-runner…
 │   ├── pages/            # страницы по маршрутам
-│   └── styles/           # tokens.css (CSS-переменные), tailwind.css
+│   └── styles/           # tailwind.css: импорт @fsp/ui/styles.css, @source на packages/ui/src, анимации
+├── vite.config.ts        # прокси /api → VITE_API_TARGET (по умолчанию http://localhost:28080)
 └── e2e/                  # Playwright: демо-сценарий целиком
 ```
 
@@ -75,9 +92,9 @@ apps/web/
 ## 5. Тема и токены
 
 **Из дизайна** ([design/handoff/](../design/handoff/)):
-- `globals.css` → `src/styles/tokens.css`: CSS-переменные, светлая в `:root`, тёмная в `.dark` (переключение классом на `<html>`, по умолчанию — системная тема).
+- `globals.css` → `packages/ui/src/styles/tokens.css` (`@fsp/ui`): CSS-переменные, светлая в `:root`, тёмная в `.dark` (переключение классом на `<html>`, по умолчанию светлая, режим «как в системе» выбирает пользователь; `<ThemeScope dark>` включает тёмную тему для области; шкала текста `text-11…text-48`, метка `lbl`, тени `shadow-xs`/`shadow-card`).
 - **Tailwind 4** (CSS-first): цвета из `tailwind.config.ts` переносятся в `@theme inline` и **ссылаются на переменные**, например `--color-brand: var(--brand)`, `--color-tint-50: var(--tint-50)`. Тогда классы `bg-brand`, `border-tint-200`, `text-brand-deep` из `fsp-ui.tsx` работают в обеих темах.
-- `fsp-ui.tsx` → `src/shared/brand/`. Захардкоженные цвета заменить токенами (см. [design/brief.md §0](../design/brief.md#0-дизайн-получен-2026-10-02--с-чего-начинать-фронтенду)).
+- `fsp-ui.tsx` → `packages/ui/src/brand/`. Захардкоженные цвета заменить токенами (см. [design/brief.md §0](../design/brief.md#0-дизайн-получен-2026-10-02--с-чего-начинать-фронтенду)).
 - shadcn/ui: Dialog, Sheet, Drawer, Tabs, Tooltip, Popover, Select, Toast — макеты на них и рассчитаны.
 
 Прежние правила ниже остаются в силе.
@@ -99,7 +116,7 @@ apps/web/
 | `ConstellationAvatar seed=` | анонимные карточки | Генеративный аватар-созвездие в стиле логотипа ФСП |
 | `CandidateCard` | выдача | Псевдоним, грейд, стек, топ-навыки, ФСП-хайлайты, ожидания, совпадение |
 | `MatchScore` + `ExplanationList` | карточки, вакансия | Кольцо процента + ✓/⚠ со ссылками на доказательства |
-| `NLSearchBar` | `/employer/search` | Текст → чипсы с анимацией. Чипсы редактируются и удаляются |
+| `NLSearchBar` | `/employer/search` | Текст → чипсы с анимацией. Чипсы редактируются и удаляются. Реализация — `features/employer/QueryBar.tsx` (E19-6): `POST /search/parse` → форма фильтров; чипс виден, пока его условие есть в фильтрах слева; `~` и пунктир — `semantic_text`, `source=llm` или `confidence < 0.7`; при `prefers-reduced-motion` чипсы сразу без перехода |
 | `MarketHeatmap` | `/employer/market` | Роль × грейд, переключатель метрики, клик → поиск |
 | `CodeRadar` | профиль, карточка | 6 осей |
 | `OfferComposer` | карточка | Выбор вакансии, вилка (обязательна), сообщение, `SalaryHint` в реальном времени |

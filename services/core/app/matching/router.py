@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, Query, Request
@@ -18,10 +19,12 @@ from app.deps import get_redis, get_session
 from app.graph.trust import TrustConfig
 from app.identity.deps import require_roles
 from app.identity.models import User
-from app.matching import card, query_parser, search, similar, uplift_service
+from app.matching import card, navigator, query_llm, query_parser, search, similar, uplift_service
 from app.matching.card import CandidateCardFull
 from app.matching.scoring import MatchConfig
 from app.matching.uplift import UpliftConfig
+from app.openapi_errors import problem_responses
+from app.recommendations.tuning import TuningConfig
 from app.taxonomy import service as taxonomy
 from app.vacancies import service as vacancies
 from app.views import service as views
@@ -33,6 +36,13 @@ _candidate = require_roles("candidate")
 _CFG = MatchConfig.load()
 _TRUST = TrustConfig.load()
 _UPLIFT = UpliftConfig.load()
+_TUNING = TuningConfig.load()
+
+# Responses for error codes
+_PARSE_RESPONSES = problem_responses(401, 403, 422)
+_SEARCH_RESPONSES = problem_responses(401, 403, 404, 422)
+_CARD_RESPONSES = problem_responses(401, 403, 404)
+_UPLIFT_RESPONSES = problem_responses(401, 403)
 
 
 class SearchRequest(BaseModel):
@@ -46,11 +56,48 @@ class SearchRequest(BaseModel):
     session_id: uuid.UUID | None = None
 
 
+class TuningChip(BaseModel):
+    feature: str
+    text: str
+    change: float
+
+
+class TuningHint(BaseModel):
+    kind: str
+    reason: str
+    text: str
+    count: int
+
+
+class SearchTuning(BaseModel):
+    """Подстройка выдачи в сессии (matching.md §7): включается после ≥ 3 реакций."""
+
+    active: bool
+    signals: int
+    chips: list[TuningChip]
+    hints: list[TuningHint]
+
+
 class SearchPage(BaseModel):
     items: list[search.CandidateCard]
     next_cursor: str | None
     total: int
     session_id: uuid.UUID
+    tuning: SearchTuning | None = None
+
+
+def _query_llm(request: Request) -> query_llm.QueryLlmClient | None:
+    """Клиент ml-api для разбора запроса; `ML_API_URL` пуст — только правила."""
+    state = request.app.state
+    client = getattr(state, "query_llm", None)
+    if client is None:
+        url = state.settings.ml_api_url
+        if not url:
+            return None
+        client = query_llm.QueryLlmClient(url, timeout=state.settings.query_parse_timeout_seconds)
+        state.query_llm = client
+    client.redis = getattr(state, "redis", None)
+    return client
 
 
 class ParseRequest(BaseModel):
@@ -59,18 +106,37 @@ class ParseRequest(BaseModel):
     text: str = Field(min_length=1, max_length=query_parser.MAX_TEXT)
 
 
-@router.post("/search/parse", response_model=ParsedQuery)
+@router.post(
+    "/search/parse", response_model=ParsedQuery, responses=problem_responses(401, 403, 422)
+)
 async def search_parse(
     body: ParseRequest,
+    request: Request,
     user: User = Depends(_employer),
     session: AsyncSession = Depends(get_session),
 ) -> Any:
-    """Правиловый разбор текста в чипсы-фильтры (E7-5); LLM-уточнение добавит E7-6."""
+    """Разбор текста в чипсы-фильтры: правила (E7-5) + LLM-уточнение и слияние (E7-6).
+
+    LLM недоступна или ответила невалидно — отдаём правиловый результат (`refining=false`).
+    """
     index = await taxonomy.alias_index(session)
-    return query_parser.parse_query(body.text, index.forms, index.names)
+    rule = query_parser.parse_query(body.text, index.forms, index.names)
+    client = _query_llm(request)
+    if client is None:
+        return rule
+    return await query_llm.refine(
+        client,
+        body.text,
+        rule,
+        taxonomy_version=await taxonomy.get_version(session),
+        forms=index.forms,
+        names=index.names,
+    )
 
 
-@router.post("/search/candidates", response_model=SearchPage)
+@router.post(
+    "/search/candidates", response_model=SearchPage, responses=problem_responses(401, 403, 404, 422)
+)
 async def search_candidates(
     body: SearchRequest,
     request: Request,
@@ -85,12 +151,19 @@ async def search_candidates(
     if body.vacancy_id is not None:  # чужая или несуществующая вакансия → 404
         version = (await vacancies.get_owned(session, user, body.vacancy_id)).version
     sort = body.sort or ("mutual" if body.vacancy_id else "match")
+    signals = None
+    if body.session_id is not None:  # подстройка только по своей сессии (matching.md §7)
+        signals = await rec_service.session_signals(
+            session, redis, user.id, str(body.session_id), _TUNING
+        )
     page = await search.search_candidates(
         session, redis, company_id=company.id, filters=body.filters, sort=sort,
         cursor=body.cursor, limit=body.limit, vacancy_id=body.vacancy_id,
         vacancy_version=version, cfg=_CFG, trust=_TRUST,
-        responsibility_score=company.responsibility_score,
+        responsibility_score=company.responsibility_score, session_signals=signals,
+        tuning_cfg=_TUNING,
     )  # fmt: skip
+    features = page.pop("features", None) or {}
 
     session_id = body.session_id or uuid.uuid4()
     context_type = "vacancy" if body.vacancy_id else "search"
@@ -114,6 +187,7 @@ async def search_candidates(
                 features={
                     "search_filters": body.filters.model_dump(mode="json"),
                     "sort": sort,
+                    "x": features.get(item["pseudo_id"]),
                 },
             )
 
@@ -122,7 +196,11 @@ async def search_candidates(
     return {**page, "session_id": session_id}
 
 
-@router.get("/candidates/{pseudo_id}/card", response_model=CandidateCardFull)
+@router.get(
+    "/candidates/{pseudo_id}/card",
+    response_model=CandidateCardFull,
+    responses=problem_responses(401, 403, 404),
+)
 async def candidate_card(
     pseudo_id: str,
     vacancy_id: uuid.UUID | None = None,
@@ -157,7 +235,11 @@ class SimilarPage(BaseModel):
     session_id: uuid.UUID
 
 
-@router.get("/candidates/{pseudo_id}/similar", response_model=SimilarPage)
+@router.get(
+    "/candidates/{pseudo_id}/similar",
+    response_model=SimilarPage,
+    responses=problem_responses(401, 403, 404),
+)
 async def candidate_similar(
     pseudo_id: str,
     limit: int = Query(default=10, ge=1, le=similar.MAX_LIMIT),
@@ -231,7 +313,80 @@ class UpliftOut(BaseModel):
     combo: UpliftCombo | None = None
 
 
-@router.get("/candidates/me/uplift", response_model=UpliftOut, response_model_exclude_none=True)
+class NavTarget(BaseModel):
+    role: str
+    grade: str
+
+
+class NavCurrent(BaseModel):
+    profession: str
+    grade: str
+    valid_until: datetime
+    needs_confirmation: bool
+
+
+class NavNextGrade(BaseModel):
+    points_needed: float
+    hints: list[str]
+
+
+class NavTest(BaseModel):
+    profession: str
+    grade: str
+    path: str  # маршрут блока 1: /me/assessment?profession=&grade=
+
+
+class NavGap(BaseModel):
+    skill: str
+    name: str
+    weight: float
+    confidence: float
+    testable: bool
+
+
+class NavCompetition(BaseModel):
+    id: str
+    title: str
+    start_date: str
+    registration_url: str | None = None
+    skills: list[str]
+
+
+class NavigatorOut(BaseModel):
+    target: NavTarget | None = None
+    current_grade: NavCurrent | None = None
+    next_grade: NavNextGrade | None = None
+    test: NavTest | None = None
+    skill_gaps: list[NavGap]
+    competitions: list[NavCompetition]
+    uplift: list[UpliftItem]
+
+
+@router.get(
+    "/candidates/me/navigator",
+    response_model=NavigatorOut,
+    response_model_exclude_none=True,
+    responses=problem_responses(401, 403),
+)
+async def my_navigator(
+    user: User = Depends(_candidate),
+    session: AsyncSession = Depends(get_session),
+    redis: Redis = Depends(get_redis),
+) -> Any:
+    """Путь к следующему грейду: пробелы по профессии, тест, соревнования ФСП, uplift."""
+    cand = await candidates.get(session, user.id)
+    if cand is None:
+        return {"skill_gaps": [], "competitions": [], "uplift": []}
+    up = await uplift_service.compute(session, redis, cand, _CFG, _TRUST, _UPLIFT)
+    return await navigator.compute(session, cand, up["items"], _UPLIFT)
+
+
+@router.get(
+    "/candidates/me/uplift",
+    response_model=UpliftOut,
+    response_model_exclude_none=True,
+    responses=problem_responses(401, 403),
+)
 async def my_uplift(
     user: User = Depends(_candidate),
     session: AsyncSession = Depends(get_session),

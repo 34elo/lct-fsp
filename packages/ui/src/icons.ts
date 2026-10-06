@@ -1,0 +1,20 @@
+// Иконки для каркаса приложения: web не зависит от lucide напрямую.
+export {
+  Building2,
+  ChevronDown,
+  Handshake,
+  Heart,
+  LayoutDashboard,
+  LogOut,
+  Moon,
+  Search,
+  SlidersHorizontal,
+  Sun,
+  SunMoon,
+  TrendingUp,
+  Trophy,
+  User,
+  X,
+  Zap,
+  type LucideIcon,
+} from "lucide-react";

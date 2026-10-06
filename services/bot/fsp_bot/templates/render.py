@@ -153,6 +153,10 @@ def fsp_imported(d: dict) -> str:
     return f"🏆 Привязка ФСП выполнена. Импортировано достижений: {_e(d.get('count', 0))}"
 
 
+def regular_task_published(d: dict) -> str:
+    return f"📋 Новое задание по профессии {_e(d.get('profession', ''))}"
+
+
 def test_result(d: dict) -> str:
     return (
         f"✅ Тест по навыку «{_e(d.get('skill', ''))}» пройден: "
@@ -183,6 +187,7 @@ RENDERERS: dict[TgTemplate, Callable[[dict], str]] = {
     TgTemplate.resume_parsed: resume_parsed,
     TgTemplate.code_progress: code_progress,
     TgTemplate.fsp_imported: fsp_imported,
+    TgTemplate.regular_task_published: regular_task_published,
     TgTemplate.test_result: test_result,
     TgTemplate.uplift: uplift,
 }

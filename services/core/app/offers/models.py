@@ -14,7 +14,11 @@ _ID = sa.BigInteger().with_variant(sa.Integer(), "sqlite")
 
 
 class Offer(Base):
-    """Оффер (data-model.md §3.8). Вилка обязательна; статусы — `OfferStatus`."""
+    """Оффер (data-model.md §3.8). Вилка обязательна; статусы — `OfferStatus`.
+
+    ADR-022: `vacancy_id` пуст у приглашения без вакансии (тогда обязателен `title`);
+    `initiator` — `employer` (приглашение) или `candidate` (отклик).
+    """
 
     __tablename__ = "offers"
     __table_args__ = (
@@ -26,7 +30,7 @@ class Offer(Base):
     )
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
-    vacancy_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("vacancies.id"))
+    vacancy_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("vacancies.id"), default=None)
     candidate_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("candidates.user_id", ondelete="SET NULL"), default=None
     )
@@ -35,6 +39,10 @@ class Offer(Base):
     salary_from: Mapped[int]
     salary_to: Mapped[int]
     message: Mapped[str | None] = mapped_column(Text, default=None)
+    title: Mapped[str | None] = mapped_column(Text, default=None)
+    description: Mapped[str | None] = mapped_column(Text, default=None)
+    contact_method: Mapped[str | None] = mapped_column(Text, default=None)
+    initiator: Mapped[str] = mapped_column(Text, default="employer", server_default="employer")
     status: Mapped[str] = mapped_column(Text, default="sent", server_default="sent")
     decline_reason: Mapped[str | None] = mapped_column(Text, default=None)
     decline_comment: Mapped[str | None] = mapped_column(Text, default=None)

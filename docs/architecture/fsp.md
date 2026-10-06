@@ -95,8 +95,10 @@ class FspCompetition(BaseModel):
 | `POST /api/v1/verification/send` | `{participant_id}` → `{channel:"email", masked:"a***@mail.ru"}` (код виден в `GET /mock/codes`) |
 | `POST /api/v1/verification/check` | `{participant_id, code}` → `{ok}` |
 | `GET /oauth/authorize` | HTML-страница в стиле ФСП: поиск себя / выбор демо-участника → редирект с `code` |
-| `POST /oauth/token` | `{access_token, token_type}` (PKCE) |
-| `GET /oauth/userinfo` | `{participant_id, full_name}` |
+| `POST /oauth/token` | `{access_token, token_type, expires_in, id_token}` (PKCE; `id_token` — RS256 JWT: `iss, sub=participant_id, aud=client_id, nonce, name`) |
+| `GET /oauth/userinfo` | `{participant_id, full_name, sub, name}` |
+| `GET /.well-known/openid-configuration` | OIDC discovery (E20-10): issuer = `FSP_MOCK_ISSUER`, endpoints, `S256` |
+| `GET /oauth/jwks` | JWKS с публичным RSA-ключом (`FSP_MOCK_OIDC_PRIVATE_KEY` — PEM, иначе ключ на старте). Keycloak подключается заменой issuer на его URL |
 | `POST /mock/results` | Админ: создать результат → вебхук на `FSP_WEBHOOK_URL` |
 | `GET /mock/codes` | Админ: последние коды верификации (для демо) |
 
@@ -161,7 +163,7 @@ robotics:
 ## 6. Синхронизация
 
 - **При привязке** — полная (команда RabbitMQ `fsp.sync` от core или сразу после OAuth). Результат — событие `fsp.results.imported` с нормализованными результатами, разрядами и командами.
-- **По вебхуку** — инкрементальная (`since = last_synced_at`), F11.
+- **По вебхуку** — инкрементальная (`since = last_synced_at`), F11. Реализация: `fsp_connector/webhook.py` — проверка HMAC (`401 invalid_signature`), идемпотентность по `event_id` в `webhook_log` (повтор → `{status: duplicate}`), синхронизация под замком `lock:fsp_sync:{cid}` с `reason=webhook`; неизвестный участник подтверждается без событий.
 - **Регулярно** — команда `fsp.sync_all` от core-scheduler раз в час (фолбэк, если у реального API нет вебхуков) + обновление календаря соревнований.
 - **Upsert** по `(participant_id, competition_id, stage)`. Результаты, пропавшие из источника, помечаем `is_active=false` у доказательств, но не удаляем: это аудит.
 - Достижения ФСП **не редактируются вручную**, только через синхронизацию (правило 11.5).

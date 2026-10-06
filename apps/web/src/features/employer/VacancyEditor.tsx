@@ -16,6 +16,8 @@ import {
 import type { SkillReqIn, VacancyOut } from "@/api/model";
 import { ErrorNote, fieldClass } from "@/features/auth/ui";
 import { GRADE_LABEL, ROLE_LABEL, SIGNAL_LABEL } from "@/features/profile/text";
+import { Skeleton } from "@fsp/ui";
+
 import { cn } from "@/shared/lib/cn";
 import { Button } from "@/shared/ui/button";
 import { EMPLOYMENT_LABEL, FORMAT_LABEL, LEVEL_WORD, QUALITY_HINT, VACANCY_STATUS_LABEL, vacancyErrorText } from "./text";
@@ -118,6 +120,7 @@ export default function VacancyEditor() {
   const invalid = !!(salaryError || gradeError || titleError || formatError);
 
   const required = skills.filter((s) => s.required !== false);
+  const strictest = required.reduce<SkillReqIn | null>((m, s) => ((s.min_level ?? 2) > (m?.min_level ?? 0) ? s : m), null);
   const nice = skills.filter((s) => s.required === false);
   const setSkill = (slug: string, p: Partial<SkillReqIn>) => setSkills((l) => l.map((s) => (s.slug === slug ? { ...s, ...p } : s)));
   const addSkill = (slug: string, req: boolean) => {
@@ -234,10 +237,10 @@ export default function VacancyEditor() {
       </main>
     );
   }
-  if (!isNew && vq.isPending) return <p role="status" className="p-6 text-muted">Загрузка…</p>;
+  if (!isNew && vq.isPending) return <Skeleton aria-hidden className="m-6 h-96 rounded-xl" />;
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4 md:p-6">
+    <main className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-6 md:px-6">
       <Link to="/employer/vacancies" className="text-sm font-semibold text-brand-fg hover:underline">← К вакансиям</Link>
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="font-mono text-2xl font-semibold">{isNew ? "Новая вакансия" : "Вакансия"}</h1>
@@ -255,7 +258,8 @@ export default function VacancyEditor() {
       )}
       <p className="text-sm text-muted">Опишите требования на профессиональном языке: роль, грейд, навыки с минимальным уровнем. Система сама найдёт подходящие профили.</p>
 
-      <form onSubmit={onSave} noValidate className="flex flex-col gap-6 rounded-xl border border-hairline bg-card p-4 md:p-5">
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <form onSubmit={onSave} noValidate className="flex min-w-0 flex-col gap-6 rounded-xl border border-hairline bg-card p-4 md:p-5">
         <fieldset className="flex flex-col gap-3" disabled={closed}>
           <legend className="mb-1 font-mono text-[17px] font-semibold">Роль и грейд</legend>
           <label className="flex flex-col gap-1 text-sm font-semibold">
@@ -393,6 +397,21 @@ export default function VacancyEditor() {
           </div>
         )}
       </form>
+      <aside aria-label="Как читать" className="grid gap-3 rounded-xl border border-tint-200 bg-tint-50 p-4 text-13 lg:sticky lg:top-4">
+        <p className="font-mono text-12 uppercase tracking-wide text-brand-fg">Как читать</p>
+        <p>Каждая точка в обязательном навыке сужает выборку. Если кандидатов мало, снизьте уровень или переведите навык в желательные.</p>
+        {strictest && (
+          <p>
+            Сейчас самое строгое требование: <b className="font-mono">{nameOf.get(strictest.slug) ?? strictest.slug} · {strictest.min_level} из 4</b>.
+          </p>
+        )}
+        {loaded && status === "published" && (
+          <Link to={`/employer/vacancies/${id}/shortlist`} className="inline-flex h-10 items-center justify-center rounded-lg bg-brand px-4 font-semibold text-on-brand hover:bg-brand-deep">
+            Показать подборку
+          </Link>
+        )}
+      </aside>
+      </div>
     </main>
   );
 }

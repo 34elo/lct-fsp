@@ -18,6 +18,7 @@ from redis.asyncio import Redis
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.fsp.client import ConnectorClient
 from app.graph.fsp_models import FspParticipant, FspTeamMember, FspTeamRow
 
 STATE_TTL = 600  # s:oauth:* — 10 мин (messaging.md §6)
@@ -75,3 +76,13 @@ async def request_sync(session: AsyncSession, redis: Redis, candidate_id: uuid.U
         raise ProblemError(429, "sync_too_often", "Обновлять можно раз в 10 минут")
     cmd = FspSync(candidate_id=candidate_id, reason="manual")
     await add_to_outbox(session, new_envelope("fsp.sync", "core", cmd), aggregate_id=candidate_id)
+
+
+async def demo_create_result(session: AsyncSession, connector: ConnectorClient) -> None:
+    """Демо-кнопка: создать результат ФСП для случайного кандидата."""
+    await connector.demo_create_result()
+
+
+async def demo_reset(session: AsyncSession, connector: ConnectorClient) -> None:
+    """Демо-кнопка: очистить результаты ФСП."""
+    await connector.demo_reset()
