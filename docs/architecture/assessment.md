@@ -1,6 +1,6 @@
 # Тестирование, категории и ранжирование (v2)
 
-> Технический документ для реализации эпиков E21–E26, E30. Продуктовая логика — в [solution.md](../solution.md), решения — ADR-018…024. Все числа живут в `data/scoring.yaml` (раздел `assessment`), здесь — их значения по умолчанию.
+> Технический документ для реализации эпиков E21–E26, E30, E32. Продуктовая логика — в [solution.md](../solution.md), решения — ADR-018…025 (ADR-025 — правки по ответам организаторов, [notes/qa-2026.md](../notes/qa-2026.md)). Все числа живут в `data/scoring.yaml` (раздел `assessment`), здесь — их значения по умолчанию.
 > **Принцип: просто и прозрачно.** Одна шкала θ, одна модель (Rasch), одно правило остановки (SPRT), одна формула ранжирования. Всё остальное — данные и конфиг.
 
 ## 1. Как модули связаны
@@ -27,12 +27,12 @@ matching ── категория = профессия × грейд; сила 
 3. Цикл `next` / `answer` до остановки SPRT.
 4. Итог: запись грейда, доказательства `test` в `graph`, события в outbox.
 5. `matching` пересчитывает силу профиля по событию.
-6. Кандидат появляется в категории, если есть согласие `profile_publication`.
+6. Кандидат появляется в категории, если есть согласие `profile_publication`. До теста (или без подтверждения) он виден в категории заявленного грейда с меткой «не подтверждён» и ниже подтверждённых (ADR-025, §9).
 
 ## 2. Модель навыков
 
 - **Навык:** `type ∈ {fundamental, hard, thinking, business, soft, experience}`.
-- **Профессия:** `slug`, название, веса навыков `{skill: w}` (бывший `roles.yaml`). Создаёт админ. В MVP: Backend, Frontend, Mobile, Data/ML, DevOps, QA, AI Engineer.
+- **Профессия:** `slug`, название, веса навыков `{skill: w}` (бывший `roles.yaml`). Создаёт админ. В MVP (ADR-025): Backend, Frontend, Data/ML с полным покрытием банка + AI Engineer как витрина «новая профессия данными». Mobile, DevOps, QA остаются в справочнике без обязательного покрытия.
 - **Грейд:** универсальная шкала θ. Порог `cut` — минимальный θ грейда:
 
 | Грейд | `cut` |
@@ -41,18 +41,19 @@ matching ── категория = профессия × грейд; сила 
 | Middle | 0.0 |
 | Senior | 1.0 |
 
-- **Категория** = профессия, выбранная в опросе, × подтверждённый грейд. Хочешь вторую категорию — проходи тест по второй профессии.
+- **Категория** = профессия, выбранная в опросе, × подтверждённый грейд. Хочешь вторую категорию — проходи тест по второй профессии. Заявленный в опросе грейд без подтверждения — «не подтверждён»: виден в выдаче, но ниже и за фильтром (ADR-025).
+- **Профессия = IT-направление.** «Отрасль» из ТЗ — это IT-направление (бэкенд, фронтенд, ML), а не индустрия: опрос спрашивает профессию, `industry` не спрашивает (ADR-025).
 - **Карточка навыка** (`data/skills/cards/<skill>.yaml`): утверждения по уровням, понятия, заблуждения. Нужна авторам заданий и для объяснений («Middle: выполнены утверждения 1, 2, 4»). Для работы движка не обязательна. Схема — `SkillCard` в `app/taxonomy/cards.py` (`schema_version`, `skill` = имя файла, `type` = тип из справочника, `summary`, `levels.{junior,middle,senior}` по 2–8 утверждений с нумерацией с 1, `concepts[] {term, note}` ≥ 3, `misconceptions[] {claim, truth}` ≥ 2); проверка — `make cards-check` (в CI).
 
 ## 3. Данные
 
 | Таблица | Ключевые поля |
 |---|---|
-| `surveys` | `candidate_id`, `industry`, `profession`, `stack[]`, `formats[]`, `salary_from/to`, `declared_grade`, `created_at` (история — новые строки) |
+| `surveys` | `candidate_id`, `industry` (необязательно, в UI не спрашиваем — ADR-025), `profession`, `stack[]`, `formats[]`, `salary_from/to`, `declared_grade`, `created_at` (история — новые строки) |
 | `families` | `id`, `slug`, `kind`, `source` (`code`, `spec`, `mutation`, `llm`), `skill_id`, `skill_type`, `level` 1–5, `b`, `n`, `anchor`, `status`, `spec` (JSON для конструктора), `key_status` (`draft`, `approved`), `author_id`, `company_id`, `ai_solvable` 0–1, `stats` (JSON), `version` |
-| `attempts` | `id`, `candidate_id`, `profession`, `declared_grade`, `stage` (`main`, `bonus`), `status` (`active`, `passed`, `failed`, `abandoned`), `plan` (JSON), `theta`, `se`, `llr`, `integrity`, `started_at`, `finished_at` |
+| `attempts` | `id`, `candidate_id`, `profession`, `declared_grade`, `mode` (`standard`, `express` — E32-4a), `stage` (`main`, `bonus`), `status` (`active`, `passed`, `failed`, `abandoned`), `plan` (JSON), `theta`, `se`, `llr`, `integrity`, `started_at`, `finished_at` |
 | `responses` | `attempt_id`, `seq`, `family_id`, `seed`, `is_pilot`, `answer` (JSON), `score` 0–1, `rt_ms`, `telemetry` (JSON: уходы со вкладки, вставки) |
-| `grades` | `candidate_id`, `profession`, `grade`, `theta`, `theta_by_type` (JSON), `confirmed_at`, `valid_until`, `next_change_at`, `attempt_id` |
+| `grades` | `candidate_id`, `profession`, `grade`, `theta`, `theta_by_type` (JSON), `confirmed_at`, `valid_until`, `next_change_at`, `attempt_id`, `mode` (E32-4a) |
 | `needs` (модуль `matching`) | `id`, `company_id`, `text`, `skills` (JSON веса), `grade`, `salary_from/to`, `formats[]`, `vacancy_id?`, `shortlist[]` |
 | `regular_tasks`, `task_submissions` (модуль `assessment`) | задание: `company_id`, `author_id`, `family_id` (своё задание конструктора или семейство банка; встроенной спецификации нет), `profession`, `grade`, `title`, `rubric` (только `open`), `period_days` 7–14, `status` (`draft`, `open`, `closed`), `round`, `published_at`; ответ: `task_id`, `candidate_id`, `round`, `seed`, `answer`, `score`, `rubric_marks`, `scored_by` (`auto`, `llm_draft`, `employer`); уникален `(task_id, candidate_id, round)` |
 
@@ -136,7 +137,9 @@ P(θ, b) = 1 / (1 + e^-(θ − b))
   - LLR ≤ −2.197 → **не прошёл**.
 - Минимум 10 оцениваемых заданий, максимум 24. На максимуме решение по EAP θ относительно `cut` с пометкой «низкая уверенность». Широкая зона безразличия (±0.7) компенсируется минимумом 10: SPRT не останавливает тест на 4–6 удачных ответах.
 
-**Бонусный этап.** Запускается, если кандидат прошёл за ≤ 10 заданий и θ ≥ cut_следующего (отступ `margin` = 0). Это до 10 заданий с тем же правилом SPRT у порога следующего грейда. Прежний мягкий допуск (θ ≥ cut_следующего − 0.5, до 6 заданий) давал около половины завышений грейда и основной выигрыш «знающих» утёкшие варианты (ADR-030). Прошёл — предложение повышения, кандидат принимает его сам.
+**Бонусный этап.** Запускается, если кандидат прошёл за ≤ 10 заданий и θ ≥ cut_следующего (отступ `margin` = 0). Это до 10 заданий с тем же правилом SPRT у порога следующего грейда. Прежний мягкий допуск (θ ≥ cut_следующего − 0.5, до 6 заданий) давал около половины завышений грейда и основной выигрыш «знающих» утёкшие варианты (ADR-030). **Прошёл — приглашение на отдельный тест следующего грейда** (ADR-025): грейд не меняется, в событии `invited_grade`; приглашённый тест не ждёт кулдауна смены грейда (90 дней), приглашение действует 30 дней; провал не меняет грейд и не сжигает попытку. Автоповышения и «принять повышение» нет.
+
+**Экспресс-режим для жюри** (ADR-025, E32-4a): `mode = express` — 6–8 заданий, α = β = 0.15 (границы LLR ±1.735), без бонусного этапа, 3–5 минут. Грейд пишется с меткой «экспресс», правила грейда те же.
 
 **Правила грейда:**
 - Подтверждение действует 12 месяцев.
@@ -145,6 +148,7 @@ P(θ, b) = 1 / (1 + e^-(θ − b))
 - После неудачи одна попытка на грейд ниже доступна сразу.
 - Грейд принудительно не понижается.
 - Нарушение кулдауна → `409 cooldown` с датой следующей попытки.
+- Исключение (ADR-025): тест по приглашению после бонусного этапа идёт без кулдауна смены грейда, пока приглашение действует (30 дней).
 
 ## 6. Ранжирование заданий: какое задание дать следующим
 
@@ -249,14 +253,16 @@ strength = (0.5·T + 0.2·F + 0.15·S + 0.1·R + 0.05·C) · (I < 0.6 ? 0.8 : 1)
 | Слагаемое | Что это | Как считается |
 |---|---|---|
 | T | Положение θ внутри полосы грейда | clamp((θ − cut_g) / (cut_{g+1} − cut_g), 0, 1); у Senior ширина полосы 1.0 |
-| F | ФСП | Существующая сила ФСП-доказательств (`graph/fsp_strength.py`) ∈ [0, 1]; без ФСП — 0, без штрафа |
+| F | ФСП | Сила ФСП v2 (`graph/fsp_strength.py`, E32-2, ADR-025) ∈ [0, 1]: результат (победитель / призёр / финалист / участник) × число соревнований с убывающей отдачей, давность — мягкий множитель; онлайн-явки без результата почти не дают вклада. Уровни соревнований и дисциплины **не ранжируются**. Без ФСП — 0, без штрафа |
 | S | Подтверждённые навыки | Среднее доверие по навыкам потребности (или топ-навыкам профессии) из графа |
 | R | Свежесть | exp(−дней_с_последнего_теста_или_задания / 180) |
 | C | Полнота профиля | Доля заполненных полей |
 
+**Неподтверждённый (заявленный) грейд** (ADR-025): кандидат без действующего грейда по профессии, но с заявленным в опросе (`assessment.service.declared_*`), получает `strength = 0.5 · (0.2·F + 0.15·S + 0.1·R + 0.05·C)` (T = 0: теста нет) и метку «не подтверждён». Фильтр «только подтверждённые» включён по умолчанию; выключил — заявленные идут в той же выдаче ниже подтверждённых с близким `match`. Коэффициент 0.5 — `scoring.yaml` `strength.unconfirmed_factor`.
+
 **Потребность → категории:**
 - `affinity(prof) = Σ_s min(w_need(s), w_prof(s)) / Σ_s w_need(s)`;
-- показываем профессии с affinity ≥ 0.4, грейд из потребности, число кандидатов, медиану ожиданий, долю с ФСП.
+- показываем профессии с affinity ≥ 0.4, грейд из потребности, число кандидатов (подтверждённых и отдельно «не подтверждён»), медиану ожиданий, долю с ФСП.
 
 **Выдача внутри категории:**
 
@@ -272,11 +278,11 @@ rank = 0.6·match + 0.4·strength
 |---|---|
 | `GET /taxonomy/professions` | Профессии, веса, грейды |
 | `PUT /assessment/survey`, `GET /assessment/survey` | Опрос (история — новые записи) |
-| `POST /assessment/attempts` `{profession, declared_grade}` | 201, или `409 cooldown`, или `403 email_not_verified` / `consent_required` |
+| `POST /assessment/attempts` `{profession, declared_grade, mode?}` | 201, или `409 cooldown`, или `403 email_not_verified` / `consent_required`. `mode = express` — экспресс-режим (E32-4a) |
 | `GET /assessment/attempts/{id}/next` | Следующее задание без ключа: `{response_id, kind, stem, options?, time_limit_s, steps?}` (`steps` — шаги `chain` в том же виде) или `{done: true}` |
 | `POST /assessment/attempts/{id}/answers` `{response_id, answer, rt_ms, telemetry}` | Повтор с тем же `response_id` идемпотентен |
 | `GET /assessment/attempts/{id}` | Итог: грейд, θ по типам, разбор ошибок, честность |
-| `POST /assessment/attempts/{id}/upgrade` | Принять повышение после бонусного этапа |
+| `POST /assessment/attempts/{id}/upgrade` | После ADR-025: начать тест следующего грейда по приглашению бонусного этапа (201 — новая попытка без кулдауна). Сейчас (E22-4) принимает повышение — переделать |
 | `GET /assessment/history` | История опросов и попыток, даты кулдаунов |
 | `POST /assessment/attempts/{id}/responses/{response_id}/explain` `{self_reason?}` | «Объясни ответ» (после завершения попытки): причина ошибки по правилам + текст |
 | `POST /assessment/plan/preview` `{vacancy_id \| skills}` | План теста и 3 примера заданий (демо «вакансия → тест») |
@@ -284,7 +290,7 @@ rank = 0.6·match + 0.4·strength
 | `GET /admin/families?status=pilot` | Очередь допуска со статистикой |
 | `POST /admin/families/{id}/approve \| quarantine \| retire` | Решение админа |
 | `POST /needs`, `GET /needs/{id}/categories` | Потребность → рекомендованные категории |
-| `GET /categories/{profession}/{grade}/candidates?need_id=` | Анонимные карточки по `rank` с объяснением |
+| `GET /categories/{profession}/{grade}/candidates?need_id=&confirmed_only=true` | Анонимные карточки по `rank` с объяснением. `confirmed_only=false` добавляет «не подтверждён» (ADR-025) |
 
 Чужой ресурс → 404. Ошибки — Problem Details с машинным `code`.
 
@@ -318,7 +324,7 @@ rank = 0.6·match + 0.4·strength
 
 | Событие | Тело |
 |---|---|
-| `assessment.attempt.finished` | `{candidate_id, attempt_id, profession, declared_grade, stage, result, grade?, theta, se, integrity, needs_confirmation, low_confidence, finished_at, profile_version}` |
+| `assessment.attempt.finished` | `{candidate_id, attempt_id, profession, declared_grade, stage, result, grade?, theta, se, integrity, needs_confirmation, low_confidence, finished_at, profile_version, mode, invited_grade?}` (`mode`, `invited_grade` — ADR-025, необязательные) |
 | `candidate.category.changed` | `{candidate_id, categories: [{profession, grade}], profile_version}` |
 | `assessment.family.status_changed` | `{family_id, from, to}` |
 | `regular_task.published` | `{task_id, company_id, profession, grade, round, period_days, recipients[], published_at}` — получатели: действующий грейд ровно категории и согласие `profile_publication`; без ПДн |

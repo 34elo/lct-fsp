@@ -184,7 +184,7 @@ TEST_GRADE_ORDER: tuple[TestGrade, ...] = (TestGrade.junior, TestGrade.middle, T
 ProfessionSlug = Annotated[str, Field(pattern=r"^[a-z][a-z0-9_]{1,31}$")]
 ```
 
-- **Профессии MVP:** `backend`, `frontend`, `mobile`, `ml` (Data/ML), `devops`, `qa`, `ai_engineer`. Первые шесть уже есть в `roles.yaml`, `ai_engineer` добавляет E21-1 (Б1). До Т2 Б2 работает только с первыми шестью.
+- **Профессии MVP** (ADR-025): `backend`, `frontend`, `ml` (Data/ML) с полным покрытием банка + `ai_engineer` как витрина (добавляет E21-1, Б1). `mobile`, `devops`, `qa` остаются в `roles.yaml` без обязательного покрытия: код не должен на них рассчитывать, но и ломаться на них не должен.
 - `enums.RoleSlug` и `enums.Grade` остаются для старых полей (резюме, вакансии). Новые поля v2 используют `ProfessionSlug` и `TestGrade`.
 - **Категория** — пара `(profession, grade)`. В URL и ключах записывается как `backend/middle`, в логах и аналитике — как `backend.middle`.
 
@@ -237,6 +237,14 @@ class CandidateGrade(BaseModel):
     confirmed_at: datetime
     valid_until: datetime
     next_change_at: datetime
+    mode: Literal["standard", "express"] = "standard"  # ADR-025, E32-4a: метка «экспресс»
+
+
+class DeclaredGrade(BaseModel):  # ADR-025: заявленный в опросе, без действующего подтверждения
+    candidate_id: UUID
+    profession: ProfessionSlug
+    grade: TestGrade
+    declared_at: datetime  # дата опроса
 
 
 class ClaimedVsConfirmed(BaseModel):
@@ -268,6 +276,9 @@ class ProfessionInfo(BaseModel):
 | `claimed_vs_confirmed(session, candidate_id)` | `list[ClaimedVsConfirmed]` | По каждой профессии из опросов или грейдов |
 | `last_activity_at(session, candidate_id)` | `datetime \| None` | Последний завершённый тест или регулярное задание — для свежести R |
 | `seed_grade(session, candidate_id, profession, grade, theta, *, integrity=1.0, needs_confirmation=False, now=None)` | `CandidateGrade` | **Только seed и тесты.** Upsert с `source="seed"` + событие `candidate.category.changed` в outbox |
+| `declared_grades_many(session, candidate_ids)` | `dict[UUID, list[DeclaredGrade]]` | ADR-025. Заявленный грейд из последнего опроса по профессии, где **нет** действующего грейда. Каждый запрошенный кандидат есть в словаре (пусто — `[]`). Без учёта согласий |
+| `declared_members(session, profession, grade)` | `list[UUID]` | ADR-025. Кандидаты, заявившие ровно `grade` и не подтверждённые по профессии. Без учёта согласий |
+| `declared_counts(session)` | `dict[tuple[str, str], int]` | ADR-025. `(profession, grade) → число` неподтверждённых заявленных. Не пересекается с `category_counts` |
 
 `status` в `ClaimedVsConfirmed`:
 - `confirmed` — `confirmed_grade` есть и равен заявленному или заявленного нет;
@@ -281,7 +292,9 @@ class ProfessionInfo(BaseModel):
 |---|---|---|
 | `list_professions(session)` | `list[ProfessionInfo]` | Профессии и веса навыков. Этап 0 читает существующие роли и веса, E21-1 добавляет типы и `ai_engineer`, не меняя сигнатуру |
 
-**Что считает Б2 из этих данных** (assessment.md §9): T = `band_position`; множитель честности = 0.8, если `needs_confirmation`; R = exp(−дней с `last_activity_at` / 180), при `None` — 0; F — из `graph/fsp_strength.py` (зона Б2); S — из существующих функций `graph.service` (только чтение); C — из `candidates.service`.
+**Что считает Б2 из этих данных** (assessment.md §9): T = `band_position`; множитель честности = 0.8, если `needs_confirmation`; R = exp(−дней с `last_activity_at` / 180), при `None` — 0; F — из `graph/fsp_strength.py` (зона Б2, v2 по результативности — E32-2); S — из существующих функций `graph.service` (только чтение); C — из `candidates.service`. **Неподтверждённый (заявленный) грейд** (ADR-025): T = 0, множитель 0.5 ко всей силе, метка «не подтверждён»; выдаётся только при выключенном фильтре «только подтверждённые» (по умолчанию включён). `mode = express` — метка «экспресс» в карточке, формула та же.
+
+Отдельного события при сохранении опроса нет: заявленные грейды Б2 читает при запросе выдачи.
 
 ### 4.4. События (outbox → RabbitMQ `events`)
 
@@ -303,6 +316,8 @@ class AttemptFinished(BaseModel):  # "assessment.attempt.finished"
     low_confidence: bool
     finished_at: datetime
     profile_version: int
+    mode: Literal["standard", "express"] = "standard"  # ADR-025
+    invited_grade: TestGrade | None = None  # ADR-025: бонус приглашает на тест этого грейда
 
 
 class CategoryChanged(BaseModel):  # "candidate.category.changed"
@@ -324,7 +339,7 @@ class FamilyStatusChanged(BaseModel):  # "assessment.family.status_changed" (в�
 
 ### 4.5. Видимость кандидата
 
-- **Кандидат попадает в выдачу работодателю, только если выполнено всё:** есть действующий грейд (`get_grades` не пуст), есть согласие `profile_publication` и не скрыт статусом поиска. Проверяет **Б2** в `matching`.
+- **Кандидат попадает в выдачу работодателю, только если выполнено всё:** есть действующий грейд (`get_grades` не пуст) **или** заявленный грейд (`declared_grades_many`, ADR-025; только при выключенном фильтре «только подтверждённые», с меткой «не подтверждён»), есть согласие `profile_publication` и не скрыт статусом поиска. Проверяет **Б2** в `matching`.
 - `ConsentType.profile_publication` добавляет этап 0. Экран согласий (Б1) берёт список типов из API, отдельной правки ему не нужно.
 - Б1 тоже учитывает это согласие: рассылка регулярных заданий (E25-1) идёт только кандидатам с `profile_publication`. Проверка — через `consents.service.has_consent`.
 
@@ -694,6 +709,7 @@ from app.assessment.router import router as assessment_router
 | 2026-10-05 | S0-b | `last_activity_at` пока `max(grades.confirmed_at)`; `attempts` и `task_submissions` подключит Б1 | Б2 (свежесть R) | S0-2 | реализовано, уточнит Б1 |
 | 2026-10-05 | S0-c | `next_change_at` у seed-грейда = +30 дней (`GRADE_COOLDOWN`) | Б2 | S0-2 | реализовано, уточнит Б1 |
 | 2026-10-05 | S0-d | `factories/base.py` теперь менять только по заявке; `make e2e`, `@playwright/test` добавлены | оба блока | E29-1 | готово |
+| 2026-10-06 | S0-e | ADR-025 (Q&A): DTO `DeclaredGrade`; `declared_grades_many`, `declared_members`, `declared_counts` в `assessment.service` (§4.3); видимость «или заявленный» (§4.5); необязательные `CandidateGrade.mode`, `AttemptFinished.mode`, `AttemptFinished.invited_grade`; MVP-профессии (§4.1). Совместимо, старые сигнатуры не менялись | Б2 (E23-1, E23-2, бот), Б1 (E22-3, E22-4, E32-4a) | E32-1 | реализовано, ждёт подтверждения обоих блоков |
 
 ### 13.1. Блок 1
 
