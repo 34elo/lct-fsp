@@ -26,8 +26,60 @@ Python 3.12 · FastAPI · SQLAlchemy 2 · FastStream + RabbitMQ · aiogram 3 · 
 - [docs/README.md](docs/README.md) — структура и что читать под задачу.
 - [AGENTS.md](AGENTS.md) — правила для ИИ-агентов и людей, работающих с репозиторием.
 
-## Запуск
+## Быстрый старт
 
-Появится вместе с кодом. Целевые команды: `make up`, `make migrate`, `make taxonomy-load`, `make seed`, `make demo-reset`, `make eval` — [deployment.md](docs/architecture/deployment.md#5-makefile-целевые-команды).
+### Требования
+- Docker и Docker Compose (v2.20+)
+- Node.js 20+
+- Python 3.12 (в составе репозитория с `uv`)
+- Linux / macOS (или WSL на Windows)
+- Минимум 16 ГБ ОЗУ (рекомендуется 32+ для полного стенда с GPU)
+
+### Запуск (2 минуты)
+
+```bash
+# 1. Первый запуск — копируем конфиг
+cp .env.example .env
+
+# 2. Для стенда жюри без GPU (lite)
+make up-lite && make migrate && make taxonomy-load && make seed
+# → http://localhost:28080
+
+# 3. Для разработки с GPU (full)
+make up && make migrate && make taxonomy-load && make seed
+
+# 4. Остановка
+make down
+```
+
+Подробная инструкция: [docs/deploy.md](docs/deploy.md)
+
+Целевые команды: `make up`, `make up-lite`, `make migrate`, `make taxonomy-load`, `make seed`, `make demo-reset`, `make eval` — полный список в [docs/deploy.md](docs/deploy.md#основные-команды).
+
+## Демо-аккаунты
+
+Все тестовые данные создаются автоматически при `make seed`. Пароль: `demo-pass-1234`
+
+| Роль | Логины | Пароль | Где |
+|---|---|---|---|
+| **Кандидат** | `cand0001@demo.fsp.test` … `cand0400@demo.fsp.test` | `demo-pass-1234` | Профиль, тест, резюме |
+| **Работодатель** | `hr01@demo.fsp.test` … `hr25@demo.fsp.test` | `demo-pass-1234` | Вакансии, подборка, офферы |
+| **Админист.** | `admin@demo.fsp.test` | `demo-pass-1234` | Модерация, справочники, метрики |
+
+Все данные вымышленные и генерируются детерминировано по семени (`SEED=20261003`).
+
+## Доступ к интерфейсам
+
+| Адрес | Назначение |
+|---|---|
+| **http://localhost:28080** | Основное приложение (SPA) |
+| **http://localhost:28080/api/docs** | API документация (Swagger UI) |
+| **http://localhost:28080/api/asyncapi** | События и команды (AsyncAPI) |
+
+## Профили запуска
+
+- **`lite`** (для жюри): без GPU, без LLM, ~1.5 ГБ ОЗУ
+- **`standard`**: с LLM на CPU, ~4 ГБ ОЗУ
+- **`full`**: с GPU и LLM, ~8 ГБ ОЗУ (обязательно наличие GPU)
 
 Данные ядра навыков частично получены из Stack Overflow (CC BY-SA 4.0).
