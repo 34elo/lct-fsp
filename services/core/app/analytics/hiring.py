@@ -73,3 +73,32 @@ def category_events(c: Any, p: Any) -> list[AnalyticsEvent]:
         )
         for cat in p.categories
     ]  # fmt: skip
+
+
+def interest_events(c: Any, p: OfferEvent) -> list[AnalyticsEvent]:
+    """События интереса (offer.interest.*): shown, answered (opened/declined/expired/withdrawn).
+
+    Интерес — это приглашение на фазе, когда компания ещё не отправила формальное предложение.
+    После того как компания отправляет предложение (invited_at устанавливается), событие
+    interest_to_invite отмечает переход. После этого обычные offer.* события.
+    """
+    oid = str(p.offer_id)
+    match c.envelope.type:
+        case "offer.interest.sent":
+            props = {"interest_id": oid, "with_vacancy": p.vacancy_id is not None}
+            return [c.ev("interest_shown", p.company_id, "employer", props)]
+        case "offer.interest.opened":
+            props = {"interest_id": oid, "decision": "opened"}
+            return [c.ev("interest_answered", p.candidate_id, "candidate", props)]
+        case "offer.interest.declined":
+            props = {"interest_id": oid, "decision": "declined"}
+            if p.decline_reason:
+                props["reason"] = p.decline_reason.value
+            return [c.ev("interest_answered", p.candidate_id, "candidate", props)]
+        case "offer.interest.expired":
+            props = {"interest_id": oid, "decision": "expired"}
+            return [c.ev("interest_answered", p.candidate_id, "candidate", props)]
+        case "offer.interest.withdrawn":
+            props = {"interest_id": oid, "decision": "withdrawn"}
+            return [c.ev("interest_answered", p.company_id, "employer", props)]
+    return []
