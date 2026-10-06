@@ -107,6 +107,11 @@ class Candidate(Base):
     # ручная форма (E20-4): контакты шифруются Fernet (security.md §3), желаемые роли — slug
     contacts_enc: Mapped[bytes | None] = mapped_column(sa.LargeBinary, default=None)
     desired_roles: Mapped[list[str] | None] = mapped_column(TextArray, default=None)
+    # возраст (E32-5b): только группа, дата рождения не собирается; `minor` = 15–17 лет
+    age_group: Mapped[str | None] = mapped_column(Text, default=None)  # adult | minor
+    parent_consent_at: Mapped[datetime | None] = mapped_column(
+        sa.DateTime(timezone=True), default=None
+    )  # отметка о согласии родителя на обработку ПДн несовершеннолетнего
     # слияние пересчётов (graph.md §4.4)
     recompute_requested_at: Mapped[datetime | None] = mapped_column(
         sa.DateTime(timezone=True), default=None

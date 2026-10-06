@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime
+from typing import Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Request, Response
@@ -92,6 +93,9 @@ class CandidateProfile(BaseModel):
     contacts: ContactsIO | None = None  # только владельцу; в карточку работодателя не идёт
     desired_roles: list[str] = []
     experience_months: int | None = None
+    age_group: Literal["adult", "minor"] | None = None  # minor = 15–17 лет
+    parent_consent: bool = False  # согласие родителя на ПДн (только для minor)
+    publishable: bool = True  # false: 15–17 лет без согласия родителя, в выдачу не попадает
     fsp: card.OwnerFsp | None = None
     experience: list[ExperienceItem] = []
     claimed_vs_confirmed: list[ClaimedVsConfirmed] = []  # E23-3: заявлено (опрос/резюме) vs тест
@@ -143,6 +147,8 @@ class ProfileIn(BaseModel):
     experience_months: int | None = Field(default=None, ge=0, le=720)
     desired_roles: list[RoleSlug] | None = Field(default=None, max_length=5)
     soft_skills: list[str] | None = Field(default=None, max_length=30)  # slug
+    age_group: Literal["adult", "minor"] | None = None
+    parent_consent: bool | None = None  # true — родитель согласен; false — отзыв
 
 
 class StoplistIO(BaseModel):
@@ -174,6 +180,9 @@ async def profile_out(session: AsyncSession, c: Candidate, settings: Settings) -
         contacts=ContactsIO(**contacts) if contacts else None,
         desired_roles=list(c.desired_roles or []),
         experience_months=c.experience_months,
+        age_group=c.age_group,
+        parent_consent=c.parent_consent_at is not None,
+        publishable=service.is_publishable(c),
         fsp=await card.owner_fsp(session, c),
         experience=await resumes.experience_for_profile(session, c.user_id),
         claimed_vs_confirmed=await assessment.claimed_vs_confirmed(session, c.user_id),
