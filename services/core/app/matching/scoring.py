@@ -65,6 +65,7 @@ class MatchConfig:
     semantic_floor: float = 0.30
     semantic_span: float = 0.55
     active_bonus: float = 1.03
+    interest_boost: float = 1.05  # встречный сигнал кандидата (E33-6): множитель к порядку
     top_explanations: int = 3
     candidate_limit: int = 300
     semantic_limit: int = 100
@@ -90,6 +91,7 @@ class MatchConfig:
             w_grade=float(w.get("grade_fit", base.w_grade)),
             w_salary=float(w.get("salary_fit", base.w_salary)),
             w_fsp=float(w.get("fsp_strength", base.w_fsp)),
+            interest_boost=float(w.get("candidate_interest_boost", base.interest_boost)),
             grade_within=float(gf.get("within_range", base.grade_within)),
             grade_adjacent=float(gf.get("one_step_adjacent", base.grade_adjacent)),
             grade_further=float(gf.get("further", base.grade_further)),

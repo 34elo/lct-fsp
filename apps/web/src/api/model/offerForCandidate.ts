@@ -12,6 +12,7 @@ import type { OfferInitiator } from './offerInitiator';
 import type { OfferStatus } from './offerStatus';
 import type { SalaryBasis } from './salaryBasis';
 import type { VacancyBrief } from './vacancyBrief';
+import type { WhyYou } from './whyYou';
 
 export interface OfferForCandidate {
   id: string;
@@ -33,5 +34,9 @@ export interface OfferForCandidate {
   match_snapshot?: MatchSnapshot | null;
   decline?: Decline | null;
   awaiting_reply_from?: string | null;
+  interest_at?: string | null;
+  interest_opened_at?: string | null;
+  invited_at?: string | null;
   company: CompanyBrief;
+  why_you?: WhyYou | null;
 }

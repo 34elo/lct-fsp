@@ -1,4 +1,4 @@
-import { AlertTriangle, Ban, Check, CircleDashed, Clock, Eye, Handshake, MessageSquare, UserX, X, type LucideIcon } from "lucide-react";
+import { AlertTriangle, Ban, Check, CircleDashed, Clock, Eye, Handshake, MailOpen, MessageSquare, Sparkles, UserX, X, type LucideIcon } from "lucide-react";
 
 import { cn } from "../lib/cn";
 import { formatRubRange } from "../lib/format";
@@ -63,7 +63,7 @@ export function SalaryRange({
 }
 
 /** Статусы оффера — те же значения, что `OfferStatus` в контракте. */
-export type OfferStatus = "sent" | "viewed" | "accepted" | "declined" | "expired" | "withdrawn" | "interview" | "hired" | "not_hired";
+export type OfferStatus = "sent" | "viewed" | "accepted" | "declined" | "expired" | "withdrawn" | "interview" | "hired" | "not_hired" | "interest" | "interest_opened";
 
 const STATUS: Record<OfferStatus, { icon: LucideIcon; label: string; cls: string }> = {
   sent: { icon: Clock, label: "Отправлен", cls: "border-brand-mid bg-card text-brand-deep dark:text-brand-mid" },
@@ -75,6 +75,8 @@ const STATUS: Record<OfferStatus, { icon: LucideIcon; label: string; cls: string
   interview: { icon: MessageSquare, label: "Собеседование", cls: "border-brand bg-tint-50 text-brand-fg" },
   hired: { icon: Handshake, label: "Нанят", cls: "border-success bg-success-bg text-success" },
   not_hired: { icon: UserX, label: "Не нанят", cls: "border-hairline bg-card text-muted" },
+  interest: { icon: Sparkles, label: "Интерес", cls: "border-brand-mid bg-tint-50 text-brand-deep dark:text-brand-mid" },
+  interest_opened: { icon: MailOpen, label: "Интерес открыт", cls: "border-brand bg-tint-50 text-brand-fg" },
 };
 
 export const OFFER_STATUS_LABEL = Object.fromEntries(Object.entries(STATUS).map(([k, v]) => [k, v.label])) as Record<OfferStatus, string>;

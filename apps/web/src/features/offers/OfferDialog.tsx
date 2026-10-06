@@ -3,15 +3,15 @@ import { AcceptanceMeter, Button, Dialog, DialogContent, DialogDescription, Dial
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { useCreateOfferOffersPost, useSalaryHintOffersSalaryHintPost } from "@/api/endpoints/offers/offers";
+import { useCreateInterestInterestsPost, useCreateOfferOffersPost, useInviteFromInterestInterestsOfferIdInvitePost, useSalaryHintOffersSalaryHintPost } from "@/api/endpoints/offers/offers";
 import { useListVacanciesVacanciesGet } from "@/api/endpoints/vacancies/vacancies";
-import { ContactMethod } from "@/api/model";
+import { ContactMethod, type OfferForCompany } from "@/api/model";
 import { ErrorNote, fieldClass } from "@/features/auth/ui";
 import { FORMAT_LABEL } from "@/features/employer/text";
 import { cn } from "@/shared/lib/cn";
 import { canSendOffer, groupDigits, isWideRange, parseRub, rangeProblem } from "./offer-model";
 import { invalidateOffers } from "./parts";
-import { CONTACT_LABEL, offerErrorText } from "./text";
+import { CONTACT_LABEL, EMP_INT_TEXT as IT, offerErrorText } from "./text";
 
 const T = {
   title: (name: string) => `Оффер кандидату ${name}`,
@@ -67,22 +67,27 @@ function useMedia(query: string): boolean {
 
 export type OfferCandidate = { pseudoId: string; pseudonym: string; salaryMin: number | null };
 
+/** offer — оффер с вакансией; interest — первый шаг (E33-1); invite — приглашение по открытому интересу. */
+export type DialogMode = "offer" | "interest" | "invite";
+
 function Note({ tone, children }: { tone: "ok" | "warn"; children: ReactNode }) {
   return <p className={cn("rounded-lg px-3 py-2 text-sm", tone === "warn" ? "bg-warning-bg text-warning-fg" : "bg-success-bg text-success")}>{children}</p>;
 }
 
-function OfferForm({ candidate, vacancyId: initialVacancy, alreadyOffered, onClose }: { candidate: OfferCandidate; vacancyId: string; alreadyOffered: boolean; onClose: () => void }) {
+function OfferForm({ candidate, vacancyId: initialVacancy, alreadyOffered, onClose, mode, interest }: { candidate: OfferCandidate; vacancyId: string; alreadyOffered: boolean; onClose: () => void; mode: DialogMode; interest?: OfferForCompany }) {
   const nav = useNavigate();
   const qc = useQueryClient();
   const vq = useListVacanciesVacanciesGet();
   const published = useMemo(() => (vq.data?.status === 200 ? vq.data.data : []).filter((v) => v.status === "published"), [vq.data]);
-  const [vacancyId, setVacancyId] = useState(initialVacancy);
+  const invite = mode === "invite";
+  const isInterest = mode === "interest";
+  const [vacancyId, setVacancyId] = useState(invite ? (interest?.vacancy?.id ?? "") : initialVacancy);
   const vacancy = published.find((v) => v.id === vacancyId);
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(invite ? (interest?.title ?? "") : "");
   const [description, setDescription] = useState("");
   const [contactMethod, setContactMethod] = useState<ContactMethod>(ContactMethod.platform);
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  const [from, setFrom] = useState(invite && interest ? String(interest.salary_from) : "");
+  const [to, setTo] = useState(invite && interest ? String(interest.salary_to) : "");
   const [message, setMessage] = useState("");
   const [touched, setTouched] = useState(false);
   // Один ключ на открытие модалки: повторный клик или ретрай не создаст второй оффер.
@@ -101,16 +106,16 @@ function OfferForm({ candidate, vacancyId: initialVacancy, alreadyOffered, onClo
   const hi = parseRub(to);
   const problem = rangeProblem(lo, hi);
   const wide = isWideRange(lo, hi);
-  const canSend = canSendOffer({ lo, hi, vacancyId, title });
+  const canSend = isInterest ? problem === null : canSendOffer({ lo, hi, vacancyId, title });
 
   const hintM = useSalaryHintOffersSalaryHintPost();
   const hintMutate = hintM.mutate;
   useEffect(() => {
-    if (!vacancyId || problem) return;
-    const t = setTimeout(() => hintMutate({ data: { vacancy_id: vacancyId, candidate_pseudo_id: candidate.pseudoId, salary_from: lo, salary_to: hi } }), 400);
+    if (problem) return;
+    const t = setTimeout(() => hintMutate({ data: { vacancy_id: vacancyId || null, candidate_pseudo_id: candidate.pseudoId, salary_from: lo, salary_to: hi } }), 400);
     return () => clearTimeout(t);
   }, [vacancyId, candidate.pseudoId, lo, hi, problem, hintMutate]);
-  const hint = vacancyId && !problem && hintM.data?.status === 200 ? hintM.data.data : null;
+  const hint = !problem && hintM.data?.status === 200 ? hintM.data.data : null;
 
   const create = useCreateOfferOffersPost({
     request: { headers: { "Idempotency-Key": key.current } },
@@ -123,10 +128,39 @@ function OfferForm({ candidate, vacancyId: initialVacancy, alreadyOffered, onClo
     },
   });
 
+  const afterSave = (r: { data: unknown }) => {
+    void invalidateOffers(qc);
+    onClose();
+    const id = (r.data as { id?: string } | null)?.id;
+    nav(id ? `/employer/offers/${id}` : "/employer/offers");
+  };
+  const mark = useCreateInterestInterestsPost({ mutation: { onSuccess: afterSave } });
+  const inviteM = useInviteFromInterestInterestsOfferIdInvitePost({ mutation: { onSuccess: afterSave } });
+  const pending = create.isPending || mark.isPending || inviteM.isPending;
+  const error = create.error ?? mark.error ?? inviteM.error;
+
   const submit = (e: FormEvent) => {
     e.preventDefault();
     setTouched(true);
-    if (!canSend || create.isPending) return;
+    if (!canSend || pending) return;
+    if (isInterest) {
+      mark.mutate({ data: { candidate_pseudo_id: candidate.pseudoId, vacancy_id: vacancyId || null, salary_from: lo, salary_to: hi, message: message.trim() || null } });
+      return;
+    }
+    if (invite && interest) {
+      inviteM.mutate({
+        offerId: interest.id,
+        data: {
+          salary_from: lo,
+          salary_to: hi,
+          message: message.trim() || null,
+          title: vacancyId ? null : title.trim(),
+          description: vacancyId ? null : description.trim() || null,
+          contact_method: vacancyId ? null : contactMethod,
+        },
+      });
+      return;
+    }
     create.mutate({
       data: {
         vacancy_id: vacancyId || null,
@@ -141,6 +175,7 @@ function OfferForm({ candidate, vacancyId: initialVacancy, alreadyOffered, onClo
     });
   };
 
+  const maxMessage = isInterest ? 300 : 2000;
   const rangeText = problem === "missing" ? T.missing : problem === "inverted" ? T.inverted : null;
   const expect = candidate.salaryMin;
   const level = hint && LEVELS.includes(hint.acceptance_hint) ? (hint.acceptance_hint as AcceptanceLevel) : null;
@@ -153,7 +188,7 @@ function OfferForm({ candidate, vacancyId: initialVacancy, alreadyOffered, onClo
             {T.already}
           </p>
         )}
-        <label className="flex flex-col gap-1 text-sm font-semibold">
+        {!invite && <label className="flex flex-col gap-1 text-sm font-semibold">
           {T.vacancy}
           <select
             value={vacancyId}
@@ -172,15 +207,15 @@ function OfferForm({ candidate, vacancyId: initialVacancy, alreadyOffered, onClo
             ))}
           </select>
           {vq.isSuccess && published.length === 0 && <span className="text-xs font-normal text-muted">{T.noPublished}</span>}
-        </label>
-        {!vacancyId && (
+        </label>}
+        {!vacancyId && !isInterest && (
           <label className="flex flex-col gap-1 text-sm font-semibold">
             {T.invitation} *
             <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} aria-invalid={touched && title.trim() === ""} className={fieldClass} />
             <span className={cn("text-xs font-normal", touched && title.trim() === "" ? "text-error" : "text-muted")}>{T.invitationHint}</span>
           </label>
         )}
-        {!vacancyId && (
+        {!vacancyId && !isInterest && (
           <>
             <label className="flex flex-col gap-1 text-sm font-semibold">
               {T.invDescription}
@@ -216,15 +251,15 @@ function OfferForm({ candidate, vacancyId: initialVacancy, alreadyOffered, onClo
           </p>
         </fieldset>
         <label className="flex flex-col gap-1 text-sm font-semibold">
-          {T.message}
-          <textarea value={message} onChange={(e) => setMessage(e.target.value)} maxLength={2000} rows={5} placeholder={T.placeholder} className={cn(fieldClass, "h-auto py-2 font-normal")} />
-          <span className="self-end text-xs font-normal text-muted">{message.length} / 2000</span>
+          {isInterest ? IT.messageInterest : T.message}
+          <textarea value={message} onChange={(e) => setMessage(e.target.value)} maxLength={maxMessage} rows={isInterest ? 3 : 5} placeholder={T.placeholder} className={cn(fieldClass, "h-auto py-2 font-normal")} />
+          <span className="self-end text-xs font-normal text-muted">{message.length} / {maxMessage}</span>
         </label>
-        <p className="text-13 text-muted">{T.info}</p>
-        {create.isError && <ErrorNote>{offerErrorText(create.error)}</ErrorNote>}
+        <p className="text-13 text-muted">{isInterest ? IT.infoInterest : invite ? IT.infoInvite : T.info}</p>
+        {error && <ErrorNote>{offerErrorText(error)}</ErrorNote>}
         <div className="flex flex-wrap gap-2">
-          <Button type="submit" size="lg" disabled={!canSend || create.isPending}>
-            {create.isPending ? T.sending : T.send}
+          <Button type="submit" size="lg" disabled={!canSend || pending}>
+            {pending ? T.sending : isInterest ? IT.sendInterest : invite ? IT.sendInvite : T.send}
           </Button>
           <Button type="button" size="lg" variant="ghost" onClick={onClose}>
             {T.cancel}
@@ -244,8 +279,7 @@ function OfferForm({ candidate, vacancyId: initialVacancy, alreadyOffered, onClo
           <p className="text-sm text-muted">{T.liveEmpty}</p>
         ) : (
           <>
-            {vacancyId &&
-              (level && hint ? (
+            {(level && hint ? (
                 <div className="flex flex-col gap-1">
                   <AcceptanceMeter level={level} />
                   <p className="text-12 text-muted">
@@ -263,6 +297,13 @@ function OfferForm({ candidate, vacancyId: initialVacancy, alreadyOffered, onClo
                   {hintM.isError ? T.liveFail : T.liveWait}
                 </p>
               ))}
+            {hint?.suggested_salary_to != null && hint.suggested_p_accept != null && hi !== null && hint.suggested_salary_to > hi && (
+              <div role="status" className="flex flex-col gap-2 rounded-lg bg-tint-100 px-3 py-2 text-sm">
+                <p>{IT.suggest(formatRub(hint.suggested_salary_to), Math.round(hint.suggested_p_accept * 100))}</p>
+                <Button type="button" size="sm" variant="outline" onClick={() => setTo(String(hint.suggested_salary_to))}>{IT.apply}</Button>
+              </div>
+            )}
+            {hint?.avg_response_hours != null && <p className="text-12 text-muted">{IT.respHours(hint.avg_response_hours)}</p>}
             {expect !== null && hi !== null && (hi < expect ? <Note tone="warn">{T.belowExpect(formatRub(expect))}</Note> : <Note tone="ok">{T.okExpect(formatRub(expect))}</Note>)}
             {wide && <Note tone="warn">{T.wide}</Note>}
           </>
@@ -278,17 +319,19 @@ function OfferForm({ candidate, vacancyId: initialVacancy, alreadyOffered, onClo
  * Форма монтируется только при открытии: ключ идемпотентности и черновик свежие на каждое открытие.
  * `dark` — хозяин экрана тёмный (карточка кандидата): портал живёт вне его, тему задаём явно.
  */
-export function OfferDialog({ open, onOpenChange, candidate, vacancyId = "", alreadyOffered = false, dark = false }: { open: boolean; onOpenChange: (v: boolean) => void; candidate: OfferCandidate; vacancyId?: string; alreadyOffered?: boolean; dark?: boolean }) {
+export function OfferDialog({ open, onOpenChange, candidate, vacancyId = "", alreadyOffered = false, dark = false, mode = "offer", interest }: { open: boolean; onOpenChange: (v: boolean) => void; candidate: OfferCandidate; vacancyId?: string; alreadyOffered?: boolean; dark?: boolean; mode?: DialogMode; interest?: OfferForCompany }) {
   const desktop = useMedia("(min-width: 1024px)");
   const close = () => onOpenChange(false);
+  const title = mode === "interest" ? IT.titleInterest(candidate.pseudonym) : mode === "invite" ? IT.titleInvite(candidate.pseudonym) : T.title(candidate.pseudonym);
+  const lead = mode === "interest" ? IT.leadInterest : mode === "invite" ? IT.leadInvite : T.lead;
   const theme = dark ? "dark bg-card text-ink" : "";
-  const form = <OfferForm candidate={candidate} vacancyId={vacancyId} alreadyOffered={alreadyOffered} onClose={close} />;
+  const form = <OfferForm candidate={candidate} vacancyId={vacancyId} alreadyOffered={alreadyOffered} onClose={close} mode={mode} interest={interest} />;
   if (desktop) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className={cn("max-h-[90dvh] max-w-3xl overflow-y-auto", theme)}>
-          <DialogTitle>{T.title(candidate.pseudonym)}</DialogTitle>
-          <DialogDescription>{T.lead}</DialogDescription>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{lead}</DialogDescription>
           {form}
         </DialogContent>
       </Dialog>
@@ -297,8 +340,8 @@ export function OfferDialog({ open, onOpenChange, candidate, vacancyId = "", alr
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className={cn("top-0 h-dvh max-h-none rounded-none border-t-0", theme)}>
-        <SheetTitle>{T.title(candidate.pseudonym)}</SheetTitle>
-        <SheetDescription>{T.lead}</SheetDescription>
+        <SheetTitle>{title}</SheetTitle>
+        <SheetDescription>{lead}</SheetDescription>
         {form}
       </SheetContent>
     </Sheet>

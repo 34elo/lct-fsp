@@ -49,11 +49,27 @@ EMPLOYER_STAGES: list[tuple[str, str, Pred]] = [
     ("shortlist", "Добавили в шорт-лист", lambda e, p: e == "shortlist_added"),
     ("invite", "Отправили приглашение", lambda e, p: e in ("invite_sent", "offer_sent")),
 ]
+# Воронка интереса (встречный оффер E33): интерес → открыл → приглашение → принял
+INTEREST_STAGES: list[tuple[str, str, Pred]] = [
+    ("shown", "Показали интерес", lambda e, p: e == "interest_shown"),
+    (
+        "opened",
+        "Открыли интерес",
+        lambda e, p: e == "interest_answered" and p.get("decision") == "opened",
+    ),
+    ("invited", "Отправили приглашение", lambda e, p: e == "interest_to_invite"),
+    (
+        "accepted",
+        "Приняли приглашение",
+        lambda e, p: e == "invite_answered" and p.get("decision") == "accepted",
+    ),
+]
 _EVENTS = {
     "signup_completed", "email_verified", "category_changed",
     "need_created", "category_viewed", "shortlist_added", "invite_sent", "offer_sent",
     "invite_answered", "offer_accepted", "offer_declined", "offer_received",
     "response_created", "response_answered",
+    "interest_shown", "interest_answered", "interest_to_invite",
     *_TEST_STARTED, *_TEST_FINISHED,
 }  # fmt: skip
 
@@ -108,6 +124,21 @@ class ResponseMetrics(BaseModel):
     time_to_answer: Timing
 
 
+class InterestMetrics(BaseModel):
+    """Метрики встречного оффера (интерес кандидата): интерес → открыл → приглашение → принял."""
+
+    shown: int | None
+    opened: int | None
+    invited: int | None
+    accepted: int | None
+    open_rate: float | None  # открыли / показали, %
+    invite_rate: float | None  # пригласили / открыли, %
+    accept_rate: float | None  # приняли / пригласили, %
+    first_contact: Timing  # регистрация → открытие интереса
+    time_to_invite: Timing  # интерес → приглашение
+    decline_reasons: list[ReasonShare]  # причины отказа от интереса
+
+
 class MetricsOut(BaseModel):
     since: datetime
     days: int
@@ -116,6 +147,7 @@ class MetricsOut(BaseModel):
     employer_funnel: Funnel
     invites: InviteMetrics
     responses: ResponseMetrics
+    interests: InterestMetrics
 
 
 Row = tuple[str, str | None, dict, datetime]
@@ -236,6 +268,66 @@ def responses(rows: list[Row]) -> ResponseMetrics:
     )
 
 
+def interests(rows: list[Row]) -> InterestMetrics:
+    """Метрики встречного оффера: интерес → открыл → приглашение → принял (E33-8)."""
+    shown = [r for r in rows if r[0] == "interest_shown"]
+    opened = [r for r in rows if r[0] == "interest_answered" and r[2].get("decision") == "opened"]
+    invited = [r for r in rows if r[0] == "interest_to_invite"]
+
+    # Для принятия: смотрим invite_answered события, где открыли интерес
+    # (то есть candidates из interest_opened intersection с invite_answered decision=accepted)
+    interest_candidates = {r[1] for r in opened}
+    accepted_from_interest = [
+        r
+        for r in rows
+        if (
+            r[0] == "invite_answered"
+            and r[2].get("decision") == "accepted"
+            and r[1] in interest_candidates
+        )
+    ]
+
+    # Причины отказа от интереса
+    declined = [
+        r for r in rows if r[0] == "interest_answered" and r[2].get("decision") == "declined"
+    ]
+    reasons = Counter(r[2]["reason"] for r in declined if r[2].get("reason"))
+
+    # Время от регистрации до открытия интереса (first contact)
+    signup: dict[str, datetime] = {}
+    for e, a, _, ts in rows:
+        if e == "signup_completed" and a:
+            signup[a] = min(ts, signup.get(a, ts))
+
+    open_times: list[int] = []
+    for r in opened:
+        if r[1] in signup:
+            open_times.append(max(0, int((r[3] - signup[r[1]]).total_seconds())))
+
+    # Время от открытия интереса до приглашения
+    invite_times: list[int] = []
+    for inv_r in invited:
+        for open_r in opened:
+            if open_r[1] == inv_r[1]:  # same candidate
+                invite_times.append(max(0, int((inv_r[3] - open_r[3]).total_seconds())))
+                break
+
+    return InterestMetrics(
+        shown=_count(len(shown)),
+        opened=_count(len(opened)),
+        invited=_count(len(invited)),
+        accepted=_count(len(accepted_from_interest)),
+        open_rate=_pct(len(opened), len(shown)),
+        invite_rate=_pct(len(invited), len(opened)),
+        accept_rate=_pct(len(accepted_from_interest), len(invited)),
+        first_contact=_timing(open_times),
+        time_to_invite=_timing(invite_times),
+        decline_reasons=[
+            ReasonShare(reason=r, count=n) for r, n in reasons.most_common() if n >= MIN_CELL
+        ],
+    )
+
+
 async def build(session: AsyncSession, days: int = DEFAULT_DAYS) -> MetricsOut:
     days = max(1, min(days, MAX_DAYS))
     since = datetime.now(UTC) - timedelta(days=days)
@@ -253,4 +345,5 @@ async def build(session: AsyncSession, days: int = DEFAULT_DAYS) -> MetricsOut:
         employer_funnel=funnel(rows, EMPLOYER_STAGES),
         invites=invites(rows),
         responses=responses(rows),
+        interests=interests(rows),
     )

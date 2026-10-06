@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import hmac
+from datetime import timedelta
 from typing import Annotated
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, File, Form, Header, Request, UploadFile
 from fsp_contracts.enums import (
@@ -15,6 +16,7 @@ from fsp_contracts.enums import (
     WorkFormat,
 )
 from fsp_platform.app import ProblemError
+from fsp_platform.jwt import encode_token
 from fsp_platform.ratelimit import RateLimiter
 from pydantic import BaseModel, Field
 from redis.asyncio import Redis
@@ -36,6 +38,8 @@ from app.openapi_errors import problem_responses
 from app.resumes import service as resumes
 from app.taxonomy import service as taxonomy
 from app.telegram import service
+
+BOT_USER_TOKEN_TTL = timedelta(minutes=5)
 
 router = APIRouter(tags=["telegram"])
 internal = APIRouter(prefix="/internal", tags=["internal"])
@@ -157,6 +161,38 @@ async def magic_link(
         session, redis, request.app.state.settings.web_base_url, body.tg_user_id, body.redirect
     )
     return MagicLinkOut(url=url)
+
+
+class UserTokenIn(BaseModel):
+    tg_user_id: int
+
+
+class UserTokenOut(BaseModel):
+    access_token: str
+    expires_in: int
+
+
+@internal.post("/tg/token", response_model=UserTokenOut, dependencies=[Depends(require_bot)])
+async def tg_user_token(
+    body: UserTokenIn,
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+    limiter: RateLimiter = Depends(get_limiter),
+):
+    """Короткий access-токен кандидата: бот ходит с ним в `/assessment/*` блока 1 (E25-3).
+
+    Тот же JWT, что и после входа, но живёт `BOT_USER_TOKEN_TTL` (5 минут), refresh не выдаётся.
+    """
+    await limiter.check(f"tgtoken:tg:{body.tg_user_id}", 120, 60)
+    user = await _candidate_by_tg(session, body.tg_user_id)
+    token = encode_token(
+        request.app.state.settings.jwt_secret,
+        str(user.id),
+        user.role,
+        ttl=BOT_USER_TOKEN_TTL,
+        jti=uuid4().hex,
+    )
+    return UserTokenOut(access_token=token, expires_in=int(BOT_USER_TOKEN_TTL.total_seconds()))
 
 
 # --- Резюме и профиль из бота (api.md §2.10) --------------------------------------------------

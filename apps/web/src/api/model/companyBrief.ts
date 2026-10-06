@@ -4,6 +4,7 @@
  * core
  * OpenAPI spec version: 0.1.0
  */
+import type { CompanyReliability } from './companyReliability';
 
 export interface CompanyBrief {
   id: string;
@@ -11,4 +12,5 @@ export interface CompanyBrief {
   logo_url?: string | null;
   responsibility_score?: number | null;
   verified: boolean;
+  reliability?: CompanyReliability | null;
 }

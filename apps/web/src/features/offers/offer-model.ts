@@ -34,11 +34,12 @@ export function canSendOffer(opts: { lo: number | null; hi: number | null; vacan
 }
 
 /** Колонки канбана работодателя (макет E5): порядок как на макете. */
-export const BOARD_COLUMNS = ["sent", "viewed", "interview", "accepted", "hired", "closed"] as const;
+export const BOARD_COLUMNS = ["interest", "sent", "viewed", "interview", "accepted", "hired", "closed"] as const;
 export type BoardColumn = (typeof BOARD_COLUMNS)[number];
 
 /** Статус из API → колонка. Неизвестный статус не теряем: уходит в «Закрыто». */
 export function columnOf(status: string): BoardColumn {
+  if (status === "interest" || status === "interest_opened") return "interest";
   return (BOARD_COLUMNS as readonly string[]).includes(status) && status !== "closed" ? (status as BoardColumn) : "closed";
 }
 
@@ -58,7 +59,9 @@ export interface BoardStats {
 }
 
 /** Сводка над доской. Принявшие: принят, интервью, нанят, не нанят (после принятия). */
-export function boardStats(offers: { status: string }[]): BoardStats {
+export function boardStats(all: { status: string }[]): BoardStats {
+  // Интересы (до приглашения) в воронку офферов не входят.
+  const offers = all.filter((o) => columnOf(o.status) !== "interest");
   const total = offers.length;
   const seen = offers.filter((o) => !["sent", "expired", "withdrawn"].includes(o.status)).length;
   const accepted = offers.filter((o) => ["accepted", "interview", "hired", "not_hired"].includes(o.status)).length;

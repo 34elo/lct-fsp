@@ -106,7 +106,7 @@ export function Conversation({ offerId, side, canWrite }: { offerId: string; sid
 export function invalidateOffers(qc: ReturnType<typeof useQueryClient>) {
   const run = () =>
     qc.invalidateQueries({
-      predicate: (q) => typeof q.queryKey[0] === "string" && (q.queryKey[0].startsWith("/offers") || q.queryKey[0].startsWith("/candidates/me/offers")),
+      predicate: (q) => typeof q.queryKey[0] === "string" && (q.queryKey[0].startsWith("/offers") || q.queryKey[0].startsWith("/candidates/me/offers") || q.queryKey[0].startsWith("/candidates/me/interests")),
     });
   // Сервер коммитит после ответа: повторная сверка страхует от гонки с первым refetch.
   setTimeout(() => void run(), 800);

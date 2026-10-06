@@ -6,6 +6,7 @@ import { useCandidateCardCandidatesPseudoIdCardGet } from "@/api/endpoints/searc
 import type { CandidateCardFull, SkillWithTrust } from "@/api/model";
 import { ErrorNote } from "@/features/auth/ui";
 import { OfferDialog } from "@/features/offers/OfferDialog";
+import { EMP_INT_TEXT as IT } from "@/features/offers/text";
 import { GRADE_LABEL, points, roleLabel } from "@/features/profile/text";
 import { cn } from "@/shared/lib/cn";
 import { dedupeExperience, fspResults, groupSkills, kindOf, radarAxes, skillLevel, trustSources, yearsLabel, type SkillGroup } from "./candidate-model";
@@ -141,6 +142,7 @@ function Body({ c, vacancyId }: { c: CandidateCardFull; vacancyId: string | null
   const items: WhyItem[] = (c.match?.explanation ?? []).map((i) => ({ kind: WHY_KIND[i.kind], text: i.text }));
   const offered = c.offers_from_you.length > 0;
   const [offerOpen, setOfferOpen] = useState(false);
+  const [interestOpen, setInterestOpen] = useState(false);
   const { groups, claimed } = groupSkills(c.skills);
   const protocol = fspResults(c.fsp_highlights);
   const experience = dedupeExperience(c.experience);
@@ -154,6 +156,7 @@ function Body({ c, vacancyId }: { c: CandidateCardFull; vacancyId: string | null
           <div className="flex flex-wrap items-center gap-2">
             {grade && <GradeBadge grade={grade} role={c.primary_role ? roleLabel(c.primary_role) : undefined} stack={c.primary_stack.slice(0, 2).join(", ") || undefined} preliminary={c.grade_preliminary} />}
             {protocol.length > 0 && <VerifiedMark />}
+            {c.interested_you && <span className="inline-flex items-center rounded-full border border-brand bg-tint-50 px-2.5 py-0.5 text-12 font-semibold text-brand-fg">{IT.interestedYou}</span>}
           </div>
           <p className="text-13 text-muted">
             {[c.salary_min ? `${T.expectations} от ${rub(c.salary_min)}` : null, meta].filter(Boolean).join(" · ")}
@@ -162,6 +165,15 @@ function Body({ c, vacancyId }: { c: CandidateCardFull; vacancyId: string | null
         {c.match && <MatchRing value={percent(c.match.score)} size={72} />}
         <div className="flex flex-col gap-1">
           <Button onClick={() => setOfferOpen(true)}>{T.offer}</Button>
+          <Button variant="outline" onClick={() => setInterestOpen(true)}>{IT.interestBtn}</Button>
+          <OfferDialog
+            open={interestOpen}
+            onOpenChange={setInterestOpen}
+            dark
+            mode="interest"
+            candidate={{ pseudoId: c.pseudo_id, pseudonym: c.pseudonym, salaryMin: c.salary_min ?? null }}
+            vacancyId={vacancyId ?? ""}
+          />
           <OfferDialog
             open={offerOpen}
             onOpenChange={setOfferOpen}
