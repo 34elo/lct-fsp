@@ -43,6 +43,7 @@ from app.taxonomy.router import router as taxonomy_router
 from app.telegram.router import internal as telegram_internal_router
 from app.telegram.router import router as telegram_router
 from app.vacancies.router import router as vacancies_router
+from app.views.router import router as views_router
 
 
 def build_app(settings: Settings | None = None) -> FastAPI:
@@ -103,6 +104,7 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(live_runs_public_router)
     app.include_router(analytics_dashboard_router)
     app.include_router(needs_router)
+    app.include_router(views_router)
     # <<< block2
 
     @app.get("/readyz", include_in_schema=False)
