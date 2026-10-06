@@ -118,6 +118,26 @@ def test_family_key_draft_contract():
     assert FamilyKeyDraft.model_validate(d.model_dump(mode="json")) == d
 
 
+def test_answer_explain_contract():
+    """E24-2: core ↔ ml-api `POST /v1/assessment/explain`."""
+    from fsp_contracts.ml import AnswerExplain, AnswerExplainRequest
+
+    req = AnswerExplainRequest.model_validate(
+        {
+            "kind": "chain",
+            "skill": "python",
+            "stem": "x",
+            "reason_code": "chain_step",
+            "reason_label": "Ошибка на одном из шагов",
+        }
+    )
+    assert req.misconception is None and req.truth is None
+    with pytest.raises(ValidationError):
+        AnswerExplainRequest.model_validate({**req.model_dump(), "kind": "essay"})
+    a = AnswerExplain.model_validate({"text": "Проверьте второй шаг", "model": "qwen"})
+    assert AnswerExplain.model_validate(a.model_dump(mode="json")) == a
+
+
 def test_family_llm_bank_contracts():
     from fsp_contracts.ml import (
         FamilyGenerateRequest,

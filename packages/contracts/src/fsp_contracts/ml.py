@@ -394,6 +394,30 @@ class FamilyKeyDraft(BaseModel):
     model: str = ""
 
 
+# --- «Объясни ответ» (E24-2) ---
+
+
+class AnswerExplainRequest(BaseModel):
+    """Причину ошибки определил core по правилам; LLM только формулирует текст (без ПДн и ключа)."""
+
+    kind: Literal[
+        "exact", "estimate", "choice", "find_bug", "order", "sjt", "open", "chain"
+    ]  # как FamilyKind + chain
+    skill: str = Field(max_length=80)
+    stem: str = Field(max_length=6000)
+    reason_code: str = Field(max_length=40)
+    reason_label: str = Field(max_length=200)
+    misconception: str | None = Field(
+        default=None, max_length=300
+    )  # утверждение из карточки навыка
+    truth: str | None = Field(default=None, max_length=300)  # как на самом деле
+
+
+class AnswerExplain(BaseModel):
+    text: str = Field(max_length=800)
+    model: str = ""
+
+
 # --- Офлайн-конвейер LLM-заданий (E26-4, ADR-024, assessment.md §7) ---
 
 
