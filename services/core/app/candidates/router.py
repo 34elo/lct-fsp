@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Response
+from fsp_contracts.assessment import ClaimedVsConfirmed
 from fsp_contracts.enums import (
     ConsentType,
     EmploymentType,
@@ -16,7 +18,8 @@ from fsp_platform.app import ProblemError
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.candidates import service
+from app.assessment import service as assessment
+from app.candidates import pdf, service
 from app.candidates.models import Candidate
 from app.config import Settings
 from app.consents import service as consents
@@ -90,6 +93,7 @@ class CandidateProfile(BaseModel):
     experience_months: int | None = None
     fsp: card.OwnerFsp | None = None
     experience: list[ExperienceItem] = []
+    claimed_vs_confirmed: list[ClaimedVsConfirmed] = []  # E23-3: заявлено (опрос/резюме) vs тест
 
 
 class PreferencesIn(BaseModel):
@@ -171,6 +175,7 @@ async def profile_out(session: AsyncSession, c: Candidate, settings: Settings) -
         experience_months=c.experience_months,
         fsp=await card.owner_fsp(session, c),
         experience=await resumes.experience_for_profile(session, c.user_id),
+        claimed_vs_confirmed=await assessment.claimed_vs_confirmed(session, c.user_id),
     )
 
 
@@ -188,6 +193,30 @@ async def get_profile(
 ):
     return await profile_out(
         session, await _cand(request, session, user), request.app.state.settings
+    )
+
+
+@router.get(
+    "/profile.pdf", response_class=Response, responses={200: {"content": {"application/pdf": {}}}}
+)
+async def profile_pdf(
+    request: Request,
+    user: User = Depends(owner),
+    session: AsyncSession = Depends(get_session),
+):
+    """PDF-профиль владельца (E20-6): категория, грейд, навыки с доверием, ФСП, тесты."""
+    cand = await _cand(request, session, user)
+    profile = await profile_out(session, cand, request.app.state.settings)
+    grades = await assessment.get_grades(session, cand.user_id)
+    html = pdf.build_html(profile, grades)
+    data = await asyncio.to_thread(pdf.render_pdf, html)
+    return Response(
+        data,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{cand.pseudonym}.pdf"',
+            "Cache-Control": "private, no-store",
+        },
     )
 
 
