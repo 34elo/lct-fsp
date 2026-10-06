@@ -1,10 +1,13 @@
+import { Button, Field, FieldInput } from "@fsp/ui";
 import { useState, type FormEvent } from "react";
 import { Link, Navigate, useLocation } from "react-router-dom";
 
 import { authErrorText } from "@/features/auth/errors";
-import { AuthCard, ErrorNote, fieldClass } from "@/features/auth/ui";
+import { authText } from "@/features/auth/text";
+import { AuthCard, ErrorNote } from "@/features/auth/ui";
 import { postAuthPath, useAuth } from "@/shared/lib/auth";
-import { Button } from "@/shared/ui/button";
+
+const t = authText.login;
 
 export default function Login() {
   const { login, me, status } = useAuth();
@@ -23,34 +26,32 @@ export default function Login() {
     try {
       await login(String(f.get("email")).trim(), String(f.get("password")));
     } catch (err) {
-      setError(authErrorText(err, "Не удалось войти, попробуйте позже"));
+      setError(authErrorText(err, t.fallbackError));
       setBusy(false);
     }
   }
 
   return (
-    <AuthCard title="Вход" lead="Профиль, офферы и доказательства навыков — в одном месте.">
-      <form onSubmit={onSubmit} className="flex flex-col gap-3">
-        <label className="flex flex-col gap-1 text-sm">
-          Почта
-          <input name="email" type="email" required autoComplete="email" className={fieldClass} />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          Пароль
-          <input name="password" type="password" required autoComplete="current-password" className={fieldClass} />
-        </label>
+    <AuthCard title={t.title} lead={t.lead}>
+      <form onSubmit={onSubmit} className="flex flex-col gap-3" data-testid="auth-login-form">
+        <Field label={t.email}>
+          <FieldInput name="email" type="email" required autoComplete="email" data-testid="auth-email" />
+        </Field>
+        <Field label={t.password}>
+          <FieldInput name="password" type="password" required autoComplete="current-password" data-testid="auth-password" />
+        </Field>
         {error && <ErrorNote>{error}</ErrorNote>}
-        <Button type="submit" disabled={busy}>
-          {busy ? "Входим…" : "Войти"}
+        <Button type="submit" size="lg" loading={busy} data-testid="auth-submit">
+          {busy ? t.busy : t.submit}
         </Button>
       </form>
-      <p className="text-sm text-muted">
-        Нет аккаунта?{" "}
-        <Link to="/register" state={{ from }} className="font-semibold text-brand-fg">
-          Зарегистрироваться
+      <p className="text-14 text-muted">
+        {t.noAccount}{" "}
+        <Link to="/register" state={{ from }} className="font-semibold text-brand-fg" data-testid="auth-to-register">
+          {t.toRegister}
         </Link>
       </p>
-      <p className="text-sm text-muted">Если вы уже пользуетесь ботом в Telegram, войти можно кнопкой из бота.</p>
+      <p className="text-14 text-muted">{t.botHint}</p>
     </AuthCard>
   );
 }
