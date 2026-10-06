@@ -22,8 +22,19 @@ NOW = datetime.now(UTC).isoformat(sep=" ")
 CARD_FIELDS = {
     "pseudo_id", "pseudonym", "avatar_seed", "primary_role", "grade", "grade_preliminary",
     "primary_stack", "top_skills", "fsp_highlights", "salary_min", "formats", "city",
-    "relocation", "search_status", "match", "updated_at",
+    "relocation", "search_status", "match", "updated_at", "categories",
 }  # fmt: skip
+TEST_GRADE = {"junior": "junior", "middle": "middle", "senior": "senior", "lead": "senior"}
+
+
+def _grade(con, uid, profession, grade, *, valid_until="2999-01-01 00:00:00"):
+    """Действующий грейд из теста (таблица `grades`, blocks.md §4.2) — без него кандидат скрыт."""
+    con.execute(
+        "insert into grades (candidate_id, profession, grade, theta, band_position, theta_by_type,"
+        " integrity, needs_confirmation, low_confidence, source, confirmed_at, valid_until,"
+        " next_change_at, updated_at) values (?,?,?,0.5,0.5,'{}',1.0,0,0,'seed',?,?,?,?)",
+        (uid, profession, grade, NOW, valid_until, NOW, NOW),
+    )
 
 
 @pytest.fixture
@@ -66,8 +77,10 @@ def _hdr(h):
     return {"Authorization": h["Authorization"]}
 
 
-def _cand(c, n, skills=(), **kw):
-    """Анкета + рёбра навыков: skills = [(slug, confidence, level, sources)]."""
+def _cand(c, n, skills=(), *, tested=True, **kw):
+    """Анкета + рёбра навыков: skills = [(slug, confidence, level, sources)].
+
+    `tested` — грейд из теста по `primary_role` × `grade` анкеты (как seed-грейды до Т2)."""
     uid = uuid.uuid4().hex
     row = dict(
         pseudonym=f"Backend #{n}", pseudo_id=f"pid{n:04d}", primary_role="backend", grade="middle",
@@ -86,6 +99,8 @@ def _cand(c, n, skills=(), **kw):
             "insert into consents (user_id, type, version, granted_at) values (?,?,?,?)",
             (uid, "profile_publication", "2025-09-01", NOW),
         )
+        if tested and row["primary_role"] and row["grade"]:
+            _grade(con, uid, row["primary_role"], TEST_GRADE[row["grade"]])
         for slug, conf, level, sources in skills:
             con.execute(
                 "insert into candidate_skills (candidate_id, skill_id, confidence, level, sources,"
@@ -201,6 +216,51 @@ def test_candidate_without_profile_publication_is_hidden_and_revoke_hides(c, mar
     assert "pid0025" not in _pids(_search(c, market, limit=100))
 
 
+def test_candidate_without_test_grade_is_hidden(c, market):
+    """E23-1 (ADR-018): резюме без теста не даёт категории — в выдаче и карточке кандидата нет;
+    истёкший грейд тоже скрывает."""
+    _cand(c, 26, [("python", 0.9, 4, ["resume"])], tested=False)
+    assert "pid0026" not in _pids(_search(c, market, limit=100))
+    assert _card(c, market, "pid0026").status_code == 404
+    uid = _cand(c, 27, [("python", 0.9, 4, ["resume"])], tested=False)
+    with sqlite3.connect(c.db) as con:
+        _grade(con, uid, "backend", "middle", valid_until="2000-01-01 00:00:00")
+    assert "pid0027" not in _pids(_search(c, market, limit=100))
+    with sqlite3.connect(c.db) as con:
+        con.execute("update grades set valid_until='2999-01-01 00:00:00' where candidate_id=?",
+                    (uid,))  # fmt: skip
+    assert "pid0027" in _pids(_search(c, market, limit=100))  # ключ кеша сменился
+    assert _card(c, market, "pid0027").status_code == 200
+
+
+def test_category_filter_and_card_fields(c, market):
+    """E23-1: фильтр по категории (профессия × грейд из теста), поля `categories` и
+    `claimed_vs_confirmed` в карточке."""
+    uid = _cand(c, 40, [("python", 0.6, 3, ["test"])], grade="middle")
+    with sqlite3.connect(c.db) as con:
+        _grade(con, uid, "ml", "junior")
+    cat = {"profession": "backend", "grade": "senior"}
+    assert _pids(_search(c, market, category=cat, sort="trust")) == ["pid0001"]
+    r = _search(c, market, category={"profession": "ml", "grade": "junior"})
+    assert _pids(r) == ["pid0040"]
+    assert r.json()["items"][0]["categories"] == [
+        {"profession": "backend", "grade": "middle"}, {"profession": "ml", "grade": "junior"},
+    ]  # fmt: skip
+    assert _pids(_search(c, market, category={"profession": "ml", "grade": "senior"})) == []
+    assert _search(c, market, category={"profession": "ml", "grade": "lead"}).status_code == 422
+    full = _card(c, market, "pid0040").json()
+    assert [x["profession"] for x in full["categories"]] == ["backend", "ml"]
+    cvc = {x["profession"]: x for x in full["claimed_vs_confirmed"]}
+    assert cvc["backend"]["status"] == "confirmed" and cvc["ml"]["confirmed_grade"] == "junior"
+    over = _cand(c, 41, [("python", 0.6, 3, ["test"])], grade="senior", tested=False)
+    with sqlite3.connect(c.db) as con:
+        _grade(con, over, "backend", "junior")
+    (row,) = _card(c, market, "pid0041").json()["claimed_vs_confirmed"]
+    assert (row["resume_grade"], row["confirmed_grade"], row["status"]) == (
+        "senior", "junior", "overclaimed",
+    )  # fmt: skip
+
+
 def test_fsp_highlights_and_filters(c, market):
     uid = _cand(c, 30, [("python", 0.8, 3, ["fsp"])])
     details = json.dumps({"label": "Кубок ФСП, 2 место из 120", "level": "federal", "place": 2,
@@ -311,6 +371,7 @@ def test_speed_on_500_candidates(c, market):
                 "insert into consents (user_id, type, version, granted_at) values (?,?,?,?)",
                 (row["user_id"], "profile_publication", "2025-09-01", NOW),
             )
+            _grade(con, row["user_id"], "backend", "senior")
     t = time.perf_counter()
     r = _search(c, market, sort="trust", filters={"skills_must": [{"slug": "python"}]})
     assert r.status_code == 200 and r.json()["total"] >= 500
@@ -342,7 +403,9 @@ def test_card_full_is_anonymous_and_logs_view(c, market):
     r = _card(c, market, "pid0040")
     assert r.status_code == 200, r.text
     body = r.json()
-    assert set(body) == CARD_FIELDS | {"skills", "grade_info", "experience", "offers_from_you"}
+    assert set(body) == CARD_FIELDS | {
+        "skills", "grade_info", "experience", "offers_from_you", "claimed_vs_confirmed",
+    }  # fmt: skip
     assert body["pseudonym"] == "Backend #40" and body["offers_from_you"] == []
     assert [s["skill"]["slug"] for s in body["skills"]] == ["python", "fastapi"]
     assert body["skills"][1]["claimed_only"] is False or body["skills"][1]["level"] == 1
@@ -409,6 +472,11 @@ def test_my_views_aggregates_without_company_names(c, market):
         pid = c.get("/candidates/me/profile", headers=h)  # создаёт анкету
         con.execute("update candidates set primary_role='backend', pseudo_id='pidself' "
                     "where user_id=?", (uid.replace("-", ""),))  # fmt: skip
+        con.execute(
+            "insert into consents (user_id, type, version, granted_at) values (?,?,?,?)",
+            (uid.replace("-", ""), "profile_publication", "2025-09-01", NOW),
+        )
+        _grade(con, uid.replace("-", ""), "backend", "middle")
     for _ in range(2):
         assert _card(c, market, "pidself").status_code == 200
     other = _employer(c, "o3@x.ru", name="Other3")
