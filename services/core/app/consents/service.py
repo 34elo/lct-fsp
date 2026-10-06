@@ -5,6 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
+import sqlalchemy as sa
 from fsp_contracts.enums import ConsentType
 from fsp_platform.app import ProblemError
 from sqlalchemy import select
@@ -26,6 +27,36 @@ async def active(session: AsyncSession, user_id: uuid.UUID) -> dict[str, Consent
         .order_by(Consent.granted_at)
     )
     return {c.type: c for c in rows}
+
+
+async def users_with_consent(
+    session: AsyncSession, user_ids: list[uuid.UUID], ctype: ConsentType
+) -> set[uuid.UUID]:
+    """Из `user_ids` те, у кого действует согласие `ctype` (один запрос, без N+1)."""
+    if not user_ids:
+        return set()
+    rows = await session.scalars(
+        select(Consent.user_id).where(
+            Consent.user_id.in_(user_ids),
+            Consent.type == str(ctype),
+            Consent.revoked_at.is_(None),
+        )
+    )
+    return set(rows)
+
+
+async def publication_version(session: AsyncSession) -> str:
+    """Отпечаток согласий `profile_publication` для ключа кеша выдачи (выдача и отзыв меняют)."""
+    n, last_granted, last_revoked = (
+        await session.execute(
+            select(
+                sa.func.count(),
+                sa.func.max(Consent.granted_at),
+                sa.func.max(Consent.revoked_at),
+            ).where(Consent.type == str(ConsentType.profile_publication))
+        )
+    ).one()
+    return f"{n}:{last_granted}:{last_revoked}"
 
 
 async def has_consent(session: AsyncSession, user_id: uuid.UUID, ctype: ConsentType) -> bool:

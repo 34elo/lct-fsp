@@ -23,12 +23,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.candidates import service as candidates
 from app.candidates.models import Candidate
+from app.consents import service as consents
 from app.graph import service as graph
 from app.graph.trust import EvidenceView, TrustConfig, effective_strength
 from app.matching.p_accept import PAcceptConfig, hint, mutual, p_accept
 from app.matching.rerank import RerankConfig, mmr, multiplier
 from app.matching.scoring import MatchConfig, MatchResult, score_candidate
-from app.matching.service import build_views, load_vacancy
+from app.matching.service import build_views, load_vacancy, only_published
 from app.offers import service as offers
 from app.recommendations import service as recs
 from app.recommendations import tuning as tun
@@ -353,7 +354,7 @@ async def search_candidates(
     rr_cfg = rr_cfg or RerankConfig.load()
     after = decode_cursor(cursor, sort) if cursor else None
     key = cache_key(
-        await candidates.catalog_version(session),
+        await candidates.catalog_version(session) + await consents.publication_version(session),
         {"company": str(company_id), "f": filters.model_dump(mode="json"), "sort": sort,
          "vacancy": [str(vacancy_id), vacancy_version], "limit": limit,
          "rs": responsibility_score},
@@ -373,13 +374,13 @@ async def search_candidates(
 
     day = today or datetime.now(UTC).date()
     f = filters
-    pool = await candidates.search_pool(
+    pool = await only_published(session, await candidates.search_pool(
         session, company_id=company_id, roles=[str(r) for r in f.roles] if f.roles else None,
         grades=grades_between(f.grade_min, f.grade_max), salary_max=f.salary_max,
         formats=[str(x) for x in f.formats] if f.formats else None,
         employment_types=[str(x) for x in f.employment_types] if f.employment_types else None,
         cities=f.cities, relocation_ok=f.relocation_ok, active_only=bool(f.active_only),
-    )  # fmt: skip
+    ))  # fmt: skip
     ids = [c.user_id for c in pool]
     owned = await graph.all_skills_of(session, ids)
 

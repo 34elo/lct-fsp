@@ -82,6 +82,10 @@ def _cand(c, n, skills=(), **kw):
         con.execute(
             f"insert into candidates ({','.join(cols)}) values ({','.join('?' * len(cols))})", vals
         )
+        con.execute(
+            "insert into consents (user_id, type, version, granted_at) values (?,?,?,?)",
+            (uid, "profile_publication", "2025-09-01", NOW),
+        )
         for slug, conf, level, sources in skills:
             con.execute(
                 "insert into candidate_skills (candidate_id, skill_id, confidence, level, sources,"
@@ -180,6 +184,21 @@ def test_stoplist_hides_candidate_from_that_company(c, market):
     _cand(c, 20, [("python", 0.5, 2, ["github"])], stoplist_company_ids=[market["company_id"]])
     assert "pid0020" not in _pids(_search(c, market, limit=100))
     assert "pid0020" in _pids(_search(c, other, limit=100))
+
+
+def test_candidate_without_profile_publication_is_hidden_and_revoke_hides(c, market):
+    """E20-11: без согласия `profile_publication` кандидата нет в выдаче; отзыв скрывает."""
+    uid = _cand(c, 25, [("python", 0.5, 2, ["github"])])
+    assert "pid0025" in _pids(_search(c, market, limit=100))
+    with sqlite3.connect(c.db) as con:
+        con.execute(
+            "update consents set revoked_at=? where user_id=? and type='profile_publication'",
+            (NOW, uid),
+        )
+    assert "pid0025" not in _pids(_search(c, market, limit=100))
+    with sqlite3.connect(c.db) as con:
+        con.execute("delete from consents where user_id=?", (uid,))
+    assert "pid0025" not in _pids(_search(c, market, limit=100))
 
 
 def test_fsp_highlights_and_filters(c, market):
