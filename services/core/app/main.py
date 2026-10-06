@@ -13,6 +13,7 @@ from redis.asyncio import Redis
 from sqlalchemy import text
 
 from app.analytics.dashboard_router import router as analytics_dashboard_router
+from app.analytics.metrics_router import router as analytics_metrics_router
 from app.analytics.router import internal as analytics_internal_router
 from app.analytics.router import router as analytics_router
 from app.analytics.runs_router import admin as live_runs_admin_router
@@ -33,11 +34,13 @@ from app.companies.router import admin_router as admin_companies_router
 from app.companies.router import router as companies_router
 from app.config import Settings
 from app.consents.router import router as consents_router
+from app.credentials.router import router as credentials_router
 from app.events_stream import UiHub
 from app.events_stream import router as events_router
 from app.fsp.router import router as fsp_router
 from app.graph.router import router as graph_router
 from app.identity.router import router as identity_router
+from app.matching.needs_router import router as needs_router
 from app.matching.router import router as search_router
 from app.offers.router import admin_router as admin_complaints_router
 from app.offers.router import router as offers_router
@@ -49,6 +52,7 @@ from app.taxonomy.skills_router import router as admin_skills_router
 from app.telegram.router import internal as telegram_internal_router
 from app.telegram.router import router as telegram_router
 from app.vacancies.router import router as vacancies_router
+from app.views.router import router as views_router
 
 
 def build_app(settings: Settings | None = None) -> FastAPI:
@@ -115,6 +119,10 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(live_runs_admin_router)
     app.include_router(live_runs_public_router)
     app.include_router(analytics_dashboard_router)
+    app.include_router(analytics_metrics_router)
+    app.include_router(needs_router)
+    app.include_router(views_router)
+    app.include_router(credentials_router)
     # <<< block2
 
     @app.get("/readyz", include_in_schema=False)

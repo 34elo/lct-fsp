@@ -540,6 +540,7 @@ class TgOfferOut(BaseModel):
     employment_type: str | None
     salary_from: int
     salary_to: int
+    salary_basis: str = "gross"
     message: str | None
     match_score: float | None
     explanation: list[dict]

@@ -28,6 +28,7 @@ class Vacancy(Base):
     city: Mapped[str | None] = mapped_column(Text, default=None)
     salary_from: Mapped[int]
     salary_to: Mapped[int]
+    salary_basis: Mapped[str] = mapped_column(Text, default="gross", server_default="gross")
     description: Mapped[str | None] = mapped_column(Text, default=None)
     status: Mapped[str] = mapped_column(Text, default="draft", server_default="draft")
     important_qualities: Mapped[list[str]] = mapped_column(TextArray, default=list)

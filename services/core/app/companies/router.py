@@ -40,6 +40,7 @@ class CompanyOut(BaseModel):
     contacts: dict[str, Any] | None
     direction: str | None
     status: CompanyStatus
+    show_verified_badge: bool = True
     responsibility_score: float | None
     created_at: datetime
     my_role: CompanyMemberRole | None = None
@@ -54,6 +55,7 @@ class CompanyIn(BaseModel):
     description: str | None = Field(default=None, max_length=5000)
     contacts: Contacts | None = Field(default=None)
     direction: str | None = Field(default=None, max_length=1000)
+    show_verified_badge: bool = True
 
 
 class CompanyPatch(BaseModel):
@@ -65,6 +67,7 @@ class CompanyPatch(BaseModel):
     description: str | None = Field(default=None, max_length=5000)
     contacts: Contacts | None = Field(default=None)
     direction: str | None = Field(default=None, max_length=1000)
+    show_verified_badge: bool | None = None
 
 
 class MemberIn(BaseModel):
@@ -90,6 +93,7 @@ def company_out(c: Company, my_role: str | None = None) -> CompanyOut:
         contacts=c.contacts,
         direction=c.direction,
         status=CompanyStatus(c.status),
+        show_verified_badge=c.show_verified_badge,
         responsibility_score=c.responsibility_score,
         created_at=c.created_at,
         my_role=CompanyMemberRole(my_role) if my_role else None,
@@ -129,8 +133,9 @@ async def patch_my_company(
 ):
     company, member = await service.require_company(session, user.id, admin=True)
     changes = body.model_dump(exclude_unset=True)
-    if changes.get("name") is None:
-        changes.pop("name", None)
+    for key in ("name", "show_verified_badge"):
+        if changes.get(key) is None:
+            changes.pop(key, None)
     await service.update_company(session, company, changes)
     return company_out(company, member.role)
 

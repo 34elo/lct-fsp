@@ -16,20 +16,31 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from typing import Any, Literal
 
+from fsp_contracts.assessment import CategoryRef
 from fsp_contracts.ml import ExplanationItem, SearchFilters
 from pydantic import BaseModel
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.assessment import service as assessment
 from app.candidates import service as candidates
 from app.candidates.models import Candidate
-from app.consents import service as consents
 from app.graph import service as graph
 from app.graph.trust import EvidenceView, TrustConfig, effective_strength
 from app.matching.p_accept import PAcceptConfig, hint, mutual, p_accept
 from app.matching.rerank import RerankConfig, mmr, multiplier
 from app.matching.scoring import MatchConfig, MatchResult, score_candidate
-from app.matching.service import build_views, load_vacancy, only_published
+from app.matching.service import build_views, load_vacancy, only_visible, visibility_version
+from app.matching.strength import (
+    StrengthConfig,
+    StrengthInput,
+    StrengthResult,
+    StrengthView,
+    completeness,
+    rank,
+    strength,
+    view,
+)
 from app.offers import service as offers
 from app.recommendations import service as recs
 from app.recommendations import tuning as tun
@@ -85,6 +96,9 @@ class CandidateCard(BaseModel):
     search_status: str
     match: CardMatch | None = None
     updated_at: datetime
+    categories: list[CategoryRef] = []  # подтверждённые тестом профессия × грейд (ADR-018)
+    strength: StrengthView | None = None  # сила профиля внутри категории (assessment.md §9)
+    is_shortlisted: bool = False  # в шорт-листе потребности (E23-5)
 
 
 @dataclass(slots=True)
@@ -98,6 +112,9 @@ class Row:
     mult: float = 1.0  # множитель переранжирования (matching.md §5)
     x: dict[str, float] | None = None  # признаки для подстройки в сессии (matching.md §7)
     tuned: float | None = None  # скор после подстройки в сессии
+    strength: StrengthResult | None = None  # сила профиля (E23-2)
+    rank_on: bool = False  # выбрана категория: порядок по rank = 0.6·match + 0.4·strength
+    strength_cfg: StrengthConfig | None = None
 
     def key(self, sort: Sort) -> float:
         if sort == "fresh":
@@ -106,10 +123,16 @@ class Row:
             return self.trust
         if self.result is not None:
             score = self.tuned if self.tuned is not None else self.result.score
+            score = self._ranked(score)
             if sort == "mutual" and self.p_accept is not None:
                 return mutual(score, self.p_accept) * self.mult
             return score * self.mult
-        return (self.tuned if self.tuned is not None else self.relevance) * self.mult
+        return self._ranked(self.tuned if self.tuned is not None else self.relevance) * self.mult
+
+    def _ranked(self, match: float) -> float:
+        if self.rank_on and self.strength is not None and self.strength_cfg is not None:
+            return rank(match, self.strength.value, self.strength_cfg)
+        return match
 
 
 def _ts(d: datetime) -> float:
@@ -197,6 +220,8 @@ def _card(
     highlights: list[FspHighlight],
     result: MatchResult | None,
     interest: str | None = None,
+    categories: list[CategoryRef] | None = None,
+    strength_view: StrengthView | None = None,
 ) -> CandidateCard:
     ordered = sorted(skills, key=lambda s: (s.claimed_only, -s.confidence, str(s.skill_id)))
     top = [
@@ -224,7 +249,75 @@ def _card(
         if result
         else None,
         updated_at=c.updated_at,
+        categories=categories or [],
+        strength=strength_view,
     )
+
+
+async def categories_of(
+    session: AsyncSession, ids: list[uuid.UUID]
+) -> dict[uuid.UUID, list[CategoryRef]]:
+    """Категории карточек пачкой (blocks.md §4.3, `get_grades_many`): профессия × грейд."""
+    grades = await assessment.get_grades_many(session, ids)
+    return {
+        cid: [CategoryRef(profession=g.profession, grade=g.grade) for g in gs]
+        for cid, gs in grades.items()
+    }
+
+
+def _strength_view(r: Row) -> StrengthView | None:
+    if r.strength is None or r.strength_cfg is None:
+        return None
+    match = None
+    if r.rank_on:
+        match = r.tuned if r.tuned is not None else (r.result.score if r.result else r.relevance)
+    return view(r.strength, r.strength_cfg, match)
+
+
+async def _attach_strength(
+    session: AsyncSession,
+    rows: list[Row],
+    category: CategoryRef | None,
+    nice_ids: list[uuid.UUID],
+    must_floor: dict[Any, int],
+    day: date,
+    cfg: StrengthConfig,
+) -> None:
+    """Сила профиля (assessment.md §9) по грейду выбранной категории, иначе по профессии
+    `primary_role`, иначе по лучшему грейду. Без действующего грейда силы нет.
+
+    F — наибольшее доверие по навыкам с источником `fsp` (нет ФСП — 0, без штрафа);
+    S — среднее доверие по навыкам запроса, без запроса — `trust_of`; R — свежесть теста
+    по `confirmed_at`; C — полнота анкеты."""
+    grades = await assessment.get_grades_many(session, [r.cand.user_id for r in rows])
+    need = [k for k in must_floor if k] + nice_ids
+    for r in rows:
+        gs = grades.get(r.cand.user_id) or []
+        if category is not None:
+            g = next((x for x in gs if x.profession == category.profession), None)
+        else:
+            g = next((x for x in gs if x.profession == r.cand.primary_role), None) or (
+                max(gs, key=lambda x: x.theta) if gs else None
+            )
+        if g is None:
+            continue
+        held = {s.skill_id: s for s in r.skills}
+        fsp = max((s.confidence for s in r.skills if "fsp" in s.sources), default=0.0)
+        s_val = (
+            sum(min(1.0, held[k].confidence) if k in held else 0.0 for k in need) / len(need)
+            if need
+            else r.trust
+        )
+        days = (datetime.combine(day, datetime.min.time(), UTC) - g.confirmed_at).days
+        r.strength = strength(
+            StrengthInput(
+                band_position=g.band_position, fsp=fsp, skills=s_val, days_since_test=days,
+                completeness=completeness(r.cand, len(r.skills)), integrity=g.integrity,
+            ),
+            cfg,
+        )  # fmt: skip
+        r.strength_cfg = cfg
+        r.rank_on = category is not None
 
 
 def features_of(r: Row) -> dict[str, float]:
@@ -341,8 +434,12 @@ async def search_candidates(
     rr_cfg: RerankConfig | None = None,
     session_signals: tuple[list[tun.Signal], dict[str, dict[str, float]]] | None = None,
     tuning_cfg: tun.TuningConfig | None = None,
+    category: CategoryRef | None = None,
+    strength_cfg: StrengthConfig | None = None,
 ) -> dict[str, Any]:
     """Страница выдачи `{items, next_cursor, total, features, tuning}`.
+
+    `category` — фильтр «профессия × грейд» по действующим грейдам (`category_members`).
 
     `items` — JSON-словари `CandidateCard`; `features` — признаки показанных (по `pseudo_id`)
     для снимка в `impressions`; `tuning` — состояние подстройки сессии (`session_signals`).
@@ -352,10 +449,12 @@ async def search_candidates(
         sort = "match"  # H считается под вакансию; без неё — обычное соответствие
     pa_cfg = pa_cfg or PAcceptConfig.load()
     rr_cfg = rr_cfg or RerankConfig.load()
+    st_cfg = strength_cfg or StrengthConfig.load()
     after = decode_cursor(cursor, sort) if cursor else None
     key = cache_key(
-        await candidates.catalog_version(session) + await consents.publication_version(session),
+        await candidates.catalog_version(session) + await visibility_version(session),
         {"company": str(company_id), "f": filters.model_dump(mode="json"), "sort": sort,
+         "cat": category.model_dump(mode="json") if category else None,
          "vacancy": [str(vacancy_id), vacancy_version], "limit": limit,
          "rs": responsibility_score},
         cursor,
@@ -374,13 +473,18 @@ async def search_candidates(
 
     day = today or datetime.now(UTC).date()
     f = filters
-    pool = await only_published(session, await candidates.search_pool(
+    pool = await only_visible(session, await candidates.search_pool(
         session, company_id=company_id, roles=[str(r) for r in f.roles] if f.roles else None,
         grades=grades_between(f.grade_min, f.grade_max), salary_max=f.salary_max,
         formats=[str(x) for x in f.formats] if f.formats else None,
         employment_types=[str(x) for x in f.employment_types] if f.employment_types else None,
         cities=f.cities, relocation_ok=f.relocation_ok, active_only=bool(f.active_only),
     ))  # fmt: skip
+    if category is not None:
+        members = set(
+            await assessment.category_members(session, category.profession, category.grade)
+        )
+        pool = [c for c in pool if c.user_id in members]
     ids = [c.user_id for c in pool]
     owned = await graph.all_skills_of(session, ids)
 
@@ -425,6 +529,8 @@ async def search_candidates(
                 r.result = score_candidate(v, view, adj, cfg)
                 if r.result is not None:
                     r.p_accept = p_accept_for(v, r.cand, responsibility_score, pa_cfg)
+    if category is not None:  # rank участвует в порядке — сила нужна всем
+        await _attach_strength(session, rows, category, nice_ids, must_floor, day, st_cfg)
     for r in rows:
         if vacancy_id is None or r.result is not None:  # не прошедших фильтры не подстраиваем
             r.x = features_of(r)
@@ -461,12 +567,15 @@ async def search_candidates(
         else None
     )
 
+    if category is None:  # без категории сила только в карточках страницы
+        await _attach_strength(session, page, None, nice_ids, must_floor, day, st_cfg)
     page_ids = [r.cand.user_id for r in page]
     sids = list({s.skill_id for r in page for s in r.skills})
     slug_of = await taxonomy.skill_slugs(session, sids)
     name_of = await taxonomy.skill_names(session, sids)
     names = {sid: (slug_of[sid], name_of.get(sid, slug_of[sid])) for sid in slug_of}
     highlights = await _fsp_highlights(session, page_ids, trust, day)
+    cats = await categories_of(session, page_ids)
     items = [
         _card(
             r.cand,
@@ -475,6 +584,8 @@ async def search_candidates(
             highlights.get(r.cand.user_id, []),
             r.result,
             None if r.p_accept is None else hint(r.p_accept, pa_cfg),
+            cats.get(r.cand.user_id, []),
+            _strength_view(r),
         ).model_dump(mode="json")
         for r in page
     ]
