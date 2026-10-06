@@ -83,3 +83,31 @@ test("пустая вилка не отправляется", async () => {
   await waitFor(() => expect(screen.getAllByText(/Укажите обе границы вилки/).length).toBeGreaterThan(0));
   expect(calls).toHaveLength(0);
 });
+
+const mkOffer = (id: string, status: string, extra: Record<string, unknown> = {}) => ({
+  id, status, created_at: "2026-10-02T10:00:00Z", expires_at: "2026-10-16T10:00:00Z",
+  vacancy: { id: "v1", title: "Backend (Python)", role: "backend", formats: ["remote"] },
+  salary_from: 200000, salary_to: 250000, below_candidate_min: false,
+  candidate: { ...card, pseudonym: `Backend #${id}` }, ...extra,
+});
+
+test("канбан E5: шесть колонок, счётчики равны карточкам, причины отказов", async () => {
+  const list = [
+    mkOffer("1", "sent"), mkOffer("2", "sent"), mkOffer("3", "viewed"),
+    mkOffer("4", "declined", { decline: { reason: "wrong_stack" } }), mkOffer("5", "expired"),
+  ];
+  const f = globalThis.fetch as unknown as ReturnType<typeof vi.fn>;
+  const base = f.getMockImplementation()!;
+  f.mockImplementation(async (url: string, init?: RequestInit) => (url.endsWith("/offers") && init?.method !== "POST" ? res(200, list) : base(url, init)));
+  mount("/employer/offers");
+  const sent = await screen.findByRole("region", { name: "Отправлен" });
+  expect(sent.querySelectorAll("li")).toHaveLength(2);
+  expect(screen.getByRole("region", { name: "Нанят" })).toHaveTextContent("Пока пусто");
+  expect(screen.getByRole("region", { name: "Закрыто" }).querySelectorAll("li")).toHaveLength(2);
+  expect(screen.getAllByLabelText("Карточек: 2", { selector: "span" })).toHaveLength(2);
+  const tabs = screen.getAllByRole("tab");
+  expect(tabs).toHaveLength(6);
+  expect(tabs[0]).toHaveTextContent("Отправлен2");
+  expect(screen.getByText(/Не тот стек/, { selector: "span" })).toBeInTheDocument();
+  expect(screen.getByText(/Отклонён · не тот стек/)).toBeInTheDocument();
+});

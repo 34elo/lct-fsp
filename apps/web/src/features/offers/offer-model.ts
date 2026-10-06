@@ -29,3 +29,51 @@ export function isWideRange(lo: number | null, hi: number | null): boolean {
 export function canSendOffer(opts: { lo: number | null; hi: number | null; vacancyId: string; title: string }): boolean {
   return rangeProblem(opts.lo, opts.hi) === null && (opts.vacancyId !== "" || opts.title.trim() !== "");
 }
+
+/** Колонки канбана работодателя (макет E5): порядок как на макете. */
+export const BOARD_COLUMNS = ["sent", "viewed", "interview", "accepted", "hired", "closed"] as const;
+export type BoardColumn = (typeof BOARD_COLUMNS)[number];
+
+/** Статус из API → колонка. Неизвестный статус не теряем: уходит в «Закрыто». */
+export function columnOf(status: string): BoardColumn {
+  return (BOARD_COLUMNS as readonly string[]).includes(status) && status !== "closed" ? (status as BoardColumn) : "closed";
+}
+
+/** Разложить офферы по колонкам, новые сверху. Пустые колонки остаются. */
+export function groupByColumn<T extends { status: string; created_at: string }>(offers: T[]): Record<BoardColumn, T[]> {
+  const out = Object.fromEntries(BOARD_COLUMNS.map((c) => [c, [] as T[]])) as Record<BoardColumn, T[]>;
+  for (const o of [...offers].sort((a, b) => b.created_at.localeCompare(a.created_at))) out[columnOf(o.status)].push(o);
+  return out;
+}
+
+export interface BoardStats {
+  total: number;
+  /** Доля просмотренных (всё, что ушло дальше «Отправлен»), % или null без офферов. */
+  viewedPct: number | null;
+  accepted: number;
+  hired: number;
+}
+
+/** Сводка над доской. Принявшие: принят, интервью, нанят, не нанят (после принятия). */
+export function boardStats(offers: { status: string }[]): BoardStats {
+  const total = offers.length;
+  const seen = offers.filter((o) => !["sent", "expired", "withdrawn"].includes(o.status)).length;
+  const accepted = offers.filter((o) => ["accepted", "interview", "hired", "not_hired"].includes(o.status)).length;
+  return { total, viewedPct: total ? Math.round((seen / total) * 100) : null, accepted, hired: offers.filter((o) => o.status === "hired").length };
+}
+
+export interface DeclineShare {
+  reason: string;
+  count: number;
+  pct: number;
+}
+
+/** Причины отказов по убыванию; проценты от числа отказов. */
+export function declineBreakdown(offers: { decline?: { reason: string } | null }[]): DeclineShare[] {
+  const counts = new Map<string, number>();
+  for (const o of offers) if (o.decline) counts.set(o.decline.reason, (counts.get(o.decline.reason) ?? 0) + 1);
+  const total = [...counts.values()].reduce((a, b) => a + b, 0);
+  return [...counts]
+    .map(([reason, count]) => ({ reason, count, pct: Math.round((count / total) * 100) }))
+    .sort((a, b) => b.count - a.count || a.reason.localeCompare(b.reason));
+}
