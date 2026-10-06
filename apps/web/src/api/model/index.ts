@@ -36,6 +36,7 @@ export * from './attemptOut';
 export * from './attemptOutStage';
 export * from './attemptOutStatus';
 export * from './attemptResultOut';
+export * from './attemptResultOutAnswersItem';
 export * from './attemptResultOutBySkillItem';
 export * from './attemptResultOutThetaByType';
 export * from './authOut';
