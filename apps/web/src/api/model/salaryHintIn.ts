@@ -6,7 +6,7 @@
  */
 
 export interface SalaryHintIn {
-  vacancy_id: string;
+  vacancy_id?: string | null;
   /**
      * @minLength 1
      * @maxLength 64

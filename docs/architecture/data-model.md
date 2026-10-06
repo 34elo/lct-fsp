@@ -506,12 +506,37 @@ CREATE TABLE offers (
   team_offer_id uuid,                    -- для командного оффера
   idempotency_key text,
   expires_at timestamptz NOT NULL, viewed_at timestamptz, responded_at timestamptz,
+  interest_at timestamptz,               -- оффер начался с интереса (ADR-026, E33-1)
+  interest_opened_at timestamptz,        -- кандидат открыл интерес
+  invited_at timestamptz,                -- приглашение по интересу: interest_opened → sent
   created_at timestamptz NOT NULL DEFAULT now(),
   UNIQUE (vacancy_id, candidate_id),
   UNIQUE (company_id, idempotency_key)
 );
 CREATE INDEX ON offers (candidate_id, created_at DESC);
 CREATE INDEX ON offers (status, expires_at) WHERE status IN ('sent','viewed');
+CREATE INDEX ON offers (status, expires_at) WHERE status IN ('interest','interest_opened');  -- E33-1
+CREATE INDEX ON offers (company_id, interest_at);  -- недельный лимит интересов
+
+-- E33-4: подписки компаний на категорию (миграция b2_10)
+CREATE TABLE category_subscriptions (
+  id uuid PRIMARY KEY, company_id uuid REFERENCES companies ON DELETE CASCADE,
+  profession text, grades jsonb, skills jsonb,  -- grades: [] = любой; skills: [{slug, min_level}]
+  salary_max int, formats jsonb, only_confirmed bool, last_digest_at timestamptz, created_at timestamptz
+);
+CREATE TABLE category_subscription_hits (  -- PK дедуплицирует уведомления
+  subscription_id uuid REFERENCES category_subscriptions ON DELETE CASCADE,
+  candidate_id uuid REFERENCES candidates(user_id) ON DELETE CASCADE,
+  created_at timestamptz, notified_at timestamptz,  -- notified_at NULL — ждёт дайджеста
+  PRIMARY KEY (subscription_id, candidate_id)
+);
+CREATE TABLE candidate_interests (  -- встречный сигнал «интересна компания» (E33-6); PK — один сигнал на пару
+  candidate_id uuid REFERENCES candidates(user_id) ON DELETE CASCADE,
+  company_id uuid REFERENCES companies ON DELETE CASCADE,
+  created_at timestamptz DEFAULT now(),
+  PRIMARY KEY (candidate_id, company_id)
+);
+CREATE INDEX ON candidate_interests (company_id, created_at);
 
 CREATE TABLE offer_events (id bigserial PRIMARY KEY, offer_id uuid REFERENCES offers(id) ON DELETE CASCADE, from_status text, to_status text, actor text, payload jsonb, created_at timestamptz DEFAULT now());
 CREATE TABLE offer_messages (id uuid PRIMARY KEY, offer_id uuid REFERENCES offers(id) ON DELETE CASCADE, author_side text NOT NULL, author_user_id uuid, text text NOT NULL, created_at timestamptz DEFAULT now(), channel text);

@@ -5,6 +5,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type TgSettingsInternalTgSettingsGetParams = {
-tg_user_id: number;
-};
+export interface WhyFactor {
+  code: string;
+  text: string;
+  weight: number;
+}

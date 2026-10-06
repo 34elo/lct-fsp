@@ -43,7 +43,7 @@ import {
   professionTitle,
   sortCards,
 } from "./need-model";
-import { CAT_TEXT as T } from "./text";
+import { CAT_TEXT as T, SUB_TEXT } from "./text";
 
 const PAGE = 20;
 const STATUS_TEXT = { match: T.stMatch, below: T.stBelow, above: T.stAbove, none: T.stNone } as const;
@@ -309,6 +309,9 @@ export default function CategoryCandidates() {
         </nav>
         <h1 className="font-mono text-24 font-semibold">{title}</h1>
         {total !== null && <p className="text-14 text-muted">{T.lead(total)}</p>}
+        <Link to={`/employer/subscriptions?profession=${encodeURIComponent(profession)}&grade=${encodeURIComponent(grade)}`} className="w-fit text-14 font-semibold text-brand-fg hover:underline">
+          {SUB_TEXT.fromCategory}
+        </Link>
         {needId && shortlist.size > 0 && <p className="font-mono text-13 font-semibold text-brand-fg">{T.shortlistCount(shortlist.size)}</p>}
       </header>
 

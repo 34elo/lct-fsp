@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Literal
 
 import structlog
@@ -31,12 +31,12 @@ from app.identity import service as identity
 from app.identity.deps import require_roles
 from app.identity.models import User
 from app.matching import card
-from app.matching.p_accept import PAcceptConfig, p_accept
+from app.matching.p_accept import PAcceptConfig, p_accept, suggest_raise
 from app.matching.p_accept import hint as p_hint
 from app.matching.scoring import MatchConfig
 from app.matching.search import CandidateCard
-from app.offers import service, teams
-from app.offers.models import ContactReveal, Offer, OfferMessage
+from app.offers import invite_task, service, teams, why
+from app.offers.models import ContactReveal, Offer, OfferMessage, OfferTask
 from app.openapi_errors import problem_responses
 from app.telegram import service as telegram
 from app.vacancies import service as vacancies
@@ -57,6 +57,15 @@ _PACCEPT = PAcceptConfig.load()
 _VACANCY_CFG = VacancyConfig.load()
 
 
+class TaskAttach(BaseModel):
+    """Задача в приглашении (E33-3): семейство из конструктора компании или банка, ≤ 15 минут."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    family_id: uuid.UUID
+    deadline_days: int = Field(default=invite_task.DEFAULT_DEADLINE_DAYS, ge=1, le=14)
+
+
 class CreateOffer(BaseModel):
     """Приглашение работодателя. Без `vacancy_id` (ADR-022) обязателен `title`."""
 
@@ -72,6 +81,7 @@ class CreateOffer(BaseModel):
     title: str | None = Field(default=None, max_length=200)
     description: str | None = Field(default=None, max_length=4000)
     contact_method: ContactMethod | None = None
+    task: TaskAttach | None = None  # E33-3
 
 
 class DeclineIn(BaseModel):
@@ -127,6 +137,48 @@ class OfferOut(BaseModel):
     match_snapshot: MatchSnapshot | None = None
     decline: Decline | None = None
     awaiting_reply_from: str | None = None
+    # E33-1 (ADR-026): оффер начался с интереса; кандидат открыл; компания пригласила
+    interest_at: datetime | None = None
+    interest_opened_at: datetime | None = None
+    invited_at: datetime | None = None
+
+
+class TaskBrief(BaseModel):
+    """Задача в приглашении глазами кандидата (вариант — `GET /offers/{id}/task`)."""
+
+    title: str
+    minutes: int
+    deadline_at: datetime
+    answered_at: datetime | None = None
+    score: float | None = None
+
+
+class TaskResult(TaskBrief):
+    """То же для компании этого оффера + ответ кандидата. Другим компаниям не отдаётся."""
+
+    family_id: uuid.UUID
+    answer: Any | None = None
+
+
+class TaskView(BaseModel):
+    """`GET /offers/{id}/task`: вариант без ключа и состояние решения."""
+
+    task: TaskBrief
+    item: dict[str, Any] | None = None  # пусто, когда ответ принят или срок вышел
+    can_answer: bool
+
+
+class TaskAnswerIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    answer: Any
+
+
+def _brief(t: OfferTask) -> TaskBrief:
+    return TaskBrief(
+        title=t.title, minutes=t.minutes, deadline_at=t.deadline_at,
+        answered_at=t.answered_at, score=t.score,
+    )  # fmt: skip
 
 
 class CompanyBrief(BaseModel):
@@ -135,10 +187,13 @@ class CompanyBrief(BaseModel):
     logo_url: str | None = None
     responsibility_score: float | None = None
     verified: bool
+    reliability: why.CompanyReliability | None = None  # E33-2: доля ответов, срок ответа
 
 
 class OfferForCandidate(OfferOut):
     company: CompanyBrief
+    why_you: why.WhyYou | None = None  # E33-2: только у интереса и приглашения компании
+    task: TaskBrief | None = None  # E33-3: после приглашения
 
 
 class Contacts(BaseModel):
@@ -151,12 +206,13 @@ class Contacts(BaseModel):
 class OfferForCompany(OfferOut):
     candidate: CandidateCard | None = None
     contacts: Contacts | None = None  # только после accepted, см. GET /offers/{id}/contacts
+    task: TaskResult | None = None  # E33-3: результат только у компании этого оффера
 
 
 class SalaryHintIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    vacancy_id: uuid.UUID
+    vacancy_id: uuid.UUID | None = None  # интерес без вакансии (E33-5): формат и навыки неизвестны
     candidate_pseudo_id: str = Field(min_length=1, max_length=64)
     salary_from: int | None = Field(default=None, le=100_000_000)
     salary_to: int | None = Field(default=None, le=100_000_000)
@@ -169,6 +225,9 @@ class SalaryHint(BaseModel):
     vs_category_median: float = 0.0
     p_accept: float
     acceptance_hint: str  # low | medium | high
+    suggested_salary_to: int | None = None  # верх вилки, при котором p_accept ≥ порога high
+    suggested_p_accept: float | None = None
+    avg_response_hours: float | None = None  # средний срок ответа кандидатов категории
     range_too_wide: bool
     message: str
 
@@ -254,6 +313,8 @@ async def _base(session: AsyncSession, o: Offer) -> dict[str, Any]:
         "decline": Decline(reason=o.decline_reason, comment=o.decline_comment)
         if o.decline_reason else None,
         "awaiting_reply_from": o.awaiting_reply_from,
+        "interest_at": o.interest_at, "interest_opened_at": o.interest_opened_at,
+        "invited_at": o.invited_at,
     }  # fmt: skip
 
 
@@ -262,8 +323,19 @@ async def for_candidate(session: AsyncSession, o: Offer) -> OfferForCandidate:
     brief = CompanyBrief(
         id=c.id, name=c.name, responsibility_score=c.responsibility_score,
         verified=companies.badge_visible(c),
+        reliability=await why.company_reliability(session, c.id, c.responsibility_score),
     )  # fmt: skip
-    return OfferForCandidate(**await _base(session, o), company=brief)
+    cand = await candidates.get(session, o.candidate_id) if o.candidate_id else None
+    reasons = (
+        await why.why_you(session, o, cand)
+        if cand is not None and o.initiator == OfferInitiator.employer.value
+        else None
+    )
+    t = await invite_task.get(session, o.id)
+    return OfferForCandidate(
+        **await _base(session, o), company=brief, why_you=reasons,
+        task=_brief(t) if t is not None and invite_task.visible_to_candidate(o) else None,
+    )  # fmt: skip
 
 
 async def for_company(session: AsyncSession, o: Offer) -> OfferForCompany:
@@ -273,7 +345,15 @@ async def for_company(session: AsyncSession, o: Offer) -> OfferForCompany:
         if c is not None:
             full = await card.build_card(session, c, vacancy_id=None, cfg=_CFG, trust=_TRUST)
             cand = CandidateCard.model_validate(full.model_dump())
-    return OfferForCompany(**await _base(session, o), candidate=cand)
+    t = await invite_task.get(session, o.id)
+    task = (
+        TaskResult(
+            **_brief(t).model_dump(), family_id=t.family_id, answer=(t.answer or {}).get("value")
+        )
+        if t is not None
+        else None
+    )
+    return OfferForCompany(**await _base(session, o), candidate=cand, task=task)
 
 
 class TeamMemberOut(BaseModel):
@@ -344,18 +424,32 @@ async def salary_hint(
 ) -> Any:
     """Подсказка по вилке до отправки: `p_accept`, «ниже ожиданий», «слишком широкая»."""
     company, _ = await companies.require_company(session, user.id)
-    vacancy = await vacancies.get_owned(session, user, body.vacancy_id)
+    vacancy = await vacancies.get_owned(session, user, body.vacancy_id) if body.vacancy_id else None
     cand = await card.get_visible(session, body.candidate_pseudo_id, company.id)
     if cand is None:
         raise ProblemError(404, "candidate_not_found", "Кандидат не найден")
     lo, hi = service.validate_range(body.salary_from, body.salary_to)
-    slugs = [slug for _, slug in (await vacancies.skills_of(session, [vacancy.id]))[vacancy.id]]
-    p = p_accept(
-        salary_to=hi, salary_min=cand.salary_min, vacancy_formats=vacancy.formats,
-        candidate_formats=cand.formats or (), vacancy_skills=slugs,
-        primary_stack=cand.primary_stack or (), responsibility_score=company.responsibility_score,
-        active=cand.search_status == "active", cfg=_PACCEPT,
-    )  # fmt: skip
+    slugs = (
+        [slug for _, slug in (await vacancies.skills_of(session, [vacancy.id]))[vacancy.id]]
+        if vacancy
+        else []
+    )
+
+    def _p(to: int) -> float:
+        return p_accept(
+            salary_to=to, salary_min=cand.salary_min,
+            vacancy_formats=vacancy.formats if vacancy else (),
+            candidate_formats=cand.formats or (), vacancy_skills=slugs,
+            primary_stack=cand.primary_stack or (),
+            responsibility_score=company.responsibility_score,
+            active=cand.search_status == "active", cfg=_PACCEPT,
+        )  # fmt: skip
+
+    p = _p(hi)
+    raised = suggest_raise(hi, p, _p, _PACCEPT)
+    resp_hours = await service.avg_response_hours(
+        session, cand.primary_role, _PACCEPT.response_min_sample
+    )
     below = cand.salary_min is not None and hi < cand.salary_min
     median = await candidates.category_median(session, cand.primary_role, cand.grade)
     wide = vacancies.range_too_wide(lo, hi, _VACANCY_CFG)
@@ -367,7 +461,10 @@ async def salary_hint(
     return SalaryHint(
         candidate_min=cand.salary_min, below_candidate_min=below, category_median=median,
         vs_category_median=round(hi / median - 1, 3) if median else 0.0, p_accept=round(p, 3),
-        acceptance_hint=p_hint(p, _PACCEPT), range_too_wide=wide, message=" ".join(notes),
+        acceptance_hint=p_hint(p, _PACCEPT), range_too_wide=wide,
+        suggested_salary_to=raised[0] if raised else None,
+        suggested_p_accept=round(raised[1], 3) if raised else None,
+        avg_response_hours=resp_hours, message=" ".join(notes),
     )  # fmt: skip
 
 
@@ -392,6 +489,14 @@ async def create_offer(
     cand = await card.get_visible(session, body.candidate_pseudo_id, company.id)
     if cand is None:
         raise ProblemError(404, "candidate_not_found", "Кандидат не найден")
+    info = (
+        await invite_task.check(
+            session, body.task.family_id, company_id=company.id, user_id=user.id,
+            deadline_days=body.task.deadline_days,
+        )
+        if body.task
+        else None
+    )  # fmt: skip
     offer, replay = await service.create(
         session, company=company, user_id=user.id, vacancy=vacancy, candidate=cand,
         salary_from=body.salary_from, salary_to=body.salary_to, message=body.message,
@@ -401,7 +506,186 @@ async def create_offer(
     )  # fmt: skip
     if replay:
         response.headers["Idempotent-Replay"] = "true"
+    elif body.task and info:
+        await invite_task.attach(
+            session, offer, body.task.family_id, info, deadline_days=body.task.deadline_days
+        )
     return await for_company(session, offer)
+
+
+# --- интерес до приглашения (E33-1, ADR-026) -------------------------------------------
+
+
+class CreateInterest(BaseModel):
+    """Отметка «интересен»: вилка обязательна, сообщение до 300 символов, вакансия — по желанию."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    candidate_pseudo_id: str = Field(min_length=1, max_length=64)
+    salary_from: int | None = Field(default=None, le=100_000_000)
+    salary_to: int | None = Field(default=None, le=100_000_000)
+    salary_basis: SalaryBasis | None = None
+    message: str | None = Field(default=None, max_length=service.INTEREST_MESSAGE_MAX)
+    vacancy_id: uuid.UUID | None = None
+    title: str | None = Field(default=None, max_length=200)
+
+
+class InviteFromInterest(BaseModel):
+    """Приглашение по открытому интересу; пустые поля берутся из интереса."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    salary_from: int | None = Field(default=None, le=100_000_000)
+    salary_to: int | None = Field(default=None, le=100_000_000)
+    message: str | None = Field(default=None, max_length=2000)
+    title: str | None = Field(default=None, max_length=200)
+    description: str | None = Field(default=None, max_length=4000)
+    contact_method: ContactMethod | None = None
+    task: TaskAttach | None = None  # E33-3
+
+
+class InterestsSummary(BaseModel):
+    """«K компаний интересуются вами, вилки …» и карточки без контактов."""
+
+    companies: int
+    salary_from_min: int | None = None
+    salary_to_max: int | None = None
+    items: list[OfferForCandidate]
+
+
+@router.post(
+    "/interests",
+    response_model=OfferForCompany,
+    status_code=201,
+    responses=problem_responses(401, 403, 404, 409, 422, 429),
+)
+async def create_interest(
+    body: CreateInterest,
+    response: Response,
+    user: User = Depends(_employer),
+    session: AsyncSession = Depends(get_session),
+) -> Any:
+    """Интерес к анонимному кандидату. Повтор отметки возвращает открытый интерес."""
+    identity.require_verified_email(user)  # blocks.md §4.6
+    company, _ = await companies.require_company(session, user.id)
+    vacancy = await vacancies.get_owned(session, user, body.vacancy_id) if body.vacancy_id else None
+    cand = await card.get_visible(session, body.candidate_pseudo_id, company.id)
+    if cand is None:
+        raise ProblemError(404, "candidate_not_found", "Кандидат не найден")
+    offer, replay = await service.create_interest(
+        session, company=company, user_id=user.id, candidate=cand, vacancy=vacancy,
+        salary_from=body.salary_from, salary_to=body.salary_to, message=body.message,
+        title=body.title, salary_basis=body.salary_basis, limits=_LIMITS,
+    )  # fmt: skip
+    if replay:
+        response.headers["Idempotent-Replay"] = "true"
+    return await for_company(session, offer)
+
+
+@router.post(
+    "/interests/{offer_id}/invite",
+    response_model=OfferForCompany,
+    responses=problem_responses(401, 403, 404, 409, 422),
+)
+async def invite_from_interest(
+    offer_id: uuid.UUID,
+    body: InviteFromInterest | None = None,
+    user: User = Depends(_employer),
+    session: AsyncSession = Depends(get_session),
+) -> Any:
+    """Кандидат открыл интерес → приглашение (`interest_opened → sent`)."""
+    company, _ = await companies.require_company(session, user.id)
+    offer = await _interest_for_company(session, company.id, offer_id)
+    b = body or InviteFromInterest()
+    info = (
+        await invite_task.check(
+            session, b.task.family_id, company_id=company.id, user_id=user.id,
+            deadline_days=b.task.deadline_days,
+        )
+        if b.task and offer.invited_at is None
+        else None
+    )  # fmt: skip
+    await service.invite_from_interest(
+        session, offer, limits=_LIMITS, title=b.title, description=b.description,
+        contact_method=b.contact_method, message=b.message, salary_from=b.salary_from,
+        salary_to=b.salary_to,
+    )  # fmt: skip
+    if b.task and info and await invite_task.get(session, offer.id) is None:
+        await invite_task.attach(
+            session, offer, b.task.family_id, info, deadline_days=b.task.deadline_days
+        )
+    return await for_company(session, offer)
+
+
+@router.get(
+    "/candidates/me/interests",
+    response_model=InterestsSummary,
+    responses=problem_responses(401, 403),
+)
+async def my_interests(
+    user: User = Depends(_candidate), session: AsyncSession = Depends(get_session)
+) -> Any:
+    rows = await service.interests_for(session, user.id)
+    return InterestsSummary(
+        companies=len({o.company_id for o in rows}),
+        salary_from_min=min((o.salary_from for o in rows), default=None),
+        salary_to_max=max((o.salary_to for o in rows), default=None),
+        items=[await for_candidate(session, o) for o in rows],
+    )
+
+
+@router.post(
+    "/interests/{offer_id}/open",
+    response_model=OfferForCandidate,
+    responses=problem_responses(401, 403, 404, 409),
+)
+async def open_interest(
+    offer_id: uuid.UUID, user: User = Depends(_candidate),
+    session: AsyncSession = Depends(get_session),
+) -> Any:  # fmt: skip
+    """«Открыть»: компания получает уведомление и может отправить приглашение. Повтор — no-op."""
+    offer = await _interest_for_candidate(session, user.id, offer_id)
+    await service.open_interest(session, offer)
+    return await for_candidate(session, offer)
+
+
+@router.post(
+    "/interests/{offer_id}/decline",
+    response_model=OfferForCandidate,
+    responses=problem_responses(401, 403, 404, 409, 422),
+)
+async def decline_interest(
+    offer_id: uuid.UUID, body: DeclineIn, user: User = Depends(_candidate),
+    session: AsyncSession = Depends(get_session),
+) -> Any:  # fmt: skip
+    """«Не интересно» с причиной (вилка, формат, компания, не ищу). Повтор — no-op."""
+    offer = await _interest_for_candidate(session, user.id, offer_id)
+    await service.decline_interest(session, offer, body.reason, body.comment)
+    return await for_candidate(session, offer)
+
+
+async def _interest_for_candidate(
+    session: AsyncSession, candidate_id: uuid.UUID, offer_id: uuid.UUID
+) -> Offer:
+    try:
+        offer = await service.get_for_candidate(session, candidate_id, offer_id, lock=True)
+    except ProblemError:
+        raise service.interest_not_found() from None
+    if offer.interest_at is None:
+        raise service.interest_not_found()
+    return offer
+
+
+async def _interest_for_company(
+    session: AsyncSession, company_id: uuid.UUID, offer_id: uuid.UUID
+) -> Offer:
+    try:
+        offer = await service.get_for_company(session, company_id, offer_id, lock=True)
+    except ProblemError:
+        raise service.interest_not_found() from None
+    if offer.interest_at is None:
+        raise service.interest_not_found()
+    return offer
 
 
 @router.get("/teams", response_model=list[TeamOut], responses=problem_responses(401, 403))
@@ -554,6 +838,43 @@ async def get_offer(
     if await service.is_revealed(session, offer):
         out.contacts = await _contacts(session, offer, user)
     return out
+
+
+@router.get(
+    "/offers/{offer_id}/task",
+    response_model=TaskView,
+    responses=problem_responses(401, 403, 404, 503),
+)
+async def get_offer_task(
+    offer_id: uuid.UUID, user: User = Depends(_candidate),
+    session: AsyncSession = Depends(get_session),
+) -> Any:  # fmt: skip
+    """Задача приглашения: вариант без ключа. Чужой оффер или без задачи — 404."""
+    offer = await service.get_for_candidate(session, user.id, offer_id)
+    task = await invite_task.get_for_candidate(session, offer)
+    can = invite_task.can_answer(offer, task, datetime.now(UTC))
+    return TaskView(
+        task=_brief(task), can_answer=can,
+        item=await invite_task.item(session, offer, task) if can else None,
+    )  # fmt: skip
+
+
+@router.post(
+    "/offers/{offer_id}/task/answer",
+    response_model=TaskBrief,
+    responses=problem_responses(401, 403, 404, 409, 422, 503),
+)
+async def answer_offer_task(
+    offer_id: uuid.UUID, body: TaskAnswerIn, response: Response,
+    user: User = Depends(_candidate), session: AsyncSession = Depends(get_session),
+) -> Any:  # fmt: skip
+    """Один ответ на задачу; повтор возвращает принятый (`Idempotent-Replay: true`)."""
+    offer = await service.get_for_candidate(session, user.id, offer_id, lock=True)
+    task = await invite_task.get_for_candidate(session, offer)
+    task, replay = await invite_task.submit(session, offer, task, body.answer)
+    if replay:
+        response.headers["Idempotent-Replay"] = "true"
+    return _brief(task)
 
 
 @router.post(

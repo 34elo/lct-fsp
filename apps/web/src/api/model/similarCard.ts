@@ -30,6 +30,7 @@ export interface SimilarCard {
   categories?: CategoryRef[];
   strength?: StrengthView | null;
   is_shortlisted?: boolean;
+  interested_you?: boolean;
   similarity: number;
   common_skills: string[];
 }
