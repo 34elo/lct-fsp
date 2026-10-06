@@ -97,6 +97,7 @@ async def offer_card_data(session: AsyncSession, offer: Offer) -> dict:
         "employment_type": vacancy.employment_type if vacancy else None,
         "salary_from": offer.salary_from,
         "salary_to": offer.salary_to,
+        "salary_basis": offer.salary_basis,
         "message": offer.message,
         "match_score": snap.get("score"),
         "explanation": snap.get("explanation") or [],

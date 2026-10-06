@@ -1,9 +1,30 @@
 """Фабрики блока 2 (работодатель, подбор, офферы)."""
 
+import uuid
 from datetime import UTC, datetime, timedelta
 
+from app.matching.models import Need
 from app.offers.models import Offer
+from fsp_contracts.ml import SearchFilters
 from sqlalchemy.ext.asyncio import AsyncSession
+
+
+async def factory_need(
+    session: AsyncSession, company_id: uuid.UUID, text: str | None = None, **kw
+) -> Need:
+    """Потребность работодателя (E23-4, E23-5)."""
+    data = {
+        "text": text or "Senior Python developer",
+        "filters": SearchFilters().model_dump(mode="json"),
+        "weights": {"python": 1.0, "postgresql": 0.5},
+        "grades": ["middle", "senior"],
+        "shortlist": [],
+    }
+    data.update(kw)
+    need = Need(company_id=company_id, **data)
+    session.add(need)
+    await session.flush()
+    return need
 
 
 async def make_offer(session: AsyncSession, vacancy, candidate_id, created_by, **kw) -> Offer:
