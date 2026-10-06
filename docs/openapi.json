@@ -13979,6 +13979,15 @@
           },
           "declared_grade": {
             "$ref": "#/components/schemas/TestGrade"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "standard",
+              "express"
+            ],
+            "title": "Mode",
+            "default": "standard"
           }
         },
         "type": "object",
@@ -14009,6 +14018,15 @@
               "bonus"
             ],
             "title": "Stage"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "standard",
+              "express"
+            ],
+            "title": "Mode",
+            "default": "standard"
           },
           "status": {
             "type": "string",
