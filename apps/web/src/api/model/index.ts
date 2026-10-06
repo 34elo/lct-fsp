@@ -5,6 +5,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './adminComplaintOut';
+export * from './adminComplaintsAdminComplaintsGetParams';
+export * from './adminComplaintsAdminComplaintsGetStatus';
 export * from './adminListAdminCompaniesGetParams';
 export * from './appConsentsRouterConsentsIn';
 export * from './appFspRouterLinkIn';
@@ -53,6 +56,7 @@ export * from './contactMethod';
 export * from './contactsInput';
 export * from './contactsOutput';
 export * from './createOffer';
+export * from './dashboardOut';
 export * from './decline';
 export * from './declineIn';
 export * from './declineReason';
@@ -77,6 +81,7 @@ export * from './fspOverview';
 export * from './fspRankBrief';
 export * from './fspStartAuthFspStartGetParams';
 export * from './fspTeam';
+export * from './getDashboardAdminDashboardGetParams';
 export * from './grade';
 export * from './gradeInfo';
 export * from './gradeSignal';
@@ -116,9 +121,12 @@ export * from './problemOut';
 export * from './problemOutErrors';
 export * from './publicCompany';
 export * from './publicVacancyOut';
+export * from './ratio';
 export * from './recordFeedbackRecsFeedbackPost200';
 export * from './registerIn';
 export * from './registerInRole';
+export * from './resolveComplaintIn';
+export * from './resolveComplaintInDecision';
 export * from './resumeAccepted';
 export * from './resumeAcceptedOut';
 export * from './resumeEducation';
@@ -155,6 +163,7 @@ export * from './skillReqIn';
 export * from './skillReqOut';
 export * from './skillRequirement';
 export * from './skillWithTrust';
+export * from './stage';
 export * from './startIn';
 export * from './statusIn';
 export * from './stoplistIO';
