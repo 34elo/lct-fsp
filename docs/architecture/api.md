@@ -48,8 +48,9 @@
 
 | Метод и путь | Назначение |
 |---|---|
-| `GET /candidates/me/profile` | Полный профиль владельца: `CandidateProfile` |
+| `GET /candidates/me/profile` | Полный профиль владельца: `CandidateProfile` (в нём `claimed_vs_confirmed: ClaimedVsConfirmed[]` — заявлено в опросе/резюме против грейда из теста, E23-3) |
 | `PATCH /candidates/me/profile` | Ручная форма (E20-4), частичное обновление: `{contacts: {email, phone, telegram} | null, stack: [{slug, years?}], experience_months, desired_roles: RoleSlug[] (≤5), soft_skills: slug[]}` → `CandidateProfile` (в нём `contacts` — только владельцу, `desired_roles`, `experience_months`). Стек — полный список: доказательства `self` (сила 0.15, «заявлено»), убранные выключаются; софт-навыки → `claimed_soft`. Контакты шифруются (`contacts_enc`, Fernet). Изменение стека, стажа, софт-навыков → пересчёт и рост `profile_version`. Ошибки: `422 unknown_skill` (нет в справочнике, софт в стеке, не софт в `soft_skills`) |
+| `GET /candidates/me/profile.pdf` | PDF-профиль владельца (E20-6, HTML → WeasyPrint, A4, кириллица, бренд): категория, грейд и его состав, результаты теста (действующие грейды), навыки с доверием ●●●○, ФСП, опыт, свои контакты. `application/pdf`, `Content-Disposition: attachment`, `Cache-Control: private, no-store`. Не кешируется (рендер ~1 с); только `candidate` (чужого профиля нет — отдельного ресурса нет). Ошибки: `401`, `403` |
 | `PATCH /candidates/me/preferences` | `{salary_min, formats, employment_types, city, relocation, search_status}`. `search_status=active` выставляет `active_until=+7д` |
 | `PATCH /candidates/me/visibility` | `{companies, education, repos, public_profile}` |
 | `PUT /candidates/me/stoplist` | `{company_ids[]}` |
