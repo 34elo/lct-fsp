@@ -140,6 +140,12 @@ assessment-mutations-check:
 # Банк → families (draft); PILOT=1 — сразу в pilot (в active — только админ по статистике пилота)
 assessment-mutations-import:
 	cd services/core && uv run python -m app.assessment.mining import ../../data/questions/mutations/*.json $(if $(PILOT),--pilot)
+# Задачи соревнований ФСП в банке (E32-6, assessment.md §4): проверка и импорт data/questions/fsp/*.yaml
+.PHONY: assessment-fsp-check assessment-fsp-import
+assessment-fsp-check:
+	cd services/core && uv run python -m app.assessment.fsp_bank check
+assessment-fsp-import:
+	cd services/core && uv run python -m app.assessment.fsp_bank import $(if $(PILOT),--pilot)
 # Схема карточек навыков data/skills/cards (assessment.md §2)
 .PHONY: cards-check
 cards-check:
