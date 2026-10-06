@@ -106,6 +106,23 @@ class ResponseAnswered(_Props):
     reason: Slug | None = None
 
 
+# --- интерес (ADR-026, E33-1) ---
+
+
+class InterestShown(_Props):
+    interest_id: UUID
+    with_vacancy: bool
+
+
+class InterestAnswered(_Props):
+    interest_id: UUID
+    decision: Literal["opened", "declined", "expired", "withdrawn"]
+
+
+class InterestToInvite(_Props):
+    offer_id: UUID
+
+
 _S: tuple[Source, ...] = ("server",)
 _W: tuple[Source, ...] = ("web",)
 
@@ -121,6 +138,9 @@ HIRING_ANALYTICS_EVENTS: dict[str, tuple[type[_Props], tuple[Source, ...]]] = {
     "invite_answered": (InviteAnswered, _S),
     "response_created": (ResponseCreated, _S),
     "response_answered": (ResponseAnswered, _S),
+    "interest_shown": (InterestShown, _S),
+    "interest_answered": (InterestAnswered, _S),
+    "interest_to_invite": (InterestToInvite, _S),
 }
 
 __all__ = ["HIRING_ANALYTICS_EVENTS"]

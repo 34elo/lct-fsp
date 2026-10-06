@@ -26,11 +26,18 @@ from app.assessment import service as assessment
 from app.candidates import service as candidates
 from app.candidates.models import Candidate
 from app.graph import service as graph
+from app.graph.fsp_strength import FspResultIn, FspStrengthConfig, fsp_term
 from app.graph.trust import EvidenceView, TrustConfig, effective_strength
 from app.matching.p_accept import PAcceptConfig, hint, mutual, p_accept
 from app.matching.rerank import RerankConfig, mmr, multiplier
 from app.matching.scoring import MatchConfig, MatchResult, score_candidate
-from app.matching.service import build_views, load_vacancy, only_visible, visibility_version
+from app.matching.service import (
+    build_views,
+    interested_candidate_ids,
+    load_vacancy,
+    only_visible,
+    visibility_version,
+)
 from app.matching.strength import (
     StrengthConfig,
     StrengthInput,
@@ -99,6 +106,7 @@ class CandidateCard(BaseModel):
     categories: list[CategoryRef] = []  # подтверждённые тестом профессия × грейд (ADR-018)
     strength: StrengthView | None = None  # сила профиля внутри категории (assessment.md §9)
     is_shortlisted: bool = False  # в шорт-листе потребности (E23-5)
+    interested_you: bool = False  # кандидат отметил вашу компанию (E33-6): «вами интересовался»
 
 
 @dataclass(slots=True)
@@ -115,6 +123,7 @@ class Row:
     strength: StrengthResult | None = None  # сила профиля (E23-2)
     rank_on: bool = False  # выбрана категория: порядок по rank = 0.6·match + 0.4·strength
     strength_cfg: StrengthConfig | None = None
+    interest_boost: float = 1.0  # >1 — кандидат отметил эту компанию (E33-6)
 
     def key(self, sort: Sort) -> float:
         if sort == "fresh":
@@ -125,9 +134,10 @@ class Row:
             score = self.tuned if self.tuned is not None else self.result.score
             score = self._ranked(score)
             if sort == "mutual" and self.p_accept is not None:
-                return mutual(score, self.p_accept) * self.mult
-            return score * self.mult
-        return self._ranked(self.tuned if self.tuned is not None else self.relevance) * self.mult
+                return mutual(score, self.p_accept) * self.mult * self.interest_boost
+            return score * self.mult * self.interest_boost
+        base = self._ranked(self.tuned if self.tuned is not None else self.relevance)
+        return base * self.mult * self.interest_boost
 
     def _ranked(self, match: float) -> float:
         if self.rank_on and self.strength is not None and self.strength_cfg is not None:
@@ -222,6 +232,7 @@ def _card(
     interest: str | None = None,
     categories: list[CategoryRef] | None = None,
     strength_view: StrengthView | None = None,
+    interested_you: bool = False,
 ) -> CandidateCard:
     ordered = sorted(skills, key=lambda s: (s.claimed_only, -s.confidence, str(s.skill_id)))
     top = [
@@ -251,6 +262,7 @@ def _card(
         updated_at=c.updated_at,
         categories=categories or [],
         strength=strength_view,
+        interested_you=interested_you,
     )
 
 
@@ -274,6 +286,22 @@ def _strength_view(r: Row) -> StrengthView | None:
     return view(r.strength, r.strength_cfg, match)
 
 
+async def _fsp_results(
+    session: AsyncSession, ids: list[uuid.UUID]
+) -> dict[uuid.UUID, list[FspResultIn]]:
+    """Результаты ФСП по кандидатам: один факт даёт несколько навыков, берём его один раз."""
+    out: dict[uuid.UUID, dict[uuid.UUID, FspResultIn]] = {}
+    for ev in await graph.evidence_of(session, ids, source="fsp"):
+        if ev.fact_type != "fsp_result":
+            continue
+        d = ev.details or {}
+        out.setdefault(ev.candidate_id, {})[ev.fact_id] = FspResultIn(
+            place=d.get("place"), total=d.get("participants"), final=bool(d.get("final")),
+            observed_at=ev.observed_at, verified=ev.verified,
+        )  # fmt: skip
+    return {cid: list(per.values()) for cid, per in out.items()}
+
+
 async def _attach_strength(
     session: AsyncSession,
     rows: list[Row],
@@ -282,15 +310,18 @@ async def _attach_strength(
     must_floor: dict[Any, int],
     day: date,
     cfg: StrengthConfig,
+    fsp_cfg: FspStrengthConfig,
 ) -> None:
     """Сила профиля (assessment.md §9) по грейду выбранной категории, иначе по профессии
     `primary_role`, иначе по лучшему грейду. Без действующего грейда силы нет.
 
-    F — наибольшее доверие по навыкам с источником `fsp` (нет ФСП — 0, без штрафа);
+    F — результативность в ФСП (`fsp_term`: победитель/призёр/финалист/участник, убывающая отдача
+    по числу соревнований, без учёта уровня; нет ФСП — 0, без штрафа);
     S — среднее доверие по навыкам запроса, без запроса — `trust_of`; R — свежесть теста
     по `confirmed_at`; C — полнота анкеты."""
     grades = await assessment.get_grades_many(session, [r.cand.user_id for r in rows])
     need = [k for k in must_floor if k] + nice_ids
+    fsp_facts = await _fsp_results(session, [r.cand.user_id for r in rows])
     for r in rows:
         gs = grades.get(r.cand.user_id) or []
         if category is not None:
@@ -302,7 +333,7 @@ async def _attach_strength(
         if g is None:
             continue
         held = {s.skill_id: s for s in r.skills}
-        fsp = max((s.confidence for s in r.skills if "fsp" in s.sources), default=0.0)
+        fsp = fsp_term(fsp_facts.get(r.cand.user_id, ()), day, fsp_cfg)
         s_val = (
             sum(min(1.0, held[k].confidence) if k in held else 0.0 for k in need) / len(need)
             if need
@@ -451,12 +482,13 @@ async def search_candidates(
     rr_cfg = rr_cfg or RerankConfig.load()
     st_cfg = strength_cfg or StrengthConfig.load()
     after = decode_cursor(cursor, sort) if cursor else None
+    liked = await interested_candidate_ids(session, company_id)  # встречный сигнал (E33-6)
     key = cache_key(
         await candidates.catalog_version(session) + await visibility_version(session),
         {"company": str(company_id), "f": filters.model_dump(mode="json"), "sort": sort,
          "cat": category.model_dump(mode="json") if category else None,
          "vacancy": [str(vacancy_id), vacancy_version], "limit": limit,
-         "rs": responsibility_score},
+         "rs": responsibility_score, "liked": sorted(str(i) for i in liked)},
         cursor,
     )  # fmt: skip
     tcfg = tuning_cfg or tun.TuningConfig.load()
@@ -518,6 +550,10 @@ async def search_candidates(
                 owned[c.user_id])
         )  # fmt: skip
 
+    for r in rows:
+        if r.cand.user_id in liked:
+            r.interest_boost = cfg.interest_boost
+
     query_vec = None
     if vacancy_id is not None and rows:
         loaded = await load_vacancy(session, vacancy_id)
@@ -530,7 +566,9 @@ async def search_candidates(
                 if r.result is not None:
                     r.p_accept = p_accept_for(v, r.cand, responsibility_score, pa_cfg)
     if category is not None:  # rank участвует в порядке — сила нужна всем
-        await _attach_strength(session, rows, category, nice_ids, must_floor, day, st_cfg)
+        await _attach_strength(
+            session, rows, category, nice_ids, must_floor, day, st_cfg, trust.fsp
+        )
     for r in rows:
         if vacancy_id is None or r.result is not None:  # не прошедших фильтры не подстраиваем
             r.x = features_of(r)
@@ -568,7 +606,7 @@ async def search_candidates(
     )
 
     if category is None:  # без категории сила только в карточках страницы
-        await _attach_strength(session, page, None, nice_ids, must_floor, day, st_cfg)
+        await _attach_strength(session, page, None, nice_ids, must_floor, day, st_cfg, trust.fsp)
     page_ids = [r.cand.user_id for r in page]
     sids = list({s.skill_id for r in page for s in r.skills})
     slug_of = await taxonomy.skill_slugs(session, sids)
@@ -586,6 +624,7 @@ async def search_candidates(
             None if r.p_accept is None else hint(r.p_accept, pa_cfg),
             cats.get(r.cand.user_id, []),
             _strength_view(r),
+            r.interest_boost > 1.0,
         ).model_dump(mode="json")
         for r in page
     ]

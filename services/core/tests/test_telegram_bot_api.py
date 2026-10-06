@@ -187,3 +187,17 @@ def test_profile_short(env):
     assert set(body) == {"primary_role", "grade", "grade_preliminary", "skills", "fsp"}
     assert c.get("/internal/tg/profile", params={"tg_user_id": 999}, headers=SVC).status_code == 404
     assert c.get("/internal/tg/profile", params={"tg_user_id": 501}).status_code == 401
+
+
+def test_user_token_for_bot(env):
+    c = env
+    uid = _start(c)
+    ok = c.post("/internal/tg/token", json={"tg_user_id": 501}, headers=SVC)
+    assert ok.status_code == 200 and ok.json()["expires_in"] == 300
+    # токен рабочий для обычного API кандидата, но выдан только по сервисному токену
+    me = c.get(
+        "/assessment/survey", headers={"Authorization": f"Bearer {ok.json()['access_token']}"}
+    )
+    assert me.status_code == 200, (me.text, uid)
+    assert c.post("/internal/tg/token", json={"tg_user_id": 501}).status_code == 401
+    assert c.post("/internal/tg/token", json={"tg_user_id": 999}, headers=SVC).status_code == 404

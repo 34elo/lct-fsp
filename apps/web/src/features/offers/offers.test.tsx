@@ -91,10 +91,10 @@ const mkOffer = (id: string, status: string, extra: Record<string, unknown> = {}
   candidate: { ...card, pseudonym: `Backend #${id}` }, ...extra,
 });
 
-test("канбан E5: шесть колонок, счётчики равны карточкам, причины отказов", async () => {
+test("канбан E5: семь колонок, счётчики равны карточкам, причины отказов", async () => {
   const list = [
     mkOffer("1", "sent"), mkOffer("2", "sent"), mkOffer("3", "viewed"),
-    mkOffer("4", "declined", { decline: { reason: "wrong_stack" } }), mkOffer("5", "expired"),
+    mkOffer("4", "declined", { decline: { reason: "wrong_stack" } }), mkOffer("5", "expired"), mkOffer("6", "interest_opened"),
   ];
   const f = globalThis.fetch as unknown as ReturnType<typeof vi.fn>;
   const base = f.getMockImplementation()!;
@@ -105,9 +105,10 @@ test("канбан E5: шесть колонок, счётчики равны к
   expect(screen.getByRole("region", { name: "Нанят" })).toHaveTextContent("Пока пусто");
   expect(screen.getByRole("region", { name: "Закрыто" }).querySelectorAll("li")).toHaveLength(2);
   expect(screen.getAllByLabelText("Карточек: 2", { selector: "span" })).toHaveLength(2);
+  expect(screen.getByRole("region", { name: "Интерес" }).querySelectorAll("li")).toHaveLength(1);
   const tabs = screen.getAllByRole("tab");
-  expect(tabs).toHaveLength(6);
-  expect(tabs[0]).toHaveTextContent("Отправлен2");
+  expect(tabs).toHaveLength(7);
+  expect(tabs[1]).toHaveTextContent("Отправлен2");
   expect(screen.getByText(/Не тот стек/, { selector: "span" })).toBeInTheDocument();
   expect(screen.getByText(/Отклонён · не тот стек/)).toBeInTheDocument();
 });
@@ -166,4 +167,30 @@ test("M2: детали приглашения без вакансии откры
   expect(await screen.findByRole("heading", { name: "Оффер принят" })).toBeInTheDocument();
   expect(screen.getByText("Нужен тимлид")).toBeInTheDocument();
   expect(screen.getByText(/Рекрутинг ML-команды/)).toBeInTheDocument();
+});
+
+test("E32-7: кандидат отзывает доступ к контактам через подтверждение", async () => {
+  stubCandidate([candOffer("o2", "accepted")]);
+  const f = globalThis.fetch as unknown as ReturnType<typeof vi.fn>;
+  const base = f.getMockImplementation()!;
+  f.mockImplementation(async (url: string, init?: RequestInit) => {
+    if (/\/offers\/o2\/contacts\/revoke$/.test(url)) {
+      calls.push({ url, headers: new Headers(init?.headers), body: null });
+      return res(200, candOffer("o2", "accepted", { contacts_revoked_at: "2026-10-05T10:00:00Z" }));
+    }
+    return base(url, init);
+  });
+  mount("/me/offers/o2");
+  fireEvent.click(await screen.findByRole("button", { name: "Отозвать доступ к контактам" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Отозвать" }));
+  await waitFor(() => expect(calls).toHaveLength(1));
+  expect(calls[0].url).toMatch(/\/offers\/o2\/contacts\/revoke$/);
+});
+
+test("E32-7: после отзыва кнопки нет, показана пометка; чат на месте", async () => {
+  stubCandidate([candOffer("o2", "accepted", { contacts_revoked_at: "2026-10-05T10:00:00Z" })]);
+  mount("/me/offers/o2");
+  expect(await screen.findByText(/Вы отозвали доступ к контактам/)).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Отозвать доступ к контактам" })).toBeNull();
+  expect(screen.getByRole("region", { name: "Переписка" })).toBeInTheDocument();
 });

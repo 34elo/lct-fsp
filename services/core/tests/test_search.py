@@ -23,7 +23,7 @@ CARD_FIELDS = {
     "pseudo_id", "pseudonym", "avatar_seed", "primary_role", "grade", "grade_preliminary",
     "primary_stack", "top_skills", "fsp_highlights", "salary_min", "formats", "city",
     "relocation", "search_status", "match", "updated_at", "categories", "strength",
-    "is_shortlisted",
+    "is_shortlisted", "interested_you",
 }  # fmt: skip
 TEST_GRADE = {"junior": "junior", "middle": "middle", "senior": "senior", "lead": "senior"}
 
@@ -560,3 +560,30 @@ def test_strength_and_rank_in_category(c, market):
     assert order.index("pid0050") < order.index("pid0051") < order.index("pid0052")
     plain = _search(c, market, filters={"skills_nice": ["python"]}).json()["items"][0]
     assert plain["strength"]["rank"] is None  # без категории rank не считается
+
+
+def test_candidate_interest_boost_only_for_marked_company(c):
+    """E33-6: отметка кандидата поднимает его только в выдаче этой компании."""
+    a = _employer(c, "a@x.ru", name="Acme Labs")
+    b = _employer(c, "b@x.ru", name="Beta Labs")
+    sk = [("python", 0.8, 3, ["github"])]
+    u1 = _cand(c, 1, sk)
+    u2 = _cand(c, 2, sk)
+    f = {"skills_must": [{"slug": "python"}]}
+    base = _pids(_search(c, a, filters=f, sort="match"))
+    assert sorted(base) == ["pid0001", "pid0002"]
+    low = base[-1]
+    low_uid = u1 if low == "pid0001" else u2
+    with sqlite3.connect(c.db) as con:
+        con.execute(
+            "insert into candidate_interests (candidate_id, company_id, created_at) values (?,?,?)",
+            (low_uid, a["company_id"].replace("-", ""), NOW),
+        )
+    r = _search(c, a, filters=f, sort="match")
+    assert _pids(r)[0] == low  # в своей компании поднялся
+    assert {i["pseudo_id"]: i["interested_you"] for i in r.json()["items"]} == {
+        base[0]: False, low: True,
+    }  # fmt: skip
+    rb = _search(c, b, filters=f, sort="match")
+    assert _pids(rb) == base  # у другой компании порядок прежний
+    assert not any(i["interested_you"] for i in rb.json()["items"])

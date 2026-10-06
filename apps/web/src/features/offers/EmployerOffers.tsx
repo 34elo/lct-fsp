@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -13,7 +14,8 @@ import { GRADE_LABEL, roleLabel } from "@/features/profile/text";
 import { ConstellationAvatar } from "@/shared/brand";
 import { Button } from "@/shared/ui/button";
 import { Conversation, invalidateOffers, Panel, StatusBadge, Timeline } from "./parts";
-import { dateOnly, DECLINE_LABEL, offerErrorText } from "./text";
+import { OfferDialog } from "./OfferDialog";
+import { CONTACTS_REVOKED_TEXT, dateOnly, DECLINE_LABEL, EMP_INT_TEXT as IT, offerErrorText } from "./text";
 
 export { EmployerOffers } from "./EmployerBoard";
 
@@ -31,6 +33,8 @@ export function EmployerOfferDetail() {
   const withdraw = useWithdrawOfferOffersOfferIdWithdrawPost({ mutation: { onSuccess: done } });
   const setStatus = useSetOfferStatusOffersOfferIdStatusPost({ mutation: { onSuccess: done } });
   const err = withdraw.error ?? setStatus.error;
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const isInterest = !!o && (o.status === "interest" || o.status === "interest_opened");
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4 md:p-6">
       <Link to="/employer/offers" className="text-sm font-semibold text-brand-fg hover:underline">← Все офферы</Link>
@@ -56,7 +60,8 @@ export function EmployerOfferDetail() {
             {o.below_candidate_min && <p className="rounded-lg bg-warning-bg px-3 py-2 text-sm text-warning-fg">Вилка ниже ожиданий кандидата.</p>}
             {o.match_snapshot && <p className="text-sm text-muted">Совпадение на момент оффера: {percent(o.match_snapshot.score)}%</p>}
             {o.message && <p className="whitespace-pre-wrap break-words rounded-lg bg-tint-50 p-3 text-sm">{o.message}</p>}
-            <p className="text-xs text-muted">Отправлен {dateOnly(o.created_at)}, ответить можно до {dateOnly(o.expires_at)}.</p>
+            <p className="text-xs text-muted">{isInterest ? IT.interestSent : "Отправлен"} {dateOnly(o.created_at)}, ответить можно до {dateOnly(o.expires_at)}.</p>
+            {isInterest && <p role="status" className="rounded-lg bg-tint-50 px-3 py-2 text-sm">{o.status === "interest_opened" ? IT.waitInvite : IT.waitOpen}</p>}
             {o.decline && (
               <p className="rounded-lg bg-error-bg px-3 py-2 text-sm text-error">
                 Отказ: {DECLINE_LABEL[o.decline.reason] ?? o.decline.reason}{o.decline.comment ? `. ${o.decline.comment}` : ""}
@@ -64,15 +69,28 @@ export function EmployerOfferDetail() {
             )}
             {err && <ErrorNote>{offerErrorText(err)}</ErrorNote>}
             <div className="flex flex-wrap gap-2">
-              {(o.status === "sent" || o.status === "viewed") && (
-                <Button variant="outline" disabled={withdraw.isPending} onClick={() => withdraw.mutate({ offerId: o.id })}>Отозвать оффер</Button>
+              {o.status === "interest_opened" && o.candidate && <Button onClick={() => setInviteOpen(true)}>{IT.invite}</Button>}
+              {(o.status === "sent" || o.status === "viewed" || isInterest) && (
+                <Button variant="outline" disabled={withdraw.isPending} onClick={() => withdraw.mutate({ offerId: o.id })}>{isInterest ? IT.withdrawInterest : "Отозвать оффер"}</Button>
               )}
               {(NEXT[o.status] ?? []).map((n) => (
                 <Button key={n.to} variant={n.to === "not_hired" ? "outline" : "primary"} disabled={setStatus.isPending} onClick={() => setStatus.mutate({ offerId: o.id, data: { status: n.to } })}>{n.label}</Button>
               ))}
             </div>
           </section>
+          {o.candidate && o.status === "interest_opened" && (
+            <OfferDialog
+              open={inviteOpen}
+              onOpenChange={setInviteOpen}
+              mode="invite"
+              interest={o}
+              candidate={{ pseudoId: o.candidate.pseudo_id, pseudonym: o.candidate.pseudonym, salaryMin: o.candidate.salary_min ?? null }}
+            />
+          )}
 
+          {o.contacts_revoked_at && !o.contacts && (
+            <p role="status" className="rounded-lg border border-warning-border bg-warning-bg px-3 py-2 text-13 text-warning-fg">{CONTACTS_REVOKED_TEXT}</p>
+          )}
           {o.contacts && (
             <Panel title="Контакты кандидата">
               <p className="text-xs text-muted">Кандидат принял оффер и раскрыл контакты.</p>

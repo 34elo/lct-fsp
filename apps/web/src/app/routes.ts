@@ -58,6 +58,7 @@ export const ROUTES: RouteDef[] = [
   // >>> block2 (candidate)
   { path: "/me/responses", title: "Мои отклики", section: "candidate", owner: "b2", nav: true },
   { path: "/me/navigator", title: "Навигатор роста", section: "candidate", owner: "b2", nav: true },
+  { path: "/me/interests", title: "Вами интересуются", section: "candidate", owner: "b2", nav: true },
   // <<< block2 (candidate)
 
   { path: "/employer/market", title: "Рынок талантов", screen: "E1", section: "employer", owner: "b2", nav: true },
@@ -81,6 +82,7 @@ export const ROUTES: RouteDef[] = [
   { path: "/employer/needs/:id", title: "Рекомендованные категории", section: "employer", owner: "b2" },
   { path: "/employer/categories/:profession/:grade", title: "Кандидаты категории", section: "employer", owner: "b2" },
   { path: "/employer/responses", title: "Отклики на вакансии", section: "employer", owner: "b2", nav: true },
+  { path: "/employer/subscriptions", title: "Подписки на категории", section: "employer", owner: "b2", nav: true },
   // <<< block2 (employer)
 
   { path: "/federation", title: "Дашборд ФСП", screen: "F1", section: "admin", owner: "b2", nav: true },
@@ -120,6 +122,7 @@ export const NAV: Record<"candidate" | "employer" | "admin", NavItem[]> = {
   candidate: [
     { to: "/me", label: "Профиль" },
     { to: "/me/offers", label: "Офферы" },
+    { to: "/me/interests", label: "Интересуются", desktopOnly: true },
     { to: "/me/responses", label: "Отклики", desktopOnly: true },
     { to: "/onboarding", label: "Резюме" },
     { to: "/me/graph", label: "Граф" },
@@ -133,6 +136,7 @@ export const NAV: Record<"candidate" | "employer" | "admin", NavItem[]> = {
     { to: "/employer/vacancies", label: "Вакансии" },
     { to: "/employer/responses", label: "Отклики" },
     { to: "/employer/offers", label: "Офферы" },
+    { to: "/employer/subscriptions", label: "Подписки" },
     { to: "/employer/company", label: "Компания" },
   ],
   admin: [

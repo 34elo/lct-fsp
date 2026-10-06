@@ -33,4 +33,5 @@ export interface CandidateCard {
   categories?: CategoryRef[];
   strength?: StrengthView | null;
   is_shortlisted?: boolean;
+  interested_you?: boolean;
 }

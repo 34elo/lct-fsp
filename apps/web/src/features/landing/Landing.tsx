@@ -2,6 +2,7 @@ import { buttonVariants, CircuitLine, cn, Logo, MatchRing, SalaryRange, SectionL
 import { Link } from "react-router-dom";
 
 import { ThemeToggle } from "@/app/layouts/Shell";
+import { JuryEntry } from "./JuryEntry";
 import { T } from "./text";
 
 const cta = "h-12 px-6 text-16";
@@ -36,6 +37,7 @@ function Hero() {
                 {T.ctaEmployer}
               </Link>
             </div>
+            <JuryEntry />
           </div>
           <HeroCard />
         </div>

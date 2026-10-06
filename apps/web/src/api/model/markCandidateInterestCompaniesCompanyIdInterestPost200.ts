@@ -5,6 +5,4 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type TgResumeStatusInternalTgResumesResumeIdGetParams = {
-tg_user_id: number;
-};
+export type MarkCandidateInterestCompaniesCompanyIdInterestPost200 = { [key: string]: unknown };

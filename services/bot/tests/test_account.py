@@ -235,7 +235,7 @@ async def test_category_status_with_test_stub(redis):
     sent = session.texts(SendMessage)[-1]
     assert "Backend · Middle" in sent.text
     assert "заявлено Senior, подтверждено Middle" in sent.text
-    assert "скоро" in sent.text
+    assert "Короткий тест" in [b.text for b in buttons(sent)][0]
     assert any(b.url and "magic" in b.url for b in buttons(sent))
     assert "Подтверждённой категории пока нет" in category_status({"categories": [], "claims": []})
 

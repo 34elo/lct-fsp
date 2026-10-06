@@ -26,7 +26,7 @@ from app.candidates import service as candidates
 from app.consents import service as consents
 from app.graph import service as graph
 from app.graph.trust import EvidenceView, TrustConfig, effective_strength
-from app.matching.models import Match
+from app.matching.models import CandidateInterest, Match
 from app.matching.scoring import (
     CandidateView,
     FspProof,
@@ -391,3 +391,37 @@ async def snapshot(
     """`{score, explanation}` подборки на сейчас — для `offers.match_snapshot`."""
     m = await session.get(Match, (vacancy_id, candidate_id))
     return None if m is None else {"score": m.score, "explanation": m.explanation}
+
+
+async def set_candidate_interest(
+    session: AsyncSession, candidate_id: uuid.UUID, company_id: uuid.UUID
+) -> datetime:
+    """Кандидат отметил интерес к компании (E33-6); повтор идемпотентен. Возвращает `created_at`."""
+    interest = await session.get(CandidateInterest, (candidate_id, company_id))
+    if interest is None:
+        interest = CandidateInterest(candidate_id=candidate_id, company_id=company_id)
+        session.add(interest)
+        await session.flush()
+        await session.refresh(interest)
+    return interest.created_at
+
+
+async def remove_candidate_interest(
+    session: AsyncSession, candidate_id: uuid.UUID, company_id: uuid.UUID
+) -> bool:
+    """Кандидат снял отметку. `True`, если она была."""
+    res = await session.execute(
+        delete(CandidateInterest).where(
+            CandidateInterest.candidate_id == candidate_id,
+            CandidateInterest.company_id == company_id,
+        )
+    )
+    return bool(res.rowcount)
+
+
+async def interested_candidate_ids(session: AsyncSession, company_id: uuid.UUID) -> set[uuid.UUID]:
+    """Кандидаты, отметившие эту компанию: буст в её выдаче виден только ей."""
+    rows = await session.scalars(
+        select(CandidateInterest.candidate_id).where(CandidateInterest.company_id == company_id)
+    )
+    return set(rows)
