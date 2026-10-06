@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Any, Literal
 
 import structlog
-from fastapi import APIRouter, Depends, Header, Response
+from fastapi import APIRouter, Depends, Header, Query, Response
 from fsp_contracts.enums import (
     DeclineReason,
     EmploymentType,
@@ -35,7 +35,7 @@ from app.matching.p_accept import PAcceptConfig, p_accept
 from app.matching.p_accept import hint as p_hint
 from app.matching.scoring import MatchConfig
 from app.matching.search import CandidateCard
-from app.offers import service
+from app.offers import service, teams
 from app.offers.models import Offer, OfferMessage
 from app.openapi_errors import problem_responses
 from app.telegram import service as telegram
@@ -114,6 +114,7 @@ class OfferOut(BaseModel):
     description: str | None = None
     contact_method: ContactMethod | None = None
     initiator: OfferInitiator = OfferInitiator.employer
+    team_offer_id: uuid.UUID | None = None  # общий у офферов одной команды (E15-2)
     salary_from: int
     salary_to: int
     message: str | None = None
@@ -239,6 +240,7 @@ async def _base(session: AsyncSession, o: Offer) -> dict[str, Any]:
         "vacancy": VacancyBrief.model_validate(v, from_attributes=True) if v else None,
         "title": o.title or (v.title if v else None), "description": o.description,
         "contact_method": o.contact_method, "initiator": o.initiator,
+        "team_offer_id": o.team_offer_id,
         "salary_from": o.salary_from, "salary_to": o.salary_to, "message": o.message,
         "below_candidate_min": o.below_candidate_min,
         "match_snapshot": MatchSnapshot.model_validate(snap) if snap else None,
@@ -265,6 +267,62 @@ async def for_company(session: AsyncSession, o: Offer) -> OfferForCompany:
             full = await card.build_card(session, c, vacancy_id=None, cfg=_CFG, trust=_TRUST)
             cand = CandidateCard.model_validate(full.model_dump())
     return OfferForCompany(**await _base(session, o), candidate=cand)
+
+
+class TeamMemberOut(BaseModel):
+    """Участник команды: только псевдоним, без ПДн."""
+
+    pseudo_id: str
+    role: str | None = None
+    primary_role: str | None = None
+    grade: str | None = None
+
+
+class TeamOut(BaseModel):
+    id: str
+    name: str | None = None
+    competition_title: str | None = None
+    discipline: str | None = None
+    best_place: int | None = None
+    members: list[TeamMemberOut]
+
+
+class SalaryPerMember(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    candidate_pseudo_id: str = Field(min_length=1, max_length=64)
+    salary_from: int | None = Field(default=None, le=100_000_000)
+    salary_to: int | None = Field(default=None, le=100_000_000)
+
+
+class CreateTeamOffer(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    vacancy_id: uuid.UUID
+    fsp_team_id: str = Field(min_length=1, max_length=128)
+    salary_per_member: list[SalaryPerMember] = Field(min_length=1, max_length=20)
+    message: str | None = Field(default=None, max_length=2000)
+
+
+class TeamOfferOut(BaseModel):
+    team_offer_id: uuid.UUID
+    fsp_team_id: str
+    team_name: str | None = None
+    offers: list[OfferForCompany]
+
+
+def _team_out(t: teams.TeamView) -> TeamOut:
+    return TeamOut(
+        id=t.id, name=t.name, competition_title=t.competition_title, discipline=t.discipline,
+        best_place=t.best_place,
+        members=[
+            TeamMemberOut(
+                pseudo_id=m.candidate.pseudo_id, role=m.role,
+                primary_role=m.candidate.primary_role, grade=m.candidate.grade,
+            )
+            for m in t.members
+        ],
+    )  # fmt: skip
 
 
 @router.post(
@@ -336,6 +394,70 @@ async def create_offer(
     if replay:
         response.headers["Idempotent-Replay"] = "true"
     return await for_company(session, offer)
+
+
+@router.get("/teams", response_model=list[TeamOut], responses=problem_responses(401, 403))
+async def list_fsp_teams(
+    discipline: str | None = Query(default=None, max_length=64),
+    min_place: int | None = Query(default=None, ge=1),
+    user: User = Depends(_employer),
+    session: AsyncSession = Depends(get_session),
+) -> Any:
+    """Команды ФСП, где есть минимум два видимых кандидата платформы (анонимно, E15-2)."""
+    company, _ = await companies.require_company(session, user.id)
+    found = await teams.list_teams(session, company.id, discipline=discipline, min_place=min_place)
+    return [_team_out(t) for t in found]
+
+
+@router.post(
+    "/team-offers",
+    response_model=TeamOfferOut,
+    status_code=201,
+    responses=problem_responses(401, 403, 404, 409, 422, 429),
+)
+async def create_team_offer(
+    body: CreateTeamOffer,
+    response: Response,
+    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key", max_length=100),
+    user: User = Depends(_employer),
+    session: AsyncSession = Depends(get_session),
+) -> Any:
+    """Командный оффер: по офферу на участника с общим `team_offer_id`, вилка у каждого своя."""
+    if not idempotency_key or not idempotency_key.strip():
+        raise ProblemError(422, "idempotency_key_required", "Нужен заголовок Idempotency-Key")
+    identity.require_verified_email(user)  # blocks.md §4.6
+    company, _ = await companies.require_company(session, user.id)
+    vacancy = await vacancies.get_owned(session, user, body.vacancy_id)
+    team = await teams.get_team(session, company.id, body.fsp_team_id)
+    pseudo = [m.candidate_pseudo_id for m in body.salary_per_member]
+    if len(set(pseudo)) != len(pseudo) or len(pseudo) < teams.MIN_TEAM:
+        raise ProblemError(
+            422, "team_members_invalid", "Нужно минимум два разных участника команды"
+        )
+    key = idempotency_key.strip()
+    by_pseudo = {pid: teams.member_by_pseudo(team, pid) for pid in pseudo}
+    existing = await service.find_by_key(session, company.id, f"{key}#{pseudo[0]}")
+    tid = existing.team_offer_id if existing and existing.team_offer_id else uuid.uuid4()
+    description = f"Командный оффер: команда «{team.name or team.id}»"
+    created: list[Offer] = []
+    replays = []
+    async with session.begin_nested():  # ошибка на любом участнике откатывает все офферы
+        for item in body.salary_per_member:
+            offer, replay = await service.create(
+                session, company=company, user_id=user.id, vacancy=vacancy,
+                candidate=by_pseudo[item.candidate_pseudo_id], salary_from=item.salary_from,
+                salary_to=item.salary_to, message=body.message,
+                idempotency_key=f"{key}#{item.candidate_pseudo_id}", limits=_LIMITS,
+                description=description, team_offer_id=tid,
+            )  # fmt: skip
+            created.append(offer)
+            replays.append(replay)
+    if all(replays):
+        response.headers["Idempotent-Replay"] = "true"
+    return TeamOfferOut(
+        team_offer_id=tid, fsp_team_id=team.id, team_name=team.name,
+        offers=[await for_company(session, o) for o in created],
+    )  # fmt: skip
 
 
 @router.get("/offers", response_model=list[OfferForCompany], responses=problem_responses(401, 403))
