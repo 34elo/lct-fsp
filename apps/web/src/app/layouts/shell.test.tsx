@@ -5,6 +5,7 @@ import { BottomNav } from "./BottomNav";
 import { PageContainer } from "./PageContainer";
 import { CANDIDATE_BOTTOM, initials } from "./shell-meta";
 import { NAV } from "@/app/routes";
+import { Providers, makeQueryClient } from "@/app/Providers";
 
 test("нижняя навигация кандидата: четыре пункта с подписями и ссылками", () => {
   render(
@@ -26,4 +27,27 @@ test("PageContainer ограничивает ширину 1440", () => {
 test("инициалы", () => {
   expect(initials("ivan.petrov@mail.ru")).toBe("IP");
   expect(initials("")).toBe("?");
+});
+
+test("счётчик офферов: у нового кандидата без офферов бейджа нет, свои отклики не считаются", async () => {
+  const { offerCount } = await import("./Shell");
+  expect(offerCount({ status: 200, data: [] })).toBeUndefined();
+  expect(offerCount({ status: 403, data: [] })).toBeUndefined();
+  expect(offerCount({ status: 200, data: [{ initiator: "candidate" }] })).toBeUndefined();
+  expect(offerCount({ status: 200, data: [{ initiator: "company" }, { initiator: "candidate" }] })).toBe(1);
+});
+
+test("шапка: вкладки не раздувают страницу на 800–1000 px (внутренняя прокрутка, без переноса)", async () => {
+  const { AppHeader } = await import("./AppHeader");
+  render(
+    <Providers client={makeQueryClient()}>
+      <MemoryRouter>
+        <AppHeader nav={NAV.candidate} />
+      </MemoryRouter>
+    </Providers>,
+  );
+  const tabs = screen.getAllByRole("navigation", { name: "Разделы" })[0];
+  expect(tabs.className).toContain("overflow-x-auto");
+  expect(tabs.className).toContain("min-w-0");
+  expect(within(tabs).getAllByRole("link")[0].className).toContain("shrink-0");
 });

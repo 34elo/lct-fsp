@@ -180,8 +180,8 @@ function Footer() {
       <footer className={cn("flex flex-col gap-3 py-8 text-14 text-muted md:flex-row md:justify-between", pad)}>
         <span>{T.copyright}</span>
         <span className="flex gap-5">
-          <Link to="/consents">{T.terms}</Link>
-          <Link to="/consents">{T.privacy}</Link>
+          <Link to="/terms">{T.terms}</Link>
+          <Link to="/privacy">{T.privacy}</Link>
           <a href="mailto:career@fsp.example">{T.contacts}</a>
         </span>
       </footer>

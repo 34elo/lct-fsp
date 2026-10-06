@@ -77,7 +77,7 @@ function UserMenu() {
 
 const tab = ({ isActive }: { isActive: boolean }) =>
   cn(
-    "relative flex h-14 items-center gap-1.5 px-3 text-14 font-semibold",
+    "relative flex h-14 shrink-0 items-center gap-1.5 whitespace-nowrap px-3 text-14 font-semibold",
     isActive
       ? "text-ink after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:bg-brand"
       : "text-muted hover:text-ink",
@@ -96,12 +96,12 @@ export function AppHeader({
 }) {
   return (
     <header className="sticky top-0 z-20 border-b border-hairline bg-card">
-      <PageContainer className="flex h-14 items-center gap-3">
+      <PageContainer className="flex h-14 min-w-0 items-center gap-3">
         <NavLink to="/" aria-label="ФСП Карьера — на главную" className="shrink-0">
           <Logo />
         </NavLink>
         {withTabs && (
-          <nav aria-label="Разделы" className="ml-4 hidden items-stretch md:flex">
+          <nav aria-label="Разделы" className="ml-4 hidden min-w-0 items-stretch overflow-x-auto md:flex [scrollbar-width:none]">
             {nav.map((n) => (
               <NavLink key={n.to} to={n.to} end={isPrefix(nav, n.to)} className={tab}>
                 {n.label}
