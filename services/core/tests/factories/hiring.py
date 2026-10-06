@@ -3,9 +3,9 @@
 import uuid
 from datetime import UTC, datetime, timedelta
 
-from fsp_contracts.ml import SearchFilters
 from app.matching.models import Need
 from app.offers.models import Offer
+from fsp_contracts.ml import SearchFilters
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
