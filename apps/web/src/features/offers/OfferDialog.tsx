@@ -5,12 +5,13 @@ import { useNavigate } from "react-router-dom";
 
 import { useCreateOfferOffersPost, useSalaryHintOffersSalaryHintPost } from "@/api/endpoints/offers/offers";
 import { useListVacanciesVacanciesGet } from "@/api/endpoints/vacancies/vacancies";
+import { ContactMethod } from "@/api/model";
 import { ErrorNote, fieldClass } from "@/features/auth/ui";
 import { FORMAT_LABEL } from "@/features/employer/text";
 import { cn } from "@/shared/lib/cn";
 import { canSendOffer, groupDigits, isWideRange, parseRub, rangeProblem } from "./offer-model";
 import { invalidateOffers } from "./parts";
-import { offerErrorText } from "./text";
+import { CONTACT_LABEL, offerErrorText } from "./text";
 
 const T = {
   title: (name: string) => `Оффер кандидату ${name}`,
@@ -19,6 +20,8 @@ const T = {
   noVacancy: "Без вакансии (прямое приглашение)",
   invitation: "Название приглашения",
   invitationHint: "Без вакансии название обязательно: кандидат увидит его в оффере.",
+  invDescription: "О чём приглашение",
+  invContact: "Как связаться после принятия",
   range: "Зарплатная вилка в месяц, ₽ *",
   from: "от",
   to: "до",
@@ -76,6 +79,8 @@ function OfferForm({ candidate, vacancyId: initialVacancy, alreadyOffered, onClo
   const [vacancyId, setVacancyId] = useState(initialVacancy);
   const vacancy = published.find((v) => v.id === vacancyId);
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [contactMethod, setContactMethod] = useState<ContactMethod>(ContactMethod.platform);
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [message, setMessage] = useState("");
@@ -126,6 +131,8 @@ function OfferForm({ candidate, vacancyId: initialVacancy, alreadyOffered, onClo
       data: {
         vacancy_id: vacancyId || null,
         title: vacancyId ? null : title.trim(),
+        description: vacancyId ? null : description.trim() || null,
+        contact_method: vacancyId ? null : contactMethod,
         candidate_pseudo_id: candidate.pseudoId,
         salary_from: lo,
         salary_to: hi,
@@ -172,6 +179,22 @@ function OfferForm({ candidate, vacancyId: initialVacancy, alreadyOffered, onClo
             <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} aria-invalid={touched && title.trim() === ""} className={fieldClass} />
             <span className={cn("text-xs font-normal", touched && title.trim() === "" ? "text-error" : "text-muted")}>{T.invitationHint}</span>
           </label>
+        )}
+        {!vacancyId && (
+          <>
+            <label className="flex flex-col gap-1 text-sm font-semibold">
+              {T.invDescription}
+              <textarea value={description} onChange={(e) => setDescription(e.target.value)} maxLength={4000} rows={3} className={cn(fieldClass, "h-auto py-2 font-normal")} />
+            </label>
+            <label className="flex flex-col gap-1 text-sm font-semibold">
+              {T.invContact}
+              <select value={contactMethod} onChange={(e) => setContactMethod(e.target.value as ContactMethod)} className={fieldClass}>
+                {Object.values(ContactMethod).map((m) => (
+                  <option key={m} value={m}>{CONTACT_LABEL[m] ?? m}</option>
+                ))}
+              </select>
+            </label>
+          </>
         )}
         <fieldset className="flex flex-col gap-1">
           <legend className="text-sm font-semibold">{T.range}</legend>
