@@ -55,7 +55,7 @@ afterEach(() => vi.unstubAllGlobals());
 test("публичный лендинг доступен без входа", async () => {
   mockFetch(() => ({ status: 401 }));
   mount("/");
-  expect(await screen.findByRole("heading", { name: "Лендинг" })).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { level: 1, name: "Не резюме, а доказательства" })).toBeInTheDocument();
 });
 
 test("аноним на /me уходит на форму входа", async () => {

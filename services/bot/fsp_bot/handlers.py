@@ -20,6 +20,14 @@ from aiogram.types import (
     ReplyKeyboardMarkup,
 )
 
+from fsp_bot.account import (
+    ACCOUNT_BUTTONS,
+    BTN_CATEGORY,
+    BTN_FSP,
+    BTN_SETTINGS,
+    BTN_STATUS,
+    build_account_router,
+)
 from fsp_bot.core_client import CoreClient, CoreError
 from fsp_bot.states import Offer, Onboarding, Resume
 from fsp_bot.templates.render import (
@@ -55,7 +63,9 @@ STAGES = {"queued": "В очереди на разбор", "parsing": "Чита�
 MENU_KB = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text=BTN_RESUME), KeyboardButton(text=BTN_PROFILE)],
-        [KeyboardButton(text=BTN_OFFERS)],
+        [KeyboardButton(text=BTN_OFFERS), KeyboardButton(text=BTN_FSP)],
+        [KeyboardButton(text=BTN_CATEGORY), KeyboardButton(text=BTN_STATUS)],
+        [KeyboardButton(text=BTN_SETTINGS)],
     ],
     resize_keyboard=True,
 )
@@ -81,7 +91,7 @@ OFFER_ERRORS = {
 }
 ASK_QUESTION = "Напиши вопрос работодателю одним сообщением. Отмена: /cancel"
 NO_OFFERS = "Активных офферов пока нет. Они появятся здесь, как только работодатель ответит."
-MENU_TEXTS = (BTN_RESUME, BTN_PROFILE, BTN_OFFERS)
+MENU_TEXTS = (BTN_RESUME, BTN_PROFILE, BTN_OFFERS, *ACCOUNT_BUTTONS)
 
 
 def offer_error(exc: CoreError) -> str:
@@ -122,6 +132,8 @@ def build_router(
             log.info("edit_skipped", reason=str(exc)[:60])
             if kb is not None:
                 await msg.edit_text(text, parse_mode="HTML")
+
+    router.include_router(build_account_router(core, site_button))
 
     @router.message(CommandStart())
     async def start(message: Message, command: CommandObject, state: FSMContext) -> None:

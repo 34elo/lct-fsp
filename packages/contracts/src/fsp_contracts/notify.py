@@ -23,6 +23,7 @@ class TgTemplate(StrEnum):
     resume_parsed = "resume_parsed"  # «вот что я понял»
     code_progress = "code_progress"
     fsp_imported = "fsp_imported"
+    regular_task_published = "regular_task_published"
     test_result = "test_result"
     uplift = "uplift"
 

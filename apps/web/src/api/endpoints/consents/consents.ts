@@ -26,7 +26,7 @@ import type {
 import type {
   AppConsentsRouterConsentsIn,
   ConsentOut,
-  HTTPValidationError
+  ProblemOut
 } from '../../model';
 
 import { apiFetch } from '../../mutator';
@@ -57,12 +57,24 @@ export type getConsentsMeConsentsGetResponse200 = {
   status: 200
 }
 
+export type getConsentsMeConsentsGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type getConsentsMeConsentsGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
 export type getConsentsMeConsentsGetResponseSuccess = (getConsentsMeConsentsGetResponse200) & {
   headers: Headers;
 };
-;
+export type getConsentsMeConsentsGetResponseError = (getConsentsMeConsentsGetResponse401ApplicationProblemJson | getConsentsMeConsentsGetResponse401ApplicationJson) & {
+  headers: Headers;
+};
 
-export type getConsentsMeConsentsGetResponse = (getConsentsMeConsentsGetResponseSuccess)
+export type getConsentsMeConsentsGetResponse = (getConsentsMeConsentsGetResponseSuccess | getConsentsMeConsentsGetResponseError)
 
 export const getGetConsentsMeConsentsGetUrl = () => {
 
@@ -97,7 +109,7 @@ export const getGetConsentsMeConsentsGetQueryKey = () => {
     }
 
 
-export const getGetConsentsMeConsentsGetQueryOptions = <TData = Awaited<ReturnType<typeof getConsentsMeConsentsGet>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getConsentsMeConsentsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+export const getGetConsentsMeConsentsGetQueryOptions = <TData = Awaited<ReturnType<typeof getConsentsMeConsentsGet>>, TError = ErrorType<ProblemOut>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getConsentsMeConsentsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -116,10 +128,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetConsentsMeConsentsGetQueryResult = NonNullable<Awaited<ReturnType<typeof getConsentsMeConsentsGet>>>
-export type GetConsentsMeConsentsGetQueryError = ErrorType<unknown>
+export type GetConsentsMeConsentsGetQueryError = ErrorType<ProblemOut>
 
 
-export function useGetConsentsMeConsentsGet<TData = Awaited<ReturnType<typeof getConsentsMeConsentsGet>>, TError = ErrorType<unknown>>(
+export function useGetConsentsMeConsentsGet<TData = Awaited<ReturnType<typeof getConsentsMeConsentsGet>>, TError = ErrorType<ProblemOut>>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getConsentsMeConsentsGet>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getConsentsMeConsentsGet>>,
@@ -129,7 +141,7 @@ export function useGetConsentsMeConsentsGet<TData = Awaited<ReturnType<typeof ge
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetConsentsMeConsentsGet<TData = Awaited<ReturnType<typeof getConsentsMeConsentsGet>>, TError = ErrorType<unknown>>(
+export function useGetConsentsMeConsentsGet<TData = Awaited<ReturnType<typeof getConsentsMeConsentsGet>>, TError = ErrorType<ProblemOut>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getConsentsMeConsentsGet>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getConsentsMeConsentsGet>>,
@@ -139,7 +151,7 @@ export function useGetConsentsMeConsentsGet<TData = Awaited<ReturnType<typeof ge
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetConsentsMeConsentsGet<TData = Awaited<ReturnType<typeof getConsentsMeConsentsGet>>, TError = ErrorType<unknown>>(
+export function useGetConsentsMeConsentsGet<TData = Awaited<ReturnType<typeof getConsentsMeConsentsGet>>, TError = ErrorType<ProblemOut>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getConsentsMeConsentsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -147,7 +159,7 @@ export function useGetConsentsMeConsentsGet<TData = Awaited<ReturnType<typeof ge
  * @summary Get Consents
  */
 
-export function useGetConsentsMeConsentsGet<TData = Awaited<ReturnType<typeof getConsentsMeConsentsGet>>, TError = ErrorType<unknown>>(
+export function useGetConsentsMeConsentsGet<TData = Awaited<ReturnType<typeof getConsentsMeConsentsGet>>, TError = ErrorType<ProblemOut>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getConsentsMeConsentsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -169,15 +181,30 @@ export type putConsentsMeConsentsPutResponse200 = {
   status: 200
 }
 
-export type putConsentsMeConsentsPutResponse422 = {
-  data: HTTPValidationError
+export type putConsentsMeConsentsPutResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type putConsentsMeConsentsPutResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type putConsentsMeConsentsPutResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type putConsentsMeConsentsPutResponse422ApplicationJson = {
+  data: ProblemOut
   status: 422
 }
 
 export type putConsentsMeConsentsPutResponseSuccess = (putConsentsMeConsentsPutResponse200) & {
   headers: Headers;
 };
-export type putConsentsMeConsentsPutResponseError = (putConsentsMeConsentsPutResponse422) & {
+export type putConsentsMeConsentsPutResponseError = (putConsentsMeConsentsPutResponse401ApplicationProblemJson | putConsentsMeConsentsPutResponse401ApplicationJson | putConsentsMeConsentsPutResponse422ApplicationProblemJson | putConsentsMeConsentsPutResponse422ApplicationJson) & {
   headers: Headers;
 };
 
@@ -225,7 +252,7 @@ return apiFetch<putConsentsMeConsentsPutResponse>(getPutConsentsMeConsentsPutUrl
 
 export const getPutConsentsMeConsentsPutMutationKey = () => ['putConsentsMeConsentsPut'] as const;
 
-export const getPutConsentsMeConsentsPutMutationOptions = <TError = ErrorType<HTTPValidationError>,
+export const getPutConsentsMeConsentsPutMutationOptions = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putConsentsMeConsentsPut>>, TError,PutConsentsMeConsentsPutMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof putConsentsMeConsentsPut>>, TError,PutConsentsMeConsentsPutMutationVariables, TContext> => {
 
@@ -254,13 +281,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type PutConsentsMeConsentsPutMutationResult = NonNullable<Awaited<ReturnType<typeof putConsentsMeConsentsPut>>>
     export type PutConsentsMeConsentsPutMutationBody = AppConsentsRouterConsentsIn
-    export type PutConsentsMeConsentsPutMutationError = ErrorType<HTTPValidationError>
+    export type PutConsentsMeConsentsPutMutationError = ErrorType<ProblemOut>
     export type PutConsentsMeConsentsPutMutationVariables = {data: AppConsentsRouterConsentsIn}
 
     /**
  * @summary Put Consents
  */
-export const usePutConsentsMeConsentsPut = <TError = ErrorType<HTTPValidationError>,
+export const usePutConsentsMeConsentsPut = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putConsentsMeConsentsPut>>, TError,PutConsentsMeConsentsPutMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof putConsentsMeConsentsPut>>,

@@ -1,14 +1,18 @@
 # Сборка SPA (Vite) → статика в caddy. API-клиент ходит на относительный /api/v1 через gateway.
+# Контекст — корень репозитория: pnpm-workspace (apps/web + packages/ui, ADR-050).
 FROM node:22-alpine AS build
 RUN corepack enable
-WORKDIR /app
-COPY apps/web/package.json apps/web/pnpm-lock.yaml apps/web/pnpm-workspace.yaml ./
-RUN pnpm install --frozen-lockfile
-COPY apps/web/ ./
-RUN pnpm exec vite build
+WORKDIR /repo
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY apps/web/package.json apps/web/
+COPY packages/ui/package.json packages/ui/
+RUN pnpm install --frozen-lockfile --filter fsp-web...
+COPY packages/ui/ packages/ui/
+COPY apps/web/ apps/web/
+RUN pnpm --filter fsp-web exec vite build
 
 FROM caddy:2-alpine
-COPY --from=build /app/dist /srv
+COPY --from=build /repo/apps/web/dist /srv
 COPY apps/web/Caddyfile /etc/caddy/Caddyfile
 ENV XDG_DATA_HOME=/tmp XDG_CONFIG_HOME=/tmp
 USER 65532:65532

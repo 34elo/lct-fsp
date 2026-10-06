@@ -23,6 +23,7 @@ from app.fsp.client import ConnectorClient
 from app.identity.deps import _bearer, get_current_user, require_roles
 from app.identity.models import User
 from app.matching import card
+from app.openapi_errors import problem_responses
 from app.telegram.service import safe_redirect
 
 router = APIRouter(tags=["fsp"])
@@ -60,7 +61,9 @@ class StartOut(BaseModel):
 
 
 @router.get(
-    "/auth/fsp/start", response_model=StartOut, responses={302: {"description": "redirect"}}
+    "/auth/fsp/start",
+    response_model=StartOut,
+    responses={302: {"description": "redirect"}, **problem_responses(401, 403, 503)},
 )
 async def fsp_start(
     request: Request,
@@ -137,7 +140,11 @@ class VerifyOut(BaseModel):
     verified: bool
 
 
-@router.post("/candidates/me/fsp/link", response_model=LinkOut)
+@router.post(
+    "/candidates/me/fsp/link",
+    response_model=LinkOut,
+    responses=problem_responses(401, 403, 422, 429, 503),
+)
 async def fsp_link(
     body: LinkIn,
     request: Request,
@@ -156,7 +163,11 @@ async def fsp_link(
     return LinkOut(method=data["method"], masked_contact=data.get("masked_contact"))
 
 
-@router.post("/candidates/me/fsp/verify", response_model=VerifyOut)
+@router.post(
+    "/candidates/me/fsp/verify",
+    response_model=VerifyOut,
+    responses=problem_responses(401, 403, 422, 429, 503),
+)
 async def fsp_verify(
     body: VerifyIn,
     user: User = Depends(writer),
@@ -168,7 +179,7 @@ async def fsp_verify(
     return VerifyOut(verified=bool(data.get("verified")))
 
 
-@router.post("/candidates/me/fsp/sync", status_code=202)
+@router.post("/candidates/me/fsp/sync", status_code=202, responses=problem_responses(401, 403, 503))
 async def fsp_sync(
     user: User = Depends(writer),
     session: AsyncSession = Depends(get_session),
@@ -198,7 +209,7 @@ class FspOverview(BaseModel):
     teams: list[FspTeam]
 
 
-@router.get("/candidates/me/fsp", response_model=FspOverview)
+@router.get("/candidates/me/fsp", response_model=FspOverview, responses=problem_responses(401, 403))
 async def fsp_overview(
     request: Request,
     user: User = Depends(owner),
@@ -214,3 +225,46 @@ async def fsp_overview(
         ranks=own.ranks if own else [],
         teams=[FspTeam(**t) for t in await service.teams_of(session, user.id)],
     )
+
+
+# -------------------------------------------------------------------------- админ: демо (E13-3)
+_admin = require_roles("fsp_admin")
+
+
+@router.post(
+    "/admin/demo/fsp-result",
+    status_code=202,
+    responses=problem_responses(400, 401, 403),
+)
+async def admin_demo_create_fsp_result(
+    request: Request,
+    user: User = Depends(_admin),
+    session: AsyncSession = Depends(get_session),
+    connector: ConnectorClient = Depends(get_connector),
+):
+    """Админ: демо-кнопка создания результата ФСП для случайного кандидата (E13-3).
+    Создаёт результат в мок-ФСП и отправляет вебхук для синхронизации.
+    Доступно только при DEMO_MODE=true."""
+    if not request.app.state.settings.demo_mode:
+        raise ProblemError(400, "demo_disabled", "Демо-режим отключен")
+    await service.demo_create_result(session, connector)
+    return {"status": "accepted"}
+
+
+@router.post(
+    "/admin/demo/reset",
+    status_code=202,
+    responses=problem_responses(400, 401, 403),
+)
+async def admin_demo_reset_fsp(
+    request: Request,
+    user: User = Depends(_admin),
+    session: AsyncSession = Depends(get_session),
+    connector: ConnectorClient = Depends(get_connector),
+):
+    """Админ: демо-кнопка сброса всех результатов ФСП к снапшоту (E13-3).
+    Доступно только при DEMO_MODE=true."""
+    if not request.app.state.settings.demo_mode:
+        raise ProblemError(400, "demo_disabled", "Демо-режим отключен")
+    await service.demo_reset(session, connector)
+    return {"status": "accepted"}

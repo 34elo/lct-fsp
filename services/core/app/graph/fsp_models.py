@@ -95,3 +95,22 @@ class FspTeamMember(Base):
     participant_id: Mapped[str] = mapped_column(Text, primary_key=True)
     candidate_id: Mapped[uuid.UUID | None] = mapped_column(default=None)
     role: Mapped[str | None] = mapped_column(Text, default=None)
+
+
+class CandidateLink(Base):
+    """Связь двух кандидатов платформы (graph.md §7). Пишет только `fsp_links.refresh_links`.
+
+    Обычная таблица, а не материализованное представление: перестраивается идемпотентно
+    и одинаково работает на PostgreSQL и SQLite в тестах. Пара упорядочена: a < b.
+    """
+
+    __tablename__ = "candidate_links"
+
+    candidate_a: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("candidates.user_id", ondelete="CASCADE"), primary_key=True
+    )
+    candidate_b: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("candidates.user_id", ondelete="CASCADE"), primary_key=True
+    )
+    kind: Mapped[str] = mapped_column(Text, primary_key=True)  # fsp_team | repo
+    context_id: Mapped[str] = mapped_column(Text, primary_key=True)

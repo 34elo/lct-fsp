@@ -24,8 +24,13 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  ApplyIn,
   HTTPValidationError,
+  ListPublicVacanciesVacanciesPublicGetParams,
   ListVacanciesVacanciesGetParams,
+  OfferForCandidate,
+  ProblemOut,
+  PublicVacancyOut,
   VacancyIn,
   VacancyOut,
   VacancyPatch
@@ -59,15 +64,40 @@ export type createVacancyVacanciesPostResponse201 = {
   status: 201
 }
 
-export type createVacancyVacanciesPostResponse422 = {
-  data: HTTPValidationError
+export type createVacancyVacanciesPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type createVacancyVacanciesPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type createVacancyVacanciesPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type createVacancyVacanciesPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type createVacancyVacanciesPostResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type createVacancyVacanciesPostResponse422ApplicationJson = {
+  data: ProblemOut
   status: 422
 }
 
 export type createVacancyVacanciesPostResponseSuccess = (createVacancyVacanciesPostResponse201) & {
   headers: Headers;
 };
-export type createVacancyVacanciesPostResponseError = (createVacancyVacanciesPostResponse422) & {
+export type createVacancyVacanciesPostResponseError = (createVacancyVacanciesPostResponse401ApplicationProblemJson | createVacancyVacanciesPostResponse401ApplicationJson | createVacancyVacanciesPostResponse403ApplicationProblemJson | createVacancyVacanciesPostResponse403ApplicationJson | createVacancyVacanciesPostResponse422ApplicationProblemJson | createVacancyVacanciesPostResponse422ApplicationJson) & {
   headers: Headers;
 };
 
@@ -115,7 +145,7 @@ return apiFetch<createVacancyVacanciesPostResponse>(getCreateVacancyVacanciesPos
 
 export const getCreateVacancyVacanciesPostMutationKey = () => ['createVacancyVacanciesPost'] as const;
 
-export const getCreateVacancyVacanciesPostMutationOptions = <TError = ErrorType<HTTPValidationError>,
+export const getCreateVacancyVacanciesPostMutationOptions = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createVacancyVacanciesPost>>, TError,CreateVacancyVacanciesPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createVacancyVacanciesPost>>, TError,CreateVacancyVacanciesPostMutationVariables, TContext> => {
 
@@ -144,13 +174,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type CreateVacancyVacanciesPostMutationResult = NonNullable<Awaited<ReturnType<typeof createVacancyVacanciesPost>>>
     export type CreateVacancyVacanciesPostMutationBody = VacancyIn
-    export type CreateVacancyVacanciesPostMutationError = ErrorType<HTTPValidationError>
+    export type CreateVacancyVacanciesPostMutationError = ErrorType<ProblemOut>
     export type CreateVacancyVacanciesPostMutationVariables = {data: VacancyIn}
 
     /**
  * @summary Create Vacancy
  */
-export const useCreateVacancyVacanciesPost = <TError = ErrorType<HTTPValidationError>,
+export const useCreateVacancyVacanciesPost = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createVacancyVacanciesPost>>, TError,CreateVacancyVacanciesPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createVacancyVacanciesPost>>,
@@ -165,6 +195,26 @@ export const useCreateVacancyVacanciesPost = <TError = ErrorType<HTTPValidationE
   status: 200
 }
 
+export type listVacanciesVacanciesGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type listVacanciesVacanciesGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type listVacanciesVacanciesGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type listVacanciesVacanciesGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
 export type listVacanciesVacanciesGetResponse422 = {
   data: HTTPValidationError
   status: 422
@@ -173,7 +223,7 @@ export type listVacanciesVacanciesGetResponse422 = {
 export type listVacanciesVacanciesGetResponseSuccess = (listVacanciesVacanciesGetResponse200) & {
   headers: Headers;
 };
-export type listVacanciesVacanciesGetResponseError = (listVacanciesVacanciesGetResponse422) & {
+export type listVacanciesVacanciesGetResponseError = (listVacanciesVacanciesGetResponse401ApplicationProblemJson | listVacanciesVacanciesGetResponse401ApplicationJson | listVacanciesVacanciesGetResponse403ApplicationProblemJson | listVacanciesVacanciesGetResponse403ApplicationJson | listVacanciesVacanciesGetResponse422) & {
   headers: Headers;
 };
 
@@ -219,7 +269,7 @@ export const getListVacanciesVacanciesGetQueryKey = (params?: ListVacanciesVacan
     }
 
 
-export const getListVacanciesVacanciesGetQueryOptions = <TData = Awaited<ReturnType<typeof listVacanciesVacanciesGet>>, TError = ErrorType<HTTPValidationError>>(params?: ListVacanciesVacanciesGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listVacanciesVacanciesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+export const getListVacanciesVacanciesGetQueryOptions = <TData = Awaited<ReturnType<typeof listVacanciesVacanciesGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(params?: ListVacanciesVacanciesGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listVacanciesVacanciesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -238,10 +288,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type ListVacanciesVacanciesGetQueryResult = NonNullable<Awaited<ReturnType<typeof listVacanciesVacanciesGet>>>
-export type ListVacanciesVacanciesGetQueryError = ErrorType<HTTPValidationError>
+export type ListVacanciesVacanciesGetQueryError = ErrorType<ProblemOut | HTTPValidationError>
 
 
-export function useListVacanciesVacanciesGet<TData = Awaited<ReturnType<typeof listVacanciesVacanciesGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useListVacanciesVacanciesGet<TData = Awaited<ReturnType<typeof listVacanciesVacanciesGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  params: undefined |  ListVacanciesVacanciesGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listVacanciesVacanciesGet>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof listVacanciesVacanciesGet>>,
@@ -251,7 +301,7 @@ export function useListVacanciesVacanciesGet<TData = Awaited<ReturnType<typeof l
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListVacanciesVacanciesGet<TData = Awaited<ReturnType<typeof listVacanciesVacanciesGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useListVacanciesVacanciesGet<TData = Awaited<ReturnType<typeof listVacanciesVacanciesGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  params?: ListVacanciesVacanciesGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listVacanciesVacanciesGet>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof listVacanciesVacanciesGet>>,
@@ -261,7 +311,7 @@ export function useListVacanciesVacanciesGet<TData = Awaited<ReturnType<typeof l
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListVacanciesVacanciesGet<TData = Awaited<ReturnType<typeof listVacanciesVacanciesGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useListVacanciesVacanciesGet<TData = Awaited<ReturnType<typeof listVacanciesVacanciesGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  params?: ListVacanciesVacanciesGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listVacanciesVacanciesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -269,7 +319,7 @@ export function useListVacanciesVacanciesGet<TData = Awaited<ReturnType<typeof l
  * @summary List Vacancies
  */
 
-export function useListVacanciesVacanciesGet<TData = Awaited<ReturnType<typeof listVacanciesVacanciesGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useListVacanciesVacanciesGet<TData = Awaited<ReturnType<typeof listVacanciesVacanciesGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  params?: ListVacanciesVacanciesGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listVacanciesVacanciesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -286,9 +336,329 @@ export function useListVacanciesVacanciesGet<TData = Awaited<ReturnType<typeof l
 
 
 
-export type getVacancyVacanciesVacancyIdGetResponse200 = {
+export type listPublicVacanciesVacanciesPublicGetResponse200 = {
+  data: PublicVacancyOut[]
+  status: 200
+}
+
+export type listPublicVacanciesVacanciesPublicGetResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type listPublicVacanciesVacanciesPublicGetResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type listPublicVacanciesVacanciesPublicGetResponseSuccess = (listPublicVacanciesVacanciesPublicGetResponse200) & {
+  headers: Headers;
+};
+export type listPublicVacanciesVacanciesPublicGetResponseError = (listPublicVacanciesVacanciesPublicGetResponse422ApplicationProblemJson | listPublicVacanciesVacanciesPublicGetResponse422ApplicationJson) & {
+  headers: Headers;
+};
+
+export type listPublicVacanciesVacanciesPublicGetResponse = (listPublicVacanciesVacanciesPublicGetResponseSuccess | listPublicVacanciesVacanciesPublicGetResponseError)
+
+export const getListPublicVacanciesVacanciesPublicGetUrl = (params?: ListPublicVacanciesVacanciesPublicGetParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/vacancies/public?${stringifiedParams}` : `/vacancies/public`
+}
+
+/**
+ * Опубликованные вакансии без авторизации: название, вилка, компания, навыки.
+ * @summary List Public Vacancies
+ */
+export const listPublicVacanciesVacanciesPublicGet = async (params?: ListPublicVacanciesVacanciesPublicGetParams, options?: Parameters<typeof apiFetch>[1]): Promise<listPublicVacanciesVacanciesPublicGetResponse> => {
+
+  return apiFetch<listPublicVacanciesVacanciesPublicGetResponse>(getListPublicVacanciesVacanciesPublicGetUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPublicVacanciesVacanciesPublicGetQueryKey = (params?: ListPublicVacanciesVacanciesPublicGetParams,) => {
+    return [
+    `/vacancies/public`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListPublicVacanciesVacanciesPublicGetQueryOptions = <TData = Awaited<ReturnType<typeof listPublicVacanciesVacanciesPublicGet>>, TError = ErrorType<ProblemOut>>(params?: ListPublicVacanciesVacanciesPublicGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicVacanciesVacanciesPublicGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPublicVacanciesVacanciesPublicGetQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPublicVacanciesVacanciesPublicGet>>> = ({ signal }) => listPublicVacanciesVacanciesPublicGet(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPublicVacanciesVacanciesPublicGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListPublicVacanciesVacanciesPublicGetQueryResult = NonNullable<Awaited<ReturnType<typeof listPublicVacanciesVacanciesPublicGet>>>
+export type ListPublicVacanciesVacanciesPublicGetQueryError = ErrorType<ProblemOut>
+
+
+export function useListPublicVacanciesVacanciesPublicGet<TData = Awaited<ReturnType<typeof listPublicVacanciesVacanciesPublicGet>>, TError = ErrorType<ProblemOut>>(
+ params: undefined |  ListPublicVacanciesVacanciesPublicGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicVacanciesVacanciesPublicGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPublicVacanciesVacanciesPublicGet>>,
+          TError,
+          Awaited<ReturnType<typeof listPublicVacanciesVacanciesPublicGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPublicVacanciesVacanciesPublicGet<TData = Awaited<ReturnType<typeof listPublicVacanciesVacanciesPublicGet>>, TError = ErrorType<ProblemOut>>(
+ params?: ListPublicVacanciesVacanciesPublicGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicVacanciesVacanciesPublicGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPublicVacanciesVacanciesPublicGet>>,
+          TError,
+          Awaited<ReturnType<typeof listPublicVacanciesVacanciesPublicGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPublicVacanciesVacanciesPublicGet<TData = Awaited<ReturnType<typeof listPublicVacanciesVacanciesPublicGet>>, TError = ErrorType<ProblemOut>>(
+ params?: ListPublicVacanciesVacanciesPublicGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicVacanciesVacanciesPublicGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Public Vacancies
+ */
+
+export function useListPublicVacanciesVacanciesPublicGet<TData = Awaited<ReturnType<typeof listPublicVacanciesVacanciesPublicGet>>, TError = ErrorType<ProblemOut>>(
+ params?: ListPublicVacanciesVacanciesPublicGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicVacanciesVacanciesPublicGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListPublicVacanciesVacanciesPublicGetQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type applyToVacancyVacanciesVacancyIdApplyPostResponse201 = {
+  data: OfferForCandidate
+  status: 201
+}
+
+export type applyToVacancyVacanciesVacancyIdApplyPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type applyToVacancyVacanciesVacancyIdApplyPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type applyToVacancyVacanciesVacancyIdApplyPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type applyToVacancyVacanciesVacancyIdApplyPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type applyToVacancyVacanciesVacancyIdApplyPostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type applyToVacancyVacanciesVacancyIdApplyPostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type applyToVacancyVacanciesVacancyIdApplyPostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type applyToVacancyVacanciesVacancyIdApplyPostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type applyToVacancyVacanciesVacancyIdApplyPostResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type applyToVacancyVacanciesVacancyIdApplyPostResponse429ApplicationProblemJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type applyToVacancyVacanciesVacancyIdApplyPostResponse429ApplicationJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type applyToVacancyVacanciesVacancyIdApplyPostResponseSuccess = (applyToVacancyVacanciesVacancyIdApplyPostResponse201) & {
+  headers: Headers;
+};
+export type applyToVacancyVacanciesVacancyIdApplyPostResponseError = (applyToVacancyVacanciesVacancyIdApplyPostResponse401ApplicationProblemJson | applyToVacancyVacanciesVacancyIdApplyPostResponse401ApplicationJson | applyToVacancyVacanciesVacancyIdApplyPostResponse403ApplicationProblemJson | applyToVacancyVacanciesVacancyIdApplyPostResponse403ApplicationJson | applyToVacancyVacanciesVacancyIdApplyPostResponse404ApplicationProblemJson | applyToVacancyVacanciesVacancyIdApplyPostResponse404ApplicationJson | applyToVacancyVacanciesVacancyIdApplyPostResponse409ApplicationProblemJson | applyToVacancyVacanciesVacancyIdApplyPostResponse409ApplicationJson | applyToVacancyVacanciesVacancyIdApplyPostResponse422 | applyToVacancyVacanciesVacancyIdApplyPostResponse429ApplicationProblemJson | applyToVacancyVacanciesVacancyIdApplyPostResponse429ApplicationJson) & {
+  headers: Headers;
+};
+
+export type applyToVacancyVacanciesVacancyIdApplyPostResponse = (applyToVacancyVacanciesVacancyIdApplyPostResponseSuccess | applyToVacancyVacanciesVacancyIdApplyPostResponseError)
+
+export const getApplyToVacancyVacanciesVacancyIdApplyPostUrl = (vacancyId: string,) => {
+
+
+
+
+  return `/vacancies/${vacancyId}/apply`
+}
+
+/**
+ * Отклик кандидата (ADR-022): оффер с `initiator = candidate`, контакты сразу у компании.
+ * @summary Apply To Vacancy
+ */
+export const applyToVacancyVacanciesVacancyIdApplyPost = async (vacancyId: string,
+    applyInNull?: ApplyIn | null, options?: Parameters<typeof apiFetch>[1]): Promise<applyToVacancyVacanciesVacancyIdApplyPostResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<applyToVacancyVacanciesVacancyIdApplyPostResponse>(getApplyToVacancyVacanciesVacancyIdApplyPostUrl(vacancyId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(applyInNull)
+  }
+);}
+
+
+
+
+
+export const getApplyToVacancyVacanciesVacancyIdApplyPostMutationKey = () => ['applyToVacancyVacanciesVacancyIdApplyPost'] as const;
+
+export const getApplyToVacancyVacanciesVacancyIdApplyPostMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof applyToVacancyVacanciesVacancyIdApplyPost>>, TError,ApplyToVacancyVacanciesVacancyIdApplyPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof applyToVacancyVacanciesVacancyIdApplyPost>>, TError,ApplyToVacancyVacanciesVacancyIdApplyPostMutationVariables, TContext> => {
+
+const mutationKey = getApplyToVacancyVacanciesVacancyIdApplyPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof applyToVacancyVacanciesVacancyIdApplyPost>>, ApplyToVacancyVacanciesVacancyIdApplyPostMutationVariables> = (props) => {
+          const {vacancyId,data} = props ?? {};
+
+          return  applyToVacancyVacanciesVacancyIdApplyPost(vacancyId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ApplyToVacancyVacanciesVacancyIdApplyPostMutationResult = NonNullable<Awaited<ReturnType<typeof applyToVacancyVacanciesVacancyIdApplyPost>>>
+    export type ApplyToVacancyVacanciesVacancyIdApplyPostMutationBody = ApplyIn | null | undefined
+    export type ApplyToVacancyVacanciesVacancyIdApplyPostMutationError = ErrorType<ProblemOut | HTTPValidationError>
+    export type ApplyToVacancyVacanciesVacancyIdApplyPostMutationVariables = {vacancyId: string;data?: ApplyIn | null}
+
+    /**
+ * @summary Apply To Vacancy
+ */
+export const useApplyToVacancyVacanciesVacancyIdApplyPost = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof applyToVacancyVacanciesVacancyIdApplyPost>>, TError,ApplyToVacancyVacanciesVacancyIdApplyPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof applyToVacancyVacanciesVacancyIdApplyPost>>,
+        TError,
+        ApplyToVacancyVacanciesVacancyIdApplyPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getApplyToVacancyVacanciesVacancyIdApplyPostMutationOptions(options), queryClient);
+    }
+    export type getVacancyVacanciesVacancyIdGetResponse200 = {
   data: VacancyOut
   status: 200
+}
+
+export type getVacancyVacanciesVacancyIdGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type getVacancyVacanciesVacancyIdGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type getVacancyVacanciesVacancyIdGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type getVacancyVacanciesVacancyIdGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type getVacancyVacanciesVacancyIdGetResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type getVacancyVacanciesVacancyIdGetResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
 }
 
 export type getVacancyVacanciesVacancyIdGetResponse422 = {
@@ -299,7 +669,7 @@ export type getVacancyVacanciesVacancyIdGetResponse422 = {
 export type getVacancyVacanciesVacancyIdGetResponseSuccess = (getVacancyVacanciesVacancyIdGetResponse200) & {
   headers: Headers;
 };
-export type getVacancyVacanciesVacancyIdGetResponseError = (getVacancyVacanciesVacancyIdGetResponse422) & {
+export type getVacancyVacanciesVacancyIdGetResponseError = (getVacancyVacanciesVacancyIdGetResponse401ApplicationProblemJson | getVacancyVacanciesVacancyIdGetResponse401ApplicationJson | getVacancyVacanciesVacancyIdGetResponse403ApplicationProblemJson | getVacancyVacanciesVacancyIdGetResponse403ApplicationJson | getVacancyVacanciesVacancyIdGetResponse404ApplicationProblemJson | getVacancyVacanciesVacancyIdGetResponse404ApplicationJson | getVacancyVacanciesVacancyIdGetResponse422) & {
   headers: Headers;
 };
 
@@ -338,7 +708,7 @@ export const getGetVacancyVacanciesVacancyIdGetQueryKey = (vacancyId: string,) =
     }
 
 
-export const getGetVacancyVacanciesVacancyIdGetQueryOptions = <TData = Awaited<ReturnType<typeof getVacancyVacanciesVacancyIdGet>>, TError = ErrorType<HTTPValidationError>>(vacancyId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVacancyVacanciesVacancyIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+export const getGetVacancyVacanciesVacancyIdGetQueryOptions = <TData = Awaited<ReturnType<typeof getVacancyVacanciesVacancyIdGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(vacancyId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVacancyVacanciesVacancyIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -357,10 +727,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetVacancyVacanciesVacancyIdGetQueryResult = NonNullable<Awaited<ReturnType<typeof getVacancyVacanciesVacancyIdGet>>>
-export type GetVacancyVacanciesVacancyIdGetQueryError = ErrorType<HTTPValidationError>
+export type GetVacancyVacanciesVacancyIdGetQueryError = ErrorType<ProblemOut | HTTPValidationError>
 
 
-export function useGetVacancyVacanciesVacancyIdGet<TData = Awaited<ReturnType<typeof getVacancyVacanciesVacancyIdGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useGetVacancyVacanciesVacancyIdGet<TData = Awaited<ReturnType<typeof getVacancyVacanciesVacancyIdGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  vacancyId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVacancyVacanciesVacancyIdGet>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getVacancyVacanciesVacancyIdGet>>,
@@ -370,7 +740,7 @@ export function useGetVacancyVacanciesVacancyIdGet<TData = Awaited<ReturnType<ty
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetVacancyVacanciesVacancyIdGet<TData = Awaited<ReturnType<typeof getVacancyVacanciesVacancyIdGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useGetVacancyVacanciesVacancyIdGet<TData = Awaited<ReturnType<typeof getVacancyVacanciesVacancyIdGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  vacancyId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVacancyVacanciesVacancyIdGet>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getVacancyVacanciesVacancyIdGet>>,
@@ -380,7 +750,7 @@ export function useGetVacancyVacanciesVacancyIdGet<TData = Awaited<ReturnType<ty
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetVacancyVacanciesVacancyIdGet<TData = Awaited<ReturnType<typeof getVacancyVacanciesVacancyIdGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useGetVacancyVacanciesVacancyIdGet<TData = Awaited<ReturnType<typeof getVacancyVacanciesVacancyIdGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  vacancyId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVacancyVacanciesVacancyIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -388,7 +758,7 @@ export function useGetVacancyVacanciesVacancyIdGet<TData = Awaited<ReturnType<ty
  * @summary Get Vacancy
  */
 
-export function useGetVacancyVacanciesVacancyIdGet<TData = Awaited<ReturnType<typeof getVacancyVacanciesVacancyIdGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useGetVacancyVacanciesVacancyIdGet<TData = Awaited<ReturnType<typeof getVacancyVacanciesVacancyIdGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  vacancyId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVacancyVacanciesVacancyIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -410,15 +780,50 @@ export type patchVacancyVacanciesVacancyIdPatchResponse200 = {
   status: 200
 }
 
-export type patchVacancyVacanciesVacancyIdPatchResponse422 = {
-  data: HTTPValidationError
+export type patchVacancyVacanciesVacancyIdPatchResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type patchVacancyVacanciesVacancyIdPatchResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type patchVacancyVacanciesVacancyIdPatchResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type patchVacancyVacanciesVacancyIdPatchResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type patchVacancyVacanciesVacancyIdPatchResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type patchVacancyVacanciesVacancyIdPatchResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type patchVacancyVacanciesVacancyIdPatchResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type patchVacancyVacanciesVacancyIdPatchResponse422ApplicationJson = {
+  data: ProblemOut
   status: 422
 }
 
 export type patchVacancyVacanciesVacancyIdPatchResponseSuccess = (patchVacancyVacanciesVacancyIdPatchResponse200) & {
   headers: Headers;
 };
-export type patchVacancyVacanciesVacancyIdPatchResponseError = (patchVacancyVacanciesVacancyIdPatchResponse422) & {
+export type patchVacancyVacanciesVacancyIdPatchResponseError = (patchVacancyVacanciesVacancyIdPatchResponse401ApplicationProblemJson | patchVacancyVacanciesVacancyIdPatchResponse401ApplicationJson | patchVacancyVacanciesVacancyIdPatchResponse403ApplicationProblemJson | patchVacancyVacanciesVacancyIdPatchResponse403ApplicationJson | patchVacancyVacanciesVacancyIdPatchResponse404ApplicationProblemJson | patchVacancyVacanciesVacancyIdPatchResponse404ApplicationJson | patchVacancyVacanciesVacancyIdPatchResponse422ApplicationProblemJson | patchVacancyVacanciesVacancyIdPatchResponse422ApplicationJson) & {
   headers: Headers;
 };
 
@@ -467,7 +872,7 @@ return apiFetch<patchVacancyVacanciesVacancyIdPatchResponse>(getPatchVacancyVaca
 
 export const getPatchVacancyVacanciesVacancyIdPatchMutationKey = () => ['patchVacancyVacanciesVacancyIdPatch'] as const;
 
-export const getPatchVacancyVacanciesVacancyIdPatchMutationOptions = <TError = ErrorType<HTTPValidationError>,
+export const getPatchVacancyVacanciesVacancyIdPatchMutationOptions = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchVacancyVacanciesVacancyIdPatch>>, TError,PatchVacancyVacanciesVacancyIdPatchMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof patchVacancyVacanciesVacancyIdPatch>>, TError,PatchVacancyVacanciesVacancyIdPatchMutationVariables, TContext> => {
 
@@ -496,13 +901,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type PatchVacancyVacanciesVacancyIdPatchMutationResult = NonNullable<Awaited<ReturnType<typeof patchVacancyVacanciesVacancyIdPatch>>>
     export type PatchVacancyVacanciesVacancyIdPatchMutationBody = VacancyPatch
-    export type PatchVacancyVacanciesVacancyIdPatchMutationError = ErrorType<HTTPValidationError>
+    export type PatchVacancyVacanciesVacancyIdPatchMutationError = ErrorType<ProblemOut>
     export type PatchVacancyVacanciesVacancyIdPatchMutationVariables = {vacancyId: string;data: VacancyPatch}
 
     /**
  * @summary Patch Vacancy
  */
-export const usePatchVacancyVacanciesVacancyIdPatch = <TError = ErrorType<HTTPValidationError>,
+export const usePatchVacancyVacanciesVacancyIdPatch = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchVacancyVacanciesVacancyIdPatch>>, TError,PatchVacancyVacanciesVacancyIdPatchMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof patchVacancyVacanciesVacancyIdPatch>>,
@@ -517,6 +922,36 @@ export const usePatchVacancyVacanciesVacancyIdPatch = <TError = ErrorType<HTTPVa
   status: 204
 }
 
+export type deleteVacancyVacanciesVacancyIdDeleteResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type deleteVacancyVacanciesVacancyIdDeleteResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type deleteVacancyVacanciesVacancyIdDeleteResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type deleteVacancyVacanciesVacancyIdDeleteResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type deleteVacancyVacanciesVacancyIdDeleteResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type deleteVacancyVacanciesVacancyIdDeleteResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
 export type deleteVacancyVacanciesVacancyIdDeleteResponse422 = {
   data: HTTPValidationError
   status: 422
@@ -525,7 +960,7 @@ export type deleteVacancyVacanciesVacancyIdDeleteResponse422 = {
 export type deleteVacancyVacanciesVacancyIdDeleteResponseSuccess = (deleteVacancyVacanciesVacancyIdDeleteResponse204) & {
   headers: Headers;
 };
-export type deleteVacancyVacanciesVacancyIdDeleteResponseError = (deleteVacancyVacanciesVacancyIdDeleteResponse422) & {
+export type deleteVacancyVacanciesVacancyIdDeleteResponseError = (deleteVacancyVacanciesVacancyIdDeleteResponse401ApplicationProblemJson | deleteVacancyVacanciesVacancyIdDeleteResponse401ApplicationJson | deleteVacancyVacanciesVacancyIdDeleteResponse403ApplicationProblemJson | deleteVacancyVacanciesVacancyIdDeleteResponse403ApplicationJson | deleteVacancyVacanciesVacancyIdDeleteResponse404ApplicationProblemJson | deleteVacancyVacanciesVacancyIdDeleteResponse404ApplicationJson | deleteVacancyVacanciesVacancyIdDeleteResponse422) & {
   headers: Headers;
 };
 
@@ -559,7 +994,7 @@ export const deleteVacancyVacanciesVacancyIdDelete = async (vacancyId: string, o
 
 export const getDeleteVacancyVacanciesVacancyIdDeleteMutationKey = () => ['deleteVacancyVacanciesVacancyIdDelete'] as const;
 
-export const getDeleteVacancyVacanciesVacancyIdDeleteMutationOptions = <TError = ErrorType<HTTPValidationError>,
+export const getDeleteVacancyVacanciesVacancyIdDeleteMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteVacancyVacanciesVacancyIdDelete>>, TError,DeleteVacancyVacanciesVacancyIdDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteVacancyVacanciesVacancyIdDelete>>, TError,DeleteVacancyVacanciesVacancyIdDeleteMutationVariables, TContext> => {
 
@@ -588,13 +1023,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type DeleteVacancyVacanciesVacancyIdDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof deleteVacancyVacanciesVacancyIdDelete>>>
 
-    export type DeleteVacancyVacanciesVacancyIdDeleteMutationError = ErrorType<HTTPValidationError>
+    export type DeleteVacancyVacanciesVacancyIdDeleteMutationError = ErrorType<ProblemOut | HTTPValidationError>
     export type DeleteVacancyVacanciesVacancyIdDeleteMutationVariables = {vacancyId: string}
 
     /**
  * @summary Delete Vacancy
  */
-export const useDeleteVacancyVacanciesVacancyIdDelete = <TError = ErrorType<HTTPValidationError>,
+export const useDeleteVacancyVacanciesVacancyIdDelete = <TError = ErrorType<ProblemOut | HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteVacancyVacanciesVacancyIdDelete>>, TError,DeleteVacancyVacanciesVacancyIdDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof deleteVacancyVacanciesVacancyIdDelete>>,
@@ -609,6 +1044,36 @@ export const useDeleteVacancyVacanciesVacancyIdDelete = <TError = ErrorType<HTTP
   status: 200
 }
 
+export type publishVacancyVacanciesVacancyIdPublishPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type publishVacancyVacanciesVacancyIdPublishPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type publishVacancyVacanciesVacancyIdPublishPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type publishVacancyVacanciesVacancyIdPublishPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type publishVacancyVacanciesVacancyIdPublishPostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type publishVacancyVacanciesVacancyIdPublishPostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
 export type publishVacancyVacanciesVacancyIdPublishPostResponse422 = {
   data: HTTPValidationError
   status: 422
@@ -617,7 +1082,7 @@ export type publishVacancyVacanciesVacancyIdPublishPostResponse422 = {
 export type publishVacancyVacanciesVacancyIdPublishPostResponseSuccess = (publishVacancyVacanciesVacancyIdPublishPostResponse200) & {
   headers: Headers;
 };
-export type publishVacancyVacanciesVacancyIdPublishPostResponseError = (publishVacancyVacanciesVacancyIdPublishPostResponse422) & {
+export type publishVacancyVacanciesVacancyIdPublishPostResponseError = (publishVacancyVacanciesVacancyIdPublishPostResponse401ApplicationProblemJson | publishVacancyVacanciesVacancyIdPublishPostResponse401ApplicationJson | publishVacancyVacanciesVacancyIdPublishPostResponse403ApplicationProblemJson | publishVacancyVacanciesVacancyIdPublishPostResponse403ApplicationJson | publishVacancyVacanciesVacancyIdPublishPostResponse404ApplicationProblemJson | publishVacancyVacanciesVacancyIdPublishPostResponse404ApplicationJson | publishVacancyVacanciesVacancyIdPublishPostResponse422) & {
   headers: Headers;
 };
 
@@ -651,7 +1116,7 @@ export const publishVacancyVacanciesVacancyIdPublishPost = async (vacancyId: str
 
 export const getPublishVacancyVacanciesVacancyIdPublishPostMutationKey = () => ['publishVacancyVacanciesVacancyIdPublishPost'] as const;
 
-export const getPublishVacancyVacanciesVacancyIdPublishPostMutationOptions = <TError = ErrorType<HTTPValidationError>,
+export const getPublishVacancyVacanciesVacancyIdPublishPostMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof publishVacancyVacanciesVacancyIdPublishPost>>, TError,PublishVacancyVacanciesVacancyIdPublishPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof publishVacancyVacanciesVacancyIdPublishPost>>, TError,PublishVacancyVacanciesVacancyIdPublishPostMutationVariables, TContext> => {
 
@@ -680,13 +1145,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type PublishVacancyVacanciesVacancyIdPublishPostMutationResult = NonNullable<Awaited<ReturnType<typeof publishVacancyVacanciesVacancyIdPublishPost>>>
 
-    export type PublishVacancyVacanciesVacancyIdPublishPostMutationError = ErrorType<HTTPValidationError>
+    export type PublishVacancyVacanciesVacancyIdPublishPostMutationError = ErrorType<ProblemOut | HTTPValidationError>
     export type PublishVacancyVacanciesVacancyIdPublishPostMutationVariables = {vacancyId: string}
 
     /**
  * @summary Publish Vacancy
  */
-export const usePublishVacancyVacanciesVacancyIdPublishPost = <TError = ErrorType<HTTPValidationError>,
+export const usePublishVacancyVacanciesVacancyIdPublishPost = <TError = ErrorType<ProblemOut | HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof publishVacancyVacanciesVacancyIdPublishPost>>, TError,PublishVacancyVacanciesVacancyIdPublishPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof publishVacancyVacanciesVacancyIdPublishPost>>,
@@ -701,6 +1166,36 @@ export const usePublishVacancyVacanciesVacancyIdPublishPost = <TError = ErrorTyp
   status: 200
 }
 
+export type closeVacancyVacanciesVacancyIdClosePostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type closeVacancyVacanciesVacancyIdClosePostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type closeVacancyVacanciesVacancyIdClosePostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type closeVacancyVacanciesVacancyIdClosePostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type closeVacancyVacanciesVacancyIdClosePostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type closeVacancyVacanciesVacancyIdClosePostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
 export type closeVacancyVacanciesVacancyIdClosePostResponse422 = {
   data: HTTPValidationError
   status: 422
@@ -709,7 +1204,7 @@ export type closeVacancyVacanciesVacancyIdClosePostResponse422 = {
 export type closeVacancyVacanciesVacancyIdClosePostResponseSuccess = (closeVacancyVacanciesVacancyIdClosePostResponse200) & {
   headers: Headers;
 };
-export type closeVacancyVacanciesVacancyIdClosePostResponseError = (closeVacancyVacanciesVacancyIdClosePostResponse422) & {
+export type closeVacancyVacanciesVacancyIdClosePostResponseError = (closeVacancyVacanciesVacancyIdClosePostResponse401ApplicationProblemJson | closeVacancyVacanciesVacancyIdClosePostResponse401ApplicationJson | closeVacancyVacanciesVacancyIdClosePostResponse403ApplicationProblemJson | closeVacancyVacanciesVacancyIdClosePostResponse403ApplicationJson | closeVacancyVacanciesVacancyIdClosePostResponse404ApplicationProblemJson | closeVacancyVacanciesVacancyIdClosePostResponse404ApplicationJson | closeVacancyVacanciesVacancyIdClosePostResponse422) & {
   headers: Headers;
 };
 
@@ -743,7 +1238,7 @@ export const closeVacancyVacanciesVacancyIdClosePost = async (vacancyId: string,
 
 export const getCloseVacancyVacanciesVacancyIdClosePostMutationKey = () => ['closeVacancyVacanciesVacancyIdClosePost'] as const;
 
-export const getCloseVacancyVacanciesVacancyIdClosePostMutationOptions = <TError = ErrorType<HTTPValidationError>,
+export const getCloseVacancyVacanciesVacancyIdClosePostMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof closeVacancyVacanciesVacancyIdClosePost>>, TError,CloseVacancyVacanciesVacancyIdClosePostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof closeVacancyVacanciesVacancyIdClosePost>>, TError,CloseVacancyVacanciesVacancyIdClosePostMutationVariables, TContext> => {
 
@@ -772,13 +1267,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type CloseVacancyVacanciesVacancyIdClosePostMutationResult = NonNullable<Awaited<ReturnType<typeof closeVacancyVacanciesVacancyIdClosePost>>>
 
-    export type CloseVacancyVacanciesVacancyIdClosePostMutationError = ErrorType<HTTPValidationError>
+    export type CloseVacancyVacanciesVacancyIdClosePostMutationError = ErrorType<ProblemOut | HTTPValidationError>
     export type CloseVacancyVacanciesVacancyIdClosePostMutationVariables = {vacancyId: string}
 
     /**
  * @summary Close Vacancy
  */
-export const useCloseVacancyVacanciesVacancyIdClosePost = <TError = ErrorType<HTTPValidationError>,
+export const useCloseVacancyVacanciesVacancyIdClosePost = <TError = ErrorType<ProblemOut | HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof closeVacancyVacanciesVacancyIdClosePost>>, TError,CloseVacancyVacanciesVacancyIdClosePostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof closeVacancyVacanciesVacancyIdClosePost>>,

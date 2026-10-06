@@ -24,6 +24,7 @@ from fsp_contracts.events import (
     SkillsProfileUpdated,
     VacancyEvent,
 )
+from fsp_contracts.hiring import OfferInitiator
 
 from app.analytics.service import pseudonym
 
@@ -107,6 +108,8 @@ def _interview(c: _Ctx, p: MlInterviewGraded) -> Mapped:
 def _offer(c: _Ctx, p: OfferEvent) -> Mapped:
     oid = str(p.offer_id)
     cand = p.candidate_id
+    if p.initiator == OfferInitiator.candidate:  # отклики в метрики офферов не входят
+        return []
     match c.envelope.type:
         case "offer.sent":
             return [

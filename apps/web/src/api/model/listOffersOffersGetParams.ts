@@ -4,9 +4,11 @@
  * core
  * OpenAPI spec version: 0.1.0
  */
+import type { OfferInitiator } from './offerInitiator';
 import type { OfferStatus } from './offerStatus';
 
 export type ListOffersOffersGetParams = {
 status?: OfferStatus | null;
 vacancy_id?: string | null;
+initiator?: OfferInitiator | null;
 };

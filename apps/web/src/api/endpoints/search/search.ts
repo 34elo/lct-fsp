@@ -28,8 +28,10 @@ import type {
   CandidateCardFull,
   CandidateSimilarCandidatesPseudoIdSimilarGetParams,
   HTTPValidationError,
+  NavigatorOut,
   ParseRequest,
   ParsedQuery,
+  ProblemOut,
   SearchPage,
   SearchRequest,
   SimilarPage,
@@ -64,15 +66,40 @@ export type searchParseSearchParsePostResponse200 = {
   status: 200
 }
 
-export type searchParseSearchParsePostResponse422 = {
-  data: HTTPValidationError
+export type searchParseSearchParsePostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type searchParseSearchParsePostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type searchParseSearchParsePostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type searchParseSearchParsePostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type searchParseSearchParsePostResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type searchParseSearchParsePostResponse422ApplicationJson = {
+  data: ProblemOut
   status: 422
 }
 
 export type searchParseSearchParsePostResponseSuccess = (searchParseSearchParsePostResponse200) & {
   headers: Headers;
 };
-export type searchParseSearchParsePostResponseError = (searchParseSearchParsePostResponse422) & {
+export type searchParseSearchParsePostResponseError = (searchParseSearchParsePostResponse401ApplicationProblemJson | searchParseSearchParsePostResponse401ApplicationJson | searchParseSearchParsePostResponse403ApplicationProblemJson | searchParseSearchParsePostResponse403ApplicationJson | searchParseSearchParsePostResponse422ApplicationProblemJson | searchParseSearchParsePostResponse422ApplicationJson) & {
   headers: Headers;
 };
 
@@ -121,7 +148,7 @@ return apiFetch<searchParseSearchParsePostResponse>(getSearchParseSearchParsePos
 
 export const getSearchParseSearchParsePostMutationKey = () => ['searchParseSearchParsePost'] as const;
 
-export const getSearchParseSearchParsePostMutationOptions = <TError = ErrorType<HTTPValidationError>,
+export const getSearchParseSearchParsePostMutationOptions = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof searchParseSearchParsePost>>, TError,SearchParseSearchParsePostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof searchParseSearchParsePost>>, TError,SearchParseSearchParsePostMutationVariables, TContext> => {
 
@@ -150,13 +177,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type SearchParseSearchParsePostMutationResult = NonNullable<Awaited<ReturnType<typeof searchParseSearchParsePost>>>
     export type SearchParseSearchParsePostMutationBody = ParseRequest
-    export type SearchParseSearchParsePostMutationError = ErrorType<HTTPValidationError>
+    export type SearchParseSearchParsePostMutationError = ErrorType<ProblemOut>
     export type SearchParseSearchParsePostMutationVariables = {data: ParseRequest}
 
     /**
  * @summary Search Parse
  */
-export const useSearchParseSearchParsePost = <TError = ErrorType<HTTPValidationError>,
+export const useSearchParseSearchParsePost = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof searchParseSearchParsePost>>, TError,SearchParseSearchParsePostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof searchParseSearchParsePost>>,
@@ -171,15 +198,50 @@ export const useSearchParseSearchParsePost = <TError = ErrorType<HTTPValidationE
   status: 200
 }
 
-export type searchCandidatesSearchCandidatesPostResponse422 = {
-  data: HTTPValidationError
+export type searchCandidatesSearchCandidatesPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type searchCandidatesSearchCandidatesPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type searchCandidatesSearchCandidatesPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type searchCandidatesSearchCandidatesPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type searchCandidatesSearchCandidatesPostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type searchCandidatesSearchCandidatesPostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type searchCandidatesSearchCandidatesPostResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type searchCandidatesSearchCandidatesPostResponse422ApplicationJson = {
+  data: ProblemOut
   status: 422
 }
 
 export type searchCandidatesSearchCandidatesPostResponseSuccess = (searchCandidatesSearchCandidatesPostResponse200) & {
   headers: Headers;
 };
-export type searchCandidatesSearchCandidatesPostResponseError = (searchCandidatesSearchCandidatesPostResponse422) & {
+export type searchCandidatesSearchCandidatesPostResponseError = (searchCandidatesSearchCandidatesPostResponse401ApplicationProblemJson | searchCandidatesSearchCandidatesPostResponse401ApplicationJson | searchCandidatesSearchCandidatesPostResponse403ApplicationProblemJson | searchCandidatesSearchCandidatesPostResponse403ApplicationJson | searchCandidatesSearchCandidatesPostResponse404ApplicationProblemJson | searchCandidatesSearchCandidatesPostResponse404ApplicationJson | searchCandidatesSearchCandidatesPostResponse422ApplicationProblemJson | searchCandidatesSearchCandidatesPostResponse422ApplicationJson) & {
   headers: Headers;
 };
 
@@ -227,7 +289,7 @@ return apiFetch<searchCandidatesSearchCandidatesPostResponse>(getSearchCandidate
 
 export const getSearchCandidatesSearchCandidatesPostMutationKey = () => ['searchCandidatesSearchCandidatesPost'] as const;
 
-export const getSearchCandidatesSearchCandidatesPostMutationOptions = <TError = ErrorType<HTTPValidationError>,
+export const getSearchCandidatesSearchCandidatesPostMutationOptions = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof searchCandidatesSearchCandidatesPost>>, TError,SearchCandidatesSearchCandidatesPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof searchCandidatesSearchCandidatesPost>>, TError,SearchCandidatesSearchCandidatesPostMutationVariables, TContext> => {
 
@@ -256,13 +318,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type SearchCandidatesSearchCandidatesPostMutationResult = NonNullable<Awaited<ReturnType<typeof searchCandidatesSearchCandidatesPost>>>
     export type SearchCandidatesSearchCandidatesPostMutationBody = SearchRequest
-    export type SearchCandidatesSearchCandidatesPostMutationError = ErrorType<HTTPValidationError>
+    export type SearchCandidatesSearchCandidatesPostMutationError = ErrorType<ProblemOut>
     export type SearchCandidatesSearchCandidatesPostMutationVariables = {data: SearchRequest}
 
     /**
  * @summary Search Candidates
  */
-export const useSearchCandidatesSearchCandidatesPost = <TError = ErrorType<HTTPValidationError>,
+export const useSearchCandidatesSearchCandidatesPost = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof searchCandidatesSearchCandidatesPost>>, TError,SearchCandidatesSearchCandidatesPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof searchCandidatesSearchCandidatesPost>>,
@@ -277,6 +339,36 @@ export const useSearchCandidatesSearchCandidatesPost = <TError = ErrorType<HTTPV
   status: 200
 }
 
+export type candidateCardCandidatesPseudoIdCardGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type candidateCardCandidatesPseudoIdCardGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type candidateCardCandidatesPseudoIdCardGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type candidateCardCandidatesPseudoIdCardGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type candidateCardCandidatesPseudoIdCardGetResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type candidateCardCandidatesPseudoIdCardGetResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
 export type candidateCardCandidatesPseudoIdCardGetResponse422 = {
   data: HTTPValidationError
   status: 422
@@ -285,7 +377,7 @@ export type candidateCardCandidatesPseudoIdCardGetResponse422 = {
 export type candidateCardCandidatesPseudoIdCardGetResponseSuccess = (candidateCardCandidatesPseudoIdCardGetResponse200) & {
   headers: Headers;
 };
-export type candidateCardCandidatesPseudoIdCardGetResponseError = (candidateCardCandidatesPseudoIdCardGetResponse422) & {
+export type candidateCardCandidatesPseudoIdCardGetResponseError = (candidateCardCandidatesPseudoIdCardGetResponse401ApplicationProblemJson | candidateCardCandidatesPseudoIdCardGetResponse401ApplicationJson | candidateCardCandidatesPseudoIdCardGetResponse403ApplicationProblemJson | candidateCardCandidatesPseudoIdCardGetResponse403ApplicationJson | candidateCardCandidatesPseudoIdCardGetResponse404ApplicationProblemJson | candidateCardCandidatesPseudoIdCardGetResponse404ApplicationJson | candidateCardCandidatesPseudoIdCardGetResponse422) & {
   headers: Headers;
 };
 
@@ -334,7 +426,7 @@ export const getCandidateCardCandidatesPseudoIdCardGetQueryKey = (pseudoId: stri
     }
 
 
-export const getCandidateCardCandidatesPseudoIdCardGetQueryOptions = <TData = Awaited<ReturnType<typeof candidateCardCandidatesPseudoIdCardGet>>, TError = ErrorType<HTTPValidationError>>(pseudoId: string,
+export const getCandidateCardCandidatesPseudoIdCardGetQueryOptions = <TData = Awaited<ReturnType<typeof candidateCardCandidatesPseudoIdCardGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(pseudoId: string,
     params?: CandidateCardCandidatesPseudoIdCardGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof candidateCardCandidatesPseudoIdCardGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
@@ -354,10 +446,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type CandidateCardCandidatesPseudoIdCardGetQueryResult = NonNullable<Awaited<ReturnType<typeof candidateCardCandidatesPseudoIdCardGet>>>
-export type CandidateCardCandidatesPseudoIdCardGetQueryError = ErrorType<HTTPValidationError>
+export type CandidateCardCandidatesPseudoIdCardGetQueryError = ErrorType<ProblemOut | HTTPValidationError>
 
 
-export function useCandidateCardCandidatesPseudoIdCardGet<TData = Awaited<ReturnType<typeof candidateCardCandidatesPseudoIdCardGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useCandidateCardCandidatesPseudoIdCardGet<TData = Awaited<ReturnType<typeof candidateCardCandidatesPseudoIdCardGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  pseudoId: string,
     params: undefined |  CandidateCardCandidatesPseudoIdCardGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof candidateCardCandidatesPseudoIdCardGet>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -368,7 +460,7 @@ export function useCandidateCardCandidatesPseudoIdCardGet<TData = Awaited<Return
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCandidateCardCandidatesPseudoIdCardGet<TData = Awaited<ReturnType<typeof candidateCardCandidatesPseudoIdCardGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useCandidateCardCandidatesPseudoIdCardGet<TData = Awaited<ReturnType<typeof candidateCardCandidatesPseudoIdCardGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  pseudoId: string,
     params?: CandidateCardCandidatesPseudoIdCardGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof candidateCardCandidatesPseudoIdCardGet>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -379,7 +471,7 @@ export function useCandidateCardCandidatesPseudoIdCardGet<TData = Awaited<Return
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCandidateCardCandidatesPseudoIdCardGet<TData = Awaited<ReturnType<typeof candidateCardCandidatesPseudoIdCardGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useCandidateCardCandidatesPseudoIdCardGet<TData = Awaited<ReturnType<typeof candidateCardCandidatesPseudoIdCardGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  pseudoId: string,
     params?: CandidateCardCandidatesPseudoIdCardGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof candidateCardCandidatesPseudoIdCardGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -388,7 +480,7 @@ export function useCandidateCardCandidatesPseudoIdCardGet<TData = Awaited<Return
  * @summary Candidate Card
  */
 
-export function useCandidateCardCandidatesPseudoIdCardGet<TData = Awaited<ReturnType<typeof candidateCardCandidatesPseudoIdCardGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useCandidateCardCandidatesPseudoIdCardGet<TData = Awaited<ReturnType<typeof candidateCardCandidatesPseudoIdCardGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  pseudoId: string,
     params?: CandidateCardCandidatesPseudoIdCardGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof candidateCardCandidatesPseudoIdCardGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -411,6 +503,36 @@ export type candidateSimilarCandidatesPseudoIdSimilarGetResponse200 = {
   status: 200
 }
 
+export type candidateSimilarCandidatesPseudoIdSimilarGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type candidateSimilarCandidatesPseudoIdSimilarGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type candidateSimilarCandidatesPseudoIdSimilarGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type candidateSimilarCandidatesPseudoIdSimilarGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type candidateSimilarCandidatesPseudoIdSimilarGetResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type candidateSimilarCandidatesPseudoIdSimilarGetResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
 export type candidateSimilarCandidatesPseudoIdSimilarGetResponse422 = {
   data: HTTPValidationError
   status: 422
@@ -419,7 +541,7 @@ export type candidateSimilarCandidatesPseudoIdSimilarGetResponse422 = {
 export type candidateSimilarCandidatesPseudoIdSimilarGetResponseSuccess = (candidateSimilarCandidatesPseudoIdSimilarGetResponse200) & {
   headers: Headers;
 };
-export type candidateSimilarCandidatesPseudoIdSimilarGetResponseError = (candidateSimilarCandidatesPseudoIdSimilarGetResponse422) & {
+export type candidateSimilarCandidatesPseudoIdSimilarGetResponseError = (candidateSimilarCandidatesPseudoIdSimilarGetResponse401ApplicationProblemJson | candidateSimilarCandidatesPseudoIdSimilarGetResponse401ApplicationJson | candidateSimilarCandidatesPseudoIdSimilarGetResponse403ApplicationProblemJson | candidateSimilarCandidatesPseudoIdSimilarGetResponse403ApplicationJson | candidateSimilarCandidatesPseudoIdSimilarGetResponse404ApplicationProblemJson | candidateSimilarCandidatesPseudoIdSimilarGetResponse404ApplicationJson | candidateSimilarCandidatesPseudoIdSimilarGetResponse422) & {
   headers: Headers;
 };
 
@@ -469,7 +591,7 @@ export const getCandidateSimilarCandidatesPseudoIdSimilarGetQueryKey = (pseudoId
     }
 
 
-export const getCandidateSimilarCandidatesPseudoIdSimilarGetQueryOptions = <TData = Awaited<ReturnType<typeof candidateSimilarCandidatesPseudoIdSimilarGet>>, TError = ErrorType<HTTPValidationError>>(pseudoId: string,
+export const getCandidateSimilarCandidatesPseudoIdSimilarGetQueryOptions = <TData = Awaited<ReturnType<typeof candidateSimilarCandidatesPseudoIdSimilarGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(pseudoId: string,
     params?: CandidateSimilarCandidatesPseudoIdSimilarGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof candidateSimilarCandidatesPseudoIdSimilarGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
@@ -489,10 +611,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type CandidateSimilarCandidatesPseudoIdSimilarGetQueryResult = NonNullable<Awaited<ReturnType<typeof candidateSimilarCandidatesPseudoIdSimilarGet>>>
-export type CandidateSimilarCandidatesPseudoIdSimilarGetQueryError = ErrorType<HTTPValidationError>
+export type CandidateSimilarCandidatesPseudoIdSimilarGetQueryError = ErrorType<ProblemOut | HTTPValidationError>
 
 
-export function useCandidateSimilarCandidatesPseudoIdSimilarGet<TData = Awaited<ReturnType<typeof candidateSimilarCandidatesPseudoIdSimilarGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useCandidateSimilarCandidatesPseudoIdSimilarGet<TData = Awaited<ReturnType<typeof candidateSimilarCandidatesPseudoIdSimilarGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  pseudoId: string,
     params: undefined |  CandidateSimilarCandidatesPseudoIdSimilarGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof candidateSimilarCandidatesPseudoIdSimilarGet>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -503,7 +625,7 @@ export function useCandidateSimilarCandidatesPseudoIdSimilarGet<TData = Awaited<
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCandidateSimilarCandidatesPseudoIdSimilarGet<TData = Awaited<ReturnType<typeof candidateSimilarCandidatesPseudoIdSimilarGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useCandidateSimilarCandidatesPseudoIdSimilarGet<TData = Awaited<ReturnType<typeof candidateSimilarCandidatesPseudoIdSimilarGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  pseudoId: string,
     params?: CandidateSimilarCandidatesPseudoIdSimilarGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof candidateSimilarCandidatesPseudoIdSimilarGet>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -514,7 +636,7 @@ export function useCandidateSimilarCandidatesPseudoIdSimilarGet<TData = Awaited<
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCandidateSimilarCandidatesPseudoIdSimilarGet<TData = Awaited<ReturnType<typeof candidateSimilarCandidatesPseudoIdSimilarGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useCandidateSimilarCandidatesPseudoIdSimilarGet<TData = Awaited<ReturnType<typeof candidateSimilarCandidatesPseudoIdSimilarGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  pseudoId: string,
     params?: CandidateSimilarCandidatesPseudoIdSimilarGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof candidateSimilarCandidatesPseudoIdSimilarGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -523,7 +645,7 @@ export function useCandidateSimilarCandidatesPseudoIdSimilarGet<TData = Awaited<
  * @summary Candidate Similar
  */
 
-export function useCandidateSimilarCandidatesPseudoIdSimilarGet<TData = Awaited<ReturnType<typeof candidateSimilarCandidatesPseudoIdSimilarGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useCandidateSimilarCandidatesPseudoIdSimilarGet<TData = Awaited<ReturnType<typeof candidateSimilarCandidatesPseudoIdSimilarGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  pseudoId: string,
     params?: CandidateSimilarCandidatesPseudoIdSimilarGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof candidateSimilarCandidatesPseudoIdSimilarGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -541,17 +663,174 @@ export function useCandidateSimilarCandidatesPseudoIdSimilarGet<TData = Awaited<
 
 
 
+export type myNavigatorCandidatesMeNavigatorGetResponse200 = {
+  data: NavigatorOut
+  status: 200
+}
+
+export type myNavigatorCandidatesMeNavigatorGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type myNavigatorCandidatesMeNavigatorGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type myNavigatorCandidatesMeNavigatorGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type myNavigatorCandidatesMeNavigatorGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type myNavigatorCandidatesMeNavigatorGetResponseSuccess = (myNavigatorCandidatesMeNavigatorGetResponse200) & {
+  headers: Headers;
+};
+export type myNavigatorCandidatesMeNavigatorGetResponseError = (myNavigatorCandidatesMeNavigatorGetResponse401ApplicationProblemJson | myNavigatorCandidatesMeNavigatorGetResponse401ApplicationJson | myNavigatorCandidatesMeNavigatorGetResponse403ApplicationProblemJson | myNavigatorCandidatesMeNavigatorGetResponse403ApplicationJson) & {
+  headers: Headers;
+};
+
+export type myNavigatorCandidatesMeNavigatorGetResponse = (myNavigatorCandidatesMeNavigatorGetResponseSuccess | myNavigatorCandidatesMeNavigatorGetResponseError)
+
+export const getMyNavigatorCandidatesMeNavigatorGetUrl = () => {
+
+
+
+
+  return `/candidates/me/navigator`
+}
+
+/**
+ * Путь к следующему грейду: пробелы по профессии, тест, соревнования ФСП, uplift.
+ * @summary My Navigator
+ */
+export const myNavigatorCandidatesMeNavigatorGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<myNavigatorCandidatesMeNavigatorGetResponse> => {
+
+  return apiFetch<myNavigatorCandidatesMeNavigatorGetResponse>(getMyNavigatorCandidatesMeNavigatorGetUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getMyNavigatorCandidatesMeNavigatorGetQueryKey = () => {
+    return [
+    `/candidates/me/navigator`
+    ] as const;
+    }
+
+
+export const getMyNavigatorCandidatesMeNavigatorGetQueryOptions = <TData = Awaited<ReturnType<typeof myNavigatorCandidatesMeNavigatorGet>>, TError = ErrorType<ProblemOut>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myNavigatorCandidatesMeNavigatorGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMyNavigatorCandidatesMeNavigatorGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof myNavigatorCandidatesMeNavigatorGet>>> = ({ signal }) => myNavigatorCandidatesMeNavigatorGet({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof myNavigatorCandidatesMeNavigatorGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type MyNavigatorCandidatesMeNavigatorGetQueryResult = NonNullable<Awaited<ReturnType<typeof myNavigatorCandidatesMeNavigatorGet>>>
+export type MyNavigatorCandidatesMeNavigatorGetQueryError = ErrorType<ProblemOut>
+
+
+export function useMyNavigatorCandidatesMeNavigatorGet<TData = Awaited<ReturnType<typeof myNavigatorCandidatesMeNavigatorGet>>, TError = ErrorType<ProblemOut>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof myNavigatorCandidatesMeNavigatorGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof myNavigatorCandidatesMeNavigatorGet>>,
+          TError,
+          Awaited<ReturnType<typeof myNavigatorCandidatesMeNavigatorGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMyNavigatorCandidatesMeNavigatorGet<TData = Awaited<ReturnType<typeof myNavigatorCandidatesMeNavigatorGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myNavigatorCandidatesMeNavigatorGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof myNavigatorCandidatesMeNavigatorGet>>,
+          TError,
+          Awaited<ReturnType<typeof myNavigatorCandidatesMeNavigatorGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMyNavigatorCandidatesMeNavigatorGet<TData = Awaited<ReturnType<typeof myNavigatorCandidatesMeNavigatorGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myNavigatorCandidatesMeNavigatorGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary My Navigator
+ */
+
+export function useMyNavigatorCandidatesMeNavigatorGet<TData = Awaited<ReturnType<typeof myNavigatorCandidatesMeNavigatorGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myNavigatorCandidatesMeNavigatorGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMyNavigatorCandidatesMeNavigatorGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 export type myUpliftCandidatesMeUpliftGetResponse200 = {
   data: UpliftOut
   status: 200
 }
 
+export type myUpliftCandidatesMeUpliftGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type myUpliftCandidatesMeUpliftGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type myUpliftCandidatesMeUpliftGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type myUpliftCandidatesMeUpliftGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
 export type myUpliftCandidatesMeUpliftGetResponseSuccess = (myUpliftCandidatesMeUpliftGetResponse200) & {
   headers: Headers;
 };
-;
+export type myUpliftCandidatesMeUpliftGetResponseError = (myUpliftCandidatesMeUpliftGetResponse401ApplicationProblemJson | myUpliftCandidatesMeUpliftGetResponse401ApplicationJson | myUpliftCandidatesMeUpliftGetResponse403ApplicationProblemJson | myUpliftCandidatesMeUpliftGetResponse403ApplicationJson) & {
+  headers: Headers;
+};
 
-export type myUpliftCandidatesMeUpliftGetResponse = (myUpliftCandidatesMeUpliftGetResponseSuccess)
+export type myUpliftCandidatesMeUpliftGetResponse = (myUpliftCandidatesMeUpliftGetResponseSuccess | myUpliftCandidatesMeUpliftGetResponseError)
 
 export const getMyUpliftCandidatesMeUpliftGetUrl = () => {
 
@@ -587,7 +866,7 @@ export const getMyUpliftCandidatesMeUpliftGetQueryKey = () => {
     }
 
 
-export const getMyUpliftCandidatesMeUpliftGetQueryOptions = <TData = Awaited<ReturnType<typeof myUpliftCandidatesMeUpliftGet>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myUpliftCandidatesMeUpliftGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+export const getMyUpliftCandidatesMeUpliftGetQueryOptions = <TData = Awaited<ReturnType<typeof myUpliftCandidatesMeUpliftGet>>, TError = ErrorType<ProblemOut>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myUpliftCandidatesMeUpliftGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -606,10 +885,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type MyUpliftCandidatesMeUpliftGetQueryResult = NonNullable<Awaited<ReturnType<typeof myUpliftCandidatesMeUpliftGet>>>
-export type MyUpliftCandidatesMeUpliftGetQueryError = ErrorType<unknown>
+export type MyUpliftCandidatesMeUpliftGetQueryError = ErrorType<ProblemOut>
 
 
-export function useMyUpliftCandidatesMeUpliftGet<TData = Awaited<ReturnType<typeof myUpliftCandidatesMeUpliftGet>>, TError = ErrorType<unknown>>(
+export function useMyUpliftCandidatesMeUpliftGet<TData = Awaited<ReturnType<typeof myUpliftCandidatesMeUpliftGet>>, TError = ErrorType<ProblemOut>>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof myUpliftCandidatesMeUpliftGet>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof myUpliftCandidatesMeUpliftGet>>,
@@ -619,7 +898,7 @@ export function useMyUpliftCandidatesMeUpliftGet<TData = Awaited<ReturnType<type
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useMyUpliftCandidatesMeUpliftGet<TData = Awaited<ReturnType<typeof myUpliftCandidatesMeUpliftGet>>, TError = ErrorType<unknown>>(
+export function useMyUpliftCandidatesMeUpliftGet<TData = Awaited<ReturnType<typeof myUpliftCandidatesMeUpliftGet>>, TError = ErrorType<ProblemOut>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myUpliftCandidatesMeUpliftGet>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof myUpliftCandidatesMeUpliftGet>>,
@@ -629,7 +908,7 @@ export function useMyUpliftCandidatesMeUpliftGet<TData = Awaited<ReturnType<type
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useMyUpliftCandidatesMeUpliftGet<TData = Awaited<ReturnType<typeof myUpliftCandidatesMeUpliftGet>>, TError = ErrorType<unknown>>(
+export function useMyUpliftCandidatesMeUpliftGet<TData = Awaited<ReturnType<typeof myUpliftCandidatesMeUpliftGet>>, TError = ErrorType<ProblemOut>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myUpliftCandidatesMeUpliftGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -637,7 +916,7 @@ export function useMyUpliftCandidatesMeUpliftGet<TData = Awaited<ReturnType<type
  * @summary My Uplift
  */
 
-export function useMyUpliftCandidatesMeUpliftGet<TData = Awaited<ReturnType<typeof myUpliftCandidatesMeUpliftGet>>, TError = ErrorType<unknown>>(
+export function useMyUpliftCandidatesMeUpliftGet<TData = Awaited<ReturnType<typeof myUpliftCandidatesMeUpliftGet>>, TError = ErrorType<ProblemOut>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myUpliftCandidatesMeUpliftGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
