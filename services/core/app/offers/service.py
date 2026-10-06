@@ -11,7 +11,11 @@
 - приглашение без вакансии (ADR-022): нужен `title`; второе открытое приглашение без вакансии
   тому же кандидату от той же компании — 409; события `offer.*` идут со schema_version 2;
 - отклик (E20-3, `initiator = candidate`): `apply`, вилка из вакансии, контакты раскрыты сразу,
-  ответ компании — `APPLICATION_TRANSITIONS`, повтор → 409 `already_applied`.
+  ответ компании — `APPLICATION_TRANSITIONS`, повтор → 409 `already_applied`;
+- интерес (E33-1, ADR-026): `interest → interest_opened → sent` в той же строке; вилка
+  обязательна, сообщение ≤ 300, срок `interest_validity_days`; лимит —
+  `interest_company_per_week` за скользящие 7 дней; повтор отметки возвращает открытый интерес;
+  события `offer.interest.*` (schema_version 3), после приглашения — обычные `offer.*`.
 """
 
 from __future__ import annotations
@@ -26,7 +30,14 @@ import yaml
 from fsp_contracts import new_envelope
 from fsp_contracts.enums import CompanyStatus, DeclineReason, OfferStatus
 from fsp_contracts.events import OfferEvent as OfferEventPayload
-from fsp_contracts.hiring import OFFER_SCHEMA_VERSION, ContactMethod, OfferInitiator, SalaryBasis
+from fsp_contracts.hiring import (
+    INTEREST_SCHEMA_VERSION,
+    OFFER_SCHEMA_VERSION,
+    ContactMethod,
+    OfferInitiator,
+    OfferInterestEvent,
+    SalaryBasis,
+)
 from fsp_platform.app import ProblemError
 from fsp_platform.outbox import add_to_outbox
 from sqlalchemy import func, select
@@ -43,7 +54,11 @@ from app.vacancies.service import VacancyStatus
 
 S = OfferStatus
 OPEN = (S.sent.value, S.viewed.value)  # ждут ответа кандидата
+INTEREST_OPEN = (S.interest.value, S.interest_opened.value)  # интерес до приглашения (ADR-026)
+EXPIRABLE = OPEN + INTEREST_OPEN
 WINDOW = timedelta(hours=24)
+INTEREST_WINDOW = timedelta(days=7)
+INTEREST_MESSAGE_MAX = 300
 
 # (из, в) -> кто может: candidate | company | system
 TRANSITIONS: dict[tuple[OfferStatus, OfferStatus], str] = {
@@ -76,6 +91,23 @@ APPLICATION_TRANSITIONS: dict[tuple[OfferStatus, OfferStatus], str] = {
     (S.interview, S.hired): "company",
     (S.interview, S.not_hired): "company",
 }
+# интерес работодателя до приглашения (ADR-026): кандидат открывает или отклоняет, компания
+# после открытия отправляет приглашение (`interest_opened → sent`) или отзывает интерес
+INTEREST_TRANSITIONS: dict[tuple[OfferStatus, OfferStatus], str] = {
+    (S.interest, S.interest_opened): "candidate",
+    (S.interest, S.declined): "candidate",
+    (S.interest_opened, S.declined): "candidate",
+    (S.interest_opened, S.sent): "company",
+    (S.interest, S.withdrawn): "company",
+    (S.interest_opened, S.withdrawn): "company",
+    (S.interest, S.expired): "system",
+    (S.interest_opened, S.expired): "system",
+}
+_INTEREST_EVENT = {
+    S.interest: "offer.interest.sent", S.interest_opened: "offer.interest.opened",
+    S.declined: "offer.interest.declined", S.expired: "offer.interest.expired",
+    S.withdrawn: "offer.interest.withdrawn",
+}  # fmt: skip
 # статусы, которые работодатель выставляет вручную (`POST /offers/{id}/status`)
 COMPANY_SET = (S.interview, S.hired, S.not_hired)
 _EVENT = {
@@ -90,6 +122,8 @@ class OfferLimits:
     candidate_per_day: int = 10
     validity_days: int = 7
     applications_per_day: int = 20
+    interest_company_per_week: int = 30
+    interest_validity_days: int = 7
 
     @classmethod
     def load(cls, path: Path | str | None = None) -> OfferLimits:
@@ -102,6 +136,12 @@ class OfferLimits:
             validity_days=int(lim.get("offer_validity_days", base.validity_days)),
             applications_per_day=int(
                 lim.get("application_candidate_per_day", base.applications_per_day)
+            ),
+            interest_company_per_week=int(
+                lim.get("interest_company_per_week", base.interest_company_per_week)
+            ),
+            interest_validity_days=int(
+                lim.get("interest_validity_days", base.interest_validity_days)
             ),
         )
 
@@ -128,10 +168,14 @@ def validate_range(salary_from: int | None, salary_to: int | None) -> tuple[int,
     return salary_from, salary_to
 
 
-async def _count_since(session: AsyncSession, column: Any, value: uuid.UUID, since: datetime):
+async def _count_since(
+    session: AsyncSession, column: Any, value: uuid.UUID, since: datetime, *, interests: bool = True
+):
     q = select(func.count(), func.min(Offer.created_at)).where(
         column == value, Offer.created_at >= since, Offer.initiator == OfferInitiator.employer.value
     )
+    if not interests:  # суточный лимит офферов компании: интересы считает недельный лимит
+        q = q.where(Offer.interest_at.is_(None))
     count, oldest = (await session.execute(q)).one()
     return count, oldest
 
@@ -162,7 +206,24 @@ def _retry_after(oldest: datetime | None, now: datetime) -> dict[str, str]:
     return {"Retry-After": str(max(1, wait))}
 
 
+def _in_interest_phase(offer: Offer) -> bool:
+    """Интерес, по которому ещё не отправлено приглашение (ADR-026)."""
+    return offer.interest_at is not None and offer.invited_at is None
+
+
 async def _emit(session: AsyncSession, offer: Offer, to: OfferStatus, *, prev, actor, **extra):
+    if _in_interest_phase(offer):
+        interest = OfferInterestEvent(
+            offer_id=offer.id, candidate_id=offer.candidate_id, company_id=offer.company_id,
+            vacancy_id=offer.vacancy_id, status=to, prev_status=prev, actor=actor,
+            decline_reason=extra.get("decline_reason"), salary_from=offer.salary_from,
+            salary_to=offer.salary_to,
+        )  # fmt: skip
+        env = new_envelope(
+            _INTEREST_EVENT[to], "core", interest, schema_version=INTEREST_SCHEMA_VERSION
+        )
+        await add_to_outbox(session, env, offer.id)
+        return
     name = _EVENT.get(to, "offer.status_changed")
     payload = OfferEventPayload(
         offer_id=offer.id, candidate_id=offer.candidate_id, company_id=offer.company_id,
@@ -242,14 +303,14 @@ async def create(
     else:  # без вакансии: одно открытое приглашение от компании кандидату
         dup_q = select(Offer.id).where(
             Offer.vacancy_id.is_(None), Offer.company_id == company.id,
-            Offer.candidate_id == candidate.user_id, Offer.status.in_(OPEN),
+            Offer.candidate_id == candidate.user_id, Offer.status.in_(EXPIRABLE),
             Offer.expires_at > now,
         )  # fmt: skip
     if await session.scalar(dup_q.limit(1)) is not None:
         raise ProblemError(409, "offer_exists", "Оффер этому кандидату по вакансии уже отправлен")
 
     since = now - WINDOW
-    n, oldest = await _count_since(session, Offer.company_id, company.id, since)
+    n, oldest = await _count_since(session, Offer.company_id, company.id, since, interests=False)
     if n >= limits.company_per_day:
         raise ProblemError(
             429, "offer_limit_exceeded", "Лимит офферов на сутки исчерпан",
@@ -346,6 +407,185 @@ async def apply(
     return offer
 
 
+# --- интерес до приглашения (E33-1, ADR-026) -------------------------------------------
+
+
+def interest_not_found() -> ProblemError:
+    return ProblemError(404, "interest_not_found", "Интерес не найден")
+
+
+async def create_interest(
+    session: AsyncSession,
+    *,
+    company: Company,
+    user_id: uuid.UUID,
+    candidate: Candidate,
+    salary_from: int | None,
+    salary_to: int | None,
+    message: str | None,
+    limits: OfferLimits,
+    vacancy: Vacancy | None = None,
+    title: str | None = None,
+    salary_basis: SalaryBasis | None = None,
+    now: datetime | None = None,
+) -> tuple[Offer, bool]:
+    """Отметка «интересен» с вилкой. Возвращает `(интерес, replay)`.
+
+    Повтор отметки, пока интерес той же компании кандидату открыт, возвращает его же
+    (`replay=True`), без новой строки, события и расхода лимита.
+    """
+    now = now or datetime.now(UTC)
+    if company.status != CompanyStatus.verified.value:
+        raise ProblemError(403, "company_not_verified", "Компания не прошла верификацию")
+    open_q = select(Offer).where(
+        Offer.company_id == company.id, Offer.candidate_id == candidate.user_id,
+        Offer.status.in_(EXPIRABLE), Offer.expires_at > now,
+    )  # fmt: skip
+    existing = list(await session.scalars(open_q))
+    for o in existing:
+        if o.status in INTEREST_OPEN:
+            return o, True
+    if existing:  # уже идёт приглашение: интерес не нужен
+        raise ProblemError(409, "offer_exists", "Приглашение этому кандидату уже отправлено")
+    if vacancy is not None and vacancy.status != VacancyStatus.published.value:
+        raise ProblemError(409, "vacancy_not_published", "Вакансия не опубликована")
+    lo, hi = validate_range(salary_from, salary_to)
+    message = (message or "").strip() or None
+    if message and len(message) > INTEREST_MESSAGE_MAX:
+        raise ProblemError(
+            422, "message_too_long", f"Сообщение — не длиннее {INTEREST_MESSAGE_MAX} символов"
+        )
+    if vacancy is not None:
+        dup = await session.scalar(
+            select(Offer.id).where(
+                Offer.vacancy_id == vacancy.id, Offer.candidate_id == candidate.user_id
+            ).limit(1)
+        )  # fmt: skip
+        if dup is not None:
+            raise ProblemError(409, "offer_exists", "По этой вакансии кандидату уже писали")
+
+    q = select(func.count(), func.min(Offer.interest_at)).where(
+        Offer.company_id == company.id, Offer.interest_at >= now - INTEREST_WINDOW
+    )
+    n, oldest = (await session.execute(q)).one()
+    if n >= limits.interest_company_per_week:
+        wait = INTEREST_WINDOW - (now - _aware(oldest)) if oldest else INTEREST_WINDOW
+        raise ProblemError(
+            429, "interest_limit_exceeded", "Лимит интересов на неделю исчерпан",
+            headers={"Retry-After": str(max(1, int(wait.total_seconds()) + 1))},
+        )  # fmt: skip
+    n, oldest = await _count_since(session, Offer.candidate_id, candidate.user_id, now - WINDOW)
+    if n >= limits.candidate_per_day:
+        raise ProblemError(
+            429, "candidate_offer_limit_exceeded", "Кандидат получил слишком много офферов",
+            headers=_retry_after(oldest, now),
+        )  # fmt: skip
+
+    snapshot = await matching.snapshot(session, vacancy.id, candidate.user_id) if vacancy else None
+    offer = Offer(
+        id=uuid.uuid4(), vacancy_id=vacancy.id if vacancy else None,
+        candidate_id=candidate.user_id, company_id=company.id, created_by=user_id,
+        salary_from=lo, salary_to=hi, message=message,
+        salary_basis=(salary_basis.value if salary_basis else None)
+        or (vacancy.salary_basis if vacancy else None) or SalaryBasis.gross.value,
+        title=(title or "").strip() or None, initiator=OfferInitiator.employer.value,
+        status=S.interest.value, awaiting_reply_from="candidate", match_snapshot=snapshot,
+        below_candidate_min=candidate.salary_min is not None and hi < candidate.salary_min,
+        interest_at=now, created_at=now,
+        expires_at=now + timedelta(days=limits.interest_validity_days),
+    )  # fmt: skip
+    session.add(offer)
+    await session.flush()
+    await _log(session, offer, None, S.interest, "company", {"created_by": str(user_id)})
+    await _emit(session, offer, S.interest, prev=None, actor="company")
+    return offer, False
+
+
+def _require_interest(offer: Offer) -> Offer:
+    if offer.interest_at is None:
+        raise interest_not_found()
+    return offer
+
+
+async def interests_for(
+    session: AsyncSession, candidate_id: uuid.UUID, now: datetime | None = None
+) -> list[Offer]:
+    """Открытые интересы кандидату (без приглашения, срок не вышел), новые сверху."""
+    now = now or datetime.now(UTC)
+    q = select(Offer).where(
+        Offer.candidate_id == candidate_id, Offer.status.in_(INTEREST_OPEN),
+        Offer.expires_at > now,
+    )  # fmt: skip
+    return list(await session.scalars(q.order_by(Offer.created_at.desc())))
+
+
+async def open_interest(session: AsyncSession, offer: Offer, now: datetime | None = None) -> Offer:
+    """Кандидат открыл интерес: `interest → interest_opened`. Повтор — без изменений."""
+    _require_interest(offer)
+    if offer.status == S.interest.value:
+        return await transition(session, offer, S.interest_opened, actor="candidate", now=now)
+    if offer.status == S.declined.value or offer.status in (S.expired.value, S.withdrawn.value):
+        raise ProblemError(409, "invalid_transition", f"Интерес уже закрыт: {offer.status}")
+    return offer  # уже открыт или дошёл до приглашения
+
+
+async def decline_interest(
+    session: AsyncSession, offer: Offer, reason: DeclineReason, comment: str | None,
+    now: datetime | None = None,
+) -> Offer:  # fmt: skip
+    """«Не интересно» с причиной. Повтор с той же причиной — без изменений."""
+    _require_interest(offer)
+    if offer.status == S.declined.value and offer.invited_at is None:
+        if offer.decline_reason == reason.value:
+            return offer
+        raise ProblemError(409, "invalid_transition", "Интерес уже отклонён")
+    if offer.status not in INTEREST_OPEN:
+        raise ProblemError(409, "invalid_transition", f"Интерес уже закрыт: {offer.status}")
+    return await decline(session, offer, reason, comment, now=now)
+
+
+async def invite_from_interest(
+    session: AsyncSession, offer: Offer, *, limits: OfferLimits, title: str | None = None,
+    description: str | None = None, contact_method: ContactMethod | None = None,
+    message: str | None = None, salary_from: int | None = None, salary_to: int | None = None,
+    now: datetime | None = None,
+) -> Offer:  # fmt: skip
+    """Приглашение после открытого интереса: `interest_opened → sent` в той же строке.
+
+    Вилку можно уточнить (снова обязательна и валидна). Без вакансии нужен `title`. Повтор после
+    отправки возвращает приглашение без изменений.
+    """
+    now = now or datetime.now(UTC)
+    _require_interest(offer)
+    if offer.invited_at is not None:
+        return offer
+    if offer.status != S.interest_opened.value:
+        raise ProblemError(
+            409, "interest_not_opened", "Приглашение можно отправить, когда кандидат открыл интерес"
+        )
+    if _is_expired(offer, now):
+        raise ProblemError(409, "offer_expired", "Срок действия интереса истёк")
+    lo, hi = validate_range(
+        salary_from if salary_from is not None else offer.salary_from,
+        salary_to if salary_to is not None else offer.salary_to,
+    )
+    title = (title or "").strip() or offer.title
+    if offer.vacancy_id is None and not title:
+        raise ProblemError(
+            422, "title_required", "Укажите название приглашения",
+            errors=[{"field": "title", "message": "без вакансии название обязательно"}],
+        )  # fmt: skip
+    cand = await session.get(Candidate, offer.candidate_id) if offer.candidate_id else None
+    offer.salary_from, offer.salary_to, offer.title = lo, hi, title
+    offer.below_candidate_min = bool(cand and cand.salary_min is not None and hi < cand.salary_min)
+    offer.description = (description or "").strip() or offer.description
+    offer.contact_method = contact_method.value if contact_method else offer.contact_method
+    offer.message = (message or "").strip() or offer.message
+    offer.invited_at = now
+    offer.expires_at = now + timedelta(days=limits.validity_days)
+    return await transition(session, offer, S.sent, actor="company", now=now)
+
+
 def _replay(existing: Offer, vacancy: Vacancy | None, candidate: Candidate) -> Offer:
     vacancy_id = vacancy.id if vacancy else None
     if existing.vacancy_id != vacancy_id or existing.candidate_id != candidate.user_id:
@@ -397,7 +637,11 @@ async def list_for_company(
 async def list_for_candidate(
     session: AsyncSession, candidate_id: uuid.UUID, *, initiator: str | None = None
 ) -> list[Offer]:
-    q = select(Offer).where(Offer.candidate_id == candidate_id)
+    """Офферы и отклики кандидата; интересы без приглашения — отдельно (`interests_for`)."""
+    q = select(Offer).where(
+        Offer.candidate_id == candidate_id,
+        (Offer.interest_at.is_(None)) | (Offer.invited_at.is_not(None)),
+    )
     if initiator:
         q = q.where(Offer.initiator == initiator)
     return list(await session.scalars(q.order_by(Offer.created_at.desc())))
@@ -416,7 +660,7 @@ async def briefs_for(
 
 
 def _is_expired(offer: Offer, now: datetime) -> bool:
-    return offer.status in OPEN and _aware(offer.expires_at) <= now
+    return offer.status in EXPIRABLE and _aware(offer.expires_at) <= now
 
 
 async def transition(
@@ -428,7 +672,11 @@ async def transition(
     now = now or datetime.now(UTC)
     prev = OfferStatus(offer.status)
     is_application = offer.initiator == OfferInitiator.candidate.value
-    allowed = (APPLICATION_TRANSITIONS if is_application else TRANSITIONS).get((prev, to))
+    if is_application:
+        table = APPLICATION_TRANSITIONS
+    else:
+        table = INTEREST_TRANSITIONS if prev.value in INTEREST_OPEN else TRANSITIONS
+    allowed = table.get((prev, to))
     if allowed is None or allowed != actor:
         raise ProblemError(
             409, "invalid_transition", f"Переход {prev.value} → {to.value} невозможен"
@@ -441,7 +689,9 @@ async def transition(
     if to in (S.accepted, S.declined, S.withdrawn, S.expired):
         offer.responded_at = now
     waiting = "company" if is_application else "candidate"
-    offer.awaiting_reply_from = waiting if to in (S.sent, S.viewed) else None
+    offer.awaiting_reply_from = waiting if to in (S.sent, S.viewed, S.interest) else None
+    if to == S.interest_opened:  # кандидат открыл интерес: ход компании
+        offer.interest_opened_at, offer.awaiting_reply_from = now, "company"
     await session.flush()
     await _log(session, offer, prev, to, actor, payload)
     if to == S.accepted:
@@ -644,9 +894,7 @@ async def decline(
     session: AsyncSession, offer: Offer, reason: DeclineReason, comment: str | None,
     now: datetime | None = None,
 ) -> Offer:  # fmt: skip
-    if OfferStatus(offer.status) not in (S.sent, S.viewed) or (
-        offer.initiator == OfferInitiator.candidate.value
-    ):
+    if offer.status not in EXPIRABLE or (offer.initiator == OfferInitiator.candidate.value):
         raise ProblemError(
             409, "invalid_transition", f"Переход {offer.status} → declined невозможен"
         )
@@ -669,10 +917,10 @@ async def set_status(
 
 
 async def expire_due(session: AsyncSession, now: datetime | None = None, batch: int = 200) -> int:
-    """`sent|viewed` с истёкшим сроком → `expired` (cron E8-5 вызывает эту функцию)."""
+    """`sent|viewed|interest|interest_opened` с истёкшим сроком → `expired` (cron E8-5)."""
     now = now or datetime.now(UTC)
     q = (
-        select(Offer).where(Offer.status.in_(OPEN), Offer.expires_at <= now)
+        select(Offer).where(Offer.status.in_(EXPIRABLE), Offer.expires_at <= now)
         .order_by(Offer.expires_at).limit(batch).with_for_update(skip_locked=True)
     )  # fmt: skip
     rows = list(await session.scalars(q))
@@ -684,6 +932,14 @@ async def expire_due(session: AsyncSession, now: datetime | None = None, batch: 
 __all__ = [
     "CHAT_OPEN",
     "COMPANY_SET",
+    "EXPIRABLE",
+    "INTEREST_OPEN",
+    "INTEREST_TRANSITIONS",
+    "create_interest",
+    "decline_interest",
+    "interests_for",
+    "invite_from_interest",
+    "open_interest",
     "COMPLAINT_REASONS",
     "MESSAGES_PER_HOUR",
     "APPLICATION_TRANSITIONS",

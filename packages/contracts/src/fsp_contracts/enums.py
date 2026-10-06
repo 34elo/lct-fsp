@@ -135,6 +135,9 @@ class OfferStatus(StrEnum):
     interview = "interview"
     hired = "hired"
     not_hired = "not_hired"
+    # ADR-026 (E33-1): интерес — шаг до приглашения; `interest_opened` — кандидат открыл интерес
+    interest = "interest"
+    interest_opened = "interest_opened"
 
 
 class DeclineReason(StrEnum):
@@ -144,6 +147,7 @@ class DeclineReason(StrEnum):
     wrong_grade = "wrong_grade"
     not_looking = "not_looking"
     other = "other"
+    wrong_company = "wrong_company"  # «не интересно»: компания (E33-1)
 
 
 class ConsentType(StrEnum):

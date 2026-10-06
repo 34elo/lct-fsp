@@ -48,6 +48,14 @@ OFFER_EVENTS = (
     "offer.message",
     "offer.status_changed",
 )
+# E33-1 (ADR-026): интерес до приглашения; payload `OfferInterestEvent` читается как `OfferEvent`
+INTEREST_EVENTS = (
+    "offer.interest.sent",
+    "offer.interest.opened",
+    "offer.interest.declined",
+    "offer.interest.expired",
+    "offer.interest.withdrawn",
+)
 
 S = OfferStatus
 _CLOSED_BY_SYSTEM_TEXT = {
@@ -166,6 +174,10 @@ async def _to_company(
 
 
 def _awaiting(ev: OfferEvent) -> str | None:
+    if ev.status == S.interest:
+        return "candidate"
+    if ev.status == S.interest_opened:
+        return "company"
     if ev.status in (S.sent, S.viewed):
         return "company" if ev.initiator == OfferInitiator.candidate else "candidate"
     return None
@@ -242,6 +254,28 @@ async def _offer_event(session: AsyncSession, envelope: Envelope, out: list[UiMe
             )
         case "offer.message":
             await _message(session, ev, out)
+        case "offer.interest.sent":
+            await _to_candidate(
+                session, ev, out, type="interest_new", title="Компания интересуется вами"
+            )
+        case "offer.interest.opened":
+            await _to_company(
+                session, ev, out, type="interest_opened",
+                title="Кандидат открыл ваш интерес: можно отправить приглашение",
+            )  # fmt: skip
+        case "offer.interest.declined":
+            extra = {"decline_reason": ev.decline_reason.value} if ev.decline_reason else None
+            await _to_company(
+                session, ev, out, type="interest_declined", title="Кандидату не интересно",
+                extra=extra,
+            )  # fmt: skip
+        case "offer.interest.expired":
+            await _to_company(
+                session, ev, out, type="interest_expired", title="Срок интереса истёк"
+            )
+            out.append(_updated(ev.candidate_id, ev, None))
+        case "offer.interest.withdrawn":
+            out.append(_updated(ev.candidate_id, ev, None))
         case "offer.status_changed":
             title = _STATUS_TITLE.get(st, "Статус оффера изменился")
             if ev.actor == "company":
@@ -288,7 +322,7 @@ def register(
     session_factory: async_sessionmaker[AsyncSession],
     ui_publish: UiPublish | None = None,
 ) -> None:
-    @consumers["core.handlers"].on(*OFFER_EVENTS)
+    @consumers["core.handlers"].on(*OFFER_EVENTS, *INTEREST_EVENTS)
     @idempotent(session_factory, "notifications.offer")
     async def on_offer(envelope: Envelope, session: AsyncSession) -> None:
         out: list[UiMessage] = []

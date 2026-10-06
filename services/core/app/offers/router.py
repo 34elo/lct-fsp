@@ -127,6 +127,10 @@ class OfferOut(BaseModel):
     match_snapshot: MatchSnapshot | None = None
     decline: Decline | None = None
     awaiting_reply_from: str | None = None
+    # E33-1 (ADR-026): оффер начался с интереса; кандидат открыл; компания пригласила
+    interest_at: datetime | None = None
+    interest_opened_at: datetime | None = None
+    invited_at: datetime | None = None
 
 
 class CompanyBrief(BaseModel):
@@ -254,6 +258,8 @@ async def _base(session: AsyncSession, o: Offer) -> dict[str, Any]:
         "decline": Decline(reason=o.decline_reason, comment=o.decline_comment)
         if o.decline_reason else None,
         "awaiting_reply_from": o.awaiting_reply_from,
+        "interest_at": o.interest_at, "interest_opened_at": o.interest_opened_at,
+        "invited_at": o.invited_at,
     }  # fmt: skip
 
 
@@ -402,6 +408,168 @@ async def create_offer(
     if replay:
         response.headers["Idempotent-Replay"] = "true"
     return await for_company(session, offer)
+
+
+# --- интерес до приглашения (E33-1, ADR-026) -------------------------------------------
+
+
+class CreateInterest(BaseModel):
+    """Отметка «интересен»: вилка обязательна, сообщение до 300 символов, вакансия — по желанию."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    candidate_pseudo_id: str = Field(min_length=1, max_length=64)
+    salary_from: int | None = Field(default=None, le=100_000_000)
+    salary_to: int | None = Field(default=None, le=100_000_000)
+    salary_basis: SalaryBasis | None = None
+    message: str | None = Field(default=None, max_length=service.INTEREST_MESSAGE_MAX)
+    vacancy_id: uuid.UUID | None = None
+    title: str | None = Field(default=None, max_length=200)
+
+
+class InviteFromInterest(BaseModel):
+    """Приглашение по открытому интересу; пустые поля берутся из интереса."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    salary_from: int | None = Field(default=None, le=100_000_000)
+    salary_to: int | None = Field(default=None, le=100_000_000)
+    message: str | None = Field(default=None, max_length=2000)
+    title: str | None = Field(default=None, max_length=200)
+    description: str | None = Field(default=None, max_length=4000)
+    contact_method: ContactMethod | None = None
+
+
+class InterestsSummary(BaseModel):
+    """«K компаний интересуются вами, вилки …» и карточки без контактов."""
+
+    companies: int
+    salary_from_min: int | None = None
+    salary_to_max: int | None = None
+    items: list[OfferForCandidate]
+
+
+@router.post(
+    "/interests",
+    response_model=OfferForCompany,
+    status_code=201,
+    responses=problem_responses(401, 403, 404, 409, 422, 429),
+)
+async def create_interest(
+    body: CreateInterest,
+    response: Response,
+    user: User = Depends(_employer),
+    session: AsyncSession = Depends(get_session),
+) -> Any:
+    """Интерес к анонимному кандидату. Повтор отметки возвращает открытый интерес."""
+    identity.require_verified_email(user)  # blocks.md §4.6
+    company, _ = await companies.require_company(session, user.id)
+    vacancy = await vacancies.get_owned(session, user, body.vacancy_id) if body.vacancy_id else None
+    cand = await card.get_visible(session, body.candidate_pseudo_id, company.id)
+    if cand is None:
+        raise ProblemError(404, "candidate_not_found", "Кандидат не найден")
+    offer, replay = await service.create_interest(
+        session, company=company, user_id=user.id, candidate=cand, vacancy=vacancy,
+        salary_from=body.salary_from, salary_to=body.salary_to, message=body.message,
+        title=body.title, salary_basis=body.salary_basis, limits=_LIMITS,
+    )  # fmt: skip
+    if replay:
+        response.headers["Idempotent-Replay"] = "true"
+    return await for_company(session, offer)
+
+
+@router.post(
+    "/interests/{offer_id}/invite",
+    response_model=OfferForCompany,
+    responses=problem_responses(401, 403, 404, 409, 422),
+)
+async def invite_from_interest(
+    offer_id: uuid.UUID,
+    body: InviteFromInterest | None = None,
+    user: User = Depends(_employer),
+    session: AsyncSession = Depends(get_session),
+) -> Any:
+    """Кандидат открыл интерес → приглашение (`interest_opened → sent`)."""
+    company, _ = await companies.require_company(session, user.id)
+    offer = await _interest_for_company(session, company.id, offer_id)
+    b = body or InviteFromInterest()
+    await service.invite_from_interest(
+        session, offer, limits=_LIMITS, title=b.title, description=b.description,
+        contact_method=b.contact_method, message=b.message, salary_from=b.salary_from,
+        salary_to=b.salary_to,
+    )  # fmt: skip
+    return await for_company(session, offer)
+
+
+@router.get(
+    "/candidates/me/interests",
+    response_model=InterestsSummary,
+    responses=problem_responses(401, 403),
+)
+async def my_interests(
+    user: User = Depends(_candidate), session: AsyncSession = Depends(get_session)
+) -> Any:
+    rows = await service.interests_for(session, user.id)
+    return InterestsSummary(
+        companies=len({o.company_id for o in rows}),
+        salary_from_min=min((o.salary_from for o in rows), default=None),
+        salary_to_max=max((o.salary_to for o in rows), default=None),
+        items=[await for_candidate(session, o) for o in rows],
+    )
+
+
+@router.post(
+    "/interests/{offer_id}/open",
+    response_model=OfferForCandidate,
+    responses=problem_responses(401, 403, 404, 409),
+)
+async def open_interest(
+    offer_id: uuid.UUID, user: User = Depends(_candidate),
+    session: AsyncSession = Depends(get_session),
+) -> Any:  # fmt: skip
+    """«Открыть»: компания получает уведомление и может отправить приглашение. Повтор — no-op."""
+    offer = await _interest_for_candidate(session, user.id, offer_id)
+    await service.open_interest(session, offer)
+    return await for_candidate(session, offer)
+
+
+@router.post(
+    "/interests/{offer_id}/decline",
+    response_model=OfferForCandidate,
+    responses=problem_responses(401, 403, 404, 409, 422),
+)
+async def decline_interest(
+    offer_id: uuid.UUID, body: DeclineIn, user: User = Depends(_candidate),
+    session: AsyncSession = Depends(get_session),
+) -> Any:  # fmt: skip
+    """«Не интересно» с причиной (вилка, формат, компания, не ищу). Повтор — no-op."""
+    offer = await _interest_for_candidate(session, user.id, offer_id)
+    await service.decline_interest(session, offer, body.reason, body.comment)
+    return await for_candidate(session, offer)
+
+
+async def _interest_for_candidate(
+    session: AsyncSession, candidate_id: uuid.UUID, offer_id: uuid.UUID
+) -> Offer:
+    try:
+        offer = await service.get_for_candidate(session, candidate_id, offer_id, lock=True)
+    except ProblemError:
+        raise service.interest_not_found() from None
+    if offer.interest_at is None:
+        raise service.interest_not_found()
+    return offer
+
+
+async def _interest_for_company(
+    session: AsyncSession, company_id: uuid.UUID, offer_id: uuid.UUID
+) -> Offer:
+    try:
+        offer = await service.get_for_company(session, company_id, offer_id, lock=True)
+    except ProblemError:
+        raise service.interest_not_found() from None
+    if offer.interest_at is None:
+        raise service.interest_not_found()
+    return offer
 
 
 @router.get("/teams", response_model=list[TeamOut], responses=problem_responses(401, 403))
