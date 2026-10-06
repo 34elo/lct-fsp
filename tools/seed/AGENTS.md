@@ -13,6 +13,8 @@
 - `heroes/*.yaml` — Аня, Дима, Ольга (ручные фикстуры).
 - `plan.py` — чистый план (без БД); `loader.py` — запись через сервисы core; `__main__.py` — CLI.
 - `grades.py` — seed-грейды блока 1 (`make seed` вызывает `python -m tools.seed grades`): 6 профессий × 3 грейда через `assessment.seed_grade`, идемпотентно.
+- `demo_v2.yaml` + `demo_v2.py` — демо v2 (E34-1): герои Борис/Вика/Глеб/Мира/Тимур с историей теста (через `grading.on_finished`), 3 компании и вакансии, офферы и отклики, регулярные задания; команда `python -m tools.seed demo2` (в `make seed`).
+- `make demo-reset` возвращает снапшот (`make demo-snapshot` сразу после `make seed`); `make demo-warm` прогревает кеши.
 
 ## Правила
 - Только вымышленные люди и компании; пароли тестовые.

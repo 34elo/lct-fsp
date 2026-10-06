@@ -292,3 +292,38 @@ async def test_seed_grades_core_and_idempotent(factory):
     }
     async with session_scope(factory) as s:
         assert await assessment.category_counts(s) == counts
+
+
+def test_demo_v2_data_consistent(plan):
+    """E34-1: герои v2 покрывают сценарии, ссылки в данных замкнуты, email уникальны."""
+    from tools.seed.demo_v2 import load_data, plan_attempts
+    from tools.seed.plan import _hero_candidate
+
+    d = load_data()
+    cfg = load_config()
+    heroes = {h["key"]: h for h in d["heroes"]}
+    hist = plan_attempts(d)
+    assert plan_attempts(d) == hist  # детерминизм
+    modes = {a.get("mode", "standard") for v in hist.values() for a in v}
+    assert "express" in modes
+    assert any(a.get("integrity", 1.0) < 0.7 for v in hist.values() for a in v)
+    assert any(a["result"] == "failed" for v in hist.values() for a in v)
+    ages = {h["key"]: (h["age"], h["parent_consent"]) for h in d["heroes"] if h.get("age")}
+    assert sorted(ages.values()) == [("minor", False), ("minor", True)]
+    for v in hist.values():  # старые попытки раньше новых
+        assert [a["days_ago"] for a in v] == sorted((a["days_ago"] for a in v), reverse=True)
+    emails = [h["email"] for h in d["heroes"]] + [c["email"] for c in d["companies"]]
+    plan_emails = {c["email"] for c in plan["candidates"]} | {c["email"] for c in plan["companies"]}
+    assert len(emails) == len(set(emails)) and not set(emails) & plan_emails
+    vac = {v["key"] for v in d["vacancies"]} | {"olga"}
+    cos = {c["key"] for c in d["companies"]}
+    people = set(heroes) | {"anya", "dima"}
+    assert all(v["company"] in cos for v in d["vacancies"])
+    assert all(
+        o["vacancy"] in vac and o["candidate"] in people for o in d["offers"] + d["applications"]
+    )
+    assert len({o["n"] for o in d["offers"]}) == len(d["offers"])
+    assert all(t["company"] in cos and set(t["answers"]) <= people for t in d["tasks"])
+    assert all("example.test" in c["site"] for c in d["companies"])  # компании вымышленные
+    c = _hero_candidate(cfg, date(2026, 10, 3), heroes["boris"])
+    assert c["hero"] == "boris" and c["fsp"] is None
