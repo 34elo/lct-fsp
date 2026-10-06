@@ -536,6 +536,18 @@ async def list_professions(session: AsyncSession) -> list[ProfessionInfo]:
     return out
 
 
+async def skill_types_of(session: AsyncSession, slugs: list[str]) -> dict[str, SkillType]:
+    """slug → тип навыка (живые навыки с заданным типом) — для плана теста по вакансии."""
+    if not slugs:
+        return {}
+    rows = await session.execute(
+        select(Skill.slug, Skill.skill_type).where(
+            Skill.slug.in_(slugs), Skill.status.in_(_LIVE), Skill.skill_type.is_not(None)
+        )
+    )
+    return {slug: SkillType(t) for slug, t in rows.all()}
+
+
 async def skill_kinds(session: AsyncSession, skill_ids: list[uuid.UUID]) -> dict[uuid.UUID, str]:
     """id → kind (`hard` | `soft` | …): ручная форма отделяет софт-навыки от стека."""
     if not skill_ids:
