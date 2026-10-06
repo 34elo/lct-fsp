@@ -19,13 +19,14 @@ from app.offers import service as offers
 from app.openapi_errors import problem_responses
 from app.vacancies import service
 from app.vacancies.models import Vacancy
-from app.vacancies.service import SkillReq, VacancyStatus
+from app.vacancies.service import SkillReq, VacancyConfig, VacancyStatus
 
 router = APIRouter(prefix="/vacancies", tags=["vacancies"])
 
 _employer = require_roles("employer")
 _candidate = require_roles("candidate")
 _LIMITS = offers.OfferLimits.load()
+_VACANCY_CFG = VacancyConfig.load()
 
 
 class SkillReqIn(BaseModel):
@@ -107,7 +108,9 @@ class VacancyOut(BaseModel):
     published_at: datetime | None
 
 
-def vacancy_out(v: Vacancy, skills: list) -> VacancyOut:
+def vacancy_out(v: Vacancy, skills: list, cfg: VacancyConfig | None = None) -> VacancyOut:
+    if cfg is None:
+        cfg = _VACANCY_CFG
     return VacancyOut(
         id=v.id,
         company_id=v.company_id,
@@ -120,7 +123,7 @@ def vacancy_out(v: Vacancy, skills: list) -> VacancyOut:
         city=v.city,
         salary_from=v.salary_from,
         salary_to=v.salary_to,
-        range_too_wide=service.range_too_wide(v.salary_from, v.salary_to),
+        range_too_wide=service.range_too_wide(v.salary_from, v.salary_to, cfg),
         description=v.description,
         status=VacancyStatus(v.status),
         important_qualities=[TeamSignalKind(q) for q in v.important_qualities],

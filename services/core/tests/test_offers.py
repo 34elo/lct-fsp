@@ -641,6 +641,22 @@ def test_salary_hint(world):
     assert c.post("/offers/salary-hint", json=body, headers=other).status_code == 404
 
 
+def test_salary_hint_range_too_wide_threshold(world):
+    """range_too_wide в salary-hint respects threshold: salary_to / salary_from > 1.6."""
+    c, e, vid, ch, pid, uid = world
+    base = {
+        "vacancy_id": vid,
+        "candidate_pseudo_id": pid,
+        "salary_from": 200000,
+    }
+    # 320k / 200k = 1.6, not > 1.6, so warning should be False
+    h1 = c.post("/offers/salary-hint", json=base | {"salary_to": 320000}, headers=e).json()
+    assert h1["range_too_wide"] is False
+    # 321k / 200k ≈ 1.605 > 1.6, so warning should be True
+    h2 = c.post("/offers/salary-hint", json=base | {"salary_to": 321000}, headers=e).json()
+    assert h2["range_too_wide"] is True
+
+
 def test_offer_events_timeline(world):
     c, e, vid, ch, pid, uid = world
     oid = _offer(c, e, vid, pid).json()["id"]
