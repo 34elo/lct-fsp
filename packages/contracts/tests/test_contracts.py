@@ -27,7 +27,7 @@ def test_enums_match_data_model():
     assert Grade.middle.order > Grade.junior_plus.order
     assert EvidenceSource.self_ == "self"
     assert [int(t) for t in TrustLevel] == [0, 1, 2, 3, 4]
-    assert len(OfferStatus) == 9
+    assert len(OfferStatus) == 11  # + interest, interest_opened (ADR-026)
 
 
 def test_event_roundtrip_typed():

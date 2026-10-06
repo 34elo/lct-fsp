@@ -371,6 +371,8 @@ limits:
   offer_company_per_day: 20  # офферов за скользящие 24 ч от одной компании
   offer_candidate_per_day: 10  # входящих офферов за 24 ч одному кандидату
   offer_validity_days: 7  # срок жизни оффера до expired (flows.md F8)
+  interest_company_per_week: 30  # интересов (E33-1, ADR-026) от компании за скользящие 7 дней
+  interest_validity_days: 7  # срок интереса до expired
   salary_range_too_wide_ratio: 1.6  # salary_to / salary_from > 1.6 → warning (EU directive)
 
   # Profile freshness

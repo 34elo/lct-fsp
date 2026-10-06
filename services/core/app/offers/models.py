@@ -53,6 +53,13 @@ class Offer(Base):
     team_offer_id: Mapped[uuid.UUID | None] = mapped_column(default=None)
     idempotency_key: Mapped[str | None] = mapped_column(Text, default=None)
     expires_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True))
+    # ADR-026 (E33-1): оффер начался с интереса (`interest_at`), кандидат открыл интерес,
+    # компания отправила приглашение (`invited_at`). Интерес без приглашения: invited_at пуст.
+    interest_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), default=None)
+    interest_opened_at: Mapped[datetime | None] = mapped_column(
+        sa.DateTime(timezone=True), default=None
+    )
+    invited_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), default=None)
     viewed_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), default=None)
     responded_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), default=None)
     created_at: Mapped[datetime] = mapped_column(
