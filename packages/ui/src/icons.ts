@@ -1,6 +1,7 @@
 // Иконки для каркаса приложения: web не зависит от lucide напрямую.
 export {
   Building2,
+  ChevronDown,
   Handshake,
   Heart,
   LayoutDashboard,
