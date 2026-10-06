@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Literal
 
 import structlog
@@ -35,8 +35,8 @@ from app.matching.p_accept import PAcceptConfig, p_accept, suggest_raise
 from app.matching.p_accept import hint as p_hint
 from app.matching.scoring import MatchConfig
 from app.matching.search import CandidateCard
-from app.offers import service, teams, why
-from app.offers.models import ContactReveal, Offer, OfferMessage
+from app.offers import invite_task, service, teams, why
+from app.offers.models import ContactReveal, Offer, OfferMessage, OfferTask
 from app.openapi_errors import problem_responses
 from app.telegram import service as telegram
 from app.vacancies import service as vacancies
@@ -57,6 +57,15 @@ _PACCEPT = PAcceptConfig.load()
 _VACANCY_CFG = VacancyConfig.load()
 
 
+class TaskAttach(BaseModel):
+    """Задача в приглашении (E33-3): семейство из конструктора компании или банка, ≤ 15 минут."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    family_id: uuid.UUID
+    deadline_days: int = Field(default=invite_task.DEFAULT_DEADLINE_DAYS, ge=1, le=14)
+
+
 class CreateOffer(BaseModel):
     """Приглашение работодателя. Без `vacancy_id` (ADR-022) обязателен `title`."""
 
@@ -72,6 +81,7 @@ class CreateOffer(BaseModel):
     title: str | None = Field(default=None, max_length=200)
     description: str | None = Field(default=None, max_length=4000)
     contact_method: ContactMethod | None = None
+    task: TaskAttach | None = None  # E33-3
 
 
 class DeclineIn(BaseModel):
@@ -133,6 +143,44 @@ class OfferOut(BaseModel):
     invited_at: datetime | None = None
 
 
+class TaskBrief(BaseModel):
+    """Задача в приглашении глазами кандидата (вариант — `GET /offers/{id}/task`)."""
+
+    title: str
+    minutes: int
+    deadline_at: datetime
+    answered_at: datetime | None = None
+    score: float | None = None
+
+
+class TaskResult(TaskBrief):
+    """То же для компании этого оффера + ответ кандидата. Другим компаниям не отдаётся."""
+
+    family_id: uuid.UUID
+    answer: Any | None = None
+
+
+class TaskView(BaseModel):
+    """`GET /offers/{id}/task`: вариант без ключа и состояние решения."""
+
+    task: TaskBrief
+    item: dict[str, Any] | None = None  # пусто, когда ответ принят или срок вышел
+    can_answer: bool
+
+
+class TaskAnswerIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    answer: Any
+
+
+def _brief(t: OfferTask) -> TaskBrief:
+    return TaskBrief(
+        title=t.title, minutes=t.minutes, deadline_at=t.deadline_at,
+        answered_at=t.answered_at, score=t.score,
+    )  # fmt: skip
+
+
 class CompanyBrief(BaseModel):
     id: uuid.UUID
     name: str
@@ -145,6 +193,7 @@ class CompanyBrief(BaseModel):
 class OfferForCandidate(OfferOut):
     company: CompanyBrief
     why_you: why.WhyYou | None = None  # E33-2: только у интереса и приглашения компании
+    task: TaskBrief | None = None  # E33-3: после приглашения
 
 
 class Contacts(BaseModel):
@@ -157,6 +206,7 @@ class Contacts(BaseModel):
 class OfferForCompany(OfferOut):
     candidate: CandidateCard | None = None
     contacts: Contacts | None = None  # только после accepted, см. GET /offers/{id}/contacts
+    task: TaskResult | None = None  # E33-3: результат только у компании этого оффера
 
 
 class SalaryHintIn(BaseModel):
@@ -281,7 +331,11 @@ async def for_candidate(session: AsyncSession, o: Offer) -> OfferForCandidate:
         if cand is not None and o.initiator == OfferInitiator.employer.value
         else None
     )
-    return OfferForCandidate(**await _base(session, o), company=brief, why_you=reasons)
+    t = await invite_task.get(session, o.id)
+    return OfferForCandidate(
+        **await _base(session, o), company=brief, why_you=reasons,
+        task=_brief(t) if t is not None and invite_task.visible_to_candidate(o) else None,
+    )  # fmt: skip
 
 
 async def for_company(session: AsyncSession, o: Offer) -> OfferForCompany:
@@ -291,7 +345,15 @@ async def for_company(session: AsyncSession, o: Offer) -> OfferForCompany:
         if c is not None:
             full = await card.build_card(session, c, vacancy_id=None, cfg=_CFG, trust=_TRUST)
             cand = CandidateCard.model_validate(full.model_dump())
-    return OfferForCompany(**await _base(session, o), candidate=cand)
+    t = await invite_task.get(session, o.id)
+    task = (
+        TaskResult(
+            **_brief(t).model_dump(), family_id=t.family_id, answer=(t.answer or {}).get("value")
+        )
+        if t is not None
+        else None
+    )
+    return OfferForCompany(**await _base(session, o), candidate=cand, task=task)
 
 
 class TeamMemberOut(BaseModel):
@@ -427,6 +489,14 @@ async def create_offer(
     cand = await card.get_visible(session, body.candidate_pseudo_id, company.id)
     if cand is None:
         raise ProblemError(404, "candidate_not_found", "Кандидат не найден")
+    info = (
+        await invite_task.check(
+            session, body.task.family_id, company_id=company.id, user_id=user.id,
+            deadline_days=body.task.deadline_days,
+        )
+        if body.task
+        else None
+    )  # fmt: skip
     offer, replay = await service.create(
         session, company=company, user_id=user.id, vacancy=vacancy, candidate=cand,
         salary_from=body.salary_from, salary_to=body.salary_to, message=body.message,
@@ -436,6 +506,10 @@ async def create_offer(
     )  # fmt: skip
     if replay:
         response.headers["Idempotent-Replay"] = "true"
+    elif body.task and info:
+        await invite_task.attach(
+            session, offer, body.task.family_id, info, deadline_days=body.task.deadline_days
+        )
     return await for_company(session, offer)
 
 
@@ -467,6 +541,7 @@ class InviteFromInterest(BaseModel):
     title: str | None = Field(default=None, max_length=200)
     description: str | None = Field(default=None, max_length=4000)
     contact_method: ContactMethod | None = None
+    task: TaskAttach | None = None  # E33-3
 
 
 class InterestsSummary(BaseModel):
@@ -522,11 +597,23 @@ async def invite_from_interest(
     company, _ = await companies.require_company(session, user.id)
     offer = await _interest_for_company(session, company.id, offer_id)
     b = body or InviteFromInterest()
+    info = (
+        await invite_task.check(
+            session, b.task.family_id, company_id=company.id, user_id=user.id,
+            deadline_days=b.task.deadline_days,
+        )
+        if b.task and offer.invited_at is None
+        else None
+    )  # fmt: skip
     await service.invite_from_interest(
         session, offer, limits=_LIMITS, title=b.title, description=b.description,
         contact_method=b.contact_method, message=b.message, salary_from=b.salary_from,
         salary_to=b.salary_to,
     )  # fmt: skip
+    if b.task and info and await invite_task.get(session, offer.id) is None:
+        await invite_task.attach(
+            session, offer, b.task.family_id, info, deadline_days=b.task.deadline_days
+        )
     return await for_company(session, offer)
 
 
@@ -751,6 +838,43 @@ async def get_offer(
     if await service.is_revealed(session, offer):
         out.contacts = await _contacts(session, offer, user)
     return out
+
+
+@router.get(
+    "/offers/{offer_id}/task",
+    response_model=TaskView,
+    responses=problem_responses(401, 403, 404, 503),
+)
+async def get_offer_task(
+    offer_id: uuid.UUID, user: User = Depends(_candidate),
+    session: AsyncSession = Depends(get_session),
+) -> Any:  # fmt: skip
+    """Задача приглашения: вариант без ключа. Чужой оффер или без задачи — 404."""
+    offer = await service.get_for_candidate(session, user.id, offer_id)
+    task = await invite_task.get_for_candidate(session, offer)
+    can = invite_task.can_answer(offer, task, datetime.now(UTC))
+    return TaskView(
+        task=_brief(task), can_answer=can,
+        item=await invite_task.item(session, offer, task) if can else None,
+    )  # fmt: skip
+
+
+@router.post(
+    "/offers/{offer_id}/task/answer",
+    response_model=TaskBrief,
+    responses=problem_responses(401, 403, 404, 409, 422, 503),
+)
+async def answer_offer_task(
+    offer_id: uuid.UUID, body: TaskAnswerIn, response: Response,
+    user: User = Depends(_candidate), session: AsyncSession = Depends(get_session),
+) -> Any:  # fmt: skip
+    """Один ответ на задачу; повтор возвращает принятый (`Idempotent-Replay: true`)."""
+    offer = await service.get_for_candidate(session, user.id, offer_id, lock=True)
+    task = await invite_task.get_for_candidate(session, offer)
+    task, replay = await invite_task.submit(session, offer, task, body.answer)
+    if replay:
+        response.headers["Idempotent-Replay"] = "true"
+    return _brief(task)
 
 
 @router.post(
