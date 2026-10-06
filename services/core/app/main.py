@@ -33,6 +33,7 @@ from app.events_stream import router as events_router
 from app.fsp.router import router as fsp_router
 from app.identity.router import router as identity_router
 from app.matching.router import router as search_router
+from app.offers.router import admin_router as admin_complaints_router
 from app.offers.router import router as offers_router
 from app.recommendations.router import router as recommendations_router
 from app.resumes.router import router as resumes_router
@@ -89,6 +90,7 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(search_router)
     app.include_router(recommendations_router)
     app.include_router(offers_router)
+    app.include_router(admin_complaints_router)
     # >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
     app.include_router(assessment_router)
     # <<< block1
