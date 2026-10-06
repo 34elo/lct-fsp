@@ -22,7 +22,7 @@ NOW = datetime.now(UTC).isoformat(sep=" ")
 CARD_FIELDS = {
     "pseudo_id", "pseudonym", "avatar_seed", "primary_role", "grade", "grade_preliminary",
     "primary_stack", "top_skills", "fsp_highlights", "salary_min", "formats", "city",
-    "relocation", "search_status", "match", "updated_at", "categories",
+    "relocation", "search_status", "match", "updated_at", "categories", "strength",
 }  # fmt: skip
 TEST_GRADE = {"junior": "junior", "middle": "middle", "senior": "senior", "lead": "senior"}
 
@@ -535,3 +535,27 @@ def test_similarity_formula():
     assert similarity(a, b, None, [1.0]) == pytest.approx(0.25)  # нет вектора → только навыки
     assert similarity(a, a, [1.0, 0.0], [1.0, 0.0]) == pytest.approx(1.0)
     assert similarity(a, a, [1.0, 0.0], [-1.0, 0.0]) == pytest.approx(0.7)
+
+
+def test_strength_and_rank_in_category(c, market):
+    """E23-2: в категории порядок по rank, у карточки сила и топ-3 слагаемых; без ФСП — F = 0."""
+    a = _cand(c, 50, [("python", 0.8, 3, ["test"])], grade="middle")
+    b = _cand(c, 51, [("python", 0.8, 3, ["test", "fsp"])], grade="middle")
+    d = _cand(c, 52, [("python", 0.8, 3, ["test"])], grade="middle")
+    with sqlite3.connect(c.db) as con:
+        con.execute("update grades set band_position=0.9 where candidate_id=?", (a,))
+        con.execute("update grades set band_position=0.2 where candidate_id=?", (b,))
+        con.execute("update grades set band_position=0.2, integrity=0.3 where candidate_id=?", (d,))
+    cat = {"profession": "backend", "grade": "middle"}
+    r = _search(c, market, category=cat, filters={"skills_nice": ["python"]})
+    items = {i["pseudo_id"]: i for i in r.json()["items"]}
+    assert {"pid0050", "pid0051", "pid0052"} <= set(items)
+    sa, sb, sd = (items[k]["strength"] for k in ("pid0050", "pid0051", "pid0052"))
+    assert sa["value"] > sb["value"] > sd["value"]  # T=0.9 > ФСП при T=0.2 > штраф честности
+    assert sa["rank"] == round(0.6 * 0.8 + 0.4 * sa["value"], 6)
+    assert len(sa["top"]) == 3 and sa["top"][0]["code"] == "T"
+    assert "F" not in [x["code"] for x in sa["top"]]  # без ФСП слагаемого нет, штрафа тоже
+    order = [i["pseudo_id"] for i in r.json()["items"]]
+    assert order.index("pid0050") < order.index("pid0051") < order.index("pid0052")
+    plain = _search(c, market, filters={"skills_nice": ["python"]}).json()["items"][0]
+    assert plain["strength"]["rank"] is None  # без категории rank не считается
