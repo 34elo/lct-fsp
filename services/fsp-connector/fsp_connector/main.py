@@ -1,4 +1,4 @@
-"""fsp-connector api: healthz, internal API привязки; вебхук и синхронизация — E5-5…E5-6."""
+"""fsp-connector api: healthz, internal API привязки; вебхук ФСП (E5-6)."""
 
 from __future__ import annotations
 
@@ -16,6 +16,8 @@ from fsp_connector.config import Settings
 from fsp_connector.errors import FspError
 from fsp_connector.factory import build_adapter
 from fsp_connector.linking import LinkService
+from fsp_connector.sync import SyncService
+from fsp_connector.webhook import router as webhook_router
 
 settings = Settings()
 configure_logging(settings.service_name, settings.log_level)
@@ -28,6 +30,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.settings = settings
     app.state.adapter = build_adapter(settings, redis)
     app.state.session_factory = make_session_factory(engine)
+    app.state.redis = redis
+    app.state.sync = SyncService(app.state.adapter, app.state.session_factory)
     app.state.links = LinkService(
         app.state.adapter,
         app.state.session_factory,
@@ -47,6 +51,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 def build() -> FastAPI:
     application = create_app(settings.service_name, lifespan=lifespan)
     application.include_router(router)
+    application.include_router(webhook_router)
 
     @application.exception_handler(FspError)
     async def _fsp_error(_: Request, exc: FspError):
