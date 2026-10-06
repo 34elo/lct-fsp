@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from app.assessment.families import (
+    ai_engineer,
     behavior,
     code,
     incident_chains,
@@ -12,7 +13,7 @@ from app.assessment.families import (
 )
 from app.assessment.families.base import BaseFamily, Family, Item, Kind
 
-_MODULES = [starter, code, reasoning, behavior, world_tasks, incident_chains]
+_MODULES = [starter, code, reasoning, behavior, world_tasks, incident_chains, ai_engineer]
 
 REGISTRY: dict[str, Family] = {}
 

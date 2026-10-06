@@ -99,6 +99,13 @@ eval:
 eval-quick:
 	uv run python tools/eval/run.py --quick --out reports/eval-quick
 
+# Все офлайн-метрики одним отчётом (E31-3, metrics.md §9.1): eval-assessment, eval, families-check, load (если был
+# прогон) → reports/metrics/report.{md,json} со светофором. make metrics [SEED=42] [ARGS="--skip load"].
+# Недоступное без стенда помечается «не измерено». Занимает около двух минут.
+.PHONY: metrics
+metrics:
+	uv run python -m tools.metrics --seed $(or $(SEED),42) --out reports/metrics $(ARGS)
+
 # Нагрузка (E29-2, metrics.md): 50 пользователей против живого стека после make seed.
 # make load [LOAD_USERS=50 LOAD_TIME=3m LOAD_HOST=http://127.0.0.1:28080]. Код выхода 1, если p95 search/matches > 1 с.
 LOAD_USERS ?= 50
@@ -119,6 +126,7 @@ seed:
 	SEED=$(SEED) uv run python -m tools.seed grades --env-file $(ENV_FILE)
 # <<< block1
 # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
+	SEED=$(SEED) uv run python -m tools.seed demo2 --env-file $(ENV_FILE)
 # <<< block2
 	$(COMPOSE) up -d --build --no-deps --force-recreate fsp-mock
 seed-fsp-mock:
