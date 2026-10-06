@@ -117,10 +117,29 @@ class FamilyStatusChanged(BaseModel):
     to: str
 
 
+class RegularTaskPublished(BaseModel):
+    """`regular_task.published`: рассылка регулярного задания (E25-1). Без ПДн: только id.
+
+    `recipients` — кандидаты с действующим грейдом ровно `profession × grade` и согласием
+    `profile_publication`. `round` растёт с каждой новой рассылкой; повтор публикации в
+    пределах периода события не создаёт.
+    """
+
+    task_id: UUID
+    company_id: UUID
+    profession: ProfessionSlug
+    grade: TestGrade
+    round: int = Field(ge=1)
+    period_days: int
+    recipients: list[UUID] = Field(default_factory=list)
+    published_at: datetime
+
+
 ASSESSMENT_EVENTS: dict[str, type[BaseModel]] = {
     "assessment.attempt.finished": AttemptFinished,
     "candidate.category.changed": CategoryChanged,
     "assessment.family.status_changed": FamilyStatusChanged,
+    "regular_task.published": RegularTaskPublished,
 }
 
 __all__ = [
@@ -134,6 +153,7 @@ __all__ = [
     "FamilyStatusChanged",
     "ProfessionInfo",
     "ProfessionSlug",
+    "RegularTaskPublished",
     "SkillType",
     "TestGrade",
 ]
