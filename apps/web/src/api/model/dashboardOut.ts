@@ -4,14 +4,14 @@
  * core
  * OpenAPI spec version: 0.1.0
  */
+import type { AppAnalyticsDashboardStage } from './appAnalyticsDashboardStage';
 import type { Ratio } from './ratio';
-import type { Stage } from './stage';
 
 export interface DashboardOut {
   since: string;
   days: number;
   min_cell: number;
-  funnel: Stage[];
+  funnel: AppAnalyticsDashboardStage[];
   fsp_share: Ratio;
   navigator_to_competition: Ratio;
 }

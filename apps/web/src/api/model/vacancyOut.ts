@@ -7,6 +7,7 @@
 import type { EmploymentType } from './employmentType';
 import type { Grade } from './grade';
 import type { RoleSlug } from './roleSlug';
+import type { SalaryBasis } from './salaryBasis';
 import type { SkillReqOut } from './skillReqOut';
 import type { TeamSignalKind } from './teamSignalKind';
 import type { VacancyStatus } from './vacancyStatus';
@@ -24,6 +25,7 @@ export interface VacancyOut {
   city: string | null;
   salary_from: number;
   salary_to: number;
+  salary_basis: SalaryBasis;
   range_too_wide: boolean;
   description: string | null;
   status: VacancyStatus;

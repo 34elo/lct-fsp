@@ -40,10 +40,12 @@ describe("канбан офферов", () => {
     expect(columnOf("declined")).toBe("closed");
     expect(columnOf("not_hired")).toBe("closed");
     expect(columnOf("???")).toBe("closed");
+    expect(columnOf("interest")).toBe("interest");
+    expect(columnOf("interest_opened")).toBe("interest");
   });
   test("счётчики равны числу карточек, пустые колонки остаются, новые выше", () => {
     const g = groupByColumn([o("sent", "2026-10-01T00:00:00Z"), o("sent", "2026-10-03T00:00:00Z"), o("declined"), o("expired")]);
-    expect(Object.keys(g)).toHaveLength(6);
+    expect(Object.keys(g)).toHaveLength(7);
     expect(g.sent.map((x) => x.created_at)[0]).toBe("2026-10-03T00:00:00Z");
     expect(g.closed).toHaveLength(2);
     expect(g.hired).toEqual([]);
@@ -53,6 +55,7 @@ describe("канбан офферов", () => {
     const list = [o("sent"), o("viewed"), o("accepted"), o("hired"), o("declined", undefined, "wrong_stack"), o("declined", undefined, "wrong_stack"), o("declined", undefined, "low_salary")];
     expect(boardStats(list)).toEqual({ total: 7, viewedPct: 86, accepted: 2, hired: 1 });
     expect(boardStats([]).viewedPct).toBeNull();
+    expect(boardStats([...list, o("interest"), o("interest_opened")]).total).toBe(7);
     expect(declineBreakdown(list)).toEqual([
       { reason: "wrong_stack", count: 2, pct: 67 },
       { reason: "low_salary", count: 1, pct: 33 },

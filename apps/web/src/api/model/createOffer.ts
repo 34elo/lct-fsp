@@ -5,6 +5,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { ContactMethod } from './contactMethod';
+import type { SalaryBasis } from './salaryBasis';
 
 /**
  * Приглашение работодателя. Без `vacancy_id` (ADR-022) обязателен `title`.
@@ -18,6 +19,7 @@ export interface CreateOffer {
   candidate_pseudo_id: string;
   salary_from?: number | null;
   salary_to?: number | null;
+  salary_basis?: SalaryBasis | null;
   message?: string | null;
   title?: string | null;
   description?: string | null;
