@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.assessment import attempts, grading, plan_preview, survey
+from app.assessment import attempts, grading, plan_preview, survey, world
 from app.assessment.config import AssessmentConfig, load_config
 from app.assessment.models import Attempt, Grade, Survey
 from app.candidates import service as candidates
@@ -364,6 +364,7 @@ async def plan_preview_(
     cfg = _cfg(request)
     grade = body.grade
     weights: dict[str, float]
+    domain: str | None = None
     if body.vacancy_id is not None:
         if user.role == "employer":
             vac = await vacancies.get_owned(session, user, body.vacancy_id)  # чужая → 404
@@ -378,6 +379,7 @@ async def plan_preview_(
             [(vs.weight, vs.required, slug) for vs, slug in rows]
         )
         grade = grade or plan_preview.to_test_grade(vac.grade_min)
+        domain = world.domain_for_vacancy(vac.role, vac.title, vac.description)
         source = "vacancy"
     elif body.profession is not None:
         prof = {p.slug: p for p in await taxonomy.list_professions(session)}.get(body.profession)
@@ -389,6 +391,7 @@ async def plan_preview_(
                 errors=[{"field": "profession", "message": body.profession}],
             )
         weights = dict(prof.skill_weights)
+        domain = world.domain_for_profession(body.profession)
         source = "profession"
     else:
         raw = body.skills
@@ -398,7 +401,7 @@ async def plan_preview_(
     ignored = sorted(s for s in weights if s not in types)
     weights = {s: w for s, w in weights.items() if s in types and w > 0}
     grade = grade or TestGrade.middle
-    out = plan_preview.preview(weights, {k: v.value for k, v in types.items()}, grade, cfg)
+    out = plan_preview.preview(weights, {k: v.value for k, v in types.items()}, grade, cfg, domain)
     if not out["sections"]:
         raise ProblemError(
             422,

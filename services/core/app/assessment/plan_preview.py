@@ -56,11 +56,19 @@ def _families_of(skill: str, grade: TestGrade, cfg: AssessmentConfig):
     return sorted(fams, key=lambda f: (abs(f.level - target), f.slug))
 
 
-def examples(sections: list[sel.Section], grade: TestGrade, cfg: AssessmentConfig) -> list[dict]:
-    """До трёх примеров из секций с наибольшими долями: по одному на навык."""
+def examples(
+    sections: list[sel.Section],
+    grade: TestGrade,
+    cfg: AssessmentConfig,
+    domain: str | None = None,
+) -> list[dict]:
+    """До трёх примеров из секций с наибольшими долями: по одному на навык.
+
+    `domain` — мир вакансии или профессии (E26-1); без него домен выбирает сид.
+    """
     key = "|".join(f"{s.skill}:{s.share:.4f}" for s in sections) + f"|{grade.value}"
     seed = int.from_bytes(hashlib.sha256(key.encode()).digest()[:8], "big") & (2**63 - 1)
-    domain = DOMAINS[seed % len(DOMAINS)]
+    domain = domain if domain in DOMAINS else DOMAINS[seed % len(DOMAINS)]
     out: list[dict] = []
     for sec in sections:
         fams = _families_of(sec.skill, grade, cfg)
@@ -87,6 +95,7 @@ def preview(
     skill_types: dict[str, str],
     grade: TestGrade,
     cfg: AssessmentConfig,
+    domain: str | None = None,
 ) -> dict:
     sections = sel.build_plan(skill_weights, skill_types, grade, cfg)
     with_tasks = {f.skill for f in registry.REGISTRY.values()}
@@ -106,5 +115,5 @@ def preview(
             }
             for s in sections
         ],
-        "examples": examples(sections, grade, cfg),
+        "examples": examples(sections, grade, cfg, domain),
     }
