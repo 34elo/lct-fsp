@@ -7,20 +7,26 @@ import hmac
 import secrets
 import statistics
 import uuid
-from datetime import UTC, timedelta
+from datetime import UTC, date, timedelta
 
 import sqlalchemy as sa
+from fsp_contracts.enums import EvidenceSource
 from fsp_platform.app import ProblemError
 from sqlalchemy import select
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.candidates import pii
 from app.candidates.models import DEFAULT_VISIBILITY, Candidate, CategoryDispute
+from app.graph import service as graph
 from app.identity.models import utcnow
+from app.taxonomy import service as taxonomy
 
 ACTIVE_DAYS = 7
 STOPLIST_MAX = 200
+STRENGTH_SELF = 0.15  # навык из ручной формы: «заявлено», потолок provisional 0.25 (skills.md)
+SELF_FACT = "self_profile"
 
 
 def make_pseudo_id(secret: str, user_id: uuid.UUID) -> str:
@@ -88,6 +94,130 @@ async def update_preferences(session: AsyncSession, cand: Candidate, changes: di
     return cand
 
 
+def contacts_of(cand: Candidate, key: str) -> dict[str, str]:
+    return pii.decrypt_contacts(key, cand.contacts_enc)
+
+
+async def update_profile(
+    session: AsyncSession, cand: Candidate, changes: dict, *, pii_key: str
+) -> Candidate:
+    """Ручная форма (E20-4): контакты, стек (`self`), стаж, роли, софт-навыки.
+
+    Частичное обновление по ключам `changes`. Стек — полный список: убранные навыки
+    деактивируются. Доказательства, стаж и софт-навыки запускают пересчёт, `profile_version` растёт
+    там же, только если агрегат изменился.
+    """
+    recompute = False
+    if "contacts" in changes:
+        contacts = {k: v for k, v in (changes["contacts"] or {}).items() if v}
+        cand.contacts_enc = pii.encrypt_contacts(pii_key, contacts) if contacts else None
+    if "desired_roles" in changes:
+        cand.desired_roles = list(dict.fromkeys(str(r) for r in changes["desired_roles"] or []))
+    if "experience_months" in changes:
+        recompute |= cand.experience_months != changes["experience_months"]
+        cand.experience_months = changes["experience_months"]
+    if "soft_skills" in changes:
+        slugs = list(dict.fromkeys(changes["soft_skills"] or []))
+        by_slug = await taxonomy.resolve_slugs(session, slugs)
+        _require_known(slugs, by_slug, "soft_skills")
+        kinds = await taxonomy.skill_kinds(session, list(by_slug.values()))
+        names = await taxonomy.skill_names(session, list(by_slug.values()))
+        bad = [s for s in slugs if kinds.get(by_slug[s]) != "soft"]
+        if bad:
+            raise _skill_error(bad, "soft_skills", "Это не софт-навык")
+        soft = [names[by_slug[s]] for s in slugs]
+        recompute |= (cand.claimed_soft or []) != soft
+        cand.claimed_soft = soft
+    if "age_group" in changes or "parent_consent" in changes:
+        _set_age(cand, changes)
+    if "stack" in changes:
+        await _set_stack(session, cand, changes["stack"] or [])  # сам запрашивает пересчёт
+    await session.flush()
+    if recompute:
+        await graph.request_recompute(session, cand.user_id)
+    return cand
+
+
+def _set_age(cand: Candidate, changes: dict) -> None:
+    """Возрастная группа и согласие родителя (E32-5b). Дата рождения не хранится.
+
+    Согласие осмысленно только для `minor`; смена группы на `adult` или отзыв сбрасывают отметку.
+    """
+    group = changes.get("age_group", cand.age_group)
+    if group not in (None, "adult", "minor"):
+        raise ProblemError(422, "validation_error", "Неизвестная возрастная группа")
+    if "parent_consent" in changes and changes["parent_consent"] and group != "minor":
+        raise ProblemError(
+            422, "validation_error", "Согласие родителя нужно только кандидатам 15–17 лет"
+        )
+    cand.age_group = group
+    if group != "minor" or changes.get("parent_consent") is False:
+        cand.parent_consent_at = None
+    elif changes.get("parent_consent") and cand.parent_consent_at is None:
+        cand.parent_consent_at = utcnow()
+
+
+def is_publishable(cand: Candidate) -> bool:
+    """Профиль 15–17 лет не публикуется без согласия родителя (E32-5b)."""
+    return cand.age_group != "minor" or cand.parent_consent_at is not None
+
+
+def _skill_error(slugs: list[str], field: str, message: str) -> ProblemError:
+    return ProblemError(
+        422, "unknown_skill", "Неизвестный навык",
+        errors=[{"field": field, "message": f"{s}: {message}"} for s in slugs],
+    )  # fmt: skip
+
+
+def _require_known(slugs: list[str], by_slug: dict, field: str) -> None:
+    unknown = [s for s in slugs if s not in by_slug]
+    if unknown:
+        raise _skill_error(unknown, field, "нет в справочнике")
+
+
+async def _set_stack(session: AsyncSession, cand: Candidate, stack: list[dict]) -> bool:
+    items = {str(i["slug"]): i for i in stack}  # дубли: побеждает последний
+    by_slug = await taxonomy.resolve_slugs(session, list(items))
+    _require_known(list(items), by_slug, "stack")
+    kinds = await taxonomy.skill_kinds(session, list(by_slug.values()))
+    soft = [s for s in items if kinds.get(by_slug[s]) == "soft"]
+    if soft:
+        raise _skill_error(soft, "stack", "софт-навыки указываются отдельно")
+    wanted = {by_slug[s]: items[s] for s in items}
+    today = date.today()
+    current = {
+        e.skill_id
+        for e in await graph.list_active(session, cand.user_id)
+        if e.fact_type == SELF_FACT and e.fact_id == cand.user_id
+    }
+    removed = current - set(wanted)
+    changed = False
+    if removed:
+        changed |= bool(
+            await graph.deactivate(
+                session, cand.user_id, fact_type=SELF_FACT, fact_id=cand.user_id, skill_ids=removed
+            )
+        )
+    res = await graph.upsert_evidence(
+        session,
+        cand.user_id,
+        [
+            graph.EvidenceIn(
+                skill_id=sid,
+                source=EvidenceSource.self_,
+                strength=STRENGTH_SELF,
+                observed_at=today,
+                fact_type=SELF_FACT,
+                fact_id=cand.user_id,
+                details={"years": i.get("years")},
+                verified=False,
+            )
+            for sid, i in wanted.items()
+        ],
+    )
+    return changed or res.changed
+
+
 async def update_visibility(session: AsyncSession, cand: Candidate, changes: dict) -> Candidate:
     cand.visibility = {**DEFAULT_VISIBILITY, **cand.visibility, **changes}
     await session.flush()
@@ -115,6 +245,13 @@ def effective_status(cand: Candidate) -> str:
 # --- чтение для подбора (matching) -------------------------------------------------------
 
 
+_PUBLISHABLE = sa.or_(
+    Candidate.age_group.is_(None),
+    Candidate.age_group != "minor",
+    Candidate.parent_consent_at.is_not(None),
+)
+
+
 def _attr_filters(
     stmt: sa.Select, *, salary_cap: float, formats: list[str], company_id: uuid.UUID, pg: bool
 ) -> sa.Select:
@@ -122,6 +259,7 @@ def _attr_filters(
     stmt = stmt.where(
         Candidate.deleted_at.is_(None),
         Candidate.search_status != "dnd",
+        _PUBLISHABLE,
         sa.or_(Candidate.salary_min.is_(None), Candidate.salary_min <= salary_cap),
     )
     if pg:
@@ -208,6 +346,7 @@ async def search_pool(
     stmt = select(Candidate).where(
         Candidate.deleted_at.is_(None),
         Candidate.search_status != "dnd",
+        _PUBLISHABLE,
         Candidate.primary_role.is_not(None),
     )
     if roles:

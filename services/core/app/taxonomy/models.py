@@ -25,6 +25,8 @@ class Skill(Base):
     support_candidates: Mapped[int] = mapped_column(default=0, server_default="0")
     support_vacancies: Mapped[int] = mapped_column(default=0, server_default="0")
     testable: Mapped[bool] = mapped_column(default=False, server_default=sa.false())
+    # fundamental | hard | thinking | business | soft | experience (assessment.md §2)
+    skill_type: Mapped[str | None] = mapped_column(Text, default=None)
     description: Mapped[str | None] = mapped_column(Text, default=None)
     created_at: Mapped[datetime] = mapped_column(
         sa.DateTime(timezone=True), default=utcnow, server_default=sa.func.now()
@@ -79,6 +81,8 @@ class Role(Base):
 
     slug: Mapped[str] = mapped_column(Text, primary_key=True)
     name: Mapped[str] = mapped_column(Text)
+    # профессия теста (assessment.md §2); остальные роли — только для подсказок и поиска
+    is_profession: Mapped[bool] = mapped_column(default=False, server_default=sa.false())
 
 
 class RoleSkill(Base):
@@ -127,3 +131,56 @@ class ScoringConfig(Base):
     updated_at: Mapped[datetime] = mapped_column(
         sa.DateTime(timezone=True), default=utcnow, onupdate=utcnow
     )
+
+
+class SkillMention(Base):
+    """Журнал и кеш решений конвейера навыков ml (skills.md §3.3): ключ кеша — `norm`."""
+
+    __tablename__ = "skill_mentions"
+    __table_args__ = (sa.Index("ix_skill_mentions_norm", "norm"),)
+
+    id: Mapped[int] = mapped_column(
+        sa.BigInteger().with_variant(sa.Integer, "sqlite"), primary_key=True
+    )
+    raw: Mapped[str] = mapped_column(Text)
+    norm: Mapped[str] = mapped_column(Text)
+    context: Mapped[str | None] = mapped_column(Text, default=None)  # resume|vacancy|repo|query
+    decision: Mapped[str] = mapped_column(Text)  # alias|fuzzy|new|same_pending|rejected
+    skill_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("skills.id"), default=None)
+    relation: Mapped[str | None] = mapped_column(Text, default=None)
+    scores: Mapped[dict | None] = mapped_column(sa.JSON, default=None)
+    model_version: Mapped[str | None] = mapped_column(Text, default=None)
+    created_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), default=utcnow, server_default=sa.func.now()
+    )
+
+
+class SkillCardDraftRow(Base):
+    """Черновик карточки нового навыка от ml (E16-4). В `data/skills/cards` — после ревью."""
+
+    __tablename__ = "skill_card_drafts"
+
+    skill_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("skills.id"), primary_key=True)
+    card: Mapped[dict] = mapped_column(sa.JSON)  # форма `SkillCard`, schema_version 1
+    model: Mapped[str] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(Text, default="draft", server_default="draft")
+    created_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), default=utcnow, server_default=sa.func.now()
+    )
+
+
+class SkillMerge(Base):
+    """Журнал слияний (skills.md §6): по `moved` слияние откатывается (разделение)."""
+
+    __tablename__ = "skill_merges"
+    __table_args__ = (sa.Index("ix_skill_merges_from", "from_skill"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    from_skill: Mapped[uuid.UUID] = mapped_column(ForeignKey("skills.id"))
+    into_skill: Mapped[uuid.UUID] = mapped_column(ForeignKey("skills.id"))
+    actor: Mapped[str] = mapped_column(Text)  # admin:<user_id> | pipeline
+    moved: Mapped[dict] = mapped_column(sa.JSON)
+    created_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), default=utcnow, server_default=sa.func.now()
+    )
+    reverted_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), default=None)

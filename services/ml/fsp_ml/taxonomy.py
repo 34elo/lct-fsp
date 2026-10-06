@@ -1,7 +1,7 @@
 """Индекс графа навыков в ml и быстрый путь `/v1/skills/resolve` (skills.md §3, шаги 1–3).
 
 Нормализация → точный поиск по синонимам → нечёткий поиск (rapidfuzz ≥ 92).
-Модерация, судья и создание вершин — отдельная задача E16-4; их здесь нет.
+Модерация, судья и решения о новых вершинах — `skill_pipeline.py` (E16-4).
 """
 
 from __future__ import annotations
@@ -28,6 +28,10 @@ class TaxonomyIndex:
     version: int = 0
     exact: dict[str, str] = field(default_factory=dict)  # норм. синоним → slug
     kinds: dict[str, str] = field(default_factory=dict)  # slug → kind
+    names: dict[str, str] = field(default_factory=dict)  # slug → название
+    aliases: dict[str, list[str]] = field(default_factory=dict)  # slug → синонимы
+    statuses: dict[str, str] = field(default_factory=dict)  # slug → active | provisional
+    distinct: set[frozenset[str]] = field(default_factory=set)  # «точно разные» (skill_distinct)
     _fuzzy_keys: list[str] = field(default_factory=list)
 
     @classmethod
@@ -36,10 +40,16 @@ class TaxonomyIndex:
         for s in snap.get("skills", []):
             slug = s["slug"]
             idx.kinds[slug] = s.get("kind", "hard")
+            idx.names[slug] = s.get("name") or slug
+            idx.aliases[slug] = list(s.get("aliases", []))
+            idx.statuses[slug] = s.get("status", "active")
             for name in (slug, s.get("name") or "", *s.get("aliases", [])):
                 key = light(name)
                 if key:
                     idx.exact.setdefault(key, slug)
+        for pair in snap.get("distinct", []):
+            if len(pair) == 2:
+                idx.distinct.add(frozenset(pair))
         idx._fuzzy_keys = sorted(idx.exact)
         return idx
 

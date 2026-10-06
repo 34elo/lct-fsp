@@ -114,6 +114,94 @@ category:
   stack_size: 3  # длина primary_stack
   explain_top: 5  # навыков в объяснении
 
+## 1a. Тест и грейды v2 (assessment.md §2, §5) — раздел блока 1
+
+assessment:
+  # Универсальная шкала θ: cut — минимальный θ грейда. Junior — −1.0, Middle — 0.0, Senior — 1.0.
+  grades:
+    junior: { cut: -1.0 }
+    middle: { cut: 0.0 }
+    senior: { cut: 1.0 }
+  # Априорная сложность b семейства по уровню 1..5 (assessment.md §5).
+  b_by_level: { 1: -2.0, 2: -1.0, 3: 0.0, 4: 1.0, 5: 2.0 }
+  # Число оцениваемых заданий в попытке (assessment.md §5): минимум и максимум (подбор — ADR-030).
+  items: { min: 10, max: 24 }
+  # EAP θ (assessment.md §5): сетка [grid_min, grid_max] с шагом step, априорное N(prior_mean, prior_sd²).
+  eap: { grid_min: -4.0, grid_max: 4.0, step: 0.1, prior_mean: 0.0, prior_sd: 1.0 }
+  # Калибровка b после попытки (assessment.md §7): K = max(k_min, k0/√(1 + n)); у якорей K = 0.
+  calibration: { k0: 0.5, k_min: 0.05 }
+  # SPRT у порога cut заявленного грейда (assessment.md §5): θ₀ = cut − delta, θ₁ = cut + delta;
+  # границы ln((1 − β)/α) = +2.197 и ln(β/(1 − α)) = −2.197. δ = 0.7 — подбор по eval (ADR-030).
+  sprt: { delta: 0.7, alpha: 0.1, beta: 0.1 }
+  # Бонусный этап (§5): прошёл за ≤ max_main_items и θ ≥ cut_следующего − margin → до max_items
+  # заданий с SPRT у порога следующего грейда (минимума нет, только границы SPRT); прошёл —
+  # приглашение на отдельный тест следующего грейда, грейд не меняется (ADR-025 п.2). margin 0 и 10
+  # заданий — бонус только при θ̂ ≥ cut_следующего: мягкий бонус давал половину завышений (ADR-030).
+  bonus: { max_main_items: 10, margin: 0.0, max_items: 10 }
+  # Экспресс-режим для жюри (ADR-025 п.7, E32-4a): POST /assessment/attempts {mode: express}, если
+  # enabled. min_items–max_items заданий, SPRT с α = β = 0.15 (границы ±1.735) при том же δ, без бонуса
+  # и пилотных слотов, 3–5 минут. Грейд с меткой mode = express: обычный тест заменяет его без
+  # кулдауна смены грейда, а сам экспресс обычный грейд не перекрывает.
+  express: { enabled: true, min_items: 6, max_items: 8, alpha: 0.15, beta: 0.15 }
+  # План теста (§6): доли типов навыков по грейду; внутри типа — пропорционально весам профессии.
+  plan_shares:
+    junior: { fundamental: 0.35, hard: 0.40, thinking: 0.10, business: 0.05, soft: 0.05, experience: 0.05 }
+    middle: { fundamental: 0.25, hard: 0.35, thinking: 0.20, business: 0.10, soft: 0.05, experience: 0.05 }
+    senior: { fundamental: 0.20, hard: 0.25, thinking: 0.30, business: 0.15, soft: 0.05, experience: 0.05 }
+  # Выбор задания (§6): счёт P(1−P)·(1 − ai_penalty·ai_solvable), равновероятно из топ-top_k;
+  # уровень в пределах грейда ±level_window; не повторять кандидату repeat_days дней; экспозиция за
+  # exposure_days дней < exposure_max тестов (проверяется, когда тестов в окне ≥ exposure_min_tests).
+  selection:
+    top_k: 3
+    ai_penalty: 0.3
+    level_window: 1
+    repeat_days: 90
+    exposure_days: 7
+    exposure_max: 0.3
+    exposure_min_tests: 20
+  # Пилотные слоты (§6): slots скрытых позиций в случайных местах после after-го задания.
+  pilot: { slots: 2, after: 3 }
+  # Грейды (§5): срок подтверждения, смена грейда не чаще раза в change_cooldown_days, повтор того же
+  # грейда после неудачи — через retry_days. Попытка на грейд ниже после неудачи доступна сразу.
+  # Пройденный бонусный этап — приглашение на тест следующего грейда на invite_days дней: без кулдауна
+  # смены грейда, провал не закрывает повтор (ADR-025 п.2).
+  rules: { validity_days: 365, change_cooldown_days: 90, retry_days: 30, invite_days: 30 }
+  # Честность (§8): I < threshold → «требует подтверждения»; доказательства `test` тогда не выше
+  # unconfirmed_cap (доверие ●●○○, т.е. < 0.6). Сигналы (§8, E24-1): верный ответ (балл ≥ correct_min)
+  # на нелёгкое задание (θ − b < fast_margin, P < 0.62) быстрее fast_ratio × медианы семейства — −fast_penalty за
+  # каждый; уход со вкладки > away_min_ms, затем верный ответ — −away_penalty, не больше away_max;
+  # person-fit lz < lz_threshold (от lz_min_items ответов) — −lz_penalty; ≥ copy_min_matches неверных
+  # ответов вида copy_kinds, совпавших с верным ответом другого кандидата на его вариант, — −copy_penalty.
+  integrity:
+    threshold: 0.6
+    unconfirmed_cap: 0.59
+    correct_min: 1.0
+    fast_margin: 0.5
+    fast_ratio: 0.3
+    fast_penalty: 0.15
+    away_min_ms: 10000
+    away_penalty: 0.15
+    away_max: 0.45
+    lz_threshold: -2.0
+    lz_penalty: 0.2
+    lz_min_items: 6
+    copy_penalty: 0.3
+    copy_min_matches: 2
+    copy_kinds: [exact, estimate, find_bug]
+  # Таймер задания (§8): p95 (quantile) времени ответа семейства по последним window ответам, не меньше
+  # min_s; при < min_n ответах — таймер семейства. Медиана для сигнала «быстро» — тоже от min_n ответов.
+  timer: { quantile: 0.95, min_n: 20, window: 500, min_s: 15 }
+  # Доказательство `test` в графе: сила = max_strength · доля набранного по навыку.
+  evidence: { max_strength: 0.8 }
+  # Жизненный цикл семейства (§7). Допуск pilot → active: все пороги + кнопка админа. Сиды делятся на
+  # seed_groups групп (seed mod G); DIF — разница средних остатков y − P(θ, b) «с ФСП / без ФСП»,
+  # считается, когда в обеих группах ≥ dif_min_group ответов. Тревоги переводят active → quarantine.
+  # Утечка: средний остаток y − P(θ, b) за последние leak_window ответов выше, чем за предыдущие,
+  # на ≥ leak_delta (остаток, а не доля верных: сдвиг состава кандидатов тревогу не даёт, ADR-030).
+  lifecycle:
+    admit: { min_n: 30, min_rpb: 0.2, max_abs_b: 3.0, max_seed_spread: 0.15, seed_groups: 3, max_dif: 0.1, dif_min_group: 5 }
+    alarm: { min_n: 50, min_rpb: 0.05, leak_window: 50, leak_delta: 0.2, appeals: 3 }
+
 ## 2. Grade (грейд)
 
 # Grade thresholds by points (ml.md §5)

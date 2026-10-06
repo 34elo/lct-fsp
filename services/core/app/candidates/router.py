@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime
+from typing import Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Response
+from fsp_contracts.assessment import ClaimedVsConfirmed
 from fsp_contracts.enums import (
     ConsentType,
     EmploymentType,
@@ -16,8 +19,10 @@ from fsp_platform.app import ProblemError
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.candidates import service
+from app.assessment import service as assessment
+from app.candidates import pdf, service
 from app.candidates.models import Candidate
+from app.config import Settings
 from app.consents import service as consents
 from app.consents.deps import require_consent
 from app.deps import get_session
@@ -26,6 +31,7 @@ from app.graph.trust import TrustConfig
 from app.identity.deps import require_roles
 from app.identity.models import User
 from app.matching import card
+from app.openapi_errors import problem_responses
 from app.resumes import service as resumes
 from app.taxonomy.service import SkillGraphCache
 from app.views import service as views
@@ -84,8 +90,15 @@ class CandidateProfile(BaseModel):
     skills: list[card.SkillWithTrust] = []
     team_signals: list[card.TeamSignal] = []
     claimed_soft: list[str] = []
+    contacts: ContactsIO | None = None  # только владельцу; в карточку работодателя не идёт
+    desired_roles: list[str] = []
+    experience_months: int | None = None
+    age_group: Literal["adult", "minor"] | None = None  # minor = 15–17 лет
+    parent_consent: bool = False  # согласие родителя на ПДн (только для minor)
+    publishable: bool = True  # false: 15–17 лет без согласия родителя, в выдачу не попадает
     fsp: card.OwnerFsp | None = None
     experience: list[ExperienceItem] = []
+    claimed_vs_confirmed: list[ClaimedVsConfirmed] = []  # E23-3: заявлено (опрос/резюме) vs тест
 
 
 class PreferencesIn(BaseModel):
@@ -109,13 +122,43 @@ class VisibilityIn(BaseModel):
     teams: bool | None = None
 
 
+class ContactsIO(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    email: str | None = Field(default=None, max_length=254, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+    phone: str | None = Field(default=None, max_length=32, pattern=r"^\+?[0-9 ()\-]{5,32}$")
+    telegram: str | None = Field(default=None, max_length=33, pattern=r"^@?[A-Za-z0-9_]{5,32}$")
+
+
+class StackItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    slug: str = Field(min_length=1, max_length=100)
+    years: float | None = Field(default=None, ge=0, le=60)
+
+
+class ProfileIn(BaseModel):
+    """`PATCH /candidates/me/profile`: частичное обновление ручной формы (E20-4)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    contacts: ContactsIO | None = None  # null очищает
+    stack: list[StackItem] | None = Field(default=None, max_length=60)  # полный список
+    experience_months: int | None = Field(default=None, ge=0, le=720)
+    desired_roles: list[RoleSlug] | None = Field(default=None, max_length=5)
+    soft_skills: list[str] | None = Field(default=None, max_length=30)  # slug
+    age_group: Literal["adult", "minor"] | None = None
+    parent_consent: bool | None = None  # true — родитель согласен; false — отзыв
+
+
 class StoplistIO(BaseModel):
     company_ids: list[UUID] = Field(max_length=service.STOPLIST_MAX)
 
 
-async def profile_out(session: AsyncSession, c: Candidate) -> CandidateProfile:
+async def profile_out(session: AsyncSession, c: Candidate, settings: Settings) -> CandidateProfile:
     vis = {**{"teams": True}, **c.visibility}
     parts = await card.build_owner_parts(session, c, _TRUST)
+    contacts = service.contacts_of(c, settings.pii_key)
     return CandidateProfile(
         pseudonym=c.pseudonym,
         profile_version=c.profile_version,
@@ -134,8 +177,15 @@ async def profile_out(session: AsyncSession, c: Candidate) -> CandidateProfile:
         skills=parts.skills,
         team_signals=parts.team_signals,
         claimed_soft=list(c.claimed_soft or []),
+        contacts=ContactsIO(**contacts) if contacts else None,
+        desired_roles=list(c.desired_roles or []),
+        experience_months=c.experience_months,
+        age_group=c.age_group,
+        parent_consent=c.parent_consent_at is not None,
+        publishable=service.is_publishable(c),
         fsp=await card.owner_fsp(session, c),
         experience=await resumes.experience_for_profile(session, c.user_id),
+        claimed_vs_confirmed=await assessment.claimed_vs_confirmed(session, c.user_id),
     )
 
 
@@ -145,16 +195,48 @@ async def _cand(request: Request, session: AsyncSession, user: User) -> Candidat
     )
 
 
-@router.get("/profile", response_model=CandidateProfile)
+@router.get("/profile", response_model=CandidateProfile, responses=problem_responses(401, 403))
 async def get_profile(
     request: Request,
     user: User = Depends(owner),
     session: AsyncSession = Depends(get_session),
 ):
-    return await profile_out(session, await _cand(request, session, user))
+    return await profile_out(
+        session, await _cand(request, session, user), request.app.state.settings
+    )
 
 
-@router.get("/skills/{skill_id}/evidence", response_model=list[card.EvidenceBrief])
+@router.get(
+    "/profile.pdf",
+    response_class=Response,
+    responses={**problem_responses(401, 403), 200: {"content": {"application/pdf": {}}}},
+)
+async def profile_pdf(
+    request: Request,
+    user: User = Depends(owner),
+    session: AsyncSession = Depends(get_session),
+):
+    """PDF-профиль владельца (E20-6): категория, грейд, навыки с доверием, ФСП, тесты."""
+    cand = await _cand(request, session, user)
+    profile = await profile_out(session, cand, request.app.state.settings)
+    grades = await assessment.get_grades(session, cand.user_id)
+    html = pdf.build_html(profile, grades)
+    data = await asyncio.to_thread(pdf.render_pdf, html)
+    return Response(
+        data,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{cand.pseudonym}.pdf"',
+            "Cache-Control": "private, no-store",
+        },
+    )
+
+
+@router.get(
+    "/skills/{skill_id}/evidence",
+    response_model=list[card.EvidenceBrief],
+    responses=problem_responses(401, 403, 404),
+)
 async def skill_evidence(
     skill_id: str,
     request: Request,
@@ -169,7 +251,31 @@ async def skill_evidence(
     return items
 
 
-@router.patch("/preferences", response_model=CandidateProfile)
+@router.patch(
+    "/profile",
+    response_model=CandidateProfile,
+    responses=problem_responses(401, 403, 422),
+)
+async def patch_profile(
+    body: ProfileIn,
+    request: Request,
+    user: User = Depends(writer),
+    session: AsyncSession = Depends(get_session),
+):
+    cand = await _cand(request, session, user)
+    changes = body.model_dump(exclude_unset=True, mode="json")
+    for key in ("stack", "experience_months", "desired_roles", "soft_skills"):
+        if key in changes and changes[key] is None and key != "experience_months":
+            changes[key] = []  # null и [] для списков одно и то же
+    await service.update_profile(session, cand, changes, pii_key=request.app.state.settings.pii_key)
+    return await profile_out(session, cand, request.app.state.settings)
+
+
+@router.patch(
+    "/preferences",
+    response_model=CandidateProfile,
+    responses=problem_responses(401, 403, 422),
+)
 async def patch_preferences(
     body: PreferencesIn,
     request: Request,
@@ -178,10 +284,14 @@ async def patch_preferences(
 ):
     cand = await _cand(request, session, user)
     await service.update_preferences(session, cand, body.model_dump(exclude_unset=True))
-    return await profile_out(session, cand)
+    return await profile_out(session, cand, request.app.state.settings)
 
 
-@router.patch("/visibility", response_model=CandidateProfile)
+@router.patch(
+    "/visibility",
+    response_model=CandidateProfile,
+    responses=problem_responses(401, 403, 422),
+)
 async def patch_visibility(
     body: VisibilityIn,
     request: Request,
@@ -201,10 +311,10 @@ async def patch_visibility(
         )
     cand = await _cand(request, session, user)
     await service.update_visibility(session, cand, changes)
-    return await profile_out(session, cand)
+    return await profile_out(session, cand, request.app.state.settings)
 
 
-@router.put("/stoplist", response_model=StoplistIO)
+@router.put("/stoplist", response_model=StoplistIO, responses=problem_responses(401, 403, 422))
 async def put_stoplist(
     body: StoplistIO,
     request: Request,
@@ -216,7 +326,7 @@ async def put_stoplist(
     return StoplistIO(company_ids=[UUID(c) for c in cand.stoplist_company_ids])
 
 
-@router.get("/views")
+@router.get("/views", responses=problem_responses(401, 403))
 async def my_views(
     user: User = Depends(owner), session: AsyncSession = Depends(get_session)
 ) -> dict:
@@ -274,7 +384,7 @@ def _dispute_out(d) -> DisputeOut:
     )  # fmt: skip
 
 
-@router.get("/category", response_model=CategoryExplanation)
+@router.get("/category", response_model=CategoryExplanation, responses=problem_responses(401, 403))
 async def get_category(
     request: Request,
     user: User = Depends(owner),
@@ -297,7 +407,12 @@ async def get_category(
     )  # fmt: skip
 
 
-@router.post("/category/dispute", response_model=DisputeOut, status_code=201)
+@router.post(
+    "/category/dispute",
+    response_model=DisputeOut,
+    status_code=201,
+    responses=problem_responses(401, 403, 422),
+)
 async def dispute_category(
     body: DisputeIn,
     request: Request,

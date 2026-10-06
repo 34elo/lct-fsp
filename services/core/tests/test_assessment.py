@@ -14,7 +14,7 @@ from app.identity.models import User
 from app.openapi_errors import problem_responses
 from app.taxonomy import service as tax
 from app.taxonomy.loader import load_taxonomy
-from fsp_contracts.assessment import CategoryChanged, TestGrade
+from fsp_contracts.assessment import CategoryChanged, SkillType, TestGrade
 from fsp_contracts.registry import EVENTS
 from fsp_platform.app import ProblemError
 from fsp_platform.db import make_engine, make_session_factory, session_scope
@@ -166,10 +166,96 @@ async def test_list_professions(factory):
         await tax.sync(s, data)
     async with session_scope(factory) as s:
         profs = {p.slug: p for p in await tax.list_professions(s)}
-    assert {"backend", "frontend", "mobile", "ml", "devops", "qa"} <= set(profs)
+    assert set(profs) == {"backend", "frontend", "mobile", "ml", "devops", "qa", "ai_engineer"}
     be = profs["backend"]
     assert be.title and be.skill_weights and all(0 < w <= 1 for w in be.skill_weights.values())
-    assert "python" in be.skill_weights and be.skill_types == {}
+    assert "python" in be.skill_weights
+    assert set(be.skill_types) == set(be.skill_weights)
+    assert be.skill_types["python"] == SkillType.hard
+    assert be.skill_types["algorithms"] == SkillType.fundamental
+    assert be.skill_types["debugging"] == SkillType.thinking
+    # каждая профессия покрывает все шесть типов навыков
+    for p in profs.values():
+        assert set(p.skill_types.values()) == set(SkillType), p.slug
+    assert {"rag", "llm_serving"} <= set(profs["ai_engineer"].skill_weights)
+
+
+async def test_professions_endpoint(factory, db_url):
+    from app.config import Settings
+    from app.main import build_app
+    from fastapi.testclient import TestClient
+
+    data = load_taxonomy(CORE.parents[1] / "data" / "taxonomy")
+    async with session_scope(factory) as s:
+        await tax.sync(s, data)
+    app = build_app(Settings(database_url=db_url, ui_bus_enabled=False))
+    with TestClient(app) as c:
+        r = c.get("/taxonomy/professions")
+    assert r.status_code == 200
+    body = r.json()
+    assert len(body["professions"]) == 7
+    assert body["skill_types"] == [t.value for t in SkillType]
+    assert body["grades"] == [
+        {"grade": "junior", "cut": -1.0},
+        {"grade": "middle", "cut": 0.0},
+        {"grade": "senior", "cut": 1.0},
+    ]
+
+
+def test_loader_skill_types_and_coverage(tmp_path):
+    import yaml
+    from app.taxonomy.loader import TaxonomyError
+
+    def build(profession_skills, types=None):
+        d = tmp_path / "t"
+        d.mkdir(exist_ok=True)
+        skills = [
+            {"slug": "a", "name": "A", "kind": "hard"},
+            {"slug": "b", "name": "B", "kind": "soft"},
+            {"slug": "c", "name": "C", "kind": "domain", "group": "fundamentals"},
+            {"slug": "d", "name": "D", "kind": "hard"},
+            {"slug": "e", "name": "E", "kind": "hard"},
+            {"slug": "f", "name": "F", "kind": "hard"},
+        ]
+        doc = {
+            "skills": skills,
+            "roles": [
+                {"slug": "dev", "name": "Dev", "profession": True, "skills": profession_skills}
+            ],
+        }
+        if types:
+            doc["skill_types"] = types
+        (d / "x.yaml").write_text(yaml.safe_dump(doc), encoding="utf-8")
+        return load_taxonomy(d)
+
+    with pytest.raises(TaxonomyError, match="нет навыков типов"):
+        build({"a": 1.0, "b": 1.0, "c": 1.0})
+    data = build(
+        {"a": 1.0, "b": 1.0, "c": 1.0, "d": 1.0, "e": 1.0, "f": 1.0},
+        [
+            {"type": "thinking", "skills": ["d"]},
+            {"type": "business", "skills": ["e"]},
+            {"type": "experience", "skills": ["f"]},
+        ],
+    )
+    assert (
+        data.skill_types["a"] == SkillType.hard and data.skill_types["c"] == SkillType.fundamental
+    )
+    assert data.skill_types["f"] == SkillType.experience
+    with pytest.raises(TaxonomyError, match="два разных типа"):
+        build(
+            {"a": 1.0},
+            [{"type": "thinking", "skills": ["a"]}, {"type": "soft", "skills": ["a"]}],
+        )
+    with pytest.raises(TaxonomyError, match="неизвестные навыки"):
+        build({"a": 1.0}, [{"type": "soft", "skills": ["zzz"]}])
+
+
+def test_real_scoring_grade_cuts():
+    from app.taxonomy.loader import load_grade_cuts
+
+    cuts = load_grade_cuts(CORE.parents[1] / "data" / "scoring.yaml")
+    assert cuts == {"junior": -1.0, "middle": 0.0, "senior": 1.0}
 
 
 def test_problem_responses_in_openapi():
@@ -190,3 +276,66 @@ def test_problem_responses_in_openapi():
         assert "application/problem+json" in op[code]["content"]
     assert "ProblemOut" in app.openapi()["components"]["schemas"]
     assert problem_responses() == {}
+
+
+async def test_claimed_vs_confirmed_resume_old_scale(factory):
+    """Старая шкала резюме сворачивается к шкале теста; опрос приоритетнее резюме."""
+    async with session_scope(factory) as s:
+        lead = await _cand(s, primary_role="backend", grade="lead")
+        await svc.seed_grade(s, lead, "backend", "middle", 0.5)
+        plus = await _cand(s, primary_role="backend", grade="middle_plus")
+        await svc.seed_grade(s, plus, "backend", "middle", 0.5)
+        jp = await _cand(s, primary_role="backend", grade="junior_plus")
+        await svc.seed_grade(s, jp, "backend", "middle", 0.5)
+    async with session_scope(factory) as s:
+        (r,) = await svc.claimed_vs_confirmed(s, lead)
+        assert (r.status, r.resume_grade) == ("overclaimed", "lead")
+        (r,) = await svc.claimed_vs_confirmed(s, plus)
+        assert r.status == "confirmed"
+        (r,) = await svc.claimed_vs_confirmed(s, jp)
+        assert r.status == "underclaimed"
+
+
+async def test_declared_grades_unconfirmed(factory):
+    """E32-1 (ADR-025): заявленный грейд из последнего опроса виден, пока нет подтверждения."""
+    from app.assessment.models import Survey
+
+    async with session_scope(factory) as s:
+        a, b, c = await _cand(s), await _cand(s), await _cand(s)
+        # a: middle по backend (последний опрос), подтверждения нет; по ml — подтверждён
+        s.add(
+            Survey(
+                candidate_id=a,
+                profession="backend",
+                declared_grade="junior",
+                created_at=NOW - timedelta(days=2),
+            )
+        )
+        s.add(
+            Survey(
+                candidate_id=a,
+                profession="backend",
+                declared_grade="middle",
+                created_at=NOW - timedelta(days=1),
+            )
+        )
+        s.add(Survey(candidate_id=a, profession="ml", declared_grade="senior", created_at=NOW))
+        await svc.seed_grade(s, a, "ml", "middle", 0.5)
+        # b: middle по backend, но грейд истёк — снова «не подтверждён»
+        s.add(Survey(candidate_id=b, profession="backend", declared_grade="middle", created_at=NOW))
+        await svc.seed_grade(s, b, "backend", "junior", -0.5, now=NOW - timedelta(days=400))
+        # c: опрос без заявленного грейда
+        s.add(Survey(candidate_id=c, profession="frontend", declared_grade=None, created_at=NOW))
+    async with session_scope(factory) as s:
+        many = await svc.declared_grades_many(s, [a, b, c])
+        assert set(many) == {a, b, c} and many[c] == []
+        assert [(d.profession, d.grade) for d in many[a]] == [("backend", TestGrade.middle)]
+        assert many[a][0].declared_at.tzinfo is not None
+        assert [(d.profession, d.grade) for d in many[b]] == [("backend", TestGrade.middle)]
+        assert await svc.declared_grades_many(s, []) == {}
+        assert sorted(await svc.declared_members(s, "backend", "middle")) == sorted([a, b])
+        assert await svc.declared_members(s, "backend", TestGrade.junior) == []
+        assert await svc.declared_members(s, "ml", "senior") == []  # ml подтверждён
+        assert await svc.declared_counts(s) == {("backend", "middle"): 2}
+        # подтверждённые категории не смешиваются с заявленными
+        assert await svc.category_counts(s) == {("ml", "middle"): 1}

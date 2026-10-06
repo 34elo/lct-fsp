@@ -13,7 +13,7 @@ import uuid
 from dataclasses import dataclass, field
 from typing import Any
 
-from fsp_contracts.assessment import ProfessionInfo
+from fsp_contracts.assessment import ProfessionInfo, SkillType
 from fsp_contracts.envelope import new_envelope
 from fsp_contracts.events import TaxonomyUpdated
 from fsp_platform.outbox import add_to_outbox
@@ -30,7 +30,9 @@ from app.taxonomy.models import (
     Skill,
     SkillAlias,
     SkillBlocklist,
+    SkillCardDraftRow,
     SkillDistinct,
+    SkillMention,
     SkillRelation,
 )
 
@@ -95,7 +97,14 @@ async def build_snapshot(session: AsyncSession) -> dict[str, Any]:
             for rs in await session.scalars(select(RoleSkill).where(RoleSkill.role == role.slug))
             if rs.skill_id in by_id
         }
-        roles.append({"slug": role.slug, "name": role.name, "skills": dict(sorted(ws.items()))})
+        roles.append(
+            {
+                "slug": role.slug,
+                "name": role.name,
+                "profession": role.is_profession,
+                "skills": dict(sorted(ws.items())),
+            }
+        )
     disciplines = []
     for d in await session.scalars(select(Discipline).order_by(Discipline.slug)):
         rules = sorted(
@@ -119,6 +128,7 @@ async def build_snapshot(session: AsyncSession) -> dict[str, Any]:
                 "group": s.grp,
                 "status": s.status,
                 "testable": s.testable,
+                "skill_type": s.skill_type,
                 "description": s.description,
                 "aliases": aliases.get(s.id, []),
             }
@@ -178,6 +188,7 @@ async def sync(session: AsyncSession, data: TaxonomyData) -> SyncResult:
             continue  # правка администратора/конвейера важнее сида
         row.name, row.kind, row.grp = sk.name, sk.kind, sk.group
         row.testable, row.description = sk.testable, sk.description
+        row.skill_type = data.skill_types[sk.slug].value
     await session.flush()
     ids = {slug: row.id for slug, row in existing.items()}
 
@@ -238,9 +249,9 @@ async def sync(session: AsyncSession, data: TaxonomyData) -> SyncResult:
     roles = {r.slug: r for r in await session.scalars(select(Role))}
     for r in data.roles:
         if r.slug in roles:
-            roles[r.slug].name = r.name
+            roles[r.slug].name, roles[r.slug].is_profession = r.name, r.profession
         else:
-            session.add(Role(slug=r.slug, name=r.name))
+            session.add(Role(slug=r.slug, name=r.name, is_profession=r.profession))
     await session.flush()
     have_rs = {(x.role, x.skill_id): x for x in await session.scalars(select(RoleSkill))}
     want_rs = {(r.slug, ids[s]): w for r in data.roles for s, w in r.skills.items()}
@@ -506,18 +517,120 @@ async def alias_index(session: AsyncSession) -> AliasIndex:
 
 
 async def list_professions(session: AsyncSession) -> list[ProfessionInfo]:
-    """Профессии и веса навыков (blocks.md §4.3). Типы навыков (`skill_types`) добавит E21-1."""
-    roles = list(await session.scalars(select(Role).order_by(Role.slug)))
-    slug_by_id = {
-        s.id: s.slug for s in await session.scalars(select(Skill).where(Skill.status.in_(_LIVE)))
-    }
+    """Профессии теста (`roles.is_profession`), веса и типы навыков (blocks.md §4.3)."""
+    roles = list(
+        await session.scalars(select(Role).where(Role.is_profession.is_(True)).order_by(Role.slug))
+    )
+    skills = {s.id: s for s in await session.scalars(select(Skill).where(Skill.status.in_(_LIVE)))}
     weights: dict[str, dict[str, float]] = {}
     for rs in await session.scalars(select(RoleSkill)):
-        if rs.skill_id in slug_by_id:
-            weights.setdefault(rs.role, {})[slug_by_id[rs.skill_id]] = rs.weight
-    return [
-        ProfessionInfo(
-            slug=r.slug, title=r.name, skill_weights=dict(sorted(weights.get(r.slug, {}).items()))
+        if rs.skill_id in skills:
+            weights.setdefault(rs.role, {})[skills[rs.skill_id].slug] = rs.weight
+    out = []
+    for r in roles:
+        ws = dict(sorted(weights.get(r.slug, {}).items()))
+        types = {
+            s.slug: SkillType(s.skill_type)
+            for s in skills.values()
+            if s.slug in ws and s.skill_type is not None
+        }
+        out.append(ProfessionInfo(slug=r.slug, title=r.name, skill_weights=ws, skill_types=types))
+    return out
+
+
+async def skill_types_of(session: AsyncSession, slugs: list[str]) -> dict[str, SkillType]:
+    """slug → тип навыка (живые навыки с заданным типом) — для плана теста по вакансии."""
+    if not slugs:
+        return {}
+    rows = await session.execute(
+        select(Skill.slug, Skill.skill_type).where(
+            Skill.slug.in_(slugs), Skill.status.in_(_LIVE), Skill.skill_type.is_not(None)
         )
-        for r in roles
-    ]
+    )
+    return {slug: SkillType(t) for slug, t in rows.all()}
+
+
+async def skill_kinds(session: AsyncSession, skill_ids: list[uuid.UUID]) -> dict[uuid.UUID, str]:
+    """id → kind (`hard` | `soft` | …): ручная форма отделяет софт-навыки от стека."""
+    if not skill_ids:
+        return {}
+    rows = await session.execute(select(Skill.id, Skill.kind).where(Skill.id.in_(skill_ids)))
+    return {sid: kind for sid, kind in rows.all()}
+
+
+# --- конвейер навыков: журнал решений и черновики карточек (E16-4) ---
+
+
+def _clean_norm(norm: str) -> str | None:
+    """ПДн и инъекции в справочник не пишем: ml маскирует `norm` как «[скрыто]»."""
+    return None if not norm or norm == "[скрыто]" else norm
+
+
+async def record_mention(
+    session: AsyncSession,
+    item: dict[str, Any],
+    *,
+    context: str | None = None,
+    model_version: str | None = None,
+) -> SkillMention | None:
+    """Пишет решение ml (`SkillResolveItem` как dict) в журнал. None — писать нельзя (ПДн)."""
+    norm = _clean_norm(item.get("norm", ""))
+    if norm is None:
+        return None
+    skill = None
+    if slug := item.get("skill_slug"):
+        skill = await session.scalar(select(Skill.id).where(Skill.slug == slug))
+    rel = item.get("relation")
+    row = SkillMention(
+        raw=item.get("raw", norm),
+        norm=norm,
+        context=context,
+        decision=item["decision"],
+        skill_id=skill,
+        relation=f"{rel['type']}:{rel['to_slug']}" if rel else None,
+        scores={"confidence": rel["confidence"]} if rel else None,
+        model_version=model_version,
+    )
+    session.add(row)
+    await session.flush()
+    return row
+
+
+async def cached_decision(session: AsyncSession, norm: str) -> SkillMention | None:
+    """Кеш решений: последнее не отклонённое по ПДн решение для `norm` (повторное упоминание
+    не идёт в ml). Пара-ловушка `skill_distinct` проверяется ml до записи, здесь не нужна."""
+    return await session.scalar(
+        select(SkillMention)
+        .where(SkillMention.norm == norm)
+        .order_by(SkillMention.id.desc())
+        .limit(1)
+    )
+
+
+async def save_card_draft(
+    session: AsyncSession, slug: str, draft: dict[str, Any]
+) -> SkillCardDraftRow:
+    """Сохраняет черновик карточки ml для навыка. Схема — `taxonomy/cards.py` (`SkillCard`).
+
+    Тип карточки обязан совпасть с типом навыка в справочнике, если он задан. Ревью человеком
+    обязательно: статус `draft` в каталог `data/skills/cards` сам не попадает.
+    """
+    from app.taxonomy.cards import SkillCard
+
+    skill = await session.scalar(select(Skill).where(Skill.slug == slug))
+    if skill is None:
+        raise ValueError(f"навыка {slug!r} нет в справочнике")
+    body = {k: v for k, v in draft.items() if k not in ("model", "draft")}
+    body["skill"] = slug
+    card = SkillCard.model_validate(body)
+    if skill.skill_type and card.type.value != skill.skill_type:
+        raise ValueError(f"type={card.type.value}, в справочнике {skill.skill_type}")
+    row = await session.get(SkillCardDraftRow, skill.id)
+    payload = card.model_dump(mode="json")
+    if row is None:
+        row = SkillCardDraftRow(skill_id=skill.id, card=payload, model=draft.get("model", ""))
+        session.add(row)
+    else:
+        row.card, row.model, row.status = payload, draft.get("model", ""), "draft"
+    await session.flush()
+    return row

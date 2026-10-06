@@ -30,7 +30,9 @@ import type {
   LoginIn,
   MagicIn,
   MeOut,
-  RegisterIn
+  ProblemOut,
+  RegisterIn,
+  VerifyIn
 } from '../../model';
 
 import { apiFetch } from '../../mutator';
@@ -56,20 +58,310 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result;
 };
 
-export type registerAuthRegisterPostResponse201 = {
+export type emailSendAuthEmailSendPostResponse204 = {
+  data: void
+  status: 204
+}
+
+export type emailSendAuthEmailSendPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type emailSendAuthEmailSendPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type emailSendAuthEmailSendPostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type emailSendAuthEmailSendPostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type emailSendAuthEmailSendPostResponse429ApplicationProblemJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type emailSendAuthEmailSendPostResponse429ApplicationJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type emailSendAuthEmailSendPostResponseSuccess = (emailSendAuthEmailSendPostResponse204) & {
+  headers: Headers;
+};
+export type emailSendAuthEmailSendPostResponseError = (emailSendAuthEmailSendPostResponse401ApplicationProblemJson | emailSendAuthEmailSendPostResponse401ApplicationJson | emailSendAuthEmailSendPostResponse409ApplicationProblemJson | emailSendAuthEmailSendPostResponse409ApplicationJson | emailSendAuthEmailSendPostResponse429ApplicationProblemJson | emailSendAuthEmailSendPostResponse429ApplicationJson) & {
+  headers: Headers;
+};
+
+export type emailSendAuthEmailSendPostResponse = (emailSendAuthEmailSendPostResponseSuccess | emailSendAuthEmailSendPostResponseError)
+
+export const getEmailSendAuthEmailSendPostUrl = () => {
+
+
+
+
+  return `/auth/email/send`
+}
+
+/**
+ * Повторная отправка кода: не чаще раза в минуту (409 `cooldown`), 5 в час (429).
+ * @summary Email Send
+ */
+export const emailSendAuthEmailSendPost = async ( options?: Parameters<typeof apiFetch>[1]): Promise<emailSendAuthEmailSendPostResponse> => {
+
+  return apiFetch<emailSendAuthEmailSendPostResponse>(getEmailSendAuthEmailSendPostUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getEmailSendAuthEmailSendPostMutationKey = () => ['emailSendAuthEmailSendPost'] as const;
+
+export const getEmailSendAuthEmailSendPostMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof emailSendAuthEmailSendPost>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof emailSendAuthEmailSendPost>>, TError,void, TContext> => {
+
+const mutationKey = getEmailSendAuthEmailSendPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof emailSendAuthEmailSendPost>>, void> = () => {
+
+
+          return  emailSendAuthEmailSendPost(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EmailSendAuthEmailSendPostMutationResult = NonNullable<Awaited<ReturnType<typeof emailSendAuthEmailSendPost>>>
+
+    export type EmailSendAuthEmailSendPostMutationError = ErrorType<ProblemOut>
+
+
+    /**
+ * @summary Email Send
+ */
+export const useEmailSendAuthEmailSendPost = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof emailSendAuthEmailSendPost>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof emailSendAuthEmailSendPost>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getEmailSendAuthEmailSendPostMutationOptions(options), queryClient);
+    }
+    export type emailVerifyAuthEmailVerifyPostResponse204 = {
+  data: void
+  status: 204
+}
+
+export type emailVerifyAuthEmailVerifyPostResponse400ApplicationProblemJson = {
+  data: ProblemOut
+  status: 400
+}
+
+export type emailVerifyAuthEmailVerifyPostResponse400ApplicationJson = {
+  data: ProblemOut
+  status: 400
+}
+
+export type emailVerifyAuthEmailVerifyPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type emailVerifyAuthEmailVerifyPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type emailVerifyAuthEmailVerifyPostResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type emailVerifyAuthEmailVerifyPostResponse429ApplicationProblemJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type emailVerifyAuthEmailVerifyPostResponse429ApplicationJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type emailVerifyAuthEmailVerifyPostResponseSuccess = (emailVerifyAuthEmailVerifyPostResponse204) & {
+  headers: Headers;
+};
+export type emailVerifyAuthEmailVerifyPostResponseError = (emailVerifyAuthEmailVerifyPostResponse400ApplicationProblemJson | emailVerifyAuthEmailVerifyPostResponse400ApplicationJson | emailVerifyAuthEmailVerifyPostResponse401ApplicationProblemJson | emailVerifyAuthEmailVerifyPostResponse401ApplicationJson | emailVerifyAuthEmailVerifyPostResponse422 | emailVerifyAuthEmailVerifyPostResponse429ApplicationProblemJson | emailVerifyAuthEmailVerifyPostResponse429ApplicationJson) & {
+  headers: Headers;
+};
+
+export type emailVerifyAuthEmailVerifyPostResponse = (emailVerifyAuthEmailVerifyPostResponseSuccess | emailVerifyAuthEmailVerifyPostResponseError)
+
+export const getEmailVerifyAuthEmailVerifyPostUrl = () => {
+
+
+
+
+  return `/auth/email/verify`
+}
+
+/**
+ * Код из письма → `email_verified_at`. Неверный/истёкший — 400.
+ * @summary Email Verify
+ */
+export const emailVerifyAuthEmailVerifyPost = async (verifyIn: VerifyIn, options?: Parameters<typeof apiFetch>[1]): Promise<emailVerifyAuthEmailVerifyPostResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<emailVerifyAuthEmailVerifyPostResponse>(getEmailVerifyAuthEmailVerifyPostUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(verifyIn)
+  }
+);}
+
+
+
+
+
+export const getEmailVerifyAuthEmailVerifyPostMutationKey = () => ['emailVerifyAuthEmailVerifyPost'] as const;
+
+export const getEmailVerifyAuthEmailVerifyPostMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof emailVerifyAuthEmailVerifyPost>>, TError,EmailVerifyAuthEmailVerifyPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof emailVerifyAuthEmailVerifyPost>>, TError,EmailVerifyAuthEmailVerifyPostMutationVariables, TContext> => {
+
+const mutationKey = getEmailVerifyAuthEmailVerifyPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof emailVerifyAuthEmailVerifyPost>>, EmailVerifyAuthEmailVerifyPostMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  emailVerifyAuthEmailVerifyPost(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EmailVerifyAuthEmailVerifyPostMutationResult = NonNullable<Awaited<ReturnType<typeof emailVerifyAuthEmailVerifyPost>>>
+    export type EmailVerifyAuthEmailVerifyPostMutationBody = VerifyIn
+    export type EmailVerifyAuthEmailVerifyPostMutationError = ErrorType<ProblemOut | HTTPValidationError>
+    export type EmailVerifyAuthEmailVerifyPostMutationVariables = {data: VerifyIn}
+
+    /**
+ * @summary Email Verify
+ */
+export const useEmailVerifyAuthEmailVerifyPost = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof emailVerifyAuthEmailVerifyPost>>, TError,EmailVerifyAuthEmailVerifyPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof emailVerifyAuthEmailVerifyPost>>,
+        TError,
+        EmailVerifyAuthEmailVerifyPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getEmailVerifyAuthEmailVerifyPostMutationOptions(options), queryClient);
+    }
+    export type registerAuthRegisterPostResponse201 = {
   data: AuthOut
   status: 201
 }
 
-export type registerAuthRegisterPostResponse422 = {
-  data: HTTPValidationError
+export type registerAuthRegisterPostResponse400ApplicationProblemJson = {
+  data: ProblemOut
+  status: 400
+}
+
+export type registerAuthRegisterPostResponse400ApplicationJson = {
+  data: ProblemOut
+  status: 400
+}
+
+export type registerAuthRegisterPostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type registerAuthRegisterPostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type registerAuthRegisterPostResponse422ApplicationProblemJson = {
+  data: ProblemOut
   status: 422
+}
+
+export type registerAuthRegisterPostResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type registerAuthRegisterPostResponse429ApplicationProblemJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type registerAuthRegisterPostResponse429ApplicationJson = {
+  data: ProblemOut
+  status: 429
 }
 
 export type registerAuthRegisterPostResponseSuccess = (registerAuthRegisterPostResponse201) & {
   headers: Headers;
 };
-export type registerAuthRegisterPostResponseError = (registerAuthRegisterPostResponse422) & {
+export type registerAuthRegisterPostResponseError = (registerAuthRegisterPostResponse400ApplicationProblemJson | registerAuthRegisterPostResponse400ApplicationJson | registerAuthRegisterPostResponse409ApplicationProblemJson | registerAuthRegisterPostResponse409ApplicationJson | registerAuthRegisterPostResponse422ApplicationProblemJson | registerAuthRegisterPostResponse422ApplicationJson | registerAuthRegisterPostResponse429ApplicationProblemJson | registerAuthRegisterPostResponse429ApplicationJson) & {
   headers: Headers;
 };
 
@@ -117,7 +409,7 @@ return apiFetch<registerAuthRegisterPostResponse>(getRegisterAuthRegisterPostUrl
 
 export const getRegisterAuthRegisterPostMutationKey = () => ['registerAuthRegisterPost'] as const;
 
-export const getRegisterAuthRegisterPostMutationOptions = <TError = ErrorType<HTTPValidationError>,
+export const getRegisterAuthRegisterPostMutationOptions = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registerAuthRegisterPost>>, TError,RegisterAuthRegisterPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof registerAuthRegisterPost>>, TError,RegisterAuthRegisterPostMutationVariables, TContext> => {
 
@@ -146,13 +438,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type RegisterAuthRegisterPostMutationResult = NonNullable<Awaited<ReturnType<typeof registerAuthRegisterPost>>>
     export type RegisterAuthRegisterPostMutationBody = RegisterIn
-    export type RegisterAuthRegisterPostMutationError = ErrorType<HTTPValidationError>
+    export type RegisterAuthRegisterPostMutationError = ErrorType<ProblemOut>
     export type RegisterAuthRegisterPostMutationVariables = {data: RegisterIn}
 
     /**
  * @summary Register
  */
-export const useRegisterAuthRegisterPost = <TError = ErrorType<HTTPValidationError>,
+export const useRegisterAuthRegisterPost = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registerAuthRegisterPost>>, TError,RegisterAuthRegisterPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof registerAuthRegisterPost>>,
@@ -167,15 +459,45 @@ export const useRegisterAuthRegisterPost = <TError = ErrorType<HTTPValidationErr
   status: 200
 }
 
+export type loginAuthLoginPostResponse400ApplicationProblemJson = {
+  data: ProblemOut
+  status: 400
+}
+
+export type loginAuthLoginPostResponse400ApplicationJson = {
+  data: ProblemOut
+  status: 400
+}
+
+export type loginAuthLoginPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type loginAuthLoginPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
 export type loginAuthLoginPostResponse422 = {
   data: HTTPValidationError
   status: 422
 }
 
+export type loginAuthLoginPostResponse429ApplicationProblemJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type loginAuthLoginPostResponse429ApplicationJson = {
+  data: ProblemOut
+  status: 429
+}
+
 export type loginAuthLoginPostResponseSuccess = (loginAuthLoginPostResponse200) & {
   headers: Headers;
 };
-export type loginAuthLoginPostResponseError = (loginAuthLoginPostResponse422) & {
+export type loginAuthLoginPostResponseError = (loginAuthLoginPostResponse400ApplicationProblemJson | loginAuthLoginPostResponse400ApplicationJson | loginAuthLoginPostResponse401ApplicationProblemJson | loginAuthLoginPostResponse401ApplicationJson | loginAuthLoginPostResponse422 | loginAuthLoginPostResponse429ApplicationProblemJson | loginAuthLoginPostResponse429ApplicationJson) & {
   headers: Headers;
 };
 
@@ -223,7 +545,7 @@ return apiFetch<loginAuthLoginPostResponse>(getLoginAuthLoginPostUrl(),
 
 export const getLoginAuthLoginPostMutationKey = () => ['loginAuthLoginPost'] as const;
 
-export const getLoginAuthLoginPostMutationOptions = <TError = ErrorType<HTTPValidationError>,
+export const getLoginAuthLoginPostMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof loginAuthLoginPost>>, TError,LoginAuthLoginPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof loginAuthLoginPost>>, TError,LoginAuthLoginPostMutationVariables, TContext> => {
 
@@ -252,13 +574,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type LoginAuthLoginPostMutationResult = NonNullable<Awaited<ReturnType<typeof loginAuthLoginPost>>>
     export type LoginAuthLoginPostMutationBody = LoginIn
-    export type LoginAuthLoginPostMutationError = ErrorType<HTTPValidationError>
+    export type LoginAuthLoginPostMutationError = ErrorType<ProblemOut | HTTPValidationError>
     export type LoginAuthLoginPostMutationVariables = {data: LoginIn}
 
     /**
  * @summary Login
  */
-export const useLoginAuthLoginPost = <TError = ErrorType<HTTPValidationError>,
+export const useLoginAuthLoginPost = <TError = ErrorType<ProblemOut | HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof loginAuthLoginPost>>, TError,LoginAuthLoginPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof loginAuthLoginPost>>,
@@ -273,15 +595,45 @@ export const useLoginAuthLoginPost = <TError = ErrorType<HTTPValidationError>,
   status: 200
 }
 
+export type authTelegramAuthTelegramPostResponse400ApplicationProblemJson = {
+  data: ProblemOut
+  status: 400
+}
+
+export type authTelegramAuthTelegramPostResponse400ApplicationJson = {
+  data: ProblemOut
+  status: 400
+}
+
+export type authTelegramAuthTelegramPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type authTelegramAuthTelegramPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
 export type authTelegramAuthTelegramPostResponse422 = {
   data: HTTPValidationError
   status: 422
 }
 
+export type authTelegramAuthTelegramPostResponse429ApplicationProblemJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type authTelegramAuthTelegramPostResponse429ApplicationJson = {
+  data: ProblemOut
+  status: 429
+}
+
 export type authTelegramAuthTelegramPostResponseSuccess = (authTelegramAuthTelegramPostResponse200) & {
   headers: Headers;
 };
-export type authTelegramAuthTelegramPostResponseError = (authTelegramAuthTelegramPostResponse422) & {
+export type authTelegramAuthTelegramPostResponseError = (authTelegramAuthTelegramPostResponse400ApplicationProblemJson | authTelegramAuthTelegramPostResponse400ApplicationJson | authTelegramAuthTelegramPostResponse401ApplicationProblemJson | authTelegramAuthTelegramPostResponse401ApplicationJson | authTelegramAuthTelegramPostResponse422 | authTelegramAuthTelegramPostResponse429ApplicationProblemJson | authTelegramAuthTelegramPostResponse429ApplicationJson) & {
   headers: Headers;
 };
 
@@ -330,7 +682,7 @@ return apiFetch<authTelegramAuthTelegramPostResponse>(getAuthTelegramAuthTelegra
 
 export const getAuthTelegramAuthTelegramPostMutationKey = () => ['authTelegramAuthTelegramPost'] as const;
 
-export const getAuthTelegramAuthTelegramPostMutationOptions = <TError = ErrorType<HTTPValidationError>,
+export const getAuthTelegramAuthTelegramPostMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authTelegramAuthTelegramPost>>, TError,AuthTelegramAuthTelegramPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof authTelegramAuthTelegramPost>>, TError,AuthTelegramAuthTelegramPostMutationVariables, TContext> => {
 
@@ -359,13 +711,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type AuthTelegramAuthTelegramPostMutationResult = NonNullable<Awaited<ReturnType<typeof authTelegramAuthTelegramPost>>>
     export type AuthTelegramAuthTelegramPostMutationBody = AuthTelegramAuthTelegramPostBody
-    export type AuthTelegramAuthTelegramPostMutationError = ErrorType<HTTPValidationError>
+    export type AuthTelegramAuthTelegramPostMutationError = ErrorType<ProblemOut | HTTPValidationError>
     export type AuthTelegramAuthTelegramPostMutationVariables = {data: AuthTelegramAuthTelegramPostBody}
 
     /**
  * @summary Auth Telegram
  */
-export const useAuthTelegramAuthTelegramPost = <TError = ErrorType<HTTPValidationError>,
+export const useAuthTelegramAuthTelegramPost = <TError = ErrorType<ProblemOut | HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authTelegramAuthTelegramPost>>, TError,AuthTelegramAuthTelegramPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof authTelegramAuthTelegramPost>>,
@@ -380,15 +732,45 @@ export const useAuthTelegramAuthTelegramPost = <TError = ErrorType<HTTPValidatio
   status: 200
 }
 
+export type authMagicAuthMagicPostResponse400ApplicationProblemJson = {
+  data: ProblemOut
+  status: 400
+}
+
+export type authMagicAuthMagicPostResponse400ApplicationJson = {
+  data: ProblemOut
+  status: 400
+}
+
+export type authMagicAuthMagicPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type authMagicAuthMagicPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
 export type authMagicAuthMagicPostResponse422 = {
   data: HTTPValidationError
   status: 422
 }
 
+export type authMagicAuthMagicPostResponse429ApplicationProblemJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type authMagicAuthMagicPostResponse429ApplicationJson = {
+  data: ProblemOut
+  status: 429
+}
+
 export type authMagicAuthMagicPostResponseSuccess = (authMagicAuthMagicPostResponse200) & {
   headers: Headers;
 };
-export type authMagicAuthMagicPostResponseError = (authMagicAuthMagicPostResponse422) & {
+export type authMagicAuthMagicPostResponseError = (authMagicAuthMagicPostResponse400ApplicationProblemJson | authMagicAuthMagicPostResponse400ApplicationJson | authMagicAuthMagicPostResponse401ApplicationProblemJson | authMagicAuthMagicPostResponse401ApplicationJson | authMagicAuthMagicPostResponse422 | authMagicAuthMagicPostResponse429ApplicationProblemJson | authMagicAuthMagicPostResponse429ApplicationJson) & {
   headers: Headers;
 };
 
@@ -437,7 +819,7 @@ return apiFetch<authMagicAuthMagicPostResponse>(getAuthMagicAuthMagicPostUrl(),
 
 export const getAuthMagicAuthMagicPostMutationKey = () => ['authMagicAuthMagicPost'] as const;
 
-export const getAuthMagicAuthMagicPostMutationOptions = <TError = ErrorType<HTTPValidationError>,
+export const getAuthMagicAuthMagicPostMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authMagicAuthMagicPost>>, TError,AuthMagicAuthMagicPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof authMagicAuthMagicPost>>, TError,AuthMagicAuthMagicPostMutationVariables, TContext> => {
 
@@ -466,13 +848,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type AuthMagicAuthMagicPostMutationResult = NonNullable<Awaited<ReturnType<typeof authMagicAuthMagicPost>>>
     export type AuthMagicAuthMagicPostMutationBody = MagicIn
-    export type AuthMagicAuthMagicPostMutationError = ErrorType<HTTPValidationError>
+    export type AuthMagicAuthMagicPostMutationError = ErrorType<ProblemOut | HTTPValidationError>
     export type AuthMagicAuthMagicPostMutationVariables = {data: MagicIn}
 
     /**
  * @summary Auth Magic
  */
-export const useAuthMagicAuthMagicPost = <TError = ErrorType<HTTPValidationError>,
+export const useAuthMagicAuthMagicPost = <TError = ErrorType<ProblemOut | HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authMagicAuthMagicPost>>, TError,AuthMagicAuthMagicPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof authMagicAuthMagicPost>>,
@@ -487,12 +869,24 @@ export const useAuthMagicAuthMagicPost = <TError = ErrorType<HTTPValidationError
   status: 200
 }
 
+export type refreshAuthRefreshPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type refreshAuthRefreshPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
 export type refreshAuthRefreshPostResponseSuccess = (refreshAuthRefreshPostResponse200) & {
   headers: Headers;
 };
-;
+export type refreshAuthRefreshPostResponseError = (refreshAuthRefreshPostResponse401ApplicationProblemJson | refreshAuthRefreshPostResponse401ApplicationJson) & {
+  headers: Headers;
+};
 
-export type refreshAuthRefreshPostResponse = (refreshAuthRefreshPostResponseSuccess)
+export type refreshAuthRefreshPostResponse = (refreshAuthRefreshPostResponseSuccess | refreshAuthRefreshPostResponseError)
 
 export const getRefreshAuthRefreshPostUrl = () => {
 
@@ -522,7 +916,7 @@ export const refreshAuthRefreshPost = async ( options?: Parameters<typeof apiFet
 
 export const getRefreshAuthRefreshPostMutationKey = () => ['refreshAuthRefreshPost'] as const;
 
-export const getRefreshAuthRefreshPostMutationOptions = <TError = ErrorType<unknown>,
+export const getRefreshAuthRefreshPostMutationOptions = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof refreshAuthRefreshPost>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof refreshAuthRefreshPost>>, TError,void, TContext> => {
 
@@ -551,13 +945,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type RefreshAuthRefreshPostMutationResult = NonNullable<Awaited<ReturnType<typeof refreshAuthRefreshPost>>>
 
-    export type RefreshAuthRefreshPostMutationError = ErrorType<unknown>
+    export type RefreshAuthRefreshPostMutationError = ErrorType<ProblemOut>
 
 
     /**
  * @summary Refresh
  */
-export const useRefreshAuthRefreshPost = <TError = ErrorType<unknown>,
+export const useRefreshAuthRefreshPost = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof refreshAuthRefreshPost>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof refreshAuthRefreshPost>>,
@@ -572,12 +966,24 @@ export const useRefreshAuthRefreshPost = <TError = ErrorType<unknown>,
   status: 204
 }
 
+export type logoutAuthLogoutPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type logoutAuthLogoutPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
 export type logoutAuthLogoutPostResponseSuccess = (logoutAuthLogoutPostResponse204) & {
   headers: Headers;
 };
-;
+export type logoutAuthLogoutPostResponseError = (logoutAuthLogoutPostResponse401ApplicationProblemJson | logoutAuthLogoutPostResponse401ApplicationJson) & {
+  headers: Headers;
+};
 
-export type logoutAuthLogoutPostResponse = (logoutAuthLogoutPostResponseSuccess)
+export type logoutAuthLogoutPostResponse = (logoutAuthLogoutPostResponseSuccess | logoutAuthLogoutPostResponseError)
 
 export const getLogoutAuthLogoutPostUrl = () => {
 
@@ -607,7 +1013,7 @@ export const logoutAuthLogoutPost = async ( options?: Parameters<typeof apiFetch
 
 export const getLogoutAuthLogoutPostMutationKey = () => ['logoutAuthLogoutPost'] as const;
 
-export const getLogoutAuthLogoutPostMutationOptions = <TError = ErrorType<unknown>,
+export const getLogoutAuthLogoutPostMutationOptions = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logoutAuthLogoutPost>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof logoutAuthLogoutPost>>, TError,void, TContext> => {
 
@@ -636,13 +1042,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type LogoutAuthLogoutPostMutationResult = NonNullable<Awaited<ReturnType<typeof logoutAuthLogoutPost>>>
 
-    export type LogoutAuthLogoutPostMutationError = ErrorType<unknown>
+    export type LogoutAuthLogoutPostMutationError = ErrorType<ProblemOut>
 
 
     /**
  * @summary Logout
  */
-export const useLogoutAuthLogoutPost = <TError = ErrorType<unknown>,
+export const useLogoutAuthLogoutPost = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logoutAuthLogoutPost>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof logoutAuthLogoutPost>>,
@@ -657,12 +1063,24 @@ export const useLogoutAuthLogoutPost = <TError = ErrorType<unknown>,
   status: 200
 }
 
+export type meMeGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type meMeGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
 export type meMeGetResponseSuccess = (meMeGetResponse200) & {
   headers: Headers;
 };
-;
+export type meMeGetResponseError = (meMeGetResponse401ApplicationProblemJson | meMeGetResponse401ApplicationJson) & {
+  headers: Headers;
+};
 
-export type meMeGetResponse = (meMeGetResponseSuccess)
+export type meMeGetResponse = (meMeGetResponseSuccess | meMeGetResponseError)
 
 export const getMeMeGetUrl = () => {
 
@@ -698,7 +1116,7 @@ export const getMeMeGetQueryKey = () => {
     }
 
 
-export const getMeMeGetQueryOptions = <TData = Awaited<ReturnType<typeof meMeGet>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof meMeGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+export const getMeMeGetQueryOptions = <TData = Awaited<ReturnType<typeof meMeGet>>, TError = ErrorType<ProblemOut>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof meMeGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -717,10 +1135,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type MeMeGetQueryResult = NonNullable<Awaited<ReturnType<typeof meMeGet>>>
-export type MeMeGetQueryError = ErrorType<unknown>
+export type MeMeGetQueryError = ErrorType<ProblemOut>
 
 
-export function useMeMeGet<TData = Awaited<ReturnType<typeof meMeGet>>, TError = ErrorType<unknown>>(
+export function useMeMeGet<TData = Awaited<ReturnType<typeof meMeGet>>, TError = ErrorType<ProblemOut>>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof meMeGet>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof meMeGet>>,
@@ -730,7 +1148,7 @@ export function useMeMeGet<TData = Awaited<ReturnType<typeof meMeGet>>, TError =
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useMeMeGet<TData = Awaited<ReturnType<typeof meMeGet>>, TError = ErrorType<unknown>>(
+export function useMeMeGet<TData = Awaited<ReturnType<typeof meMeGet>>, TError = ErrorType<ProblemOut>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof meMeGet>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof meMeGet>>,
@@ -740,7 +1158,7 @@ export function useMeMeGet<TData = Awaited<ReturnType<typeof meMeGet>>, TError =
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useMeMeGet<TData = Awaited<ReturnType<typeof meMeGet>>, TError = ErrorType<unknown>>(
+export function useMeMeGet<TData = Awaited<ReturnType<typeof meMeGet>>, TError = ErrorType<ProblemOut>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof meMeGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -748,7 +1166,7 @@ export function useMeMeGet<TData = Awaited<ReturnType<typeof meMeGet>>, TError =
  * @summary Me
  */
 
-export function useMeMeGet<TData = Awaited<ReturnType<typeof meMeGet>>, TError = ErrorType<unknown>>(
+export function useMeMeGet<TData = Awaited<ReturnType<typeof meMeGet>>, TError = ErrorType<ProblemOut>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof meMeGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {

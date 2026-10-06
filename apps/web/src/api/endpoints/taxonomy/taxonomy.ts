@@ -20,7 +20,9 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  HTTPValidationError
+  HTTPValidationError,
+  ProblemOut,
+  ProfessionsOut
 } from '../../model';
 
 import { apiFetch } from '../../mutator';
@@ -56,10 +58,20 @@ export type getTaxonomyTaxonomyGetResponse422 = {
   status: 422
 }
 
+export type getTaxonomyTaxonomyGetResponse503ApplicationProblemJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type getTaxonomyTaxonomyGetResponse503ApplicationJson = {
+  data: ProblemOut
+  status: 503
+}
+
 export type getTaxonomyTaxonomyGetResponseSuccess = (getTaxonomyTaxonomyGetResponse200) & {
   headers: Headers;
 };
-export type getTaxonomyTaxonomyGetResponseError = (getTaxonomyTaxonomyGetResponse422) & {
+export type getTaxonomyTaxonomyGetResponseError = (getTaxonomyTaxonomyGetResponse422 | getTaxonomyTaxonomyGetResponse503ApplicationProblemJson | getTaxonomyTaxonomyGetResponse503ApplicationJson) & {
   headers: Headers;
 };
 
@@ -98,7 +110,7 @@ export const getGetTaxonomyTaxonomyGetQueryKey = () => {
     }
 
 
-export const getGetTaxonomyTaxonomyGetQueryOptions = <TData = Awaited<ReturnType<typeof getTaxonomyTaxonomyGet>>, TError = ErrorType<HTTPValidationError>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaxonomyTaxonomyGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+export const getGetTaxonomyTaxonomyGetQueryOptions = <TData = Awaited<ReturnType<typeof getTaxonomyTaxonomyGet>>, TError = ErrorType<HTTPValidationError | ProblemOut>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaxonomyTaxonomyGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -117,10 +129,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetTaxonomyTaxonomyGetQueryResult = NonNullable<Awaited<ReturnType<typeof getTaxonomyTaxonomyGet>>>
-export type GetTaxonomyTaxonomyGetQueryError = ErrorType<HTTPValidationError>
+export type GetTaxonomyTaxonomyGetQueryError = ErrorType<HTTPValidationError | ProblemOut>
 
 
-export function useGetTaxonomyTaxonomyGet<TData = Awaited<ReturnType<typeof getTaxonomyTaxonomyGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useGetTaxonomyTaxonomyGet<TData = Awaited<ReturnType<typeof getTaxonomyTaxonomyGet>>, TError = ErrorType<HTTPValidationError | ProblemOut>>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaxonomyTaxonomyGet>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getTaxonomyTaxonomyGet>>,
@@ -130,7 +142,7 @@ export function useGetTaxonomyTaxonomyGet<TData = Awaited<ReturnType<typeof getT
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetTaxonomyTaxonomyGet<TData = Awaited<ReturnType<typeof getTaxonomyTaxonomyGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useGetTaxonomyTaxonomyGet<TData = Awaited<ReturnType<typeof getTaxonomyTaxonomyGet>>, TError = ErrorType<HTTPValidationError | ProblemOut>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaxonomyTaxonomyGet>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getTaxonomyTaxonomyGet>>,
@@ -140,7 +152,7 @@ export function useGetTaxonomyTaxonomyGet<TData = Awaited<ReturnType<typeof getT
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetTaxonomyTaxonomyGet<TData = Awaited<ReturnType<typeof getTaxonomyTaxonomyGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useGetTaxonomyTaxonomyGet<TData = Awaited<ReturnType<typeof getTaxonomyTaxonomyGet>>, TError = ErrorType<HTTPValidationError | ProblemOut>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaxonomyTaxonomyGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -148,12 +160,137 @@ export function useGetTaxonomyTaxonomyGet<TData = Awaited<ReturnType<typeof getT
  * @summary Get Taxonomy
  */
 
-export function useGetTaxonomyTaxonomyGet<TData = Awaited<ReturnType<typeof getTaxonomyTaxonomyGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useGetTaxonomyTaxonomyGet<TData = Awaited<ReturnType<typeof getTaxonomyTaxonomyGet>>, TError = ErrorType<HTTPValidationError | ProblemOut>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaxonomyTaxonomyGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetTaxonomyTaxonomyGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type getProfessionsTaxonomyProfessionsGetResponse200 = {
+  data: ProfessionsOut
+  status: 200
+}
+
+export type getProfessionsTaxonomyProfessionsGetResponse503ApplicationProblemJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type getProfessionsTaxonomyProfessionsGetResponse503ApplicationJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type getProfessionsTaxonomyProfessionsGetResponseSuccess = (getProfessionsTaxonomyProfessionsGetResponse200) & {
+  headers: Headers;
+};
+export type getProfessionsTaxonomyProfessionsGetResponseError = (getProfessionsTaxonomyProfessionsGetResponse503ApplicationProblemJson | getProfessionsTaxonomyProfessionsGetResponse503ApplicationJson) & {
+  headers: Headers;
+};
+
+export type getProfessionsTaxonomyProfessionsGetResponse = (getProfessionsTaxonomyProfessionsGetResponseSuccess | getProfessionsTaxonomyProfessionsGetResponseError)
+
+export const getGetProfessionsTaxonomyProfessionsGetUrl = () => {
+
+
+
+
+  return `/taxonomy/professions`
+}
+
+/**
+ * Профессии теста, веса и типы навыков, грейды с порогами θ (assessment.md §10).
+ * @summary Get Professions
+ */
+export const getProfessionsTaxonomyProfessionsGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getProfessionsTaxonomyProfessionsGetResponse> => {
+
+  return apiFetch<getProfessionsTaxonomyProfessionsGetResponse>(getGetProfessionsTaxonomyProfessionsGetUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetProfessionsTaxonomyProfessionsGetQueryKey = () => {
+    return [
+    `/taxonomy/professions`
+    ] as const;
+    }
+
+
+export const getGetProfessionsTaxonomyProfessionsGetQueryOptions = <TData = Awaited<ReturnType<typeof getProfessionsTaxonomyProfessionsGet>>, TError = ErrorType<ProblemOut>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProfessionsTaxonomyProfessionsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetProfessionsTaxonomyProfessionsGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProfessionsTaxonomyProfessionsGet>>> = ({ signal }) => getProfessionsTaxonomyProfessionsGet({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getProfessionsTaxonomyProfessionsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetProfessionsTaxonomyProfessionsGetQueryResult = NonNullable<Awaited<ReturnType<typeof getProfessionsTaxonomyProfessionsGet>>>
+export type GetProfessionsTaxonomyProfessionsGetQueryError = ErrorType<ProblemOut>
+
+
+export function useGetProfessionsTaxonomyProfessionsGet<TData = Awaited<ReturnType<typeof getProfessionsTaxonomyProfessionsGet>>, TError = ErrorType<ProblemOut>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProfessionsTaxonomyProfessionsGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProfessionsTaxonomyProfessionsGet>>,
+          TError,
+          Awaited<ReturnType<typeof getProfessionsTaxonomyProfessionsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetProfessionsTaxonomyProfessionsGet<TData = Awaited<ReturnType<typeof getProfessionsTaxonomyProfessionsGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProfessionsTaxonomyProfessionsGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProfessionsTaxonomyProfessionsGet>>,
+          TError,
+          Awaited<ReturnType<typeof getProfessionsTaxonomyProfessionsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetProfessionsTaxonomyProfessionsGet<TData = Awaited<ReturnType<typeof getProfessionsTaxonomyProfessionsGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProfessionsTaxonomyProfessionsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Professions
+ */
+
+export function useGetProfessionsTaxonomyProfessionsGet<TData = Awaited<ReturnType<typeof getProfessionsTaxonomyProfessionsGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProfessionsTaxonomyProfessionsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetProfessionsTaxonomyProfessionsGetQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

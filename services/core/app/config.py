@@ -38,8 +38,21 @@ class Settings(BaseServiceSettings):
     # >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
     # подтверждение email (blocks.md §4.6): Б1 (E20-1) включает в .env.example, Б2 — после Т2
     email_verification_required: bool = False
+    # SMTP для кода подтверждения (E20-1); пусто — письма не отправляются (dev: Mailpit)
+    smtp_host: str = ""
+    smtp_port: int = 1025
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_from: str = "no-reply@fsp-career.local"
+    email_code_ttl_minutes: int = 15
+    email_resend_cooldown_seconds: int = 60
+    email_code_max_attempts: int = 5
     # LLM для резюме, навыков, теста; false — ml-воркеры не ходят в llama-server (ML_FAKE и т.п.)
     llm_enabled: bool = True
+    # Fernet-ключ шифрования ПДн в БД (contacts_enc); в проде из PII_KEY (security.md §3)
+    pii_key: str = "ZGV2LW9ubHktcGlpLWtleS0wMTIzNDU2Nzg5YWJjZGU="
+    # E30-1: черновик ключа задания конструктора через ml-api; таймаут синхронного запроса
+    assessment_key_draft_timeout_seconds: float = 30.0
     # <<< block1
     # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
     # демо-кнопки для ФСП (E13-3): создание результатов и сброс

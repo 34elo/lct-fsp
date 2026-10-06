@@ -6,7 +6,8 @@ import {
   useGetResumeCandidatesMeResumesResumeIdGet,
 } from "@/api/endpoints/resumes/resumes";
 import type { ResumeOut } from "@/api/model";
-import type { LogLine } from "@/features/onboarding/BuildLog";
+import type { LogLine } from "@fsp/ui";
+
 import { useEventStream } from "@/shared/lib/useEventStream";
 
 interface Progress {
