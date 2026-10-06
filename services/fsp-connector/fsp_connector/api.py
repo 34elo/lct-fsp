@@ -91,3 +91,26 @@ async def create_link(body: LinkIn, links: LinkService = Depends(get_links)) -> 
 @router.post("/links/verify")
 async def verify_link(body: VerifyIn, links: LinkService = Depends(get_links)) -> VerifyOut:
     return VerifyOut(verified=await links.verify(body.candidate_id, body.code))
+
+
+# -------------------------------------------------------------------------- демо (E13-3)
+@router.post("/demo/fsp/results", status_code=202, include_in_schema=False)
+async def demo_create_fsp_result(request: Request):
+    """Демо-кнопка: создать результат ФСП для случайного кандидата."""
+    if not request.app.state.settings.demo_mode:
+        raise ProblemError(400, "demo_disabled", "Демо-режим отключен")
+    from fsp_connector.service import demo_create_result
+
+    await demo_create_result(request.app.state.adapter)
+    return {"status": "accepted"}
+
+
+@router.post("/demo/fsp/reset", status_code=202, include_in_schema=False)
+async def demo_reset_fsp(request: Request):
+    """Демо-кнопка: очистить результаты ФСП."""
+    if not request.app.state.settings.demo_mode:
+        raise ProblemError(400, "demo_disabled", "Демо-режим отключен")
+    from fsp_connector.service import demo_reset
+
+    await demo_reset(request.app.state.adapter)
+    return {"status": "accepted"}
