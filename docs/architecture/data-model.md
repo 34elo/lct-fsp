@@ -518,16 +518,13 @@ CREATE TABLE rec_feedback (
   reason text, created_at timestamptz DEFAULT now()
 );
 
-CREATE MATERIALIZED VIEW candidate_links AS     -- связи людей (graph.md §7)
-SELECT a.candidate_id AS candidate_a, b.candidate_id AS candidate_b, 'fsp_team' AS kind, a.team_id AS context_id
-FROM fsp_team_members a JOIN fsp_team_members b ON a.team_id = b.team_id AND a.candidate_id < b.candidate_id
-WHERE a.candidate_id IS NOT NULL AND b.candidate_id IS NOT NULL
-UNION ALL
-SELECT r.candidate_id, c.candidate_id, 'repo', c.repo_id::text
-FROM repo_contributors c JOIN code_repos cr ON cr.id = c.repo_id
-JOIN code_analyses an ON an.id = cr.analysis_id
-JOIN LATERAL (SELECT an.candidate_id) r ON true
-WHERE c.candidate_id IS NOT NULL AND c.candidate_id <> r.candidate_id;
+CREATE TABLE candidate_links (                  -- связи людей (graph.md §7); обычная таблица, перестраивается
+  candidate_a uuid REFERENCES candidates(user_id) ON DELETE CASCADE,  -- заданием candidate_links.refresh
+  candidate_b uuid REFERENCES candidates(user_id) ON DELETE CASCADE,  -- (graph/fsp_links.py), пара упорядочена a < b
+  kind text,                                    -- fsp_team | repo (repo - после анализа GitHub, E16-8)
+  context_id text,                              -- fsp_teams.id или code_repos.id
+  PRIMARY KEY (candidate_a, candidate_b, kind, context_id)
+);
 CREATE INDEX ON candidate_links (candidate_a);
 CREATE INDEX ON candidate_links (candidate_b);
 CREATE TABLE eval_runs (id uuid PRIMARY KEY, created_at timestamptz DEFAULT now(), git_sha text, dataset text, config jsonb, metrics jsonb, report_md text);
