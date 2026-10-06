@@ -6,7 +6,8 @@
  */
 
 export interface CreateOffer {
-  vacancy_id: string;
+  /** Необязателен: приглашение без вакансии (ADR-022) требует `title`. */
+  vacancy_id?: string | null;
   /**
      * @minLength 1
      * @maxLength 64
@@ -15,4 +16,8 @@ export interface CreateOffer {
   salary_from?: number | null;
   salary_to?: number | null;
   message?: string | null;
+  /** Название приглашения, обязательно без вакансии. */
+  title?: string | null;
+  description?: string | null;
+  contact_method?: "platform" | "email" | "phone" | "telegram" | null;
 }

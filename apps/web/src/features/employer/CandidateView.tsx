@@ -1,9 +1,11 @@
-import { ConstellationAvatar, FspProtocol, GradeBadge, MatchRing, MatchWhy, SectionLabel, SkillChip, ThemeScope, VerifiedMark, type WhyItem } from "@fsp/ui";
+import { Button, ConstellationAvatar, FspProtocol, GradeBadge, MatchRing, MatchWhy, SectionLabel, SkillChip, ThemeScope, VerifiedMark, type WhyItem } from "@fsp/ui";
+import { useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 
 import { useCandidateCardCandidatesPseudoIdCardGet } from "@/api/endpoints/search/search";
 import type { CandidateCardFull, SkillWithTrust } from "@/api/model";
 import { ErrorNote } from "@/features/auth/ui";
+import { OfferDialog } from "@/features/offers/OfferDialog";
 import { GRADE_LABEL, points, roleLabel } from "@/features/profile/text";
 import { cn } from "@/shared/lib/cn";
 import { dedupeExperience, fspResults, groupSkills, kindOf, radarAxes, skillLevel, trustSources, yearsLabel, type SkillGroup } from "./candidate-model";
@@ -138,12 +140,11 @@ function Body({ c, vacancyId }: { c: CandidateCardFull; vacancyId: string | null
   const grade = c.grade ? (GRADE_LABEL[c.grade] ?? c.grade) : null;
   const items: WhyItem[] = (c.match?.explanation ?? []).map((i) => ({ kind: WHY_KIND[i.kind], text: i.text }));
   const offered = c.offers_from_you.length > 0;
-  const offerHref = `/employer/offers/new?candidate=${c.pseudo_id}${vacancyId ? `&vacancy=${vacancyId}` : ""}`;
+  const [offerOpen, setOfferOpen] = useState(false);
   const { groups, claimed } = groupSkills(c.skills);
   const protocol = fspResults(c.fsp_highlights);
   const experience = dedupeExperience(c.experience);
   const meta = [c.city, c.relocation ? "готов к релокации" : null, c.formats.map((f) => FORMAT_LABEL[f] ?? f).join(", "), SEARCH_STATUS_LABEL[c.search_status]].filter(Boolean).join(" · ");
-  const offerLink = "inline-flex h-11 items-center justify-center rounded-lg bg-brand px-4 font-semibold text-on-brand hover:bg-brand-deep";
   return (
     <div className="flex flex-col gap-4">
       <section aria-label={T.header} className="flex flex-col gap-4 rounded-xl border border-hairline bg-card p-5 md:flex-row md:items-center">
@@ -160,10 +161,15 @@ function Body({ c, vacancyId }: { c: CandidateCardFull; vacancyId: string | null
         </div>
         {c.match && <MatchRing value={percent(c.match.score)} size={72} />}
         <div className="flex flex-col gap-1">
-          {/* Точка интеграции: модалку оффера делает E19-8. */}
-          <Link to={offerHref} className={offerLink}>
-            {T.offer}
-          </Link>
+          <Button onClick={() => setOfferOpen(true)}>{T.offer}</Button>
+          <OfferDialog
+            open={offerOpen}
+            onOpenChange={setOfferOpen}
+            dark
+            candidate={{ pseudoId: c.pseudo_id, pseudonym: c.pseudonym, salaryMin: c.salary_min ?? null }}
+            vacancyId={vacancyId ?? ""}
+            alreadyOffered={offered}
+          />
           {offered && (
             <span className="text-xs text-muted">
               {T.offered}: {c.offers_from_you.map((o) => o.status).join(", ")}
