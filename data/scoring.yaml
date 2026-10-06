@@ -332,6 +332,12 @@ p_accept:
     medium_min: 0.35
     medium_max: 0.65
     high: 0.65
+  # Прогноз ответа до отправки (E33-5): подсказка «поднимите верх вилки до X → Y %»
+  forecast:
+    raise_step: 0.05  # шаг перебора верха вилки, доля от текущего верха
+    raise_max_steps: 8  # до +40 %
+    raise_round: 5000  # округление предложенного верха вверх, ₽
+    response_min_sample: 3  # меньше ответов в категории — средний срок ответа не показываем
 
 ## 4. Limits and operational parameters
 
