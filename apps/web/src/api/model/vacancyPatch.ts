@@ -7,6 +7,7 @@
 import type { EmploymentType } from './employmentType';
 import type { Grade } from './grade';
 import type { RoleSlug } from './roleSlug';
+import type { SalaryBasis } from './salaryBasis';
 import type { SkillReqIn } from './skillReqIn';
 import type { TeamSignalKind } from './teamSignalKind';
 import type { WorkFormat } from './workFormat';
@@ -21,6 +22,7 @@ export interface VacancyPatch {
   city?: string | null;
   salary_from?: number | null;
   salary_to?: number | null;
+  salary_basis?: SalaryBasis | null;
   description?: string | null;
   important_qualities?: TeamSignalKind[] | null;
   skills?: SkillReqIn[] | null;
