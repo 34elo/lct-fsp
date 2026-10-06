@@ -143,4 +143,10 @@ cards-check:
 .PHONY: eval-assessment
 eval-assessment:
 	uv run python -m tools.eval_assessment --seed $(or $(SEED),42) --out reports/eval-assessment
+# Офлайн-конвейер LLM-заданий (E26-4): генератор → автопроверки → draft в очереди допуска; LLM как
+# кандидат → families.ai_solvable. Только через ml-api (ML_API_URL), LLM_ENABLED=false — ничего не делает.
+# ARGS — флаги CLI (--skills, --kinds, --levels, --n, --k, --skip-propose, --skip-solve)
+.PHONY: assessment-llm-bank
+assessment-llm-bank:
+	cd services/core && uv run python -m app.assessment.llm_bank --out ../../reports/llm-bank $(ARGS)
 # <<< block1

@@ -38,6 +38,7 @@ MAX_ERRORS = 5
 
 Drafter = Callable[[FamilySpec], Awaitable[FamilyKeyDraft | None]]
 KeySource = Literal["author", "llm", "custom"]
+SPEC_SOURCES = ("spec", "llm")  # llm — офлайн-конвейер E26-4: та же форма, «автор» — генератор
 
 
 # --- автопроверка (чистые функции) ------------------------------------------------------------
@@ -203,7 +204,7 @@ async def list_visible(
 def _spec_row(row: FamilyRow | None) -> FamilyRow:
     if row is None:
         raise ProblemError(404, "not_found", "Семейство не найдено")
-    if row.source != "spec":
+    if row.source not in SPEC_SOURCES:
         raise ProblemError(
             409, "not_constructor_family", "Ключ задаётся только у заданий конструктора"
         )

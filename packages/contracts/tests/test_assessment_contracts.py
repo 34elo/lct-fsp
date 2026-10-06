@@ -116,3 +116,24 @@ def test_family_key_draft_contract():
     d = FamilyKeyDraft.model_validate({"scores": [3, 1, 2], "model": "qwen3-vl-4b"})
     assert d.correct is None and d.scores == [3.0, 1.0, 2.0]
     assert FamilyKeyDraft.model_validate(d.model_dump(mode="json")) == d
+
+
+def test_family_llm_bank_contracts():
+    from fsp_contracts.ml import (
+        FamilyGenerateRequest,
+        FamilyGenerateResponse,
+        FamilySolveAnswer,
+        FamilySolveRequest,
+    )
+
+    g = FamilyGenerateRequest.model_validate({"skill": "python", "kind": "choice", "level": 3})
+    assert g.n == 1 and g.domain is None
+    with pytest.raises(ValidationError):
+        FamilyGenerateRequest.model_validate({"skill": "python", "kind": "choice", "level": 6})
+    r = FamilyGenerateResponse.model_validate({"specs": [{"title": "x"}], "model": "m"})
+    assert FamilyGenerateResponse.model_validate(r.model_dump(mode="json")) == r
+    s = FamilySolveRequest.model_validate({"kind": "order", "stem": "x", "options": ["a", "b"]})
+    assert s.options == ["a", "b"]
+    for v in (2, 2.5, "42", [1, 0]):
+        a = FamilySolveAnswer.model_validate({"answer": v})
+        assert a.answer == v and type(a.answer) is type(v)
