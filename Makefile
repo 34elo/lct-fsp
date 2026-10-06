@@ -1,4 +1,4 @@
-.PHONY: demo-snapshot demo-reset demo-warm demo-env logs ps seed seed-plan seed-fsp-mock synth taxonomy-load up down dev-core compose-config sync lint fmt test test-py test-web test-integration new-service web-install asyncapi api-gen
+.PHONY: demo-snapshot demo-reset demo-warm demo-env logs ps seed seed-plan seed-fsp-mock synth eval eval-quick load taxonomy-load up down dev-core compose-config sync lint fmt test test-py test-web test-integration new-service web-install asyncapi api-gen
 
 sync:
 	uv sync --all-packages
@@ -91,6 +91,22 @@ taxonomy-load:
 SPLIT ?= dev
 synth:
 	uv run python tools/synth/synth.py --split $(SPLIT) --out reports/synth/$(SPLIT)
+
+# Стенд оценки (evaluation.md §5): подбор против BM25 на синтетическом рынке → reports/eval/eval.{md,json}
+eval:
+	uv run python tools/eval/run.py --split $(SPLIT) --out reports/eval
+
+eval-quick:
+	uv run python tools/eval/run.py --quick --out reports/eval-quick
+
+# Нагрузка (E29-2, metrics.md): 50 пользователей против живого стека после make seed.
+# make load [LOAD_USERS=50 LOAD_TIME=3m LOAD_HOST=http://127.0.0.1:28080]. Код выхода 1, если p95 search/matches > 1 с.
+LOAD_USERS ?= 50
+LOAD_TIME ?= 3m
+LOAD_HOST ?= http://127.0.0.1:$(or $(GATEWAY_PORT),28080)
+load:
+	uv run --group load locust -f tools/load/locustfile.py --headless -u $(LOAD_USERS) -r 5 -t $(LOAD_TIME) 		--host $(LOAD_HOST) --csv reports/load/load --only-summary
+	uv run python tools/load/report.py reports/load/load_stats.csv --out reports/load/load.md
 
 # Демо-витрина (evaluation.md §4): make seed [SEED=42]. Пишет данные fsp-mock в reports/seed/fsp-mock.json
 # (compose монтирует каталог в fsp-mock, сервис пересоздаётся), наполняет БД core сервисными слоями

@@ -38,6 +38,7 @@ class Offer(Base):
     created_by: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     salary_from: Mapped[int]
     salary_to: Mapped[int]
+    salary_basis: Mapped[str] = mapped_column(Text, default="gross", server_default="gross")
     message: Mapped[str | None] = mapped_column(Text, default=None)
     title: Mapped[str | None] = mapped_column(Text, default=None)
     description: Mapped[str | None] = mapped_column(Text, default=None)
@@ -103,6 +104,8 @@ class ContactReveal(Base):
     revealed_at: Mapped[datetime] = mapped_column(
         sa.DateTime(timezone=True), default=utcnow, server_default=sa.func.now()
     )
+    # E32-5a: кандидат отозвал доступ к контактам; после отзыва компания их не видит
+    revoked_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), default=None)
 
 
 class Complaint(Base):

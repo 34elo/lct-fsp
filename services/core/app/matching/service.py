@@ -7,6 +7,7 @@ graph и candidates. Формулы — в `scoring.py`. Запись в `matche
 
 from __future__ import annotations
 
+import hashlib
 import uuid
 from collections.abc import Iterable
 from datetime import UTC, date, datetime
@@ -20,6 +21,7 @@ from fsp_platform.outbox import add_to_outbox
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.assessment import service as assessment
 from app.candidates import service as candidates
 from app.consents import service as consents
 from app.graph import service as graph
@@ -42,12 +44,32 @@ if TYPE_CHECKING:
     from app.candidates.service import Candidate
 
 
-async def only_published(session, cands: list[Candidate]) -> list[Candidate]:
-    """Видимость для работодателя (blocks.md §4.5): только с действующим `profile_publication`."""
-    allowed = await consents.users_with_consent(
-        session, [c.user_id for c in cands], ConsentType.profile_publication
-    )
+async def visible_ids(session: AsyncSession, ids: Iterable[uuid.UUID]) -> set[uuid.UUID]:
+    """Видимые работодателю (blocks.md §4.5, ADR-018): действующий грейд из теста
+    (`assessment.get_grades_many`) и согласие `profile_publication`. Статус поиска и стоп-лист
+    проверяет отбор анкет (`candidates.search_pool` / `eligible`)."""
+    ids = list(dict.fromkeys(ids))
+    if not ids:
+        return set()
+    graded = {cid for cid, gs in (await assessment.get_grades_many(session, ids)).items() if gs}
+    if not graded:
+        return set()
+    return await consents.users_with_consent(session, list(graded), ConsentType.profile_publication)
+
+
+async def only_visible(session: AsyncSession, cands: list[Candidate]) -> list[Candidate]:
+    """Фильтр выдачи по `visible_ids`: без теста или без `profile_publication` кандидата нет."""
+    allowed = await visible_ids(session, [c.user_id for c in cands])
     return [c for c in cands if c.user_id in allowed]
+
+
+async def visibility_version(session: AsyncSession) -> str:
+    """Отпечаток согласий и категорий для ключа кеша выдачи: выдача/отзыв согласия и
+    появление/истечение грейда меняют ключ. Смена грейда внутри тех же счётчиков доживает до
+    TTL кеша (60 с)."""
+    counts = sorted((p, g, n) for (p, g), n in (await assessment.category_counts(session)).items())
+    digest = hashlib.sha1(repr(counts).encode()).hexdigest()[:10]
+    return f"{await consents.publication_version(session)}:{digest}"
 
 
 async def load_vacancy(
@@ -109,10 +131,10 @@ async def select_candidates(
         "formats": list(v.formats),
         "company_id": v.company_id,
     }
-    found = await only_published(session, await candidates.eligible(session, ids, **attrs))
+    found = await only_visible(session, await candidates.eligible(session, ids, **attrs))
     semantic: list[Candidate] = []
     if v.embedding:
-        semantic = await only_published(
+        semantic = await only_visible(
             session,
             await candidates.nearest_by_embedding(
                 session, list(v.embedding), limit=cfg.semantic_limit, **attrs

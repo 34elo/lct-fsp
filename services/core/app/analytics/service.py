@@ -78,6 +78,25 @@ async def record(
     return len(rows)
 
 
+async def track_employer(
+    session: AsyncSession,
+    salt: str,
+    company_id: uuid.UUID,
+    name: str,
+    props: dict[str, object],
+) -> None:
+    """Серверное событие работодателя, записанное в транзакции эндпоинта."""
+    ev = AnalyticsEvent(
+        event=name,
+        ts=datetime.now(UTC),
+        actor=pseudonym(salt, company_id),
+        role="employer",
+        channel="web",
+        props=props,
+    )
+    await record(session, [ev])
+
+
 async def delete_by_actor(session: AsyncSession, actor: str) -> int:
     """Удаление профиля → удаление сырых событий по псевдониму (metrics.md §7)."""
     res = await session.execute(delete(AnalyticsEventRow).where(AnalyticsEventRow.actor == actor))

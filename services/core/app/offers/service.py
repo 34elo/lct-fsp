@@ -26,7 +26,7 @@ import yaml
 from fsp_contracts import new_envelope
 from fsp_contracts.enums import CompanyStatus, DeclineReason, OfferStatus
 from fsp_contracts.events import OfferEvent as OfferEventPayload
-from fsp_contracts.hiring import OFFER_SCHEMA_VERSION, ContactMethod, OfferInitiator
+from fsp_contracts.hiring import OFFER_SCHEMA_VERSION, ContactMethod, OfferInitiator, SalaryBasis
 from fsp_platform.app import ProblemError
 from fsp_platform.outbox import add_to_outbox
 from sqlalchemy import func, select
@@ -210,6 +210,7 @@ async def create(
     title: str | None = None,
     description: str | None = None,
     contact_method: ContactMethod | None = None,
+    salary_basis: SalaryBasis | None = None,
     team_offer_id: uuid.UUID | None = None,
     now: datetime | None = None,
 ) -> tuple[Offer, bool]:
@@ -266,6 +267,8 @@ async def create(
         id=uuid.uuid4(), vacancy_id=vacancy.id if vacancy else None,
         candidate_id=candidate.user_id, company_id=company.id, created_by=user_id,
         salary_from=lo, salary_to=hi, message=(message or "").strip() or None,
+        salary_basis=(salary_basis.value if salary_basis else None)
+        or (vacancy.salary_basis if vacancy else None) or SalaryBasis.gross.value,
         title=title, description=(description or "").strip() or None,
         contact_method=contact_method.value if contact_method else None,
         initiator=OfferInitiator.employer.value, status=S.sent.value,
@@ -324,6 +327,7 @@ async def apply(
         id=uuid.uuid4(), vacancy_id=vacancy.id, candidate_id=candidate.user_id,
         company_id=vacancy.company_id, created_by=candidate.user_id,
         salary_from=vacancy.salary_from, salary_to=vacancy.salary_to,
+        salary_basis=vacancy.salary_basis,
         message=(message or "").strip() or None, title=vacancy.title,
         initiator=OfferInitiator.candidate.value, status=S.sent.value,
         awaiting_reply_from="company", created_at=now,
@@ -462,7 +466,8 @@ REVEALED = (S.accepted.value, S.interview.value, S.hired.value, S.not_hired.valu
 
 
 async def is_revealed(session: AsyncSession, offer: Offer) -> bool:
-    return await session.get(ContactReveal, offer.id) is not None
+    reveal = await session.get(ContactReveal, offer.id)
+    return reveal is not None and reveal.revoked_at is None
 
 
 async def require_revealed(session: AsyncSession, offer: Offer) -> ContactReveal:
@@ -471,6 +476,21 @@ async def require_revealed(session: AsyncSession, offer: Offer) -> ContactReveal
         raise ProblemError(
             409, "contacts_not_revealed", "Контакты откроются после принятия оффера кандидатом"
         )
+    if reveal.revoked_at is not None:
+        raise ProblemError(409, "contacts_revoked", "Кандидат отозвал доступ к контактам")
+    return reveal
+
+
+async def revoke_contacts(
+    session: AsyncSession, offer: Offer, now: datetime | None = None
+) -> ContactReveal:
+    """Отзыв доступа к контактам (E32-5a). Нечего отзывать — 409; повторный отзыв — no-op."""
+    reveal = await session.get(ContactReveal, offer.id)
+    if reveal is None:
+        raise ProblemError(409, "contacts_not_revealed", "Контакты ещё не раскрыты")
+    if reveal.revoked_at is None:
+        reveal.revoked_at = now or datetime.now(UTC)
+        await session.flush()
     return reveal
 
 

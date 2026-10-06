@@ -275,9 +275,8 @@ async def test_seed_grades_core_and_idempotent(factory):
     from tools.seed.loader import Seeder
 
     seeder = Seeder(plan, factory, password="demo-pass-1234", pseudo_secret="t", analytics_salt="t")
-    await seeder.run()
-    first = await seed_grades(factory, plan, seeder.user_ids)
-    assert first["grades"] >= 42
+    stats = await seeder.run()  # E23-1: грейды пишутся до подбора, иначе выдача пуста
+    assert stats["grades"] >= 42 and stats["matched_vacancies"] > 0
     async with session_scope(factory) as s:
         counts = await assessment.category_counts(s)
         anya = await s.scalar(select(User).where(User.email == "anya@demo.fsp.test"))

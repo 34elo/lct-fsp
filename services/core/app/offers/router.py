@@ -16,7 +16,7 @@ from fsp_contracts.enums import (
     RoleSlug,
     WorkFormat,
 )
-from fsp_contracts.hiring import ContactMethod, OfferInitiator
+from fsp_contracts.hiring import ContactMethod, OfferInitiator, SalaryBasis
 from fsp_contracts.ml import ExplanationItem
 from fsp_platform.app import ProblemError
 from fsp_platform.ratelimit import RateLimiter
@@ -36,7 +36,7 @@ from app.matching.p_accept import hint as p_hint
 from app.matching.scoring import MatchConfig
 from app.matching.search import CandidateCard
 from app.offers import service, teams
-from app.offers.models import Offer, OfferMessage
+from app.offers.models import ContactReveal, Offer, OfferMessage
 from app.openapi_errors import problem_responses
 from app.telegram import service as telegram
 from app.vacancies import service as vacancies
@@ -67,6 +67,7 @@ class CreateOffer(BaseModel):
     # обязательны по смыслу; отсутствие даёт 422 `salary_range_required`, а не общую ошибку схемы
     salary_from: int | None = Field(default=None, le=100_000_000)
     salary_to: int | None = Field(default=None, le=100_000_000)
+    salary_basis: SalaryBasis | None = None  # пусто: из вакансии, иначе gross
     message: str | None = Field(default=None, max_length=2000)
     title: str | None = Field(default=None, max_length=200)
     description: str | None = Field(default=None, max_length=4000)
@@ -119,6 +120,8 @@ class OfferOut(BaseModel):
     team_offer_id: uuid.UUID | None = None  # общий у офферов одной команды (E15-2)
     salary_from: int
     salary_to: int
+    salary_basis: SalaryBasis = SalaryBasis.gross
+    contacts_revoked_at: datetime | None = None  # кандидат отозвал доступ к контактам
     message: str | None = None
     below_candidate_min: bool
     match_snapshot: MatchSnapshot | None = None
@@ -236,6 +239,7 @@ def _admin_complaint(row: Any, offer: Offer, company: Any) -> AdminComplaintOut:
 
 async def _base(session: AsyncSession, o: Offer) -> dict[str, Any]:
     v = await vacancies.get(session, o.vacancy_id) if o.vacancy_id else None
+    reveal = await session.get(ContactReveal, o.id)
     snap = o.match_snapshot
     return {
         "id": o.id, "status": o.status, "created_at": o.created_at, "expires_at": o.expires_at,
@@ -243,7 +247,8 @@ async def _base(session: AsyncSession, o: Offer) -> dict[str, Any]:
         "title": o.title or (v.title if v else None), "description": o.description,
         "contact_method": o.contact_method, "initiator": o.initiator,
         "team_offer_id": o.team_offer_id,
-        "salary_from": o.salary_from, "salary_to": o.salary_to, "message": o.message,
+        "salary_from": o.salary_from, "salary_to": o.salary_to, "salary_basis": o.salary_basis,
+        "contacts_revoked_at": reveal.revoked_at if reveal else None, "message": o.message,
         "below_candidate_min": o.below_candidate_min,
         "match_snapshot": MatchSnapshot.model_validate(snap) if snap else None,
         "decline": Decline(reason=o.decline_reason, comment=o.decline_comment)
@@ -256,7 +261,7 @@ async def for_candidate(session: AsyncSession, o: Offer) -> OfferForCandidate:
     c = await companies.get_company(session, o.company_id)
     brief = CompanyBrief(
         id=c.id, name=c.name, responsibility_score=c.responsibility_score,
-        verified=c.status == "verified",
+        verified=companies.badge_visible(c),
     )  # fmt: skip
     return OfferForCandidate(**await _base(session, o), company=brief)
 
@@ -392,6 +397,7 @@ async def create_offer(
         salary_from=body.salary_from, salary_to=body.salary_to, message=body.message,
         idempotency_key=idempotency_key.strip(), limits=_LIMITS, title=body.title,
         description=body.description, contact_method=body.contact_method,
+        salary_basis=body.salary_basis,
     )  # fmt: skip
     if replay:
         response.headers["Idempotent-Replay"] = "true"
@@ -637,6 +643,21 @@ async def offer_contacts(
     offer = await service.get_for_company(session, company.id, offer_id)
     await service.require_revealed(session, offer)
     return await _contacts(session, offer, user)
+
+
+@router.post(
+    "/offers/{offer_id}/contacts/revoke",
+    response_model=OfferForCandidate,
+    responses=problem_responses(401, 403, 404, 409),
+)
+async def revoke_contacts(
+    offer_id: uuid.UUID, user: User = Depends(_candidate),
+    session: AsyncSession = Depends(get_session),
+) -> Any:  # fmt: skip
+    """Отзыв доступа к контактам: компания перестаёт их видеть (E32-5a). Повтор — no-op."""
+    offer = await service.get_for_candidate(session, user.id, offer_id, lock=True)
+    await service.revoke_contacts(session, offer)
+    return await for_candidate(session, offer)
 
 
 async def _side_offer(

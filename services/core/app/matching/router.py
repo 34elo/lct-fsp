@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, Query, Request
+from fsp_contracts.assessment import CategoryRef
 from fsp_contracts.ml import ParsedQuery, SearchFilters
 from fsp_platform.app import ProblemError
 from pydantic import BaseModel, ConfigDict, Field
@@ -22,6 +23,7 @@ from app.identity.models import User
 from app.matching import card, navigator, query_llm, query_parser, search, similar, uplift_service
 from app.matching.card import CandidateCardFull
 from app.matching.scoring import MatchConfig
+from app.matching.strength import StrengthConfig
 from app.matching.uplift import UpliftConfig
 from app.openapi_errors import problem_responses
 from app.recommendations.tuning import TuningConfig
@@ -37,6 +39,7 @@ _CFG = MatchConfig.load()
 _TRUST = TrustConfig.load()
 _UPLIFT = UpliftConfig.load()
 _TUNING = TuningConfig.load()
+_STRENGTH = StrengthConfig.load()
 
 # Responses for error codes
 _PARSE_RESPONSES = problem_responses(401, 403, 422)
@@ -49,6 +52,7 @@ class SearchRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     filters: SearchFilters = Field(default_factory=SearchFilters)
+    category: CategoryRef | None = None  # профессия × грейд из теста (ADR-018)
     sort: search.Sort | None = None  # по умолчанию: с вакансией — mutual (H), без — match
     cursor: str | None = Field(default=None, max_length=200)
     limit: int = Field(default=20, ge=1, le=search.MAX_LIMIT)
@@ -161,7 +165,7 @@ async def search_candidates(
         cursor=body.cursor, limit=body.limit, vacancy_id=body.vacancy_id,
         vacancy_version=version, cfg=_CFG, trust=_TRUST,
         responsibility_score=company.responsibility_score, session_signals=signals,
-        tuning_cfg=_TUNING,
+        tuning_cfg=_TUNING, category=body.category, strength_cfg=_STRENGTH,
     )  # fmt: skip
     features = page.pop("features", None) or {}
 
@@ -211,7 +215,7 @@ async def candidate_card(
     company, _ = await companies.require_company(session, user.id)
     if vacancy_id is not None:  # чужая или несуществующая вакансия → 404
         await vacancies.get_owned(session, user, vacancy_id)
-    cand = await card.get_visible(session, pseudo_id, company.id)
+    cand = await card.get_listed(session, pseudo_id, company.id)
     if cand is None:
         raise ProblemError(404, "candidate_not_found", "Кандидат не найден")
     out = await card.build_card(
@@ -250,7 +254,7 @@ async def candidate_similar(
     from app.recommendations import service as rec_service
 
     company, _ = await companies.require_company(session, user.id)
-    cand = await card.get_visible(session, pseudo_id, company.id)
+    cand = await card.get_listed(session, pseudo_id, company.id)
     if cand is None:
         raise ProblemError(404, "candidate_not_found", "Кандидат не найден")
     items = await similar.find_similar(

@@ -69,3 +69,10 @@ def test_keyboard():
     )
     assert kb is not None and kb.inline_keyboard[0][1].url == "https://x.y"
     assert render_keyboard([]) is None
+
+
+def test_offer_new_salary_basis_label():
+    """E32-5a: вилка подписана «до НДФЛ» (по умолчанию) или «на руки»."""
+    base = {"vacancy_title": "Dev", "salary_from": 100000, "salary_to": 150000}
+    assert "150 000 ₽</b> до НДФЛ" in render(TgTemplate.offer_new, base)
+    assert "150 000 ₽</b> на руки" in render(TgTemplate.offer_new, base | {"salary_basis": "net"})
