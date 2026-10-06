@@ -68,6 +68,10 @@ def _cand(c, n):
         con.execute(
             f"insert into candidates ({','.join(cols)}) values ({','.join('?' * len(cols))})", vals
         )
+        con.execute(
+            "insert into consents (user_id, type, version, granted_at) values (?,?,?,?)",
+            (uid, "profile_publication", "2025-09-01", NOW),
+        )
     return uid
 
 
