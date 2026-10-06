@@ -128,4 +128,8 @@ families-check:
 .PHONY: cards-check
 cards-check:
 	cd services/core && uv run python -m app.taxonomy.cards
+# Валидация теста на синтетике (E27-1, metrics.md §9.1): make eval-assessment [SEED=42] → reports/eval-assessment/report.{md,json}
+.PHONY: eval-assessment
+eval-assessment:
+	uv run python -m tools.eval_assessment --seed $(or $(SEED),42) --out reports/eval-assessment
 # <<< block1
