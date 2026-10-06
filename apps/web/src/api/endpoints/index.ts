@@ -1,4 +1,5 @@
 export * from './admin/admin';
+export * from './admin-dashboard/admin-dashboard';
 export * from './analytics/analytics';
 export * from './auth/auth';
 export * from './candidates/candidates';
