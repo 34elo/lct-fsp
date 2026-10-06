@@ -18,7 +18,7 @@ import {
 import { useGetProfileCandidatesMeProfileGet } from "@/api/endpoints/candidates/candidates";
 import type { CandidateProfile, ExperienceItem, GradeInfo, OwnerFsp, SkillWithTrust, TeamSignal } from "@/api/model";
 import { FspLinkPanel } from "@/features/fsp/FspLinkPanel";
-import { claimedOf, downloadProfilePdf } from "@/features/profile/adapters";
+import { downloadProfilePdf } from "@/features/profile/pdf";
 import {
   CLAIM_STATUS_LABEL,
   DISCIPLINE_LABEL,
@@ -120,6 +120,9 @@ function Header({ p }: { p: CandidateProfile }) {
       </p>
       <div className="flex flex-wrap gap-2">
         <PdfButton name={p.pseudonym} />
+        <Link to="/me/profile/edit" data-testid="profile-edit-link" className="inline-flex min-h-11 items-center font-semibold text-brand-fg">
+          {T.editLink}
+        </Link>
         <Link to="/me/graph" data-testid="profile-graph-link">
           <Button variant="ghost" size="sm" tabIndex={-1}>
             {T.graph}
@@ -212,7 +215,7 @@ function GradeWhy({ g }: { g: GradeInfo }) {
 }
 
 function Claimed({ p }: { p: CandidateProfile }) {
-  const rows = claimedOf(p);
+  const rows = p.claimed_vs_confirmed ?? [];
   if (!rows.length) return null;
   const g = (v?: string | null) => (v ? (GRADE_LABEL[v] ?? v) : "нет");
   return (
