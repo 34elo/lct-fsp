@@ -27,6 +27,7 @@ from app.offers.models import (  # noqa: F401
     Offer,
     OfferEvent,
     OfferMessage,
+    OfferTask,
 )
 from app.resumes.models import Education, Experience, Resume  # noqa: F401
 from app.taxonomy import models as _taxonomy  # noqa: F401
