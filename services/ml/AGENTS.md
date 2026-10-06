@@ -14,7 +14,7 @@
 - `fsp_ml/skill_moderation.py`, `skill_pipeline.py`, `skill_card.py` — конвейер навыков (E16-4): модерация, судья, кеш, черновик карточки; метрики — `tests/test_skill_pipeline.py`, `fixtures/skill_eval.yaml`
 - `fsp_ml/fake.py` — детерминированные ответы по контрактам `fsp_contracts.ml`
 - `fsp_ml/handlers.py` — команда → события `ml.*.completed/failed` (`HANDLERS`, `handle`; `resume_parse_llm` — реальный)
-- `fsp_ml/llm.py` — OpenAI-совместимый клиент (JSON-схема); `resume_text.py`, `resume_rules.py`, `resume_parser.py` — разбор резюме; промпты — `prompts/<task>/v<N>.j2`
+- `fsp_ml/llm.py` — OpenAI-совместимый клиент (JSON-схема); `resume_text.py`, `resume_rules.py`, `resume_structure.py` + `resume_ner.py` (Natasha, без LLM, E30-4), `resume_parser.py` — разбор резюме; промпты — `prompts/<task>/v<N>.j2`
 - `fsp_ml/worker.py` — подписка на `ml.llm` / `ml.code`, публикация результатов
 - `fixtures/` — JSON-фикстуры резюме и анализа кода (вымышленные данные)
 - Сценарии ошибок: `object_key` на `.scanned` → `ml.resume.failed`; `github_login=not-found` → `ml.code.failed`
