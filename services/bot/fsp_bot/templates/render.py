@@ -160,6 +160,11 @@ def regular_task_published(d: dict) -> str:
     return f"📋 Новое задание по профессии {_e(d.get('profession', ''))}"
 
 
+def category_subscription(d: dict) -> str:
+    n = int(d.get("count", 0) or 0)
+    return f"🔔 По подписке «{_e(d.get('title', ''))}»: новых кандидатов — {n}"
+
+
 def test_result(d: dict) -> str:
     return (
         f"✅ Тест по навыку «{_e(d.get('skill', ''))}» пройден: "
@@ -193,6 +198,7 @@ RENDERERS: dict[TgTemplate, Callable[[dict], str]] = {
     TgTemplate.regular_task_published: regular_task_published,
     TgTemplate.test_result: test_result,
     TgTemplate.uplift: uplift,
+    TgTemplate.category_subscription: category_subscription,
 }
 
 

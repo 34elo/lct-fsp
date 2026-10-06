@@ -476,6 +476,19 @@ CREATE INDEX ON offers (status, expires_at) WHERE status IN ('sent','viewed');
 CREATE INDEX ON offers (status, expires_at) WHERE status IN ('interest','interest_opened');  -- E33-1
 CREATE INDEX ON offers (company_id, interest_at);  -- недельный лимит интересов
 
+-- E33-4: подписки компаний на категорию (миграция b2_10)
+CREATE TABLE category_subscriptions (
+  id uuid PRIMARY KEY, company_id uuid REFERENCES companies ON DELETE CASCADE,
+  profession text, grades jsonb, skills jsonb,  -- grades: [] = любой; skills: [{slug, min_level}]
+  salary_max int, formats jsonb, only_confirmed bool, last_digest_at timestamptz, created_at timestamptz
+);
+CREATE TABLE category_subscription_hits (  -- PK дедуплицирует уведомления
+  subscription_id uuid REFERENCES category_subscriptions ON DELETE CASCADE,
+  candidate_id uuid REFERENCES candidates(user_id) ON DELETE CASCADE,
+  created_at timestamptz, notified_at timestamptz,  -- notified_at NULL — ждёт дайджеста
+  PRIMARY KEY (subscription_id, candidate_id)
+);
+
 CREATE TABLE offer_events (id bigserial PRIMARY KEY, offer_id uuid REFERENCES offers(id) ON DELETE CASCADE, from_status text, to_status text, actor text, payload jsonb, created_at timestamptz DEFAULT now());
 CREATE TABLE offer_messages (id uuid PRIMARY KEY, offer_id uuid REFERENCES offers(id) ON DELETE CASCADE, author_side text NOT NULL, author_user_id uuid, text text NOT NULL, created_at timestamptz DEFAULT now(), channel text);
 CREATE TABLE contact_reveals (offer_id uuid PRIMARY KEY REFERENCES offers(id), candidate_id uuid, company_id uuid, revealed_at timestamptz DEFAULT now(), revoked_at timestamptz);  -- revoked_at: отзыв кандидатом (E32-5a)

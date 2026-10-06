@@ -14,7 +14,12 @@ from app.credentials.models import IssuedCredential  # noqa: F401
 from app.graph import fsp_models as _fsp  # noqa: F401
 from app.graph.models import CandidateSkill, Evidence  # noqa: F401
 from app.identity.models import RefreshToken, User  # noqa: F401
-from app.matching.models import Match, Need  # noqa: F401
+from app.matching.models import (  # noqa: F401
+    CategorySubscription,
+    CategorySubscriptionHit,
+    Match,
+    Need,
+)
 from app.notifications.models import Notification  # noqa: F401
 from app.offers.models import (  # noqa: F401
     Complaint,
