@@ -23,6 +23,7 @@ from app.identity.models import User
 from app.matching import card, navigator, query_llm, query_parser, search, similar, uplift_service
 from app.matching.card import CandidateCardFull
 from app.matching.scoring import MatchConfig
+from app.matching.strength import StrengthConfig
 from app.matching.uplift import UpliftConfig
 from app.openapi_errors import problem_responses
 from app.recommendations.tuning import TuningConfig
@@ -38,6 +39,7 @@ _CFG = MatchConfig.load()
 _TRUST = TrustConfig.load()
 _UPLIFT = UpliftConfig.load()
 _TUNING = TuningConfig.load()
+_STRENGTH = StrengthConfig.load()
 
 # Responses for error codes
 _PARSE_RESPONSES = problem_responses(401, 403, 422)
@@ -163,7 +165,7 @@ async def search_candidates(
         cursor=body.cursor, limit=body.limit, vacancy_id=body.vacancy_id,
         vacancy_version=version, cfg=_CFG, trust=_TRUST,
         responsibility_score=company.responsibility_score, session_signals=signals,
-        tuning_cfg=_TUNING, category=body.category,
+        tuning_cfg=_TUNING, category=body.category, strength_cfg=_STRENGTH,
     )  # fmt: skip
     features = page.pop("features", None) or {}
 
