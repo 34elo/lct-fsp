@@ -1,4 +1,4 @@
-"""Уведомления: offer.*, skills.profile.updated, fsp.results.imported, regular_task.published → БД, ui.user.*, notify.telegram (E8-3, E9-6)."""
+"""Уведомления: offer.*, skills.profile.updated, fsp.results.imported, regular_task (E8-3, E9-6)."""
 
 import asyncio
 import json
