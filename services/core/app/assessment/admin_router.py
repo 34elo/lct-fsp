@@ -10,8 +10,9 @@ from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.assessment import lifecycle
+from app.assessment import constructor, lifecycle
 from app.assessment.config import AssessmentConfig, load_config
+from app.assessment.families.spec import FamilySpec
 from app.assessment.models import FamilyRow
 from app.deps import get_session
 from app.identity.deps import require_roles
@@ -55,6 +56,8 @@ class AdminFamilyOut(BaseModel):
     failed_thresholds: list[str] = Field(default_factory=list)  # пусто — можно допускать
     log: list[dict[str, Any]] = Field(default_factory=list)  # история смен статуса
     updated_at: datetime | None = None
+    company_id: uuid.UUID | None = None  # задание компании (конструктор)
+    spec: dict[str, Any] | None = None  # конструктор: form, author, key_draft, autocheck
 
 
 def _out(row: FamilyRow, stats: lifecycle.FamilyStats | None, failed: list[str]) -> AdminFamilyOut:
@@ -76,6 +79,8 @@ def _out(row: FamilyRow, stats: lifecycle.FamilyStats | None, failed: list[str])
         failed_thresholds=failed,
         log=list((row.stats or {}).get("log", [])),
         updated_at=row.updated_at,
+        company_id=row.company_id,
+        spec=row.spec,
     )
 
 
@@ -140,3 +145,44 @@ async def retire(
     session: AsyncSession = Depends(get_session),
 ):
     return await _decide(lifecycle.retire, family_id, request, user, session)
+
+
+class KeyApproveIn(BaseModel):
+    """Какой ключ утвердить: автора, черновик LLM или свою правку спецификации (E30-1)."""
+
+    source: Literal["author", "llm", "custom"]
+    spec: FamilySpec | None = None  # для `custom`
+
+
+@router.post(
+    "/{family_id}/key",
+    response_model=AdminFamilyOut,
+    responses=problem_responses(401, 403, 404, 409, 422),
+)
+async def approve_key(
+    family_id: uuid.UUID,
+    body: KeyApproveIn,
+    request: Request,
+    user: User = Depends(_admin),
+    session: AsyncSession = Depends(get_session),
+):
+    """Утвердить ключ задания конструктора (`key_status → approved`) после автопроверки."""
+    cfg = _cfg(request)
+    row = await constructor.approve_key(session, family_id, user.id, body.source, body.spec)
+    stats = lifecycle._stats_of(row)
+    return _out(row, stats, lifecycle.admission_failures(stats, row.b, cfg))
+
+
+@router.post(
+    "/{family_id}/pilot",
+    response_model=AdminFamilyOut,
+    responses=problem_responses(401, 403, 404, 409),
+)
+async def to_pilot(
+    family_id: uuid.UUID,
+    request: Request,
+    user: User = Depends(_admin),
+    session: AsyncSession = Depends(get_session),
+):
+    """Задание компании → общий банк: `draft → pilot` (E30-1)."""
+    return await _decide(constructor.to_bank, family_id, request, user, session)

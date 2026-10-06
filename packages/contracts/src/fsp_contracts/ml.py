@@ -323,3 +323,32 @@ class QuestionDraft(BaseModel):
     correct_option: str
     difficulty: int = Field(ge=1, le=5)
     explanation: str | None = None
+
+
+# --- Черновик ключа задания конструктора (assessment.md §4, §7; E30-1) ---
+
+FamilyKind = Literal["exact", "estimate", "choice", "find_bug", "order", "sjt", "open"]
+
+
+class FamilyKeyDraftRequest(BaseModel):
+    """Пример варианта задания без ключа: ml-api предлагает ключ и рубрику (черновик)."""
+
+    kind: FamilyKind
+    stem: str = Field(max_length=6000)
+    options: list[str] = Field(default_factory=list, max_length=8)  # choice, порядок автора
+    lines: list[str] = Field(default_factory=list, max_length=60)  # find_bug, строки с 1
+    actions: list[str] = Field(default_factory=list, max_length=8)  # sjt
+    steps: list[str] = Field(default_factory=list, max_length=10)  # order, порядок автора
+    rubric: list[str] = Field(default_factory=list, max_length=10)  # open: рубрика автора
+
+
+class FamilyKeyDraft(BaseModel):
+    """Черновик ключа: в оценке не используется, пока его не утвердит админ (ADR-024)."""
+
+    correct: int | None = None  # choice: индекс в `options`
+    bug_lines: list[int] | None = None  # find_bug: номера строк с 1
+    scores: list[float] | None = None  # sjt: оценка эффективности каждого действия
+    answer: float | str | None = None  # exact, estimate: примерный ответ на этот вариант
+    rubric: list[str] | None = None  # open: пункты рубрики
+    rationale: str | None = Field(default=None, max_length=1000)
+    model: str = ""
