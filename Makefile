@@ -7,7 +7,7 @@ lint:
 	uv run ruff check .
 	uv run ruff format --check .
 	uv run lint-imports
-	cd apps/web && pnpm lint && pnpm typecheck
+	pnpm -r lint && pnpm -r typecheck
 
 fmt:
 	uv run ruff check --fix .
@@ -28,14 +28,14 @@ test-integration:
 	rc=$$?; $(TEST_COMPOSE) down -v; exit $$rc
 
 test-web:
-	cd apps/web && pnpm test
+	pnpm -r test
 
 # e2e Playwright на стенде с сидом (make up && make seed); нужен Node >= 20
 e2e:
 	cd apps/web && pnpm e2e
 
 web-install:
-	cd apps/web && pnpm install
+	pnpm install
 
 # make new-service NAME=core
 new-service:
@@ -44,6 +44,11 @@ new-service:
 # Каталог AsyncAPI всех событий и команд из packages/contracts
 asyncapi:
 	uv run python -m fsp_contracts.asyncapi > asyncapi.json
+
+# OpenAPI схема REST API
+openapi:
+	mkdir -p docs
+	cd services/core && PYTHONUTF8=1 uv run python export_openapi.py > ../../docs/openapi.json
 
 # --- compose ---
 # Окружение: .env, если в нём задан JWT_SECRET (то есть он полный); иначе .env.demo (создаётся infra/scripts/gen-demo-env.sh со случайными секретами)
@@ -76,7 +81,7 @@ compose-config:
 	docker compose --env-file $(ENV_FILE) --profile core --profile ml --profile bot --profile llm --profile dev --profile obs config -q
 
 api-gen:
-	cd apps/web && pnpm api:gen
+	pnpm --filter fsp-web api:gen
 
 # Загрузить data/taxonomy/*.yaml и data/fsp/discipline_rules.yaml в БД core (идемпотентно, версия растёт при изменениях)
 taxonomy-load:

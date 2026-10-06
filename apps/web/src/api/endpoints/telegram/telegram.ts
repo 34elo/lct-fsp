@@ -15,7 +15,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  DeepLinkOut
+  DeepLinkOut,
+  ProblemOut
 } from '../../model';
 
 import { apiFetch } from '../../mutator';
@@ -31,12 +32,34 @@ export type myLinkMeTelegramLinkPostResponse200 = {
   status: 200
 }
 
+export type myLinkMeTelegramLinkPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type myLinkMeTelegramLinkPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type myLinkMeTelegramLinkPostResponse429ApplicationProblemJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type myLinkMeTelegramLinkPostResponse429ApplicationJson = {
+  data: ProblemOut
+  status: 429
+}
+
 export type myLinkMeTelegramLinkPostResponseSuccess = (myLinkMeTelegramLinkPostResponse200) & {
   headers: Headers;
 };
-;
+export type myLinkMeTelegramLinkPostResponseError = (myLinkMeTelegramLinkPostResponse401ApplicationProblemJson | myLinkMeTelegramLinkPostResponse401ApplicationJson | myLinkMeTelegramLinkPostResponse429ApplicationProblemJson | myLinkMeTelegramLinkPostResponse429ApplicationJson) & {
+  headers: Headers;
+};
 
-export type myLinkMeTelegramLinkPostResponse = (myLinkMeTelegramLinkPostResponseSuccess)
+export type myLinkMeTelegramLinkPostResponse = (myLinkMeTelegramLinkPostResponseSuccess | myLinkMeTelegramLinkPostResponseError)
 
 export const getMyLinkMeTelegramLinkPostUrl = () => {
 
@@ -66,7 +89,7 @@ export const myLinkMeTelegramLinkPost = async ( options?: Parameters<typeof apiF
 
 export const getMyLinkMeTelegramLinkPostMutationKey = () => ['myLinkMeTelegramLinkPost'] as const;
 
-export const getMyLinkMeTelegramLinkPostMutationOptions = <TError = ErrorType<unknown>,
+export const getMyLinkMeTelegramLinkPostMutationOptions = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof myLinkMeTelegramLinkPost>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof myLinkMeTelegramLinkPost>>, TError,void, TContext> => {
 
@@ -95,13 +118,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type MyLinkMeTelegramLinkPostMutationResult = NonNullable<Awaited<ReturnType<typeof myLinkMeTelegramLinkPost>>>
 
-    export type MyLinkMeTelegramLinkPostMutationError = ErrorType<unknown>
+    export type MyLinkMeTelegramLinkPostMutationError = ErrorType<ProblemOut>
 
 
     /**
  * @summary My Link
  */
-export const useMyLinkMeTelegramLinkPost = <TError = ErrorType<unknown>,
+export const useMyLinkMeTelegramLinkPost = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof myLinkMeTelegramLinkPost>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof myLinkMeTelegramLinkPost>>,

@@ -1,56 +1,41 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
+import {
+  Button,
+  CandidateCard as CandidateCardView,
+  EmptyState,
+  ErrorState,
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetTrigger,
+  Skeleton,
+  SlidersHorizontal,
+} from "@fsp/ui";
+
+import { useRecordFeedbackRecsFeedbackPost } from "@/api/endpoints/recommendations/recommendations";
+import { useSearchCandidatesSearchCandidatesPost, useSearchParseSearchParsePost } from "@/api/endpoints/search/search";
 import { useGetTaxonomyTaxonomyGet } from "@/api/endpoints/taxonomy/taxonomy";
 import { useListVacanciesVacanciesGet } from "@/api/endpoints/vacancies/vacancies";
-import { useSearchCandidatesSearchCandidatesPost } from "@/api/endpoints/search/search";
-import type { CandidateCard, SearchFilters, SearchRequestSort } from "@/api/model";
-import { ErrorNote, fieldClass } from "@/features/auth/ui";
-import { GRADE_LABEL, ROLE_LABEL } from "@/features/profile/text";
-import { cn } from "@/shared/lib/cn";
-import { Button } from "@/shared/ui/button";
-import { CandidateTile } from "./CandidateTile";
-import { FORMAT_LABEL, SORT_LABEL } from "./text";
+import type { CandidateCard, FilterChip, SearchRequestSort, VacancyOut } from "@/api/model";
+import { QueryBar } from "./QueryBar";
+import { chipActive, EMPTY_FORM, fromParsed, gradeRange, removeChip, toCardData, toFilters, type SearchForm } from "./search-model";
+import { SearchFiltersPanel, selectClass } from "./SearchFiltersPanel";
+import { SEARCH_TEXT as T, SORT_LABEL } from "./text";
 
-const GRADES = Object.keys(GRADE_LABEL);
-const sel = cn(fieldClass, "appearance-none");
-
-interface Form {
-  role: string;
-  gradeMin: string;
-  gradeMax: string;
-  format: string;
-  skills: string[];
-  fspOnly: boolean;
-  activeOnly: boolean;
-  sort: SearchRequestSort;
-}
-const EMPTY: Form = { role: "", gradeMin: "", gradeMax: "", format: "", skills: [], fspOnly: false, activeOnly: false, sort: "match" };
-
-function toFilters(f: Form): SearchFilters {
-  const out: SearchFilters = {};
-  if (f.role) out.roles = [f.role as never];
-  if (f.gradeMin) out.grade_min = f.gradeMin as never;
-  if (f.gradeMax) out.grade_max = f.gradeMax as never;
-  if (f.format) out.formats = [f.format as never];
-  if (f.skills.length) out.skills_must = f.skills.map((slug) => ({ slug }));
-  if (f.fspOnly) out.fsp_only = true;
-  if (f.activeOnly) out.active_only = true;
-  return out;
+/** Стартовые фильтры подборки: роль и грейды вакансии. */
+function vacancyForm(v: VacancyOut | null, sort: SearchRequestSort = "match"): SearchForm {
+  if (!v) return { ...EMPTY_FORM, sort };
+  return { ...EMPTY_FORM, roles: [v.role], grades: gradeRange(v.grade_min, v.grade_max), sort: "match" };
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <label className="flex min-w-0 flex-col gap-1 text-[13px] font-medium text-muted">
-      {label}
-      {children}
-    </label>
-  );
-}
+type Feedback = "open" | "shortlist" | "dismiss";
 
 /**
- * Выдача поиска (экраны A/E2/E4). С `vacancy` — подборка под вакансию: сортировка по совпадению,
- * match-ring и объяснение по путям графа. Фильтры пересобирают выдачу, «Показать ещё» — курсор.
+ * Экран A (поиск) и E2 («текст → чипсы»); с вакансией — подборка E4. Текст разбирается в фильтры
+ * (`POST /search/parse`), фильтры слева правят ту же форму, выдача пересобирается с задержкой 150 мс.
+ * Реакции «В шорт-лист», «Не подходит», «Открыть профиль» уходят в `POST /recs/feedback`.
  */
 export default function Search() {
   const { id: pathVacancy } = useParams();
@@ -61,24 +46,37 @@ export default function Search() {
   const vacancies = useListVacanciesVacanciesGet();
   const taxonomy = useGetTaxonomyTaxonomyGet();
   const search = useSearchCandidatesSearchCandidatesPost();
+  const parse = useSearchParseSearchParsePost();
+  const feedback = useRecordFeedbackRecsFeedbackPost();
 
-  const [form, setForm] = useState<Form>(EMPTY);
+  const [form, setForm] = useState<SearchForm>(EMPTY_FORM);
+  const [query, setQuery] = useState("");
+  const [chips, setChips] = useState<FilterChip[] | null>(null);
+  const [parseKey, setParseKey] = useState(0);
+  const [parseError, setParseError] = useState<string | null>(null);
   const [items, setItems] = useState<CandidateCard[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [total, setTotal] = useState<number | null>(null);
   const [failed, setFailed] = useState(false);
+  const [shortlisted, setShortlisted] = useState<Set<string>>(() => new Set());
+  const [dismissed, setDismissed] = useState<Set<string>>(() => new Set());
+  const [sheetOpen, setSheetOpen] = useState(false);
   const session = useRef<string | null>(null);
   const seq = useRef(0);
 
   const myVacancies = useMemo(() => (vacancies.data?.status === 200 ? vacancies.data.data : []), [vacancies.data]);
   const vacancy = myVacancies.find((v) => v.id === vacancyId) ?? null;
   // Ответ /taxonomy в схеме без модели (unknown): сужаем до нужных полей.
-  const taxSkills = useMemo(() => ((taxonomy.data?.data as { skills?: { slug: string; name: string }[] } | undefined)?.skills ?? []), [taxonomy.data]);
-  const skillName = useMemo(() => new Map(taxSkills.map((s) => [s.slug, s.name])), [taxSkills]);
+  const taxSkills = useMemo(
+    () => (taxonomy.data?.data as { skills?: { slug: string; name: string }[] } | undefined)?.skills ?? [],
+    [taxonomy.data],
+  );
+  const names = useMemo(() => new Map(taxSkills.map((s) => [s.slug, s.name])), [taxSkills]);
+  const skillName = useCallback((slug: string) => names.get(slug) ?? slug, [names]);
 
   // При выборе вакансии подставляем её роль и грейды как стартовые фильтры.
   useEffect(() => {
-    if (vacancy) setForm((f) => ({ ...f, role: vacancy.role, gradeMin: vacancy.grade_min, gradeMax: vacancy.grade_max, sort: "match" }));
+    if (vacancy) setForm(vacancyForm(vacancy));
   }, [vacancy?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const run = useCallback(
@@ -121,133 +119,160 @@ export default function Search() {
     return () => clearTimeout(t);
   }, [formKey, vacancyId, ready]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const set = <K extends keyof Form>(k: K, v: Form[K]) => setForm((f) => ({ ...f, [k]: v }));
+  const set = <K extends keyof SearchForm>(k: K, v: SearchForm[K]) => setForm((f) => ({ ...f, [k]: v }));
+  const reset = () => {
+    setForm(vacancyForm(vacancy, form.sort));
+    setChips(null);
+  };
   const pickVacancy = (id: string) => {
     if (pathVacancy) navigate(id ? `/employer/vacancies/${id}/shortlist` : "/employer/search");
     else setParams(id ? { vacancy: id } : {});
-    if (!id) setForm(EMPTY);
+    if (!id) setForm(EMPTY_FORM);
   };
-  const addSkill = (slug: string) => slug && !form.skills.includes(slug) && set("skills", [...form.skills, slug]);
 
+  const submitQuery = () => {
+    setParseError(null);
+    parse.mutate(
+      { data: { text: query.trim().slice(0, 500) } },
+      {
+        onSuccess: (r) => {
+          if (r.status !== 200) return setParseError(T.parseFailed);
+          setForm((f) => fromParsed(r.data.filters, f.sort));
+          setChips(r.data.chips ?? []);
+          setParseKey((k) => k + 1);
+        },
+        onError: () => setParseError(T.parseFailed),
+      },
+    );
+  };
+  const visibleChips = chips ? chips.filter((c) => chipActive(c, form)) : null;
+
+  const react = (c: CandidateCard, event: Feedback) => {
+    if (session.current) feedback.mutate({ data: { session_id: session.current, candidate_pseudo_id: c.pseudo_id, event } });
+  };
+  const toggleShortlist = (c: CandidateCard) => {
+    const on = !shortlisted.has(c.pseudo_id);
+    setShortlisted((s) => {
+      const n = new Set(s);
+      if (on) n.add(c.pseudo_id);
+      else n.delete(c.pseudo_id);
+      return n;
+    });
+    if (on) react(c, "shortlist");
+  };
+  const dismiss = (c: CandidateCard) => {
+    setDismissed((s) => new Set(s).add(c.pseudo_id));
+    react(c, "dismiss");
+  };
+  const open = (c: CandidateCard) => {
+    react(c, "open");
+    const q = vacancyId ? `?vacancy=${vacancyId}&source=match` : "?source=search";
+    navigate(`/employer/candidates/${c.pseudo_id}${q}`);
+  };
+
+  const shown = items.filter((c) => !dismissed.has(c.pseudo_id));
   const pending = search.isPending;
-  return (
-    <main className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4 md:p-6">
-      <h1 className="font-mono text-2xl font-semibold">{vacancy ? `Подборка: ${vacancy.title}` : "Поиск кандидатов"}</h1>
-      <p className="text-sm text-muted">Карточки анонимны: имя, контакты и компании открываются после принятия оффера.</p>
+  const panel = (
+    <SearchFiltersPanel
+      form={form}
+      set={set}
+      onReset={reset}
+      vacancies={myVacancies}
+      vacancyId={vacancyId}
+      onPickVacancy={pickVacancy}
+      skills={taxSkills}
+      skillName={skillName}
+    />
+  );
 
-      <section aria-label="Фильтры" className="grid grid-cols-2 gap-3 rounded-xl border border-hairline bg-card p-4 md:grid-cols-4">
-        <div className="col-span-2 md:col-span-4">
-          <Field label="Вакансия (подборка)">
-            <select className={sel} value={vacancyId ?? ""} onChange={(e) => pickVacancy(e.target.value)} aria-label="Вакансия">
-              <option value="">Без вакансии: свободный поиск</option>
-              {myVacancies.map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.title}
-                </option>
-              ))}
-            </select>
-          </Field>
-        </div>
-        <Field label="Роль">
-          <select className={sel} value={form.role} onChange={(e) => set("role", e.target.value)} aria-label="Роль">
-            <option value="">Любая</option>
-            {Object.entries(ROLE_LABEL).map(([k, v]) => (
-              <option key={k} value={k}>{v}</option>
-            ))}
-          </select>
-        </Field>
-        <Field label="Формат">
-          <select className={sel} value={form.format} onChange={(e) => set("format", e.target.value)} aria-label="Формат">
-            <option value="">Любой</option>
-            {Object.entries(FORMAT_LABEL).map(([k, v]) => (
-              <option key={k} value={k}>{v}</option>
-            ))}
-          </select>
-        </Field>
-        <Field label="Грейд от">
-          <select className={sel} value={form.gradeMin} onChange={(e) => set("gradeMin", e.target.value)} aria-label="Грейд от">
-            <option value="">Любой</option>
-            {GRADES.map((g) => (
-              <option key={g} value={g}>{GRADE_LABEL[g]}</option>
-            ))}
-          </select>
-        </Field>
-        <Field label="Грейд до">
-          <select className={sel} value={form.gradeMax} onChange={(e) => set("gradeMax", e.target.value)} aria-label="Грейд до">
-            <option value="">Любой</option>
-            {GRADES.map((g) => (
-              <option key={g} value={g}>{GRADE_LABEL[g]}</option>
-            ))}
-          </select>
-        </Field>
-        <div className="col-span-2 md:col-span-4">
-          <Field label="Обязательные навыки">
-            <select className={sel} value="" onChange={(e) => addSkill(e.target.value)} aria-label="Добавить навык">
-              <option value="">Добавить навык…</option>
-              {taxSkills.map((s) => (
-                <option key={s.slug} value={s.slug}>{s.name}</option>
-              ))}
-            </select>
-          </Field>
-          {form.skills.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {form.skills.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => set("skills", form.skills.filter((x) => x !== s))}
-                  aria-label={`Убрать навык ${skillName.get(s) ?? s}`}
-                  className="inline-flex h-[30px] items-center gap-1.5 rounded-md border border-tint-200 bg-tint-50 px-[11px] font-mono text-[12.5px] text-brand-deep dark:text-brand-mid"
-                >
-                  {skillName.get(s) ?? s} <span aria-hidden>×</span>
-                </button>
-              ))}
+  return (
+    <div className="grid gap-6 px-4 py-6 md:px-6 lg:px-10 lg:py-8">
+      <header className={vacancy ? "grid gap-1" : "sr-only"}>
+        <h1 className="font-mono text-24 font-semibold">{vacancy ? T.shortlistTitle(vacancy.title) : T.title}</h1>
+        <p className="text-14 text-muted">{T.anon}</p>
+      </header>
+
+      <QueryBar
+        value={query}
+        onChange={setQuery}
+        onSubmit={submitQuery}
+        pending={parse.isPending}
+        chips={visibleChips}
+        parseKey={parseKey}
+        error={parseError}
+        onRemoveChip={(c) => setForm((f) => removeChip(c, f))}
+      />
+
+      <div className="grid items-start gap-8 lg:grid-cols-[280px_minmax(0,1fr)]">
+        <aside className="hidden rounded-xl border border-hairline bg-card p-5 lg:block">{panel}</aside>
+
+        <section aria-label="Выдача" className="grid min-w-0 gap-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <h2 role="status" className="mr-auto font-mono text-20 font-semibold">
+              {pending && items.length === 0 ? T.searching : total !== null ? T.found(total) : T.searching}
+            </h2>
+            <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="sm" className="lg:hidden">
+                  <SlidersHorizontal aria-hidden className="size-4" />
+                  {T.filters}
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" aria-describedby={undefined}>
+                <SheetTitle className="sr-only">{T.filters}</SheetTitle>
+                {/* Отступ сверху: крестик Sheet не наезжает на «Сбросить». */}
+                <div className="pt-8">{panel}</div>
+              </SheetContent>
+            </Sheet>
+            <label className="flex items-center gap-2 text-13 text-muted">
+              <span className="hidden sm:inline">{T.sort}</span>
+              <select
+                className={`${selectClass} w-auto pr-8`}
+                value={form.sort ?? "match"}
+                onChange={(e) => set("sort", e.target.value as SearchRequestSort)}
+                aria-label={T.sort}
+              >
+                {Object.entries(SORT_LABEL).map(([k, v]) => (
+                  <option key={k} value={k}>
+                    {v}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          {failed && <ErrorState title={T.failed} onRetry={() => run(null)} />}
+
+          {pending && items.length === 0 && !failed && (
+            <div className="grid gap-4" aria-hidden>
+              <Skeleton className="h-64 rounded-xl" />
+              <Skeleton className="h-64 rounded-xl" />
             </div>
           )}
-        </div>
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={form.fspOnly} onChange={(e) => set("fspOnly", e.target.checked)} className="size-4 accent-[var(--brand)]" />
-          Только с достижениями ФСП
-        </label>
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={form.activeOnly} onChange={(e) => set("activeOnly", e.target.checked)} className="size-4 accent-[var(--brand)]" />
-          Только активно ищут
-        </label>
-        <div className="col-span-2 flex items-end justify-between gap-3 md:col-span-2">
-          <Field label="Сортировка">
-            <select className={sel} value={form.sort ?? undefined} onChange={(e) => set("sort", e.target.value as SearchRequestSort)} aria-label="Сортировка">
-              {Object.entries(SORT_LABEL).map(([k, v]) => (
-                <option key={k} value={k}>{v}</option>
-              ))}
-            </select>
-          </Field>
-          <Button variant="ghost" size="sm" onClick={() => setForm(vacancy ? { ...EMPTY, role: vacancy.role, gradeMin: vacancy.grade_min, gradeMax: vacancy.grade_max } : EMPTY)}>
-            Сбросить
-          </Button>
-        </div>
-      </section>
 
-      {failed && <ErrorNote>Не удалось загрузить выдачу. Попробуйте ещё раз.</ErrorNote>}
+          {total === 0 && !pending && !failed && <EmptyState title={T.empty} description={T.emptyHint} />}
 
-      <p role="status" className="text-sm text-muted">
-        {pending && items.length === 0 ? "Ищем…" : total !== null ? `Найдено: ${total}` : ""}
-      </p>
+          <ul className="grid gap-4">
+            {shown.map((c) => (
+              <li key={c.pseudo_id}>
+                <CandidateCardView
+                  c={toCardData(c)}
+                  shortlisted={shortlisted.has(c.pseudo_id)}
+                  onShortlist={() => toggleShortlist(c)}
+                  onReject={() => dismiss(c)}
+                  onOpen={() => open(c)}
+                />
+              </li>
+            ))}
+          </ul>
 
-      {total === 0 && !pending && (
-        <p className="rounded-xl border border-hairline bg-card p-5 text-sm">Никого не нашли: ослабьте фильтры или уберите обязательные навыки.</p>
-      )}
-
-      <div className="grid gap-3 md:grid-cols-2">
-        {items.map((c) => (
-          <CandidateTile key={c.pseudo_id} card={c} vacancyId={vacancyId} />
-        ))}
+          {cursor && (
+            <Button variant="outline" onClick={() => run(cursor)} loading={pending} className="justify-self-center">
+              {pending ? T.loadingMore : T.more}
+            </Button>
+          )}
+        </section>
       </div>
-
-      {cursor && (
-        <Button variant="outline" onClick={() => run(cursor)} disabled={pending} className="self-center">
-          {pending ? "Загружаем…" : "Показать ещё"}
-        </Button>
-      )}
-    </main>
+    </div>
   );
 }

@@ -23,14 +23,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.candidates import service as candidates
 from app.candidates.models import Candidate
+from app.consents import service as consents
 from app.graph import service as graph
 from app.graph.trust import EvidenceView, TrustConfig, effective_strength
 from app.matching.p_accept import PAcceptConfig, hint, mutual, p_accept
 from app.matching.rerank import RerankConfig, mmr, multiplier
 from app.matching.scoring import MatchConfig, MatchResult, score_candidate
-from app.matching.service import build_views, load_vacancy
+from app.matching.service import build_views, load_vacancy, only_published
 from app.offers import service as offers
 from app.recommendations import service as recs
+from app.recommendations import tuning as tun
 from app.taxonomy import service as taxonomy
 
 CACHE_TTL = 60
@@ -94,6 +96,8 @@ class Row:
     result: MatchResult | None = None
     p_accept: float | None = None
     mult: float = 1.0  # множитель переранжирования (matching.md §5)
+    x: dict[str, float] | None = None  # признаки для подстройки в сессии (matching.md §7)
+    tuned: float | None = None  # скор после подстройки в сессии
 
     def key(self, sort: Sort) -> float:
         if sort == "fresh":
@@ -101,10 +105,11 @@ class Row:
         if sort == "trust":
             return self.trust
         if self.result is not None:
+            score = self.tuned if self.tuned is not None else self.result.score
             if sort == "mutual" and self.p_accept is not None:
-                return mutual(self.result.score, self.p_accept) * self.mult
-            return self.result.score * self.mult
-        return self.relevance * self.mult
+                return mutual(score, self.p_accept) * self.mult
+            return score * self.mult
+        return (self.tuned if self.tuned is not None else self.relevance) * self.mult
 
 
 def _ts(d: datetime) -> float:
@@ -222,6 +227,59 @@ def _card(
     )
 
 
+def features_of(r: Row) -> dict[str, float]:
+    """Признаки подстройки (matching.md §7): компоненты скора и бинарные капитан/GitHub/«ищу».
+
+    Без вакансии `skills` — покрытие запрошенных навыков, `fsp` — есть ли навык из ФСП.
+    """
+    if r.result is not None:
+        b = r.result.breakdown
+        x = {k: float(b.get(k, 0.0)) for k in ("skills", "semantic", "grade", "salary", "fsp")}
+    else:
+        fsp = any("fsp" in (s.sources or ()) for s in r.skills)
+        x = {"skills": r.relevance, "semantic": 0.0, "grade": 0.0, "salary": 0.0,
+             "fsp": 1.0 if fsp else 0.0}  # fmt: skip
+    team = r.cand.team_signals or {}
+    x["captain"] = float(
+        any(
+            f.get("kind") == "captain"
+            for sig in team.values() if isinstance(sig, dict)
+            for f in sig.get("facts") or ()
+        )
+    )  # fmt: skip
+    x["github"] = float(any("github" in (s.sources or ()) for s in r.skills))
+    x["active"] = float(candidates.effective_status(r.cand) == "active")
+    return {k: round(v, 6) for k, v in x.items()}
+
+
+def apply_tuning(
+    rows: list[Row],
+    signals: list[tun.Signal],
+    snapshot: dict[str, dict[str, float]],
+    query: Any,
+    cfg: tun.TuningConfig,
+) -> tun.Tuning:
+    """Подстройка сессии: веса по снимкам признаков из показов, Роккио по векторам выдачи.
+
+    Меняется только порядок уже прошедших фильтры: у вакансии `score' = min(1, Σw'·x ·
+    score/base)` (K_soft и «ищу» сохраняются), без вакансии — `Σw'·x`.
+    """
+    embs = {str(r.cand.user_id): r.cand.embedding for r in rows}
+    t = tun.build(signals, snapshot, cfg, embeddings=embs, query=query)
+    if not t.active:
+        return t
+    for r in rows:
+        if r.x is None:
+            continue
+        tb = tun.tuned_base(r.x, t, r.cand.embedding, cfg)
+        if r.result is not None:
+            base = float(r.result.breakdown.get("base") or 0.0)
+            r.tuned = round(min(1.0, tb * (r.result.score / base if base > 0 else 1.0)), 6)
+        else:
+            r.tuned = round(tb, 6)
+    return t
+
+
 def p_accept_for(
     v: Any, cand: Candidate, responsibility_score: float | None, cfg: PAcceptConfig
 ) -> float:
@@ -281,8 +339,14 @@ async def search_candidates(
     responsibility_score: float | None = None,
     pa_cfg: PAcceptConfig | None = None,
     rr_cfg: RerankConfig | None = None,
+    session_signals: tuple[list[tun.Signal], dict[str, dict[str, float]]] | None = None,
+    tuning_cfg: tun.TuningConfig | None = None,
 ) -> dict[str, Any]:
-    """Страница выдачи `{items, next_cursor, total}`; `items` — JSON-словари `CandidateCard`."""
+    """Страница выдачи `{items, next_cursor, total, features, tuning}`.
+
+    `items` — JSON-словари `CandidateCard`; `features` — признаки показанных (по `pseudo_id`)
+    для снимка в `impressions`; `tuning` — состояние подстройки сессии (`session_signals`).
+    """
     limit = max(1, min(limit, MAX_LIMIT))
     if sort == "mutual" and vacancy_id is None:
         sort = "match"  # H считается под вакансию; без неё — обычное соответствие
@@ -290,13 +354,18 @@ async def search_candidates(
     rr_cfg = rr_cfg or RerankConfig.load()
     after = decode_cursor(cursor, sort) if cursor else None
     key = cache_key(
-        await candidates.catalog_version(session),
+        await candidates.catalog_version(session) + await consents.publication_version(session),
         {"company": str(company_id), "f": filters.model_dump(mode="json"), "sort": sort,
          "vacancy": [str(vacancy_id), vacancy_version], "limit": limit,
          "rs": responsibility_score},
         cursor,
     )  # fmt: skip
-    if redis is not None:
+    tcfg = tuning_cfg or tun.TuningConfig.load()
+    tuned_session = (
+        session_signals is not None
+        and tun.count_signals(session_signals[0], tcfg) >= tcfg.min_signals
+    )
+    if redis is not None and not tuned_session:  # подстроенная выдача не кешируется
         try:
             if (hit := await redis.get(key)) is not None:
                 return json.loads(hit)
@@ -305,13 +374,13 @@ async def search_candidates(
 
     day = today or datetime.now(UTC).date()
     f = filters
-    pool = await candidates.search_pool(
+    pool = await only_published(session, await candidates.search_pool(
         session, company_id=company_id, roles=[str(r) for r in f.roles] if f.roles else None,
         grades=grades_between(f.grade_min, f.grade_max), salary_max=f.salary_max,
         formats=[str(x) for x in f.formats] if f.formats else None,
         employment_types=[str(x) for x in f.employment_types] if f.employment_types else None,
         cities=f.cities, relocation_ok=f.relocation_ok, active_only=bool(f.active_only),
-    )  # fmt: skip
+    ))  # fmt: skip
     ids = [c.user_id for c in pool]
     owned = await graph.all_skills_of(session, ids)
 
@@ -345,15 +414,25 @@ async def search_candidates(
                 owned[c.user_id])
         )  # fmt: skip
 
+    query_vec = None
     if vacancy_id is not None and rows:
         loaded = await load_vacancy(session, vacancy_id)
         if loaded is not None:
             v, adj = loaded
+            query_vec = v.embedding
             views = await build_views(session, [r.cand for r in rows], v, adj, trust, day)
             for r, view in zip(rows, views, strict=True):
                 r.result = score_candidate(v, view, adj, cfg)
                 if r.result is not None:
                     r.p_accept = p_accept_for(v, r.cand, responsibility_score, pa_cfg)
+    for r in rows:
+        if vacancy_id is None or r.result is not None:  # не прошедших фильтры не подстраиваем
+            r.x = features_of(r)
+    t = (
+        apply_tuning(rows, session_signals[0], session_signals[1], query_vec, tcfg)
+        if session_signals is not None
+        else None
+    )
 
     def sortkey(r: Row) -> float:
         k = r.key(sort)
@@ -399,8 +478,18 @@ async def search_candidates(
         ).model_dump(mode="json")
         for r in page
     ]
-    out = {"items": items, "next_cursor": next_cursor, "total": total}
-    if redis is not None:
+    out: dict[str, Any] = {
+        "items": items,
+        "next_cursor": next_cursor,
+        "total": total,
+        "features": {r.cand.pseudo_id: r.x for r in page if r.x is not None},
+    }
+    if t is not None:
+        out["tuning"] = {
+            "active": t.active, "signals": t.signals,
+            "chips": tun.chips(t.weights, tcfg) if t.active else [], "hints": t.hints,
+        }  # fmt: skip
+    if redis is not None and not tuned_session:
         try:
             await redis.set(key, json.dumps(out, ensure_ascii=False), ex=CACHE_TTL)
         except Exception:  # noqa: BLE001

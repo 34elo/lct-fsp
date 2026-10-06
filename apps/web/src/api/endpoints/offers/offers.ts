@@ -26,19 +26,25 @@ import type {
 import type {
   ComplaintIn,
   ComplaintOut,
-  Contacts,
+  ContactsOutput,
   CreateOffer,
+  CreateTeamOffer,
   DeclineIn,
   HTTPValidationError,
+  ListFspTeamsTeamsGetParams,
   ListOffersOffersGetParams,
   MessageIn,
   MessageOut,
+  MyOffersCandidatesMeOffersGetParams,
   OfferEventOut,
   OfferForCandidate,
   OfferForCompany,
+  ProblemOut,
   SalaryHint,
   SalaryHintIn,
-  StatusIn
+  StatusIn,
+  TeamOfferOut,
+  TeamOut
 } from '../../model';
 
 import { apiFetch } from '../../mutator';
@@ -69,15 +75,50 @@ export type salaryHintOffersSalaryHintPostResponse200 = {
   status: 200
 }
 
-export type salaryHintOffersSalaryHintPostResponse422 = {
-  data: HTTPValidationError
+export type salaryHintOffersSalaryHintPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type salaryHintOffersSalaryHintPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type salaryHintOffersSalaryHintPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type salaryHintOffersSalaryHintPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type salaryHintOffersSalaryHintPostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type salaryHintOffersSalaryHintPostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type salaryHintOffersSalaryHintPostResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type salaryHintOffersSalaryHintPostResponse422ApplicationJson = {
+  data: ProblemOut
   status: 422
 }
 
 export type salaryHintOffersSalaryHintPostResponseSuccess = (salaryHintOffersSalaryHintPostResponse200) & {
   headers: Headers;
 };
-export type salaryHintOffersSalaryHintPostResponseError = (salaryHintOffersSalaryHintPostResponse422) & {
+export type salaryHintOffersSalaryHintPostResponseError = (salaryHintOffersSalaryHintPostResponse401ApplicationProblemJson | salaryHintOffersSalaryHintPostResponse401ApplicationJson | salaryHintOffersSalaryHintPostResponse403ApplicationProblemJson | salaryHintOffersSalaryHintPostResponse403ApplicationJson | salaryHintOffersSalaryHintPostResponse404ApplicationProblemJson | salaryHintOffersSalaryHintPostResponse404ApplicationJson | salaryHintOffersSalaryHintPostResponse422ApplicationProblemJson | salaryHintOffersSalaryHintPostResponse422ApplicationJson) & {
   headers: Headers;
 };
 
@@ -126,7 +167,7 @@ return apiFetch<salaryHintOffersSalaryHintPostResponse>(getSalaryHintOffersSalar
 
 export const getSalaryHintOffersSalaryHintPostMutationKey = () => ['salaryHintOffersSalaryHintPost'] as const;
 
-export const getSalaryHintOffersSalaryHintPostMutationOptions = <TError = ErrorType<HTTPValidationError>,
+export const getSalaryHintOffersSalaryHintPostMutationOptions = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof salaryHintOffersSalaryHintPost>>, TError,SalaryHintOffersSalaryHintPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof salaryHintOffersSalaryHintPost>>, TError,SalaryHintOffersSalaryHintPostMutationVariables, TContext> => {
 
@@ -155,13 +196,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type SalaryHintOffersSalaryHintPostMutationResult = NonNullable<Awaited<ReturnType<typeof salaryHintOffersSalaryHintPost>>>
     export type SalaryHintOffersSalaryHintPostMutationBody = SalaryHintIn
-    export type SalaryHintOffersSalaryHintPostMutationError = ErrorType<HTTPValidationError>
+    export type SalaryHintOffersSalaryHintPostMutationError = ErrorType<ProblemOut>
     export type SalaryHintOffersSalaryHintPostMutationVariables = {data: SalaryHintIn}
 
     /**
  * @summary Salary Hint
  */
-export const useSalaryHintOffersSalaryHintPost = <TError = ErrorType<HTTPValidationError>,
+export const useSalaryHintOffersSalaryHintPost = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof salaryHintOffersSalaryHintPost>>, TError,SalaryHintOffersSalaryHintPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof salaryHintOffersSalaryHintPost>>,
@@ -176,15 +217,70 @@ export const useSalaryHintOffersSalaryHintPost = <TError = ErrorType<HTTPValidat
   status: 201
 }
 
-export type createOfferOffersPostResponse422 = {
-  data: HTTPValidationError
+export type createOfferOffersPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type createOfferOffersPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type createOfferOffersPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type createOfferOffersPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type createOfferOffersPostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type createOfferOffersPostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type createOfferOffersPostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type createOfferOffersPostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type createOfferOffersPostResponse422ApplicationProblemJson = {
+  data: ProblemOut
   status: 422
+}
+
+export type createOfferOffersPostResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type createOfferOffersPostResponse429ApplicationProblemJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type createOfferOffersPostResponse429ApplicationJson = {
+  data: ProblemOut
+  status: 429
 }
 
 export type createOfferOffersPostResponseSuccess = (createOfferOffersPostResponse201) & {
   headers: Headers;
 };
-export type createOfferOffersPostResponseError = (createOfferOffersPostResponse422) & {
+export type createOfferOffersPostResponseError = (createOfferOffersPostResponse401ApplicationProblemJson | createOfferOffersPostResponse401ApplicationJson | createOfferOffersPostResponse403ApplicationProblemJson | createOfferOffersPostResponse403ApplicationJson | createOfferOffersPostResponse404ApplicationProblemJson | createOfferOffersPostResponse404ApplicationJson | createOfferOffersPostResponse409ApplicationProblemJson | createOfferOffersPostResponse409ApplicationJson | createOfferOffersPostResponse422ApplicationProblemJson | createOfferOffersPostResponse422ApplicationJson | createOfferOffersPostResponse429ApplicationProblemJson | createOfferOffersPostResponse429ApplicationJson) & {
   headers: Headers;
 };
 
@@ -232,7 +328,7 @@ return apiFetch<createOfferOffersPostResponse>(getCreateOfferOffersPostUrl(),
 
 export const getCreateOfferOffersPostMutationKey = () => ['createOfferOffersPost'] as const;
 
-export const getCreateOfferOffersPostMutationOptions = <TError = ErrorType<HTTPValidationError>,
+export const getCreateOfferOffersPostMutationOptions = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createOfferOffersPost>>, TError,CreateOfferOffersPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createOfferOffersPost>>, TError,CreateOfferOffersPostMutationVariables, TContext> => {
 
@@ -261,13 +357,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type CreateOfferOffersPostMutationResult = NonNullable<Awaited<ReturnType<typeof createOfferOffersPost>>>
     export type CreateOfferOffersPostMutationBody = CreateOffer
-    export type CreateOfferOffersPostMutationError = ErrorType<HTTPValidationError>
+    export type CreateOfferOffersPostMutationError = ErrorType<ProblemOut>
     export type CreateOfferOffersPostMutationVariables = {data: CreateOffer}
 
     /**
  * @summary Create Offer
  */
-export const useCreateOfferOffersPost = <TError = ErrorType<HTTPValidationError>,
+export const useCreateOfferOffersPost = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createOfferOffersPost>>, TError,CreateOfferOffersPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createOfferOffersPost>>,
@@ -282,6 +378,26 @@ export const useCreateOfferOffersPost = <TError = ErrorType<HTTPValidationError>
   status: 200
 }
 
+export type listOffersOffersGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type listOffersOffersGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type listOffersOffersGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type listOffersOffersGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
 export type listOffersOffersGetResponse422 = {
   data: HTTPValidationError
   status: 422
@@ -290,7 +406,7 @@ export type listOffersOffersGetResponse422 = {
 export type listOffersOffersGetResponseSuccess = (listOffersOffersGetResponse200) & {
   headers: Headers;
 };
-export type listOffersOffersGetResponseError = (listOffersOffersGetResponse422) & {
+export type listOffersOffersGetResponseError = (listOffersOffersGetResponse401ApplicationProblemJson | listOffersOffersGetResponse401ApplicationJson | listOffersOffersGetResponse403ApplicationProblemJson | listOffersOffersGetResponse403ApplicationJson | listOffersOffersGetResponse422) & {
   headers: Headers;
 };
 
@@ -312,6 +428,7 @@ export const getListOffersOffersGetUrl = (params?: ListOffersOffersGetParams,) =
 }
 
 /**
+ * Офферы компании; `initiator=candidate` - отклики на её вакансии.
  * @summary List Offers
  */
 export const listOffersOffersGet = async (params?: ListOffersOffersGetParams, options?: Parameters<typeof apiFetch>[1]): Promise<listOffersOffersGetResponse> => {
@@ -336,7 +453,7 @@ export const getListOffersOffersGetQueryKey = (params?: ListOffersOffersGetParam
     }
 
 
-export const getListOffersOffersGetQueryOptions = <TData = Awaited<ReturnType<typeof listOffersOffersGet>>, TError = ErrorType<HTTPValidationError>>(params?: ListOffersOffersGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOffersOffersGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+export const getListOffersOffersGetQueryOptions = <TData = Awaited<ReturnType<typeof listOffersOffersGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(params?: ListOffersOffersGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOffersOffersGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -355,10 +472,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type ListOffersOffersGetQueryResult = NonNullable<Awaited<ReturnType<typeof listOffersOffersGet>>>
-export type ListOffersOffersGetQueryError = ErrorType<HTTPValidationError>
+export type ListOffersOffersGetQueryError = ErrorType<ProblemOut | HTTPValidationError>
 
 
-export function useListOffersOffersGet<TData = Awaited<ReturnType<typeof listOffersOffersGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useListOffersOffersGet<TData = Awaited<ReturnType<typeof listOffersOffersGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  params: undefined |  ListOffersOffersGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOffersOffersGet>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof listOffersOffersGet>>,
@@ -368,7 +485,7 @@ export function useListOffersOffersGet<TData = Awaited<ReturnType<typeof listOff
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListOffersOffersGet<TData = Awaited<ReturnType<typeof listOffersOffersGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useListOffersOffersGet<TData = Awaited<ReturnType<typeof listOffersOffersGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  params?: ListOffersOffersGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOffersOffersGet>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof listOffersOffersGet>>,
@@ -378,7 +495,7 @@ export function useListOffersOffersGet<TData = Awaited<ReturnType<typeof listOff
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListOffersOffersGet<TData = Awaited<ReturnType<typeof listOffersOffersGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useListOffersOffersGet<TData = Awaited<ReturnType<typeof listOffersOffersGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  params?: ListOffersOffersGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOffersOffersGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -386,7 +503,7 @@ export function useListOffersOffersGet<TData = Awaited<ReturnType<typeof listOff
  * @summary List Offers
  */
 
-export function useListOffersOffersGet<TData = Awaited<ReturnType<typeof listOffersOffersGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useListOffersOffersGet<TData = Awaited<ReturnType<typeof listOffersOffersGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  params?: ListOffersOffersGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOffersOffersGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -403,32 +520,67 @@ export function useListOffersOffersGet<TData = Awaited<ReturnType<typeof listOff
 
 
 
-export type myOffersCandidatesMeOffersGetResponse200 = {
-  data: OfferForCandidate[]
+export type listFspTeamsTeamsGetResponse200 = {
+  data: TeamOut[]
   status: 200
 }
 
-export type myOffersCandidatesMeOffersGetResponseSuccess = (myOffersCandidatesMeOffersGetResponse200) & {
+export type listFspTeamsTeamsGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type listFspTeamsTeamsGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type listFspTeamsTeamsGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type listFspTeamsTeamsGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type listFspTeamsTeamsGetResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type listFspTeamsTeamsGetResponseSuccess = (listFspTeamsTeamsGetResponse200) & {
   headers: Headers;
 };
-;
+export type listFspTeamsTeamsGetResponseError = (listFspTeamsTeamsGetResponse401ApplicationProblemJson | listFspTeamsTeamsGetResponse401ApplicationJson | listFspTeamsTeamsGetResponse403ApplicationProblemJson | listFspTeamsTeamsGetResponse403ApplicationJson | listFspTeamsTeamsGetResponse422) & {
+  headers: Headers;
+};
 
-export type myOffersCandidatesMeOffersGetResponse = (myOffersCandidatesMeOffersGetResponseSuccess)
+export type listFspTeamsTeamsGetResponse = (listFspTeamsTeamsGetResponseSuccess | listFspTeamsTeamsGetResponseError)
 
-export const getMyOffersCandidatesMeOffersGetUrl = () => {
+export const getListFspTeamsTeamsGetUrl = (params?: ListFspTeamsTeamsGetParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
 
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
 
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/candidates/me/offers`
+  return stringifiedParams.length > 0 ? `/teams?${stringifiedParams}` : `/teams`
 }
 
 /**
- * @summary My Offers
+ * Команды ФСП, где есть минимум два видимых кандидата платформы (анонимно, E15-2).
+ * @summary List Fsp Teams
  */
-export const myOffersCandidatesMeOffersGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<myOffersCandidatesMeOffersGetResponse> => {
+export const listFspTeamsTeamsGet = async (params?: ListFspTeamsTeamsGetParams, options?: Parameters<typeof apiFetch>[1]): Promise<listFspTeamsTeamsGetResponse> => {
 
-  return apiFetch<myOffersCandidatesMeOffersGetResponse>(getMyOffersCandidatesMeOffersGetUrl(),
+  return apiFetch<listFspTeamsTeamsGetResponse>(getListFspTeamsTeamsGetUrl(params),
   {
     ...options,
     method: 'GET'
@@ -441,69 +593,69 @@ export const myOffersCandidatesMeOffersGet = async ( options?: Parameters<typeof
 
 
 
-export const getMyOffersCandidatesMeOffersGetQueryKey = () => {
+export const getListFspTeamsTeamsGetQueryKey = (params?: ListFspTeamsTeamsGetParams,) => {
     return [
-    `/candidates/me/offers`
+    `/teams`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getMyOffersCandidatesMeOffersGetQueryOptions = <TData = Awaited<ReturnType<typeof myOffersCandidatesMeOffersGet>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myOffersCandidatesMeOffersGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+export const getListFspTeamsTeamsGetQueryOptions = <TData = Awaited<ReturnType<typeof listFspTeamsTeamsGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(params?: ListFspTeamsTeamsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listFspTeamsTeamsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getMyOffersCandidatesMeOffersGetQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getListFspTeamsTeamsGetQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof myOffersCandidatesMeOffersGet>>> = ({ signal }) => myOffersCandidatesMeOffersGet({ signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listFspTeamsTeamsGet>>> = ({ signal }) => listFspTeamsTeamsGet(params, { signal, ...requestOptions });
 
 
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof myOffersCandidatesMeOffersGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listFspTeamsTeamsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type MyOffersCandidatesMeOffersGetQueryResult = NonNullable<Awaited<ReturnType<typeof myOffersCandidatesMeOffersGet>>>
-export type MyOffersCandidatesMeOffersGetQueryError = ErrorType<unknown>
+export type ListFspTeamsTeamsGetQueryResult = NonNullable<Awaited<ReturnType<typeof listFspTeamsTeamsGet>>>
+export type ListFspTeamsTeamsGetQueryError = ErrorType<ProblemOut | HTTPValidationError>
 
 
-export function useMyOffersCandidatesMeOffersGet<TData = Awaited<ReturnType<typeof myOffersCandidatesMeOffersGet>>, TError = ErrorType<unknown>>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof myOffersCandidatesMeOffersGet>>, TError, TData>> & Pick<
+export function useListFspTeamsTeamsGet<TData = Awaited<ReturnType<typeof listFspTeamsTeamsGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ params: undefined |  ListFspTeamsTeamsGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listFspTeamsTeamsGet>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof myOffersCandidatesMeOffersGet>>,
+          Awaited<ReturnType<typeof listFspTeamsTeamsGet>>,
           TError,
-          Awaited<ReturnType<typeof myOffersCandidatesMeOffersGet>>
+          Awaited<ReturnType<typeof listFspTeamsTeamsGet>>
         > , 'initialData'
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useMyOffersCandidatesMeOffersGet<TData = Awaited<ReturnType<typeof myOffersCandidatesMeOffersGet>>, TError = ErrorType<unknown>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myOffersCandidatesMeOffersGet>>, TError, TData>> & Pick<
+export function useListFspTeamsTeamsGet<TData = Awaited<ReturnType<typeof listFspTeamsTeamsGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ params?: ListFspTeamsTeamsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listFspTeamsTeamsGet>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof myOffersCandidatesMeOffersGet>>,
+          Awaited<ReturnType<typeof listFspTeamsTeamsGet>>,
           TError,
-          Awaited<ReturnType<typeof myOffersCandidatesMeOffersGet>>
+          Awaited<ReturnType<typeof listFspTeamsTeamsGet>>
         > , 'initialData'
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useMyOffersCandidatesMeOffersGet<TData = Awaited<ReturnType<typeof myOffersCandidatesMeOffersGet>>, TError = ErrorType<unknown>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myOffersCandidatesMeOffersGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+export function useListFspTeamsTeamsGet<TData = Awaited<ReturnType<typeof listFspTeamsTeamsGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ params?: ListFspTeamsTeamsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listFspTeamsTeamsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary My Offers
+ * @summary List Fsp Teams
  */
 
-export function useMyOffersCandidatesMeOffersGet<TData = Awaited<ReturnType<typeof myOffersCandidatesMeOffersGet>>, TError = ErrorType<unknown>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myOffersCandidatesMeOffersGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+export function useListFspTeamsTeamsGet<TData = Awaited<ReturnType<typeof listFspTeamsTeamsGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ params?: ListFspTeamsTeamsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listFspTeamsTeamsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getMyOffersCandidatesMeOffersGetQueryOptions(options)
+  const queryOptions = getListFspTeamsTeamsGetQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -515,9 +667,614 @@ export function useMyOffersCandidatesMeOffersGet<TData = Awaited<ReturnType<type
 
 
 
-export type getOfferOffersOfferIdGetResponse200 = {
+export type createTeamOfferTeamOffersPostResponse201 = {
+  data: TeamOfferOut
+  status: 201
+}
+
+export type createTeamOfferTeamOffersPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type createTeamOfferTeamOffersPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type createTeamOfferTeamOffersPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type createTeamOfferTeamOffersPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type createTeamOfferTeamOffersPostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type createTeamOfferTeamOffersPostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type createTeamOfferTeamOffersPostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type createTeamOfferTeamOffersPostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type createTeamOfferTeamOffersPostResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type createTeamOfferTeamOffersPostResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type createTeamOfferTeamOffersPostResponse429ApplicationProblemJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type createTeamOfferTeamOffersPostResponse429ApplicationJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type createTeamOfferTeamOffersPostResponseSuccess = (createTeamOfferTeamOffersPostResponse201) & {
+  headers: Headers;
+};
+export type createTeamOfferTeamOffersPostResponseError = (createTeamOfferTeamOffersPostResponse401ApplicationProblemJson | createTeamOfferTeamOffersPostResponse401ApplicationJson | createTeamOfferTeamOffersPostResponse403ApplicationProblemJson | createTeamOfferTeamOffersPostResponse403ApplicationJson | createTeamOfferTeamOffersPostResponse404ApplicationProblemJson | createTeamOfferTeamOffersPostResponse404ApplicationJson | createTeamOfferTeamOffersPostResponse409ApplicationProblemJson | createTeamOfferTeamOffersPostResponse409ApplicationJson | createTeamOfferTeamOffersPostResponse422ApplicationProblemJson | createTeamOfferTeamOffersPostResponse422ApplicationJson | createTeamOfferTeamOffersPostResponse429ApplicationProblemJson | createTeamOfferTeamOffersPostResponse429ApplicationJson) & {
+  headers: Headers;
+};
+
+export type createTeamOfferTeamOffersPostResponse = (createTeamOfferTeamOffersPostResponseSuccess | createTeamOfferTeamOffersPostResponseError)
+
+export const getCreateTeamOfferTeamOffersPostUrl = () => {
+
+
+
+
+  return `/team-offers`
+}
+
+/**
+ * Командный оффер: по офферу на участника с общим `team_offer_id`, вилка у каждого своя.
+ * @summary Create Team Offer
+ */
+export const createTeamOfferTeamOffersPost = async (createTeamOffer: CreateTeamOffer, options?: Parameters<typeof apiFetch>[1]): Promise<createTeamOfferTeamOffersPostResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<createTeamOfferTeamOffersPostResponse>(getCreateTeamOfferTeamOffersPostUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(createTeamOffer)
+  }
+);}
+
+
+
+
+
+export const getCreateTeamOfferTeamOffersPostMutationKey = () => ['createTeamOfferTeamOffersPost'] as const;
+
+export const getCreateTeamOfferTeamOffersPostMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTeamOfferTeamOffersPost>>, TError,CreateTeamOfferTeamOffersPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createTeamOfferTeamOffersPost>>, TError,CreateTeamOfferTeamOffersPostMutationVariables, TContext> => {
+
+const mutationKey = getCreateTeamOfferTeamOffersPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createTeamOfferTeamOffersPost>>, CreateTeamOfferTeamOffersPostMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createTeamOfferTeamOffersPost(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateTeamOfferTeamOffersPostMutationResult = NonNullable<Awaited<ReturnType<typeof createTeamOfferTeamOffersPost>>>
+    export type CreateTeamOfferTeamOffersPostMutationBody = CreateTeamOffer
+    export type CreateTeamOfferTeamOffersPostMutationError = ErrorType<ProblemOut>
+    export type CreateTeamOfferTeamOffersPostMutationVariables = {data: CreateTeamOffer}
+
+    /**
+ * @summary Create Team Offer
+ */
+export const useCreateTeamOfferTeamOffersPost = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTeamOfferTeamOffersPost>>, TError,CreateTeamOfferTeamOffersPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createTeamOfferTeamOffersPost>>,
+        TError,
+        CreateTeamOfferTeamOffersPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateTeamOfferTeamOffersPostMutationOptions(options), queryClient);
+    }
+    export type myOffersCandidatesMeOffersGetResponse200 = {
+  data: OfferForCandidate[]
+  status: 200
+}
+
+export type myOffersCandidatesMeOffersGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type myOffersCandidatesMeOffersGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type myOffersCandidatesMeOffersGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type myOffersCandidatesMeOffersGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type myOffersCandidatesMeOffersGetResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type myOffersCandidatesMeOffersGetResponseSuccess = (myOffersCandidatesMeOffersGetResponse200) & {
+  headers: Headers;
+};
+export type myOffersCandidatesMeOffersGetResponseError = (myOffersCandidatesMeOffersGetResponse401ApplicationProblemJson | myOffersCandidatesMeOffersGetResponse401ApplicationJson | myOffersCandidatesMeOffersGetResponse403ApplicationProblemJson | myOffersCandidatesMeOffersGetResponse403ApplicationJson | myOffersCandidatesMeOffersGetResponse422) & {
+  headers: Headers;
+};
+
+export type myOffersCandidatesMeOffersGetResponse = (myOffersCandidatesMeOffersGetResponseSuccess | myOffersCandidatesMeOffersGetResponseError)
+
+export const getMyOffersCandidatesMeOffersGetUrl = (params?: MyOffersCandidatesMeOffersGetParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/candidates/me/offers?${stringifiedParams}` : `/candidates/me/offers`
+}
+
+/**
+ * @summary My Offers
+ */
+export const myOffersCandidatesMeOffersGet = async (params?: MyOffersCandidatesMeOffersGetParams, options?: Parameters<typeof apiFetch>[1]): Promise<myOffersCandidatesMeOffersGetResponse> => {
+
+  return apiFetch<myOffersCandidatesMeOffersGetResponse>(getMyOffersCandidatesMeOffersGetUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getMyOffersCandidatesMeOffersGetQueryKey = (params?: MyOffersCandidatesMeOffersGetParams,) => {
+    return [
+    `/candidates/me/offers`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getMyOffersCandidatesMeOffersGetQueryOptions = <TData = Awaited<ReturnType<typeof myOffersCandidatesMeOffersGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(params?: MyOffersCandidatesMeOffersGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myOffersCandidatesMeOffersGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMyOffersCandidatesMeOffersGetQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof myOffersCandidatesMeOffersGet>>> = ({ signal }) => myOffersCandidatesMeOffersGet(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof myOffersCandidatesMeOffersGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type MyOffersCandidatesMeOffersGetQueryResult = NonNullable<Awaited<ReturnType<typeof myOffersCandidatesMeOffersGet>>>
+export type MyOffersCandidatesMeOffersGetQueryError = ErrorType<ProblemOut | HTTPValidationError>
+
+
+export function useMyOffersCandidatesMeOffersGet<TData = Awaited<ReturnType<typeof myOffersCandidatesMeOffersGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ params: undefined |  MyOffersCandidatesMeOffersGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof myOffersCandidatesMeOffersGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof myOffersCandidatesMeOffersGet>>,
+          TError,
+          Awaited<ReturnType<typeof myOffersCandidatesMeOffersGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMyOffersCandidatesMeOffersGet<TData = Awaited<ReturnType<typeof myOffersCandidatesMeOffersGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ params?: MyOffersCandidatesMeOffersGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myOffersCandidatesMeOffersGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof myOffersCandidatesMeOffersGet>>,
+          TError,
+          Awaited<ReturnType<typeof myOffersCandidatesMeOffersGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMyOffersCandidatesMeOffersGet<TData = Awaited<ReturnType<typeof myOffersCandidatesMeOffersGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ params?: MyOffersCandidatesMeOffersGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myOffersCandidatesMeOffersGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary My Offers
+ */
+
+export function useMyOffersCandidatesMeOffersGet<TData = Awaited<ReturnType<typeof myOffersCandidatesMeOffersGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ params?: MyOffersCandidatesMeOffersGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myOffersCandidatesMeOffersGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMyOffersCandidatesMeOffersGetQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type myApplicationsCandidatesMeApplicationsGetResponse200 = {
+  data: OfferForCandidate[]
+  status: 200
+}
+
+export type myApplicationsCandidatesMeApplicationsGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type myApplicationsCandidatesMeApplicationsGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type myApplicationsCandidatesMeApplicationsGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type myApplicationsCandidatesMeApplicationsGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type myApplicationsCandidatesMeApplicationsGetResponseSuccess = (myApplicationsCandidatesMeApplicationsGetResponse200) & {
+  headers: Headers;
+};
+export type myApplicationsCandidatesMeApplicationsGetResponseError = (myApplicationsCandidatesMeApplicationsGetResponse401ApplicationProblemJson | myApplicationsCandidatesMeApplicationsGetResponse401ApplicationJson | myApplicationsCandidatesMeApplicationsGetResponse403ApplicationProblemJson | myApplicationsCandidatesMeApplicationsGetResponse403ApplicationJson) & {
+  headers: Headers;
+};
+
+export type myApplicationsCandidatesMeApplicationsGetResponse = (myApplicationsCandidatesMeApplicationsGetResponseSuccess | myApplicationsCandidatesMeApplicationsGetResponseError)
+
+export const getMyApplicationsCandidatesMeApplicationsGetUrl = () => {
+
+
+
+
+  return `/candidates/me/applications`
+}
+
+/**
+ * Мои отклики на вакансии (`initiator = candidate`) со статусами.
+ * @summary My Applications
+ */
+export const myApplicationsCandidatesMeApplicationsGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<myApplicationsCandidatesMeApplicationsGetResponse> => {
+
+  return apiFetch<myApplicationsCandidatesMeApplicationsGetResponse>(getMyApplicationsCandidatesMeApplicationsGetUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getMyApplicationsCandidatesMeApplicationsGetQueryKey = () => {
+    return [
+    `/candidates/me/applications`
+    ] as const;
+    }
+
+
+export const getMyApplicationsCandidatesMeApplicationsGetQueryOptions = <TData = Awaited<ReturnType<typeof myApplicationsCandidatesMeApplicationsGet>>, TError = ErrorType<ProblemOut>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myApplicationsCandidatesMeApplicationsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMyApplicationsCandidatesMeApplicationsGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof myApplicationsCandidatesMeApplicationsGet>>> = ({ signal }) => myApplicationsCandidatesMeApplicationsGet({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof myApplicationsCandidatesMeApplicationsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type MyApplicationsCandidatesMeApplicationsGetQueryResult = NonNullable<Awaited<ReturnType<typeof myApplicationsCandidatesMeApplicationsGet>>>
+export type MyApplicationsCandidatesMeApplicationsGetQueryError = ErrorType<ProblemOut>
+
+
+export function useMyApplicationsCandidatesMeApplicationsGet<TData = Awaited<ReturnType<typeof myApplicationsCandidatesMeApplicationsGet>>, TError = ErrorType<ProblemOut>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof myApplicationsCandidatesMeApplicationsGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof myApplicationsCandidatesMeApplicationsGet>>,
+          TError,
+          Awaited<ReturnType<typeof myApplicationsCandidatesMeApplicationsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMyApplicationsCandidatesMeApplicationsGet<TData = Awaited<ReturnType<typeof myApplicationsCandidatesMeApplicationsGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myApplicationsCandidatesMeApplicationsGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof myApplicationsCandidatesMeApplicationsGet>>,
+          TError,
+          Awaited<ReturnType<typeof myApplicationsCandidatesMeApplicationsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMyApplicationsCandidatesMeApplicationsGet<TData = Awaited<ReturnType<typeof myApplicationsCandidatesMeApplicationsGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myApplicationsCandidatesMeApplicationsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary My Applications
+ */
+
+export function useMyApplicationsCandidatesMeApplicationsGet<TData = Awaited<ReturnType<typeof myApplicationsCandidatesMeApplicationsGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myApplicationsCandidatesMeApplicationsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMyApplicationsCandidatesMeApplicationsGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type withdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostResponse200 = {
+  data: OfferForCandidate
+  status: 200
+}
+
+export type withdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type withdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type withdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type withdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type withdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type withdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type withdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type withdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type withdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type withdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostResponseSuccess = (withdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostResponse200) & {
+  headers: Headers;
+};
+export type withdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostResponseError = (withdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostResponse401ApplicationProblemJson | withdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostResponse401ApplicationJson | withdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostResponse403ApplicationProblemJson | withdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostResponse403ApplicationJson | withdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostResponse404ApplicationProblemJson | withdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostResponse404ApplicationJson | withdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostResponse409ApplicationProblemJson | withdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostResponse409ApplicationJson | withdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostResponse422) & {
+  headers: Headers;
+};
+
+export type withdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostResponse = (withdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostResponseSuccess | withdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostResponseError)
+
+export const getWithdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostUrl = (offerId: string,) => {
+
+
+
+
+  return `/candidates/me/applications/${offerId}/withdraw`
+}
+
+/**
+ * @summary Withdraw Application
+ */
+export const withdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPost = async (offerId: string, options?: Parameters<typeof apiFetch>[1]): Promise<withdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostResponse> => {
+
+  return apiFetch<withdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostResponse>(getWithdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostUrl(offerId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getWithdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostMutationKey = () => ['withdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPost'] as const;
+
+export const getWithdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof withdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPost>>, TError,WithdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof withdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPost>>, TError,WithdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostMutationVariables, TContext> => {
+
+const mutationKey = getWithdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof withdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPost>>, WithdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostMutationVariables> = (props) => {
+          const {offerId} = props ?? {};
+
+          return  withdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPost(offerId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WithdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostMutationResult = NonNullable<Awaited<ReturnType<typeof withdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPost>>>
+
+    export type WithdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostMutationError = ErrorType<ProblemOut | HTTPValidationError>
+    export type WithdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostMutationVariables = {offerId: string}
+
+    /**
+ * @summary Withdraw Application
+ */
+export const useWithdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPost = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof withdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPost>>, TError,WithdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof withdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPost>>,
+        TError,
+        WithdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getWithdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPostMutationOptions(options), queryClient);
+    }
+    export type getOfferOffersOfferIdGetResponse200 = {
   data: OfferForCandidate | OfferForCompany
   status: 200
+}
+
+export type getOfferOffersOfferIdGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type getOfferOffersOfferIdGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type getOfferOffersOfferIdGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type getOfferOffersOfferIdGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type getOfferOffersOfferIdGetResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type getOfferOffersOfferIdGetResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
 }
 
 export type getOfferOffersOfferIdGetResponse422 = {
@@ -528,7 +1285,7 @@ export type getOfferOffersOfferIdGetResponse422 = {
 export type getOfferOffersOfferIdGetResponseSuccess = (getOfferOffersOfferIdGetResponse200) & {
   headers: Headers;
 };
-export type getOfferOffersOfferIdGetResponseError = (getOfferOffersOfferIdGetResponse422) & {
+export type getOfferOffersOfferIdGetResponseError = (getOfferOffersOfferIdGetResponse401ApplicationProblemJson | getOfferOffersOfferIdGetResponse401ApplicationJson | getOfferOffersOfferIdGetResponse403ApplicationProblemJson | getOfferOffersOfferIdGetResponse403ApplicationJson | getOfferOffersOfferIdGetResponse404ApplicationProblemJson | getOfferOffersOfferIdGetResponse404ApplicationJson | getOfferOffersOfferIdGetResponse422) & {
   headers: Headers;
 };
 
@@ -567,7 +1324,7 @@ export const getGetOfferOffersOfferIdGetQueryKey = (offerId: string,) => {
     }
 
 
-export const getGetOfferOffersOfferIdGetQueryOptions = <TData = Awaited<ReturnType<typeof getOfferOffersOfferIdGet>>, TError = ErrorType<HTTPValidationError>>(offerId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOfferOffersOfferIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+export const getGetOfferOffersOfferIdGetQueryOptions = <TData = Awaited<ReturnType<typeof getOfferOffersOfferIdGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(offerId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOfferOffersOfferIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -586,10 +1343,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetOfferOffersOfferIdGetQueryResult = NonNullable<Awaited<ReturnType<typeof getOfferOffersOfferIdGet>>>
-export type GetOfferOffersOfferIdGetQueryError = ErrorType<HTTPValidationError>
+export type GetOfferOffersOfferIdGetQueryError = ErrorType<ProblemOut | HTTPValidationError>
 
 
-export function useGetOfferOffersOfferIdGet<TData = Awaited<ReturnType<typeof getOfferOffersOfferIdGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useGetOfferOffersOfferIdGet<TData = Awaited<ReturnType<typeof getOfferOffersOfferIdGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  offerId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOfferOffersOfferIdGet>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getOfferOffersOfferIdGet>>,
@@ -599,7 +1356,7 @@ export function useGetOfferOffersOfferIdGet<TData = Awaited<ReturnType<typeof ge
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetOfferOffersOfferIdGet<TData = Awaited<ReturnType<typeof getOfferOffersOfferIdGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useGetOfferOffersOfferIdGet<TData = Awaited<ReturnType<typeof getOfferOffersOfferIdGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  offerId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOfferOffersOfferIdGet>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getOfferOffersOfferIdGet>>,
@@ -609,7 +1366,7 @@ export function useGetOfferOffersOfferIdGet<TData = Awaited<ReturnType<typeof ge
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetOfferOffersOfferIdGet<TData = Awaited<ReturnType<typeof getOfferOffersOfferIdGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useGetOfferOffersOfferIdGet<TData = Awaited<ReturnType<typeof getOfferOffersOfferIdGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  offerId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOfferOffersOfferIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -617,7 +1374,7 @@ export function useGetOfferOffersOfferIdGet<TData = Awaited<ReturnType<typeof ge
  * @summary Get Offer
  */
 
-export function useGetOfferOffersOfferIdGet<TData = Awaited<ReturnType<typeof getOfferOffersOfferIdGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useGetOfferOffersOfferIdGet<TData = Awaited<ReturnType<typeof getOfferOffersOfferIdGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  offerId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOfferOffersOfferIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -639,6 +1396,36 @@ export type acceptOfferOffersOfferIdAcceptPostResponse200 = {
   status: 200
 }
 
+export type acceptOfferOffersOfferIdAcceptPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type acceptOfferOffersOfferIdAcceptPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type acceptOfferOffersOfferIdAcceptPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type acceptOfferOffersOfferIdAcceptPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type acceptOfferOffersOfferIdAcceptPostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type acceptOfferOffersOfferIdAcceptPostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
 export type acceptOfferOffersOfferIdAcceptPostResponse422 = {
   data: HTTPValidationError
   status: 422
@@ -647,7 +1434,7 @@ export type acceptOfferOffersOfferIdAcceptPostResponse422 = {
 export type acceptOfferOffersOfferIdAcceptPostResponseSuccess = (acceptOfferOffersOfferIdAcceptPostResponse200) & {
   headers: Headers;
 };
-export type acceptOfferOffersOfferIdAcceptPostResponseError = (acceptOfferOffersOfferIdAcceptPostResponse422) & {
+export type acceptOfferOffersOfferIdAcceptPostResponseError = (acceptOfferOffersOfferIdAcceptPostResponse401ApplicationProblemJson | acceptOfferOffersOfferIdAcceptPostResponse401ApplicationJson | acceptOfferOffersOfferIdAcceptPostResponse403ApplicationProblemJson | acceptOfferOffersOfferIdAcceptPostResponse403ApplicationJson | acceptOfferOffersOfferIdAcceptPostResponse404ApplicationProblemJson | acceptOfferOffersOfferIdAcceptPostResponse404ApplicationJson | acceptOfferOffersOfferIdAcceptPostResponse422) & {
   headers: Headers;
 };
 
@@ -681,7 +1468,7 @@ export const acceptOfferOffersOfferIdAcceptPost = async (offerId: string, option
 
 export const getAcceptOfferOffersOfferIdAcceptPostMutationKey = () => ['acceptOfferOffersOfferIdAcceptPost'] as const;
 
-export const getAcceptOfferOffersOfferIdAcceptPostMutationOptions = <TError = ErrorType<HTTPValidationError>,
+export const getAcceptOfferOffersOfferIdAcceptPostMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof acceptOfferOffersOfferIdAcceptPost>>, TError,AcceptOfferOffersOfferIdAcceptPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof acceptOfferOffersOfferIdAcceptPost>>, TError,AcceptOfferOffersOfferIdAcceptPostMutationVariables, TContext> => {
 
@@ -710,13 +1497,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type AcceptOfferOffersOfferIdAcceptPostMutationResult = NonNullable<Awaited<ReturnType<typeof acceptOfferOffersOfferIdAcceptPost>>>
 
-    export type AcceptOfferOffersOfferIdAcceptPostMutationError = ErrorType<HTTPValidationError>
+    export type AcceptOfferOffersOfferIdAcceptPostMutationError = ErrorType<ProblemOut | HTTPValidationError>
     export type AcceptOfferOffersOfferIdAcceptPostMutationVariables = {offerId: string}
 
     /**
  * @summary Accept Offer
  */
-export const useAcceptOfferOffersOfferIdAcceptPost = <TError = ErrorType<HTTPValidationError>,
+export const useAcceptOfferOffersOfferIdAcceptPost = <TError = ErrorType<ProblemOut | HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof acceptOfferOffersOfferIdAcceptPost>>, TError,AcceptOfferOffersOfferIdAcceptPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof acceptOfferOffersOfferIdAcceptPost>>,
@@ -731,15 +1518,50 @@ export const useAcceptOfferOffersOfferIdAcceptPost = <TError = ErrorType<HTTPVal
   status: 200
 }
 
-export type declineOfferOffersOfferIdDeclinePostResponse422 = {
-  data: HTTPValidationError
+export type declineOfferOffersOfferIdDeclinePostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type declineOfferOffersOfferIdDeclinePostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type declineOfferOffersOfferIdDeclinePostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type declineOfferOffersOfferIdDeclinePostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type declineOfferOffersOfferIdDeclinePostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type declineOfferOffersOfferIdDeclinePostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type declineOfferOffersOfferIdDeclinePostResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type declineOfferOffersOfferIdDeclinePostResponse422ApplicationJson = {
+  data: ProblemOut
   status: 422
 }
 
 export type declineOfferOffersOfferIdDeclinePostResponseSuccess = (declineOfferOffersOfferIdDeclinePostResponse200) & {
   headers: Headers;
 };
-export type declineOfferOffersOfferIdDeclinePostResponseError = (declineOfferOffersOfferIdDeclinePostResponse422) & {
+export type declineOfferOffersOfferIdDeclinePostResponseError = (declineOfferOffersOfferIdDeclinePostResponse401ApplicationProblemJson | declineOfferOffersOfferIdDeclinePostResponse401ApplicationJson | declineOfferOffersOfferIdDeclinePostResponse403ApplicationProblemJson | declineOfferOffersOfferIdDeclinePostResponse403ApplicationJson | declineOfferOffersOfferIdDeclinePostResponse404ApplicationProblemJson | declineOfferOffersOfferIdDeclinePostResponse404ApplicationJson | declineOfferOffersOfferIdDeclinePostResponse422ApplicationProblemJson | declineOfferOffersOfferIdDeclinePostResponse422ApplicationJson) & {
   headers: Headers;
 };
 
@@ -788,7 +1610,7 @@ return apiFetch<declineOfferOffersOfferIdDeclinePostResponse>(getDeclineOfferOff
 
 export const getDeclineOfferOffersOfferIdDeclinePostMutationKey = () => ['declineOfferOffersOfferIdDeclinePost'] as const;
 
-export const getDeclineOfferOffersOfferIdDeclinePostMutationOptions = <TError = ErrorType<HTTPValidationError>,
+export const getDeclineOfferOffersOfferIdDeclinePostMutationOptions = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof declineOfferOffersOfferIdDeclinePost>>, TError,DeclineOfferOffersOfferIdDeclinePostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof declineOfferOffersOfferIdDeclinePost>>, TError,DeclineOfferOffersOfferIdDeclinePostMutationVariables, TContext> => {
 
@@ -817,13 +1639,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type DeclineOfferOffersOfferIdDeclinePostMutationResult = NonNullable<Awaited<ReturnType<typeof declineOfferOffersOfferIdDeclinePost>>>
     export type DeclineOfferOffersOfferIdDeclinePostMutationBody = DeclineIn
-    export type DeclineOfferOffersOfferIdDeclinePostMutationError = ErrorType<HTTPValidationError>
+    export type DeclineOfferOffersOfferIdDeclinePostMutationError = ErrorType<ProblemOut>
     export type DeclineOfferOffersOfferIdDeclinePostMutationVariables = {offerId: string;data: DeclineIn}
 
     /**
  * @summary Decline Offer
  */
-export const useDeclineOfferOffersOfferIdDeclinePost = <TError = ErrorType<HTTPValidationError>,
+export const useDeclineOfferOffersOfferIdDeclinePost = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof declineOfferOffersOfferIdDeclinePost>>, TError,DeclineOfferOffersOfferIdDeclinePostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof declineOfferOffersOfferIdDeclinePost>>,
@@ -838,6 +1660,36 @@ export const useDeclineOfferOffersOfferIdDeclinePost = <TError = ErrorType<HTTPV
   status: 200
 }
 
+export type withdrawOfferOffersOfferIdWithdrawPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type withdrawOfferOffersOfferIdWithdrawPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type withdrawOfferOffersOfferIdWithdrawPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type withdrawOfferOffersOfferIdWithdrawPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type withdrawOfferOffersOfferIdWithdrawPostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type withdrawOfferOffersOfferIdWithdrawPostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
 export type withdrawOfferOffersOfferIdWithdrawPostResponse422 = {
   data: HTTPValidationError
   status: 422
@@ -846,7 +1698,7 @@ export type withdrawOfferOffersOfferIdWithdrawPostResponse422 = {
 export type withdrawOfferOffersOfferIdWithdrawPostResponseSuccess = (withdrawOfferOffersOfferIdWithdrawPostResponse200) & {
   headers: Headers;
 };
-export type withdrawOfferOffersOfferIdWithdrawPostResponseError = (withdrawOfferOffersOfferIdWithdrawPostResponse422) & {
+export type withdrawOfferOffersOfferIdWithdrawPostResponseError = (withdrawOfferOffersOfferIdWithdrawPostResponse401ApplicationProblemJson | withdrawOfferOffersOfferIdWithdrawPostResponse401ApplicationJson | withdrawOfferOffersOfferIdWithdrawPostResponse403ApplicationProblemJson | withdrawOfferOffersOfferIdWithdrawPostResponse403ApplicationJson | withdrawOfferOffersOfferIdWithdrawPostResponse404ApplicationProblemJson | withdrawOfferOffersOfferIdWithdrawPostResponse404ApplicationJson | withdrawOfferOffersOfferIdWithdrawPostResponse422) & {
   headers: Headers;
 };
 
@@ -880,7 +1732,7 @@ export const withdrawOfferOffersOfferIdWithdrawPost = async (offerId: string, op
 
 export const getWithdrawOfferOffersOfferIdWithdrawPostMutationKey = () => ['withdrawOfferOffersOfferIdWithdrawPost'] as const;
 
-export const getWithdrawOfferOffersOfferIdWithdrawPostMutationOptions = <TError = ErrorType<HTTPValidationError>,
+export const getWithdrawOfferOffersOfferIdWithdrawPostMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof withdrawOfferOffersOfferIdWithdrawPost>>, TError,WithdrawOfferOffersOfferIdWithdrawPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof withdrawOfferOffersOfferIdWithdrawPost>>, TError,WithdrawOfferOffersOfferIdWithdrawPostMutationVariables, TContext> => {
 
@@ -909,13 +1761,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type WithdrawOfferOffersOfferIdWithdrawPostMutationResult = NonNullable<Awaited<ReturnType<typeof withdrawOfferOffersOfferIdWithdrawPost>>>
 
-    export type WithdrawOfferOffersOfferIdWithdrawPostMutationError = ErrorType<HTTPValidationError>
+    export type WithdrawOfferOffersOfferIdWithdrawPostMutationError = ErrorType<ProblemOut | HTTPValidationError>
     export type WithdrawOfferOffersOfferIdWithdrawPostMutationVariables = {offerId: string}
 
     /**
  * @summary Withdraw Offer
  */
-export const useWithdrawOfferOffersOfferIdWithdrawPost = <TError = ErrorType<HTTPValidationError>,
+export const useWithdrawOfferOffersOfferIdWithdrawPost = <TError = ErrorType<ProblemOut | HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof withdrawOfferOffersOfferIdWithdrawPost>>, TError,WithdrawOfferOffersOfferIdWithdrawPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof withdrawOfferOffersOfferIdWithdrawPost>>,
@@ -930,15 +1782,50 @@ export const useWithdrawOfferOffersOfferIdWithdrawPost = <TError = ErrorType<HTT
   status: 200
 }
 
-export type setOfferStatusOffersOfferIdStatusPostResponse422 = {
-  data: HTTPValidationError
+export type setOfferStatusOffersOfferIdStatusPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type setOfferStatusOffersOfferIdStatusPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type setOfferStatusOffersOfferIdStatusPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type setOfferStatusOffersOfferIdStatusPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type setOfferStatusOffersOfferIdStatusPostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type setOfferStatusOffersOfferIdStatusPostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type setOfferStatusOffersOfferIdStatusPostResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type setOfferStatusOffersOfferIdStatusPostResponse422ApplicationJson = {
+  data: ProblemOut
   status: 422
 }
 
 export type setOfferStatusOffersOfferIdStatusPostResponseSuccess = (setOfferStatusOffersOfferIdStatusPostResponse200) & {
   headers: Headers;
 };
-export type setOfferStatusOffersOfferIdStatusPostResponseError = (setOfferStatusOffersOfferIdStatusPostResponse422) & {
+export type setOfferStatusOffersOfferIdStatusPostResponseError = (setOfferStatusOffersOfferIdStatusPostResponse401ApplicationProblemJson | setOfferStatusOffersOfferIdStatusPostResponse401ApplicationJson | setOfferStatusOffersOfferIdStatusPostResponse403ApplicationProblemJson | setOfferStatusOffersOfferIdStatusPostResponse403ApplicationJson | setOfferStatusOffersOfferIdStatusPostResponse404ApplicationProblemJson | setOfferStatusOffersOfferIdStatusPostResponse404ApplicationJson | setOfferStatusOffersOfferIdStatusPostResponse422ApplicationProblemJson | setOfferStatusOffersOfferIdStatusPostResponse422ApplicationJson) & {
   headers: Headers;
 };
 
@@ -987,7 +1874,7 @@ return apiFetch<setOfferStatusOffersOfferIdStatusPostResponse>(getSetOfferStatus
 
 export const getSetOfferStatusOffersOfferIdStatusPostMutationKey = () => ['setOfferStatusOffersOfferIdStatusPost'] as const;
 
-export const getSetOfferStatusOffersOfferIdStatusPostMutationOptions = <TError = ErrorType<HTTPValidationError>,
+export const getSetOfferStatusOffersOfferIdStatusPostMutationOptions = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setOfferStatusOffersOfferIdStatusPost>>, TError,SetOfferStatusOffersOfferIdStatusPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof setOfferStatusOffersOfferIdStatusPost>>, TError,SetOfferStatusOffersOfferIdStatusPostMutationVariables, TContext> => {
 
@@ -1016,13 +1903,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type SetOfferStatusOffersOfferIdStatusPostMutationResult = NonNullable<Awaited<ReturnType<typeof setOfferStatusOffersOfferIdStatusPost>>>
     export type SetOfferStatusOffersOfferIdStatusPostMutationBody = StatusIn
-    export type SetOfferStatusOffersOfferIdStatusPostMutationError = ErrorType<HTTPValidationError>
+    export type SetOfferStatusOffersOfferIdStatusPostMutationError = ErrorType<ProblemOut>
     export type SetOfferStatusOffersOfferIdStatusPostMutationVariables = {offerId: string;data: StatusIn}
 
     /**
  * @summary Set Offer Status
  */
-export const useSetOfferStatusOffersOfferIdStatusPost = <TError = ErrorType<HTTPValidationError>,
+export const useSetOfferStatusOffersOfferIdStatusPost = <TError = ErrorType<ProblemOut>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setOfferStatusOffersOfferIdStatusPost>>, TError,SetOfferStatusOffersOfferIdStatusPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof setOfferStatusOffersOfferIdStatusPost>>,
@@ -1033,8 +1920,38 @@ export const useSetOfferStatusOffersOfferIdStatusPost = <TError = ErrorType<HTTP
       return useMutation(getSetOfferStatusOffersOfferIdStatusPostMutationOptions(options), queryClient);
     }
     export type offerContactsOffersOfferIdContactsGetResponse200 = {
-  data: Contacts
+  data: ContactsOutput
   status: 200
+}
+
+export type offerContactsOffersOfferIdContactsGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type offerContactsOffersOfferIdContactsGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type offerContactsOffersOfferIdContactsGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type offerContactsOffersOfferIdContactsGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type offerContactsOffersOfferIdContactsGetResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type offerContactsOffersOfferIdContactsGetResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
 }
 
 export type offerContactsOffersOfferIdContactsGetResponse422 = {
@@ -1045,7 +1962,7 @@ export type offerContactsOffersOfferIdContactsGetResponse422 = {
 export type offerContactsOffersOfferIdContactsGetResponseSuccess = (offerContactsOffersOfferIdContactsGetResponse200) & {
   headers: Headers;
 };
-export type offerContactsOffersOfferIdContactsGetResponseError = (offerContactsOffersOfferIdContactsGetResponse422) & {
+export type offerContactsOffersOfferIdContactsGetResponseError = (offerContactsOffersOfferIdContactsGetResponse401ApplicationProblemJson | offerContactsOffersOfferIdContactsGetResponse401ApplicationJson | offerContactsOffersOfferIdContactsGetResponse403ApplicationProblemJson | offerContactsOffersOfferIdContactsGetResponse403ApplicationJson | offerContactsOffersOfferIdContactsGetResponse404ApplicationProblemJson | offerContactsOffersOfferIdContactsGetResponse404ApplicationJson | offerContactsOffersOfferIdContactsGetResponse422) & {
   headers: Headers;
 };
 
@@ -1084,7 +2001,7 @@ export const getOfferContactsOffersOfferIdContactsGetQueryKey = (offerId: string
     }
 
 
-export const getOfferContactsOffersOfferIdContactsGetQueryOptions = <TData = Awaited<ReturnType<typeof offerContactsOffersOfferIdContactsGet>>, TError = ErrorType<HTTPValidationError>>(offerId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof offerContactsOffersOfferIdContactsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+export const getOfferContactsOffersOfferIdContactsGetQueryOptions = <TData = Awaited<ReturnType<typeof offerContactsOffersOfferIdContactsGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(offerId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof offerContactsOffersOfferIdContactsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -1103,10 +2020,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type OfferContactsOffersOfferIdContactsGetQueryResult = NonNullable<Awaited<ReturnType<typeof offerContactsOffersOfferIdContactsGet>>>
-export type OfferContactsOffersOfferIdContactsGetQueryError = ErrorType<HTTPValidationError>
+export type OfferContactsOffersOfferIdContactsGetQueryError = ErrorType<ProblemOut | HTTPValidationError>
 
 
-export function useOfferContactsOffersOfferIdContactsGet<TData = Awaited<ReturnType<typeof offerContactsOffersOfferIdContactsGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useOfferContactsOffersOfferIdContactsGet<TData = Awaited<ReturnType<typeof offerContactsOffersOfferIdContactsGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  offerId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof offerContactsOffersOfferIdContactsGet>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof offerContactsOffersOfferIdContactsGet>>,
@@ -1116,7 +2033,7 @@ export function useOfferContactsOffersOfferIdContactsGet<TData = Awaited<ReturnT
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useOfferContactsOffersOfferIdContactsGet<TData = Awaited<ReturnType<typeof offerContactsOffersOfferIdContactsGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useOfferContactsOffersOfferIdContactsGet<TData = Awaited<ReturnType<typeof offerContactsOffersOfferIdContactsGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  offerId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof offerContactsOffersOfferIdContactsGet>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof offerContactsOffersOfferIdContactsGet>>,
@@ -1126,7 +2043,7 @@ export function useOfferContactsOffersOfferIdContactsGet<TData = Awaited<ReturnT
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useOfferContactsOffersOfferIdContactsGet<TData = Awaited<ReturnType<typeof offerContactsOffersOfferIdContactsGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useOfferContactsOffersOfferIdContactsGet<TData = Awaited<ReturnType<typeof offerContactsOffersOfferIdContactsGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  offerId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof offerContactsOffersOfferIdContactsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -1134,7 +2051,7 @@ export function useOfferContactsOffersOfferIdContactsGet<TData = Awaited<ReturnT
  * @summary Offer Contacts
  */
 
-export function useOfferContactsOffersOfferIdContactsGet<TData = Awaited<ReturnType<typeof offerContactsOffersOfferIdContactsGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useOfferContactsOffersOfferIdContactsGet<TData = Awaited<ReturnType<typeof offerContactsOffersOfferIdContactsGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  offerId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof offerContactsOffersOfferIdContactsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -1156,6 +2073,36 @@ export type listEventsOffersOfferIdEventsGetResponse200 = {
   status: 200
 }
 
+export type listEventsOffersOfferIdEventsGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type listEventsOffersOfferIdEventsGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type listEventsOffersOfferIdEventsGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type listEventsOffersOfferIdEventsGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type listEventsOffersOfferIdEventsGetResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type listEventsOffersOfferIdEventsGetResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
 export type listEventsOffersOfferIdEventsGetResponse422 = {
   data: HTTPValidationError
   status: 422
@@ -1164,7 +2111,7 @@ export type listEventsOffersOfferIdEventsGetResponse422 = {
 export type listEventsOffersOfferIdEventsGetResponseSuccess = (listEventsOffersOfferIdEventsGetResponse200) & {
   headers: Headers;
 };
-export type listEventsOffersOfferIdEventsGetResponseError = (listEventsOffersOfferIdEventsGetResponse422) & {
+export type listEventsOffersOfferIdEventsGetResponseError = (listEventsOffersOfferIdEventsGetResponse401ApplicationProblemJson | listEventsOffersOfferIdEventsGetResponse401ApplicationJson | listEventsOffersOfferIdEventsGetResponse403ApplicationProblemJson | listEventsOffersOfferIdEventsGetResponse403ApplicationJson | listEventsOffersOfferIdEventsGetResponse404ApplicationProblemJson | listEventsOffersOfferIdEventsGetResponse404ApplicationJson | listEventsOffersOfferIdEventsGetResponse422) & {
   headers: Headers;
 };
 
@@ -1203,7 +2150,7 @@ export const getListEventsOffersOfferIdEventsGetQueryKey = (offerId: string,) =>
     }
 
 
-export const getListEventsOffersOfferIdEventsGetQueryOptions = <TData = Awaited<ReturnType<typeof listEventsOffersOfferIdEventsGet>>, TError = ErrorType<HTTPValidationError>>(offerId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listEventsOffersOfferIdEventsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+export const getListEventsOffersOfferIdEventsGetQueryOptions = <TData = Awaited<ReturnType<typeof listEventsOffersOfferIdEventsGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(offerId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listEventsOffersOfferIdEventsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -1222,10 +2169,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type ListEventsOffersOfferIdEventsGetQueryResult = NonNullable<Awaited<ReturnType<typeof listEventsOffersOfferIdEventsGet>>>
-export type ListEventsOffersOfferIdEventsGetQueryError = ErrorType<HTTPValidationError>
+export type ListEventsOffersOfferIdEventsGetQueryError = ErrorType<ProblemOut | HTTPValidationError>
 
 
-export function useListEventsOffersOfferIdEventsGet<TData = Awaited<ReturnType<typeof listEventsOffersOfferIdEventsGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useListEventsOffersOfferIdEventsGet<TData = Awaited<ReturnType<typeof listEventsOffersOfferIdEventsGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  offerId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listEventsOffersOfferIdEventsGet>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof listEventsOffersOfferIdEventsGet>>,
@@ -1235,7 +2182,7 @@ export function useListEventsOffersOfferIdEventsGet<TData = Awaited<ReturnType<t
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListEventsOffersOfferIdEventsGet<TData = Awaited<ReturnType<typeof listEventsOffersOfferIdEventsGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useListEventsOffersOfferIdEventsGet<TData = Awaited<ReturnType<typeof listEventsOffersOfferIdEventsGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  offerId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listEventsOffersOfferIdEventsGet>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof listEventsOffersOfferIdEventsGet>>,
@@ -1245,7 +2192,7 @@ export function useListEventsOffersOfferIdEventsGet<TData = Awaited<ReturnType<t
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListEventsOffersOfferIdEventsGet<TData = Awaited<ReturnType<typeof listEventsOffersOfferIdEventsGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useListEventsOffersOfferIdEventsGet<TData = Awaited<ReturnType<typeof listEventsOffersOfferIdEventsGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  offerId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listEventsOffersOfferIdEventsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -1253,7 +2200,7 @@ export function useListEventsOffersOfferIdEventsGet<TData = Awaited<ReturnType<t
  * @summary List Events
  */
 
-export function useListEventsOffersOfferIdEventsGet<TData = Awaited<ReturnType<typeof listEventsOffersOfferIdEventsGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useListEventsOffersOfferIdEventsGet<TData = Awaited<ReturnType<typeof listEventsOffersOfferIdEventsGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  offerId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listEventsOffersOfferIdEventsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -1275,6 +2222,36 @@ export type listMessagesOffersOfferIdMessagesGetResponse200 = {
   status: 200
 }
 
+export type listMessagesOffersOfferIdMessagesGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type listMessagesOffersOfferIdMessagesGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type listMessagesOffersOfferIdMessagesGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type listMessagesOffersOfferIdMessagesGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type listMessagesOffersOfferIdMessagesGetResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type listMessagesOffersOfferIdMessagesGetResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
 export type listMessagesOffersOfferIdMessagesGetResponse422 = {
   data: HTTPValidationError
   status: 422
@@ -1283,7 +2260,7 @@ export type listMessagesOffersOfferIdMessagesGetResponse422 = {
 export type listMessagesOffersOfferIdMessagesGetResponseSuccess = (listMessagesOffersOfferIdMessagesGetResponse200) & {
   headers: Headers;
 };
-export type listMessagesOffersOfferIdMessagesGetResponseError = (listMessagesOffersOfferIdMessagesGetResponse422) & {
+export type listMessagesOffersOfferIdMessagesGetResponseError = (listMessagesOffersOfferIdMessagesGetResponse401ApplicationProblemJson | listMessagesOffersOfferIdMessagesGetResponse401ApplicationJson | listMessagesOffersOfferIdMessagesGetResponse403ApplicationProblemJson | listMessagesOffersOfferIdMessagesGetResponse403ApplicationJson | listMessagesOffersOfferIdMessagesGetResponse404ApplicationProblemJson | listMessagesOffersOfferIdMessagesGetResponse404ApplicationJson | listMessagesOffersOfferIdMessagesGetResponse422) & {
   headers: Headers;
 };
 
@@ -1322,7 +2299,7 @@ export const getListMessagesOffersOfferIdMessagesGetQueryKey = (offerId: string,
     }
 
 
-export const getListMessagesOffersOfferIdMessagesGetQueryOptions = <TData = Awaited<ReturnType<typeof listMessagesOffersOfferIdMessagesGet>>, TError = ErrorType<HTTPValidationError>>(offerId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMessagesOffersOfferIdMessagesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+export const getListMessagesOffersOfferIdMessagesGetQueryOptions = <TData = Awaited<ReturnType<typeof listMessagesOffersOfferIdMessagesGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(offerId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMessagesOffersOfferIdMessagesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -1341,10 +2318,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type ListMessagesOffersOfferIdMessagesGetQueryResult = NonNullable<Awaited<ReturnType<typeof listMessagesOffersOfferIdMessagesGet>>>
-export type ListMessagesOffersOfferIdMessagesGetQueryError = ErrorType<HTTPValidationError>
+export type ListMessagesOffersOfferIdMessagesGetQueryError = ErrorType<ProblemOut | HTTPValidationError>
 
 
-export function useListMessagesOffersOfferIdMessagesGet<TData = Awaited<ReturnType<typeof listMessagesOffersOfferIdMessagesGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useListMessagesOffersOfferIdMessagesGet<TData = Awaited<ReturnType<typeof listMessagesOffersOfferIdMessagesGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  offerId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMessagesOffersOfferIdMessagesGet>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof listMessagesOffersOfferIdMessagesGet>>,
@@ -1354,7 +2331,7 @@ export function useListMessagesOffersOfferIdMessagesGet<TData = Awaited<ReturnTy
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListMessagesOffersOfferIdMessagesGet<TData = Awaited<ReturnType<typeof listMessagesOffersOfferIdMessagesGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useListMessagesOffersOfferIdMessagesGet<TData = Awaited<ReturnType<typeof listMessagesOffersOfferIdMessagesGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  offerId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMessagesOffersOfferIdMessagesGet>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof listMessagesOffersOfferIdMessagesGet>>,
@@ -1364,7 +2341,7 @@ export function useListMessagesOffersOfferIdMessagesGet<TData = Awaited<ReturnTy
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListMessagesOffersOfferIdMessagesGet<TData = Awaited<ReturnType<typeof listMessagesOffersOfferIdMessagesGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useListMessagesOffersOfferIdMessagesGet<TData = Awaited<ReturnType<typeof listMessagesOffersOfferIdMessagesGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  offerId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMessagesOffersOfferIdMessagesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -1372,7 +2349,7 @@ export function useListMessagesOffersOfferIdMessagesGet<TData = Awaited<ReturnTy
  * @summary List Messages
  */
 
-export function useListMessagesOffersOfferIdMessagesGet<TData = Awaited<ReturnType<typeof listMessagesOffersOfferIdMessagesGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useListMessagesOffersOfferIdMessagesGet<TData = Awaited<ReturnType<typeof listMessagesOffersOfferIdMessagesGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  offerId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMessagesOffersOfferIdMessagesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -1394,15 +2371,55 @@ export type postMessageOffersOfferIdMessagesPostResponse201 = {
   status: 201
 }
 
+export type postMessageOffersOfferIdMessagesPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type postMessageOffersOfferIdMessagesPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type postMessageOffersOfferIdMessagesPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type postMessageOffersOfferIdMessagesPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type postMessageOffersOfferIdMessagesPostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type postMessageOffersOfferIdMessagesPostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
 export type postMessageOffersOfferIdMessagesPostResponse422 = {
   data: HTTPValidationError
   status: 422
 }
 
+export type postMessageOffersOfferIdMessagesPostResponse429ApplicationProblemJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type postMessageOffersOfferIdMessagesPostResponse429ApplicationJson = {
+  data: ProblemOut
+  status: 429
+}
+
 export type postMessageOffersOfferIdMessagesPostResponseSuccess = (postMessageOffersOfferIdMessagesPostResponse201) & {
   headers: Headers;
 };
-export type postMessageOffersOfferIdMessagesPostResponseError = (postMessageOffersOfferIdMessagesPostResponse422) & {
+export type postMessageOffersOfferIdMessagesPostResponseError = (postMessageOffersOfferIdMessagesPostResponse401ApplicationProblemJson | postMessageOffersOfferIdMessagesPostResponse401ApplicationJson | postMessageOffersOfferIdMessagesPostResponse403ApplicationProblemJson | postMessageOffersOfferIdMessagesPostResponse403ApplicationJson | postMessageOffersOfferIdMessagesPostResponse404ApplicationProblemJson | postMessageOffersOfferIdMessagesPostResponse404ApplicationJson | postMessageOffersOfferIdMessagesPostResponse422 | postMessageOffersOfferIdMessagesPostResponse429ApplicationProblemJson | postMessageOffersOfferIdMessagesPostResponse429ApplicationJson) & {
   headers: Headers;
 };
 
@@ -1451,7 +2468,7 @@ return apiFetch<postMessageOffersOfferIdMessagesPostResponse>(getPostMessageOffe
 
 export const getPostMessageOffersOfferIdMessagesPostMutationKey = () => ['postMessageOffersOfferIdMessagesPost'] as const;
 
-export const getPostMessageOffersOfferIdMessagesPostMutationOptions = <TError = ErrorType<HTTPValidationError>,
+export const getPostMessageOffersOfferIdMessagesPostMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postMessageOffersOfferIdMessagesPost>>, TError,PostMessageOffersOfferIdMessagesPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof postMessageOffersOfferIdMessagesPost>>, TError,PostMessageOffersOfferIdMessagesPostMutationVariables, TContext> => {
 
@@ -1480,13 +2497,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type PostMessageOffersOfferIdMessagesPostMutationResult = NonNullable<Awaited<ReturnType<typeof postMessageOffersOfferIdMessagesPost>>>
     export type PostMessageOffersOfferIdMessagesPostMutationBody = MessageIn
-    export type PostMessageOffersOfferIdMessagesPostMutationError = ErrorType<HTTPValidationError>
+    export type PostMessageOffersOfferIdMessagesPostMutationError = ErrorType<ProblemOut | HTTPValidationError>
     export type PostMessageOffersOfferIdMessagesPostMutationVariables = {offerId: string;data: MessageIn}
 
     /**
  * @summary Post Message
  */
-export const usePostMessageOffersOfferIdMessagesPost = <TError = ErrorType<HTTPValidationError>,
+export const usePostMessageOffersOfferIdMessagesPost = <TError = ErrorType<ProblemOut | HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postMessageOffersOfferIdMessagesPost>>, TError,PostMessageOffersOfferIdMessagesPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof postMessageOffersOfferIdMessagesPost>>,
@@ -1501,6 +2518,36 @@ export const usePostMessageOffersOfferIdMessagesPost = <TError = ErrorType<HTTPV
   status: 201
 }
 
+export type complainOffersOfferIdComplaintPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type complainOffersOfferIdComplaintPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type complainOffersOfferIdComplaintPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type complainOffersOfferIdComplaintPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type complainOffersOfferIdComplaintPostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type complainOffersOfferIdComplaintPostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
 export type complainOffersOfferIdComplaintPostResponse422 = {
   data: HTTPValidationError
   status: 422
@@ -1509,7 +2556,7 @@ export type complainOffersOfferIdComplaintPostResponse422 = {
 export type complainOffersOfferIdComplaintPostResponseSuccess = (complainOffersOfferIdComplaintPostResponse201) & {
   headers: Headers;
 };
-export type complainOffersOfferIdComplaintPostResponseError = (complainOffersOfferIdComplaintPostResponse422) & {
+export type complainOffersOfferIdComplaintPostResponseError = (complainOffersOfferIdComplaintPostResponse401ApplicationProblemJson | complainOffersOfferIdComplaintPostResponse401ApplicationJson | complainOffersOfferIdComplaintPostResponse403ApplicationProblemJson | complainOffersOfferIdComplaintPostResponse403ApplicationJson | complainOffersOfferIdComplaintPostResponse404ApplicationProblemJson | complainOffersOfferIdComplaintPostResponse404ApplicationJson | complainOffersOfferIdComplaintPostResponse422) & {
   headers: Headers;
 };
 
@@ -1558,7 +2605,7 @@ return apiFetch<complainOffersOfferIdComplaintPostResponse>(getComplainOffersOff
 
 export const getComplainOffersOfferIdComplaintPostMutationKey = () => ['complainOffersOfferIdComplaintPost'] as const;
 
-export const getComplainOffersOfferIdComplaintPostMutationOptions = <TError = ErrorType<HTTPValidationError>,
+export const getComplainOffersOfferIdComplaintPostMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof complainOffersOfferIdComplaintPost>>, TError,ComplainOffersOfferIdComplaintPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof complainOffersOfferIdComplaintPost>>, TError,ComplainOffersOfferIdComplaintPostMutationVariables, TContext> => {
 
@@ -1587,13 +2634,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type ComplainOffersOfferIdComplaintPostMutationResult = NonNullable<Awaited<ReturnType<typeof complainOffersOfferIdComplaintPost>>>
     export type ComplainOffersOfferIdComplaintPostMutationBody = ComplaintIn
-    export type ComplainOffersOfferIdComplaintPostMutationError = ErrorType<HTTPValidationError>
+    export type ComplainOffersOfferIdComplaintPostMutationError = ErrorType<ProblemOut | HTTPValidationError>
     export type ComplainOffersOfferIdComplaintPostMutationVariables = {offerId: string;data: ComplaintIn}
 
     /**
  * @summary Complain
  */
-export const useComplainOffersOfferIdComplaintPost = <TError = ErrorType<HTTPValidationError>,
+export const useComplainOffersOfferIdComplaintPost = <TError = ErrorType<ProblemOut | HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof complainOffersOfferIdComplaintPost>>, TError,ComplainOffersOfferIdComplaintPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof complainOffersOfferIdComplaintPost>>,

@@ -208,3 +208,119 @@ def test_endpoint_permissions_and_validation(c):
     h = _reg(c, "e@x.ru", "employer")
     assert c.post("/search/parse", json={"text": ""}, headers=h).status_code == 422
     assert c.post("/search/parse", json={"text": "x" * 501}, headers=h).status_code == 422
+
+
+# --- LLM-уточнение и слияние (E7-6) -------------------------------------------------------------
+
+
+def _llm_client(handler, redis=None):
+    import httpx
+    from app.matching.query_llm import QueryLlmClient
+
+    return QueryLlmClient(
+        "http://ml", redis=redis, transport=httpx.MockTransport(handler), timeout=1.0
+    )
+
+
+def _llm_reply(**filters):
+    return {"filters": filters, "chips": [], "unparsed": [], "refining": True}
+
+
+def test_merge_rules_win_llm_adds(forms):
+    from app.matching.query_llm import merge
+    from fsp_contracts.ml import ParsedQuery
+
+    names = {"python": "Python", "fastapi": "FastAPI"}
+    rule = parse_query("мидл python, до 250к", forms, names)
+    llm = ParsedQuery.model_validate(
+        _llm_reply(
+            roles=["backend", "devops"],
+            salary_max=300_000,
+            grade_min="senior",
+            formats=["remote"],
+            skills_must=[{"slug": "fastapi"}, {"slug": "python"}, {"slug": "выдуманный"}],
+            semantic_text="API для финтеха",
+        )
+    )
+    r = merge(rule, llm, forms, names)
+    f = r.filters
+    assert r.refining and f.salary_max == 250_000 and f.grade_min == "middle"
+    assert f.roles == ["backend", "devops"] and f.formats == ["remote"]
+    assert [s.slug for s in f.skills_must] == ["python", "fastapi"]  # неизвестный отброшен
+    assert f.semantic_text == "API для финтеха"
+    labels = {c.label for c in r.chips}
+    assert "Бюджет: до 300 000 ₽?" in labels and "Грейд от Senior?" in labels
+    assert "Бюджет: до 250 000 ₽" in labels and "Навык: FastAPI" in labels
+
+
+def test_merge_without_llm_is_rule(forms):
+    from app.matching.query_llm import merge
+
+    rule = parse_query("python", forms)
+    assert merge(rule, None, forms, {}) is rule
+
+
+async def test_client_degrades_and_caches(forms):
+    import fakeredis
+    import httpx
+
+    rule = parse_query("питон", forms)
+    calls = []
+
+    def boom(req):
+        calls.append(1)
+        return httpx.Response(503, json={"code": "ml_unavailable"})
+
+    assert await _llm_client(boom).parse("питон", rule, 1) is None
+
+    def bad(req):
+        return httpx.Response(200, json={"filters": {"roles": ["nonsense"]}})
+
+    assert await _llm_client(bad).parse("питон", rule, 1) is None
+
+    def down(req):
+        raise httpx.ConnectError("no route")
+
+    assert await _llm_client(down).parse("питон", rule, 1) is None
+
+    redis = fakeredis.FakeAsyncRedis()
+    n = []
+
+    def ok(req):
+        n.append(1)
+        return httpx.Response(200, json=_llm_reply(roles=["backend"]))
+
+    cl = _llm_client(ok, redis)
+    first = await cl.parse("Питон ", rule, 7)
+    second = await cl.parse("питон", rule, 7)  # тот же нормализованный текст — из кеша
+    assert first == second and len(n) == 1
+    assert await redis.ttl(next(iter(await redis.keys("c:qparse:7:*")))) > 0
+    await cl.parse("питон", rule, 8)  # другая версия справочника — новый ключ
+    assert len(n) == 2
+
+
+def test_endpoint_merges_llm_and_degrades(c):
+    import httpx
+
+    h = _reg(c, "e@x.ru", "employer")
+    seen = []
+
+    def handler(req):
+        seen.append(req.read())
+        return httpx.Response(200, json=_llm_reply(roles=["backend"], semantic_text="финтех"))
+
+    c.app.state.query_llm = _llm_client(handler)
+    r = c.post("/search/parse", json={"text": "питон, до 250к"}, headers=h)
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["refining"] is True and body["filters"]["roles"] == ["backend"]
+    assert body["filters"]["salary_max"] == 250_000 and body["filters"]["semantic_text"] == "финтех"
+    assert b"rule_hint" in seen[0]
+
+    def broken(req):
+        return httpx.Response(500)
+
+    c.app.state.query_llm = _llm_client(broken)
+    r = c.post("/search/parse", json={"text": "питон, до 260к"}, headers=h)
+    assert r.status_code == 200 and r.json()["refining"] is False
+    assert r.json()["filters"]["salary_max"] == 260_000

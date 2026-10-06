@@ -735,6 +735,7 @@ name = "fsp-fsp-mock"
 version = "0.1.0"
 source = { editable = "services/fsp-mock" }
 dependencies = [
+    { name = "cryptography" },
     { name = "fsp-contracts" },
     { name = "fsp-platform" },
     { name = "python-multipart" },
@@ -743,6 +744,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "cryptography", specifier = ">=43" },
     { name = "fsp-contracts", editable = "packages/contracts" },
     { name = "fsp-platform", editable = "packages/platform" },
     { name = "python-multipart", specifier = ">=0.0.12" },

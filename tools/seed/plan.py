@@ -610,7 +610,7 @@ def _candidate(
         )
 
     status = _weighted(rng, {"active": 0.25, "open": 0.6, "dnd": 0.15})
-    consents = ["pd_processing"]
+    consents = ["pd_processing", "profile_publication"]
     if row["linked"]:
         consents.append("fsp_data")
     if best:

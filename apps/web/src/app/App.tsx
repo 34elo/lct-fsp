@@ -11,6 +11,7 @@ import Profile from "@/features/profile/Profile";
 import SkillEvidence from "@/features/profile/SkillEvidence";
 import CandidateView from "@/features/employer/CandidateView";
 import EmployerSearch from "@/features/employer/Search";
+import Shortlist from "@/features/employer/Shortlist";
 import Company from "@/features/employer/Company";
 import Vacancies from "@/features/employer/Vacancies";
 import VacancyEditor from "@/features/employer/VacancyEditor";
@@ -23,6 +24,14 @@ import { Stub } from "@/pages/Stub";
 // >>> block1 imports
 // <<< block1 imports
 // >>> block2 imports
+import Landing from "@/features/landing/Landing";
+import FederationDashboard from "@/features/admin/Dashboard";
+import FederationModeration from "@/features/admin/Moderation";
+import Navigator from "@/features/navigator/Navigator";
+import Jobs from "@/features/jobs/Jobs";
+import JobDetail from "@/features/jobs/JobDetail";
+import CandidateResponses from "@/features/responses/CandidateResponses";
+import EmployerResponses from "@/features/responses/EmployerResponses";
 // <<< block2 imports
 
 // Разделы по ролям грузятся лениво (frontend.md: «ленивые разделы»).
@@ -30,9 +39,10 @@ const PublicLayout = lazy(() => import("@/app/layouts/PublicLayout"));
 const CandidateLayout = lazy(() => import("@/app/layouts/CandidateLayout"));
 const EmployerLayout = lazy(() => import("@/app/layouts/EmployerLayout"));
 const AdminLayout = lazy(() => import("@/app/layouts/AdminLayout"));
+const RunPage = lazy(() => import("@/features/runs/RunPage"));
 
 // Эти пути уже реализованы настоящими страницами (E1-4).
-const IMPLEMENTED = new Set(["/login", "/register", "/auth/magic", "/consents", "/onboarding", "/me", "/me/skills/:slug", "/employer/search", "/employer/candidates/:id", "/employer/vacancies", "/employer/vacancies/new", "/employer/vacancies/:id", "/employer/company", "/employer/vacancies/:id/shortlist", "/employer/offers/new", "/employer/offers", "/employer/offers/:id", "/me/offers", "/me/offers/:id"]);
+const IMPLEMENTED = new Set(["/", "/login", "/register", "/auth/magic", "/consents", "/onboarding", "/me", "/me/skills/:slug", "/employer/search", "/employer/candidates/:id", "/employer/vacancies", "/employer/vacancies/new", "/employer/vacancies/:id", "/employer/company", "/employer/vacancies/:id/shortlist", "/employer/offers/new", "/employer/offers", "/employer/offers/:id", "/me/offers", "/me/offers/:id", "/me/navigator", "/me/responses", "/employer/responses", "/jobs", "/jobs/:id", "/run/:token", "/federation", "/federation/moderation"]);
 
 const stubs = (section: string) =>
   ROUTES.filter((r) => r.section === section && !IMPLEMENTED.has(r.path)).map((r) => (
@@ -54,6 +64,8 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
             {/* >>> block1 (candidate) */}
             {/* <<< block1 (candidate) */}
             {/* >>> block2 (candidate) */}
+            <Route path="/me/navigator" element={<Navigator />} />
+            <Route path="/me/responses" element={<CandidateResponses />} />
             {/* <<< block2 (candidate) */}
           </>
         )}
@@ -68,10 +80,11 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
             <Route path="/employer/offers/new" element={<OfferComposer />} />
             <Route path="/employer/offers" element={<EmployerOffers />} />
             <Route path="/employer/offers/:id" element={<EmployerOfferDetail />} />
-            <Route path="/employer/vacancies/:id/shortlist" element={<EmployerSearch />} />
+            <Route path="/employer/vacancies/:id/shortlist" element={<Shortlist />} />
             {/* >>> block1 (employer) */}
             {/* <<< block1 (employer) */}
             {/* >>> block2 (employer) */}
+            <Route path="/employer/responses" element={<EmployerResponses />} />
             {/* <<< block2 (employer) */}
           </>
         )}
@@ -80,6 +93,8 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
             {/* >>> block1 (admin) */}
             {/* <<< block1 (admin) */}
             {/* >>> block2 (admin) */}
+            <Route path="/federation" element={<FederationDashboard />} />
+            <Route path="/federation/moderation" element={<FederationModeration />} />
             {/* <<< block2 (admin) */}
           </>
         )}
@@ -106,6 +121,10 @@ export function App() {
           {/* >>> block1 (public) */}
           {/* <<< block1 (public) */}
           {/* >>> block2 (public) */}
+          <Route path="/" element={<Landing />} />
+          <Route path="/run/:token" element={<RunPage />} />
+          <Route path="/jobs" element={<Jobs />} />
+          <Route path="/jobs/:id" element={<JobDetail />} />
           {/* <<< block2 (public) */}
         </Route>
         {guarded("candidate", CandidateLayout)}
