@@ -28,6 +28,7 @@ import type {
   CandidateCardFull,
   CandidateSimilarCandidatesPseudoIdSimilarGetParams,
   HTTPValidationError,
+  NavigatorOut,
   ParseRequest,
   ParsedQuery,
   ProblemOut,
@@ -651,6 +652,141 @@ export function useCandidateSimilarCandidatesPseudoIdSimilarGet<TData = Awaited<
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getCandidateSimilarCandidatesPseudoIdSimilarGetQueryOptions(pseudoId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type myNavigatorCandidatesMeNavigatorGetResponse200 = {
+  data: NavigatorOut
+  status: 200
+}
+
+export type myNavigatorCandidatesMeNavigatorGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type myNavigatorCandidatesMeNavigatorGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type myNavigatorCandidatesMeNavigatorGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type myNavigatorCandidatesMeNavigatorGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type myNavigatorCandidatesMeNavigatorGetResponseSuccess = (myNavigatorCandidatesMeNavigatorGetResponse200) & {
+  headers: Headers;
+};
+export type myNavigatorCandidatesMeNavigatorGetResponseError = (myNavigatorCandidatesMeNavigatorGetResponse401ApplicationProblemJson | myNavigatorCandidatesMeNavigatorGetResponse401ApplicationJson | myNavigatorCandidatesMeNavigatorGetResponse403ApplicationProblemJson | myNavigatorCandidatesMeNavigatorGetResponse403ApplicationJson) & {
+  headers: Headers;
+};
+
+export type myNavigatorCandidatesMeNavigatorGetResponse = (myNavigatorCandidatesMeNavigatorGetResponseSuccess | myNavigatorCandidatesMeNavigatorGetResponseError)
+
+export const getMyNavigatorCandidatesMeNavigatorGetUrl = () => {
+
+
+
+
+  return `/candidates/me/navigator`
+}
+
+/**
+ * Путь к следующему грейду: пробелы по профессии, тест, соревнования ФСП, uplift.
+ * @summary My Navigator
+ */
+export const myNavigatorCandidatesMeNavigatorGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<myNavigatorCandidatesMeNavigatorGetResponse> => {
+
+  return apiFetch<myNavigatorCandidatesMeNavigatorGetResponse>(getMyNavigatorCandidatesMeNavigatorGetUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getMyNavigatorCandidatesMeNavigatorGetQueryKey = () => {
+    return [
+    `/candidates/me/navigator`
+    ] as const;
+    }
+
+
+export const getMyNavigatorCandidatesMeNavigatorGetQueryOptions = <TData = Awaited<ReturnType<typeof myNavigatorCandidatesMeNavigatorGet>>, TError = ErrorType<ProblemOut>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myNavigatorCandidatesMeNavigatorGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMyNavigatorCandidatesMeNavigatorGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof myNavigatorCandidatesMeNavigatorGet>>> = ({ signal }) => myNavigatorCandidatesMeNavigatorGet({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof myNavigatorCandidatesMeNavigatorGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type MyNavigatorCandidatesMeNavigatorGetQueryResult = NonNullable<Awaited<ReturnType<typeof myNavigatorCandidatesMeNavigatorGet>>>
+export type MyNavigatorCandidatesMeNavigatorGetQueryError = ErrorType<ProblemOut>
+
+
+export function useMyNavigatorCandidatesMeNavigatorGet<TData = Awaited<ReturnType<typeof myNavigatorCandidatesMeNavigatorGet>>, TError = ErrorType<ProblemOut>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof myNavigatorCandidatesMeNavigatorGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof myNavigatorCandidatesMeNavigatorGet>>,
+          TError,
+          Awaited<ReturnType<typeof myNavigatorCandidatesMeNavigatorGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMyNavigatorCandidatesMeNavigatorGet<TData = Awaited<ReturnType<typeof myNavigatorCandidatesMeNavigatorGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myNavigatorCandidatesMeNavigatorGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof myNavigatorCandidatesMeNavigatorGet>>,
+          TError,
+          Awaited<ReturnType<typeof myNavigatorCandidatesMeNavigatorGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMyNavigatorCandidatesMeNavigatorGet<TData = Awaited<ReturnType<typeof myNavigatorCandidatesMeNavigatorGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myNavigatorCandidatesMeNavigatorGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary My Navigator
+ */
+
+export function useMyNavigatorCandidatesMeNavigatorGet<TData = Awaited<ReturnType<typeof myNavigatorCandidatesMeNavigatorGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myNavigatorCandidatesMeNavigatorGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMyNavigatorCandidatesMeNavigatorGetQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

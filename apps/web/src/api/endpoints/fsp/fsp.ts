@@ -901,3 +901,242 @@ export function useFspOverviewCandidatesMeFspGet<TData = Awaited<ReturnType<type
 
 
 
+export type adminDemoCreateFspResultAdminDemoFspResultPostResponse202 = {
+  data: unknown
+  status: 202
+}
+
+export type adminDemoCreateFspResultAdminDemoFspResultPostResponse400ApplicationProblemJson = {
+  data: ProblemOut
+  status: 400
+}
+
+export type adminDemoCreateFspResultAdminDemoFspResultPostResponse400ApplicationJson = {
+  data: ProblemOut
+  status: 400
+}
+
+export type adminDemoCreateFspResultAdminDemoFspResultPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type adminDemoCreateFspResultAdminDemoFspResultPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type adminDemoCreateFspResultAdminDemoFspResultPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type adminDemoCreateFspResultAdminDemoFspResultPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type adminDemoCreateFspResultAdminDemoFspResultPostResponseSuccess = (adminDemoCreateFspResultAdminDemoFspResultPostResponse202) & {
+  headers: Headers;
+};
+export type adminDemoCreateFspResultAdminDemoFspResultPostResponseError = (adminDemoCreateFspResultAdminDemoFspResultPostResponse400ApplicationProblemJson | adminDemoCreateFspResultAdminDemoFspResultPostResponse400ApplicationJson | adminDemoCreateFspResultAdminDemoFspResultPostResponse401ApplicationProblemJson | adminDemoCreateFspResultAdminDemoFspResultPostResponse401ApplicationJson | adminDemoCreateFspResultAdminDemoFspResultPostResponse403ApplicationProblemJson | adminDemoCreateFspResultAdminDemoFspResultPostResponse403ApplicationJson) & {
+  headers: Headers;
+};
+
+export type adminDemoCreateFspResultAdminDemoFspResultPostResponse = (adminDemoCreateFspResultAdminDemoFspResultPostResponseSuccess | adminDemoCreateFspResultAdminDemoFspResultPostResponseError)
+
+export const getAdminDemoCreateFspResultAdminDemoFspResultPostUrl = () => {
+
+
+
+
+  return `/admin/demo/fsp-result`
+}
+
+/**
+ * Админ: демо-кнопка создания результата ФСП для случайного кандидата (E13-3).
+ * Создаёт результат в мок-ФСП и отправляет вебхук для синхронизации.
+ * Доступно только при DEMO_MODE=true.
+ * @summary Admin Demo Create Fsp Result
+ */
+export const adminDemoCreateFspResultAdminDemoFspResultPost = async ( options?: Parameters<typeof apiFetch>[1]): Promise<adminDemoCreateFspResultAdminDemoFspResultPostResponse> => {
+
+  return apiFetch<adminDemoCreateFspResultAdminDemoFspResultPostResponse>(getAdminDemoCreateFspResultAdminDemoFspResultPostUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getAdminDemoCreateFspResultAdminDemoFspResultPostMutationKey = () => ['adminDemoCreateFspResultAdminDemoFspResultPost'] as const;
+
+export const getAdminDemoCreateFspResultAdminDemoFspResultPostMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminDemoCreateFspResultAdminDemoFspResultPost>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminDemoCreateFspResultAdminDemoFspResultPost>>, TError,void, TContext> => {
+
+const mutationKey = getAdminDemoCreateFspResultAdminDemoFspResultPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminDemoCreateFspResultAdminDemoFspResultPost>>, void> = () => {
+
+
+          return  adminDemoCreateFspResultAdminDemoFspResultPost(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminDemoCreateFspResultAdminDemoFspResultPostMutationResult = NonNullable<Awaited<ReturnType<typeof adminDemoCreateFspResultAdminDemoFspResultPost>>>
+
+    export type AdminDemoCreateFspResultAdminDemoFspResultPostMutationError = ErrorType<ProblemOut>
+
+
+    /**
+ * @summary Admin Demo Create Fsp Result
+ */
+export const useAdminDemoCreateFspResultAdminDemoFspResultPost = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminDemoCreateFspResultAdminDemoFspResultPost>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminDemoCreateFspResultAdminDemoFspResultPost>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getAdminDemoCreateFspResultAdminDemoFspResultPostMutationOptions(options), queryClient);
+    }
+    export type adminDemoResetFspAdminDemoResetPostResponse202 = {
+  data: unknown
+  status: 202
+}
+
+export type adminDemoResetFspAdminDemoResetPostResponse400ApplicationProblemJson = {
+  data: ProblemOut
+  status: 400
+}
+
+export type adminDemoResetFspAdminDemoResetPostResponse400ApplicationJson = {
+  data: ProblemOut
+  status: 400
+}
+
+export type adminDemoResetFspAdminDemoResetPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type adminDemoResetFspAdminDemoResetPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type adminDemoResetFspAdminDemoResetPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type adminDemoResetFspAdminDemoResetPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type adminDemoResetFspAdminDemoResetPostResponseSuccess = (adminDemoResetFspAdminDemoResetPostResponse202) & {
+  headers: Headers;
+};
+export type adminDemoResetFspAdminDemoResetPostResponseError = (adminDemoResetFspAdminDemoResetPostResponse400ApplicationProblemJson | adminDemoResetFspAdminDemoResetPostResponse400ApplicationJson | adminDemoResetFspAdminDemoResetPostResponse401ApplicationProblemJson | adminDemoResetFspAdminDemoResetPostResponse401ApplicationJson | adminDemoResetFspAdminDemoResetPostResponse403ApplicationProblemJson | adminDemoResetFspAdminDemoResetPostResponse403ApplicationJson) & {
+  headers: Headers;
+};
+
+export type adminDemoResetFspAdminDemoResetPostResponse = (adminDemoResetFspAdminDemoResetPostResponseSuccess | adminDemoResetFspAdminDemoResetPostResponseError)
+
+export const getAdminDemoResetFspAdminDemoResetPostUrl = () => {
+
+
+
+
+  return `/admin/demo/reset`
+}
+
+/**
+ * Админ: демо-кнопка сброса всех результатов ФСП к снапшоту (E13-3).
+ * Доступно только при DEMO_MODE=true.
+ * @summary Admin Demo Reset Fsp
+ */
+export const adminDemoResetFspAdminDemoResetPost = async ( options?: Parameters<typeof apiFetch>[1]): Promise<adminDemoResetFspAdminDemoResetPostResponse> => {
+
+  return apiFetch<adminDemoResetFspAdminDemoResetPostResponse>(getAdminDemoResetFspAdminDemoResetPostUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getAdminDemoResetFspAdminDemoResetPostMutationKey = () => ['adminDemoResetFspAdminDemoResetPost'] as const;
+
+export const getAdminDemoResetFspAdminDemoResetPostMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminDemoResetFspAdminDemoResetPost>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminDemoResetFspAdminDemoResetPost>>, TError,void, TContext> => {
+
+const mutationKey = getAdminDemoResetFspAdminDemoResetPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminDemoResetFspAdminDemoResetPost>>, void> = () => {
+
+
+          return  adminDemoResetFspAdminDemoResetPost(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminDemoResetFspAdminDemoResetPostMutationResult = NonNullable<Awaited<ReturnType<typeof adminDemoResetFspAdminDemoResetPost>>>
+
+    export type AdminDemoResetFspAdminDemoResetPostMutationError = ErrorType<ProblemOut>
+
+
+    /**
+ * @summary Admin Demo Reset Fsp
+ */
+export const useAdminDemoResetFspAdminDemoResetPost = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminDemoResetFspAdminDemoResetPost>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminDemoResetFspAdminDemoResetPost>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getAdminDemoResetFspAdminDemoResetPostMutationOptions(options), queryClient);
+    }
