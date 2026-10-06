@@ -15,6 +15,7 @@ from fsp_platform.app import ProblemError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.assessment import track
 from app.assessment.models import Survey
 from app.candidates.models import Candidate
 from app.taxonomy import service as taxonomy
@@ -84,6 +85,18 @@ async def save_survey(
     row = Survey(candidate_id=candidate_id, **{f: data.get(f) for f in _FIELDS})
     session.add(row)
     await session.flush()
+    await track.emit(
+        session,
+        "survey_saved",
+        candidate_id,
+        {
+            "profession": data["profession"],
+            "declared_grade": data.get("declared_grade"),
+            "stack_size": len(data["stack"]),
+            "formats_count": len(data["formats"]),
+            "has_salary": sf is not None or st is not None,
+        },
+    )
     return row, True
 
 

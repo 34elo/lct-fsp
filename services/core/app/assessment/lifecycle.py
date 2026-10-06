@@ -36,7 +36,7 @@ from fsp_platform.outbox import add_to_outbox
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.assessment import grading, sprt
+from app.assessment import grading, sprt, track
 from app.assessment.config import AssessmentConfig
 from app.assessment.models import Attempt, FamilyRow, Grade, Response
 from app.assessment.psychometrics import Observation, eap, p_correct, theta_by_type
@@ -255,6 +255,25 @@ async def set_status(
     event = FamilyStatusChanged(family_id=row.id, **{"from": frm}, to=to)
     await add_to_outbox(
         session, new_event("assessment.family.status_changed", PRODUCER, event), row.id
+    )
+    if actor_id is not None:
+        reason_kind = "admin"
+    else:
+        reason_kind = (
+            reason.split(":")[0] if reason.split(":")[0] in ("autocheck", "alarm") else "other"
+        )
+    await track.emit(
+        session,
+        "family_status_changed",
+        None,
+        {
+            "family": track.slug(row.slug),
+            "from_status": frm,
+            "to_status": to,
+            "reason": reason_kind,
+        },
+        role="fsp_admin" if actor_id else "anon",
+        now=now,
     )
     if (frm == "active") != (to == "active") and "active" in (frm, to):
         await recompute_attempts(session, row.id, cfg, now=now)
