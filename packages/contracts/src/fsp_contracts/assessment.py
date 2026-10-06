@@ -10,7 +10,7 @@ from enum import StrEnum
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
 
 class SkillType(StrEnum):
@@ -125,14 +125,28 @@ class RegularTaskPublished(BaseModel):
     пределах периода события не создаёт.
     """
 
-    task_id: UUID
-    company_id: UUID
+    # `family_id` и `candidate_ids` — прежние имена полей (обработчик уведомлений блока 2, E9-6)
+    task_id: UUID = Field(validation_alias=AliasChoices("task_id", "family_id"))
+    company_id: UUID | None = None
     profession: ProfessionSlug
-    grade: TestGrade
-    round: int = Field(ge=1)
-    period_days: int
-    recipients: list[UUID] = Field(default_factory=list)
-    published_at: datetime
+    grade: TestGrade | None = None
+    round: int = Field(default=1, ge=1)
+    period_days: int = 7
+    recipients: list[UUID] = Field(
+        default_factory=list, validation_alias=AliasChoices("recipients", "candidate_ids")
+    )
+
+    @property
+    def family_id(self) -> UUID:
+        """Совместимость с обработчиком уведомлений блока 2 (E9-6): задание = `task_id`."""
+        return self.task_id
+
+    @property
+    def candidate_ids(self) -> list[UUID]:
+        """Совместимость с обработчиком блока 2: получатели рассылки."""
+        return self.recipients
+
+    published_at: datetime | None = None
 
 
 ASSESSMENT_EVENTS: dict[str, type[BaseModel]] = {
