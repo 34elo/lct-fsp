@@ -105,6 +105,18 @@ def test_metrics_and_team(domain):
         assert w.domain_title
 
 
+def test_fraction_metrics_stay_in_bounds():
+    """E26-1: метрики с единицей 'доля' остаются в [0.0, 1.0] несмотря на шум."""
+    for domain in DOMAINS:
+        for s in SEEDS[:30]:
+            w = World.from_seed(s, domain)
+            for m in w.kpis:
+                if m.unit == "доля":
+                    assert all(0.0 <= v <= 1.0 for v in m.series), (
+                        f"{domain}/{m.name}: значения вне [0.0, 1.0]: {m.series}"
+                    )
+
+
 def test_domain_from_vacancy_and_profession():
     assert domain_for_profession("ai_engineer") == "rag_service"
     assert domain_for_profession("backend") is None
