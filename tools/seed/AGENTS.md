@@ -13,6 +13,7 @@
 - `heroes/*.yaml` — Аня, Дима, Ольга (ручные фикстуры).
 - `plan.py` — чистый план (без БД); `loader.py` — запись через сервисы core; `__main__.py` — CLI.
 - `grades.py` — seed-грейды блока 1 (`make seed` вызывает `python -m tools.seed grades`): 6 профессий × 3 грейда через `assessment.seed_grade`, идемпотентно.
+- `jury.py` — аккаунты жюри (E32-4b): `jury-candidate@` (без грейда) и `jury-hr@demo.fsp.test` (проверенная компания «Жюри Демо»); создаются в конце `make seed`, идемпотентно. Лендинг показывает кнопки входа при сборке с `VITE_JURY_MODE=true` (`apps/web/src/features/landing/JuryEntry.tsx`): кандидат попадает на `/me/assessment?mode=express`, работодатель — на `/employer/search`.
 
 ## Правила
 - Только вымышленные люди и компании; пароли тестовые.
