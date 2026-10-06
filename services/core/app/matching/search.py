@@ -98,6 +98,7 @@ class CandidateCard(BaseModel):
     updated_at: datetime
     categories: list[CategoryRef] = []  # подтверждённые тестом профессия × грейд (ADR-018)
     strength: StrengthView | None = None  # сила профиля внутри категории (assessment.md §9)
+    is_shortlisted: bool = False  # в шорт-листе потребности (E23-5)
 
 
 @dataclass(slots=True)
