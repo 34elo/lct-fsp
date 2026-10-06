@@ -94,9 +94,9 @@ async def verify_link(body: VerifyIn, links: LinkService = Depends(get_links)) -
 
 
 # -------------------------------------------------------------------------- демо (E13-3)
-@router.post("/demo/fsp/results", status_code=202, include_in_schema=False)
-async def demo_create_fsp_result(request: Request):
-    """Демо-кнопка: создать результат ФСП для случайного кандидата."""
+@router.post("/demo/fsp-result", status_code=202)
+async def demo_create_fsp_result(request: Request) -> dict[str, str]:
+    """Демо: создать результат ФСП для случайного кандидата (E13-3)."""
     if not request.app.state.settings.demo_mode:
         raise ProblemError(400, "demo_disabled", "Демо-режим отключен")
     from fsp_connector.service import demo_create_result
@@ -105,9 +105,9 @@ async def demo_create_fsp_result(request: Request):
     return {"status": "accepted"}
 
 
-@router.post("/demo/fsp/reset", status_code=202, include_in_schema=False)
-async def demo_reset_fsp(request: Request):
-    """Демо-кнопка: очистить результаты ФСП."""
+@router.post("/demo/reset", status_code=202)
+async def demo_reset_fsp(request: Request) -> dict[str, str]:
+    """Демо: сброс результатов ФСП (E13-3)."""
     if not request.app.state.settings.demo_mode:
         raise ProblemError(400, "demo_disabled", "Демо-режим отключен")
     from fsp_connector.service import demo_reset

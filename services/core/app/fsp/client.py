@@ -89,7 +89,7 @@ class ConnectorClient:
         )
 
     async def demo_create_result(self) -> dict[str, Any]:
-        return await self._call("POST", "/internal/demo/fsp/results")
+        return await self._call("POST", "/internal/demo/fsp-result")
 
     async def demo_reset(self) -> dict[str, Any]:
-        return await self._call("POST", "/internal/demo/fsp/reset")
+        return await self._call("POST", "/internal/demo/reset")
