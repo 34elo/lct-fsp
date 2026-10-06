@@ -12760,6 +12760,14 @@
             },
             "type": "array",
             "title": "By Skill"
+          },
+          "answers": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Answers"
           }
         },
         "type": "object",

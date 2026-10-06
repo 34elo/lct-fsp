@@ -4,6 +4,7 @@
  * core
  * OpenAPI spec version: 0.1.0
  */
+import type { AttemptResultOutAnswersItem } from './attemptResultOutAnswersItem';
 import type { AttemptResultOutBySkillItem } from './attemptResultOutBySkillItem';
 import type { AttemptResultOutThetaByType } from './attemptResultOutThetaByType';
 import type { TestGrade } from './testGrade';
@@ -19,4 +20,5 @@ export interface AttemptResultOut {
   integrity?: number;
   needs_confirmation?: boolean;
   by_skill?: AttemptResultOutBySkillItem[];
+  answers?: AttemptResultOutAnswersItem[];
 }
