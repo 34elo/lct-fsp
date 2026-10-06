@@ -17,4 +17,5 @@ export interface CompanyIn {
   description?: string | null;
   contacts?: ContactsInput | null;
   direction?: string | null;
+  show_verified_badge?: boolean;
 }
