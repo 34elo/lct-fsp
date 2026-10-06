@@ -42,6 +42,7 @@ import type {
   HTTPValidationError,
   HintsOut,
   KeyApproveIn,
+  LlmExamOut,
   MergeBody,
   MergeOut,
   MergeRow,
@@ -57,6 +58,8 @@ import type {
   ResolveComplaintIn,
   RetiredOut,
   SkillCard,
+  TwoWorldsAdminDemoTwoWorldsGetParams,
+  TwoWorldsOut,
   VersionOut
 } from '../../model';
 
@@ -1606,7 +1609,310 @@ export const useToPilotAdminFamiliesFamilyIdPilotPost = <TError = ErrorType<Prob
       > => {
       return useMutation(getToPilotAdminFamiliesFamilyIdPilotPostMutationOptions(options), queryClient);
     }
-    export type listProfessionsAdminProfessionsGetResponse200 = {
+    export type twoWorldsAdminDemoTwoWorldsGetResponse200 = {
+  data: TwoWorldsOut
+  status: 200
+}
+
+export type twoWorldsAdminDemoTwoWorldsGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type twoWorldsAdminDemoTwoWorldsGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type twoWorldsAdminDemoTwoWorldsGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type twoWorldsAdminDemoTwoWorldsGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type twoWorldsAdminDemoTwoWorldsGetResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type twoWorldsAdminDemoTwoWorldsGetResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type twoWorldsAdminDemoTwoWorldsGetResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type twoWorldsAdminDemoTwoWorldsGetResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type twoWorldsAdminDemoTwoWorldsGetResponseSuccess = (twoWorldsAdminDemoTwoWorldsGetResponse200) & {
+  headers: Headers;
+};
+export type twoWorldsAdminDemoTwoWorldsGetResponseError = (twoWorldsAdminDemoTwoWorldsGetResponse401ApplicationProblemJson | twoWorldsAdminDemoTwoWorldsGetResponse401ApplicationJson | twoWorldsAdminDemoTwoWorldsGetResponse403ApplicationProblemJson | twoWorldsAdminDemoTwoWorldsGetResponse403ApplicationJson | twoWorldsAdminDemoTwoWorldsGetResponse404ApplicationProblemJson | twoWorldsAdminDemoTwoWorldsGetResponse404ApplicationJson | twoWorldsAdminDemoTwoWorldsGetResponse422ApplicationProblemJson | twoWorldsAdminDemoTwoWorldsGetResponse422ApplicationJson) & {
+  headers: Headers;
+};
+
+export type twoWorldsAdminDemoTwoWorldsGetResponse = (twoWorldsAdminDemoTwoWorldsGetResponseSuccess | twoWorldsAdminDemoTwoWorldsGetResponseError)
+
+export const getTwoWorldsAdminDemoTwoWorldsGetUrl = (params?: TwoWorldsAdminDemoTwoWorldsGetParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    const explodeParameters = ["domains"];
+
+    if (Array.isArray(value) && explodeParameters.includes(key)) {
+      value.forEach((v) => {
+        normalizedParams.append(key, v === null ? 'null' : String(v));
+      });
+      return;
+    }
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/admin/demo/two-worlds?${stringifiedParams}` : `/admin/demo/two-worlds`
+}
+
+/**
+ * @summary Two Worlds
+ */
+export const twoWorldsAdminDemoTwoWorldsGet = async (params?: TwoWorldsAdminDemoTwoWorldsGetParams, options?: Parameters<typeof apiFetch>[1]): Promise<twoWorldsAdminDemoTwoWorldsGetResponse> => {
+
+  return apiFetch<twoWorldsAdminDemoTwoWorldsGetResponse>(getTwoWorldsAdminDemoTwoWorldsGetUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getTwoWorldsAdminDemoTwoWorldsGetQueryKey = (params?: TwoWorldsAdminDemoTwoWorldsGetParams,) => {
+    return [
+    `/admin/demo/two-worlds`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getTwoWorldsAdminDemoTwoWorldsGetQueryOptions = <TData = Awaited<ReturnType<typeof twoWorldsAdminDemoTwoWorldsGet>>, TError = ErrorType<ProblemOut>>(params?: TwoWorldsAdminDemoTwoWorldsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof twoWorldsAdminDemoTwoWorldsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTwoWorldsAdminDemoTwoWorldsGetQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof twoWorldsAdminDemoTwoWorldsGet>>> = ({ signal }) => twoWorldsAdminDemoTwoWorldsGet(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof twoWorldsAdminDemoTwoWorldsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TwoWorldsAdminDemoTwoWorldsGetQueryResult = NonNullable<Awaited<ReturnType<typeof twoWorldsAdminDemoTwoWorldsGet>>>
+export type TwoWorldsAdminDemoTwoWorldsGetQueryError = ErrorType<ProblemOut>
+
+
+export function useTwoWorldsAdminDemoTwoWorldsGet<TData = Awaited<ReturnType<typeof twoWorldsAdminDemoTwoWorldsGet>>, TError = ErrorType<ProblemOut>>(
+ params: undefined |  TwoWorldsAdminDemoTwoWorldsGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof twoWorldsAdminDemoTwoWorldsGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof twoWorldsAdminDemoTwoWorldsGet>>,
+          TError,
+          Awaited<ReturnType<typeof twoWorldsAdminDemoTwoWorldsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTwoWorldsAdminDemoTwoWorldsGet<TData = Awaited<ReturnType<typeof twoWorldsAdminDemoTwoWorldsGet>>, TError = ErrorType<ProblemOut>>(
+ params?: TwoWorldsAdminDemoTwoWorldsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof twoWorldsAdminDemoTwoWorldsGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof twoWorldsAdminDemoTwoWorldsGet>>,
+          TError,
+          Awaited<ReturnType<typeof twoWorldsAdminDemoTwoWorldsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTwoWorldsAdminDemoTwoWorldsGet<TData = Awaited<ReturnType<typeof twoWorldsAdminDemoTwoWorldsGet>>, TError = ErrorType<ProblemOut>>(
+ params?: TwoWorldsAdminDemoTwoWorldsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof twoWorldsAdminDemoTwoWorldsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Two Worlds
+ */
+
+export function useTwoWorldsAdminDemoTwoWorldsGet<TData = Awaited<ReturnType<typeof twoWorldsAdminDemoTwoWorldsGet>>, TError = ErrorType<ProblemOut>>(
+ params?: TwoWorldsAdminDemoTwoWorldsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof twoWorldsAdminDemoTwoWorldsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTwoWorldsAdminDemoTwoWorldsGetQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type llmExamAdminDemoLlmExamGetResponse200 = {
+  data: LlmExamOut
+  status: 200
+}
+
+export type llmExamAdminDemoLlmExamGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type llmExamAdminDemoLlmExamGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type llmExamAdminDemoLlmExamGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type llmExamAdminDemoLlmExamGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type llmExamAdminDemoLlmExamGetResponseSuccess = (llmExamAdminDemoLlmExamGetResponse200) & {
+  headers: Headers;
+};
+export type llmExamAdminDemoLlmExamGetResponseError = (llmExamAdminDemoLlmExamGetResponse401ApplicationProblemJson | llmExamAdminDemoLlmExamGetResponse401ApplicationJson | llmExamAdminDemoLlmExamGetResponse403ApplicationProblemJson | llmExamAdminDemoLlmExamGetResponse403ApplicationJson) & {
+  headers: Headers;
+};
+
+export type llmExamAdminDemoLlmExamGetResponse = (llmExamAdminDemoLlmExamGetResponseSuccess | llmExamAdminDemoLlmExamGetResponseError)
+
+export const getLlmExamAdminDemoLlmExamGetUrl = () => {
+
+
+
+
+  return `/admin/demo/llm-exam`
+}
+
+/**
+ * @summary Llm Exam
+ */
+export const llmExamAdminDemoLlmExamGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<llmExamAdminDemoLlmExamGetResponse> => {
+
+  return apiFetch<llmExamAdminDemoLlmExamGetResponse>(getLlmExamAdminDemoLlmExamGetUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getLlmExamAdminDemoLlmExamGetQueryKey = () => {
+    return [
+    `/admin/demo/llm-exam`
+    ] as const;
+    }
+
+
+export const getLlmExamAdminDemoLlmExamGetQueryOptions = <TData = Awaited<ReturnType<typeof llmExamAdminDemoLlmExamGet>>, TError = ErrorType<ProblemOut>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof llmExamAdminDemoLlmExamGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getLlmExamAdminDemoLlmExamGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof llmExamAdminDemoLlmExamGet>>> = ({ signal }) => llmExamAdminDemoLlmExamGet({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof llmExamAdminDemoLlmExamGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type LlmExamAdminDemoLlmExamGetQueryResult = NonNullable<Awaited<ReturnType<typeof llmExamAdminDemoLlmExamGet>>>
+export type LlmExamAdminDemoLlmExamGetQueryError = ErrorType<ProblemOut>
+
+
+export function useLlmExamAdminDemoLlmExamGet<TData = Awaited<ReturnType<typeof llmExamAdminDemoLlmExamGet>>, TError = ErrorType<ProblemOut>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof llmExamAdminDemoLlmExamGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof llmExamAdminDemoLlmExamGet>>,
+          TError,
+          Awaited<ReturnType<typeof llmExamAdminDemoLlmExamGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useLlmExamAdminDemoLlmExamGet<TData = Awaited<ReturnType<typeof llmExamAdminDemoLlmExamGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof llmExamAdminDemoLlmExamGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof llmExamAdminDemoLlmExamGet>>,
+          TError,
+          Awaited<ReturnType<typeof llmExamAdminDemoLlmExamGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useLlmExamAdminDemoLlmExamGet<TData = Awaited<ReturnType<typeof llmExamAdminDemoLlmExamGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof llmExamAdminDemoLlmExamGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Llm Exam
+ */
+
+export function useLlmExamAdminDemoLlmExamGet<TData = Awaited<ReturnType<typeof llmExamAdminDemoLlmExamGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof llmExamAdminDemoLlmExamGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getLlmExamAdminDemoLlmExamGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type listProfessionsAdminProfessionsGetResponse200 = {
   data: ProfessionOut[]
   status: 200
 }
