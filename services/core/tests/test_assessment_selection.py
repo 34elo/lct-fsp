@@ -1,8 +1,9 @@
 """E22-3: SPRT, бонусный этап, выбор задания, экспозиция, пилотные слоты (assessment.md §5–6).
 
-Числа — из документа: θ₀/θ₁ = cut ∓ 0.4, границы ±2.197, минимум 6 / максимум 20, бонус ≤ 10 и
-θ ≥ cut_след − 0.5, доли секций по грейду, счёт `P(1−P)·(1 − 0.3·ai_solvable)`, топ-3, 2 пилота
-после 3-го задания. Плюс симуляция: точность классификации ≥ 90 %, в среднем ≤ 14 заданий.
+Числа — из документа: θ₀/θ₁ = cut ∓ 0.7, границы ±2.197, минимум 10 / максимум 24, бонус ≤ 10
+и θ ≥ cut_след (до 10 заданий), доли секций по грейду, счёт `P(1−P)·(1 − 0.3·ai_solvable)`,
+топ-3, 2 пилота после 3-го задания. Плюс симуляция: точность классификации вне зоны безразличия
+≥ 90 %, в среднем ≤ 14 заданий.
 """
 
 import dataclasses
@@ -38,23 +39,23 @@ J, M, S = TestGrade.junior, TestGrade.middle, TestGrade.senior
 def test_sprt_bounds_and_hypotheses():
     lo, hi = sprt.bounds(CFG)
     assert hi == pytest.approx(2.197, abs=1e-3) and lo == pytest.approx(-2.197, abs=1e-3)
-    assert sprt.hypotheses(0.0, CFG) == (-0.4, 0.4)
-    assert sprt.hypotheses(-1.0, CFG) == pytest.approx((-1.4, -0.6))
+    assert sprt.hypotheses(0.0, CFG) == (-0.7, 0.7)
+    assert sprt.hypotheses(-1.0, CFG) == pytest.approx((-1.7, -0.3))
 
 
 def test_llr_increment_numbers():
-    # у порога: ln(P₁/P₀) = ln(σ(0.4)/σ(−0.4)) = 0.4; неверный — −0.4; половина — 0
-    assert sprt.llr_increment(0.0, 0.0, 1.0, CFG) == pytest.approx(0.4)
-    assert sprt.llr_increment(0.0, 0.0, 0.0, CFG) == pytest.approx(-0.4)
+    # у порога: ln(P₁/P₀) = ln(σ(0.7)/σ(−0.7)) = 0.7; неверный — −0.7; половина — 0
+    assert sprt.llr_increment(0.0, 0.0, 1.0, CFG) == pytest.approx(0.7)
+    assert sprt.llr_increment(0.0, 0.0, 0.0, CFG) == pytest.approx(-0.7)
     assert sprt.llr_increment(0.0, 0.0, 0.5, CFG) == pytest.approx(0.0)
     # по формуле документа для лёгкого задания
-    p0, p1 = p_correct(-0.4, -2.0), p_correct(0.4, -2.0)
+    p0, p1 = p_correct(-0.7, -2.0), p_correct(0.7, -2.0)
     assert sprt.llr_increment(0.0, -2.0, 1.0, CFG) == pytest.approx(math.log(p1 / p0))
     assert sprt.llr_increment(0.0, -2.0, 0.0, CFG) == pytest.approx(math.log((1 - p1) / (1 - p0)))
-    # y и 1 − y дают разницу ровно θ₁ − θ₀ = 0.8 (Rasch)
+    # y и 1 − y дают разницу ровно θ₁ − θ₀ = 1.4 (Rasch)
     for b in (-2.0, 0.0, 1.5):
         d = sprt.llr_increment(0.0, b, 1.0, CFG) - sprt.llr_increment(0.0, b, 0.0, CFG)
-        assert d == pytest.approx(0.8)
+        assert d == pytest.approx(1.4)
 
 
 def _decide(llr, n, theta=None, exhausted=False, cut=0.0):
@@ -71,30 +72,30 @@ def _decide(llr, n, theta=None, exhausted=False, cut=0.0):
 
 
 def test_decide_min_max_and_bounds():
-    assert CFG.min_items == 6 and CFG.max_items == 20
-    # 6 верных у порога: 6·0.4 = 2.4 ≥ 2.197 → прошёл ровно на шестом
-    assert _decide(5 * 0.4, 5) is None
-    assert _decide(6 * 0.4, 6) == sprt.Decision("passed", False)
-    assert _decide(-6 * 0.4, 6) == sprt.Decision("failed", False)
-    assert _decide(9.0, 5) is None  # минимум 6 оцениваемых
-    assert _decide(2.19, 10) is None and _decide(-2.19, 19, theta=0.1) is None
+    assert CFG.min_items == 10 and CFG.max_items == 24
+    # 10 верных у порога: 10·0.7 = 7.0 ≥ 2.197 → прошёл ровно на десятом (раньше — минимум)
+    assert _decide(9 * 0.7, 9) is None
+    assert _decide(10 * 0.7, 10) == sprt.Decision("passed", False)
+    assert _decide(-10 * 0.7, 10) == sprt.Decision("failed", False)
+    assert _decide(9.0, 9) is None  # минимум 10 оцениваемых
+    assert _decide(2.19, 12) is None and _decide(-2.19, 23, theta=0.1) is None
     # максимум: решение по EAP θ с пометкой «низкая уверенность»
-    assert _decide(1.0, 20, theta=0.05) == sprt.Decision("passed", True)
-    assert _decide(1.0, 20, theta=-0.05) == sprt.Decision("failed", True)
+    assert _decide(1.0, 24, theta=0.05) == sprt.Decision("passed", True)
+    assert _decide(1.0, 24, theta=-0.05) == sprt.Decision("failed", True)
     assert _decide(0.0, 3, theta=-1.2, exhausted=True, cut=-1.0) == sprt.Decision("failed", True)
     with pytest.raises(ValueError):
-        _decide(0.0, 20)
+        _decide(0.0, 24)
 
 
 def test_bonus_eligibility_numbers():
     ok = sprt.Decision("passed", False)
-    assert sprt.bonus_eligible(M, ok, 10, 0.5, CFG) == S  # ≤ 10 и θ ≥ 1.0 − 0.5
-    assert sprt.bonus_eligible(M, ok, 10, 0.49, CFG) is None
+    assert sprt.bonus_eligible(M, ok, 10, 1.0, CFG) == S  # ≤ 10 и θ ≥ 1.0 − 0
+    assert sprt.bonus_eligible(M, ok, 10, 0.99, CFG) is None
     assert sprt.bonus_eligible(M, ok, 11, 2.0, CFG) is None
-    assert sprt.bonus_eligible(J, ok, 6, -0.5, CFG) == M
-    assert sprt.bonus_eligible(S, ok, 6, 3.0, CFG) is None  # выше Senior грейда нет
-    assert sprt.bonus_eligible(M, sprt.Decision("failed", False), 6, 2.0, CFG) is None
-    assert CFG.bonus_max_items == 6
+    assert sprt.bonus_eligible(J, ok, 10, 0.0, CFG) == M
+    assert sprt.bonus_eligible(S, ok, 10, 3.0, CFG) is None  # выше Senior грейда нет
+    assert sprt.bonus_eligible(M, sprt.Decision("failed", False), 10, 2.0, CFG) is None
+    assert CFG.bonus_max_items == 10
 
 
 # --- выбор задания (§6) -----------------------------------------------------------------------
@@ -345,7 +346,7 @@ async def _state(factory, aid):
         return att, rows.all()
 
 
-async def test_all_correct_passes_at_6_then_bonus_offers_upgrade(
+async def test_all_correct_passes_at_10_then_bonus_offers_upgrade(
     api, factory, taxonomy_loaded, fake_bank
 ):
     h = register(api)
@@ -354,16 +355,17 @@ async def test_all_correct_passes_at_6_then_bonus_offers_upgrade(
     att, rows = await _state(factory, aid)
     assert att.status == "passed" and att.stage == "bonus"
     main, bonus = att.plan["main"], att.plan["bonus"]
-    assert main == {"result": "passed", "low_confidence": False, "items": 6, "llr": main["llr"]}
-    assert main["llr"] == pytest.approx(2.4)  # 6 × 0.4: все задания у порога (уровень 3, b = 0)
+    assert main == {"result": "passed", "low_confidence": False, "items": 10, "llr": main["llr"]}
+    assert main["llr"] == pytest.approx(7.0)  # 10 × 0.7: все задания у порога (уровень 3, b = 0)
     assert bonus["grade"] == "senior" and bonus["result"] == "passed"
-    assert bonus["from_seq"] == 6 and total == 12
-    assert {f.level for r, f in rows[:6]} == {3} and {f.level for r, f in rows[6:]} == {4}
+    # бонус без минимума: 4 × 0.7 = 2.8 ≥ 2.197
+    assert bonus["from_seq"] == 10 and total == 14
+    assert {f.level for r, f in rows[:10]} == {3} and {f.level for r, f in rows[10:]} == {4}
     assert len({f.id for _, f in rows}) == len(rows)  # семейства не повторяются
     out = api.get(f"/assessment/attempts/{aid}", headers=h).json()
     assert out["upgrade_offer"] == "senior" and out["low_confidence"] is False
     assert out["status"] == "passed" and out["stage"] == "bonus"
-    # план основного этапа: секции по навыкам банка, первые 6 заданий — по дефициту
+    # план основного этапа: секции по навыкам банка, первые 10 заданий — по дефициту
     assert {sec["skill"] for sec in att.plan["sections"]} == set(_SKILLS)
     assert att.theta is not None and att.theta > 1.0
 
@@ -371,10 +373,10 @@ async def test_all_correct_passes_at_6_then_bonus_offers_upgrade(
 async def test_all_wrong_fails_without_bonus(api, factory, taxonomy_loaded, fake_bank):
     h = register(api)
     aid = _start(api, h, grade="junior")
-    assert _run(api, h, aid, answer="0") == 6
+    assert _run(api, h, aid, answer="0") == 10
     att, rows = await _state(factory, aid)
     assert att.status == "failed" and att.stage == "main" and "bonus" not in att.plan
-    assert att.llr == pytest.approx(-2.4)
+    assert att.llr == pytest.approx(-7.0)
     assert {f.level for _, f in rows} == {2}  # junior: b = cut = −1
     assert api.get(f"/assessment/attempts/{aid}", headers=h).json()["upgrade_offer"] is None
 
@@ -393,7 +395,7 @@ async def test_pilot_slots_hidden_and_without_effect(api, factory, taxonomy_load
     assert [r.seq for r, _ in pilots] == att.plan["pilot_seqs"]
     assert {f.slug for _, f in pilots} == {"t_sql_1_0", "t_sql_1_1"}  # наименьшее n
     assert all(f.status == "pilot" for _, f in pilots)
-    assert att.plan["main"]["items"] == 6  # пилоты не считаются в оцениваемые
+    assert att.plan["main"]["items"] == 10  # пилоты не считаются в оцениваемые
     scored = [f for r, f in rows if not r.is_pilot]
     expect = sum(sprt.llr_increment(1.0, CFG.prior_b(f.level), 1.0, CFG) for f in scored)
     assert att.plan["main"]["llr"] == pytest.approx(expect)

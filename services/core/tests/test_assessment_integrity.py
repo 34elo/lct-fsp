@@ -38,8 +38,8 @@ def _plain(n: int = 6, b: float = 0.0, score: float = 1.0) -> list[ItemSignal]:
 
 def test_config_matches_document():
     assert IC == IntegrityConfig()  # scoring.yaml = значения §8 по умолчанию
-    assert (IC.fast_margin, IC.fast_ratio, IC.fast_penalty) == (-0.5, 0.3, 0.15)
-    assert (IC.away_min_ms, IC.away_penalty, IC.away_max) == (10_000, 0.1, 0.3)
+    assert (IC.fast_margin, IC.fast_ratio, IC.fast_penalty) == (0.5, 0.3, 0.15)
+    assert (IC.away_min_ms, IC.away_penalty, IC.away_max) == (10_000, 0.15, 0.45)
     assert (IC.lz_threshold, IC.lz_penalty, IC.copy_penalty) == (-2.0, 0.2, 0.3)
     assert CFG.integrity_threshold == 0.6
 
@@ -50,27 +50,27 @@ def test_clean_attempt_is_one():
 
 
 def test_fast_correct_on_hard_item_minus_015_each():
-    # θ = −1, b = 0: θ − b = −1 < −0.5 — трудное; 17 с < 0.3 × 60 с = 18 с
+    # θ = −1, b = 0: θ − b = −1 < 0.5 — нелёгкое; 17 с < 0.3 × 60 с = 18 с
     fast = ItemSignal(b=0.0, score=1.0, rt_ms=17_000, median_ms=60_000)
     items = [fast, fast] + _plain(4, b=-2.0, score=0.0)
     res = integrity_index(items, theta=-1.0, copy_matches=0, cfg=IC)
     assert res.fast_correct == 2 and res.penalties["fast_correct"] == pytest.approx(0.30)
-    # не быстро (18 с = порог), не трудно (θ − b = −0.5), неверно, нет медианы — без штрафа
+    # не быстро (18 с = порог), лёгкое (θ − b = 0.5), неверно, нет медианы — без штрафа
     for it, theta in [
         (ItemSignal(b=0.0, score=1.0, rt_ms=18_000, median_ms=60_000), -1.0),
-        (ItemSignal(b=0.0, score=1.0, rt_ms=1_000, median_ms=60_000), -0.5),
+        (ItemSignal(b=0.0, score=1.0, rt_ms=1_000, median_ms=60_000), 0.5),
         (ItemSignal(b=0.0, score=0.0, rt_ms=1_000, median_ms=60_000), -1.0),
         (ItemSignal(b=0.0, score=1.0, rt_ms=1_000, median_ms=None), -1.0),
     ]:
         assert integrity_index([it], theta, 0, IC).fast_correct == 0
 
 
-def test_tab_away_minus_01_each_max_03():
+def test_tab_away_minus_015_each_max_045():
     away = ItemSignal(b=0.0, score=1.0, away_ms=(3_000, 10_001))
-    assert integrity_index([away], 0.0, 0, IC).index == pytest.approx(0.9)
-    assert integrity_index([away] * 2, 0.0, 0, IC).index == pytest.approx(0.8)
+    assert integrity_index([away], 0.0, 0, IC).index == pytest.approx(0.85)
+    assert integrity_index([away] * 2, 0.0, 0, IC).index == pytest.approx(0.7)
     res = integrity_index([away] * 5, 0.0, 0, IC)
-    assert res.tab_away == 5 and res.index == pytest.approx(0.7)  # максимум −0.3
+    assert res.tab_away == 5 and res.index == pytest.approx(0.55)  # максимум −0.45
     # ровно 10 с или уход перед неверным ответом — не сигнал
     assert integrity_index([ItemSignal(b=0, score=1.0, away_ms=(10_000,))], 0.0, 0, IC).index == 1
     assert integrity_index([ItemSignal(b=0, score=0.0, away_ms=(60_000,))], 0.0, 0, IC).index == 1
@@ -101,10 +101,13 @@ def test_copy_minus_03_from_two_matches():
 
 
 def test_threshold_06_combination():
-    # копия −0.3 + два ухода −0.2 = 0.5 < 0.6 → «требует подтверждения»
+    # копия −0.3 + два ухода −0.3 = 0.4 < 0.6 → «требует подтверждения»
     away = ItemSignal(b=0.0, score=1.0, away_ms=(20_000,))
     res = integrity_index([away, away], 0.0, 2, IC)
-    assert res.index == pytest.approx(0.5) and res.index < CFG.integrity_threshold
+    assert res.index == pytest.approx(0.4) and res.index < CFG.integrity_threshold
+    # два ухода — 0.7, три — 0.55: пометка с третьего ухода перед верным ответом
+    assert integrity_index([away] * 2, 0.0, 0, IC).index >= CFG.integrity_threshold
+    assert integrity_index([away] * 3, 0.0, 0, IC).index < CFG.integrity_threshold
     # одна копия ровно 0.7 — без пометки
     assert integrity_index(_plain(), 0.0, 3, IC).index >= CFG.integrity_threshold
     # не уходит ниже 0
@@ -180,9 +183,9 @@ def _flagged(items: list[ItemSignal], copies: int) -> bool:
 def test_theta_ref_ignores_fast_answers():
     # списанные быстрые верные ответы не завышают опорный θ: трудность меряется без них
     slow = [ItemSignal(b=-1.0, score=0.0, rt_ms=60_000, median_ms=60_000)] * 4
-    quick = [ItemSignal(b=1.0, score=1.0, rt_ms=5_000, median_ms=60_000)] * 8
+    quick = [ItemSignal(b=-0.5, score=1.0, rt_ms=5_000, median_ms=60_000)] * 8
     full = eap([Observation(b=it.b, score=it.score) for it in slow + quick], CFG).theta
-    assert full == pytest.approx(0.857, abs=0.01)  # θ − b = −0.14: по итоговому θ «не трудно»
+    assert full == pytest.approx(0.058, abs=0.01)  # θ − b = 0.56 ≥ 0.5: по итоговому θ «лёгкое»
     assert integrity_index(slow + quick, full, 0, IC).fast_correct == 0
     res = assess(slow + quick, 0, CFG, IC)  # опорный θ ≈ −1.53 по медленным ответам
     assert res.fast_correct == 8 and res.index == 0.0
@@ -245,11 +248,12 @@ async def test_attempt_integrity_from_telemetry(api, factory, bank):
         }
         assert api.post(f"/assessment/attempts/{aid}/answers", json=ans, headers=h).is_success
     res = api.get(f"/assessment/attempts/{aid}", headers=h).json()["result"]
-    assert res["integrity"] == pytest.approx(0.7)  # уходы: −0.1 за каждый, максимум −0.3
+    # уходы: −0.15 за каждый, максимум −0.45 → 0.55 < 0.6
+    assert res["integrity"] == pytest.approx(0.55)
     async with session_scope(factory) as s:
         att = await s.get(Attempt, uuid.UUID(aid))
-        assert att.integrity == pytest.approx(0.7)
-        assert att.plan["integrity"]["penalties"] == {"tab_away": 0.3}
-        assert att.plan["integrity"]["pastes"] >= 6
+        assert att.integrity == pytest.approx(0.55)
+        assert att.plan["integrity"]["penalties"] == {"tab_away": 0.45}
+        assert att.plan["integrity"]["pastes"] >= 10
         row = await s.get(Grade, (att.candidate_id, "backend"))
-        assert row.integrity == pytest.approx(0.7) and not row.needs_confirmation
+        assert row.integrity == pytest.approx(0.55) and row.needs_confirmation

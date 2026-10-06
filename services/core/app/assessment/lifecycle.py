@@ -6,8 +6,9 @@ draft ─ автопроверка ─► pilot ─ пороги + админ �
 
 - Статистика семейства (`families.stats`) считается по ответам завершённых попыток: `n`, доля
   верных, `r_pb` (балл × финальный θ попытки), разброс доли верных по группам сидов
-  (`seed mod G`), DIF «с ФСП / без ФСП» (разница средних остатков `y − P(θ, b)`), рост доли верных
-  за последние `leak_window` ответов, число апелляций.
+  (`seed mod G`), DIF «с ФСП / без ФСП» (разница средних остатков `y − P(θ, b)`), рост среднего
+  остатка `y − P(θ, b)` за последние `leak_window` ответов относительно предыдущих (утечка; остаток
+  учитывает θ отвечавших, поэтому сдвиг состава кандидатов тревогу не даёт), число апелляций.
 - Допуск `pilot → active` — только кнопкой админа и только при выполнении всех порогов. Без админа
   семейство в `active` не попадает (кроме стартового банка кодовых семейств, см. `attempts.py`).
 - Тревоги (`r_pb` < 0.05 при n ≥ 50, утечка, 3 апелляции) переводят `active → quarantine`
@@ -74,7 +75,7 @@ class FamilyStats:
     r_pb: float | None  # точечно-бисериальная: балл × финальный θ
     seed_spread: float | None  # max − min доли верных по группам сидов
     dif: float | None  # |остаток с ФСП − остаток без ФСП|
-    leak: float | None  # доля верных за последние leak_window − за предыдущие
+    leak: float | None  # средний остаток y − P(θ, b) за последние leak_window − за предыдущие
     appeals: int = 0
 
     def as_json(self) -> dict[str, Any]:
@@ -111,10 +112,11 @@ def compute_stats(
     means = [sum(g) / len(g) for g in groups.values()]
     spread = max(means) - min(means) if len(means) >= 2 else None
 
-    resid = {True: [], False: []}
-    for a, y in zip(answers, scores, strict=True):
+    res = [y - p_correct(a.theta, b) for a, y in zip(answers, scores, strict=True)]
+    resid: dict[bool, list[float]] = {True: [], False: []}
+    for a, r in zip(answers, res, strict=True):
         if a.fsp is not None:
-            resid[a.fsp].append(y - p_correct(a.theta, b))
+            resid[a.fsp].append(r)
     dif = None
     if min(len(resid[True]), len(resid[False])) >= cfg.dif_min_group:
         dif = abs(sum(resid[True]) / len(resid[True]) - sum(resid[False]) / len(resid[False]))
@@ -122,7 +124,7 @@ def compute_stats(
     leak = None
     w = cfg.leak_window
     if n >= 2 * w:
-        leak = sum(scores[-w:]) / w - sum(scores[:-w]) / (n - w)
+        leak = sum(res[-w:]) / w - sum(res[:-w]) / (n - w)
     return FamilyStats(
         n=n,
         p=_mean(scores),
