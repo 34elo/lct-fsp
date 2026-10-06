@@ -34,7 +34,6 @@ import EmployerTasks from "@/features/tasks/EmployerTasks";
 import Constructor from "@/features/constructor/Constructor";
 import AdmissionQueue from "@/features/constructor/AdmissionQueue";
 import AdminTaxonomy from "@/features/admin-taxonomy/AdminTaxonomy";
-import AdminTaxonomy from "@/features/admin-taxonomy/AdminTaxonomy";
 // <<< block1 imports
 // >>> block2 imports
 import Landing from "@/features/landing/Landing";
@@ -117,7 +116,6 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
           <>
             {/* >>> block1 (admin) */}
             <Route path="/admin/families" element={<AdmissionQueue />} />
-            <Route path="/admin/professions" element={<AdminTaxonomy />} />
             <Route path="/admin/professions" element={<AdminTaxonomy />} />
             {/* <<< block1 (admin) */}
             {/* >>> block2 (admin) */}
