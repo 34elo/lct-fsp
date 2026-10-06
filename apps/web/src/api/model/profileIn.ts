@@ -5,6 +5,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { ContactsIO } from './contactsIO';
+import type { ProfileInAgeGroup } from './profileInAgeGroup';
 import type { RoleSlug } from './roleSlug';
 import type { StackItem } from './stackItem';
 
@@ -17,4 +18,6 @@ export interface ProfileIn {
   experience_months?: number | null;
   desired_roles?: RoleSlug[] | null;
   soft_skills?: string[] | null;
+  age_group?: ProfileInAgeGroup;
+  parent_consent?: boolean | null;
 }

@@ -4,6 +4,7 @@
  * core
  * OpenAPI spec version: 0.1.0
  */
+import type { CandidateProfileAgeGroup } from './candidateProfileAgeGroup';
 import type { Category } from './category';
 import type { ClaimedVsConfirmed } from './claimedVsConfirmed';
 import type { ContactsIO } from './contactsIO';
@@ -34,6 +35,9 @@ export interface CandidateProfile {
   contacts?: ContactsIO | null;
   desired_roles?: string[];
   experience_months?: number | null;
+  age_group?: CandidateProfileAgeGroup;
+  parent_consent?: boolean;
+  publishable?: boolean;
   fsp?: OwnerFsp | null;
   experience?: ExperienceItem[];
   claimed_vs_confirmed?: ClaimedVsConfirmed[];
