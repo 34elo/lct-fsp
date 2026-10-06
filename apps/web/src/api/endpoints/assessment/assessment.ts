@@ -32,6 +32,8 @@ import type {
   AttemptOut,
   CandidateTaskDetail,
   CandidateTaskOut,
+  ExplainIn,
+  ExplainOut,
   FamilyOut,
   FamilySpec,
   HTTPValidationError,
@@ -803,6 +805,166 @@ export const useUpgradeAssessmentAttemptsAttemptIdUpgradePost = <TError = ErrorT
         TContext
       > => {
       return useMutation(getUpgradeAssessmentAttemptsAttemptIdUpgradePostMutationOptions(options), queryClient);
+    }
+    export type explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostResponse200 = {
+  data: ExplainOut
+  status: 200
+}
+
+export type explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostResponse429ApplicationProblemJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostResponse429ApplicationJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostResponseSuccess = (explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostResponse200) & {
+  headers: Headers;
+};
+export type explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostResponseError = (explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostResponse401ApplicationProblemJson | explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostResponse401ApplicationJson | explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostResponse403ApplicationProblemJson | explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostResponse403ApplicationJson | explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostResponse404ApplicationProblemJson | explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostResponse404ApplicationJson | explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostResponse409ApplicationProblemJson | explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostResponse409ApplicationJson | explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostResponse422 | explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostResponse429ApplicationProblemJson | explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostResponse429ApplicationJson) & {
+  headers: Headers;
+};
+
+export type explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostResponse = (explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostResponseSuccess | explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostResponseError)
+
+export const getExplainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostUrl = (attemptId: string,
+    responseId: string,) => {
+
+
+
+
+  return `/assessment/attempts/${attemptId}/responses/${responseId}/explain`
+}
+
+/**
+ * Причина ошибки (правила) и текст объяснения; только после завершения попытки.
+ * @summary Explain Answer
+ */
+export const explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPost = async (attemptId: string,
+    responseId: string,
+    explainInNull?: ExplainIn | null, options?: Parameters<typeof apiFetch>[1]): Promise<explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostResponse>(getExplainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostUrl(attemptId,responseId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(explainInNull)
+  }
+);}
+
+
+
+
+
+export const getExplainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostMutationKey = () => ['explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPost'] as const;
+
+export const getExplainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPost>>, TError,ExplainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPost>>, TError,ExplainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostMutationVariables, TContext> => {
+
+const mutationKey = getExplainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPost>>, ExplainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostMutationVariables> = (props) => {
+          const {attemptId,responseId,data} = props ?? {};
+
+          return  explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPost(attemptId,responseId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ExplainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostMutationResult = NonNullable<Awaited<ReturnType<typeof explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPost>>>
+    export type ExplainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostMutationBody = ExplainIn | null | undefined
+    export type ExplainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostMutationError = ErrorType<ProblemOut | HTTPValidationError>
+    export type ExplainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostMutationVariables = {attemptId: string;responseId: string;data?: ExplainIn | null}
+
+    /**
+ * @summary Explain Answer
+ */
+export const useExplainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPost = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPost>>, TError,ExplainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof explainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPost>>,
+        TError,
+        ExplainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getExplainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostMutationOptions(options), queryClient);
     }
     export type getSurveyAssessmentSurveyGetResponse200 = {
   data: SurveyOut
