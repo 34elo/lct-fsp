@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { createTracker, MAX_BATCH, SESSION_IDLE_MS } from "./track";
+import { createTracker, MAX_BATCH, SESSION_IDLE_MS, setRunId } from "./track";
 
 const readBlob = (b: Blob) =>
   new Promise<string>((resolve) => {
@@ -74,5 +74,17 @@ describe("tracker", () => {
     const ev = JSON.parse(send.mock.calls[0][1]).events;
     expect(ev[0].session_id).toBe(ev[1].session_id);
     expect(ev[2].session_id).not.toBe(ev[0].session_id);
+  });
+
+  it("ставит run_id живого прогона на события, пока он задан", async () => {
+    const { tracker, send } = setup();
+    tracker.track("card_dwell", { seconds: 1 });
+    setRunId("11111111-1111-4111-8111-111111111111");
+    tracker.track("card_dwell", { seconds: 2 });
+    setRunId(null);
+    tracker.track("card_dwell", { seconds: 3 });
+    await tracker.flush();
+    const ids = JSON.parse(send.mock.calls[0][1]).events.map((e: { run_id?: string }) => e.run_id);
+    expect(ids).toEqual([undefined, "11111111-1111-4111-8111-111111111111", undefined]);
   });
 });

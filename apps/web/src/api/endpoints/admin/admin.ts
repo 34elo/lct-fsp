@@ -26,7 +26,8 @@ import type {
 import type {
   AdminListAdminCompaniesGetParams,
   CompanyOut,
-  HTTPValidationError
+  HTTPValidationError,
+  ProblemOut
 } from '../../model';
 
 import { apiFetch } from '../../mutator';
@@ -57,6 +58,26 @@ export type adminListAdminCompaniesGetResponse200 = {
   status: 200
 }
 
+export type adminListAdminCompaniesGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type adminListAdminCompaniesGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type adminListAdminCompaniesGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type adminListAdminCompaniesGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
 export type adminListAdminCompaniesGetResponse422 = {
   data: HTTPValidationError
   status: 422
@@ -65,7 +86,7 @@ export type adminListAdminCompaniesGetResponse422 = {
 export type adminListAdminCompaniesGetResponseSuccess = (adminListAdminCompaniesGetResponse200) & {
   headers: Headers;
 };
-export type adminListAdminCompaniesGetResponseError = (adminListAdminCompaniesGetResponse422) & {
+export type adminListAdminCompaniesGetResponseError = (adminListAdminCompaniesGetResponse401ApplicationProblemJson | adminListAdminCompaniesGetResponse401ApplicationJson | adminListAdminCompaniesGetResponse403ApplicationProblemJson | adminListAdminCompaniesGetResponse403ApplicationJson | adminListAdminCompaniesGetResponse422) & {
   headers: Headers;
 };
 
@@ -111,7 +132,7 @@ export const getAdminListAdminCompaniesGetQueryKey = (params?: AdminListAdminCom
     }
 
 
-export const getAdminListAdminCompaniesGetQueryOptions = <TData = Awaited<ReturnType<typeof adminListAdminCompaniesGet>>, TError = ErrorType<HTTPValidationError>>(params?: AdminListAdminCompaniesGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListAdminCompaniesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+export const getAdminListAdminCompaniesGetQueryOptions = <TData = Awaited<ReturnType<typeof adminListAdminCompaniesGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(params?: AdminListAdminCompaniesGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListAdminCompaniesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -130,10 +151,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type AdminListAdminCompaniesGetQueryResult = NonNullable<Awaited<ReturnType<typeof adminListAdminCompaniesGet>>>
-export type AdminListAdminCompaniesGetQueryError = ErrorType<HTTPValidationError>
+export type AdminListAdminCompaniesGetQueryError = ErrorType<ProblemOut | HTTPValidationError>
 
 
-export function useAdminListAdminCompaniesGet<TData = Awaited<ReturnType<typeof adminListAdminCompaniesGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useAdminListAdminCompaniesGet<TData = Awaited<ReturnType<typeof adminListAdminCompaniesGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  params: undefined |  AdminListAdminCompaniesGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListAdminCompaniesGet>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof adminListAdminCompaniesGet>>,
@@ -143,7 +164,7 @@ export function useAdminListAdminCompaniesGet<TData = Awaited<ReturnType<typeof 
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminListAdminCompaniesGet<TData = Awaited<ReturnType<typeof adminListAdminCompaniesGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useAdminListAdminCompaniesGet<TData = Awaited<ReturnType<typeof adminListAdminCompaniesGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  params?: AdminListAdminCompaniesGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListAdminCompaniesGet>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof adminListAdminCompaniesGet>>,
@@ -153,7 +174,7 @@ export function useAdminListAdminCompaniesGet<TData = Awaited<ReturnType<typeof 
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminListAdminCompaniesGet<TData = Awaited<ReturnType<typeof adminListAdminCompaniesGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useAdminListAdminCompaniesGet<TData = Awaited<ReturnType<typeof adminListAdminCompaniesGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  params?: AdminListAdminCompaniesGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListAdminCompaniesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -161,7 +182,7 @@ export function useAdminListAdminCompaniesGet<TData = Awaited<ReturnType<typeof 
  * @summary Admin List
  */
 
-export function useAdminListAdminCompaniesGet<TData = Awaited<ReturnType<typeof adminListAdminCompaniesGet>>, TError = ErrorType<HTTPValidationError>>(
+export function useAdminListAdminCompaniesGet<TData = Awaited<ReturnType<typeof adminListAdminCompaniesGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
  params?: AdminListAdminCompaniesGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminListAdminCompaniesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -183,6 +204,36 @@ export type adminVerifyAdminCompaniesCompanyIdVerifyPostResponse200 = {
   status: 200
 }
 
+export type adminVerifyAdminCompaniesCompanyIdVerifyPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type adminVerifyAdminCompaniesCompanyIdVerifyPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type adminVerifyAdminCompaniesCompanyIdVerifyPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type adminVerifyAdminCompaniesCompanyIdVerifyPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type adminVerifyAdminCompaniesCompanyIdVerifyPostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type adminVerifyAdminCompaniesCompanyIdVerifyPostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
 export type adminVerifyAdminCompaniesCompanyIdVerifyPostResponse422 = {
   data: HTTPValidationError
   status: 422
@@ -191,7 +242,7 @@ export type adminVerifyAdminCompaniesCompanyIdVerifyPostResponse422 = {
 export type adminVerifyAdminCompaniesCompanyIdVerifyPostResponseSuccess = (adminVerifyAdminCompaniesCompanyIdVerifyPostResponse200) & {
   headers: Headers;
 };
-export type adminVerifyAdminCompaniesCompanyIdVerifyPostResponseError = (adminVerifyAdminCompaniesCompanyIdVerifyPostResponse422) & {
+export type adminVerifyAdminCompaniesCompanyIdVerifyPostResponseError = (adminVerifyAdminCompaniesCompanyIdVerifyPostResponse401ApplicationProblemJson | adminVerifyAdminCompaniesCompanyIdVerifyPostResponse401ApplicationJson | adminVerifyAdminCompaniesCompanyIdVerifyPostResponse403ApplicationProblemJson | adminVerifyAdminCompaniesCompanyIdVerifyPostResponse403ApplicationJson | adminVerifyAdminCompaniesCompanyIdVerifyPostResponse404ApplicationProblemJson | adminVerifyAdminCompaniesCompanyIdVerifyPostResponse404ApplicationJson | adminVerifyAdminCompaniesCompanyIdVerifyPostResponse422) & {
   headers: Headers;
 };
 
@@ -225,7 +276,7 @@ export const adminVerifyAdminCompaniesCompanyIdVerifyPost = async (companyId: st
 
 export const getAdminVerifyAdminCompaniesCompanyIdVerifyPostMutationKey = () => ['adminVerifyAdminCompaniesCompanyIdVerifyPost'] as const;
 
-export const getAdminVerifyAdminCompaniesCompanyIdVerifyPostMutationOptions = <TError = ErrorType<HTTPValidationError>,
+export const getAdminVerifyAdminCompaniesCompanyIdVerifyPostMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminVerifyAdminCompaniesCompanyIdVerifyPost>>, TError,AdminVerifyAdminCompaniesCompanyIdVerifyPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof adminVerifyAdminCompaniesCompanyIdVerifyPost>>, TError,AdminVerifyAdminCompaniesCompanyIdVerifyPostMutationVariables, TContext> => {
 
@@ -254,13 +305,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type AdminVerifyAdminCompaniesCompanyIdVerifyPostMutationResult = NonNullable<Awaited<ReturnType<typeof adminVerifyAdminCompaniesCompanyIdVerifyPost>>>
 
-    export type AdminVerifyAdminCompaniesCompanyIdVerifyPostMutationError = ErrorType<HTTPValidationError>
+    export type AdminVerifyAdminCompaniesCompanyIdVerifyPostMutationError = ErrorType<ProblemOut | HTTPValidationError>
     export type AdminVerifyAdminCompaniesCompanyIdVerifyPostMutationVariables = {companyId: string}
 
     /**
  * @summary Admin Verify
  */
-export const useAdminVerifyAdminCompaniesCompanyIdVerifyPost = <TError = ErrorType<HTTPValidationError>,
+export const useAdminVerifyAdminCompaniesCompanyIdVerifyPost = <TError = ErrorType<ProblemOut | HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminVerifyAdminCompaniesCompanyIdVerifyPost>>, TError,AdminVerifyAdminCompaniesCompanyIdVerifyPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof adminVerifyAdminCompaniesCompanyIdVerifyPost>>,
@@ -275,6 +326,36 @@ export const useAdminVerifyAdminCompaniesCompanyIdVerifyPost = <TError = ErrorTy
   status: 200
 }
 
+export type adminRejectAdminCompaniesCompanyIdRejectPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type adminRejectAdminCompaniesCompanyIdRejectPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type adminRejectAdminCompaniesCompanyIdRejectPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type adminRejectAdminCompaniesCompanyIdRejectPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type adminRejectAdminCompaniesCompanyIdRejectPostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type adminRejectAdminCompaniesCompanyIdRejectPostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
 export type adminRejectAdminCompaniesCompanyIdRejectPostResponse422 = {
   data: HTTPValidationError
   status: 422
@@ -283,7 +364,7 @@ export type adminRejectAdminCompaniesCompanyIdRejectPostResponse422 = {
 export type adminRejectAdminCompaniesCompanyIdRejectPostResponseSuccess = (adminRejectAdminCompaniesCompanyIdRejectPostResponse200) & {
   headers: Headers;
 };
-export type adminRejectAdminCompaniesCompanyIdRejectPostResponseError = (adminRejectAdminCompaniesCompanyIdRejectPostResponse422) & {
+export type adminRejectAdminCompaniesCompanyIdRejectPostResponseError = (adminRejectAdminCompaniesCompanyIdRejectPostResponse401ApplicationProblemJson | adminRejectAdminCompaniesCompanyIdRejectPostResponse401ApplicationJson | adminRejectAdminCompaniesCompanyIdRejectPostResponse403ApplicationProblemJson | adminRejectAdminCompaniesCompanyIdRejectPostResponse403ApplicationJson | adminRejectAdminCompaniesCompanyIdRejectPostResponse404ApplicationProblemJson | adminRejectAdminCompaniesCompanyIdRejectPostResponse404ApplicationJson | adminRejectAdminCompaniesCompanyIdRejectPostResponse422) & {
   headers: Headers;
 };
 
@@ -317,7 +398,7 @@ export const adminRejectAdminCompaniesCompanyIdRejectPost = async (companyId: st
 
 export const getAdminRejectAdminCompaniesCompanyIdRejectPostMutationKey = () => ['adminRejectAdminCompaniesCompanyIdRejectPost'] as const;
 
-export const getAdminRejectAdminCompaniesCompanyIdRejectPostMutationOptions = <TError = ErrorType<HTTPValidationError>,
+export const getAdminRejectAdminCompaniesCompanyIdRejectPostMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminRejectAdminCompaniesCompanyIdRejectPost>>, TError,AdminRejectAdminCompaniesCompanyIdRejectPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof adminRejectAdminCompaniesCompanyIdRejectPost>>, TError,AdminRejectAdminCompaniesCompanyIdRejectPostMutationVariables, TContext> => {
 
@@ -346,13 +427,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type AdminRejectAdminCompaniesCompanyIdRejectPostMutationResult = NonNullable<Awaited<ReturnType<typeof adminRejectAdminCompaniesCompanyIdRejectPost>>>
 
-    export type AdminRejectAdminCompaniesCompanyIdRejectPostMutationError = ErrorType<HTTPValidationError>
+    export type AdminRejectAdminCompaniesCompanyIdRejectPostMutationError = ErrorType<ProblemOut | HTTPValidationError>
     export type AdminRejectAdminCompaniesCompanyIdRejectPostMutationVariables = {companyId: string}
 
     /**
  * @summary Admin Reject
  */
-export const useAdminRejectAdminCompaniesCompanyIdRejectPost = <TError = ErrorType<HTTPValidationError>,
+export const useAdminRejectAdminCompaniesCompanyIdRejectPost = <TError = ErrorType<ProblemOut | HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminRejectAdminCompaniesCompanyIdRejectPost>>, TError,AdminRejectAdminCompaniesCompanyIdRejectPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof adminRejectAdminCompaniesCompanyIdRejectPost>>,

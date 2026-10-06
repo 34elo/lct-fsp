@@ -5,8 +5,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface Contacts {
-  name: string;
+export interface ContactsInput {
+  name?: string | null;
   email?: string | null;
   phone?: string | null;
   telegram?: string | null;
