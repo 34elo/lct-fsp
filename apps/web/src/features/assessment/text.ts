@@ -119,6 +119,30 @@ export const T = {
   upgradeKept: "Остаёмся на текущем грейде. Предложение можно принять, пока оно действует.",
   bySkill: "Разбор по навыкам",
   bySkillLead: "Показываем, где просело, а не какие ответы верные: задания остаются честными для всех. Слабые навыки ведут в «Рост».",
+  explainTitle: "Объясни ответ",
+  explainLead: "Задания, где набрано не всё. Правильные ответы не показываем, чтобы задания оставались честными: разберём, почему могло не получиться.",
+  explainTask: (n: number) => `Задание ${n}`,
+  explainMyReason: "Как вы сами это объясняете",
+  explainMyReasonNone: "Не выбрано",
+  explainAsk: "Объяснить",
+  explainRetry: "Объяснить ещё раз",
+  explainWhy: "Причина по правилам",
+  explainMisconception: "Частое заблуждение",
+  explainTruth: "На деле",
+  explainMatch: "Ваше объяснение совпало с причиной по правилам.",
+  explainDiffer: "Ваше объяснение отличается: проверьте и вариант из разбора.",
+  explainSourceLlm: "Текст подготовила локальная модель; причина определена правилами.",
+  explainSourceTemplate: "Шаблонное объяснение; причина определена правилами.",
+  explainNotAnswered: "На это задание ответа не было.",
+  explainLimit: "Слишком много запросов. Попробуйте позже.",
+  selfReasons: {
+    misread: "Не так понял условие",
+    rushed: "Поторопился",
+    calc_error: "Ошибся в вычислении",
+    knowledge_gap: "Не знал тему",
+    guess: "Угадывал",
+    technical: "Помешал сбой или время",
+  } as Record<string, string>,
   colSkill: "Навык",
   colItems: "Заданий",
   colShare: "Доля",
@@ -236,7 +260,10 @@ export function errorView(e: unknown): ErrorView {
       return { code: e.code, text: T.upgradeStale };
     case "not_found":
       return { code: e.code, text: T.notFoundTitle };
+    case "not_answered":
+      return { code: e.code, text: T.explainNotAnswered };
     default:
+      if (e.status === 429) return { code: e.code, text: T.explainLimit };
       return { code: e.code, text: e.status === 404 ? T.notFoundTitle : T.generic };
   }
 }

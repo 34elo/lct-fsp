@@ -165,3 +165,24 @@ export function salaryError(from: string, to: string): boolean {
   const b = Number(to);
   return from !== "" && to !== "" && Number.isFinite(a) && Number.isFinite(b) && a > b;
 }
+
+export interface AnswerRow {
+  responseId: string;
+  seq: number;
+  skill: string;
+  score: number;
+}
+
+/** `result.answers` приходит свободным словарём: берём корректные строки, где набрано не всё. */
+export function missedAnswers(raw: unknown): AnswerRow[] {
+  if (!Array.isArray(raw)) return [];
+  const rows: AnswerRow[] = [];
+  for (const r of raw) {
+    if (!r || typeof r !== "object") continue;
+    const { response_id, seq, skill, score } = r as Record<string, unknown>;
+    if (typeof response_id === "string" && typeof seq === "number" && typeof score === "number" && score < 1) {
+      rows.push({ responseId: response_id, seq, skill: typeof skill === "string" ? skill : "", score });
+    }
+  }
+  return rows.sort((a, b) => a.seq - b.seq);
+}
