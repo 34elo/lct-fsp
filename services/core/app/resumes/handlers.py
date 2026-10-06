@@ -45,4 +45,4 @@ def register(
         try:
             await ui_publish(msg)
         except Exception:  # SSE — удобство, а не часть транзакции: не роняем обработчик
-            log.warning("ui_publish_failed", event=event)
+            log.warning("ui_publish_failed", ui_event=event)
