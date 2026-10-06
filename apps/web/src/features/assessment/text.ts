@@ -24,7 +24,8 @@ export const KIND_LABEL: Record<string, string> = {
   chain: "цепочка-инцидент",
 };
 
-export const STEPS = ["Отрасль", "Профессия", "Стек", "Формат и вилка", "Грейд"] as const;
+/** ADR-025 п.4: первый шаг — IT-направление (это и есть профессия), отрасль не спрашиваем. */
+export const STEPS = ["IT-направление", "Стек", "Формат и вилка", "Грейд"] as const;
 
 export const T = {
   // опрос (S1)
@@ -32,10 +33,9 @@ export const T = {
   surveyLead: "Опрос — это твои ожидания. Грейд на профиле станет подтверждённым только после теста.",
   prefilled: "Заполнили из резюме · проверь",
   stepOf: (n: number, total: number) => `Шаг ${n} из ${total}`,
-  industry: "Отрасль",
-  industryHint: "Например: электронная коммерция",
-  profession: "Профессия",
-  professionQ: "Кем ты хочешь работать?",
+  profession: "IT-направление",
+  professionQ: "В каком IT-направлении ты работаешь?",
+  professionHint: "Backend, Frontend, Data/ML… От направления зависят навыки в тесте и категория в выдаче.",
   stack: "Стек",
   stackQ: "Какой у тебя стек?",
   stackHint: "Убери лишнее и добавь недостающее. До 30 навыков.",
@@ -58,7 +58,7 @@ export const T = {
   saveAndStart: "Сохранить и начать тест",
   historyLink: "История попыток",
   invalidRange: "«От» не может быть больше «До».",
-  needProfession: "Выберите профессию.",
+  needProfession: "Выберите IT-направление.",
   needGrade: "Выберите грейд, чтобы начать тест.",
   loading: "Загружаем…",
   // тест (S2)
@@ -109,14 +109,17 @@ export const T = {
   failedText: "Это не отметка о неудаче: профиль и прежний грейд остаются. Слабые навыки ведут в «Рост».",
   needsConfirmation: "Результат требует подтверждения: уверенность оценки низкая.",
   lowConfidence: "Банк заданий кончился раньше, чем результат стал однозначным. Решение принято с пометкой «низкая уверенность».",
-  upgradeTitle: "Бонусный этап пройден",
-  upgradeAvailable: (g: string) => `Тебе доступен ${g}`,
-  upgradeText:
-    "Ты отвечал на уровне следующего грейда. Повышение принимаешь ты сам: потом смена грейда — не раньше чем через 90 дней.",
-  upgradeAccept: (g: string) => `Принять ${g}`,
-  upgradeKeep: (g: string) => `Остаться на ${g}`,
-  upgradeDone: "Повышение принято. Грейд обновлён в профиле.",
-  upgradeKept: "Остаёмся на текущем грейде. Предложение можно принять, пока оно действует.",
+  inviteTitle: "Бонусный этап пройден",
+  inviteAvailable: (g: string) => `Приглашение на тест ${g}`,
+  inviteText:
+    "Ты отвечал на уровне следующего грейда. Грейд сам не повышается: пройди отдельный тест. Кулдаун смены грейда на него не действует, а неудача не меняет грейд и не закрывает повтор.",
+  inviteUntil: (d: string) => `Приглашение действует до ${d}`,
+  inviteStart: (g: string) => `Пройти тест ${g}`,
+  inviteLater: "Позже",
+  inviteLaterText: "Приглашение сохранится, пока действует. Вернуться к нему можно из «Истории попыток».",
+  inviteOpen: "Открыть тест по приглашению",
+  inviteExpired: "Срок приглашения истёк.",
+  invitedAttempt: "Тест по приглашению после бонусного этапа: неудача не меняет грейд и не закрывает повтор.",
   bySkill: "Разбор по навыкам",
   bySkillLead: "Показываем, где просело, а не какие ответы верные: задания остаются честными для всех. Слабые навыки ведут в «Рост».",
   explainTitle: "Объясни ответ",
@@ -204,8 +207,8 @@ export const T = {
   noItems: "Для этой профессии и грейда пока нет заданий. Попробуйте позже.",
   attemptFinished: "Попытка уже завершена.",
   unknownProfession: "Такой профессии нет в справочнике.",
-  noUpgrade: "Повышение недоступно.",
-  upgradeStale: "Предложение устарело: грейд уже изменился.",
+  noInvite: "Приглашения по этой попытке нет.",
+  inviteStale: "Приглашение неактуально: грейд уже не ниже.",
   generic: "Что-то пошло не так. Попробуйте ещё раз.",
 };
 
@@ -254,10 +257,12 @@ export function errorView(e: unknown): ErrorView {
       return { code: e.code, text: T.attemptFinished };
     case "unknown_profession":
       return { code: e.code, text: T.unknownProfession };
-    case "no_upgrade_offer":
-      return { code: e.code, text: T.noUpgrade };
-    case "upgrade_stale":
-      return { code: e.code, text: T.upgradeStale };
+    case "no_invite":
+      return { code: e.code, text: T.noInvite };
+    case "invite_expired":
+      return { code: e.code, text: T.inviteExpired };
+    case "invite_stale":
+      return { code: e.code, text: T.inviteStale };
     case "not_found":
       return { code: e.code, text: T.notFoundTitle };
     case "not_answered":

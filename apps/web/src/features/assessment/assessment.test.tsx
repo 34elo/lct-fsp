@@ -42,8 +42,9 @@ const finished = {
   status: "passed",
   answered: 10,
   finished_at: "2026-10-06T09:20:00Z",
-  upgrade_offer: "senior",
-  upgrade_accepted: false,
+  invited_grade: "senior",
+  invite_expires_at: "2999-11-05T09:20:00Z",
+  invite_attempt_id: null,
   result: {
     grade: "middle",
     theta: 0.4,
@@ -100,7 +101,8 @@ describe("опрос (S1)", () => {
       if (url.endsWith("/attempts/a1")) return res(200, attemptBase);
     });
     expect(await tid("assessment-prefilled")).toBeInTheDocument();
-    expect(screen.getByTestId("assessment-industry")).toHaveValue("Электронная коммерция");
+    expect(screen.queryByTestId("assessment-industry")).toBeNull(); // ADR-025 п.4: отрасль не спрашиваем
+    expect(screen.getByTestId("assessment-profession-backend")).toBeChecked();
     expect(screen.getByTestId("assessment-grade-middle")).toBeChecked();
     fireEvent.change(screen.getByTestId("assessment-stack-input"), { target: { value: "Redis" } });
     fireEvent.click(screen.getByTestId("assessment-stack-add"));
@@ -108,7 +110,7 @@ describe("опрос (S1)", () => {
     fireEvent.click(screen.getByTestId("assessment-start"));
     expect(await tid("assessment-item")).toBeInTheDocument();
     const put = calls.find((c) => c.method === "PUT")!;
-    expect(put.body).toMatchObject({ profession: "backend", declared_grade: "middle", stack: ["python", "fastapi", "redis"], salary_from: 200000 });
+    expect(put.body).toMatchObject({ industry: "Электронная коммерция", profession: "backend", declared_grade: "middle", stack: ["python", "fastapi", "redis"], salary_from: 200000 });
     expect(calls.find((c) => c.url.endsWith("/assessment/attempts") && c.method === "POST")!.body).toEqual({ profession: "backend", declared_grade: "middle" });
   });
 
@@ -257,15 +259,17 @@ describe("результат (S3)", () => {
   const routes = (calls: { n: number }): Handler => (url, init) => {
     if (url.endsWith("/attempts/a1/upgrade")) {
       calls.n += 1;
-      return res(200, { ...finished, upgrade_accepted: true });
+      return res(201, { ...attemptBase, id: "a2", declared_grade: "senior", answered: 0, invited_by: "a1" });
     }
+    if (url.includes("/attempts/a2/next")) return res(200, { done: false, response_id: "r1", seq: 1, kind: "exact", stem: "Что выведет?", time_limit_s: 120 });
+    if (url.endsWith("/attempts/a2")) return res(200, { ...attemptBase, id: "a2", declared_grade: "senior", answered: 0, invited_by: "a1" });
     if (url.endsWith("/attempts/a1")) return res(200, finished);
     if (url.endsWith("/assessment/history"))
       return res(200, { surveys: [], attempts: [finished], cooldowns: [{ profession: "backend", grade: "middle", next_change_at: "2999-01-04T00:00:00Z" }], retries: [] });
     void init;
   };
 
-  it("грейд, честность, разбор по навыкам, кулдаун и принятие повышения", async () => {
+  it("грейд, честность, разбор по навыкам, кулдаун и приглашение на тест следующего грейда", async () => {
     const calls = { n: 0 };
     mount("/me/assessment/attempts/a1/result", routes(calls));
     expect(await tid("assessment-grade")).toHaveTextContent("Middle");
@@ -273,28 +277,44 @@ describe("результат (S3)", () => {
     expect(screen.getByTestId("assessment-skill-python")).toHaveTextContent("83%");
     expect(screen.getByTestId("assessment-skill-system_design")).toHaveTextContent("подтянуть");
     expect(await screen.findByText(/Следующая смена грейда — с 04\.01\.2999/)).toBeInTheDocument();
-    fireEvent.click(screen.getByTestId("assessment-upgrade-accept"));
+    expect(screen.getByTestId("assessment-invite")).toHaveTextContent("Приглашение на тест Senior");
+    expect(screen.getByTestId("assessment-invite-until")).toHaveTextContent("05.11.2999");
+    expect(screen.queryByText(/Принять/)).toBeNull(); // ADR-025 п.2: повышения нет, только отдельный тест
+    fireEvent.click(screen.getByTestId("assessment-invite-start"));
     await waitFor(() => expect(calls.n).toBe(1));
+    expect(await tid("assessment-item")).toBeInTheDocument();
   });
 
   it("не прошёл: нейтральный текст без красного акцента", async () => {
     mount("/me/assessment/attempts/a1/result", (url) => {
       if (url.endsWith("/attempts/a1"))
-        return res(200, { ...finished, status: "failed", upgrade_offer: null, result: { ...finished.result, grade: null } });
+        return res(200, { ...finished, status: "failed", invited_grade: null, result: { ...finished.result, grade: null } });
       if (url.endsWith("/assessment/history")) return res(200, { surveys: [], attempts: [], cooldowns: [], retries: [] });
     });
     expect(await tid("assessment-not-confirmed")).toBeInTheDocument();
-    expect(screen.queryByTestId("assessment-upgrade")).toBeNull();
+    expect(screen.queryByTestId("assessment-invite")).toBeNull();
   });
 
-  it("409 upgrade_stale показывает понятную ошибку", async () => {
+  it("409 invite_stale показывает понятную ошибку", async () => {
     mount("/me/assessment/attempts/a1/result", (url) => {
-      if (url.endsWith("/attempts/a1/upgrade")) return res(409, { code: "upgrade_stale" });
+      if (url.endsWith("/attempts/a1/upgrade")) return res(409, { code: "invite_stale" });
       if (url.endsWith("/attempts/a1")) return res(200, finished);
       if (url.endsWith("/assessment/history")) return res(200, { surveys: [], attempts: [], cooldowns: [], retries: [] });
     });
-    fireEvent.click(await tid("assessment-upgrade-accept"));
-    expect(await tid("assessment-upgrade-error")).toHaveTextContent("устарело");
+    fireEvent.click(await tid("assessment-invite-start"));
+    expect(await tid("assessment-invite-error")).toHaveTextContent("неактуально");
+  });
+
+  it.each([
+    [{ invite_expires_at: "2000-01-01T00:00:00Z" }, "assessment-invite-expired"],
+    [{ invite_attempt_id: "a2" }, "assessment-invite-open"],
+  ])("приглашение истекло или уже начато: %o", async (patch, testid) => {
+    mount("/me/assessment/attempts/a1/result", (url) => {
+      if (url.endsWith("/attempts/a1")) return res(200, { ...finished, ...patch });
+      if (url.endsWith("/assessment/history")) return res(200, { surveys: [], attempts: [], cooldowns: [], retries: [] });
+    });
+    expect(await tid(testid)).toBeInTheDocument();
+    expect(screen.queryByTestId("assessment-invite")).toBeNull();
   });
 });
 

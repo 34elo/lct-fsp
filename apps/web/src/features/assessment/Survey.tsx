@@ -47,7 +47,6 @@ export default function Survey() {
   const professions = useMemo(() => (pq.data?.status === 200 ? pq.data.data.professions : []), [pq.data]);
 
   const [step, setStep] = useState(0);
-  const [industry, setIndustry] = useState("");
   const [profession, setProfession] = useState("");
   const [stack, setStack] = useState<string[]>([]);
   const [stackDraft, setStackDraft] = useState("");
@@ -62,7 +61,6 @@ export default function Survey() {
   const [filled, setFilled] = useState(false);
   useEffect(() => {
     if (filled || !survey) return;
-    setIndustry(survey.industry ?? "");
     setProfession(params.get("profession") ?? survey.profession ?? "");
     setStack(survey.stack ?? []);
     setFormats((survey.formats ?? []) as WorkFormat[]);
@@ -79,7 +77,7 @@ export default function Survey() {
   const rangeBad = salaryError(from, to);
 
   const body = (): SurveyIn => ({
-    industry: industry.trim() || null,
+    industry: survey?.industry ?? null, // ADR-025 п.4: отрасль не спрашиваем, прежнее значение сохраняем
     profession,
     stack,
     formats,
@@ -151,16 +149,9 @@ export default function Survey() {
           )}
 
           <div className={section(0)}>
-            <SectionLabel>1. {T.industry}</SectionLabel>
-            <Field label={T.industry} hint={T.industryHint}>
-              <FieldInput value={industry} onChange={(e) => setIndustry(e.target.value)} data-testid="assessment-industry" />
-            </Field>
-            {mobileNav(0)}
-          </div>
-
-          <div className={section(1)}>
-            <SectionLabel>2. {T.profession}</SectionLabel>
+            <SectionLabel>1. {T.profession}</SectionLabel>
             <p className="text-16 font-semibold md:hidden">{T.professionQ}</p>
+            <p className="text-13 text-muted">{T.professionHint}</p>
             <div role="radiogroup" aria-label={T.profession} className="grid gap-2 sm:grid-cols-2">
               {professions.map((p) => (
                 <Choice key={p.slug} checked={profession === p.slug} onSelect={() => setProfession(p.slug)} title={p.title} testid={`assessment-profession-${p.slug}`} />
@@ -171,11 +162,11 @@ export default function Survey() {
                 {T.needProfession}
               </p>
             )}
-            {mobileNav(1)}
+            {mobileNav(0)}
           </div>
 
-          <div className={section(2)}>
-            <SectionLabel>3. {T.stack}</SectionLabel>
+          <div className={section(1)}>
+            <SectionLabel>2. {T.stack}</SectionLabel>
             <p className="text-16 font-semibold md:hidden">{T.stackQ}</p>
             <p className="text-13 text-muted">{T.stackHint}</p>
             <ul className="flex flex-wrap gap-2" data-testid="assessment-stack">
@@ -211,11 +202,11 @@ export default function Survey() {
                 {T.stackAddBtn}
               </Button>
             </form>
-            {mobileNav(2)}
+            {mobileNav(1)}
           </div>
 
-          <div className={section(3)}>
-            <SectionLabel>4. {T.formats} · {T.salary}</SectionLabel>
+          <div className={section(2)}>
+            <SectionLabel>3. {T.formats} · {T.salary}</SectionLabel>
             <div className="flex flex-wrap gap-2" role="group" aria-label={T.formats}>
               {FORMAT_OPTIONS.map((f) => {
                 const on = formats.includes(f.value);
@@ -244,11 +235,11 @@ export default function Survey() {
                 <FieldInput type="number" inputMode="numeric" min={0} value={to} onChange={(e) => setTo(e.target.value)} data-testid="assessment-salary-to" />
               </Field>
             </div>
-            {mobileNav(3)}
+            {mobileNav(2)}
           </div>
 
-          <div className={section(4)}>
-            <SectionLabel>5. {T.gradeQ}</SectionLabel>
+          <div className={section(3)}>
+            <SectionLabel>4. {T.gradeQ}</SectionLabel>
             <div role="radiogroup" aria-label={T.gradeQ} className="grid gap-2 md:grid-cols-3">
               {GRADE_CARDS.map((c) => (
                 <Choice
@@ -269,7 +260,7 @@ export default function Survey() {
                 {T.needGrade}
               </p>
             )}
-            {mobileNav(4)}
+            {mobileNav(3)}
           </div>
 
           {put.isError && <ErrorLine error={put.error} data-testid="assessment-survey-error" />}

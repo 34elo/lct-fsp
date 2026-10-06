@@ -48,6 +48,17 @@ def test_survey_save_history_and_dedup(api, taxonomy_loaded):
     assert api.get("/assessment/survey", headers=h).json()["declared_grade"] == "senior"
 
 
+def test_survey_it_direction_without_industry(api, taxonomy_loaded):
+    """ADR-025 п.4: первый шаг — IT-направление (профессия), отрасль не обязательна."""
+    h = register(api)
+    body = {k: v for k, v in BODY.items() if k != "industry"}
+    r = api.put("/assessment/survey", json=body, headers=h)
+    assert r.status_code == 200, r.text
+    assert (r.json()["profession"], r.json()["industry"]) == ("backend", None)
+    r = api.put("/assessment/survey", json={"profession": "frontend"}, headers=h)
+    assert r.status_code == 200 and r.json()["declared_grade"] is None
+
+
 def test_survey_validation_and_isolation(api, taxonomy_loaded):
     h, other = register(api), register(api)
     r = api.put("/assessment/survey", json={**BODY, "profession": "nope"}, headers=h)
