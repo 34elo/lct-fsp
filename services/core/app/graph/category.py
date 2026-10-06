@@ -1,5 +1,8 @@
 """Категория кандидата: роли, мульти-метки, `primary_stack`, объяснение (ml.md §4).
 
+С E22-4 (ADR-018) это не категория кандидата: категорию (профессия × грейд) задаёт только тест
+(`assessment.service`). Роли и `primary_stack` отсюда — сигнал силы профиля и старые поля резюме.
+
 Чистые формулы без БД: вход — доверие к навыкам (slug → confidence/level/sources) и веса ролей
 `role_skills`; параметры — секция `category` из `data/scoring.yaml`.
 """
@@ -12,11 +15,14 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import yaml
+from fsp_contracts.enums import RoleSlug
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.graph.models import CandidateSkill
 from app.taxonomy.service import SkillGraph
+
+_LEGACY_ROLES = frozenset(r.value for r in RoleSlug)
 
 ROOT = Path(__file__).resolve().parents[4]
 DEFAULT_SCORING_PATH = ROOT / "data" / "scoring.yaml"
@@ -162,6 +168,7 @@ def category_for(
     roles = {
         r: {graph.slugs[sid]: w for sid, w in ws.items() if sid in graph.slugs}
         for r, ws in graph.roles.items()
+        if r in _LEGACY_ROLES  # профессии v2 (ai_engineer) в старую категорию не входят
     }
     return compute_category(
         skills, roles, {graph.slugs[sid] for sid in graph.stack_ids if sid in graph.slugs}, cfg

@@ -1,10 +1,9 @@
+import { Button, Input, Label, SectionLabel, SkillChip } from "@fsp/ui";
 import { useState } from "react";
 
 import type { ParsedResume, ParsedResumeEdits, ResumeEducation, ResumeExperience } from "@/api/model";
-import { ErrorNote, fieldClass } from "@/features/auth/ui";
+import { Note } from "@/features/onboarding/Note";
 import { warningText } from "@/features/onboarding/text";
-import { SkillChip } from "@/shared/brand";
-import { Button } from "@/shared/ui/button";
 
 function months(n: number) {
   const y = Math.floor(n / 12);
@@ -35,7 +34,7 @@ function EditableRow({
           setDraft(Object.fromEntries(fields.map((f) => [f.key, f.value])));
           setOpen(true);
         }}
-        className="w-full rounded-lg border border-hairline bg-card p-3 text-left hover:bg-tint-50"
+        className="w-full rounded-lg border border-hairline bg-card p-3 text-left hover:border-brand-mid hover:bg-tint-50 focus-visible:outline-2 focus-visible:outline-brand"
       >
         {children}
       </button>
@@ -44,10 +43,9 @@ function EditableRow({
   return (
     <div className="flex flex-col gap-2 rounded-lg border border-brand bg-card p-3">
       {fields.map((f) => (
-        <label key={f.key} className="flex flex-col gap-1 text-sm">
-          <span className="text-muted">{f.label}</span>
-          <input
-            className={fieldClass}
+        <label key={f.key} className="flex flex-col gap-1.5 text-14">
+          <Label>{f.label}</Label>
+          <Input
             value={draft[f.key] ?? ""}
             onChange={(e) => setDraft((d) => ({ ...d, [f.key]: e.target.value }))}
           />
@@ -116,15 +114,13 @@ export function Understood({
   return (
     <section aria-labelledby="understood-h" className="flex flex-col gap-4">
       <header className="flex flex-col gap-1">
-        <h2 id="understood-h" className="text-xl font-bold">Вот что я понял</h2>
-        <p className="text-sm text-muted">Проверьте, всё ли верно. Нажмите на строку, чтобы поправить.</p>
+        <h2 id="understood-h" className="text-20 font-bold">Вот что я понял</h2>
+        <p className="text-14 text-muted">Проверьте, всё ли верно. Нажмите на строку, чтобы поправить.</p>
       </header>
 
       <div className="flex flex-col gap-2">
-        <h3 className="text-sm font-semibold text-muted">
-          Опыт · {months(parsed.total_experience_months ?? 0)}
-        </h3>
-        {experience.length === 0 && <p className="text-sm text-muted">Мест работы не нашли.</p>}
+        <SectionLabel>Опыт · {months(parsed.total_experience_months ?? 0)}</SectionLabel>
+        {experience.length === 0 && <p className="text-14 text-muted">Мест работы не нашли.</p>}
         {experience.map((e, i) => (
           <EditableRow
             key={i}
@@ -139,7 +135,7 @@ export function Understood({
             }}
           >
             <p className="font-semibold">{e.title || "Должность не указана"}</p>
-            <p className="text-sm text-muted">
+            <p className="text-14 text-muted">
               {[e.company, e.start && `${e.start} — ${e.end ?? "сейчас"}`].filter(Boolean).join(" · ") || "Данных мало"}
             </p>
           </EditableRow>
@@ -148,7 +144,7 @@ export function Understood({
 
       {(education.length > 0) && (
         <div className="flex flex-col gap-2">
-          <h3 className="text-sm font-semibold text-muted">Образование</h3>
+          <SectionLabel>Образование</SectionLabel>
           {education.map((e, i) => (
             <EditableRow
               key={i}
@@ -163,7 +159,7 @@ export function Understood({
               }}
             >
               <p className="font-semibold">{e.field || e.degree || "Направление не указано"}</p>
-              <p className="text-sm text-muted">
+              <p className="text-14 text-muted">
                 {[e.institution, e.year_end && `до ${e.year_end}`].filter(Boolean).join(" · ") || "Данных мало"}
               </p>
             </EditableRow>
@@ -172,7 +168,7 @@ export function Understood({
       )}
 
       <div className="flex flex-col gap-2">
-        <h3 className="text-sm font-semibold text-muted">Навыки · из резюме, доверие слабое</h3>
+        <SectionLabel>Навыки · из резюме, доверие слабое</SectionLabel>
         <ul className="flex flex-wrap gap-2">
           {skills.map((s, i) => (
             <li key={`${s.slug ?? s.raw}-${i}`} className="fsp-chip-in flex items-center gap-1" style={{ animationDelay: `${i * 60}ms` }}>
@@ -182,7 +178,7 @@ export function Understood({
                   type="button"
                   aria-label={`Убрать навык ${s.raw}`}
                   onClick={() => setRemoved((r) => [...r, s.slug as string])}
-                  className="size-6 rounded-md text-muted hover:bg-tint-100"
+                  className="size-11 rounded-md text-muted hover:bg-tint-100 sm:size-8"
                 >
                   ×
                 </button>
@@ -196,7 +192,7 @@ export function Understood({
                 type="button"
                 aria-label={`Убрать навык ${slug}`}
                 onClick={() => setAdded((a) => a.filter((x) => x !== slug))}
-                className="size-6 rounded-md text-muted hover:bg-tint-100"
+                className="size-11 rounded-md text-muted hover:bg-tint-100 sm:size-8"
               >
                 ×
               </button>
@@ -209,13 +205,12 @@ export function Understood({
           ))}
         </ul>
         {(parsed.unknown_skills?.length ?? 0) > 0 && (
-          <p className="text-sm text-muted">
+          <p className="text-14 text-muted">
             Новые навыки раньше не встречались в справочнике: мы добавим их с пометкой «новый», доверие к ним пока минимальное.
           </p>
         )}
         <div className="flex gap-2">
-          <input
-            className={fieldClass}
+          <Input
             aria-label="Добавить навык"
             placeholder="Добавить навык, например redis"
             value={draft}
@@ -236,19 +231,19 @@ export function Understood({
       {warnings.length > 0 && (
         <ul className="flex flex-col gap-2">
           {warnings.map((w) => (
-            <li key={w} className="rounded-lg border border-warning-border bg-warning-bg px-3 py-2 text-sm text-warning-fg">
+            <li key={w} className="rounded-lg border border-warning-border bg-warning-bg px-3 py-2 text-14 text-warning-fg">
               {w}
             </li>
           ))}
         </ul>
       )}
 
-      {error && <ErrorNote>{error}</ErrorNote>}
+      {error && <Note>{error}</Note>}
       <div className="flex flex-col gap-2">
-        <Button size="lg" onClick={submit} disabled={pending}>
+        <Button size="lg" data-testid="onboarding-confirm" onClick={submit} loading={pending}>
           {pending ? "Сохраняем…" : "Всё верно"}
         </Button>
-        <Button variant="ghost" onClick={onSkip} disabled={pending}>
+        <Button variant="ghost" data-testid="onboarding-skip" onClick={onSkip} disabled={pending}>
           Пропустить
         </Button>
       </div>

@@ -42,3 +42,41 @@ export function summaryLines(p: ParsedResume): string[] {
     `Нашёл ${sk} ${plural(sk, "навык", "навыка", "навыков")}`,
   ];
 }
+
+export const RESUME_HINT = "Загрузите резюме в PDF или DOCX до 10 МБ. Мы только читаем его, наружу файл не уходит.";
+
+export type StepId = "consents" | "resume" | "fsp" | "github" | "done";
+
+export const STEPS: { id: StepId; title: string; lead: string }[] = [
+  { id: "consents", title: "Согласия", lead: "Согласие на обработку персональных данных выдано при регистрации." },
+  { id: "resume", title: "Резюме", lead: "Загрузите резюме, и мы соберём из него черновик профиля." },
+  {
+    id: "fsp",
+    title: "ФСП",
+    lead: "Результаты соревнований ФСП — самое сильное подтверждение: они поднимут навыки и грейд.",
+  },
+  {
+    id: "github",
+    title: "GitHub",
+    lead: "Читаем только публичные репозитории, токен не нужен. Код не запускается.",
+  },
+  { id: "done", title: "Готово", lead: "Профиль собран." },
+];
+
+export const ONBOARDING = {
+  title: "Соберём ваш профиль",
+  eta: "около 3 минут",
+  skipHint: "Каждый шаг можно пропустить и вернуться позже.",
+  skip: "Пропустить",
+  next: "Дальше",
+  githubSoon: "Этот шаг подключим позже. Его можно пройти из профиля, когда он появится.",
+  doneWithResume: "Резюме добавлено. Остальные подтверждения можно добавить позже, они поднимут доверие к навыкам.",
+  doneNoResume: "Профиль создан без резюме. Его можно загрузить позже.",
+  toProfile: "Смотреть мой профиль",
+  statusSkipped: "пропущено",
+  statusDone: "готово",
+} as const;
+
+export function skillsStatus(n: number): string {
+  return `навыков: ${n}`;
+}

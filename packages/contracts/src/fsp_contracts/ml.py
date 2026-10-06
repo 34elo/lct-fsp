@@ -156,6 +156,46 @@ class SkillResolveItem(BaseModel):
     reason: str | None = None
 
 
+class SkillCardDraftRequest(BaseModel):
+    """`POST /v1/skills/card-draft`: черновик карточки для нового (provisional) навыка (E16-4)."""
+
+    slug: str = Field(min_length=1, max_length=64)
+    name: str = Field(min_length=1, max_length=120)
+    kind: Literal["hard", "soft", "domain"] = "hard"
+    skill_type: (
+        Literal["fundamental", "hard", "thinking", "business", "soft", "experience"] | None
+    ) = None
+    description: str | None = Field(default=None, max_length=500)
+    aliases: list[str] = Field(default_factory=list, max_length=20)
+
+
+class SkillCardConcept(BaseModel):
+    term: str = Field(min_length=1, max_length=80)
+    note: str = Field(min_length=3, max_length=300)
+
+
+class SkillCardMisconception(BaseModel):
+    claim: str = Field(min_length=3, max_length=300)
+    truth: str = Field(min_length=3, max_length=300)
+
+
+class SkillCardDraft(BaseModel):
+    """Форма карточки `data/skills/cards/*.yaml` (core `taxonomy/cards.py`, `schema_version` 1).
+
+    Это всегда черновик: в `data/skills/cards` он попадает только после проверки человеком.
+    """
+
+    schema_version: Literal[1] = 1
+    skill: str
+    type: Literal["fundamental", "hard", "thinking", "business", "soft", "experience"]
+    summary: str = Field(min_length=10, max_length=400)
+    levels: dict[Literal["junior", "middle", "senior"], list[str]]
+    concepts: list[SkillCardConcept] = Field(min_length=3)
+    misconceptions: list[SkillCardMisconception] = Field(min_length=2)
+    model: str  # чем сделан: имя LLM или `rules-template`
+    draft: Literal[True] = True
+
+
 class MlHealth(BaseModel):
     llm: Literal["up", "down"]
     embedder: Literal["up", "down"]
@@ -323,3 +363,92 @@ class QuestionDraft(BaseModel):
     correct_option: str
     difficulty: int = Field(ge=1, le=5)
     explanation: str | None = None
+
+
+# --- Черновик ключа задания конструктора (assessment.md §4, §7; E30-1) ---
+
+FamilyKind = Literal["exact", "estimate", "choice", "find_bug", "order", "sjt", "open"]
+
+
+class FamilyKeyDraftRequest(BaseModel):
+    """Пример варианта задания без ключа: ml-api предлагает ключ и рубрику (черновик)."""
+
+    kind: FamilyKind
+    stem: str = Field(max_length=6000)
+    options: list[str] = Field(default_factory=list, max_length=8)  # choice, порядок автора
+    lines: list[str] = Field(default_factory=list, max_length=60)  # find_bug, строки с 1
+    actions: list[str] = Field(default_factory=list, max_length=8)  # sjt
+    steps: list[str] = Field(default_factory=list, max_length=10)  # order, порядок автора
+    rubric: list[str] = Field(default_factory=list, max_length=10)  # open: рубрика автора
+
+
+class FamilyKeyDraft(BaseModel):
+    """Черновик ключа: в оценке не используется, пока его не утвердит админ (ADR-024)."""
+
+    correct: int | None = None  # choice: индекс в `options`
+    bug_lines: list[int] | None = None  # find_bug: номера строк с 1
+    scores: list[float] | None = None  # sjt: оценка эффективности каждого действия
+    answer: float | str | None = None  # exact, estimate: примерный ответ на этот вариант
+    rubric: list[str] | None = None  # open: пункты рубрики
+    rationale: str | None = Field(default=None, max_length=1000)
+    model: str = ""
+
+
+# --- «Объясни ответ» (E24-2) ---
+
+
+class AnswerExplainRequest(BaseModel):
+    """Причину ошибки определил core по правилам; LLM только формулирует текст (без ПДн и ключа)."""
+
+    kind: Literal[
+        "exact", "estimate", "choice", "find_bug", "order", "sjt", "open", "chain"
+    ]  # как FamilyKind + chain
+    skill: str = Field(max_length=80)
+    stem: str = Field(max_length=6000)
+    reason_code: str = Field(max_length=40)
+    reason_label: str = Field(max_length=200)
+    misconception: str | None = Field(
+        default=None, max_length=300
+    )  # утверждение из карточки навыка
+    truth: str | None = Field(default=None, max_length=300)  # как на самом деле
+
+
+class AnswerExplain(BaseModel):
+    text: str = Field(max_length=800)
+    model: str = ""
+
+
+# --- Офлайн-конвейер LLM-заданий (E26-4, ADR-024, assessment.md §7) ---
+
+
+class FamilyGenerateRequest(BaseModel):
+    """Заказ генератору: предложить `n` спецификаций семейства для навыка, `kind` и уровня."""
+
+    skill: str = Field(min_length=1, max_length=80)  # slug из data/taxonomy
+    skill_type: str = Field(default="", max_length=40)  # SkillType навыка (подсказка генератору)
+    kind: FamilyKind
+    level: int = Field(ge=1, le=5)
+    domain: str | None = Field(default=None, max_length=40)  # e-commerce, fintech…
+    n: int = Field(default=1, ge=1, le=5)
+
+
+class FamilyGenerateResponse(BaseModel):
+    """Черновики форм конструктора (`FamilySpec`); core проверяет их схемой и автопроверкой."""
+
+    specs: list[dict[str, Any]] = Field(default_factory=list, max_length=5)
+    model: str = ""
+
+
+class FamilySolveRequest(BaseModel):
+    """Вариант задания так, как его видит кандидат (без ключа): LLM решает его как кандидат."""
+
+    kind: FamilyKind
+    stem: str = Field(max_length=6000)
+    options: list[str] = Field(default_factory=list, max_length=10)  # choice, order, sjt
+
+
+class FamilySolveAnswer(BaseModel):
+    """Ответ LLM в формате ответа кандидата: число/строка, индекс, строки дефекта, порядок."""
+
+    answer: int | float | str | list[int] | None = None
+    model: str = ""

@@ -1,22 +1,16 @@
+import { Button, Checkbox, ErrorState, Label, Skeleton, cn } from "@fsp/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState, type FormEvent } from "react";
 
 import { getGetConsentsMeConsentsGetQueryKey, useGetConsentsMeConsentsGet, usePutConsentsMeConsentsPut } from "@/api/endpoints/consents/consents";
 import type { ConsentOut } from "@/api/model";
 import { ApiError } from "@/api/mutator";
+import { authText } from "@/features/auth/text";
 import { ErrorNote } from "@/features/auth/ui";
-import { Button } from "@/shared/ui/button";
 
-/** Тексты по типам согласий (design/screens/M1_Onboarding, security.md §2). */
-const COPY: Record<string, { title: string; hint: string }> = {
-  pd_processing: { title: "Обработка персональных данных", hint: "Имя, контакты и резюме нужны, чтобы создать профиль." },
-  fsp_data: { title: "Данные ФСП", hint: "Результаты соревнований подтверждают ваши навыки." },
-  code_analysis: { title: "Анализ кода", hint: "Читаем ваши публичные репозитории, чтобы подтвердить навыки. Код не запускается." },
-  telegram_notifications: { title: "Уведомления в Telegram", hint: "Офферы и новые результаты ФСП." },
-  public_profile: { title: "Публичная карточка", hint: "Страница профиля, которую можно показать по ссылке." },
-};
+const t = authText.consents;
 
-export function ConsentsForm({ onDone, submitLabel = "Продолжить" }: { onDone: () => void | Promise<void>; submitLabel?: string }) {
+export function ConsentsForm({ onDone, submitLabel = t.submit }: { onDone: () => void | Promise<void>; submitLabel?: string }) {
   const qc = useQueryClient();
   const list = useGetConsentsMeConsentsGet();
   const save = usePutConsentsMeConsentsPut();
@@ -29,8 +23,23 @@ export function ConsentsForm({ onDone, submitLabel = "Продолжить" }: {
     if (items) setChecked(Object.fromEntries(items.map((c) => [c.type, c.granted])));
   }, [items]);
 
-  if (list.isPending) return <p role="status" className="text-sm text-muted">Загрузка…</p>;
-  if (!items) return <ErrorNote>Не удалось загрузить согласия. Обновите страницу.</ErrorNote>;
+  if (list.isPending)
+    return (
+      <div className="flex flex-col gap-2" data-testid="consents-form-loading">
+        {[0, 1, 2].map((i) => (
+          <Skeleton key={i} className="h-16" />
+        ))}
+      </div>
+    );
+  if (!items)
+    return (
+      <ErrorState
+        title={t.loadError}
+        description={t.loadErrorHint}
+        onRetry={() => void list.refetch()}
+        className="py-6"
+      />
+    );
 
   const missingRequired = items.some((c) => c.required && !checked[c.type]);
 
@@ -46,47 +55,54 @@ export function ConsentsForm({ onDone, submitLabel = "Продолжить" }: {
       await onDone();
     } catch (err) {
       if (err instanceof ApiError && err.code === "consent_version_mismatch") {
-        setError("Текст согласия обновился. Перечитайте и подтвердите ещё раз.");
+        setError(t.versionMismatch);
         await qc.invalidateQueries({ queryKey: getGetConsentsMeConsentsGetQueryKey() });
       } else {
-        setError("Не удалось сохранить согласия, попробуйте позже");
+        setError(t.saveError);
       }
     }
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-3">
+    <form onSubmit={onSubmit} className="flex flex-col gap-3" data-testid="consents-form">
       <ul className="flex flex-col gap-2">
         {items.map((c) => {
-          const copy = COPY[c.type] ?? { title: c.type, hint: "" };
+          const copy = t.types[c.type] ?? { title: c.type, hint: "" };
           return (
             <li key={c.type}>
-              <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-hairline bg-card p-3 has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-brand">
-                <input
-                  type="checkbox"
-                  className="mt-1 size-5 shrink-0 accent-brand"
+              <Label
+                htmlFor={`consent-${c.type}`}
+                data-testid={`consents-item-${c.type}`}
+                className={cn(
+                  "flex min-h-11 cursor-pointer items-start gap-3 rounded-lg border p-3",
+                  checked[c.type] ? "border-brand bg-tint-50" : "border-hairline bg-card",
+                )}
+              >
+                <Checkbox
+                  id={`consent-${c.type}`}
+                  className="mt-0.5"
                   checked={!!checked[c.type]}
-                  onChange={(e) => setChecked((s) => ({ ...s, [c.type]: e.target.checked }))}
+                  onCheckedChange={(v) => setChecked((s) => ({ ...s, [c.type]: v === true }))}
                 />
                 <span className="flex flex-col gap-0.5">
                   <span className="font-semibold">
                     {copy.title}{" "}
-                    <span className={c.required ? "text-xs font-normal text-signal" : "text-xs font-normal text-muted"}>
-                      {c.required ? "обязательно" : "по желанию"}
+                    <span className={cn("text-12 font-normal", c.required ? "text-brand-fg" : "text-muted")}>
+                      {c.required ? t.required : t.optional}
                     </span>
                   </span>
-                  <span className="text-sm text-muted">{copy.hint}</span>
+                  <span className="text-14 font-normal text-muted">{copy.hint}</span>
                 </span>
-              </label>
+              </Label>
             </li>
           );
         })}
       </ul>
       {error && <ErrorNote>{error}</ErrorNote>}
-      <Button type="submit" disabled={missingRequired || save.isPending}>
-        {save.isPending ? "Сохраняем…" : submitLabel}
+      <Button type="submit" size="lg" disabled={missingRequired} loading={save.isPending} data-testid="consents-submit">
+        {save.isPending ? t.saving : submitLabel}
       </Button>
-      {missingRequired && <p className="text-xs text-muted">Без обязательных согласий создать профиль нельзя.</p>}
+      {missingRequired && <p className="text-12 text-muted">{t.missingRequired}</p>}
     </form>
   );
 }

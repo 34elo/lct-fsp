@@ -31,7 +31,7 @@ from fsp_contracts.ml import (
 from pydantic import BaseModel, Field, ValidationError
 from rapidfuzz import fuzz
 
-from fsp_ml import resume_rules
+from fsp_ml import resume_ner, resume_rules, resume_structure
 from fsp_ml.llm import LlmClient, LlmError
 from fsp_ml.normalize import light, normalize
 from fsp_ml.resume_text import extract_text
@@ -290,6 +290,82 @@ def assemble(
     )
 
 
+RULES_VERSION = "resume-rules-v2"
+_NAME_WORD = re.compile(r"[А-ЯЁA-Z][а-яёa-z]+(?:-[А-ЯЁA-Z][а-яёa-z]+)?")
+
+
+def _skill_mentions(text: str, index: TaxonomyIndex | None) -> list[LlmSkill]:
+    skills: list[LlmSkill] = []
+    seen: set[str] = set()
+    if index is None:
+        return skills
+    for line in text.splitlines():
+        line = line.strip()
+        quote = line[:400]
+        tokens = _TOKEN.findall(line)
+        for n in (3, 2, 1):
+            for i in range(len(tokens) - n + 1):
+                raw = " ".join(tokens[i : i + n])
+                slug = index.lookup(raw)
+                if slug and slug not in seen and raw.lower() in quote.lower():
+                    seen.add(slug)
+                    skills.append(LlmSkill(name=raw[:80], quote=quote))
+    return skills[:80]
+
+
+def _full_name(head: list[str]) -> str | None:
+    for line in head[:5]:
+        words = line.split()
+        if (
+            2 <= len(words) <= 3
+            and all(_NAME_WORD.fullmatch(w) for w in words)
+            and not resume_structure.TITLE_WORDS.search(line)
+        ):
+            return line.strip()
+    for line in head[:5]:  # запасной путь: Natasha, по строке («Фамилия Имя Отчество, 29 лет»)
+        for kind, value in resume_ner.entities(line):
+            words = value.split()
+            if (
+                kind == "PER"
+                and 2 <= len(words) <= 3
+                and all(_NAME_WORD.fullmatch(w) for w in words)
+            ):
+                return value
+    return None
+
+
+def extract_rules(text: str, index: TaxonomyIndex | None) -> LlmResume:
+    """Разбор без LLM (LLM_ENABLED=false, E20-8 + E30-4): правила, словарь графа, Natasha.
+
+    Навыки: каждое слово и пара-тройка слов строки ищутся в словаре синонимов, цитата — строка
+    резюме; `assemble` проверяет цитату так же, как для LLM. Опыт, образование, даты, город и
+    «о себе» — `resume_structure` (заголовки разделов + периоды); Natasha — запасной путь для
+    имени, города и компании. Нераспознанное остаётся пустым.
+    """
+    skills = _skill_mentions(text, index)
+    sec = resume_structure.sections(text)
+    names = {s.name.lower() for s in skills}
+    exp_lines = sec.get("experience") or [
+        ln for k, v in sec.items() if k not in ("education", "skills", "about", "other") for ln in v
+    ]
+    experience = []
+    for e in resume_structure.parse_experience(exp_lines, names):
+        blob = f"{e.get('title') or ''}\n{e.get('description') or ''}"
+        e["skills"] = [s.name for s in _skill_mentions(blob, index)][:40]
+        experience.append(LlmExperience(**e))
+    education = [
+        LlmEducation(**e) for e in resume_structure.parse_education(sec.get("education", []))
+    ]
+    return LlmResume(
+        full_name=_full_name(sec["head"]),
+        city=resume_structure.parse_city(sec["head"]),
+        summary=resume_structure.parse_summary(sec.get("about", [])),
+        experience=experience[:30],
+        education=education,
+        skills=skills,
+    )
+
+
 async def _noop(stage: str, pct: int, message: str) -> None:
     return None
 
@@ -297,13 +373,13 @@ async def _noop(stage: str, pct: int, message: str) -> None:
 async def parse_resume(
     data: bytes,
     *,
-    llm: LlmClient,
+    llm: LlmClient | None,
     index: TaxonomyIndex | None,
     model: str,
     today: date,
     progress: Progress | None = None,
 ) -> ParsedResume:
-    """Полный конвейер. Ошибки: `ResumeFileError` (bad_file, scanned_pdf), `LlmError`."""
+    """Полный конвейер. `llm=None` — правиловая ветка. Ошибки: `ResumeFileError`, `LlmError`."""
     report = progress or _noop
     t0 = time.monotonic()
     await report("text", 10, "Извлекаем текст")
@@ -313,11 +389,15 @@ async def parse_resume(
         text = text[:MAX_TEXT_CHARS]
         warnings.append("text_truncated")
     await report("llm", 30, "Разбираем опыт и навыки")
-    llm_out = await extract_llm(llm, text)
+    if llm is None:
+        llm_out = extract_rules(text, index)
+        version = RULES_VERSION
+        warnings.append("rules_mode")
+    else:
+        llm_out = await extract_llm(llm, text)
+        version = parser_version(model)
     await report("verify", 85, "Проверяем навыки по тексту")
-    parsed = assemble(
-        text, llm_out, index, version=parser_version(model), today=today, warnings=warnings
-    )
+    parsed = assemble(text, llm_out, index, version=version, today=today, warnings=warnings)
     # без ПДн: только размеры и счётчики
     log.info(
         "resume_parsed",

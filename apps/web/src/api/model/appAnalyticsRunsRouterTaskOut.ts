@@ -5,7 +5,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface TaskOut {
+export interface AppAnalyticsRunsRouterTaskOut {
   id: string;
   title: string;
   target: number;

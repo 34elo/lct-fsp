@@ -17,7 +17,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import Settings
-from app.identity.models import RefreshToken, User
+from app.identity.mailer import Mailer
+from app.identity.models import EmailVerification, RefreshToken, User
 
 REFRESH_TTL = timedelta(days=30)
 ACCESS_TTL = timedelta(minutes=15)
@@ -165,3 +166,76 @@ def require_verified_email(user: User, *, required: bool | None = None) -> None:
     """403 `email_not_verified`, если проверка включена, а email не подтверждён."""
     if not is_email_verified(user, required=required):
         raise ProblemError(403, "email_not_verified", "Подтвердите email")
+
+
+def _code_hash(user_id: uuid.UUID, code: str) -> str:
+    return hash_token(f"{user_id}:{code}")
+
+
+async def send_verification_code(
+    session: AsyncSession,
+    mailer: Mailer,
+    settings: Settings,
+    user: User,
+    *,
+    now: datetime | None = None,
+) -> None:
+    """Новый 6-значный код (старый аннулируется) и письмо. 409 `cooldown` — слишком часто."""
+    if user.email is None:
+        raise ProblemError(409, "email_missing", "У аккаунта нет email")
+    now = now or datetime.now(UTC)
+    row = await session.get(EmailVerification, user.id)
+    if row is not None:
+        ready = _aware(row.sent_at) + timedelta(seconds=settings.email_resend_cooldown_seconds)
+        if ready > now:
+            raise ProblemError(
+                409, "cooldown", "Код уже отправлен", f"Повторить можно после {ready.isoformat()}"
+            )
+    code = f"{secrets.randbelow(10**6):06d}"
+    expires = now + timedelta(minutes=settings.email_code_ttl_minutes)
+    if row is None:
+        session.add(
+            EmailVerification(
+                user_id=user.id,
+                code_hash=_code_hash(user.id, code),
+                expires_at=expires,
+                sent_at=now,
+            )
+        )
+    else:
+        row.code_hash, row.expires_at, row.sent_at, row.attempts = (
+            _code_hash(user.id, code),
+            expires,
+            now,
+            0,
+        )
+    await session.flush()
+    await mailer.send(
+        user.email,
+        "Код подтверждения email — ФСП Карьера",
+        f"Ваш код: {code}\nОн действует {settings.email_code_ttl_minutes} минут.",
+    )
+
+
+async def verify_code(
+    session: AsyncSession, settings: Settings, user: User, code: str, *, now: datetime | None = None
+) -> bool:
+    """True — подтверждён (повтор после успеха тоже True); False — неверный код: вызывающий
+    обязан зафиксировать транзакцию (счётчик попыток) и ответить 400 `invalid_code`.
+    Истёкший код → 400 `code_expired`, исчерпаны попытки → 429 `too_many_attempts`."""
+    if user.email_verified_at is not None:
+        return True
+    now = now or datetime.now(UTC)
+    row = await session.get(EmailVerification, user.id)
+    if row is None:
+        return False
+    if row.attempts >= settings.email_code_max_attempts:
+        raise ProblemError(429, "too_many_attempts", "Слишком много попыток", "Запросите новый код")
+    if _aware(row.expires_at) <= now:
+        raise ProblemError(400, "code_expired", "Код истёк", "Запросите новый код")
+    if not secrets.compare_digest(row.code_hash, _code_hash(user.id, code.strip())):
+        row.attempts += 1
+        return False
+    user.email_verified_at = now
+    await session.delete(row)
+    return True

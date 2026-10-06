@@ -103,6 +103,143 @@ def test_registries_wired():
     assert ConsentType.profile_publication == "profile_publication"
 
 
+def test_family_key_draft_contract():
+    """E30-1: core ↔ ml-api `POST /v1/families/key-draft`."""
+    from fsp_contracts.ml import FamilyKeyDraft, FamilyKeyDraftRequest
+
+    req = FamilyKeyDraftRequest.model_validate(
+        {"kind": "sjt", "stem": "PR на 3000 строк", "actions": ["Разбить", "Одобрить", "Обсудить"]}
+    )
+    assert req.options == [] and req.rubric == []
+    with pytest.raises(ValidationError):
+        FamilyKeyDraftRequest.model_validate({"kind": "essay", "stem": "x"})
+    d = FamilyKeyDraft.model_validate({"scores": [3, 1, 2], "model": "qwen3-vl-4b"})
+    assert d.correct is None and d.scores == [3.0, 1.0, 2.0]
+    assert FamilyKeyDraft.model_validate(d.model_dump(mode="json")) == d
+
+
+def test_answer_explain_contract():
+    """E24-2: core ↔ ml-api `POST /v1/assessment/explain`."""
+    from fsp_contracts.ml import AnswerExplain, AnswerExplainRequest
+
+    req = AnswerExplainRequest.model_validate(
+        {
+            "kind": "chain",
+            "skill": "python",
+            "stem": "x",
+            "reason_code": "chain_step",
+            "reason_label": "Ошибка на одном из шагов",
+        }
+    )
+    assert req.misconception is None and req.truth is None
+    with pytest.raises(ValidationError):
+        AnswerExplainRequest.model_validate({**req.model_dump(), "kind": "essay"})
+    a = AnswerExplain.model_validate({"text": "Проверьте второй шаг", "model": "qwen"})
+    assert AnswerExplain.model_validate(a.model_dump(mode="json")) == a
+
+
+def test_family_llm_bank_contracts():
+    from fsp_contracts.ml import (
+        FamilyGenerateRequest,
+        FamilyGenerateResponse,
+        FamilySolveAnswer,
+        FamilySolveRequest,
+    )
+
+    g = FamilyGenerateRequest.model_validate({"skill": "python", "kind": "choice", "level": 3})
+    assert g.n == 1 and g.domain is None
+    with pytest.raises(ValidationError):
+        FamilyGenerateRequest.model_validate({"skill": "python", "kind": "choice", "level": 6})
+    r = FamilyGenerateResponse.model_validate({"specs": [{"title": "x"}], "model": "m"})
+    assert FamilyGenerateResponse.model_validate(r.model_dump(mode="json")) == r
+    s = FamilySolveRequest.model_validate({"kind": "order", "stem": "x", "options": ["a", "b"]})
+    assert s.options == ["a", "b"]
+    for v in (2, 2.5, "42", [1, 0]):
+        a = FamilySolveAnswer.model_validate({"answer": v})
+        assert a.answer == v and type(a.answer) is type(v)
+
+
+def test_regular_task_published_contract():
+    """E25-1: событие рассылки регулярного задания (E9-6 у блока 2 читает его)."""
+    from fsp_contracts.assessment import RegularTaskPublished
+
+    assert ASSESSMENT_EVENTS["regular_task.published"] is RegularTaskPublished
+    payload = {
+        "task_id": str(uuid4()),
+        "company_id": str(uuid4()),
+        "profession": "backend",
+        "grade": "middle",
+        "round": 1,
+        "period_days": 14,
+        "recipients": [str(uuid4())],
+        "published_at": datetime.now(UTC).isoformat(),
+    }
+    ev = RegularTaskPublished.model_validate(payload)
+    assert RegularTaskPublished.model_validate(ev.model_dump(mode="json")) == ev
+    assert RegularTaskPublished.model_validate({**payload, "recipients": []}).recipients == []
+    with pytest.raises(ValidationError):
+        RegularTaskPublished.model_validate({**payload, "round": 0})
+
+
+def test_assessment_analytics_props_strict():
+    from fsp_contracts.analytics import AnalyticsEvent, UnknownAnalyticsEvent, validate_event
+    from pydantic import ValidationError
+
+    def ev(name, props):
+        return AnalyticsEvent(event=name, ts=datetime.now(UTC), props=props)
+
+    ok = validate_event(
+        ev(
+            "assessment_answered",
+            {
+                "attempt_id": str(uuid4()),
+                "seq": 3,
+                "stage": "main",
+                "is_pilot": False,
+                "score": 0.5,
+                "rt_ms": 1200,
+            },
+        )
+    )
+    assert ok.props["score"] == 0.5
+    with pytest.raises(ValidationError):  # текст ответа в props запрещён
+        validate_event(
+            ev(
+                "assessment_answered",
+                {
+                    "attempt_id": "a",
+                    "seq": 1,
+                    "stage": "main",
+                    "is_pilot": False,
+                    "score": 1,
+                    "answer": "def f(): pass",
+                },
+            )
+        )
+    with pytest.raises(ValidationError):  # свободный текст не проходит как slug
+        validate_event(ev("survey_saved", {"profession": "Backend Dev text"}))
+    with pytest.raises(ValidationError):
+        validate_event(
+            ev(
+                "family_status_changed",
+                {"family": "f", "from_status": "draft", "to_status": "bogus"},
+            )
+        )
+    with pytest.raises(UnknownAnalyticsEvent):  # веб не шлёт серверные события
+        validate_event(
+            ev(
+                "assessment_started",
+                {"attempt_id": "a", "profession": "backend", "declared_grade": "middle"},
+            ),
+            "web",
+        )
+    assert set(ASSESSMENT_ANALYTICS_EVENTS) <= set(ANALYTICS_EVENTS)
+    assert all(
+        n.split("_")[0] in ("survey", "assessment", "family", "regular")
+        for n in ASSESSMENT_ANALYTICS_EVENTS
+    )
+
+
 def test_hiring_analytics_events_validate_and_reject_pii():
     from datetime import UTC, datetime
     from uuid import uuid4
@@ -127,3 +264,93 @@ def test_hiring_analytics_events_validate_and_reject_pii():
         validate_event(
             ev("category_viewed", {"profession": "Иван", "grade": "mid", "candidates": 1})
         )
+
+
+def test_e32_declared_grade_and_compatible_fields():
+    """E32-1 (ADR-025): заявленный грейд, режим «экспресс», приглашение после бонуса.
+
+    Старые payload без новых полей валидны: изменение совместимое (blocks.md §5.3).
+    """
+    from fsp_contracts.assessment import DeclaredGrade
+
+    now = datetime.now(UTC)
+    d = DeclaredGrade(candidate_id=uuid4(), profession="backend", grade="middle", declared_at=now)
+    assert DeclaredGrade.model_validate(d.model_dump(mode="json")) == d
+    with pytest.raises(ValidationError):
+        DeclaredGrade(candidate_id=uuid4(), profession="backend", grade="lead", declared_at=now)
+
+    old_grade = {
+        "candidate_id": str(uuid4()),
+        "profession": "frontend",
+        "grade": "junior",
+        "theta": -0.5,
+        "band_position": 0.5,
+        "source": "test",
+        "confirmed_at": now.isoformat(),
+        "valid_until": (now + timedelta(days=365)).isoformat(),
+        "next_change_at": (now + timedelta(days=90)).isoformat(),
+    }
+    assert CandidateGrade.model_validate(old_grade).mode == "standard"
+    assert CandidateGrade.model_validate({**old_grade, "mode": "express"}).mode == "express"
+    with pytest.raises(ValidationError):
+        CandidateGrade.model_validate({**old_grade, "mode": "fast"})
+
+    old_finished = {
+        "candidate_id": str(uuid4()),
+        "attempt_id": str(uuid4()),
+        "profession": "ml",
+        "declared_grade": "junior",
+        "stage": "bonus",
+        "result": "passed",
+        "grade": "junior",
+        "theta": 0.3,
+        "se": 0.3,
+        "integrity": 1.0,
+        "needs_confirmation": False,
+        "low_confidence": False,
+        "finished_at": now.isoformat(),
+        "profile_version": 2,
+    }
+    ev = AttemptFinished.model_validate(old_finished)
+    assert ev.mode == "standard" and ev.invited_grade is None
+    ev2 = AttemptFinished.model_validate({**old_finished, "invited_grade": "middle"})
+    assert ev2.invited_grade == TestGrade.middle and ev2.grade == TestGrade.junior
+    env = new_event("assessment.attempt.finished", "core", ev2)
+    assert parse_payload(type(env).model_validate_json(env.model_dump_json())) == ev2
+
+
+def test_assessment_mode_fields_are_optional():
+    """E32-4a: `mode` в событиях и аналитике необязателен (совместимо), `express` принимается."""
+    from uuid import uuid4
+
+    import pytest
+    from fsp_contracts.analytics_assessment import AssessmentFinished, AssessmentStarted
+    from fsp_contracts.assessment import AttemptFinished
+    from pydantic import ValidationError
+
+    base = {"attempt_id": "a", "profession": "backend", "declared_grade": "middle"}
+    assert AssessmentStarted(**base).mode == "standard"
+    assert AssessmentStarted(**base, mode="express").mode == "express"
+    with pytest.raises(ValidationError):
+        AssessmentStarted(**base, mode="turbo")
+    fin = {**base, "stage": "main", "result": "passed"}
+    assert AssessmentFinished(**fin, mode="express").mode == "express"
+    ev = AttemptFinished.model_validate(
+        {
+            "candidate_id": str(uuid4()),
+            "attempt_id": str(uuid4()),
+            "profession": "backend",
+            "declared_grade": "middle",
+            "stage": "main",
+            "result": "passed",
+            "grade": "middle",
+            "theta": 0.3,
+            "se": 0.4,
+            "integrity": 1.0,
+            "needs_confirmation": False,
+            "low_confidence": False,
+            "finished_at": "2026-10-06T10:00:00Z",
+            "profile_version": 1,
+        }
+    )
+    assert (ev.mode, ev.invited_grade) == ("standard", None)

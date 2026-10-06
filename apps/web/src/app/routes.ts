@@ -97,6 +97,9 @@ export const ROUTES: RouteDef[] = [
   // >>> block1 (admin)
   { path: "/admin/families", title: "Очередь допуска", section: "admin", owner: "b1", nav: true },
   { path: "/admin/professions", title: "Профессии и навыки", section: "admin", owner: "b1", nav: true },
+  { path: "/admin/demo/two-worlds", title: "Два мира", section: "admin", owner: "b1" },
+  { path: "/admin/demo/llm-exam", title: "LLM сдаёт тест", section: "admin", owner: "b1" },
+  { path: "/admin/demo/new-profession", title: "Новая профессия", section: "admin", owner: "b1" },
   // <<< block1 (admin)
   // >>> block2 (admin)
   // <<< block2 (admin)

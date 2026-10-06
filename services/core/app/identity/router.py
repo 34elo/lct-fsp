@@ -14,7 +14,9 @@ from app.consents import service as consents
 from app.deps import get_limiter, get_session
 from app.identity import service
 from app.identity.deps import get_current_user
+from app.identity.mailer import SmtpMailer
 from app.identity.models import User
+from app.openapi_errors import problem_responses
 from app.telegram import service as telegram
 
 router = APIRouter(tags=["auth"])
@@ -36,10 +38,13 @@ class UserOut(BaseModel):
     id: UUID
     email: str | None
     role: str
+    email_verified: bool = False
 
     @classmethod
     def of(cls, u: User) -> UserOut:
-        return cls(id=u.id, email=u.email, role=u.role)
+        return cls(
+            id=u.id, email=u.email, role=u.role, email_verified=u.email_verified_at is not None
+        )
 
 
 class AuthOut(BaseModel):
@@ -82,7 +87,56 @@ def _client_ip(request: Request) -> str:
     return fwd.split(",")[0].strip() if fwd else (request.client.host if request.client else "-")
 
 
-@router.post("/auth/register", status_code=201, response_model=AuthOut)
+def _mailer(request: Request) -> SmtpMailer:
+    mailer = getattr(request.app.state, "mailer", None)
+    return mailer or SmtpMailer(request.app.state.settings)
+
+
+class VerifyIn(BaseModel):
+    code: str = Field(min_length=1, max_length=16)
+
+
+@router.post(
+    "/auth/email/send",
+    status_code=204,
+    responses=problem_responses(401, 409, 429),
+)
+async def email_send(
+    request: Request,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+    limiter: RateLimiter = Depends(get_limiter),
+):
+    """Повторная отправка кода: не чаще раза в минуту (409 `cooldown`), 5 в час (429)."""
+    if user.email_verified_at is not None:
+        return Response(status_code=204)
+    await limiter.check(f"email_code:{user.id}", 5, 3600)
+    await service.send_verification_code(
+        session, _mailer(request), request.app.state.settings, user
+    )
+    return Response(status_code=204)
+
+
+@router.post("/auth/email/verify", status_code=204, responses=problem_responses(400, 401, 429))
+async def email_verify(
+    body: VerifyIn,
+    request: Request,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    """Код из письма → `email_verified_at`. Неверный/истёкший — 400."""
+    if not await service.verify_code(session, request.app.state.settings, user, body.code):
+        # счётчик попыток должен попасть в БД, поэтому не исключение, а обычный ответ
+        return problem_response(400, "invalid_code", "Неверный код", "Проверьте код из письма")
+    return Response(status_code=204)
+
+
+@router.post(
+    "/auth/register",
+    status_code=201,
+    response_model=AuthOut,
+    responses=problem_responses(400, 409, 422, 429),
+)
 async def register(
     body: RegisterIn,
     request: Request,
@@ -92,13 +146,15 @@ async def register(
 ):
     await limiter.check(f"register:ip:{_client_ip(request)}", 10, 60)
     user = await service.register(session, body.email, body.password, body.role)
+    settings = request.app.state.settings
+    await service.send_verification_code(session, _mailer(request), settings, user)
     issued = await service.issue_tokens(
         session, request.app.state.settings.jwt_secret, user, request.headers.get("user-agent")
     )
     return tokens_out(request, response, issued)
 
 
-@router.post("/auth/login", response_model=AuthOut)
+@router.post("/auth/login", response_model=AuthOut, responses=problem_responses(400, 401, 429))
 async def login(
     body: LoginIn,
     request: Request,
@@ -120,7 +176,7 @@ class MagicIn(BaseModel):
     token: str = Field(min_length=1, max_length=256)
 
 
-@router.post("/auth/telegram", response_model=AuthOut)
+@router.post("/auth/telegram", response_model=AuthOut, responses=problem_responses(400, 401, 429))
 async def auth_telegram(
     body: dict[str, Any],
     request: Request,
@@ -138,7 +194,7 @@ async def auth_telegram(
     return tokens_out(request, response, issued)
 
 
-@router.post("/auth/magic", response_model=AuthOut)
+@router.post("/auth/magic", response_model=AuthOut, responses=problem_responses(400, 401, 429))
 async def auth_magic(
     body: MagicIn,
     request: Request,
@@ -158,7 +214,7 @@ async def auth_magic(
     return tokens_out(request, response, issued)
 
 
-@router.post("/auth/refresh", response_model=AuthOut)
+@router.post("/auth/refresh", response_model=AuthOut, responses=problem_responses(401))
 async def refresh(
     request: Request,
     response: Response,
@@ -179,7 +235,7 @@ async def refresh(
     return tokens_out(request, response, issued)
 
 
-@router.post("/auth/logout", status_code=204)
+@router.post("/auth/logout", status_code=204, responses=problem_responses(401))
 async def logout(request: Request, session: AsyncSession = Depends(get_session)):
     _check_origin(request)
     await service.logout(session, request.cookies.get(REFRESH_COOKIE))
@@ -201,7 +257,7 @@ class MeOut(UserOut):
     company: MeCompany | None = None
 
 
-@router.get("/me", response_model=MeOut)
+@router.get("/me", response_model=MeOut, responses=problem_responses(401))
 async def me(user: User = Depends(get_current_user), session: AsyncSession = Depends(get_session)):
     """consents — действующие типы; company — E6-1; candidate — E3-1."""
     found = await companies.my_company(session, user.id) if user.role == "employer" else None

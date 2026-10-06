@@ -39,6 +39,13 @@
 | F1–F4 | Админка ФСП: дашборд, матрица, модерация, демо-пульт | `F1_Dashboard` … `F4_Demo` | `/federation/*` | 1440/1024 |
 | L1–L2 | Лендинг | `L1_Landing`, `L2_LandingMobile` | `/` | hero тёмный |
 | P1–P3 | Публичная карточка и OG, бейджи, Telegram | `P1_Athlete`, `P1_OG`, `P2_Badges`, `P3_Telegram` | `/athlete/:id`, `/badge/:id.svg`, бот | — |
+| S1 | Опрос и выбор грейда | `S1_Survey` | `/me/assessment` | 1440 / 375 по шагам |
+| S2 | Тест | `S2_Test` | `/me/assessment/attempts/:id` | 1440 / 375 |
+| S3 | Результат теста | `S3_Result` | `/me/assessment/attempts/:id/result` | 1440 / 375 |
+| S4 | История попыток и пересдачи | `S4_History` | `/me/assessment/history` | 1440 / 375 |
+| K1 | Конструктор задания | `K1_Constructor` | `/employer/families/new` | 1440 / 375 |
+| K2 | Очередь допуска семейств | `K2_Admission` | `/admin/families` | 1440 / 375 (sheet) |
+| Z1 | Регулярные задания | `Z1_Tasks` | `/me/tasks, /employer/tasks` | кандидат 1440 / 375, работодатель 1440 / 375 |
 | — | Аватар-созвездие | `Avatar` | компонент | — |
 
 **Картинки в макетах** (`/_blob/…` в `.dc.html` локально не откроются) — бери из [assets/](assets/):

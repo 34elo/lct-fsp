@@ -118,11 +118,24 @@ api.fsp.patissons.tech {
 | `ml-worker-code` | `services/ml` (очередь `ml.code`, tmpfs 1 ГБ, ограничения из security §6) | — | 2 CPU, 2 ГБ | ml |
 | `llm-chat` | **уже запущен отдельно** на ПК: `llama-server` с Qwen3-VL-4B Q4 (общий с другим проектом, хостовый порт 18090, ключ API). В наш compose не входит, сервисы ml ходят по `LLM_BASE_URL` | — | GPU | — |
 | `dozzle` | amir20/dozzle | 8888 (только через WG) | — | dev |
+| `mailpit` | axllent/mailpit | 28025 (UI, 127.0.0.1) | — | dev |
 | `prometheus` | prom/prometheus (+ `infra/prometheus.yml`: core, ml, fsp-connector, rabbitmq:15692, llm-chat, exporters) | 9090 (через WG) | 512 МБ | obs |
 | `grafana` | grafana/grafana (+ дашборды `infra/grafana/*.json`) | 3000 (через WG) | 256 МБ | obs |
 | `postgres-exporter`, `redis-exporter` | prometheuscommunity/postgres-exporter, oliver006/redis_exporter | — | 64 МБ | obs |
 
 **Профили:** `docker compose --profile core --profile ml --profile llm up -d`. Фронтендер может запускать только `core` + мок ML (`ML_FAKE=true` отдаёт заготовленные ответы), чтобы не зависеть от GPU.
+
+**Профили запуска (ADR-023, E20-8):**
+
+| Профиль | Команда | LLM | Эмбеддинги | RAM сервисов приложения* |
+|---|---|---|---|---|
+| `lite` | `make up-lite` | нет: `LLM_ENABLED=false`, `ML_FAKE=false`; каждая функция идёт правилами ([solution.md §3](../solution.md)) | `multilingual-e5-small` (384, ml-api добивает нулями до 1024) | ≈ 1.2–1.5 ГБ: core-api/worker/scheduler ~0.9, ml-api ~0.4 (с малой моделью), ml-worker-* ~0.15 |
+| `standard` | `make up` + малая LLM на CPU (`LLM_PROFILE=cpu`) | да, CPU | bge-m3 | ≈ 4 ГБ |
+| `full` | `make up` | да, GPU (общий `llama-server`) | bge-m3 | наш стенд |
+
+**Стенд жюри** (ADR-025, [notes/qa-2026.md](../notes/qa-2026.md) §6): ориентир 32–64 ГБ RAM, ~8 CPU, **без GPU**. Обязательный путь (регистрация → опрос → тест → категория → приглашение) от GPU и LLM не зависит; на таком стенде работает `standard` с российской открытой моделью на CPU (выбор — E32-3) или `lite`. Проверяют на нашем стенде после дедлайна: упавший контейнер можно поднять, менять идею нельзя (E32-8).
+
+\* без postgres/redis/rabbitmq/minio (≈ 1–2 ГБ, настраиваются лимитами). Цифры ориентировочные, замер — при первом запуске lite. Без LLM: разбор резюме идёт словарём графа (`resume-rules-v2`: навык только с цитатой из текста; опыт, образование, периоды и город — правила по разделам и датам, Natasha как запасной путь, E30-4), разбор запроса работодателя — правилами, остальные LLM-команды отвечают заглушкой до своих правиловых реализаций. Переменные: `LLM_ENABLED`, `EMBEDDING_MODEL`, `EMBEDDING_MODEL_PATH`.
 
 **Состояние (E0-2):** `docker-compose.yml` в корне содержит инфраструктуру профиля `core` (gateway, postgres, redis, rabbitmq, minio) и `dozzle` (`dev`); сервисы приложения добавляются своими задачами. Разовая инициализация: `infra/postgres/init.sh` (роли `core`, `fspc`, базы `core`, `fsp_connector`, расширения `vector`, `pg_trgm`), `rabbitmq-init` (vhost `fsp`, пользователи `core`, `ml`, `fspc`, `bot`), `minio-init` (бакет). Порты на хосте: gateway 28080, RabbitMQ UI 28672, Postgres 28432, Redis 28379 (последние три только на 127.0.0.1). Маршруты gateway — `infra/caddy/Caddyfile`. Первый запуск: `cp .env.example .env`, заменить `CHANGE_ME`, `make up`.
 
@@ -199,6 +212,7 @@ OB_ISSUER_DID=did:web:fsp.patissons.tech
 | Команда | Что делает |
 |---|---|
 | `make up` / `make down` | Поднять / остановить все профили |
+| `make up-lite` | Профиль lite: ядро и ML без LLM (ADR-023) |
 | `make dev-core` | Только core-профиль + `ML_FAKE=true` |
 | `make migrate` | `alembic upgrade head` |
 | `make taxonomy-load` | Загрузить `data/taxonomy/*.yaml`, `data/fsp/discipline_rules.yaml`, банк вопросов |

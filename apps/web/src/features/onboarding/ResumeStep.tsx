@@ -1,3 +1,4 @@
+import { BuildLog, Button, type LogLine } from "@fsp/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 
@@ -8,12 +9,10 @@ import {
 import { getGetProfileCandidatesMeProfileGetQueryKey } from "@/api/endpoints/candidates/candidates";
 import type { ParsedResumeEdits } from "@/api/model";
 import { ApiError } from "@/api/mutator";
-import { ErrorNote } from "@/features/auth/ui";
-import { BuildLog, type LogLine } from "@/features/onboarding/BuildLog";
-import { failureText, summaryLines } from "@/features/onboarding/text";
+import { failureText, RESUME_HINT, summaryLines } from "@/features/onboarding/text";
 import { Understood } from "@/features/onboarding/Understood";
 import { stageLines, useResumeJob } from "@/features/onboarding/useResumeJob";
-import { Button } from "@/shared/ui/button";
+import { Note } from "@/features/onboarding/Note";
 
 const MAX_BYTES = 10 * 1024 * 1024;
 
@@ -95,9 +94,7 @@ export function ResumeStep({ onDone, onSkip }: { onDone: (skills: number) => voi
 
   const picker = (
     <div className="flex flex-col gap-3">
-      <p className="text-sm text-muted">
-        Загрузите резюме в PDF или DOCX до 10 МБ. Мы только читаем его, наружу файл не уходит.
-      </p>
+      <p className="text-14 text-muted">{RESUME_HINT}</p>
       <input
         ref={input}
         type="file"
@@ -109,11 +106,11 @@ export function ResumeStep({ onDone, onSkip }: { onDone: (skills: number) => voi
           e.target.value = "";
         }}
       />
-      <Button size="lg" onClick={() => input.current?.click()} disabled={upload.isPending}>
+      <Button size="lg" data-testid="onboarding-resume-pick" onClick={() => input.current?.click()} loading={upload.isPending}>
         {upload.isPending ? "Загружаем…" : "Выбрать файл"}
       </Button>
-      {error && <ErrorNote>{error}</ErrorNote>}
-      <Button variant="ghost" onClick={onSkip}>
+      {error && <Note>{error}</Note>}
+      <Button variant="ghost" data-testid="onboarding-skip" onClick={onSkip}>
         Пропустить, заполню вручную
       </Button>
     </div>
@@ -125,7 +122,7 @@ export function ResumeStep({ onDone, onSkip }: { onDone: (skills: number) => voi
     return (
       <div className="flex flex-col gap-3">
         <BuildLog title="разбор резюме" lines={[...stageLines(job.stages, status), { id: "fail", text: "Разбор не удался", state: "fail" }]} />
-        <ErrorNote>{failureText(job.resume?.error)}</ErrorNote>
+        <Note>{failureText(job.resume?.error)}</Note>
         {picker}
       </div>
     );
@@ -148,8 +145,8 @@ export function ResumeStep({ onDone, onSkip }: { onDone: (skills: number) => voi
   return (
     <div className="flex flex-col gap-3">
       <BuildLog title={`разбор резюме${fileName ? ` · ${fileName}` : ""}`} lines={stageLines(job.stages, status)} />
-      {job.isError && <ErrorNote>Не удаётся узнать состояние разбора. Обновите страницу.</ErrorNote>}
-      <Button variant="ghost" onClick={onSkip}>
+      {job.isError && <Note>Не удаётся узнать состояние разбора. Обновите страницу.</Note>}
+      <Button variant="ghost" data-testid="onboarding-skip" onClick={onSkip}>
         Пропустить, заполню вручную
       </Button>
     </div>

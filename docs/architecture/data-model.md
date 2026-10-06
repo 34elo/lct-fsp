@@ -127,6 +127,9 @@ CREATE TABLE candidates (
   public_slug        text UNIQUE,                     -- для публичного профиля и бейджа (по желанию)
   full_name_enc      bytea,                           -- ПДн шифруются Fernet
   contacts_enc       bytea,                           -- {email, phone, telegram}
+  age_group          text,                            -- adult | minor (15–17 лет), E32-5b; дата рождения не хранится
+  parent_consent_at  timestamptz,                     -- согласие родителя на ПДн несовершеннолетнего; без него minor не публикуется
+  desired_roles      text[],                          -- желаемые роли из ручной формы (E20-4), RoleSlug
   city               text,
   relocation         boolean DEFAULT false,
   search_status      text NOT NULL DEFAULT 'open',    -- search_status
@@ -212,6 +215,45 @@ CREATE TABLE grades (
   confirmed_at timestamptz NOT NULL, valid_until timestamptz NOT NULL, next_change_at timestamptz NOT NULL,
   updated_at timestamptz NOT NULL DEFAULT now(),
   PRIMARY KEY (candidate_id, profession)
+);
+-- миграция b1_03 (E22-1): grades.attempt_id REFERENCES attempts(id) ON DELETE SET NULL
+-- миграция b1_13 (E32-4a): grades.mode, attempts.mode text NOT NULL DEFAULT 'standard' -- standard | express
+
+-- v2 (миграция b1_03; assessment.md §3): опрос, банк семейств, попытки, ответы
+CREATE TABLE surveys (
+  id uuid PRIMARY KEY, candidate_id uuid NOT NULL REFERENCES candidates(user_id) ON DELETE CASCADE,
+  industry text, profession text NOT NULL, stack jsonb NOT NULL DEFAULT '[]', formats jsonb NOT NULL DEFAULT '[]',
+  salary_from int, salary_to int, declared_grade text, created_at timestamptz NOT NULL DEFAULT now()
+);                                       -- история — новые строки
+CREATE TABLE families (
+  id uuid PRIMARY KEY,                   -- у кодовых семейств uuid5 от slug
+  slug text UNIQUE NOT NULL, kind text NOT NULL,
+  source text NOT NULL,                  -- code | spec | mutation | llm | fsp
+  skill_id uuid NOT NULL,                -- taxonomy.service.skill_id(slug), без FK
+  skill_type text NOT NULL, level smallint NOT NULL, b float NOT NULL, n int NOT NULL DEFAULT 0,
+  anchor boolean NOT NULL DEFAULT false,
+  status text NOT NULL DEFAULT 'draft',  -- draft | pilot | active | quarantine | retired
+  spec jsonb, key_status text NOT NULL DEFAULT 'approved', author_id uuid, company_id uuid,
+  competition_id text,                   -- source = fsp: соревнование ФСП (E32-6), индекс
+  ai_solvable float NOT NULL DEFAULT 0, stats jsonb NOT NULL DEFAULT '{}', version int NOT NULL DEFAULT 1,
+  created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE TABLE attempts (
+  id uuid PRIMARY KEY, candidate_id uuid NOT NULL REFERENCES candidates(user_id) ON DELETE CASCADE,
+  profession text NOT NULL, declared_grade text NOT NULL,
+  stage text NOT NULL DEFAULT 'main',    -- main | bonus
+  status text NOT NULL DEFAULT 'active', -- active | passed | failed | abandoned
+  plan jsonb NOT NULL DEFAULT '{}',      -- {domain, order: [family_id], target}
+  theta float, se float, llr float NOT NULL DEFAULT 0, integrity float NOT NULL DEFAULT 1.0,
+  started_at timestamptz NOT NULL DEFAULT now(), finished_at timestamptz
+);
+CREATE TABLE responses (                 -- ключа нет: задание пересобирается из (family_id, seed)
+  id uuid PRIMARY KEY, attempt_id uuid NOT NULL REFERENCES attempts(id) ON DELETE CASCADE,
+  seq int NOT NULL, family_id uuid NOT NULL REFERENCES families(id),
+  seed bigint NOT NULL,                  -- sha256(candidate_id:attempt_id:family_id), 63 бита
+  is_pilot boolean NOT NULL DEFAULT false, answer jsonb, score float, rt_ms int, telemetry jsonb,
+  created_at timestamptz NOT NULL DEFAULT now(), answered_at timestamptz,  -- null — выдано, не отвечено
+  UNIQUE (attempt_id, seq), UNIQUE (attempt_id, family_id)
 );
 ```
 
@@ -302,7 +344,7 @@ CREATE TABLE skill_mentions (                   -- журнал и кеш реш
 );
 CREATE INDEX ON skill_mentions (norm);
 CREATE TABLE skill_merges (id uuid PRIMARY KEY, from_skill uuid, into_skill uuid, actor text, moved jsonb, created_at timestamptz DEFAULT now(), reverted_at timestamptz);
-CREATE TABLE roles (slug text PRIMARY KEY, name text NOT NULL);
+CREATE TABLE roles (slug text PRIMARY KEY, name text NOT NULL, is_profession boolean NOT NULL DEFAULT false);  -- профессия теста (E21-1, миграция b1_01); skills.skill_type text: fundamental|hard|thinking|business|soft|experience
 CREATE TABLE role_skills (role text REFERENCES roles(slug), skill_id uuid REFERENCES skills(id), weight real, source text NOT NULL DEFAULT 'seed', PRIMARY KEY (role, skill_id));
 CREATE TABLE disciplines (slug text PRIMARY KEY, name text NOT NULL);
 CREATE TABLE discipline_skill_rules (
@@ -318,7 +360,7 @@ CREATE TABLE scoring_config (key text PRIMARY KEY, value jsonb NOT NULL, version
 
 Ядро графа навыков на старте — YAML в `data/taxonomy/*.yaml` (ревью в git), собирается из тегов Stack Overflow, карты пакетов и русских названий. `make taxonomy-load` загружает его в БД. Дальше граф растёт через конвейер ([skills.md](skills.md)), правки идут через админку, есть экспорт в YAML.
 
-Формат YAML (читает `services/core/app/taxonomy/loader.py`; ключи верхнего уровня всех `data/taxonomy/*.yaml` сливаются, незнакомые файлы, например `package_map.yaml`, игнорируются): `skills` (`slug, name, kind, group?, testable?, description?, aliases?`), `adjacent` (`a, b, weight`), `parent` (`child, parent, weight`), `distinct` (пары), `blocklist` (`norm, reason?`), `roles` (`slug, name, skills: {slug: вес}`). Роли — из `RoleSlug`. Правила дисциплин берутся из `data/fsp/discipline_rules.yaml` (навык, которого нет в ядре, пропускается с предупреждением). Загрузка идемпотентна: id вершин ядра — `uuid5(slug)`, правятся только строки с `source=seed` (то, что сделали админ или конвейер, остаётся), `adjacent` пишется в обе стороны, `skill_distinct` — одна строка на пару (`skill_a < skill_b`). Версия справочника — `scoring_config` ключ `taxonomy` (`version` + хеш снимка в `value`); при изменении содержимого версия растёт и в outbox пишется `taxonomy.updated`. Колонки `skills.embedding` и таблицы `skill_mentions`, `skill_merges` появятся с задачами E3-4 и E16-5.
+Формат YAML (читает `services/core/app/taxonomy/loader.py`; ключи верхнего уровня всех `data/taxonomy/*.yaml` сливаются, незнакомые файлы, например `package_map.yaml`, игнорируются): `skills` (`slug, name, kind, group?, testable?, description?, aliases?`), `adjacent` (`a, b, weight`), `parent` (`child, parent, weight`), `distinct` (пары), `blocklist` (`norm, reason?`), `roles` (`slug, name, profession?, skills: {slug: вес}`), `skill_types` (`type, skills[]` — переопределения типа навыка; по умолчанию из `kind`/`group`, E21-1). Slug роли — `ProfessionSlug`; профессия (`profession: true`) обязана покрывать все 6 типов навыков. Правила дисциплин берутся из `data/fsp/discipline_rules.yaml` (навык, которого нет в ядре, пропускается с предупреждением). Загрузка идемпотентна: id вершин ядра — `uuid5(slug)`, правятся только строки с `source=seed` (то, что сделали админ или конвейер, остаётся), `adjacent` пишется в обе стороны, `skill_distinct` — одна строка на пару (`skill_a < skill_b`). Версия справочника — `scoring_config` ключ `taxonomy` (`version` + хеш снимка в `value`); при изменении содержимого версия растёт и в outbox пишется `taxonomy.updated`. Таблица `skill_mentions` создана миграцией `b1_09` (E16-4) вместе с `skill_card_drafts` (`skill_id` PK, `card` JSON, `model`, `status` draft|approved|rejected). Таблица `skill_merges` (`id, from_skill, into_skill, actor, moved json, created_at, reverted_at`) создана миграцией `b1_10` (E16-5): в `moved` лежит всё, что перенесло слияние (удалённые, добавленные и изменённые строки по таблицам), по нему откат возвращает состояние. Колонка `skills.embedding` появится с задачей E3-4.
 
 ### 3.5. ФСП
 

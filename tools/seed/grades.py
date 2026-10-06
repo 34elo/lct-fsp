@@ -16,7 +16,9 @@ from datetime import UTC, datetime
 from typing import Any
 
 from app.assessment import service as assessment
+from app.consents import service as consents
 from fsp_contracts.assessment import TEST_GRADE_ORDER
+from fsp_contracts.enums import ConsentType
 from fsp_platform.db import session_scope
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -114,7 +116,11 @@ async def seed_grades(
         have = await assessment.get_grades_many(s, [user_ids[k] for k in wanted if k in user_ids])
         for key, entries in wanted.items():
             uid = user_ids.get(key)
-            if uid is None or uid in have:
+            if uid is None:
+                continue
+            # демо-кандидаты согласны на публикацию: без `profile_publication` их не видно в выдаче
+            await consents.set_consents(s, uid, [(ConsentType.profile_publication, True, None)])
+            if uid in have:
                 continue
             for e in entries:
                 await assessment.seed_grade(

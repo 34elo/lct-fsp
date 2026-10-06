@@ -22,6 +22,22 @@ import NotFound from "@/pages/NotFound";
 import Register from "@/pages/Register";
 import { Stub } from "@/pages/Stub";
 // >>> block1 imports
+import Survey from "@/features/assessment/Survey";
+import Attempt from "@/features/assessment/Attempt";
+import Result from "@/features/assessment/Result";
+import History from "@/features/assessment/History";
+import VerifyEmail from "@/features/auth/VerifyEmail";
+import ProfileEdit from "@/features/profile/ProfileEdit";
+import Graph from "@/features/graph/Graph";
+import CandidateTasks from "@/features/tasks/CandidateTasks";
+import EmployerTasks from "@/features/tasks/EmployerTasks";
+import Constructor from "@/features/constructor/Constructor";
+import AdmissionQueue from "@/features/constructor/AdmissionQueue";
+import AdminSkills from "@/features/admin-taxonomy/AdminSkills";
+import AdminTaxonomy from "@/features/admin-taxonomy/AdminTaxonomy";
+import DemoLlmExam from "@/features/demo/LlmExam";
+import DemoNewProfession from "@/features/demo/NewProfession";
+import DemoTwoWorlds from "@/features/demo/TwoWorlds";
 // <<< block1 imports
 // >>> block2 imports
 import Landing from "@/features/landing/Landing";
@@ -47,7 +63,10 @@ const AdminLayout = lazy(() => import("@/app/layouts/AdminLayout"));
 const RunPage = lazy(() => import("@/features/runs/RunPage"));
 
 // Эти пути уже реализованы настоящими страницами (E1-4).
-const IMPLEMENTED = new Set(["/", "/login", "/register", "/auth/magic", "/consents", "/onboarding", "/me", "/me/skills/:slug", "/employer/search", "/employer/candidates/:id", "/employer/vacancies", "/employer/vacancies/new", "/employer/vacancies/:id", "/employer/company", "/employer/vacancies/:id/shortlist", "/employer/offers/new", "/employer/offers", "/employer/offers/:id", "/me/offers", "/me/offers/:id", "/me/navigator", "/me/responses", "/employer/responses", "/jobs", "/jobs/:id", "/run/:token", "/federation", "/federation/moderation", "/employer/needs/new", "/employer/needs/:id", "/employer/categories/:profession/:grade", "/employer/subscriptions", "/me/interests"]);
+const IMPLEMENTED = new Set(["/", "/login", "/register", "/auth/magic", "/consents", "/onboarding", "/me", "/me/skills/:slug", "/employer/search", "/employer/candidates/:id", "/employer/vacancies", "/employer/vacancies/new", "/employer/vacancies/:id", "/employer/company", "/employer/vacancies/:id/shortlist", "/employer/offers/new", "/employer/offers", "/employer/offers/:id", "/me/offers", "/me/offers/:id", "/me/navigator", "/verify-email", "/me/profile/edit", "/me/responses", "/employer/responses", "/jobs", "/jobs/:id", "/run/:token", "/federation", "/federation/moderation", "/me/tasks", "/employer/tasks", "/employer/families/new", "/admin/families", "/admin/professions", "/admin/skills", "/employer/needs/new", "/employer/needs/:id", "/employer/categories/:profession/:grade", "/employer/subscriptions", "/me/interests"]);
+
+// Б1: страницы теста (E22-8).
+["/me/graph", "/me/assessment", "/me/assessment/history", "/me/assessment/attempts/:id", "/me/assessment/attempts/:id/result", "/admin/demo/two-worlds", "/admin/demo/llm-exam", "/admin/demo/new-profession"].forEach((p) => IMPLEMENTED.add(p));
 
 const stubs = (section: string) =>
   ROUTES.filter((r) => r.section === section && !IMPLEMENTED.has(r.path)).map((r) => (
@@ -67,6 +86,13 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
             <Route path="/me/offers" element={<CandidateOffers />} />
             <Route path="/me/offers/:id" element={<CandidateOfferDetail />} />
             {/* >>> block1 (candidate) */}
+            <Route path="/me/assessment" element={<Survey />} />
+            <Route path="/me/assessment/history" element={<History />} />
+            <Route path="/me/assessment/attempts/:id" element={<Attempt />} />
+            <Route path="/me/assessment/attempts/:id/result" element={<Result />} />
+            <Route path="/me/profile/edit" element={<ProfileEdit />} />
+            <Route path="/me/tasks" element={<CandidateTasks />} />
+            <Route path="/me/graph" element={<Graph />} />
             {/* <<< block1 (candidate) */}
             {/* >>> block2 (candidate) */}
             <Route path="/me/navigator" element={<Navigator />} />
@@ -88,6 +114,8 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
             <Route path="/employer/offers/:id" element={<EmployerOfferDetail />} />
             <Route path="/employer/vacancies/:id/shortlist" element={<Shortlist />} />
             {/* >>> block1 (employer) */}
+            <Route path="/employer/tasks" element={<EmployerTasks />} />
+            <Route path="/employer/families/new" element={<Constructor />} />
             {/* <<< block1 (employer) */}
             {/* >>> block2 (employer) */}
             <Route path="/employer/responses" element={<EmployerResponses />} />
@@ -101,6 +129,12 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
         {section === "admin" && (
           <>
             {/* >>> block1 (admin) */}
+            <Route path="/admin/families" element={<AdmissionQueue />} />
+            <Route path="/admin/professions" element={<AdminTaxonomy />} />
+            <Route path="/admin/skills" element={<AdminSkills />} />
+            <Route path="/admin/demo/two-worlds" element={<DemoTwoWorlds />} />
+            <Route path="/admin/demo/llm-exam" element={<DemoLlmExam />} />
+            <Route path="/admin/demo/new-profession" element={<DemoNewProfession />} />
             {/* <<< block1 (admin) */}
             {/* >>> block2 (admin) */}
             <Route path="/federation" element={<FederationDashboard />} />
@@ -125,6 +159,7 @@ export function App() {
           <Route path="/consents" element={<Consents />} />
           {stubs("auth")}
           {/* >>> block1 (auth) */}
+          <Route path="/verify-email" element={<VerifyEmail />} />
           {/* <<< block1 (auth) */}
           {/* >>> block2 (auth) */}
           {/* <<< block2 (auth) */}

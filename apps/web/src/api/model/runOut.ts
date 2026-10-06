@@ -4,9 +4,9 @@
  * core
  * OpenAPI spec version: 0.1.0
  */
+import type { AppAnalyticsRunsRouterTaskOut } from './appAnalyticsRunsRouterTaskOut';
 import type { RunOutScenario } from './runOutScenario';
 import type { RunOutStatus } from './runOutStatus';
-import type { TaskOut } from './taskOut';
 
 /**
  * Прогон для админа: задания, время, SUS, затык.
@@ -20,7 +20,7 @@ export interface RunOut {
   invited_at: string | null;
   started_at: string | null;
   finished_at: string | null;
-  tasks: TaskOut[];
+  tasks: AppAnalyticsRunsRouterTaskOut[];
   tasks_done: number;
   tasks_total: number;
   steps: number;

@@ -107,8 +107,9 @@ test("профиль: достижения ФСП, разряд, опыт и м�
   };
   mount("/me");
   const fsp = await screen.findByRole("region", { name: "Достижения ФСП" });
-  expect(within(fsp).getByText("Финал по продуктовому программированию")).toBeInTheDocument();
-  expect(within(fsp).getByText("2 из 40 · всероссийский · капитан · 2026")).toBeInTheDocument();
+  expect(within(fsp).getByText(/Финал по продуктовому программированию/)).toBeInTheDocument();
+  expect(within(fsp).getByRole("img", { name: "2 место, медаль" })).toBeInTheDocument();
+  expect(within(fsp).getByText("2 из 40")).toBeInTheDocument();
   expect(within(fsp).getByText("2 разряд · Продуктовое программирование")).toBeInTheDocument();
   expect(within(screen.getByRole("region", { name: "Опыт" })).getByText(/Кедр Софт/)).toBeInTheDocument();
   // Меню: шапка (десктоп) ведёт во все разделы кандидата, нижняя панель (E19-5) — в четыре главных.
@@ -118,6 +119,36 @@ test("профиль: достижения ФСП, разряд, опыт и м�
   expect(within(bottom).getByRole("link", { name: "Офферы" })).toHaveAttribute("href", "/me/offers");
   expect(within(bottom).getByRole("link", { name: "ФСП" })).toHaveAttribute("href", "/me/settings");
 });
+
+test("профиль: навыки по группам, чек-лист «что усилит», заявлено/подтверждено, PDF", async () => {
+  profile = {
+    ...full,
+    claimed_vs_confirmed: [{ profession: "backend", declared_grade: "senior", confirmed_grade: "middle", status: "overclaimed" }],
+  };
+  mount("/me");
+  await screen.findByTestId("profile-page");
+  expect(within(screen.getByTestId("profile-skill-group-language")).getByText("Python")).toBeInTheDocument();
+  expect(screen.getByTestId("profile-skill-group-db")).toHaveTextContent("Redis");
+  const strength = screen.getByTestId("profile-strength");
+  expect(within(strength).getByTestId("profile-strength-fsp")).toHaveTextContent("есть");
+  expect(within(strength).getByRole("link", { name: "добавить: GitHub" })).toHaveAttribute("href", "/onboarding");
+  expect(within(screen.getByTestId("profile-claimed-backend")).getByText("тест ниже заявленного")).toBeInTheDocument();
+  expect(screen.getByTestId("profile-pdf")).toBeInTheDocument();
+  expect(screen.getByTestId("profile-graph-link")).toHaveAttribute("href", "/me/graph");
+});
+
+test("ошибка загрузки профиля: сообщение и повтор", async () => {
+  profile = undefined;
+  vi.mocked(fetch).mockImplementation(async (url: unknown) => {
+    const u = String(url);
+    if (u.endsWith("/auth/refresh")) return res(200, { access_token: "t" });
+    if (u.endsWith("/me")) return res(200, { id: "u1", email: "a@b.ru", role: "candidate", consents: ["pd_processing"] });
+    return res(500, { code: "boom" });
+  });
+  mount("/me");
+  expect(await screen.findByRole("alert", {}, { timeout: 8000 })).toHaveTextContent("Не удалось загрузить профиль");
+  expect(screen.getByRole("button", { name: "Повторить" })).toBeInTheDocument();
+}, 15000);
 
 test("пустой профиль: подсказка вместо грейда и навыков", async () => {
   profile = { ...base, claimed_soft: [], category: null, skills: [], team_signals: [], grade: { grade: null, score: null, confidence: null, preliminary: true, breakdown: [] } };

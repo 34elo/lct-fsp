@@ -10,6 +10,7 @@ export interface MeOut {
   id: string;
   email: string | null;
   role: string;
+  email_verified?: boolean;
   consents: string[];
   telegram_linked?: boolean;
   company?: MeCompany | null;

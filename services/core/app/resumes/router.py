@@ -14,6 +14,7 @@ from app.consents.deps import require_consent
 from app.deps import get_limiter, get_session, get_storage
 from app.identity.deps import require_roles
 from app.identity.models import User
+from app.openapi_errors import problem_responses
 from app.resumes import service
 
 router = APIRouter(prefix="/candidates/me/resumes", tags=["resumes"])
@@ -49,7 +50,12 @@ def _out(resume) -> ResumeOut:
     )
 
 
-@router.post("", status_code=202, response_model=ResumeAccepted)
+@router.post(
+    "",
+    status_code=202,
+    response_model=ResumeAccepted,
+    responses=problem_responses(401, 403, 413, 429),
+)
 async def upload_resume(
     request: Request,
     file: Annotated[UploadFile, File()],
@@ -68,7 +74,7 @@ async def upload_resume(
     return ResumeAccepted(resume_id=resume.id, job_id=job_id)
 
 
-@router.get("/{resume_id}", response_model=ResumeOut)
+@router.get("/{resume_id}", response_model=ResumeOut, responses=problem_responses(401, 403, 404))
 async def get_resume(
     resume_id: UUID,
     user: User = Depends(_owner),
@@ -77,7 +83,11 @@ async def get_resume(
     return _out(await service.get_owned(session, user.id, resume_id))
 
 
-@router.post("/{resume_id}/confirm", response_model=ResumeOut)
+@router.post(
+    "/{resume_id}/confirm",
+    response_model=ResumeOut,
+    responses=problem_responses(401, 403, 404, 422),
+)
 async def confirm_resume(
     resume_id: UUID,
     body: ConfirmIn | None = None,

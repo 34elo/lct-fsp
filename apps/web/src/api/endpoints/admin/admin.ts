@@ -26,11 +26,41 @@ import type {
 import type {
   AdminComplaintOut,
   AdminComplaintsAdminComplaintsGetParams,
+  AdminFamilyOut,
   AdminListAdminCompaniesGetParams,
+  AdminSkillBrief,
+  AdmissionQueueAdminFamiliesGetParams,
+  BlockIn,
+  BlockItem,
+  CardOut,
+  CardRef,
+  CardSaved,
   CompanyOut,
+  DistinctIn,
+  DistinctPair,
+  DistinctSaved,
   HTTPValidationError,
+  HintsOut,
+  KeyApproveIn,
+  LlmExamOut,
+  MergeBody,
+  MergeOut,
+  MergeRow,
   ProblemOut,
-  ResolveComplaintIn
+  ProfessionIn,
+  ProfessionOut,
+  ProfessionPatch,
+  ProvisionalOut,
+  QueueItem,
+  RejectBody,
+  RemoveBlocklistAdminSkillsBlocklistDeleteParams,
+  RemoveDistinctAdminSkillsDistinctDeleteParams,
+  ResolveComplaintIn,
+  RetiredOut,
+  SkillCard,
+  TwoWorldsAdminDemoTwoWorldsGetParams,
+  TwoWorldsOut,
+  VersionOut
 } from '../../model';
 
 import { apiFetch } from '../../mutator';
@@ -748,4 +778,4444 @@ export const useAdminResolveComplaintAdminComplaintsComplaintIdResolvePost = <TE
         TContext
       > => {
       return useMutation(getAdminResolveComplaintAdminComplaintsComplaintIdResolvePostMutationOptions(options), queryClient);
+    }
+    export type admissionQueueAdminFamiliesGetResponse200 = {
+  data: AdminFamilyOut[]
+  status: 200
+}
+
+export type admissionQueueAdminFamiliesGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type admissionQueueAdminFamiliesGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type admissionQueueAdminFamiliesGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type admissionQueueAdminFamiliesGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type admissionQueueAdminFamiliesGetResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type admissionQueueAdminFamiliesGetResponseSuccess = (admissionQueueAdminFamiliesGetResponse200) & {
+  headers: Headers;
+};
+export type admissionQueueAdminFamiliesGetResponseError = (admissionQueueAdminFamiliesGetResponse401ApplicationProblemJson | admissionQueueAdminFamiliesGetResponse401ApplicationJson | admissionQueueAdminFamiliesGetResponse403ApplicationProblemJson | admissionQueueAdminFamiliesGetResponse403ApplicationJson | admissionQueueAdminFamiliesGetResponse422) & {
+  headers: Headers;
+};
+
+export type admissionQueueAdminFamiliesGetResponse = (admissionQueueAdminFamiliesGetResponseSuccess | admissionQueueAdminFamiliesGetResponseError)
+
+export const getAdmissionQueueAdminFamiliesGetUrl = (params?: AdmissionQueueAdminFamiliesGetParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/admin/families?${stringifiedParams}` : `/admin/families`
+}
+
+/**
+ * Очередь допуска со статистикой и невыполненными порогами.
+ * @summary Admission Queue
+ */
+export const admissionQueueAdminFamiliesGet = async (params?: AdmissionQueueAdminFamiliesGetParams, options?: Parameters<typeof apiFetch>[1]): Promise<admissionQueueAdminFamiliesGetResponse> => {
+
+  return apiFetch<admissionQueueAdminFamiliesGetResponse>(getAdmissionQueueAdminFamiliesGetUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getAdmissionQueueAdminFamiliesGetQueryKey = (params?: AdmissionQueueAdminFamiliesGetParams,) => {
+    return [
+    `/admin/families`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getAdmissionQueueAdminFamiliesGetQueryOptions = <TData = Awaited<ReturnType<typeof admissionQueueAdminFamiliesGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(params?: AdmissionQueueAdminFamiliesGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof admissionQueueAdminFamiliesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdmissionQueueAdminFamiliesGetQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof admissionQueueAdminFamiliesGet>>> = ({ signal }) => admissionQueueAdminFamiliesGet(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof admissionQueueAdminFamiliesGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdmissionQueueAdminFamiliesGetQueryResult = NonNullable<Awaited<ReturnType<typeof admissionQueueAdminFamiliesGet>>>
+export type AdmissionQueueAdminFamiliesGetQueryError = ErrorType<ProblemOut | HTTPValidationError>
+
+
+export function useAdmissionQueueAdminFamiliesGet<TData = Awaited<ReturnType<typeof admissionQueueAdminFamiliesGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ params: undefined |  AdmissionQueueAdminFamiliesGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof admissionQueueAdminFamiliesGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof admissionQueueAdminFamiliesGet>>,
+          TError,
+          Awaited<ReturnType<typeof admissionQueueAdminFamiliesGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdmissionQueueAdminFamiliesGet<TData = Awaited<ReturnType<typeof admissionQueueAdminFamiliesGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ params?: AdmissionQueueAdminFamiliesGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof admissionQueueAdminFamiliesGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof admissionQueueAdminFamiliesGet>>,
+          TError,
+          Awaited<ReturnType<typeof admissionQueueAdminFamiliesGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdmissionQueueAdminFamiliesGet<TData = Awaited<ReturnType<typeof admissionQueueAdminFamiliesGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ params?: AdmissionQueueAdminFamiliesGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof admissionQueueAdminFamiliesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Admission Queue
+ */
+
+export function useAdmissionQueueAdminFamiliesGet<TData = Awaited<ReturnType<typeof admissionQueueAdminFamiliesGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ params?: AdmissionQueueAdminFamiliesGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof admissionQueueAdminFamiliesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdmissionQueueAdminFamiliesGetQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type approveAdminFamiliesFamilyIdApprovePostResponse200 = {
+  data: AdminFamilyOut
+  status: 200
+}
+
+export type approveAdminFamiliesFamilyIdApprovePostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type approveAdminFamiliesFamilyIdApprovePostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type approveAdminFamiliesFamilyIdApprovePostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type approveAdminFamiliesFamilyIdApprovePostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type approveAdminFamiliesFamilyIdApprovePostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type approveAdminFamiliesFamilyIdApprovePostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type approveAdminFamiliesFamilyIdApprovePostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type approveAdminFamiliesFamilyIdApprovePostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type approveAdminFamiliesFamilyIdApprovePostResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type approveAdminFamiliesFamilyIdApprovePostResponseSuccess = (approveAdminFamiliesFamilyIdApprovePostResponse200) & {
+  headers: Headers;
+};
+export type approveAdminFamiliesFamilyIdApprovePostResponseError = (approveAdminFamiliesFamilyIdApprovePostResponse401ApplicationProblemJson | approveAdminFamiliesFamilyIdApprovePostResponse401ApplicationJson | approveAdminFamiliesFamilyIdApprovePostResponse403ApplicationProblemJson | approveAdminFamiliesFamilyIdApprovePostResponse403ApplicationJson | approveAdminFamiliesFamilyIdApprovePostResponse404ApplicationProblemJson | approveAdminFamiliesFamilyIdApprovePostResponse404ApplicationJson | approveAdminFamiliesFamilyIdApprovePostResponse409ApplicationProblemJson | approveAdminFamiliesFamilyIdApprovePostResponse409ApplicationJson | approveAdminFamiliesFamilyIdApprovePostResponse422) & {
+  headers: Headers;
+};
+
+export type approveAdminFamiliesFamilyIdApprovePostResponse = (approveAdminFamiliesFamilyIdApprovePostResponseSuccess | approveAdminFamiliesFamilyIdApprovePostResponseError)
+
+export const getApproveAdminFamiliesFamilyIdApprovePostUrl = (familyId: string,) => {
+
+
+
+
+  return `/admin/families/${familyId}/approve`
+}
+
+/**
+ * `pilot → active` (все пороги) или `quarantine → active`.
+ * @summary Approve
+ */
+export const approveAdminFamiliesFamilyIdApprovePost = async (familyId: string, options?: Parameters<typeof apiFetch>[1]): Promise<approveAdminFamiliesFamilyIdApprovePostResponse> => {
+
+  return apiFetch<approveAdminFamiliesFamilyIdApprovePostResponse>(getApproveAdminFamiliesFamilyIdApprovePostUrl(familyId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getApproveAdminFamiliesFamilyIdApprovePostMutationKey = () => ['approveAdminFamiliesFamilyIdApprovePost'] as const;
+
+export const getApproveAdminFamiliesFamilyIdApprovePostMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveAdminFamiliesFamilyIdApprovePost>>, TError,ApproveAdminFamiliesFamilyIdApprovePostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof approveAdminFamiliesFamilyIdApprovePost>>, TError,ApproveAdminFamiliesFamilyIdApprovePostMutationVariables, TContext> => {
+
+const mutationKey = getApproveAdminFamiliesFamilyIdApprovePostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof approveAdminFamiliesFamilyIdApprovePost>>, ApproveAdminFamiliesFamilyIdApprovePostMutationVariables> = (props) => {
+          const {familyId} = props ?? {};
+
+          return  approveAdminFamiliesFamilyIdApprovePost(familyId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ApproveAdminFamiliesFamilyIdApprovePostMutationResult = NonNullable<Awaited<ReturnType<typeof approveAdminFamiliesFamilyIdApprovePost>>>
+
+    export type ApproveAdminFamiliesFamilyIdApprovePostMutationError = ErrorType<ProblemOut | HTTPValidationError>
+    export type ApproveAdminFamiliesFamilyIdApprovePostMutationVariables = {familyId: string}
+
+    /**
+ * @summary Approve
+ */
+export const useApproveAdminFamiliesFamilyIdApprovePost = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveAdminFamiliesFamilyIdApprovePost>>, TError,ApproveAdminFamiliesFamilyIdApprovePostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof approveAdminFamiliesFamilyIdApprovePost>>,
+        TError,
+        ApproveAdminFamiliesFamilyIdApprovePostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getApproveAdminFamiliesFamilyIdApprovePostMutationOptions(options), queryClient);
+    }
+    export type quarantineAdminFamiliesFamilyIdQuarantinePostResponse200 = {
+  data: AdminFamilyOut
+  status: 200
+}
+
+export type quarantineAdminFamiliesFamilyIdQuarantinePostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type quarantineAdminFamiliesFamilyIdQuarantinePostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type quarantineAdminFamiliesFamilyIdQuarantinePostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type quarantineAdminFamiliesFamilyIdQuarantinePostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type quarantineAdminFamiliesFamilyIdQuarantinePostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type quarantineAdminFamiliesFamilyIdQuarantinePostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type quarantineAdminFamiliesFamilyIdQuarantinePostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type quarantineAdminFamiliesFamilyIdQuarantinePostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type quarantineAdminFamiliesFamilyIdQuarantinePostResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type quarantineAdminFamiliesFamilyIdQuarantinePostResponseSuccess = (quarantineAdminFamiliesFamilyIdQuarantinePostResponse200) & {
+  headers: Headers;
+};
+export type quarantineAdminFamiliesFamilyIdQuarantinePostResponseError = (quarantineAdminFamiliesFamilyIdQuarantinePostResponse401ApplicationProblemJson | quarantineAdminFamiliesFamilyIdQuarantinePostResponse401ApplicationJson | quarantineAdminFamiliesFamilyIdQuarantinePostResponse403ApplicationProblemJson | quarantineAdminFamiliesFamilyIdQuarantinePostResponse403ApplicationJson | quarantineAdminFamiliesFamilyIdQuarantinePostResponse404ApplicationProblemJson | quarantineAdminFamiliesFamilyIdQuarantinePostResponse404ApplicationJson | quarantineAdminFamiliesFamilyIdQuarantinePostResponse409ApplicationProblemJson | quarantineAdminFamiliesFamilyIdQuarantinePostResponse409ApplicationJson | quarantineAdminFamiliesFamilyIdQuarantinePostResponse422) & {
+  headers: Headers;
+};
+
+export type quarantineAdminFamiliesFamilyIdQuarantinePostResponse = (quarantineAdminFamiliesFamilyIdQuarantinePostResponseSuccess | quarantineAdminFamiliesFamilyIdQuarantinePostResponseError)
+
+export const getQuarantineAdminFamiliesFamilyIdQuarantinePostUrl = (familyId: string,) => {
+
+
+
+
+  return `/admin/families/${familyId}/quarantine`
+}
+
+/**
+ * @summary Quarantine
+ */
+export const quarantineAdminFamiliesFamilyIdQuarantinePost = async (familyId: string, options?: Parameters<typeof apiFetch>[1]): Promise<quarantineAdminFamiliesFamilyIdQuarantinePostResponse> => {
+
+  return apiFetch<quarantineAdminFamiliesFamilyIdQuarantinePostResponse>(getQuarantineAdminFamiliesFamilyIdQuarantinePostUrl(familyId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getQuarantineAdminFamiliesFamilyIdQuarantinePostMutationKey = () => ['quarantineAdminFamiliesFamilyIdQuarantinePost'] as const;
+
+export const getQuarantineAdminFamiliesFamilyIdQuarantinePostMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quarantineAdminFamiliesFamilyIdQuarantinePost>>, TError,QuarantineAdminFamiliesFamilyIdQuarantinePostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof quarantineAdminFamiliesFamilyIdQuarantinePost>>, TError,QuarantineAdminFamiliesFamilyIdQuarantinePostMutationVariables, TContext> => {
+
+const mutationKey = getQuarantineAdminFamiliesFamilyIdQuarantinePostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof quarantineAdminFamiliesFamilyIdQuarantinePost>>, QuarantineAdminFamiliesFamilyIdQuarantinePostMutationVariables> = (props) => {
+          const {familyId} = props ?? {};
+
+          return  quarantineAdminFamiliesFamilyIdQuarantinePost(familyId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type QuarantineAdminFamiliesFamilyIdQuarantinePostMutationResult = NonNullable<Awaited<ReturnType<typeof quarantineAdminFamiliesFamilyIdQuarantinePost>>>
+
+    export type QuarantineAdminFamiliesFamilyIdQuarantinePostMutationError = ErrorType<ProblemOut | HTTPValidationError>
+    export type QuarantineAdminFamiliesFamilyIdQuarantinePostMutationVariables = {familyId: string}
+
+    /**
+ * @summary Quarantine
+ */
+export const useQuarantineAdminFamiliesFamilyIdQuarantinePost = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quarantineAdminFamiliesFamilyIdQuarantinePost>>, TError,QuarantineAdminFamiliesFamilyIdQuarantinePostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof quarantineAdminFamiliesFamilyIdQuarantinePost>>,
+        TError,
+        QuarantineAdminFamiliesFamilyIdQuarantinePostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getQuarantineAdminFamiliesFamilyIdQuarantinePostMutationOptions(options), queryClient);
+    }
+    export type retireAdminFamiliesFamilyIdRetirePostResponse200 = {
+  data: AdminFamilyOut
+  status: 200
+}
+
+export type retireAdminFamiliesFamilyIdRetirePostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type retireAdminFamiliesFamilyIdRetirePostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type retireAdminFamiliesFamilyIdRetirePostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type retireAdminFamiliesFamilyIdRetirePostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type retireAdminFamiliesFamilyIdRetirePostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type retireAdminFamiliesFamilyIdRetirePostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type retireAdminFamiliesFamilyIdRetirePostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type retireAdminFamiliesFamilyIdRetirePostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type retireAdminFamiliesFamilyIdRetirePostResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type retireAdminFamiliesFamilyIdRetirePostResponseSuccess = (retireAdminFamiliesFamilyIdRetirePostResponse200) & {
+  headers: Headers;
+};
+export type retireAdminFamiliesFamilyIdRetirePostResponseError = (retireAdminFamiliesFamilyIdRetirePostResponse401ApplicationProblemJson | retireAdminFamiliesFamilyIdRetirePostResponse401ApplicationJson | retireAdminFamiliesFamilyIdRetirePostResponse403ApplicationProblemJson | retireAdminFamiliesFamilyIdRetirePostResponse403ApplicationJson | retireAdminFamiliesFamilyIdRetirePostResponse404ApplicationProblemJson | retireAdminFamiliesFamilyIdRetirePostResponse404ApplicationJson | retireAdminFamiliesFamilyIdRetirePostResponse409ApplicationProblemJson | retireAdminFamiliesFamilyIdRetirePostResponse409ApplicationJson | retireAdminFamiliesFamilyIdRetirePostResponse422) & {
+  headers: Headers;
+};
+
+export type retireAdminFamiliesFamilyIdRetirePostResponse = (retireAdminFamiliesFamilyIdRetirePostResponseSuccess | retireAdminFamiliesFamilyIdRetirePostResponseError)
+
+export const getRetireAdminFamiliesFamilyIdRetirePostUrl = (familyId: string,) => {
+
+
+
+
+  return `/admin/families/${familyId}/retire`
+}
+
+/**
+ * @summary Retire
+ */
+export const retireAdminFamiliesFamilyIdRetirePost = async (familyId: string, options?: Parameters<typeof apiFetch>[1]): Promise<retireAdminFamiliesFamilyIdRetirePostResponse> => {
+
+  return apiFetch<retireAdminFamiliesFamilyIdRetirePostResponse>(getRetireAdminFamiliesFamilyIdRetirePostUrl(familyId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getRetireAdminFamiliesFamilyIdRetirePostMutationKey = () => ['retireAdminFamiliesFamilyIdRetirePost'] as const;
+
+export const getRetireAdminFamiliesFamilyIdRetirePostMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof retireAdminFamiliesFamilyIdRetirePost>>, TError,RetireAdminFamiliesFamilyIdRetirePostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof retireAdminFamiliesFamilyIdRetirePost>>, TError,RetireAdminFamiliesFamilyIdRetirePostMutationVariables, TContext> => {
+
+const mutationKey = getRetireAdminFamiliesFamilyIdRetirePostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof retireAdminFamiliesFamilyIdRetirePost>>, RetireAdminFamiliesFamilyIdRetirePostMutationVariables> = (props) => {
+          const {familyId} = props ?? {};
+
+          return  retireAdminFamiliesFamilyIdRetirePost(familyId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RetireAdminFamiliesFamilyIdRetirePostMutationResult = NonNullable<Awaited<ReturnType<typeof retireAdminFamiliesFamilyIdRetirePost>>>
+
+    export type RetireAdminFamiliesFamilyIdRetirePostMutationError = ErrorType<ProblemOut | HTTPValidationError>
+    export type RetireAdminFamiliesFamilyIdRetirePostMutationVariables = {familyId: string}
+
+    /**
+ * @summary Retire
+ */
+export const useRetireAdminFamiliesFamilyIdRetirePost = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof retireAdminFamiliesFamilyIdRetirePost>>, TError,RetireAdminFamiliesFamilyIdRetirePostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof retireAdminFamiliesFamilyIdRetirePost>>,
+        TError,
+        RetireAdminFamiliesFamilyIdRetirePostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRetireAdminFamiliesFamilyIdRetirePostMutationOptions(options), queryClient);
+    }
+    export type approveKeyAdminFamiliesFamilyIdKeyPostResponse200 = {
+  data: AdminFamilyOut
+  status: 200
+}
+
+export type approveKeyAdminFamiliesFamilyIdKeyPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type approveKeyAdminFamiliesFamilyIdKeyPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type approveKeyAdminFamiliesFamilyIdKeyPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type approveKeyAdminFamiliesFamilyIdKeyPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type approveKeyAdminFamiliesFamilyIdKeyPostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type approveKeyAdminFamiliesFamilyIdKeyPostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type approveKeyAdminFamiliesFamilyIdKeyPostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type approveKeyAdminFamiliesFamilyIdKeyPostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type approveKeyAdminFamiliesFamilyIdKeyPostResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type approveKeyAdminFamiliesFamilyIdKeyPostResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type approveKeyAdminFamiliesFamilyIdKeyPostResponseSuccess = (approveKeyAdminFamiliesFamilyIdKeyPostResponse200) & {
+  headers: Headers;
+};
+export type approveKeyAdminFamiliesFamilyIdKeyPostResponseError = (approveKeyAdminFamiliesFamilyIdKeyPostResponse401ApplicationProblemJson | approveKeyAdminFamiliesFamilyIdKeyPostResponse401ApplicationJson | approveKeyAdminFamiliesFamilyIdKeyPostResponse403ApplicationProblemJson | approveKeyAdminFamiliesFamilyIdKeyPostResponse403ApplicationJson | approveKeyAdminFamiliesFamilyIdKeyPostResponse404ApplicationProblemJson | approveKeyAdminFamiliesFamilyIdKeyPostResponse404ApplicationJson | approveKeyAdminFamiliesFamilyIdKeyPostResponse409ApplicationProblemJson | approveKeyAdminFamiliesFamilyIdKeyPostResponse409ApplicationJson | approveKeyAdminFamiliesFamilyIdKeyPostResponse422ApplicationProblemJson | approveKeyAdminFamiliesFamilyIdKeyPostResponse422ApplicationJson) & {
+  headers: Headers;
+};
+
+export type approveKeyAdminFamiliesFamilyIdKeyPostResponse = (approveKeyAdminFamiliesFamilyIdKeyPostResponseSuccess | approveKeyAdminFamiliesFamilyIdKeyPostResponseError)
+
+export const getApproveKeyAdminFamiliesFamilyIdKeyPostUrl = (familyId: string,) => {
+
+
+
+
+  return `/admin/families/${familyId}/key`
+}
+
+/**
+ * Утвердить ключ задания конструктора (`key_status → approved`) после автопроверки.
+ * @summary Approve Key
+ */
+export const approveKeyAdminFamiliesFamilyIdKeyPost = async (familyId: string,
+    keyApproveIn: KeyApproveIn, options?: Parameters<typeof apiFetch>[1]): Promise<approveKeyAdminFamiliesFamilyIdKeyPostResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<approveKeyAdminFamiliesFamilyIdKeyPostResponse>(getApproveKeyAdminFamiliesFamilyIdKeyPostUrl(familyId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(keyApproveIn)
+  }
+);}
+
+
+
+
+
+export const getApproveKeyAdminFamiliesFamilyIdKeyPostMutationKey = () => ['approveKeyAdminFamiliesFamilyIdKeyPost'] as const;
+
+export const getApproveKeyAdminFamiliesFamilyIdKeyPostMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveKeyAdminFamiliesFamilyIdKeyPost>>, TError,ApproveKeyAdminFamiliesFamilyIdKeyPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof approveKeyAdminFamiliesFamilyIdKeyPost>>, TError,ApproveKeyAdminFamiliesFamilyIdKeyPostMutationVariables, TContext> => {
+
+const mutationKey = getApproveKeyAdminFamiliesFamilyIdKeyPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof approveKeyAdminFamiliesFamilyIdKeyPost>>, ApproveKeyAdminFamiliesFamilyIdKeyPostMutationVariables> = (props) => {
+          const {familyId,data} = props ?? {};
+
+          return  approveKeyAdminFamiliesFamilyIdKeyPost(familyId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ApproveKeyAdminFamiliesFamilyIdKeyPostMutationResult = NonNullable<Awaited<ReturnType<typeof approveKeyAdminFamiliesFamilyIdKeyPost>>>
+    export type ApproveKeyAdminFamiliesFamilyIdKeyPostMutationBody = KeyApproveIn
+    export type ApproveKeyAdminFamiliesFamilyIdKeyPostMutationError = ErrorType<ProblemOut>
+    export type ApproveKeyAdminFamiliesFamilyIdKeyPostMutationVariables = {familyId: string;data: KeyApproveIn}
+
+    /**
+ * @summary Approve Key
+ */
+export const useApproveKeyAdminFamiliesFamilyIdKeyPost = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveKeyAdminFamiliesFamilyIdKeyPost>>, TError,ApproveKeyAdminFamiliesFamilyIdKeyPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof approveKeyAdminFamiliesFamilyIdKeyPost>>,
+        TError,
+        ApproveKeyAdminFamiliesFamilyIdKeyPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getApproveKeyAdminFamiliesFamilyIdKeyPostMutationOptions(options), queryClient);
+    }
+    export type toPilotAdminFamiliesFamilyIdPilotPostResponse200 = {
+  data: AdminFamilyOut
+  status: 200
+}
+
+export type toPilotAdminFamiliesFamilyIdPilotPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type toPilotAdminFamiliesFamilyIdPilotPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type toPilotAdminFamiliesFamilyIdPilotPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type toPilotAdminFamiliesFamilyIdPilotPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type toPilotAdminFamiliesFamilyIdPilotPostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type toPilotAdminFamiliesFamilyIdPilotPostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type toPilotAdminFamiliesFamilyIdPilotPostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type toPilotAdminFamiliesFamilyIdPilotPostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type toPilotAdminFamiliesFamilyIdPilotPostResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type toPilotAdminFamiliesFamilyIdPilotPostResponseSuccess = (toPilotAdminFamiliesFamilyIdPilotPostResponse200) & {
+  headers: Headers;
+};
+export type toPilotAdminFamiliesFamilyIdPilotPostResponseError = (toPilotAdminFamiliesFamilyIdPilotPostResponse401ApplicationProblemJson | toPilotAdminFamiliesFamilyIdPilotPostResponse401ApplicationJson | toPilotAdminFamiliesFamilyIdPilotPostResponse403ApplicationProblemJson | toPilotAdminFamiliesFamilyIdPilotPostResponse403ApplicationJson | toPilotAdminFamiliesFamilyIdPilotPostResponse404ApplicationProblemJson | toPilotAdminFamiliesFamilyIdPilotPostResponse404ApplicationJson | toPilotAdminFamiliesFamilyIdPilotPostResponse409ApplicationProblemJson | toPilotAdminFamiliesFamilyIdPilotPostResponse409ApplicationJson | toPilotAdminFamiliesFamilyIdPilotPostResponse422) & {
+  headers: Headers;
+};
+
+export type toPilotAdminFamiliesFamilyIdPilotPostResponse = (toPilotAdminFamiliesFamilyIdPilotPostResponseSuccess | toPilotAdminFamiliesFamilyIdPilotPostResponseError)
+
+export const getToPilotAdminFamiliesFamilyIdPilotPostUrl = (familyId: string,) => {
+
+
+
+
+  return `/admin/families/${familyId}/pilot`
+}
+
+/**
+ * Задание компании → общий банк: `draft → pilot` (E30-1).
+ * @summary To Pilot
+ */
+export const toPilotAdminFamiliesFamilyIdPilotPost = async (familyId: string, options?: Parameters<typeof apiFetch>[1]): Promise<toPilotAdminFamiliesFamilyIdPilotPostResponse> => {
+
+  return apiFetch<toPilotAdminFamiliesFamilyIdPilotPostResponse>(getToPilotAdminFamiliesFamilyIdPilotPostUrl(familyId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getToPilotAdminFamiliesFamilyIdPilotPostMutationKey = () => ['toPilotAdminFamiliesFamilyIdPilotPost'] as const;
+
+export const getToPilotAdminFamiliesFamilyIdPilotPostMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof toPilotAdminFamiliesFamilyIdPilotPost>>, TError,ToPilotAdminFamiliesFamilyIdPilotPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof toPilotAdminFamiliesFamilyIdPilotPost>>, TError,ToPilotAdminFamiliesFamilyIdPilotPostMutationVariables, TContext> => {
+
+const mutationKey = getToPilotAdminFamiliesFamilyIdPilotPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof toPilotAdminFamiliesFamilyIdPilotPost>>, ToPilotAdminFamiliesFamilyIdPilotPostMutationVariables> = (props) => {
+          const {familyId} = props ?? {};
+
+          return  toPilotAdminFamiliesFamilyIdPilotPost(familyId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ToPilotAdminFamiliesFamilyIdPilotPostMutationResult = NonNullable<Awaited<ReturnType<typeof toPilotAdminFamiliesFamilyIdPilotPost>>>
+
+    export type ToPilotAdminFamiliesFamilyIdPilotPostMutationError = ErrorType<ProblemOut | HTTPValidationError>
+    export type ToPilotAdminFamiliesFamilyIdPilotPostMutationVariables = {familyId: string}
+
+    /**
+ * @summary To Pilot
+ */
+export const useToPilotAdminFamiliesFamilyIdPilotPost = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof toPilotAdminFamiliesFamilyIdPilotPost>>, TError,ToPilotAdminFamiliesFamilyIdPilotPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof toPilotAdminFamiliesFamilyIdPilotPost>>,
+        TError,
+        ToPilotAdminFamiliesFamilyIdPilotPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getToPilotAdminFamiliesFamilyIdPilotPostMutationOptions(options), queryClient);
+    }
+    export type twoWorldsAdminDemoTwoWorldsGetResponse200 = {
+  data: TwoWorldsOut
+  status: 200
+}
+
+export type twoWorldsAdminDemoTwoWorldsGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type twoWorldsAdminDemoTwoWorldsGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type twoWorldsAdminDemoTwoWorldsGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type twoWorldsAdminDemoTwoWorldsGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type twoWorldsAdminDemoTwoWorldsGetResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type twoWorldsAdminDemoTwoWorldsGetResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type twoWorldsAdminDemoTwoWorldsGetResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type twoWorldsAdminDemoTwoWorldsGetResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type twoWorldsAdminDemoTwoWorldsGetResponseSuccess = (twoWorldsAdminDemoTwoWorldsGetResponse200) & {
+  headers: Headers;
+};
+export type twoWorldsAdminDemoTwoWorldsGetResponseError = (twoWorldsAdminDemoTwoWorldsGetResponse401ApplicationProblemJson | twoWorldsAdminDemoTwoWorldsGetResponse401ApplicationJson | twoWorldsAdminDemoTwoWorldsGetResponse403ApplicationProblemJson | twoWorldsAdminDemoTwoWorldsGetResponse403ApplicationJson | twoWorldsAdminDemoTwoWorldsGetResponse404ApplicationProblemJson | twoWorldsAdminDemoTwoWorldsGetResponse404ApplicationJson | twoWorldsAdminDemoTwoWorldsGetResponse422ApplicationProblemJson | twoWorldsAdminDemoTwoWorldsGetResponse422ApplicationJson) & {
+  headers: Headers;
+};
+
+export type twoWorldsAdminDemoTwoWorldsGetResponse = (twoWorldsAdminDemoTwoWorldsGetResponseSuccess | twoWorldsAdminDemoTwoWorldsGetResponseError)
+
+export const getTwoWorldsAdminDemoTwoWorldsGetUrl = (params?: TwoWorldsAdminDemoTwoWorldsGetParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    const explodeParameters = ["domains"];
+
+    if (Array.isArray(value) && explodeParameters.includes(key)) {
+      value.forEach((v) => {
+        normalizedParams.append(key, v === null ? 'null' : String(v));
+      });
+      return;
+    }
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/admin/demo/two-worlds?${stringifiedParams}` : `/admin/demo/two-worlds`
+}
+
+/**
+ * @summary Two Worlds
+ */
+export const twoWorldsAdminDemoTwoWorldsGet = async (params?: TwoWorldsAdminDemoTwoWorldsGetParams, options?: Parameters<typeof apiFetch>[1]): Promise<twoWorldsAdminDemoTwoWorldsGetResponse> => {
+
+  return apiFetch<twoWorldsAdminDemoTwoWorldsGetResponse>(getTwoWorldsAdminDemoTwoWorldsGetUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getTwoWorldsAdminDemoTwoWorldsGetQueryKey = (params?: TwoWorldsAdminDemoTwoWorldsGetParams,) => {
+    return [
+    `/admin/demo/two-worlds`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getTwoWorldsAdminDemoTwoWorldsGetQueryOptions = <TData = Awaited<ReturnType<typeof twoWorldsAdminDemoTwoWorldsGet>>, TError = ErrorType<ProblemOut>>(params?: TwoWorldsAdminDemoTwoWorldsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof twoWorldsAdminDemoTwoWorldsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTwoWorldsAdminDemoTwoWorldsGetQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof twoWorldsAdminDemoTwoWorldsGet>>> = ({ signal }) => twoWorldsAdminDemoTwoWorldsGet(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof twoWorldsAdminDemoTwoWorldsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TwoWorldsAdminDemoTwoWorldsGetQueryResult = NonNullable<Awaited<ReturnType<typeof twoWorldsAdminDemoTwoWorldsGet>>>
+export type TwoWorldsAdminDemoTwoWorldsGetQueryError = ErrorType<ProblemOut>
+
+
+export function useTwoWorldsAdminDemoTwoWorldsGet<TData = Awaited<ReturnType<typeof twoWorldsAdminDemoTwoWorldsGet>>, TError = ErrorType<ProblemOut>>(
+ params: undefined |  TwoWorldsAdminDemoTwoWorldsGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof twoWorldsAdminDemoTwoWorldsGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof twoWorldsAdminDemoTwoWorldsGet>>,
+          TError,
+          Awaited<ReturnType<typeof twoWorldsAdminDemoTwoWorldsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTwoWorldsAdminDemoTwoWorldsGet<TData = Awaited<ReturnType<typeof twoWorldsAdminDemoTwoWorldsGet>>, TError = ErrorType<ProblemOut>>(
+ params?: TwoWorldsAdminDemoTwoWorldsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof twoWorldsAdminDemoTwoWorldsGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof twoWorldsAdminDemoTwoWorldsGet>>,
+          TError,
+          Awaited<ReturnType<typeof twoWorldsAdminDemoTwoWorldsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTwoWorldsAdminDemoTwoWorldsGet<TData = Awaited<ReturnType<typeof twoWorldsAdminDemoTwoWorldsGet>>, TError = ErrorType<ProblemOut>>(
+ params?: TwoWorldsAdminDemoTwoWorldsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof twoWorldsAdminDemoTwoWorldsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Two Worlds
+ */
+
+export function useTwoWorldsAdminDemoTwoWorldsGet<TData = Awaited<ReturnType<typeof twoWorldsAdminDemoTwoWorldsGet>>, TError = ErrorType<ProblemOut>>(
+ params?: TwoWorldsAdminDemoTwoWorldsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof twoWorldsAdminDemoTwoWorldsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTwoWorldsAdminDemoTwoWorldsGetQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type llmExamAdminDemoLlmExamGetResponse200 = {
+  data: LlmExamOut
+  status: 200
+}
+
+export type llmExamAdminDemoLlmExamGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type llmExamAdminDemoLlmExamGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type llmExamAdminDemoLlmExamGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type llmExamAdminDemoLlmExamGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type llmExamAdminDemoLlmExamGetResponseSuccess = (llmExamAdminDemoLlmExamGetResponse200) & {
+  headers: Headers;
+};
+export type llmExamAdminDemoLlmExamGetResponseError = (llmExamAdminDemoLlmExamGetResponse401ApplicationProblemJson | llmExamAdminDemoLlmExamGetResponse401ApplicationJson | llmExamAdminDemoLlmExamGetResponse403ApplicationProblemJson | llmExamAdminDemoLlmExamGetResponse403ApplicationJson) & {
+  headers: Headers;
+};
+
+export type llmExamAdminDemoLlmExamGetResponse = (llmExamAdminDemoLlmExamGetResponseSuccess | llmExamAdminDemoLlmExamGetResponseError)
+
+export const getLlmExamAdminDemoLlmExamGetUrl = () => {
+
+
+
+
+  return `/admin/demo/llm-exam`
+}
+
+/**
+ * @summary Llm Exam
+ */
+export const llmExamAdminDemoLlmExamGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<llmExamAdminDemoLlmExamGetResponse> => {
+
+  return apiFetch<llmExamAdminDemoLlmExamGetResponse>(getLlmExamAdminDemoLlmExamGetUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getLlmExamAdminDemoLlmExamGetQueryKey = () => {
+    return [
+    `/admin/demo/llm-exam`
+    ] as const;
+    }
+
+
+export const getLlmExamAdminDemoLlmExamGetQueryOptions = <TData = Awaited<ReturnType<typeof llmExamAdminDemoLlmExamGet>>, TError = ErrorType<ProblemOut>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof llmExamAdminDemoLlmExamGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getLlmExamAdminDemoLlmExamGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof llmExamAdminDemoLlmExamGet>>> = ({ signal }) => llmExamAdminDemoLlmExamGet({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof llmExamAdminDemoLlmExamGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type LlmExamAdminDemoLlmExamGetQueryResult = NonNullable<Awaited<ReturnType<typeof llmExamAdminDemoLlmExamGet>>>
+export type LlmExamAdminDemoLlmExamGetQueryError = ErrorType<ProblemOut>
+
+
+export function useLlmExamAdminDemoLlmExamGet<TData = Awaited<ReturnType<typeof llmExamAdminDemoLlmExamGet>>, TError = ErrorType<ProblemOut>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof llmExamAdminDemoLlmExamGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof llmExamAdminDemoLlmExamGet>>,
+          TError,
+          Awaited<ReturnType<typeof llmExamAdminDemoLlmExamGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useLlmExamAdminDemoLlmExamGet<TData = Awaited<ReturnType<typeof llmExamAdminDemoLlmExamGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof llmExamAdminDemoLlmExamGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof llmExamAdminDemoLlmExamGet>>,
+          TError,
+          Awaited<ReturnType<typeof llmExamAdminDemoLlmExamGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useLlmExamAdminDemoLlmExamGet<TData = Awaited<ReturnType<typeof llmExamAdminDemoLlmExamGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof llmExamAdminDemoLlmExamGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Llm Exam
+ */
+
+export function useLlmExamAdminDemoLlmExamGet<TData = Awaited<ReturnType<typeof llmExamAdminDemoLlmExamGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof llmExamAdminDemoLlmExamGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getLlmExamAdminDemoLlmExamGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type listProfessionsAdminProfessionsGetResponse200 = {
+  data: ProfessionOut[]
+  status: 200
+}
+
+export type listProfessionsAdminProfessionsGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type listProfessionsAdminProfessionsGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type listProfessionsAdminProfessionsGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type listProfessionsAdminProfessionsGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type listProfessionsAdminProfessionsGetResponseSuccess = (listProfessionsAdminProfessionsGetResponse200) & {
+  headers: Headers;
+};
+export type listProfessionsAdminProfessionsGetResponseError = (listProfessionsAdminProfessionsGetResponse401ApplicationProblemJson | listProfessionsAdminProfessionsGetResponse401ApplicationJson | listProfessionsAdminProfessionsGetResponse403ApplicationProblemJson | listProfessionsAdminProfessionsGetResponse403ApplicationJson) & {
+  headers: Headers;
+};
+
+export type listProfessionsAdminProfessionsGetResponse = (listProfessionsAdminProfessionsGetResponseSuccess | listProfessionsAdminProfessionsGetResponseError)
+
+export const getListProfessionsAdminProfessionsGetUrl = () => {
+
+
+
+
+  return `/admin/professions`
+}
+
+/**
+ * @summary List Professions
+ */
+export const listProfessionsAdminProfessionsGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<listProfessionsAdminProfessionsGetResponse> => {
+
+  return apiFetch<listProfessionsAdminProfessionsGetResponse>(getListProfessionsAdminProfessionsGetUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListProfessionsAdminProfessionsGetQueryKey = () => {
+    return [
+    `/admin/professions`
+    ] as const;
+    }
+
+
+export const getListProfessionsAdminProfessionsGetQueryOptions = <TData = Awaited<ReturnType<typeof listProfessionsAdminProfessionsGet>>, TError = ErrorType<ProblemOut>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProfessionsAdminProfessionsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListProfessionsAdminProfessionsGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listProfessionsAdminProfessionsGet>>> = ({ signal }) => listProfessionsAdminProfessionsGet({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listProfessionsAdminProfessionsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListProfessionsAdminProfessionsGetQueryResult = NonNullable<Awaited<ReturnType<typeof listProfessionsAdminProfessionsGet>>>
+export type ListProfessionsAdminProfessionsGetQueryError = ErrorType<ProblemOut>
+
+
+export function useListProfessionsAdminProfessionsGet<TData = Awaited<ReturnType<typeof listProfessionsAdminProfessionsGet>>, TError = ErrorType<ProblemOut>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProfessionsAdminProfessionsGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProfessionsAdminProfessionsGet>>,
+          TError,
+          Awaited<ReturnType<typeof listProfessionsAdminProfessionsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListProfessionsAdminProfessionsGet<TData = Awaited<ReturnType<typeof listProfessionsAdminProfessionsGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProfessionsAdminProfessionsGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProfessionsAdminProfessionsGet>>,
+          TError,
+          Awaited<ReturnType<typeof listProfessionsAdminProfessionsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListProfessionsAdminProfessionsGet<TData = Awaited<ReturnType<typeof listProfessionsAdminProfessionsGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProfessionsAdminProfessionsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Professions
+ */
+
+export function useListProfessionsAdminProfessionsGet<TData = Awaited<ReturnType<typeof listProfessionsAdminProfessionsGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProfessionsAdminProfessionsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListProfessionsAdminProfessionsGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type createProfessionAdminProfessionsPostResponse201 = {
+  data: ProfessionOut
+  status: 201
+}
+
+export type createProfessionAdminProfessionsPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type createProfessionAdminProfessionsPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type createProfessionAdminProfessionsPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type createProfessionAdminProfessionsPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type createProfessionAdminProfessionsPostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type createProfessionAdminProfessionsPostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type createProfessionAdminProfessionsPostResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type createProfessionAdminProfessionsPostResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type createProfessionAdminProfessionsPostResponseSuccess = (createProfessionAdminProfessionsPostResponse201) & {
+  headers: Headers;
+};
+export type createProfessionAdminProfessionsPostResponseError = (createProfessionAdminProfessionsPostResponse401ApplicationProblemJson | createProfessionAdminProfessionsPostResponse401ApplicationJson | createProfessionAdminProfessionsPostResponse403ApplicationProblemJson | createProfessionAdminProfessionsPostResponse403ApplicationJson | createProfessionAdminProfessionsPostResponse409ApplicationProblemJson | createProfessionAdminProfessionsPostResponse409ApplicationJson | createProfessionAdminProfessionsPostResponse422ApplicationProblemJson | createProfessionAdminProfessionsPostResponse422ApplicationJson) & {
+  headers: Headers;
+};
+
+export type createProfessionAdminProfessionsPostResponse = (createProfessionAdminProfessionsPostResponseSuccess | createProfessionAdminProfessionsPostResponseError)
+
+export const getCreateProfessionAdminProfessionsPostUrl = () => {
+
+
+
+
+  return `/admin/professions`
+}
+
+/**
+ * Новая профессия теста с весами навыков (покрыты все шесть типов).
+ * @summary Create Profession
+ */
+export const createProfessionAdminProfessionsPost = async (professionIn: ProfessionIn, options?: Parameters<typeof apiFetch>[1]): Promise<createProfessionAdminProfessionsPostResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<createProfessionAdminProfessionsPostResponse>(getCreateProfessionAdminProfessionsPostUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(professionIn)
+  }
+);}
+
+
+
+
+
+export const getCreateProfessionAdminProfessionsPostMutationKey = () => ['createProfessionAdminProfessionsPost'] as const;
+
+export const getCreateProfessionAdminProfessionsPostMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProfessionAdminProfessionsPost>>, TError,CreateProfessionAdminProfessionsPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createProfessionAdminProfessionsPost>>, TError,CreateProfessionAdminProfessionsPostMutationVariables, TContext> => {
+
+const mutationKey = getCreateProfessionAdminProfessionsPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createProfessionAdminProfessionsPost>>, CreateProfessionAdminProfessionsPostMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createProfessionAdminProfessionsPost(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateProfessionAdminProfessionsPostMutationResult = NonNullable<Awaited<ReturnType<typeof createProfessionAdminProfessionsPost>>>
+    export type CreateProfessionAdminProfessionsPostMutationBody = ProfessionIn
+    export type CreateProfessionAdminProfessionsPostMutationError = ErrorType<ProblemOut>
+    export type CreateProfessionAdminProfessionsPostMutationVariables = {data: ProfessionIn}
+
+    /**
+ * @summary Create Profession
+ */
+export const useCreateProfessionAdminProfessionsPost = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProfessionAdminProfessionsPost>>, TError,CreateProfessionAdminProfessionsPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createProfessionAdminProfessionsPost>>,
+        TError,
+        CreateProfessionAdminProfessionsPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateProfessionAdminProfessionsPostMutationOptions(options), queryClient);
+    }
+    export type getProfessionAdminProfessionsSlugGetResponse200 = {
+  data: ProfessionOut
+  status: 200
+}
+
+export type getProfessionAdminProfessionsSlugGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type getProfessionAdminProfessionsSlugGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type getProfessionAdminProfessionsSlugGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type getProfessionAdminProfessionsSlugGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type getProfessionAdminProfessionsSlugGetResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type getProfessionAdminProfessionsSlugGetResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type getProfessionAdminProfessionsSlugGetResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type getProfessionAdminProfessionsSlugGetResponseSuccess = (getProfessionAdminProfessionsSlugGetResponse200) & {
+  headers: Headers;
+};
+export type getProfessionAdminProfessionsSlugGetResponseError = (getProfessionAdminProfessionsSlugGetResponse401ApplicationProblemJson | getProfessionAdminProfessionsSlugGetResponse401ApplicationJson | getProfessionAdminProfessionsSlugGetResponse403ApplicationProblemJson | getProfessionAdminProfessionsSlugGetResponse403ApplicationJson | getProfessionAdminProfessionsSlugGetResponse404ApplicationProblemJson | getProfessionAdminProfessionsSlugGetResponse404ApplicationJson | getProfessionAdminProfessionsSlugGetResponse422) & {
+  headers: Headers;
+};
+
+export type getProfessionAdminProfessionsSlugGetResponse = (getProfessionAdminProfessionsSlugGetResponseSuccess | getProfessionAdminProfessionsSlugGetResponseError)
+
+export const getGetProfessionAdminProfessionsSlugGetUrl = (slug: string,) => {
+
+
+
+
+  return `/admin/professions/${slug}`
+}
+
+/**
+ * @summary Get Profession
+ */
+export const getProfessionAdminProfessionsSlugGet = async (slug: string, options?: Parameters<typeof apiFetch>[1]): Promise<getProfessionAdminProfessionsSlugGetResponse> => {
+
+  return apiFetch<getProfessionAdminProfessionsSlugGetResponse>(getGetProfessionAdminProfessionsSlugGetUrl(slug),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetProfessionAdminProfessionsSlugGetQueryKey = (slug: string,) => {
+    return [
+    `/admin/professions/${slug}`
+    ] as const;
+    }
+
+
+export const getGetProfessionAdminProfessionsSlugGetQueryOptions = <TData = Awaited<ReturnType<typeof getProfessionAdminProfessionsSlugGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProfessionAdminProfessionsSlugGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetProfessionAdminProfessionsSlugGetQueryKey(slug);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProfessionAdminProfessionsSlugGet>>> = ({ signal }) => getProfessionAdminProfessionsSlugGet(slug, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: slug !== null && slug !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getProfessionAdminProfessionsSlugGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetProfessionAdminProfessionsSlugGetQueryResult = NonNullable<Awaited<ReturnType<typeof getProfessionAdminProfessionsSlugGet>>>
+export type GetProfessionAdminProfessionsSlugGetQueryError = ErrorType<ProblemOut | HTTPValidationError>
+
+
+export function useGetProfessionAdminProfessionsSlugGet<TData = Awaited<ReturnType<typeof getProfessionAdminProfessionsSlugGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ slug: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProfessionAdminProfessionsSlugGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProfessionAdminProfessionsSlugGet>>,
+          TError,
+          Awaited<ReturnType<typeof getProfessionAdminProfessionsSlugGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetProfessionAdminProfessionsSlugGet<TData = Awaited<ReturnType<typeof getProfessionAdminProfessionsSlugGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProfessionAdminProfessionsSlugGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProfessionAdminProfessionsSlugGet>>,
+          TError,
+          Awaited<ReturnType<typeof getProfessionAdminProfessionsSlugGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetProfessionAdminProfessionsSlugGet<TData = Awaited<ReturnType<typeof getProfessionAdminProfessionsSlugGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProfessionAdminProfessionsSlugGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Profession
+ */
+
+export function useGetProfessionAdminProfessionsSlugGet<TData = Awaited<ReturnType<typeof getProfessionAdminProfessionsSlugGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProfessionAdminProfessionsSlugGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetProfessionAdminProfessionsSlugGetQueryOptions(slug,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type updateProfessionAdminProfessionsSlugPatchResponse200 = {
+  data: ProfessionOut
+  status: 200
+}
+
+export type updateProfessionAdminProfessionsSlugPatchResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type updateProfessionAdminProfessionsSlugPatchResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type updateProfessionAdminProfessionsSlugPatchResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type updateProfessionAdminProfessionsSlugPatchResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type updateProfessionAdminProfessionsSlugPatchResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type updateProfessionAdminProfessionsSlugPatchResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type updateProfessionAdminProfessionsSlugPatchResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type updateProfessionAdminProfessionsSlugPatchResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type updateProfessionAdminProfessionsSlugPatchResponseSuccess = (updateProfessionAdminProfessionsSlugPatchResponse200) & {
+  headers: Headers;
+};
+export type updateProfessionAdminProfessionsSlugPatchResponseError = (updateProfessionAdminProfessionsSlugPatchResponse401ApplicationProblemJson | updateProfessionAdminProfessionsSlugPatchResponse401ApplicationJson | updateProfessionAdminProfessionsSlugPatchResponse403ApplicationProblemJson | updateProfessionAdminProfessionsSlugPatchResponse403ApplicationJson | updateProfessionAdminProfessionsSlugPatchResponse404ApplicationProblemJson | updateProfessionAdminProfessionsSlugPatchResponse404ApplicationJson | updateProfessionAdminProfessionsSlugPatchResponse422ApplicationProblemJson | updateProfessionAdminProfessionsSlugPatchResponse422ApplicationJson) & {
+  headers: Headers;
+};
+
+export type updateProfessionAdminProfessionsSlugPatchResponse = (updateProfessionAdminProfessionsSlugPatchResponseSuccess | updateProfessionAdminProfessionsSlugPatchResponseError)
+
+export const getUpdateProfessionAdminProfessionsSlugPatchUrl = (slug: string,) => {
+
+
+
+
+  return `/admin/professions/${slug}`
+}
+
+/**
+ * Название и/или веса навыков (замена целиком).
+ * @summary Update Profession
+ */
+export const updateProfessionAdminProfessionsSlugPatch = async (slug: string,
+    professionPatch: ProfessionPatch, options?: Parameters<typeof apiFetch>[1]): Promise<updateProfessionAdminProfessionsSlugPatchResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<updateProfessionAdminProfessionsSlugPatchResponse>(getUpdateProfessionAdminProfessionsSlugPatchUrl(slug),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(professionPatch)
+  }
+);}
+
+
+
+
+
+export const getUpdateProfessionAdminProfessionsSlugPatchMutationKey = () => ['updateProfessionAdminProfessionsSlugPatch'] as const;
+
+export const getUpdateProfessionAdminProfessionsSlugPatchMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProfessionAdminProfessionsSlugPatch>>, TError,UpdateProfessionAdminProfessionsSlugPatchMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateProfessionAdminProfessionsSlugPatch>>, TError,UpdateProfessionAdminProfessionsSlugPatchMutationVariables, TContext> => {
+
+const mutationKey = getUpdateProfessionAdminProfessionsSlugPatchMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProfessionAdminProfessionsSlugPatch>>, UpdateProfessionAdminProfessionsSlugPatchMutationVariables> = (props) => {
+          const {slug,data} = props ?? {};
+
+          return  updateProfessionAdminProfessionsSlugPatch(slug,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateProfessionAdminProfessionsSlugPatchMutationResult = NonNullable<Awaited<ReturnType<typeof updateProfessionAdminProfessionsSlugPatch>>>
+    export type UpdateProfessionAdminProfessionsSlugPatchMutationBody = ProfessionPatch
+    export type UpdateProfessionAdminProfessionsSlugPatchMutationError = ErrorType<ProblemOut>
+    export type UpdateProfessionAdminProfessionsSlugPatchMutationVariables = {slug: string;data: ProfessionPatch}
+
+    /**
+ * @summary Update Profession
+ */
+export const useUpdateProfessionAdminProfessionsSlugPatch = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProfessionAdminProfessionsSlugPatch>>, TError,UpdateProfessionAdminProfessionsSlugPatchMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateProfessionAdminProfessionsSlugPatch>>,
+        TError,
+        UpdateProfessionAdminProfessionsSlugPatchMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateProfessionAdminProfessionsSlugPatchMutationOptions(options), queryClient);
+    }
+    export type retireProfessionAdminProfessionsSlugDeleteResponse200 = {
+  data: RetiredOut
+  status: 200
+}
+
+export type retireProfessionAdminProfessionsSlugDeleteResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type retireProfessionAdminProfessionsSlugDeleteResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type retireProfessionAdminProfessionsSlugDeleteResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type retireProfessionAdminProfessionsSlugDeleteResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type retireProfessionAdminProfessionsSlugDeleteResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type retireProfessionAdminProfessionsSlugDeleteResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type retireProfessionAdminProfessionsSlugDeleteResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type retireProfessionAdminProfessionsSlugDeleteResponseSuccess = (retireProfessionAdminProfessionsSlugDeleteResponse200) & {
+  headers: Headers;
+};
+export type retireProfessionAdminProfessionsSlugDeleteResponseError = (retireProfessionAdminProfessionsSlugDeleteResponse401ApplicationProblemJson | retireProfessionAdminProfessionsSlugDeleteResponse401ApplicationJson | retireProfessionAdminProfessionsSlugDeleteResponse403ApplicationProblemJson | retireProfessionAdminProfessionsSlugDeleteResponse403ApplicationJson | retireProfessionAdminProfessionsSlugDeleteResponse404ApplicationProblemJson | retireProfessionAdminProfessionsSlugDeleteResponse404ApplicationJson | retireProfessionAdminProfessionsSlugDeleteResponse422) & {
+  headers: Headers;
+};
+
+export type retireProfessionAdminProfessionsSlugDeleteResponse = (retireProfessionAdminProfessionsSlugDeleteResponseSuccess | retireProfessionAdminProfessionsSlugDeleteResponseError)
+
+export const getRetireProfessionAdminProfessionsSlugDeleteUrl = (slug: string,) => {
+
+
+
+
+  return `/admin/professions/${slug}`
+}
+
+/**
+ * Снимает профессию с теста; веса остаются в справочнике.
+ * @summary Retire Profession
+ */
+export const retireProfessionAdminProfessionsSlugDelete = async (slug: string, options?: Parameters<typeof apiFetch>[1]): Promise<retireProfessionAdminProfessionsSlugDeleteResponse> => {
+
+  return apiFetch<retireProfessionAdminProfessionsSlugDeleteResponse>(getRetireProfessionAdminProfessionsSlugDeleteUrl(slug),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getRetireProfessionAdminProfessionsSlugDeleteMutationKey = () => ['retireProfessionAdminProfessionsSlugDelete'] as const;
+
+export const getRetireProfessionAdminProfessionsSlugDeleteMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof retireProfessionAdminProfessionsSlugDelete>>, TError,RetireProfessionAdminProfessionsSlugDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof retireProfessionAdminProfessionsSlugDelete>>, TError,RetireProfessionAdminProfessionsSlugDeleteMutationVariables, TContext> => {
+
+const mutationKey = getRetireProfessionAdminProfessionsSlugDeleteMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof retireProfessionAdminProfessionsSlugDelete>>, RetireProfessionAdminProfessionsSlugDeleteMutationVariables> = (props) => {
+          const {slug} = props ?? {};
+
+          return  retireProfessionAdminProfessionsSlugDelete(slug,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RetireProfessionAdminProfessionsSlugDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof retireProfessionAdminProfessionsSlugDelete>>>
+
+    export type RetireProfessionAdminProfessionsSlugDeleteMutationError = ErrorType<ProblemOut | HTTPValidationError>
+    export type RetireProfessionAdminProfessionsSlugDeleteMutationVariables = {slug: string}
+
+    /**
+ * @summary Retire Profession
+ */
+export const useRetireProfessionAdminProfessionsSlugDelete = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof retireProfessionAdminProfessionsSlugDelete>>, TError,RetireProfessionAdminProfessionsSlugDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof retireProfessionAdminProfessionsSlugDelete>>,
+        TError,
+        RetireProfessionAdminProfessionsSlugDeleteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRetireProfessionAdminProfessionsSlugDeleteMutationOptions(options), queryClient);
+    }
+    export type listCardsAdminSkillCardsGetResponse200 = {
+  data: CardRef[]
+  status: 200
+}
+
+export type listCardsAdminSkillCardsGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type listCardsAdminSkillCardsGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type listCardsAdminSkillCardsGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type listCardsAdminSkillCardsGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type listCardsAdminSkillCardsGetResponseSuccess = (listCardsAdminSkillCardsGetResponse200) & {
+  headers: Headers;
+};
+export type listCardsAdminSkillCardsGetResponseError = (listCardsAdminSkillCardsGetResponse401ApplicationProblemJson | listCardsAdminSkillCardsGetResponse401ApplicationJson | listCardsAdminSkillCardsGetResponse403ApplicationProblemJson | listCardsAdminSkillCardsGetResponse403ApplicationJson) & {
+  headers: Headers;
+};
+
+export type listCardsAdminSkillCardsGetResponse = (listCardsAdminSkillCardsGetResponseSuccess | listCardsAdminSkillCardsGetResponseError)
+
+export const getListCardsAdminSkillCardsGetUrl = () => {
+
+
+
+
+  return `/admin/skill-cards`
+}
+
+/**
+ * @summary List Cards
+ */
+export const listCardsAdminSkillCardsGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<listCardsAdminSkillCardsGetResponse> => {
+
+  return apiFetch<listCardsAdminSkillCardsGetResponse>(getListCardsAdminSkillCardsGetUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListCardsAdminSkillCardsGetQueryKey = () => {
+    return [
+    `/admin/skill-cards`
+    ] as const;
+    }
+
+
+export const getListCardsAdminSkillCardsGetQueryOptions = <TData = Awaited<ReturnType<typeof listCardsAdminSkillCardsGet>>, TError = ErrorType<ProblemOut>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCardsAdminSkillCardsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListCardsAdminSkillCardsGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCardsAdminSkillCardsGet>>> = ({ signal }) => listCardsAdminSkillCardsGet({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCardsAdminSkillCardsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListCardsAdminSkillCardsGetQueryResult = NonNullable<Awaited<ReturnType<typeof listCardsAdminSkillCardsGet>>>
+export type ListCardsAdminSkillCardsGetQueryError = ErrorType<ProblemOut>
+
+
+export function useListCardsAdminSkillCardsGet<TData = Awaited<ReturnType<typeof listCardsAdminSkillCardsGet>>, TError = ErrorType<ProblemOut>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCardsAdminSkillCardsGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listCardsAdminSkillCardsGet>>,
+          TError,
+          Awaited<ReturnType<typeof listCardsAdminSkillCardsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListCardsAdminSkillCardsGet<TData = Awaited<ReturnType<typeof listCardsAdminSkillCardsGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCardsAdminSkillCardsGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listCardsAdminSkillCardsGet>>,
+          TError,
+          Awaited<ReturnType<typeof listCardsAdminSkillCardsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListCardsAdminSkillCardsGet<TData = Awaited<ReturnType<typeof listCardsAdminSkillCardsGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCardsAdminSkillCardsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Cards
+ */
+
+export function useListCardsAdminSkillCardsGet<TData = Awaited<ReturnType<typeof listCardsAdminSkillCardsGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCardsAdminSkillCardsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListCardsAdminSkillCardsGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type getCardAdminSkillCardsSlugGetResponse200 = {
+  data: CardOut
+  status: 200
+}
+
+export type getCardAdminSkillCardsSlugGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type getCardAdminSkillCardsSlugGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type getCardAdminSkillCardsSlugGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type getCardAdminSkillCardsSlugGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type getCardAdminSkillCardsSlugGetResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type getCardAdminSkillCardsSlugGetResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type getCardAdminSkillCardsSlugGetResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type getCardAdminSkillCardsSlugGetResponseSuccess = (getCardAdminSkillCardsSlugGetResponse200) & {
+  headers: Headers;
+};
+export type getCardAdminSkillCardsSlugGetResponseError = (getCardAdminSkillCardsSlugGetResponse401ApplicationProblemJson | getCardAdminSkillCardsSlugGetResponse401ApplicationJson | getCardAdminSkillCardsSlugGetResponse403ApplicationProblemJson | getCardAdminSkillCardsSlugGetResponse403ApplicationJson | getCardAdminSkillCardsSlugGetResponse404ApplicationProblemJson | getCardAdminSkillCardsSlugGetResponse404ApplicationJson | getCardAdminSkillCardsSlugGetResponse422) & {
+  headers: Headers;
+};
+
+export type getCardAdminSkillCardsSlugGetResponse = (getCardAdminSkillCardsSlugGetResponseSuccess | getCardAdminSkillCardsSlugGetResponseError)
+
+export const getGetCardAdminSkillCardsSlugGetUrl = (slug: string,) => {
+
+
+
+
+  return `/admin/skill-cards/${slug}`
+}
+
+/**
+ * @summary Get Card
+ */
+export const getCardAdminSkillCardsSlugGet = async (slug: string, options?: Parameters<typeof apiFetch>[1]): Promise<getCardAdminSkillCardsSlugGetResponse> => {
+
+  return apiFetch<getCardAdminSkillCardsSlugGetResponse>(getGetCardAdminSkillCardsSlugGetUrl(slug),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCardAdminSkillCardsSlugGetQueryKey = (slug: string,) => {
+    return [
+    `/admin/skill-cards/${slug}`
+    ] as const;
+    }
+
+
+export const getGetCardAdminSkillCardsSlugGetQueryOptions = <TData = Awaited<ReturnType<typeof getCardAdminSkillCardsSlugGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCardAdminSkillCardsSlugGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCardAdminSkillCardsSlugGetQueryKey(slug);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCardAdminSkillCardsSlugGet>>> = ({ signal }) => getCardAdminSkillCardsSlugGet(slug, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: slug !== null && slug !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCardAdminSkillCardsSlugGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetCardAdminSkillCardsSlugGetQueryResult = NonNullable<Awaited<ReturnType<typeof getCardAdminSkillCardsSlugGet>>>
+export type GetCardAdminSkillCardsSlugGetQueryError = ErrorType<ProblemOut | HTTPValidationError>
+
+
+export function useGetCardAdminSkillCardsSlugGet<TData = Awaited<ReturnType<typeof getCardAdminSkillCardsSlugGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ slug: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCardAdminSkillCardsSlugGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCardAdminSkillCardsSlugGet>>,
+          TError,
+          Awaited<ReturnType<typeof getCardAdminSkillCardsSlugGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCardAdminSkillCardsSlugGet<TData = Awaited<ReturnType<typeof getCardAdminSkillCardsSlugGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCardAdminSkillCardsSlugGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCardAdminSkillCardsSlugGet>>,
+          TError,
+          Awaited<ReturnType<typeof getCardAdminSkillCardsSlugGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCardAdminSkillCardsSlugGet<TData = Awaited<ReturnType<typeof getCardAdminSkillCardsSlugGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCardAdminSkillCardsSlugGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Card
+ */
+
+export function useGetCardAdminSkillCardsSlugGet<TData = Awaited<ReturnType<typeof getCardAdminSkillCardsSlugGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCardAdminSkillCardsSlugGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetCardAdminSkillCardsSlugGetQueryOptions(slug,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type putCardAdminSkillCardsSlugPutResponse200 = {
+  data: CardSaved
+  status: 200
+}
+
+export type putCardAdminSkillCardsSlugPutResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type putCardAdminSkillCardsSlugPutResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type putCardAdminSkillCardsSlugPutResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type putCardAdminSkillCardsSlugPutResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type putCardAdminSkillCardsSlugPutResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type putCardAdminSkillCardsSlugPutResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type putCardAdminSkillCardsSlugPutResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type putCardAdminSkillCardsSlugPutResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type putCardAdminSkillCardsSlugPutResponseSuccess = (putCardAdminSkillCardsSlugPutResponse200) & {
+  headers: Headers;
+};
+export type putCardAdminSkillCardsSlugPutResponseError = (putCardAdminSkillCardsSlugPutResponse401ApplicationProblemJson | putCardAdminSkillCardsSlugPutResponse401ApplicationJson | putCardAdminSkillCardsSlugPutResponse403ApplicationProblemJson | putCardAdminSkillCardsSlugPutResponse403ApplicationJson | putCardAdminSkillCardsSlugPutResponse404ApplicationProblemJson | putCardAdminSkillCardsSlugPutResponse404ApplicationJson | putCardAdminSkillCardsSlugPutResponse422ApplicationProblemJson | putCardAdminSkillCardsSlugPutResponse422ApplicationJson) & {
+  headers: Headers;
+};
+
+export type putCardAdminSkillCardsSlugPutResponse = (putCardAdminSkillCardsSlugPutResponseSuccess | putCardAdminSkillCardsSlugPutResponseError)
+
+export const getPutCardAdminSkillCardsSlugPutUrl = (slug: string,) => {
+
+
+
+
+  return `/admin/skill-cards/${slug}`
+}
+
+/**
+ * Сохраняет карточку (схема `SkillCard`); тип обязан совпасть с типом навыка.
+ * @summary Put Card
+ */
+export const putCardAdminSkillCardsSlugPut = async (slug: string,
+    skillCard: SkillCard, options?: Parameters<typeof apiFetch>[1]): Promise<putCardAdminSkillCardsSlugPutResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<putCardAdminSkillCardsSlugPutResponse>(getPutCardAdminSkillCardsSlugPutUrl(slug),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(skillCard)
+  }
+);}
+
+
+
+
+
+export const getPutCardAdminSkillCardsSlugPutMutationKey = () => ['putCardAdminSkillCardsSlugPut'] as const;
+
+export const getPutCardAdminSkillCardsSlugPutMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putCardAdminSkillCardsSlugPut>>, TError,PutCardAdminSkillCardsSlugPutMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof putCardAdminSkillCardsSlugPut>>, TError,PutCardAdminSkillCardsSlugPutMutationVariables, TContext> => {
+
+const mutationKey = getPutCardAdminSkillCardsSlugPutMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putCardAdminSkillCardsSlugPut>>, PutCardAdminSkillCardsSlugPutMutationVariables> = (props) => {
+          const {slug,data} = props ?? {};
+
+          return  putCardAdminSkillCardsSlugPut(slug,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutCardAdminSkillCardsSlugPutMutationResult = NonNullable<Awaited<ReturnType<typeof putCardAdminSkillCardsSlugPut>>>
+    export type PutCardAdminSkillCardsSlugPutMutationBody = SkillCard
+    export type PutCardAdminSkillCardsSlugPutMutationError = ErrorType<ProblemOut>
+    export type PutCardAdminSkillCardsSlugPutMutationVariables = {slug: string;data: SkillCard}
+
+    /**
+ * @summary Put Card
+ */
+export const usePutCardAdminSkillCardsSlugPut = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putCardAdminSkillCardsSlugPut>>, TError,PutCardAdminSkillCardsSlugPutMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putCardAdminSkillCardsSlugPut>>,
+        TError,
+        PutCardAdminSkillCardsSlugPutMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPutCardAdminSkillCardsSlugPutMutationOptions(options), queryClient);
+    }
+    export type getQueueAdminSkillsQueueGetResponse200 = {
+  data: QueueItem[]
+  status: 200
+}
+
+export type getQueueAdminSkillsQueueGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type getQueueAdminSkillsQueueGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type getQueueAdminSkillsQueueGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type getQueueAdminSkillsQueueGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type getQueueAdminSkillsQueueGetResponseSuccess = (getQueueAdminSkillsQueueGetResponse200) & {
+  headers: Headers;
+};
+export type getQueueAdminSkillsQueueGetResponseError = (getQueueAdminSkillsQueueGetResponse401ApplicationProblemJson | getQueueAdminSkillsQueueGetResponse401ApplicationJson | getQueueAdminSkillsQueueGetResponse403ApplicationProblemJson | getQueueAdminSkillsQueueGetResponse403ApplicationJson) & {
+  headers: Headers;
+};
+
+export type getQueueAdminSkillsQueueGetResponse = (getQueueAdminSkillsQueueGetResponseSuccess | getQueueAdminSkillsQueueGetResponseError)
+
+export const getGetQueueAdminSkillsQueueGetUrl = () => {
+
+
+
+
+  return `/admin/skills/queue`
+}
+
+/**
+ * Предложенные слияния («то же», уверенность 0.6–0.9) с превью.
+ * @summary Get Queue
+ */
+export const getQueueAdminSkillsQueueGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getQueueAdminSkillsQueueGetResponse> => {
+
+  return apiFetch<getQueueAdminSkillsQueueGetResponse>(getGetQueueAdminSkillsQueueGetUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetQueueAdminSkillsQueueGetQueryKey = () => {
+    return [
+    `/admin/skills/queue`
+    ] as const;
+    }
+
+
+export const getGetQueueAdminSkillsQueueGetQueryOptions = <TData = Awaited<ReturnType<typeof getQueueAdminSkillsQueueGet>>, TError = ErrorType<ProblemOut>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getQueueAdminSkillsQueueGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetQueueAdminSkillsQueueGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getQueueAdminSkillsQueueGet>>> = ({ signal }) => getQueueAdminSkillsQueueGet({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getQueueAdminSkillsQueueGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetQueueAdminSkillsQueueGetQueryResult = NonNullable<Awaited<ReturnType<typeof getQueueAdminSkillsQueueGet>>>
+export type GetQueueAdminSkillsQueueGetQueryError = ErrorType<ProblemOut>
+
+
+export function useGetQueueAdminSkillsQueueGet<TData = Awaited<ReturnType<typeof getQueueAdminSkillsQueueGet>>, TError = ErrorType<ProblemOut>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getQueueAdminSkillsQueueGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getQueueAdminSkillsQueueGet>>,
+          TError,
+          Awaited<ReturnType<typeof getQueueAdminSkillsQueueGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetQueueAdminSkillsQueueGet<TData = Awaited<ReturnType<typeof getQueueAdminSkillsQueueGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getQueueAdminSkillsQueueGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getQueueAdminSkillsQueueGet>>,
+          TError,
+          Awaited<ReturnType<typeof getQueueAdminSkillsQueueGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetQueueAdminSkillsQueueGet<TData = Awaited<ReturnType<typeof getQueueAdminSkillsQueueGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getQueueAdminSkillsQueueGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Queue
+ */
+
+export function useGetQueueAdminSkillsQueueGet<TData = Awaited<ReturnType<typeof getQueueAdminSkillsQueueGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getQueueAdminSkillsQueueGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetQueueAdminSkillsQueueGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type approveQueueAdminSkillsQueueSlugApprovePostResponse200 = {
+  data: MergeOut
+  status: 200
+}
+
+export type approveQueueAdminSkillsQueueSlugApprovePostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type approveQueueAdminSkillsQueueSlugApprovePostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type approveQueueAdminSkillsQueueSlugApprovePostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type approveQueueAdminSkillsQueueSlugApprovePostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type approveQueueAdminSkillsQueueSlugApprovePostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type approveQueueAdminSkillsQueueSlugApprovePostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type approveQueueAdminSkillsQueueSlugApprovePostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type approveQueueAdminSkillsQueueSlugApprovePostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type approveQueueAdminSkillsQueueSlugApprovePostResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type approveQueueAdminSkillsQueueSlugApprovePostResponseSuccess = (approveQueueAdminSkillsQueueSlugApprovePostResponse200) & {
+  headers: Headers;
+};
+export type approveQueueAdminSkillsQueueSlugApprovePostResponseError = (approveQueueAdminSkillsQueueSlugApprovePostResponse401ApplicationProblemJson | approveQueueAdminSkillsQueueSlugApprovePostResponse401ApplicationJson | approveQueueAdminSkillsQueueSlugApprovePostResponse403ApplicationProblemJson | approveQueueAdminSkillsQueueSlugApprovePostResponse403ApplicationJson | approveQueueAdminSkillsQueueSlugApprovePostResponse404ApplicationProblemJson | approveQueueAdminSkillsQueueSlugApprovePostResponse404ApplicationJson | approveQueueAdminSkillsQueueSlugApprovePostResponse409ApplicationProblemJson | approveQueueAdminSkillsQueueSlugApprovePostResponse409ApplicationJson | approveQueueAdminSkillsQueueSlugApprovePostResponse422) & {
+  headers: Headers;
+};
+
+export type approveQueueAdminSkillsQueueSlugApprovePostResponse = (approveQueueAdminSkillsQueueSlugApprovePostResponseSuccess | approveQueueAdminSkillsQueueSlugApprovePostResponseError)
+
+export const getApproveQueueAdminSkillsQueueSlugApprovePostUrl = (slug: string,) => {
+
+
+
+
+  return `/admin/skills/queue/${slug}/approve`
+}
+
+/**
+ * Подтверждает слияние: временный навык вливается в целевой.
+ * @summary Approve Queue
+ */
+export const approveQueueAdminSkillsQueueSlugApprovePost = async (slug: string, options?: Parameters<typeof apiFetch>[1]): Promise<approveQueueAdminSkillsQueueSlugApprovePostResponse> => {
+
+  return apiFetch<approveQueueAdminSkillsQueueSlugApprovePostResponse>(getApproveQueueAdminSkillsQueueSlugApprovePostUrl(slug),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getApproveQueueAdminSkillsQueueSlugApprovePostMutationKey = () => ['approveQueueAdminSkillsQueueSlugApprovePost'] as const;
+
+export const getApproveQueueAdminSkillsQueueSlugApprovePostMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveQueueAdminSkillsQueueSlugApprovePost>>, TError,ApproveQueueAdminSkillsQueueSlugApprovePostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof approveQueueAdminSkillsQueueSlugApprovePost>>, TError,ApproveQueueAdminSkillsQueueSlugApprovePostMutationVariables, TContext> => {
+
+const mutationKey = getApproveQueueAdminSkillsQueueSlugApprovePostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof approveQueueAdminSkillsQueueSlugApprovePost>>, ApproveQueueAdminSkillsQueueSlugApprovePostMutationVariables> = (props) => {
+          const {slug} = props ?? {};
+
+          return  approveQueueAdminSkillsQueueSlugApprovePost(slug,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ApproveQueueAdminSkillsQueueSlugApprovePostMutationResult = NonNullable<Awaited<ReturnType<typeof approveQueueAdminSkillsQueueSlugApprovePost>>>
+
+    export type ApproveQueueAdminSkillsQueueSlugApprovePostMutationError = ErrorType<ProblemOut | HTTPValidationError>
+    export type ApproveQueueAdminSkillsQueueSlugApprovePostMutationVariables = {slug: string}
+
+    /**
+ * @summary Approve Queue
+ */
+export const useApproveQueueAdminSkillsQueueSlugApprovePost = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveQueueAdminSkillsQueueSlugApprovePost>>, TError,ApproveQueueAdminSkillsQueueSlugApprovePostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof approveQueueAdminSkillsQueueSlugApprovePost>>,
+        TError,
+        ApproveQueueAdminSkillsQueueSlugApprovePostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getApproveQueueAdminSkillsQueueSlugApprovePostMutationOptions(options), queryClient);
+    }
+    export type rejectQueueAdminSkillsQueueSlugRejectPostResponse200 = {
+  data: VersionOut
+  status: 200
+}
+
+export type rejectQueueAdminSkillsQueueSlugRejectPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type rejectQueueAdminSkillsQueueSlugRejectPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type rejectQueueAdminSkillsQueueSlugRejectPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type rejectQueueAdminSkillsQueueSlugRejectPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type rejectQueueAdminSkillsQueueSlugRejectPostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type rejectQueueAdminSkillsQueueSlugRejectPostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type rejectQueueAdminSkillsQueueSlugRejectPostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type rejectQueueAdminSkillsQueueSlugRejectPostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type rejectQueueAdminSkillsQueueSlugRejectPostResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type rejectQueueAdminSkillsQueueSlugRejectPostResponseSuccess = (rejectQueueAdminSkillsQueueSlugRejectPostResponse200) & {
+  headers: Headers;
+};
+export type rejectQueueAdminSkillsQueueSlugRejectPostResponseError = (rejectQueueAdminSkillsQueueSlugRejectPostResponse401ApplicationProblemJson | rejectQueueAdminSkillsQueueSlugRejectPostResponse401ApplicationJson | rejectQueueAdminSkillsQueueSlugRejectPostResponse403ApplicationProblemJson | rejectQueueAdminSkillsQueueSlugRejectPostResponse403ApplicationJson | rejectQueueAdminSkillsQueueSlugRejectPostResponse404ApplicationProblemJson | rejectQueueAdminSkillsQueueSlugRejectPostResponse404ApplicationJson | rejectQueueAdminSkillsQueueSlugRejectPostResponse409ApplicationProblemJson | rejectQueueAdminSkillsQueueSlugRejectPostResponse409ApplicationJson | rejectQueueAdminSkillsQueueSlugRejectPostResponse422) & {
+  headers: Headers;
+};
+
+export type rejectQueueAdminSkillsQueueSlugRejectPostResponse = (rejectQueueAdminSkillsQueueSlugRejectPostResponseSuccess | rejectQueueAdminSkillsQueueSlugRejectPostResponseError)
+
+export const getRejectQueueAdminSkillsQueueSlugRejectPostUrl = (slug: string,) => {
+
+
+
+
+  return `/admin/skills/queue/${slug}/reject`
+}
+
+/**
+ * Отклоняет слияние: навык остаётся отдельным, пара уходит из очереди.
+ * @summary Reject Queue
+ */
+export const rejectQueueAdminSkillsQueueSlugRejectPost = async (slug: string,
+    rejectBodyNull?: RejectBody | null, options?: Parameters<typeof apiFetch>[1]): Promise<rejectQueueAdminSkillsQueueSlugRejectPostResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<rejectQueueAdminSkillsQueueSlugRejectPostResponse>(getRejectQueueAdminSkillsQueueSlugRejectPostUrl(slug),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(rejectBodyNull)
+  }
+);}
+
+
+
+
+
+export const getRejectQueueAdminSkillsQueueSlugRejectPostMutationKey = () => ['rejectQueueAdminSkillsQueueSlugRejectPost'] as const;
+
+export const getRejectQueueAdminSkillsQueueSlugRejectPostMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rejectQueueAdminSkillsQueueSlugRejectPost>>, TError,RejectQueueAdminSkillsQueueSlugRejectPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof rejectQueueAdminSkillsQueueSlugRejectPost>>, TError,RejectQueueAdminSkillsQueueSlugRejectPostMutationVariables, TContext> => {
+
+const mutationKey = getRejectQueueAdminSkillsQueueSlugRejectPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof rejectQueueAdminSkillsQueueSlugRejectPost>>, RejectQueueAdminSkillsQueueSlugRejectPostMutationVariables> = (props) => {
+          const {slug,data} = props ?? {};
+
+          return  rejectQueueAdminSkillsQueueSlugRejectPost(slug,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RejectQueueAdminSkillsQueueSlugRejectPostMutationResult = NonNullable<Awaited<ReturnType<typeof rejectQueueAdminSkillsQueueSlugRejectPost>>>
+    export type RejectQueueAdminSkillsQueueSlugRejectPostMutationBody = RejectBody | null | undefined
+    export type RejectQueueAdminSkillsQueueSlugRejectPostMutationError = ErrorType<ProblemOut | HTTPValidationError>
+    export type RejectQueueAdminSkillsQueueSlugRejectPostMutationVariables = {slug: string;data?: RejectBody | null}
+
+    /**
+ * @summary Reject Queue
+ */
+export const useRejectQueueAdminSkillsQueueSlugRejectPost = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rejectQueueAdminSkillsQueueSlugRejectPost>>, TError,RejectQueueAdminSkillsQueueSlugRejectPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof rejectQueueAdminSkillsQueueSlugRejectPost>>,
+        TError,
+        RejectQueueAdminSkillsQueueSlugRejectPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRejectQueueAdminSkillsQueueSlugRejectPostMutationOptions(options), queryClient);
+    }
+    export type mergeSkillsAdminSkillsMergePostResponse201 = {
+  data: MergeOut
+  status: 201
+}
+
+export type mergeSkillsAdminSkillsMergePostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type mergeSkillsAdminSkillsMergePostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type mergeSkillsAdminSkillsMergePostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type mergeSkillsAdminSkillsMergePostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type mergeSkillsAdminSkillsMergePostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type mergeSkillsAdminSkillsMergePostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type mergeSkillsAdminSkillsMergePostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type mergeSkillsAdminSkillsMergePostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type mergeSkillsAdminSkillsMergePostResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type mergeSkillsAdminSkillsMergePostResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type mergeSkillsAdminSkillsMergePostResponseSuccess = (mergeSkillsAdminSkillsMergePostResponse201) & {
+  headers: Headers;
+};
+export type mergeSkillsAdminSkillsMergePostResponseError = (mergeSkillsAdminSkillsMergePostResponse401ApplicationProblemJson | mergeSkillsAdminSkillsMergePostResponse401ApplicationJson | mergeSkillsAdminSkillsMergePostResponse403ApplicationProblemJson | mergeSkillsAdminSkillsMergePostResponse403ApplicationJson | mergeSkillsAdminSkillsMergePostResponse404ApplicationProblemJson | mergeSkillsAdminSkillsMergePostResponse404ApplicationJson | mergeSkillsAdminSkillsMergePostResponse409ApplicationProblemJson | mergeSkillsAdminSkillsMergePostResponse409ApplicationJson | mergeSkillsAdminSkillsMergePostResponse422ApplicationProblemJson | mergeSkillsAdminSkillsMergePostResponse422ApplicationJson) & {
+  headers: Headers;
+};
+
+export type mergeSkillsAdminSkillsMergePostResponse = (mergeSkillsAdminSkillsMergePostResponseSuccess | mergeSkillsAdminSkillsMergePostResponseError)
+
+export const getMergeSkillsAdminSkillsMergePostUrl = () => {
+
+
+
+
+  return `/admin/skills/merge`
+}
+
+/**
+ * Ручное слияние `from` → `into` (запрещено для пары «точно разные»).
+ * @summary Merge Skills
+ */
+export const mergeSkillsAdminSkillsMergePost = async (mergeBody: MergeBody, options?: Parameters<typeof apiFetch>[1]): Promise<mergeSkillsAdminSkillsMergePostResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<mergeSkillsAdminSkillsMergePostResponse>(getMergeSkillsAdminSkillsMergePostUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(mergeBody)
+  }
+);}
+
+
+
+
+
+export const getMergeSkillsAdminSkillsMergePostMutationKey = () => ['mergeSkillsAdminSkillsMergePost'] as const;
+
+export const getMergeSkillsAdminSkillsMergePostMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mergeSkillsAdminSkillsMergePost>>, TError,MergeSkillsAdminSkillsMergePostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof mergeSkillsAdminSkillsMergePost>>, TError,MergeSkillsAdminSkillsMergePostMutationVariables, TContext> => {
+
+const mutationKey = getMergeSkillsAdminSkillsMergePostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mergeSkillsAdminSkillsMergePost>>, MergeSkillsAdminSkillsMergePostMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  mergeSkillsAdminSkillsMergePost(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MergeSkillsAdminSkillsMergePostMutationResult = NonNullable<Awaited<ReturnType<typeof mergeSkillsAdminSkillsMergePost>>>
+    export type MergeSkillsAdminSkillsMergePostMutationBody = MergeBody
+    export type MergeSkillsAdminSkillsMergePostMutationError = ErrorType<ProblemOut>
+    export type MergeSkillsAdminSkillsMergePostMutationVariables = {data: MergeBody}
+
+    /**
+ * @summary Merge Skills
+ */
+export const useMergeSkillsAdminSkillsMergePost = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mergeSkillsAdminSkillsMergePost>>, TError,MergeSkillsAdminSkillsMergePostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mergeSkillsAdminSkillsMergePost>>,
+        TError,
+        MergeSkillsAdminSkillsMergePostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getMergeSkillsAdminSkillsMergePostMutationOptions(options), queryClient);
+    }
+    export type listMergesAdminSkillsMergesGetResponse200 = {
+  data: MergeRow[]
+  status: 200
+}
+
+export type listMergesAdminSkillsMergesGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type listMergesAdminSkillsMergesGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type listMergesAdminSkillsMergesGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type listMergesAdminSkillsMergesGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type listMergesAdminSkillsMergesGetResponseSuccess = (listMergesAdminSkillsMergesGetResponse200) & {
+  headers: Headers;
+};
+export type listMergesAdminSkillsMergesGetResponseError = (listMergesAdminSkillsMergesGetResponse401ApplicationProblemJson | listMergesAdminSkillsMergesGetResponse401ApplicationJson | listMergesAdminSkillsMergesGetResponse403ApplicationProblemJson | listMergesAdminSkillsMergesGetResponse403ApplicationJson) & {
+  headers: Headers;
+};
+
+export type listMergesAdminSkillsMergesGetResponse = (listMergesAdminSkillsMergesGetResponseSuccess | listMergesAdminSkillsMergesGetResponseError)
+
+export const getListMergesAdminSkillsMergesGetUrl = () => {
+
+
+
+
+  return `/admin/skills/merges`
+}
+
+/**
+ * Журнал слияний; откатываются те, у которых нет `reverted_at`.
+ * @summary List Merges
+ */
+export const listMergesAdminSkillsMergesGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<listMergesAdminSkillsMergesGetResponse> => {
+
+  return apiFetch<listMergesAdminSkillsMergesGetResponse>(getListMergesAdminSkillsMergesGetUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMergesAdminSkillsMergesGetQueryKey = () => {
+    return [
+    `/admin/skills/merges`
+    ] as const;
+    }
+
+
+export const getListMergesAdminSkillsMergesGetQueryOptions = <TData = Awaited<ReturnType<typeof listMergesAdminSkillsMergesGet>>, TError = ErrorType<ProblemOut>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMergesAdminSkillsMergesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMergesAdminSkillsMergesGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMergesAdminSkillsMergesGet>>> = ({ signal }) => listMergesAdminSkillsMergesGet({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMergesAdminSkillsMergesGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListMergesAdminSkillsMergesGetQueryResult = NonNullable<Awaited<ReturnType<typeof listMergesAdminSkillsMergesGet>>>
+export type ListMergesAdminSkillsMergesGetQueryError = ErrorType<ProblemOut>
+
+
+export function useListMergesAdminSkillsMergesGet<TData = Awaited<ReturnType<typeof listMergesAdminSkillsMergesGet>>, TError = ErrorType<ProblemOut>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMergesAdminSkillsMergesGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMergesAdminSkillsMergesGet>>,
+          TError,
+          Awaited<ReturnType<typeof listMergesAdminSkillsMergesGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListMergesAdminSkillsMergesGet<TData = Awaited<ReturnType<typeof listMergesAdminSkillsMergesGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMergesAdminSkillsMergesGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMergesAdminSkillsMergesGet>>,
+          TError,
+          Awaited<ReturnType<typeof listMergesAdminSkillsMergesGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListMergesAdminSkillsMergesGet<TData = Awaited<ReturnType<typeof listMergesAdminSkillsMergesGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMergesAdminSkillsMergesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Merges
+ */
+
+export function useListMergesAdminSkillsMergesGet<TData = Awaited<ReturnType<typeof listMergesAdminSkillsMergesGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMergesAdminSkillsMergesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListMergesAdminSkillsMergesGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type revertMergeAdminSkillsMergesMergeIdRevertPostResponse200 = {
+  data: VersionOut
+  status: 200
+}
+
+export type revertMergeAdminSkillsMergesMergeIdRevertPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type revertMergeAdminSkillsMergesMergeIdRevertPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type revertMergeAdminSkillsMergesMergeIdRevertPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type revertMergeAdminSkillsMergesMergeIdRevertPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type revertMergeAdminSkillsMergesMergeIdRevertPostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type revertMergeAdminSkillsMergesMergeIdRevertPostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type revertMergeAdminSkillsMergesMergeIdRevertPostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type revertMergeAdminSkillsMergesMergeIdRevertPostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type revertMergeAdminSkillsMergesMergeIdRevertPostResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type revertMergeAdminSkillsMergesMergeIdRevertPostResponseSuccess = (revertMergeAdminSkillsMergesMergeIdRevertPostResponse200) & {
+  headers: Headers;
+};
+export type revertMergeAdminSkillsMergesMergeIdRevertPostResponseError = (revertMergeAdminSkillsMergesMergeIdRevertPostResponse401ApplicationProblemJson | revertMergeAdminSkillsMergesMergeIdRevertPostResponse401ApplicationJson | revertMergeAdminSkillsMergesMergeIdRevertPostResponse403ApplicationProblemJson | revertMergeAdminSkillsMergesMergeIdRevertPostResponse403ApplicationJson | revertMergeAdminSkillsMergesMergeIdRevertPostResponse404ApplicationProblemJson | revertMergeAdminSkillsMergesMergeIdRevertPostResponse404ApplicationJson | revertMergeAdminSkillsMergesMergeIdRevertPostResponse409ApplicationProblemJson | revertMergeAdminSkillsMergesMergeIdRevertPostResponse409ApplicationJson | revertMergeAdminSkillsMergesMergeIdRevertPostResponse422) & {
+  headers: Headers;
+};
+
+export type revertMergeAdminSkillsMergesMergeIdRevertPostResponse = (revertMergeAdminSkillsMergesMergeIdRevertPostResponseSuccess | revertMergeAdminSkillsMergesMergeIdRevertPostResponseError)
+
+export const getRevertMergeAdminSkillsMergesMergeIdRevertPostUrl = (mergeId: string,) => {
+
+
+
+
+  return `/admin/skills/merges/${mergeId}/revert`
+}
+
+/**
+ * @summary Revert Merge
+ */
+export const revertMergeAdminSkillsMergesMergeIdRevertPost = async (mergeId: string, options?: Parameters<typeof apiFetch>[1]): Promise<revertMergeAdminSkillsMergesMergeIdRevertPostResponse> => {
+
+  return apiFetch<revertMergeAdminSkillsMergesMergeIdRevertPostResponse>(getRevertMergeAdminSkillsMergesMergeIdRevertPostUrl(mergeId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getRevertMergeAdminSkillsMergesMergeIdRevertPostMutationKey = () => ['revertMergeAdminSkillsMergesMergeIdRevertPost'] as const;
+
+export const getRevertMergeAdminSkillsMergesMergeIdRevertPostMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof revertMergeAdminSkillsMergesMergeIdRevertPost>>, TError,RevertMergeAdminSkillsMergesMergeIdRevertPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof revertMergeAdminSkillsMergesMergeIdRevertPost>>, TError,RevertMergeAdminSkillsMergesMergeIdRevertPostMutationVariables, TContext> => {
+
+const mutationKey = getRevertMergeAdminSkillsMergesMergeIdRevertPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof revertMergeAdminSkillsMergesMergeIdRevertPost>>, RevertMergeAdminSkillsMergesMergeIdRevertPostMutationVariables> = (props) => {
+          const {mergeId} = props ?? {};
+
+          return  revertMergeAdminSkillsMergesMergeIdRevertPost(mergeId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RevertMergeAdminSkillsMergesMergeIdRevertPostMutationResult = NonNullable<Awaited<ReturnType<typeof revertMergeAdminSkillsMergesMergeIdRevertPost>>>
+
+    export type RevertMergeAdminSkillsMergesMergeIdRevertPostMutationError = ErrorType<ProblemOut | HTTPValidationError>
+    export type RevertMergeAdminSkillsMergesMergeIdRevertPostMutationVariables = {mergeId: string}
+
+    /**
+ * @summary Revert Merge
+ */
+export const useRevertMergeAdminSkillsMergesMergeIdRevertPost = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof revertMergeAdminSkillsMergesMergeIdRevertPost>>, TError,RevertMergeAdminSkillsMergesMergeIdRevertPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof revertMergeAdminSkillsMergesMergeIdRevertPost>>,
+        TError,
+        RevertMergeAdminSkillsMergesMergeIdRevertPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRevertMergeAdminSkillsMergesMergeIdRevertPostMutationOptions(options), queryClient);
+    }
+    export type listDistinctAdminSkillsDistinctGetResponse200 = {
+  data: DistinctPair[]
+  status: 200
+}
+
+export type listDistinctAdminSkillsDistinctGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type listDistinctAdminSkillsDistinctGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type listDistinctAdminSkillsDistinctGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type listDistinctAdminSkillsDistinctGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type listDistinctAdminSkillsDistinctGetResponseSuccess = (listDistinctAdminSkillsDistinctGetResponse200) & {
+  headers: Headers;
+};
+export type listDistinctAdminSkillsDistinctGetResponseError = (listDistinctAdminSkillsDistinctGetResponse401ApplicationProblemJson | listDistinctAdminSkillsDistinctGetResponse401ApplicationJson | listDistinctAdminSkillsDistinctGetResponse403ApplicationProblemJson | listDistinctAdminSkillsDistinctGetResponse403ApplicationJson) & {
+  headers: Headers;
+};
+
+export type listDistinctAdminSkillsDistinctGetResponse = (listDistinctAdminSkillsDistinctGetResponseSuccess | listDistinctAdminSkillsDistinctGetResponseError)
+
+export const getListDistinctAdminSkillsDistinctGetUrl = () => {
+
+
+
+
+  return `/admin/skills/distinct`
+}
+
+/**
+ * @summary List Distinct
+ */
+export const listDistinctAdminSkillsDistinctGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<listDistinctAdminSkillsDistinctGetResponse> => {
+
+  return apiFetch<listDistinctAdminSkillsDistinctGetResponse>(getListDistinctAdminSkillsDistinctGetUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListDistinctAdminSkillsDistinctGetQueryKey = () => {
+    return [
+    `/admin/skills/distinct`
+    ] as const;
+    }
+
+
+export const getListDistinctAdminSkillsDistinctGetQueryOptions = <TData = Awaited<ReturnType<typeof listDistinctAdminSkillsDistinctGet>>, TError = ErrorType<ProblemOut>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listDistinctAdminSkillsDistinctGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListDistinctAdminSkillsDistinctGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listDistinctAdminSkillsDistinctGet>>> = ({ signal }) => listDistinctAdminSkillsDistinctGet({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listDistinctAdminSkillsDistinctGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListDistinctAdminSkillsDistinctGetQueryResult = NonNullable<Awaited<ReturnType<typeof listDistinctAdminSkillsDistinctGet>>>
+export type ListDistinctAdminSkillsDistinctGetQueryError = ErrorType<ProblemOut>
+
+
+export function useListDistinctAdminSkillsDistinctGet<TData = Awaited<ReturnType<typeof listDistinctAdminSkillsDistinctGet>>, TError = ErrorType<ProblemOut>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listDistinctAdminSkillsDistinctGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listDistinctAdminSkillsDistinctGet>>,
+          TError,
+          Awaited<ReturnType<typeof listDistinctAdminSkillsDistinctGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListDistinctAdminSkillsDistinctGet<TData = Awaited<ReturnType<typeof listDistinctAdminSkillsDistinctGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listDistinctAdminSkillsDistinctGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listDistinctAdminSkillsDistinctGet>>,
+          TError,
+          Awaited<ReturnType<typeof listDistinctAdminSkillsDistinctGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListDistinctAdminSkillsDistinctGet<TData = Awaited<ReturnType<typeof listDistinctAdminSkillsDistinctGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listDistinctAdminSkillsDistinctGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Distinct
+ */
+
+export function useListDistinctAdminSkillsDistinctGet<TData = Awaited<ReturnType<typeof listDistinctAdminSkillsDistinctGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listDistinctAdminSkillsDistinctGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListDistinctAdminSkillsDistinctGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type addDistinctAdminSkillsDistinctPostResponse200 = {
+  data: DistinctSaved
+  status: 200
+}
+
+export type addDistinctAdminSkillsDistinctPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type addDistinctAdminSkillsDistinctPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type addDistinctAdminSkillsDistinctPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type addDistinctAdminSkillsDistinctPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type addDistinctAdminSkillsDistinctPostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type addDistinctAdminSkillsDistinctPostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type addDistinctAdminSkillsDistinctPostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type addDistinctAdminSkillsDistinctPostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type addDistinctAdminSkillsDistinctPostResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type addDistinctAdminSkillsDistinctPostResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type addDistinctAdminSkillsDistinctPostResponseSuccess = (addDistinctAdminSkillsDistinctPostResponse200) & {
+  headers: Headers;
+};
+export type addDistinctAdminSkillsDistinctPostResponseError = (addDistinctAdminSkillsDistinctPostResponse401ApplicationProblemJson | addDistinctAdminSkillsDistinctPostResponse401ApplicationJson | addDistinctAdminSkillsDistinctPostResponse403ApplicationProblemJson | addDistinctAdminSkillsDistinctPostResponse403ApplicationJson | addDistinctAdminSkillsDistinctPostResponse404ApplicationProblemJson | addDistinctAdminSkillsDistinctPostResponse404ApplicationJson | addDistinctAdminSkillsDistinctPostResponse409ApplicationProblemJson | addDistinctAdminSkillsDistinctPostResponse409ApplicationJson | addDistinctAdminSkillsDistinctPostResponse422ApplicationProblemJson | addDistinctAdminSkillsDistinctPostResponse422ApplicationJson) & {
+  headers: Headers;
+};
+
+export type addDistinctAdminSkillsDistinctPostResponse = (addDistinctAdminSkillsDistinctPostResponseSuccess | addDistinctAdminSkillsDistinctPostResponseError)
+
+export const getAddDistinctAdminSkillsDistinctPostUrl = () => {
+
+
+
+
+  return `/admin/skills/distinct`
+}
+
+/**
+ * @summary Add Distinct
+ */
+export const addDistinctAdminSkillsDistinctPost = async (distinctIn: DistinctIn, options?: Parameters<typeof apiFetch>[1]): Promise<addDistinctAdminSkillsDistinctPostResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<addDistinctAdminSkillsDistinctPostResponse>(getAddDistinctAdminSkillsDistinctPostUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(distinctIn)
+  }
+);}
+
+
+
+
+
+export const getAddDistinctAdminSkillsDistinctPostMutationKey = () => ['addDistinctAdminSkillsDistinctPost'] as const;
+
+export const getAddDistinctAdminSkillsDistinctPostMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addDistinctAdminSkillsDistinctPost>>, TError,AddDistinctAdminSkillsDistinctPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof addDistinctAdminSkillsDistinctPost>>, TError,AddDistinctAdminSkillsDistinctPostMutationVariables, TContext> => {
+
+const mutationKey = getAddDistinctAdminSkillsDistinctPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addDistinctAdminSkillsDistinctPost>>, AddDistinctAdminSkillsDistinctPostMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  addDistinctAdminSkillsDistinctPost(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddDistinctAdminSkillsDistinctPostMutationResult = NonNullable<Awaited<ReturnType<typeof addDistinctAdminSkillsDistinctPost>>>
+    export type AddDistinctAdminSkillsDistinctPostMutationBody = DistinctIn
+    export type AddDistinctAdminSkillsDistinctPostMutationError = ErrorType<ProblemOut>
+    export type AddDistinctAdminSkillsDistinctPostMutationVariables = {data: DistinctIn}
+
+    /**
+ * @summary Add Distinct
+ */
+export const useAddDistinctAdminSkillsDistinctPost = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addDistinctAdminSkillsDistinctPost>>, TError,AddDistinctAdminSkillsDistinctPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof addDistinctAdminSkillsDistinctPost>>,
+        TError,
+        AddDistinctAdminSkillsDistinctPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAddDistinctAdminSkillsDistinctPostMutationOptions(options), queryClient);
+    }
+    export type removeDistinctAdminSkillsDistinctDeleteResponse200 = {
+  data: DistinctSaved
+  status: 200
+}
+
+export type removeDistinctAdminSkillsDistinctDeleteResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type removeDistinctAdminSkillsDistinctDeleteResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type removeDistinctAdminSkillsDistinctDeleteResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type removeDistinctAdminSkillsDistinctDeleteResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type removeDistinctAdminSkillsDistinctDeleteResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type removeDistinctAdminSkillsDistinctDeleteResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type removeDistinctAdminSkillsDistinctDeleteResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type removeDistinctAdminSkillsDistinctDeleteResponseSuccess = (removeDistinctAdminSkillsDistinctDeleteResponse200) & {
+  headers: Headers;
+};
+export type removeDistinctAdminSkillsDistinctDeleteResponseError = (removeDistinctAdminSkillsDistinctDeleteResponse401ApplicationProblemJson | removeDistinctAdminSkillsDistinctDeleteResponse401ApplicationJson | removeDistinctAdminSkillsDistinctDeleteResponse403ApplicationProblemJson | removeDistinctAdminSkillsDistinctDeleteResponse403ApplicationJson | removeDistinctAdminSkillsDistinctDeleteResponse404ApplicationProblemJson | removeDistinctAdminSkillsDistinctDeleteResponse404ApplicationJson | removeDistinctAdminSkillsDistinctDeleteResponse422) & {
+  headers: Headers;
+};
+
+export type removeDistinctAdminSkillsDistinctDeleteResponse = (removeDistinctAdminSkillsDistinctDeleteResponseSuccess | removeDistinctAdminSkillsDistinctDeleteResponseError)
+
+export const getRemoveDistinctAdminSkillsDistinctDeleteUrl = (params: RemoveDistinctAdminSkillsDistinctDeleteParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/admin/skills/distinct?${stringifiedParams}` : `/admin/skills/distinct`
+}
+
+/**
+ * Пара не найдена → 404.
+ * @summary Remove Distinct
+ */
+export const removeDistinctAdminSkillsDistinctDelete = async (params: RemoveDistinctAdminSkillsDistinctDeleteParams, options?: Parameters<typeof apiFetch>[1]): Promise<removeDistinctAdminSkillsDistinctDeleteResponse> => {
+
+  return apiFetch<removeDistinctAdminSkillsDistinctDeleteResponse>(getRemoveDistinctAdminSkillsDistinctDeleteUrl(params),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getRemoveDistinctAdminSkillsDistinctDeleteMutationKey = () => ['removeDistinctAdminSkillsDistinctDelete'] as const;
+
+export const getRemoveDistinctAdminSkillsDistinctDeleteMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeDistinctAdminSkillsDistinctDelete>>, TError,RemoveDistinctAdminSkillsDistinctDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof removeDistinctAdminSkillsDistinctDelete>>, TError,RemoveDistinctAdminSkillsDistinctDeleteMutationVariables, TContext> => {
+
+const mutationKey = getRemoveDistinctAdminSkillsDistinctDeleteMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removeDistinctAdminSkillsDistinctDelete>>, RemoveDistinctAdminSkillsDistinctDeleteMutationVariables> = (props) => {
+          const {params} = props ?? {};
+
+          return  removeDistinctAdminSkillsDistinctDelete(params,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RemoveDistinctAdminSkillsDistinctDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof removeDistinctAdminSkillsDistinctDelete>>>
+
+    export type RemoveDistinctAdminSkillsDistinctDeleteMutationError = ErrorType<ProblemOut | HTTPValidationError>
+    export type RemoveDistinctAdminSkillsDistinctDeleteMutationVariables = {params: RemoveDistinctAdminSkillsDistinctDeleteParams}
+
+    /**
+ * @summary Remove Distinct
+ */
+export const useRemoveDistinctAdminSkillsDistinctDelete = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeDistinctAdminSkillsDistinctDelete>>, TError,RemoveDistinctAdminSkillsDistinctDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof removeDistinctAdminSkillsDistinctDelete>>,
+        TError,
+        RemoveDistinctAdminSkillsDistinctDeleteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRemoveDistinctAdminSkillsDistinctDeleteMutationOptions(options), queryClient);
+    }
+    export type listBlocklistAdminSkillsBlocklistGetResponse200 = {
+  data: BlockItem[]
+  status: 200
+}
+
+export type listBlocklistAdminSkillsBlocklistGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type listBlocklistAdminSkillsBlocklistGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type listBlocklistAdminSkillsBlocklistGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type listBlocklistAdminSkillsBlocklistGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type listBlocklistAdminSkillsBlocklistGetResponseSuccess = (listBlocklistAdminSkillsBlocklistGetResponse200) & {
+  headers: Headers;
+};
+export type listBlocklistAdminSkillsBlocklistGetResponseError = (listBlocklistAdminSkillsBlocklistGetResponse401ApplicationProblemJson | listBlocklistAdminSkillsBlocklistGetResponse401ApplicationJson | listBlocklistAdminSkillsBlocklistGetResponse403ApplicationProblemJson | listBlocklistAdminSkillsBlocklistGetResponse403ApplicationJson) & {
+  headers: Headers;
+};
+
+export type listBlocklistAdminSkillsBlocklistGetResponse = (listBlocklistAdminSkillsBlocklistGetResponseSuccess | listBlocklistAdminSkillsBlocklistGetResponseError)
+
+export const getListBlocklistAdminSkillsBlocklistGetUrl = () => {
+
+
+
+
+  return `/admin/skills/blocklist`
+}
+
+/**
+ * @summary List Blocklist
+ */
+export const listBlocklistAdminSkillsBlocklistGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<listBlocklistAdminSkillsBlocklistGetResponse> => {
+
+  return apiFetch<listBlocklistAdminSkillsBlocklistGetResponse>(getListBlocklistAdminSkillsBlocklistGetUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListBlocklistAdminSkillsBlocklistGetQueryKey = () => {
+    return [
+    `/admin/skills/blocklist`
+    ] as const;
+    }
+
+
+export const getListBlocklistAdminSkillsBlocklistGetQueryOptions = <TData = Awaited<ReturnType<typeof listBlocklistAdminSkillsBlocklistGet>>, TError = ErrorType<ProblemOut>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listBlocklistAdminSkillsBlocklistGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListBlocklistAdminSkillsBlocklistGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listBlocklistAdminSkillsBlocklistGet>>> = ({ signal }) => listBlocklistAdminSkillsBlocklistGet({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listBlocklistAdminSkillsBlocklistGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListBlocklistAdminSkillsBlocklistGetQueryResult = NonNullable<Awaited<ReturnType<typeof listBlocklistAdminSkillsBlocklistGet>>>
+export type ListBlocklistAdminSkillsBlocklistGetQueryError = ErrorType<ProblemOut>
+
+
+export function useListBlocklistAdminSkillsBlocklistGet<TData = Awaited<ReturnType<typeof listBlocklistAdminSkillsBlocklistGet>>, TError = ErrorType<ProblemOut>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listBlocklistAdminSkillsBlocklistGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listBlocklistAdminSkillsBlocklistGet>>,
+          TError,
+          Awaited<ReturnType<typeof listBlocklistAdminSkillsBlocklistGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListBlocklistAdminSkillsBlocklistGet<TData = Awaited<ReturnType<typeof listBlocklistAdminSkillsBlocklistGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listBlocklistAdminSkillsBlocklistGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listBlocklistAdminSkillsBlocklistGet>>,
+          TError,
+          Awaited<ReturnType<typeof listBlocklistAdminSkillsBlocklistGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListBlocklistAdminSkillsBlocklistGet<TData = Awaited<ReturnType<typeof listBlocklistAdminSkillsBlocklistGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listBlocklistAdminSkillsBlocklistGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Blocklist
+ */
+
+export function useListBlocklistAdminSkillsBlocklistGet<TData = Awaited<ReturnType<typeof listBlocklistAdminSkillsBlocklistGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listBlocklistAdminSkillsBlocklistGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListBlocklistAdminSkillsBlocklistGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type addBlocklistAdminSkillsBlocklistPostResponse200 = {
+  data: BlockItem
+  status: 200
+}
+
+export type addBlocklistAdminSkillsBlocklistPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type addBlocklistAdminSkillsBlocklistPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type addBlocklistAdminSkillsBlocklistPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type addBlocklistAdminSkillsBlocklistPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type addBlocklistAdminSkillsBlocklistPostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type addBlocklistAdminSkillsBlocklistPostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type addBlocklistAdminSkillsBlocklistPostResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type addBlocklistAdminSkillsBlocklistPostResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type addBlocklistAdminSkillsBlocklistPostResponseSuccess = (addBlocklistAdminSkillsBlocklistPostResponse200) & {
+  headers: Headers;
+};
+export type addBlocklistAdminSkillsBlocklistPostResponseError = (addBlocklistAdminSkillsBlocklistPostResponse401ApplicationProblemJson | addBlocklistAdminSkillsBlocklistPostResponse401ApplicationJson | addBlocklistAdminSkillsBlocklistPostResponse403ApplicationProblemJson | addBlocklistAdminSkillsBlocklistPostResponse403ApplicationJson | addBlocklistAdminSkillsBlocklistPostResponse409ApplicationProblemJson | addBlocklistAdminSkillsBlocklistPostResponse409ApplicationJson | addBlocklistAdminSkillsBlocklistPostResponse422ApplicationProblemJson | addBlocklistAdminSkillsBlocklistPostResponse422ApplicationJson) & {
+  headers: Headers;
+};
+
+export type addBlocklistAdminSkillsBlocklistPostResponse = (addBlocklistAdminSkillsBlocklistPostResponseSuccess | addBlocklistAdminSkillsBlocklistPostResponseError)
+
+export const getAddBlocklistAdminSkillsBlocklistPostUrl = () => {
+
+
+
+
+  return `/admin/skills/blocklist`
+}
+
+/**
+ * @summary Add Blocklist
+ */
+export const addBlocklistAdminSkillsBlocklistPost = async (blockIn: BlockIn, options?: Parameters<typeof apiFetch>[1]): Promise<addBlocklistAdminSkillsBlocklistPostResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<addBlocklistAdminSkillsBlocklistPostResponse>(getAddBlocklistAdminSkillsBlocklistPostUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(blockIn)
+  }
+);}
+
+
+
+
+
+export const getAddBlocklistAdminSkillsBlocklistPostMutationKey = () => ['addBlocklistAdminSkillsBlocklistPost'] as const;
+
+export const getAddBlocklistAdminSkillsBlocklistPostMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addBlocklistAdminSkillsBlocklistPost>>, TError,AddBlocklistAdminSkillsBlocklistPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof addBlocklistAdminSkillsBlocklistPost>>, TError,AddBlocklistAdminSkillsBlocklistPostMutationVariables, TContext> => {
+
+const mutationKey = getAddBlocklistAdminSkillsBlocklistPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addBlocklistAdminSkillsBlocklistPost>>, AddBlocklistAdminSkillsBlocklistPostMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  addBlocklistAdminSkillsBlocklistPost(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddBlocklistAdminSkillsBlocklistPostMutationResult = NonNullable<Awaited<ReturnType<typeof addBlocklistAdminSkillsBlocklistPost>>>
+    export type AddBlocklistAdminSkillsBlocklistPostMutationBody = BlockIn
+    export type AddBlocklistAdminSkillsBlocklistPostMutationError = ErrorType<ProblemOut>
+    export type AddBlocklistAdminSkillsBlocklistPostMutationVariables = {data: BlockIn}
+
+    /**
+ * @summary Add Blocklist
+ */
+export const useAddBlocklistAdminSkillsBlocklistPost = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addBlocklistAdminSkillsBlocklistPost>>, TError,AddBlocklistAdminSkillsBlocklistPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof addBlocklistAdminSkillsBlocklistPost>>,
+        TError,
+        AddBlocklistAdminSkillsBlocklistPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAddBlocklistAdminSkillsBlocklistPostMutationOptions(options), queryClient);
+    }
+    export type removeBlocklistAdminSkillsBlocklistDeleteResponse204 = {
+  data: void
+  status: 204
+}
+
+export type removeBlocklistAdminSkillsBlocklistDeleteResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type removeBlocklistAdminSkillsBlocklistDeleteResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type removeBlocklistAdminSkillsBlocklistDeleteResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type removeBlocklistAdminSkillsBlocklistDeleteResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type removeBlocklistAdminSkillsBlocklistDeleteResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type removeBlocklistAdminSkillsBlocklistDeleteResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type removeBlocklistAdminSkillsBlocklistDeleteResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type removeBlocklistAdminSkillsBlocklistDeleteResponseSuccess = (removeBlocklistAdminSkillsBlocklistDeleteResponse204) & {
+  headers: Headers;
+};
+export type removeBlocklistAdminSkillsBlocklistDeleteResponseError = (removeBlocklistAdminSkillsBlocklistDeleteResponse401ApplicationProblemJson | removeBlocklistAdminSkillsBlocklistDeleteResponse401ApplicationJson | removeBlocklistAdminSkillsBlocklistDeleteResponse403ApplicationProblemJson | removeBlocklistAdminSkillsBlocklistDeleteResponse403ApplicationJson | removeBlocklistAdminSkillsBlocklistDeleteResponse404ApplicationProblemJson | removeBlocklistAdminSkillsBlocklistDeleteResponse404ApplicationJson | removeBlocklistAdminSkillsBlocklistDeleteResponse422) & {
+  headers: Headers;
+};
+
+export type removeBlocklistAdminSkillsBlocklistDeleteResponse = (removeBlocklistAdminSkillsBlocklistDeleteResponseSuccess | removeBlocklistAdminSkillsBlocklistDeleteResponseError)
+
+export const getRemoveBlocklistAdminSkillsBlocklistDeleteUrl = (params: RemoveBlocklistAdminSkillsBlocklistDeleteParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/admin/skills/blocklist?${stringifiedParams}` : `/admin/skills/blocklist`
+}
+
+/**
+ * @summary Remove Blocklist
+ */
+export const removeBlocklistAdminSkillsBlocklistDelete = async (params: RemoveBlocklistAdminSkillsBlocklistDeleteParams, options?: Parameters<typeof apiFetch>[1]): Promise<removeBlocklistAdminSkillsBlocklistDeleteResponse> => {
+
+  return apiFetch<removeBlocklistAdminSkillsBlocklistDeleteResponse>(getRemoveBlocklistAdminSkillsBlocklistDeleteUrl(params),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getRemoveBlocklistAdminSkillsBlocklistDeleteMutationKey = () => ['removeBlocklistAdminSkillsBlocklistDelete'] as const;
+
+export const getRemoveBlocklistAdminSkillsBlocklistDeleteMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeBlocklistAdminSkillsBlocklistDelete>>, TError,RemoveBlocklistAdminSkillsBlocklistDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof removeBlocklistAdminSkillsBlocklistDelete>>, TError,RemoveBlocklistAdminSkillsBlocklistDeleteMutationVariables, TContext> => {
+
+const mutationKey = getRemoveBlocklistAdminSkillsBlocklistDeleteMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removeBlocklistAdminSkillsBlocklistDelete>>, RemoveBlocklistAdminSkillsBlocklistDeleteMutationVariables> = (props) => {
+          const {params} = props ?? {};
+
+          return  removeBlocklistAdminSkillsBlocklistDelete(params,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RemoveBlocklistAdminSkillsBlocklistDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof removeBlocklistAdminSkillsBlocklistDelete>>>
+
+    export type RemoveBlocklistAdminSkillsBlocklistDeleteMutationError = ErrorType<ProblemOut | HTTPValidationError>
+    export type RemoveBlocklistAdminSkillsBlocklistDeleteMutationVariables = {params: RemoveBlocklistAdminSkillsBlocklistDeleteParams}
+
+    /**
+ * @summary Remove Blocklist
+ */
+export const useRemoveBlocklistAdminSkillsBlocklistDelete = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeBlocklistAdminSkillsBlocklistDelete>>, TError,RemoveBlocklistAdminSkillsBlocklistDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof removeBlocklistAdminSkillsBlocklistDelete>>,
+        TError,
+        RemoveBlocklistAdminSkillsBlocklistDeleteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRemoveBlocklistAdminSkillsBlocklistDeleteMutationOptions(options), queryClient);
+    }
+    export type listProvisionalAdminSkillsProvisionalGetResponse200 = {
+  data: ProvisionalOut[]
+  status: 200
+}
+
+export type listProvisionalAdminSkillsProvisionalGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type listProvisionalAdminSkillsProvisionalGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type listProvisionalAdminSkillsProvisionalGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type listProvisionalAdminSkillsProvisionalGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type listProvisionalAdminSkillsProvisionalGetResponseSuccess = (listProvisionalAdminSkillsProvisionalGetResponse200) & {
+  headers: Headers;
+};
+export type listProvisionalAdminSkillsProvisionalGetResponseError = (listProvisionalAdminSkillsProvisionalGetResponse401ApplicationProblemJson | listProvisionalAdminSkillsProvisionalGetResponse401ApplicationJson | listProvisionalAdminSkillsProvisionalGetResponse403ApplicationProblemJson | listProvisionalAdminSkillsProvisionalGetResponse403ApplicationJson) & {
+  headers: Headers;
+};
+
+export type listProvisionalAdminSkillsProvisionalGetResponse = (listProvisionalAdminSkillsProvisionalGetResponseSuccess | listProvisionalAdminSkillsProvisionalGetResponseError)
+
+export const getListProvisionalAdminSkillsProvisionalGetUrl = () => {
+
+
+
+
+  return `/admin/skills/provisional`
+}
+
+/**
+ * Временные навыки с карточками-черновиками ml.
+ * @summary List Provisional
+ */
+export const listProvisionalAdminSkillsProvisionalGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<listProvisionalAdminSkillsProvisionalGetResponse> => {
+
+  return apiFetch<listProvisionalAdminSkillsProvisionalGetResponse>(getListProvisionalAdminSkillsProvisionalGetUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListProvisionalAdminSkillsProvisionalGetQueryKey = () => {
+    return [
+    `/admin/skills/provisional`
+    ] as const;
+    }
+
+
+export const getListProvisionalAdminSkillsProvisionalGetQueryOptions = <TData = Awaited<ReturnType<typeof listProvisionalAdminSkillsProvisionalGet>>, TError = ErrorType<ProblemOut>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProvisionalAdminSkillsProvisionalGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListProvisionalAdminSkillsProvisionalGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listProvisionalAdminSkillsProvisionalGet>>> = ({ signal }) => listProvisionalAdminSkillsProvisionalGet({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listProvisionalAdminSkillsProvisionalGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListProvisionalAdminSkillsProvisionalGetQueryResult = NonNullable<Awaited<ReturnType<typeof listProvisionalAdminSkillsProvisionalGet>>>
+export type ListProvisionalAdminSkillsProvisionalGetQueryError = ErrorType<ProblemOut>
+
+
+export function useListProvisionalAdminSkillsProvisionalGet<TData = Awaited<ReturnType<typeof listProvisionalAdminSkillsProvisionalGet>>, TError = ErrorType<ProblemOut>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProvisionalAdminSkillsProvisionalGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProvisionalAdminSkillsProvisionalGet>>,
+          TError,
+          Awaited<ReturnType<typeof listProvisionalAdminSkillsProvisionalGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListProvisionalAdminSkillsProvisionalGet<TData = Awaited<ReturnType<typeof listProvisionalAdminSkillsProvisionalGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProvisionalAdminSkillsProvisionalGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProvisionalAdminSkillsProvisionalGet>>,
+          TError,
+          Awaited<ReturnType<typeof listProvisionalAdminSkillsProvisionalGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListProvisionalAdminSkillsProvisionalGet<TData = Awaited<ReturnType<typeof listProvisionalAdminSkillsProvisionalGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProvisionalAdminSkillsProvisionalGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Provisional
+ */
+
+export function useListProvisionalAdminSkillsProvisionalGet<TData = Awaited<ReturnType<typeof listProvisionalAdminSkillsProvisionalGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProvisionalAdminSkillsProvisionalGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListProvisionalAdminSkillsProvisionalGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type getHintsAdminSkillsHintsGetResponse200 = {
+  data: HintsOut
+  status: 200
+}
+
+export type getHintsAdminSkillsHintsGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type getHintsAdminSkillsHintsGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type getHintsAdminSkillsHintsGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type getHintsAdminSkillsHintsGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type getHintsAdminSkillsHintsGetResponseSuccess = (getHintsAdminSkillsHintsGetResponse200) & {
+  headers: Headers;
+};
+export type getHintsAdminSkillsHintsGetResponseError = (getHintsAdminSkillsHintsGetResponse401ApplicationProblemJson | getHintsAdminSkillsHintsGetResponse401ApplicationJson | getHintsAdminSkillsHintsGetResponse403ApplicationProblemJson | getHintsAdminSkillsHintsGetResponse403ApplicationJson) & {
+  headers: Headers;
+};
+
+export type getHintsAdminSkillsHintsGetResponse = (getHintsAdminSkillsHintsGetResponseSuccess | getHintsAdminSkillsHintsGetResponseError)
+
+export const getGetHintsAdminSkillsHintsGetUrl = () => {
+
+
+
+
+  return `/admin/skills/hints`
+}
+
+/**
+ * `taxonomy_hints`: правила дисциплин и кандидаты в новые профессии (ночной рост).
+ * @summary Get Hints
+ */
+export const getHintsAdminSkillsHintsGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getHintsAdminSkillsHintsGetResponse> => {
+
+  return apiFetch<getHintsAdminSkillsHintsGetResponse>(getGetHintsAdminSkillsHintsGetUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetHintsAdminSkillsHintsGetQueryKey = () => {
+    return [
+    `/admin/skills/hints`
+    ] as const;
+    }
+
+
+export const getGetHintsAdminSkillsHintsGetQueryOptions = <TData = Awaited<ReturnType<typeof getHintsAdminSkillsHintsGet>>, TError = ErrorType<ProblemOut>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHintsAdminSkillsHintsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetHintsAdminSkillsHintsGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getHintsAdminSkillsHintsGet>>> = ({ signal }) => getHintsAdminSkillsHintsGet({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getHintsAdminSkillsHintsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetHintsAdminSkillsHintsGetQueryResult = NonNullable<Awaited<ReturnType<typeof getHintsAdminSkillsHintsGet>>>
+export type GetHintsAdminSkillsHintsGetQueryError = ErrorType<ProblemOut>
+
+
+export function useGetHintsAdminSkillsHintsGet<TData = Awaited<ReturnType<typeof getHintsAdminSkillsHintsGet>>, TError = ErrorType<ProblemOut>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHintsAdminSkillsHintsGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getHintsAdminSkillsHintsGet>>,
+          TError,
+          Awaited<ReturnType<typeof getHintsAdminSkillsHintsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetHintsAdminSkillsHintsGet<TData = Awaited<ReturnType<typeof getHintsAdminSkillsHintsGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHintsAdminSkillsHintsGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getHintsAdminSkillsHintsGet>>,
+          TError,
+          Awaited<ReturnType<typeof getHintsAdminSkillsHintsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetHintsAdminSkillsHintsGet<TData = Awaited<ReturnType<typeof getHintsAdminSkillsHintsGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHintsAdminSkillsHintsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Hints
+ */
+
+export function useGetHintsAdminSkillsHintsGet<TData = Awaited<ReturnType<typeof getHintsAdminSkillsHintsGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHintsAdminSkillsHintsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetHintsAdminSkillsHintsGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type approveSkillAdminSkillsSlugApprovePostResponse200 = {
+  data: AdminSkillBrief
+  status: 200
+}
+
+export type approveSkillAdminSkillsSlugApprovePostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type approveSkillAdminSkillsSlugApprovePostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type approveSkillAdminSkillsSlugApprovePostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type approveSkillAdminSkillsSlugApprovePostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type approveSkillAdminSkillsSlugApprovePostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type approveSkillAdminSkillsSlugApprovePostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type approveSkillAdminSkillsSlugApprovePostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type approveSkillAdminSkillsSlugApprovePostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type approveSkillAdminSkillsSlugApprovePostResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type approveSkillAdminSkillsSlugApprovePostResponseSuccess = (approveSkillAdminSkillsSlugApprovePostResponse200) & {
+  headers: Headers;
+};
+export type approveSkillAdminSkillsSlugApprovePostResponseError = (approveSkillAdminSkillsSlugApprovePostResponse401ApplicationProblemJson | approveSkillAdminSkillsSlugApprovePostResponse401ApplicationJson | approveSkillAdminSkillsSlugApprovePostResponse403ApplicationProblemJson | approveSkillAdminSkillsSlugApprovePostResponse403ApplicationJson | approveSkillAdminSkillsSlugApprovePostResponse404ApplicationProblemJson | approveSkillAdminSkillsSlugApprovePostResponse404ApplicationJson | approveSkillAdminSkillsSlugApprovePostResponse409ApplicationProblemJson | approveSkillAdminSkillsSlugApprovePostResponse409ApplicationJson | approveSkillAdminSkillsSlugApprovePostResponse422) & {
+  headers: Headers;
+};
+
+export type approveSkillAdminSkillsSlugApprovePostResponse = (approveSkillAdminSkillsSlugApprovePostResponseSuccess | approveSkillAdminSkillsSlugApprovePostResponseError)
+
+export const getApproveSkillAdminSkillsSlugApprovePostUrl = (slug: string,) => {
+
+
+
+
+  return `/admin/skills/${slug}/approve`
+}
+
+/**
+ * Временный навык становится активным.
+ * @summary Approve Skill
+ */
+export const approveSkillAdminSkillsSlugApprovePost = async (slug: string, options?: Parameters<typeof apiFetch>[1]): Promise<approveSkillAdminSkillsSlugApprovePostResponse> => {
+
+  return apiFetch<approveSkillAdminSkillsSlugApprovePostResponse>(getApproveSkillAdminSkillsSlugApprovePostUrl(slug),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getApproveSkillAdminSkillsSlugApprovePostMutationKey = () => ['approveSkillAdminSkillsSlugApprovePost'] as const;
+
+export const getApproveSkillAdminSkillsSlugApprovePostMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveSkillAdminSkillsSlugApprovePost>>, TError,ApproveSkillAdminSkillsSlugApprovePostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof approveSkillAdminSkillsSlugApprovePost>>, TError,ApproveSkillAdminSkillsSlugApprovePostMutationVariables, TContext> => {
+
+const mutationKey = getApproveSkillAdminSkillsSlugApprovePostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof approveSkillAdminSkillsSlugApprovePost>>, ApproveSkillAdminSkillsSlugApprovePostMutationVariables> = (props) => {
+          const {slug} = props ?? {};
+
+          return  approveSkillAdminSkillsSlugApprovePost(slug,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ApproveSkillAdminSkillsSlugApprovePostMutationResult = NonNullable<Awaited<ReturnType<typeof approveSkillAdminSkillsSlugApprovePost>>>
+
+    export type ApproveSkillAdminSkillsSlugApprovePostMutationError = ErrorType<ProblemOut | HTTPValidationError>
+    export type ApproveSkillAdminSkillsSlugApprovePostMutationVariables = {slug: string}
+
+    /**
+ * @summary Approve Skill
+ */
+export const useApproveSkillAdminSkillsSlugApprovePost = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveSkillAdminSkillsSlugApprovePost>>, TError,ApproveSkillAdminSkillsSlugApprovePostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof approveSkillAdminSkillsSlugApprovePost>>,
+        TError,
+        ApproveSkillAdminSkillsSlugApprovePostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getApproveSkillAdminSkillsSlugApprovePostMutationOptions(options), queryClient);
+    }
+    export type rejectSkillAdminSkillsSlugRejectPostResponse200 = {
+  data: AdminSkillBrief
+  status: 200
+}
+
+export type rejectSkillAdminSkillsSlugRejectPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type rejectSkillAdminSkillsSlugRejectPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type rejectSkillAdminSkillsSlugRejectPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type rejectSkillAdminSkillsSlugRejectPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type rejectSkillAdminSkillsSlugRejectPostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type rejectSkillAdminSkillsSlugRejectPostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type rejectSkillAdminSkillsSlugRejectPostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type rejectSkillAdminSkillsSlugRejectPostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type rejectSkillAdminSkillsSlugRejectPostResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type rejectSkillAdminSkillsSlugRejectPostResponseSuccess = (rejectSkillAdminSkillsSlugRejectPostResponse200) & {
+  headers: Headers;
+};
+export type rejectSkillAdminSkillsSlugRejectPostResponseError = (rejectSkillAdminSkillsSlugRejectPostResponse401ApplicationProblemJson | rejectSkillAdminSkillsSlugRejectPostResponse401ApplicationJson | rejectSkillAdminSkillsSlugRejectPostResponse403ApplicationProblemJson | rejectSkillAdminSkillsSlugRejectPostResponse403ApplicationJson | rejectSkillAdminSkillsSlugRejectPostResponse404ApplicationProblemJson | rejectSkillAdminSkillsSlugRejectPostResponse404ApplicationJson | rejectSkillAdminSkillsSlugRejectPostResponse409ApplicationProblemJson | rejectSkillAdminSkillsSlugRejectPostResponse409ApplicationJson | rejectSkillAdminSkillsSlugRejectPostResponse422) & {
+  headers: Headers;
+};
+
+export type rejectSkillAdminSkillsSlugRejectPostResponse = (rejectSkillAdminSkillsSlugRejectPostResponseSuccess | rejectSkillAdminSkillsSlugRejectPostResponseError)
+
+export const getRejectSkillAdminSkillsSlugRejectPostUrl = (slug: string,) => {
+
+
+
+
+  return `/admin/skills/${slug}/reject`
+}
+
+/**
+ * Временный навык отклоняется и скрывается.
+ * @summary Reject Skill
+ */
+export const rejectSkillAdminSkillsSlugRejectPost = async (slug: string, options?: Parameters<typeof apiFetch>[1]): Promise<rejectSkillAdminSkillsSlugRejectPostResponse> => {
+
+  return apiFetch<rejectSkillAdminSkillsSlugRejectPostResponse>(getRejectSkillAdminSkillsSlugRejectPostUrl(slug),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getRejectSkillAdminSkillsSlugRejectPostMutationKey = () => ['rejectSkillAdminSkillsSlugRejectPost'] as const;
+
+export const getRejectSkillAdminSkillsSlugRejectPostMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rejectSkillAdminSkillsSlugRejectPost>>, TError,RejectSkillAdminSkillsSlugRejectPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof rejectSkillAdminSkillsSlugRejectPost>>, TError,RejectSkillAdminSkillsSlugRejectPostMutationVariables, TContext> => {
+
+const mutationKey = getRejectSkillAdminSkillsSlugRejectPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof rejectSkillAdminSkillsSlugRejectPost>>, RejectSkillAdminSkillsSlugRejectPostMutationVariables> = (props) => {
+          const {slug} = props ?? {};
+
+          return  rejectSkillAdminSkillsSlugRejectPost(slug,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RejectSkillAdminSkillsSlugRejectPostMutationResult = NonNullable<Awaited<ReturnType<typeof rejectSkillAdminSkillsSlugRejectPost>>>
+
+    export type RejectSkillAdminSkillsSlugRejectPostMutationError = ErrorType<ProblemOut | HTTPValidationError>
+    export type RejectSkillAdminSkillsSlugRejectPostMutationVariables = {slug: string}
+
+    /**
+ * @summary Reject Skill
+ */
+export const useRejectSkillAdminSkillsSlugRejectPost = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rejectSkillAdminSkillsSlugRejectPost>>, TError,RejectSkillAdminSkillsSlugRejectPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof rejectSkillAdminSkillsSlugRejectPost>>,
+        TError,
+        RejectSkillAdminSkillsSlugRejectPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRejectSkillAdminSkillsSlugRejectPostMutationOptions(options), queryClient);
     }
