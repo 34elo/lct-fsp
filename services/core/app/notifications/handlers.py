@@ -13,6 +13,7 @@ import structlog
 from fsp_contracts import Envelope
 from fsp_contracts.enums import OfferStatus
 from fsp_contracts.events import OfferEvent, SkillsProfileUpdated
+from fsp_contracts.hiring import OfferInitiator
 from fsp_contracts.notify import TgButton, TgTemplate
 from fsp_contracts.ui import (
     OfferCreated,
@@ -162,7 +163,7 @@ async def _to_company(
 
 def _awaiting(ev: OfferEvent) -> str | None:
     if ev.status in (S.sent, S.viewed):
-        return "candidate"
+        return "company" if ev.initiator == OfferInitiator.candidate else "candidate"
     return None
 
 
@@ -194,8 +195,14 @@ async def _offer_event(session: AsyncSession, envelope: Envelope, out: list[UiMe
     ev = OfferEvent.model_validate(envelope.payload)
     st = ev.status
     match envelope.type:
+        case "offer.sent" if ev.initiator == OfferInitiator.candidate:
+            await _to_company(
+                session, ev, out, type="application_new", title="Новый отклик на вакансию"
+            )
         case "offer.sent":
             await _offer_sent(session, ev, out)
+        case "offer.viewed" if ev.initiator == OfferInitiator.candidate:
+            out.append(_updated(ev.candidate_id, ev, "company"))
         case "offer.viewed":
             out.extend(_updated(u, ev, "candidate") for u in await _members(session, ev))
         case "offer.accepted":
@@ -220,6 +227,10 @@ async def _offer_event(session: AsyncSession, envelope: Envelope, out: list[UiMe
             )
             await _to_candidate(
                 session, ev, out, type="offer_expired", title=_CLOSED_BY_SYSTEM_TEXT[S.expired]
+            )
+        case "offer.withdrawn" if ev.actor == "candidate":  # кандидат отозвал свой отклик
+            await _to_company(
+                session, ev, out, type="application_withdrawn", title="Кандидат отозвал отклик"
             )
         case "offer.withdrawn":
             await _to_candidate(
