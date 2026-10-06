@@ -109,3 +109,61 @@ export function periodRu(start?: string | null, end?: string | null): string {
   const b = end ? f(end) : "по настоящее время";
   return a ? `${a} — ${b}` : "";
 }
+
+/** Тексты экрана профиля (макет D). */
+export const T = {
+  title: "Мой профиль",
+  loading: "Загрузка профиля…",
+  loadError: "Не удалось загрузить профиль",
+  loadErrorHint: "Проверьте соединение и повторите.",
+  seenAs: "Так вас видят компании, пока вы не примете оффер",
+  noGrade: "Категория и грейд появятся, когда в профиле будут навыки: загрузите резюме или подключите ФСП.",
+  preliminary: "Предварительно: пока мало подтверждённых фактов",
+  strengthTitle: "Что усилит профиль",
+  strengthHint: "Чем больше проверяемого, тем выше доверие к навыкам и точнее грейд.",
+  strengthDone: "есть",
+  strengthTodo: "добавить",
+  pdf: "Скачать PDF",
+  pdfBusy: "Готовим PDF…",
+  pdfError: "Не удалось скачать PDF. Попробуйте ещё раз.",
+  graph: "Граф доказательств",
+  claimedTitle: "Заявлено и подтверждено",
+  claimedHint: "Что вы указали в опросе или резюме и что подтвердил тест.",
+  skillsEmpty: "Пока нет навыков. Загрузите резюме или подключите ФСП, и они появятся здесь.",
+  skillsHint: "Нажмите на навык, чтобы увидеть, чем он подтверждён. Пунктир: заявлено или выведено, без доказательств сила не растёт.",
+  fspEmpty: "Результатов ФСП пока нет. Привяжите профиль ФСП: соревнования и разряды появятся здесь и усилят грейд.",
+  fspImported: "Данные ФСП загружены, навыки и грейд обновлены.",
+} as const;
+
+export const STRENGTH_ITEMS = [
+  { key: "resume", label: "Резюме", hint: "навыки с цитатами из текста", to: "/onboarding" },
+  { key: "fsp", label: "ФСП", hint: "результаты и разряды соревнований", to: "/me/settings" },
+  { key: "github", label: "GitHub", hint: "код станет доказательством", to: "/onboarding" },
+  { key: "test", label: "Тест", hint: "подтверждает грейд", to: "/me/assessment" },
+] as const;
+
+export const CLAIM_STATUS_LABEL: Record<string, string> = {
+  confirmed: "подтверждено",
+  overclaimed: "тест ниже заявленного",
+  underclaimed: "тест выше заявленного",
+  unconfirmed: "тест не пройден",
+};
+
+/** Группы навыков (data/taxonomy/skills.yaml); порядок = порядок показа. */
+export const GROUP_LABEL: Record<string, string> = {
+  language: "Языки",
+  backend: "Backend",
+  frontend: "Frontend",
+  storage: "Хранение данных",
+  data_ml: "Данные и ML",
+  devops: "DevOps",
+  fundamentals: "Основы и алгоритмы",
+  testing: "Тестирование",
+  security: "Безопасность",
+  mobile: "Mobile",
+  embedded: "Embedded",
+  gamedev: "Gamedev",
+  product: "Продукт",
+  design: "Дизайн",
+  analysis: "Аналитика",
+};
