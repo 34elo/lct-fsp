@@ -14,6 +14,8 @@ from sqlalchemy import text
 
 from app.analytics.router import internal as analytics_internal_router
 from app.analytics.router import router as analytics_router
+from app.analytics.runs_router import admin as live_runs_admin_router
+from app.analytics.runs_router import public as live_runs_public_router
 
 # >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
 from app.assessment.router import router as assessment_router
@@ -93,6 +95,8 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
     app.include_router(analytics_router)
     app.include_router(analytics_internal_router)
+    app.include_router(live_runs_admin_router)
+    app.include_router(live_runs_public_router)
     # <<< block2
 
     @app.get("/readyz", include_in_schema=False)
