@@ -6,7 +6,8 @@
 - Итог (`on_finished`): при завершении попытки (один раз) — запись грейда (без понижения),
   доказательства `test` в `graph`, события `assessment.attempt.finished` и, если набор категорий или
   поля, влияющие на силу профиля, изменились, — `candidate.category.changed` (всегда полный набор).
-- Повышение (`accept_upgrade`): кандидат сам принимает грейд, пройденный на бонусном этапе.
+- Бонусный этап грейд не повышает (ADR-025 п.2): прошёл — в событии `invited_grade`, а тест по
+  приглашению (`attempts.start_invited`) идёт без кулдаунов; его провал повтор не закрывает.
 
 Функции не делают `commit`: события пишутся в outbox в транзакции вызывающего.
 """
@@ -18,7 +19,6 @@ from collections import defaultdict
 from collections.abc import Collection
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from typing import Any
 
 from fsp_contracts.assessment import (
     TEST_GRADE_ORDER,
@@ -70,7 +70,8 @@ class Cooldown:
 async def _failed_attempts(
     session: AsyncSession, candidate_id: uuid.UUID, profession: str
 ) -> list[Attempt]:
-    return list(
+    """Неудачи, которые закрывают повтор. Провал теста по приглашению не считается (ADR-025 п.2)."""
+    rows = list(
         await session.scalars(
             select(Attempt)
             .where(
@@ -82,6 +83,7 @@ async def _failed_attempts(
             .order_by(Attempt.finished_at.desc())
         )
     )
+    return [a for a in rows if not (a.plan or {}).get("invited_by")]
 
 
 async def cooldowns(
@@ -327,6 +329,7 @@ async def on_finished(
         low_confidence=low or bool((plan.get("bonus") or {}).get("low_confidence")),
         finished_at=_aware(att.finished_at or now),
         profile_version=await _profile_version(session, att.candidate_id),
+        invited_grade=TestGrade(plan["invited_grade"]) if plan.get("invited_grade") else None,
     )
     await add_to_outbox(
         session, new_event("assessment.attempt.finished", PRODUCER, event), att.candidate_id
@@ -356,26 +359,3 @@ async def on_finished(
     from app.assessment import lifecycle  # тревоги семейств после попытки (E22-9)
 
     await lifecycle.watch_attempt(session, att, cfg)
-
-
-async def accept_upgrade(
-    session: AsyncSession, att: Attempt, cfg: AssessmentConfig, now: datetime | None = None
-) -> dict[str, Any]:
-    """Принять повышение после бонусного этапа. Повтор идемпотентен."""
-    now = now or datetime.now(UTC)
-    plan = att.plan or {}
-    offer = plan.get("upgrade_offer")
-    if not offer:
-        raise ProblemError(409, "no_upgrade_offer", "По этой попытке повышение не предлагалось")
-    if plan.get("upgrade_accepted_at"):
-        return plan
-    row = await session.get(Grade, (att.candidate_id, att.profession))
-    if row is None or row.attempt_id != att.id or _rank(row.grade) >= _rank(offer):
-        raise ProblemError(409, "upgrade_stale", "Предложение повышения уже неактуально")
-    bonus_low = bool((plan.get("bonus") or {}).get("low_confidence"))
-    changed = await _write_grade(session, att, TestGrade(offer), cfg, now, low_confidence=bonus_low)
-    att.plan = {**plan, "upgrade_accepted_at": now.isoformat()}
-    if changed:
-        await _emit_category_changed(session, att.candidate_id, now)
-    await session.flush()
-    return att.plan

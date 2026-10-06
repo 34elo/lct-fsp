@@ -50,6 +50,7 @@ class AssessmentConfig:
     validity_days: int = 365
     change_cooldown_days: int = 90
     retry_days: int = 30
+    invite_days: int = 30  # приглашение бонусного этапа на тест следующего грейда (ADR-025 п.2)
     integrity_threshold: float = 0.6
     unconfirmed_cap: float = 0.59
     evidence_max_strength: float = 0.8
@@ -121,6 +122,7 @@ def load_config(path: str | None = None) -> AssessmentConfig:
         validity_days=int(rules.get("validity_days", 365)),
         change_cooldown_days=int(rules.get("change_cooldown_days", 90)),
         retry_days=int(rules.get("retry_days", 30)),
+        invite_days=int(rules.get("invite_days", 30)),
         integrity_threshold=float(integ.get("threshold", 0.6)),
         unconfirmed_cap=float(integ.get("unconfirmed_cap", 0.59)),
         evidence_max_strength=float(evid.get("max_strength", 0.8)),

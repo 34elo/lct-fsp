@@ -346,7 +346,7 @@ async def _state(factory, aid):
         return att, rows.all()
 
 
-async def test_all_correct_passes_at_10_then_bonus_offers_upgrade(
+async def test_all_correct_passes_at_10_then_bonus_invites(
     api, factory, taxonomy_loaded, fake_bank
 ):
     h = register(api)
@@ -363,7 +363,8 @@ async def test_all_correct_passes_at_10_then_bonus_offers_upgrade(
     assert {f.level for r, f in rows[:10]} == {3} and {f.level for r, f in rows[10:]} == {4}
     assert len({f.id for _, f in rows}) == len(rows)  # семейства не повторяются
     out = api.get(f"/assessment/attempts/{aid}", headers=h).json()
-    assert out["upgrade_offer"] == "senior" and out["low_confidence"] is False
+    assert out["invited_grade"] == "senior" and out["low_confidence"] is False
+    assert out["invite_expires_at"] and out["result"]["grade"] == "middle"  # грейд не повышен
     assert out["status"] == "passed" and out["stage"] == "bonus"
     # план основного этапа: секции по навыкам банка, первые 10 заданий — по дефициту
     assert {sec["skill"] for sec in att.plan["sections"]} == set(_SKILLS)
@@ -378,7 +379,7 @@ async def test_all_wrong_fails_without_bonus(api, factory, taxonomy_loaded, fake
     assert att.status == "failed" and att.stage == "main" and "bonus" not in att.plan
     assert att.llr == pytest.approx(-7.0)
     assert {f.level for _, f in rows} == {2}  # junior: b = cut = −1
-    assert api.get(f"/assessment/attempts/{aid}", headers=h).json()["upgrade_offer"] is None
+    assert api.get(f"/assessment/attempts/{aid}", headers=h).json()["invited_grade"] is None
 
 
 async def test_pilot_slots_hidden_and_without_effect(api, factory, taxonomy_loaded, fake_bank):

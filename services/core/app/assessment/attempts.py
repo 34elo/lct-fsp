@@ -3,7 +3,8 @@
 - Выбор задания (E22-3, §6): секция с наибольшим дефицитом → фильтры банка → топ-3 по счёту
   у порога грейда этапа (`engine.py`, `selection.py`); пилотные слоты — скрытые позиции.
 - Остановка (E22-3, §5): SPRT после каждого оцениваемого ответа (`sprt.py`); прошёл быстро и
-  близко к следующему грейду → бонусный этап в той же попытке (`stage = bonus`).
+  близко к следующему грейду → бонусный этап в той же попытке (`stage = bonus`). Прошёл бонус —
+  приглашение на отдельный тест следующего грейда (ADR-025 п.2, `start_invited`), грейд не меняется.
 - Завершение: θ/SE по EAP и калибровка `b` (E22-2, `psychometrics_db`). Грейды и события — E22-4.
 
 Ключ на клиент не уходит: в `responses` лежат только `(family_id, seed)`, задание пересобирается
@@ -14,7 +15,7 @@ from __future__ import annotations
 
 import hashlib
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from random import Random
 from typing import Any
 
@@ -115,7 +116,11 @@ async def create_attempt(
     profession: str,
     declared_grade: TestGrade,
     cfg: AssessmentConfig,
+    *,
+    invited_by: uuid.UUID | None = None,
 ) -> Attempt:
+    """Новая попытка. `invited_by` — попытка, чей бонусный этап пригласил на этот тест
+    (ADR-025 п.2): такой тест идёт без кулдаунов."""
     prof = await _profession(session, profession)
     if prof is None:
         raise ProblemError(
@@ -124,7 +129,8 @@ async def create_attempt(
             "Неизвестная профессия",
             errors=[{"field": "profession", "message": profession}],
         )
-    await grading.check_cooldown(session, candidate_id, profession, declared_grade, cfg)
+    if invited_by is None:
+        await grading.check_cooldown(session, candidate_id, profession, declared_grade, cfg)
     active = await session.scalar(
         select(Attempt.id).where(
             Attempt.candidate_id == candidate_id,
@@ -156,6 +162,8 @@ async def create_attempt(
         "pilot_seqs": sel.pilot_positions(rng, cfg),
         "target": cfg.min_items,
     }
+    if invited_by is not None:
+        att.plan["invited_by"] = str(invited_by)
     session.add(att)
     await session.flush()
     await track.emit(
@@ -239,8 +247,7 @@ async def _conclude(
     }
     if att.stage == "bonus":
         bonus = {**att.plan["bonus"], **summary}
-        offer = bonus["grade"] if decision.result == "passed" else None
-        att.plan = {**att.plan, "bonus": bonus, "upgrade_offer": offer}
+        att.plan = {**att.plan, "bonus": bonus, **invitation(bonus, decision.result, cfg)}
         await _finish(session, att, "passed", cfg)  # основной этап уже пройден
         return
     att.plan = {**att.plan, "main": summary}
@@ -263,6 +270,53 @@ async def _conclude(
             await session.flush()
             return
     await _finish(session, att, decision.result, cfg)
+
+
+def invitation(
+    bonus: dict[str, Any], result: str, cfg: AssessmentConfig, now: datetime | None = None
+) -> dict[str, Any]:
+    """Поля плана по итогу бонуса: прошёл — приглашение на тест следующего грейда (ADR-025 п.2)."""
+    if result != "passed":
+        return {"invited_grade": None, "invite_expires_at": None}
+    until = (now or datetime.now(UTC)) + timedelta(days=cfg.invite_days)
+    return {"invited_grade": bonus["grade"], "invite_expires_at": until.isoformat()}
+
+
+async def start_invited(
+    session: AsyncSession, candidate_id: uuid.UUID, attempt_id: uuid.UUID, cfg: AssessmentConfig
+) -> Attempt:
+    """Начать тест следующего грейда по приглашению бонусного этапа (ADR-025 п.2).
+
+    Без кулдаунов; приглашение действует `invite_days` дней и используется один раз: повтор
+    возвращает уже начатую попытку. Грейд меняет только пройденный приглашённый тест.
+    """
+    src = await _own_attempt(session, candidate_id, attempt_id)
+    plan = src.plan or {}
+    invited = plan.get("invited_grade")
+    if not invited:
+        raise ProblemError(409, "no_invite", "По этой попытке приглашения нет")
+    used = plan.get("invite_attempt_id")
+    if used:
+        prev = await session.get(Attempt, uuid.UUID(used))
+        if prev is not None:
+            return prev  # повтор идемпотентен
+    now = datetime.now(UTC)
+    expires = plan.get("invite_expires_at")
+    if expires and datetime.fromisoformat(expires) <= now:
+        raise ProblemError(409, "invite_expired", "Срок приглашения истёк", expires)
+    row = await session.get(Grade, (candidate_id, src.profession))
+    if (
+        row is not None
+        and grading._aware(row.valid_until) > now
+        and grading._rank(row.grade) >= grading._rank(invited)
+    ):
+        raise ProblemError(409, "invite_stale", "Приглашение неактуально: грейд уже не ниже")
+    att = await create_attempt(
+        session, candidate_id, src.profession, TestGrade(invited), cfg, invited_by=src.id
+    )
+    src.plan = {**plan, "invite_attempt_id": str(att.id)}
+    await session.flush()
+    return att
 
 
 async def _exhausted(
@@ -493,7 +547,8 @@ async def attempt_summary(
     answered = [r for r in await _issued(session, att.id) if r.answered_at is not None]
     main = att.plan.get("main") or {}
     bonus = att.plan.get("bonus") or {}
-    offer = att.plan.get("upgrade_offer")
+    invited = att.plan.get("invited_grade")
+    expires = att.plan.get("invite_expires_at")
     out: dict[str, Any] = {
         "id": att.id,
         "profession": att.profession,
@@ -505,8 +560,10 @@ async def attempt_summary(
         "started_at": att.started_at,
         "finished_at": att.finished_at,
         "low_confidence": bool(main.get("low_confidence") or bonus.get("low_confidence")),
-        "upgrade_offer": TestGrade(offer) if offer else None,
-        "upgrade_accepted": bool(att.plan.get("upgrade_accepted_at")),
+        "invited_grade": TestGrade(invited) if invited else None,
+        "invite_expires_at": datetime.fromisoformat(expires) if invited and expires else None,
+        "invite_attempt_id": att.plan.get("invite_attempt_id"),
+        "invited_by": att.plan.get("invited_by"),
     }
     if att.status != "active":
         grade_row = await session.get(Grade, (att.candidate_id, att.profession))

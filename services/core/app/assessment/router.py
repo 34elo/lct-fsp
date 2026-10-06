@@ -64,8 +64,11 @@ class AttemptOut(BaseModel):
     started_at: datetime
     finished_at: datetime | None
     low_confidence: bool = False  # решение по EAP на максимуме заданий или при нехватке банка
-    upgrade_offer: TestGrade | None = None  # бонусный этап пройден: предложение повышения
-    upgrade_accepted: bool = False
+    # ADR-025 п.2: бонусный этап пройден → приглашение на отдельный тест этого грейда
+    invited_grade: TestGrade | None = None
+    invite_expires_at: datetime | None = None  # приглашение действует `rules.invite_days` дней
+    invite_attempt_id: uuid.UUID | None = None  # попытка, начатая по приглашению
+    invited_by: uuid.UUID | None = None  # эта попытка — тест по приглашению этой попытки
     result: AttemptResultOut | None = None  # только у завершённой попытки
 
 
@@ -169,8 +172,9 @@ async def answer(
 
 @router.post(
     "/assessment/attempts/{attempt_id}/upgrade",
+    status_code=201,
     response_model=AttemptOut,
-    responses=problem_responses(401, 403, 404, 409),
+    responses=problem_responses(401, 403, 404, 409, 422, 503),
 )
 async def upgrade(
     attempt_id: uuid.UUID,
@@ -178,10 +182,14 @@ async def upgrade(
     user: User = Depends(_candidate),
     session: AsyncSession = Depends(get_session),
 ):
-    """Принять повышение после бонусного этапа (повтор идемпотентен)."""
-    att = await attempts._own_attempt(session, user.id, attempt_id)
-    await grading.accept_upgrade(session, att, _cfg(request))
-    return await attempts.attempt_summary(session, user.id, attempt_id)
+    """Начать тест следующего грейда по приглашению бонусного этапа (ADR-025 п.2).
+
+    Возвращает новую попытку; без кулдаунов; повтор возвращает уже начатую. Грейд не меняется,
+    пока не пройден сам приглашённый тест. `409 no_invite`, `invite_expired`, `invite_stale`.
+    """
+    identity.require_verified_email(user)
+    att = await attempts.start_invited(session, user.id, attempt_id, _cfg(request))
+    return await attempts.attempt_summary(session, user.id, att.id)
 
 
 # --- «Объясни ответ» (E24-2) ----------------------------------------------------------------------
