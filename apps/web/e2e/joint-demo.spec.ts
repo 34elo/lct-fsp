@@ -122,7 +122,7 @@ test("joint: регистрация → опрос и тест → катего�
   // --- 4. приглашение (оффер с вилкой) ---------------------------------------------------------
   await test.step("работодатель: приглашение кандидату", async () => {
     const categoryUrl = olga.url();
-    const invites = olga.getByRole("button", { name: "Пригласить" });
+    const invites = olga.getByRole("button", { name: "Интерес" });
     const total = Math.min(await invites.count(), 5);
     expect(total, "в категории нет кандидатов для приглашения").toBeGreaterThan(0);
     for (let i = 0; i < total; i++) {
