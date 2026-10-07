@@ -293,3 +293,44 @@ export function plural(n: number, one: string, few: string, many: string): strin
   if (b >= 2 && b <= 4) return few;
   return many;
 }
+
+/** Профиль кандидата `/me/profile` (E38-6, макеты v2_me-profile__*). */
+export const PROFILE = {
+  title: "Профиль",
+  addEvidence: "Добавить доказательство",
+  tabsLabel: "Разделы профиля",
+  tabs: { skills: "Навыки", fsp: "ФСП", resume: "Резюме", graph: "Граф" },
+  loading: "Загрузка профиля…",
+  loadError: "Не загрузилось",
+  errorCode: (status: number) => `ошибка ${status}`,
+  empty: "Доказательств пока нет",
+  confirmed: "Подтверждено",
+  claimed: "Заявлено",
+  claimedAndConfirmed: "Заявлено и подтверждено",
+  published: "профиль опубликован",
+  hidden: "профиль скрыт от компаний",
+  testTag: (date: string) => (date ? `тест ${date}` : "тест"),
+  claimedInResume: "заявлено в резюме",
+  claimedSelf: "заявлено",
+  derived: "выведено",
+  skillLink: (name: string) => `${name}: чем подтверждён`,
+  fspTitle: "Достижения ФСП",
+  fspLinked: "привязан",
+  fspNotLinked: "не привязан",
+  resume: "Резюме",
+  city: "Город",
+  salary: "Ожидания",
+  salaryFrom: (v: string) => `от ${v}`,
+  format: "Формат",
+  experience: "Опыт",
+  roles: "Роли",
+  notSpecified: "не указан",
+  experienceMonths: (m: number) => {
+    const y = Math.floor(m / 12);
+    const mo = m % 12;
+    return [y ? `${y} ${plural(y, "год", "года", "лет")}` : "", mo || !y ? `${mo} мес.` : ""].filter(Boolean).join(" ");
+  },
+  graphTitle: "Граф доказательств",
+  legendFact: "факт",
+  legendClaimed: "заявлено",
+} as const;

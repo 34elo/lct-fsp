@@ -41,7 +41,8 @@ export const ROUTES: RouteDef[] = [
 
   { path: "/onboarding", title: "Онбординг", screen: "M1", section: "candidate", owner: "b1", nav: true },
   { path: "/me", title: "Главная", screen: "v2_me__before, v2_me__after", section: "candidate", owner: "b1", nav: true },
-  { path: "/me/graph", title: "Граф доказательств", screen: "G1, G2", section: "candidate", owner: "b1", nav: true },
+  // Граф переехал во вкладку профиля (E38-6).
+  { path: "/me/graph", title: "Граф доказательств", section: "candidate", owner: "b1", redirect: "/me/profile?tab=graph" },
   { path: "/me/skills/:slug", title: "Доказательства навыка", section: "candidate", owner: "b1" },
   { path: "/me/offers", title: "Приглашения", screen: "M2", section: "candidate", owner: "b2", nav: true },
   { path: "/me/offers/:id", title: "Приглашение", screen: "M2", section: "candidate", owner: "b2" },
@@ -53,7 +54,7 @@ export const ROUTES: RouteDef[] = [
   { path: "/me/assessment/attempts/:id", title: "Прохождение теста", section: "candidate", owner: "b1" },
   { path: "/me/assessment/attempts/:id/result", title: "Результат теста", section: "candidate", owner: "b1" },
   { path: "/me/tasks", title: "Регулярные задания", section: "candidate", owner: "b1", nav: true },
-  { path: "/me/profile", title: "Мой профиль", screen: "D", section: "candidate", owner: "b1", nav: true },
+  { path: "/me/profile", title: "Мой профиль", screen: "v2_me-profile", section: "candidate", owner: "b1", nav: true },
   { path: "/me/profile/edit", title: "Редактирование профиля", section: "candidate", owner: "b1", nav: true },
   // Статистика (E38-2): ссылка с Главной, не в меню.
   { path: "/me/stats", title: "Статистика", screen: "v2_me-stats", section: "candidate", owner: "b1" },
@@ -143,11 +144,10 @@ export const NAV: Record<"candidate" | "employer" | "admin", NavItem[]> = {
       to: "/me/profile",
       label: "Профиль",
       tabs: [
-        // Обзор — прежний «Мой профиль» (PDF, почему такой грейд, ФСП); вид v2 — E38-6.
+        // Внутри «Профиля» свои вкладки: Навыки · ФСП · Резюме · Граф (E38-6).
         { to: "/me/profile", label: "Обзор" },
         { to: "/me/profile/edit", label: "Данные" },
         { to: "/onboarding", label: "Резюме и ФСП" },
-        { to: "/me/graph", label: "Граф" },
         { to: "/me/tasks", label: "Задания" },
       ],
     },

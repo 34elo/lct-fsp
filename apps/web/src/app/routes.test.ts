@@ -35,8 +35,9 @@ describe("routes", () => {
   it("у каждого маршрута есть страница или переадресация (заглушек нет)", () => {
     for (const r of ROUTES) {
       if (r.redirect) {
-        expect(byPath.get(r.redirect)?.redirect, `${r.path} → ${r.redirect}`).toBeUndefined();
-        expect(byPath.has(r.redirect), r.redirect).toBe(true);
+        const target = r.redirect.split("?")[0];
+        expect(byPath.get(target)?.redirect, `${r.path} → ${r.redirect}`).toBeUndefined();
+        expect(byPath.has(target), r.redirect).toBe(true);
       } else {
         expect(appSource, `${r.path} подключён в App.tsx`).toContain(`path="${r.path}"`);
       }
@@ -70,7 +71,7 @@ describe("routes", () => {
     expect(activeNav(NAV.candidate, "/me/skills/python")?.label).toBe("Главная");
     expect(activeNav(NAV.candidate, "/me/assessment/attempts/1")?.label).toBe("Тест и грейд");
     expect(activeNav(NAV.candidate, "/me/interests")?.label).toBe("Приглашения");
-    expect(activeNav(NAV.candidate, "/me/graph")?.label).toBe("Профиль");
+    expect(activeNav(NAV.candidate, "/me/profile/edit")?.label).toBe("Профиль");
     expect(activeNav(NAV.employer, "/employer/needs/7")?.label).toBe("Подбор");
     expect(activeNav(NAV.employer, "/employer")?.label).toBe("Подбор");
     expect(activeNav(NAV.employer, "/employer/categories/backend/middle")?.label).toBe("Подбор");
