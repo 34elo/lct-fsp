@@ -90,23 +90,29 @@ test("пустая потребность (422 need_empty) предлагает 
   expect(screen.getByRole("link", { name: "Открыть форму" })).toHaveAttribute("href", "/employer/search");
 });
 
-test("кандидаты категории: заявлено vs подтверждено, шорт-лист, фильтр не сбрасывает отмеченных", async () => {
+test("кандидаты категории: подтверждённые по рангу, неподтверждённые ниже, шорт-лист, фильтр не сбрасывает отмеченных", async () => {
   mount("/employer/categories/backend/middle?need_id=n1");
   const first = await screen.findByRole("article", { name: "Backend #4821" });
-  expect(within(first).getByText(/Совпадает/)).toBeInTheDocument();
-  expect(within(first).getByText("№ 1 в категории · ранг 0.88")).toBeInTheDocument();
-  expect(within(screen.getByRole("article", { name: "Backend #3077" })).getByText(/Заявлено выше подтверждённого/)).toBeInTheDocument();
+  expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Backend · Middle");
+  expect(screen.getByTestId("category-stats")).toHaveTextContent("3 человек");
+  expect(within(first).getByText("подтверждён")).toBeInTheDocument();
+  expect(within(first).getByText("сила 74 · ранг 0.88")).toBeInTheDocument();
+  // p3 без теста — в группе «Не подтверждены», с меткой и пунктиром
   const third = screen.getByRole("article", { name: "Backend #5502" });
-  expect(within(third).getByText(/Подтверждения нет/)).toBeInTheDocument();
-  expect(within(third).getByText("нет теста")).toBeInTheDocument();
+  expect(third).toHaveAttribute("data-confirmed", "false");
+  expect(within(third).getByText("не подтверждён")).toBeInTheDocument();
+  expect(within(third).getByText("Навыки не подтверждены тестом")).toBeInTheDocument();
+  const group = screen.getByRole("region", { name: "Не подтверждены" });
+  expect(within(group).getByRole("article", { name: "Backend #5502" })).toBeInTheDocument();
+  expect(within(screen.getByRole("article", { name: "Backend #3077" })).getByText("Заявленный грейд выше подтверждённого")).toBeInTheDocument();
 
   // отметка в шорт-лист уходит на сервер
   fireEvent.click(within(first).getByRole("button", { name: "В шорт-лист" }));
   await vi.waitFor(() => expect(calls.some((c) => c.method === "POST" && c.url.endsWith("/needs/n1/shortlist/p1"))).toBe(true));
   expect(within(first).getByRole("button", { name: /В шорт-листе/ })).toHaveAttribute("aria-pressed", "true");
 
-  // фильтр «только подтверждённый грейд»: p3 уходит, p1 и p2 (в шорт-листе) остаются
-  fireEvent.click(screen.getByRole("checkbox", { name: "Только подтверждённый грейд" }));
+  // фильтр «только подтверждённые»: p3 уходит, p1 и p2 (в шорт-листе) остаются
+  fireEvent.click(screen.getByRole("button", { name: /Только подтверждённые/ }));
   expect(screen.queryByRole("article", { name: "Backend #5502" })).toBeNull();
   expect(screen.getByRole("article", { name: "Backend #3077" })).toBeInTheDocument();
   // снятие отметки уходит DELETE-ом
@@ -114,12 +120,25 @@ test("кандидаты категории: заявлено vs подтвер�
   await vi.waitFor(() => expect(calls.some((c) => c.method === "DELETE" && c.url.endsWith("/needs/n1/shortlist/p2"))).toBe(true));
 });
 
-test("«не подходит» скрывает карточку, приглашение доступно", async () => {
+test("фильтры категории: стек и «ФСП» дают пустое состояние со сбросом", async () => {
+  mount("/employer/categories/backend/middle?need_id=n1");
+  await screen.findByRole("article", { name: "Backend #4821" });
+  fireEvent.change(screen.getByRole("combobox", { name: "Стек" }), { target: { value: "Python" } });
+  expect(screen.getAllByRole("article")).toHaveLength(3);
+  fireEvent.click(screen.getByRole("button", { name: /ФСП/ }));
+  // в шорт-листе остаётся p2; снимаем отметку — и по фильтру никого
+  fireEvent.click(within(screen.getByRole("article", { name: "Backend #3077" })).getByRole("button", { name: /В шорт-листе/ }));
+  expect(await screen.findByText("В категории никого по фильтрам")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Сбросить фильтры" }));
+  expect(await screen.findByRole("article", { name: "Backend #4821" })).toBeInTheDocument();
+});
+
+test("«не подходит» скрывает карточку, интерес ведёт к приглашению", async () => {
   mount("/employer/categories/backend/middle?need_id=n1");
   const first = await screen.findByRole("article", { name: "Backend #4821" });
   fireEvent.click(within(screen.getByRole("article", { name: "Backend #3077" })).getByRole("button", { name: "Не подходит" }));
   expect(screen.queryByRole("article", { name: "Backend #3077" })).toBeNull();
-  expect(within(first).getByRole("button", { name: "Пригласить" })).toBeInTheDocument();
+  expect(within(first).getByRole("button", { name: "Интерес" })).toBeInTheDocument();
 });
 
 test("реакции уходят в /recs/feedback, чипсы «Учли» появляются и сбрасываются", async () => {
