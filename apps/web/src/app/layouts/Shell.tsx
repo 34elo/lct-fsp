@@ -52,7 +52,7 @@ export function Shell({ nav, variant, banner }: { nav: NavItem[]; variant: "top"
       {variant === "side" && <AdminSidebar nav={nav} />}
       <div className="flex min-h-dvh min-w-0 flex-col">
         <AppHeader nav={nav} counts={counts} withTabs={variant === "top"} />
-        {variant === "top" && <SectionTabs nav={nav} />}
+        {variant === "top" && <SectionTabs nav={nav} counts={counts} />}
         {/* Поля задают сами страницы (p-4 md:p-6), поэтому контейнер без своих полей. */}
         <PageContainer className={cn("flex-1 px-0 md:px-0 lg:px-0", bottom && "pb-20 md:pb-0")} as="main">
           {banner}

@@ -1,14 +1,12 @@
 import { useRef, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 
 import {
   Button,
   CircuitLine,
-  EmptyState,
-  ErrorState,
   MatchWhy,
-  OfferCard,
+  OfferCardV2,
   SalaryRange,
   SectionLabel,
   Sheet,
@@ -17,7 +15,6 @@ import {
   SheetTitle,
   Skeleton,
   StatusBadge,
-  type OfferCardData,
   type OfferStatus,
   type WhyItem,
 } from "@fsp/ui";
@@ -26,98 +23,92 @@ import {
   useAcceptOfferOffersOfferIdAcceptPost,
   useDeclineOfferOffersOfferIdDeclinePost,
   useGetOfferOffersOfferIdGet,
-  useMyInterestsCandidatesMeInterestsGet,
   useMyOffersCandidatesMeOffersGet,
   useRevokeContactsOffersOfferIdContactsRevokePost,
 } from "@/api/endpoints/offers/offers";
 import { DeclineReason } from "@/api/model";
 import { ErrorNote } from "@/features/auth/ui";
-import { FORMAT_LABEL, percent } from "@/features/employer/text";
+import { FORMAT_LABEL } from "@/features/employer/text";
 import { GRADE_LABEL } from "@/features/profile/text";
 import { Conversation, invalidateOffers, Panel, Timeline } from "./parts";
+import { DeclineSheet, DetailLink, LIST_PAGE, ListEmpty, ListError, ListHeader, ListSkeleton, offerCardData } from "./offer-cards";
 import { isAwaiting, nextSteps, offerTitle, pastSummary, type CandidateOffer } from "./offer-model";
-import { ACTIVE_STATUSES, CAND_TEXT as T, CONTACT_LABEL, daysLeft, dateOnly, DECLINE_LABEL, INT_TEXT as IT, offerErrorText } from "./text";
+import { ACTIVE_STATUSES, CAND_TEXT as T, CONTACT_LABEL, dateOnly, DECLINE_LABEL, offerErrorText } from "./text";
 import { WhyYouBlock, whyYouItems } from "./WhyYou";
 
-function cardData(o: CandidateOffer): OfferCardData {
-  const tags = o.vacancy ? o.vacancy.formats.map((f) => FORMAT_LABEL[f] ?? f) : [T.invite];
-  if (o.initiator === "candidate") tags.unshift(T.response);
-  return {
-    company: o.company.name,
-    rating: o.company.responsibility_score ?? undefined,
-    verified: o.company.verified,
-    from: o.salary_from,
-    to: o.salary_to,
-    title: offerTitle(o),
-    tags,
-    match: o.match_snapshot ? percent(o.match_snapshot.score) : undefined,
-    status: o.status as OfferStatus,
-    deadline: isAwaiting(o.status) ? `${dateOnly(o.expires_at)} · осталось ${daysLeft(o.expires_at)} дн.` : undefined,
-  };
-}
-
-function OfferItem({ o, past }: { o: CandidateOffer; past?: boolean }) {
-  const nav = useNavigate();
+function OfferItem({ o, onDecline }: { o: CandidateOffer; onDecline: (id: string) => void }) {
+  const qc = useQueryClient();
+  const accept = useAcceptOfferOffersOfferIdAcceptPost({ mutation: { onSuccess: () => void invalidateOffers(qc) } });
+  const awaiting = isAwaiting(o.status);
+  const closed = ["declined", "expired", "withdrawn"].includes(o.status);
+  const title = offerTitle(o);
   return (
-    <li className={past ? "opacity-80" : undefined}>
-      <OfferCard
-        o={cardData(o)}
-        onOpen={() => nav(`/me/offers/${o.id}`)}
-        extra={
+    <li>
+      <OfferCardV2
+        o={offerCardData(o)}
+        dimmed={closed}
+        className={awaiting ? "border-brand" : undefined}
+        actions={
           <>
-            {o.below_candidate_min && (
-              <p role="status" className="rounded-lg border border-warning-border bg-warning-bg px-3 py-2 text-13 font-semibold text-warning-fg">{T.belowPlain}</p>
+            {o.below_candidate_min && awaiting && <p role="status" className="m-0 text-12 font-semibold text-warning-fg">{T.belowPlain}</p>}
+            {awaiting ? (
+              <>
+                {accept.isError && <ErrorNote>{offerErrorText(accept.error)}</ErrorNote>}
+                <Button loading={accept.isPending} aria-label={`${T.accept}: ${title}`} onClick={() => accept.mutate({ offerId: o.id })}>{T.accept}</Button>
+                <Button variant="outline" onClick={() => onDecline(o.id)}>{T.reject}</Button>
+              </>
+            ) : (
+              <StatusBadge status={o.status as OfferStatus} className="self-start" />
             )}
-            {!isAwaiting(o.status) && <p className="text-12 text-muted">Получен {dateOnly(o.created_at)}</p>}
+            <DetailLink id={o.id} />
           </>
         }
-        className={isAwaiting(o.status) ? "border-brand" : undefined}
       />
     </li>
   );
 }
 
-/** Приглашения кандидата (M2): ждущие ответа сверху, прошлые ниже. На 1440 — сетка карточек в ширину контейнера. */
+/** Вкладка «Приглашения» (E38-14): ждущие ответа сверху, прошлые приглушены ниже; отклики кандидата — в своей вкладке. */
 export function CandidateOffers() {
+  const qc = useQueryClient();
   const q = useMyOffersCandidatesMeOffersGet();
-  const all = (q.data?.status === 200 ? q.data.data : []) as unknown as CandidateOffer[];
+  const all = ((q.data?.status === 200 ? q.data.data : []) as unknown as CandidateOffer[]).filter((o) => o.initiator !== "candidate");
   const sorted = [...all].sort((a, b) => b.created_at.localeCompare(a.created_at));
   const open = sorted.filter((o) => ACTIVE_STATUSES.includes(o.status));
   const past = sorted.filter((o) => !ACTIVE_STATUSES.includes(o.status));
-  const fresh = all.filter((o) => o.status === "sent").length;
   const ps = pastSummary(past);
-  const interests = useMyInterestsCandidatesMeInterestsGet();
-  const interestCount = interests.data?.status === 200 ? interests.data.data.companies : 0;
+  const [declining, setDeclining] = useState<string | null>(null);
+  const decline = useDeclineOfferOffersOfferIdDeclinePost({
+    mutation: {
+      onSuccess: () => {
+        setDeclining(null);
+        void invalidateOffers(qc);
+      },
+    },
+  });
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4 md:p-6">
-      <header className="flex items-center justify-between gap-3">
-        <h1 className="font-mono text-24 font-semibold">{T.title}</h1>
-        {fresh > 0 && <span className="rounded-full bg-brand px-2.5 py-0.5 font-mono text-12 font-semibold text-on-brand">{T.newCount(fresh)}</span>}
-      </header>
-      {interestCount > 0 && (
-        <Link to="/me/interests" className="flex items-center justify-between gap-3 rounded-xl border border-brand bg-tint-50 p-4 hover:bg-tint-100 focus-visible:outline-2 focus-visible:outline-brand">
-          <span className="grid gap-0.5">
-            <b className="font-mono text-16">{IT.banner(interestCount)}</b>
-            <span className="text-13 text-muted">{IT.bannerHint}</span>
-          </span>
-          <span aria-hidden className="text-brand-fg">›</span>
-        </Link>
-      )}
-      {q.isPending && (
-        <div role="status" aria-label="Загрузка" className="grid gap-3 md:grid-cols-2">
-          <Skeleton className="h-64" />
-          <Skeleton className="h-64" />
-        </div>
-      )}
-      {q.isError && <ErrorState title={T.loadError} onRetry={() => void q.refetch()} />}
-      {q.isSuccess && all.length === 0 && <EmptyState title={T.empty} description={T.emptyHint} />}
-      {open.length > 0 && <ul className="grid gap-3 md:grid-cols-2">{open.map((o) => <OfferItem key={o.id} o={o} />)}</ul>}
+    <main className={LIST_PAGE}>
+      <ListHeader />
+      {q.isPending && <ListSkeleton />}
+      {q.isError && <ListError error={q.error} onRetry={() => void q.refetch()} />}
+      {q.isSuccess && all.length === 0 && <ListEmpty title={T.empty} />}
+      {open.length > 0 && <ul className="m-0 flex list-none flex-col gap-4 p-0">{open.map((o) => <OfferItem key={o.id} o={o} onDecline={setDeclining} />)}</ul>}
       {past.length > 0 && (
         <>
-          <p className="text-center text-13 text-muted">{T.past}: {T.pastSummary(ps.accepted, ps.declined, ps.expired)}</p>
-          <ul className="grid gap-3 md:grid-cols-2">{past.map((o) => <OfferItem key={o.id} o={o} past />)}</ul>
+          <p className="m-0 text-center text-13 text-muted">{T.past}: {T.pastSummary(ps.accepted, ps.declined, ps.expired)}</p>
+          <ul className="m-0 flex list-none flex-col gap-4 p-0">{past.map((o) => <OfferItem key={o.id} o={o} onDecline={setDeclining} />)}</ul>
         </>
       )}
+      <DeclineSheet
+        open={declining !== null}
+        title={T.sheetTitle}
+        hint={T.sheetHint}
+        reasons={Object.values(DeclineReason)}
+        pending={decline.isPending}
+        error={decline.isError ? offerErrorText(decline.error) : undefined}
+        onPick={(r) => declining && decline.mutate({ offerId: declining, data: { reason: r as DeclineReason, comment: null } })}
+        onClose={() => setDeclining(null)}
+      />
     </main>
   );
 }

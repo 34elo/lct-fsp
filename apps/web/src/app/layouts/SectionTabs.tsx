@@ -7,7 +7,7 @@ import { PageContainer } from "./PageContainer";
 import { activeNav } from "./shell-meta";
 
 /** Вкладки открытого раздела меню (E35-1): например, «Приглашения · Вами интересуются · Отклики». */
-export function SectionTabs({ nav }: { nav: NavItem[] }) {
+export function SectionTabs({ nav, counts }: { nav: NavItem[]; counts?: Record<string, number | undefined> }) {
   const tabs = activeNav(nav, useLocation().pathname)?.tabs;
   if (!tabs?.length) return null;
   return (
@@ -27,6 +27,7 @@ export function SectionTabs({ nav }: { nav: NavItem[] }) {
               }
             >
               {t.label}
+              {counts?.[t.to] ? <span className="num ml-1.5 rounded-full bg-tint-100 px-1.5 text-11 text-brand-deep dark:text-brand-mid">{counts[t.to]}</span> : null}
             </NavLink>
           ))}
         </nav>

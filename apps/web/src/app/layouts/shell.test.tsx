@@ -52,7 +52,7 @@ test("шапка: вкладки не раздувают страницу на 8
   expect(within(tabs).getAllByRole("link")[0].className).toContain("shrink-0");
 });
 
-test("вкладки раздела: «Приглашения» кандидата показывают интересы и отклики", async () => {
+test("вкладки раздела: «Приглашения» кандидата показывают интересы, приглашения и отклики", async () => {
   const { SectionTabs } = await import("./SectionTabs");
   render(
     <MemoryRouter initialEntries={["/me/interests"]}>
@@ -60,8 +60,8 @@ test("вкладки раздела: «Приглашения» кандидат
     </MemoryRouter>,
   );
   const tabs = screen.getByRole("navigation", { name: "Вкладки раздела" });
-  expect(within(tabs).getAllByRole("link").map((a) => a.getAttribute("href"))).toEqual(["/me/offers", "/me/interests", "/me/responses"]);
-  expect(within(tabs).getByRole("link", { name: "Вами интересуются" })).toHaveAttribute("aria-current", "page");
+  expect(within(tabs).getAllByRole("link").map((a) => a.getAttribute("href"))).toEqual(["/me/interests", "/me/offers", "/me/responses"]);
+  expect(within(tabs).getByRole("link", { name: "Интересы" })).toHaveAttribute("aria-current", "page");
 });
 
 test("вкладок нет у раздела без вкладок", async () => {
