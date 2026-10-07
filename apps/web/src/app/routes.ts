@@ -55,6 +55,8 @@ export const ROUTES: RouteDef[] = [
   { path: "/me/tasks", title: "Регулярные задания", section: "candidate", owner: "b1", nav: true },
   { path: "/me/profile", title: "Мой профиль", screen: "D", section: "candidate", owner: "b1", nav: true },
   { path: "/me/profile/edit", title: "Редактирование профиля", section: "candidate", owner: "b1", nav: true },
+  // Статистика (E38-2): ссылка с Главной, не в меню.
+  { path: "/me/stats", title: "Статистика", screen: "v2_me-stats", section: "candidate", owner: "b1" },
   // <<< block1 (candidate)
   // >>> block2 (candidate)
   { path: "/me/responses", title: "Мои отклики", section: "candidate", owner: "b2", nav: true },
