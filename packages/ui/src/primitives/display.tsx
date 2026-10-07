@@ -1,5 +1,5 @@
 import { cva, type VariantProps } from "class-variance-authority";
-import { AlertTriangle, Inbox, SearchX } from "lucide-react";
+import { SearchX } from "lucide-react";
 import { Progress as RProgress, Separator as RSeparator } from "radix-ui";
 import type { ComponentProps, HTMLAttributes, ReactNode, TdHTMLAttributes, ThHTMLAttributes } from "react";
 
@@ -40,17 +40,9 @@ export function Badge({ className, variant, ...p }: HTMLAttributes<HTMLSpanEleme
 }
 
 /* ---------- Skeleton ---------- */
-/** Заглушка загрузки. Скринридеру сообщает «загрузка» через role=status. */
+/** Заглушка загрузки (v2 `.skl`: бегущий блик). Скринридеру сообщает «загрузка» через role=status. */
 export function Skeleton({ className, ...p }: HTMLAttributes<HTMLDivElement>) {
-  return (
-    <div
-      role="status"
-      aria-busy="true"
-      aria-label="Загрузка"
-      className={cn("animate-pulse rounded-lg bg-tint-100", className)}
-      {...p}
-    />
-  );
+  return <div role="status" aria-busy="true" aria-label="Загрузка" className={cn("skl h-3.5", className)} {...p} />;
 }
 
 /* ---------- Progress ---------- */
@@ -104,37 +96,45 @@ export function TableCell({ className, ...p }: TdHTMLAttributes<HTMLTableCellEle
 /* ---------- Состояния экрана: пусто, ошибка, 404 ---------- */
 type StateProps = { title: string; description?: ReactNode; action?: ReactNode; className?: string };
 
-/** Пустое состояние: пунктирная рамка, подсказка, что делать дальше. */
+/** Пустое состояние (v2 `.emp`): пунктирная рамка, фраза и одно действие. Иконка — только если передана. */
 export function EmptyState({ title, description, action, className, icon }: StateProps & { icon?: ReactNode }) {
   return (
-    <div className={cn("flex flex-col items-center gap-2 rounded-xl border border-dashed border-tint-200 px-5 py-10 text-center", className)}>
-      <span className="text-muted" aria-hidden>
-        {icon ?? <Inbox className="size-8" />}
-      </span>
-      <p className="text-16 font-semibold">{title}</p>
+    <div
+      className={cn(
+        "flex min-h-[260px] flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-tint-200 px-6 py-12 text-center",
+        className,
+      )}
+    >
+      {icon && (
+        <span className="text-muted" aria-hidden>
+          {icon}
+        </span>
+      )}
+      <p className="font-mono text-[18px] leading-[1.3] font-semibold">{title}</p>
       {description && <p className="max-w-sm text-14 text-muted">{description}</p>}
-      {action && <div className="mt-2">{action}</div>}
+      {action && <div>{action}</div>}
     </div>
   );
 }
 
-/** Ошибка загрузки: role=alert, кнопка «Повторить», если передан `onRetry`. */
+/** Ошибка загрузки (v2 `.errc`): текст, код ошибки, «Повторить». role=alert. */
 export function ErrorState({
   title = "Не загрузилось",
   description,
+  code,
   onRetry,
   action,
   className,
-}: Partial<StateProps> & { onRetry?: () => void }) {
+}: Partial<StateProps> & { onRetry?: () => void; code?: ReactNode }) {
   return (
-    <div role="alert" className={cn("flex flex-col items-center gap-2 rounded-xl border border-error/30 bg-error-bg px-5 py-10 text-center", className)}>
-      <AlertTriangle className="size-8 text-error" aria-hidden />
-      <p className="text-16 font-semibold text-error">{title}</p>
-      {description && <p className="max-w-sm text-14 text-ink">{description}</p>}
+    <div role="alert" className={cn("flex flex-col items-start gap-3 rounded-xl border border-err-border bg-error-bg p-6 text-error", className)}>
+      <p className="font-mono text-[18px] leading-[1.3] font-semibold">{title}</p>
+      {description && <p className="max-w-md text-14 text-ink">{description}</p>}
+      {code && <span className="num text-12">{code}</span>}
       {(onRetry || action) && (
-        <div className="mt-2 flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {onRetry && (
-            <Button variant="destructive" onClick={onRetry}>
+            <Button size="sm" onClick={onRetry}>
               Повторить
             </Button>
           )}

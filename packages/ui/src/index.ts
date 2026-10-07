@@ -45,3 +45,9 @@ export {
 } from "./brand/match";
 export { CandidateCard, OfferCard, type CandidateCardData, type OfferCardData } from "./brand/cards";
 export * from "./icons";
+// v2 (docs/design/v2, E38-0): примитивы макетов, новые компоненты, каркас.
+export * from "./v2/primitives";
+export * from "./v2/charts";
+export * from "./v2/cards";
+export * from "./v2/assessment";
+export * from "./v2/shell";

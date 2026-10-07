@@ -88,13 +88,15 @@ import {
   toast,
   type TrustKind,
 } from "../src";
+import { V2Board } from "./V2Board";
 import { DEMO_CANDIDATES, DEMO_FSP, DEMO_SKILLS, RADII, TEXT_SIZES, TOKEN_GROUPS } from "./data";
 
-type Page = "tokens" | "base" | "brand";
+type Page = "tokens" | "base" | "brand" | "v2";
 const PAGES: { id: Page; title: string }[] = [
   { id: "tokens", title: "Токены" },
   { id: "base", title: "Базовые" },
   { id: "brand", title: "Фирменные" },
+  { id: "v2", title: "v2" },
 ];
 const KINDS: TrustKind[] = ["verified", "inferred", "adjacent", "claimed", "provisional"];
 
@@ -660,6 +662,7 @@ export function Playground() {
       {page === "tokens" && <Tokens />}
       {page === "base" && <Base />}
       {page === "brand" && <Brand />}
+      {page === "v2" && <V2Board />}
     </div>
   );
 }

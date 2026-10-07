@@ -47,6 +47,17 @@
   --shadow-xs: var(--shadow-xs);
   --shadow-card: var(--shadow-card);
   --shadow-sheet: var(--shadow-sheet);
+  /* v2 (docs/design/v2/fsp2.css) */
+  --color-chip-fg: var(--chip-fg);
+  --color-err-border: var(--err-border);
+  --color-code-bg: var(--code-bg);
+  --color-code-fg: var(--code-fg);
+  --color-code-muted: var(--code-muted);
+  --color-code-mark: var(--code-mark);
+  --color-code-sel: var(--code-sel);
+  --color-scrim: var(--scrim);
+  --shadow-menu: var(--shadow-menu);
+  --shadow-dialog: var(--shadow-dialog);
 }
 
 @layer base {
@@ -70,6 +81,32 @@
   line-height: 1.4;
   letter-spacing: var(--lbl-tracking);
   text-transform: uppercase;
+}
+
+/* v2: число (.num) — Mono 600. */
+@utility num {
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+/* v2: скелетон (.skl) — бегущий блик по оттенкам; при «уменьшить движение» — статичный. */
+@utility skl {
+  border-radius: var(--radius-sm);
+  background: linear-gradient(90deg, var(--tint-100) 0%, var(--tint-50) 50%, var(--tint-100) 100%);
+  background-size: 200% 100%;
+}
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes fsp-shimmer {
+    0% {
+      background-position: 100% 0;
+    }
+    100% {
+      background-position: -100% 0;
+    }
+  }
+  .skl {
+    animation: fsp-shimmer 1.6s linear infinite;
+  }
 }
 
 /* Лог сборки и чипсы «вот что я понял»: строки появляются по одной; при «уменьшить движение» — сразу. */
