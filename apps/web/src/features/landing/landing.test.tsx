@@ -22,20 +22,22 @@ describe("Landing", () => {
     render(ui);
     expect(screen.getByRole("button", { name: "Войти как кандидат" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Войти как работодатель" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Демо для жюри →" })).toHaveAttribute("href", "#jury");
     expect(screen.getByText(/экспресс-тест/)).toBeInTheDocument();
   });
 
-  it("показывает hero, шаги и ссылки на регистрацию без счётчиков", () => {
+  it("показывает hero, три шага и ссылки на регистрацию без кнопки жюри", () => {
     render(
       <Providers client={makeQueryClient()}><MemoryRouter>
         <Landing />
       </MemoryRouter></Providers>,
     );
-    expect(screen.getByRole("heading", { level: 1, name: "Не резюме, а доказательства" })).toBeInTheDocument();
-    expect(screen.getByText("Соберите профиль", { selector: "h3" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Я ищу работу" })).toHaveAttribute("href", "/register");
-    expect(screen.getByRole("link", { name: "Я ищу людей" })).toHaveAttribute("href", "/register");
-    expect(screen.queryByText(/профилей/)).toBeNull();
+    expect(screen.getByRole("heading", { level: 1, name: "Тест подтверждает грейд. Работодатель приходит с вилкой." })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: "Три шага" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Пройти тест" })).toHaveAttribute("href", "/register");
+    expect(screen.getByRole("link", { name: "Найти специалиста" })).toHaveAttribute("href", "/register");
+    expect(screen.getByRole("link", { name: "Войти" })).toHaveAttribute("href", "/login");
+    expect(screen.queryByRole("link", { name: /Демо для жюри/ })).toBeNull();
   });
 });
 
