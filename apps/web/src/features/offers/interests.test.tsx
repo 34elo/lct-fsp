@@ -119,7 +119,7 @@ test("работодатель: модалка интереса с подска�
   routes = employerRoutes;
   mount("/employer/candidates/p1?vacancy=v1");
   expect(await screen.findByText("Вами интересовался")).toBeInTheDocument();
-  fireEvent.click(await screen.findByRole("button", { name: "Проявить интерес" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Интерес" }));
   const dialog = await screen.findByRole("dialog");
   expect(await within(dialog).findByText(/Поднимите верх вилки до 280\s000\s₽/)).toBeInTheDocument();
   expect(within(dialog).getByText(/в среднем за 1 дн\./)).toBeInTheDocument();
