@@ -14,6 +14,7 @@ import {
   FeedList,
   GradeScale,
   GradeTag,
+  MatchRingV2,
   MeterBar,
   MetricTile,
   OfferCardV2,
@@ -128,6 +129,26 @@ describe("v2: карточки", () => {
     expect(screen.getByRole("img", { name: "Совпадение 94 %" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Открыть профиль" }));
     expect(open).toHaveBeenCalled();
+  });
+
+  it("CandidateCardV2 wide: строка с заявленным грейдом и своим действием", () => {
+    render(
+      <CandidateCardV2
+        wide
+        action={<a href="/employer/candidates/p1">Открыть профиль</a>}
+        c={{ pseudonym: "Backend #2210", match: 91, grade: "Middle", confirmed: false, salary: "от 220 000 ₽", skills: [{ name: "Go", level: 0, claimed: true }], meta: "Удалённо" }}
+      />,
+    );
+    const card = screen.getByRole("article", { name: "Backend #2210" });
+    expect(within(card).getByText("заявлен")).toHaveAttribute("data-state", "claimed");
+    expect(within(card).getByRole("link", { name: "Открыть профиль" })).toHaveAttribute("href", "/employer/candidates/p1");
+    expect(within(card).getByText("Удалённо")).toBeInTheDocument();
+  });
+
+  it("MatchRingV2: размер и подпись", () => {
+    render(<MatchRingV2 value={87.4} size={34} />);
+    const ring = screen.getByRole("img", { name: "Совпадение 87 %" });
+    expect(ring).toHaveAttribute("width", "34");
   });
 
   it("FeedEvent: время и текст в списке", () => {
