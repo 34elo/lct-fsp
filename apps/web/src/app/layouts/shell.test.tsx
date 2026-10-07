@@ -14,9 +14,9 @@ test("нижняя навигация кандидата: четыре пунк�
     </MemoryRouter>,
   );
   const nav = screen.getByRole("navigation", { name: "Разделы" });
-  expect(within(nav).getAllByRole("link").map((a) => a.textContent)).toEqual(["Профиль", "Офферы", "Рост", "ФСП"]);
-  expect(within(nav).getByRole("link", { name: "Офферы" })).toHaveAttribute("aria-current", "page");
-  expect(within(nav).getByRole("link", { name: "Профиль" })).not.toHaveAttribute("aria-current");
+  expect(within(nav).getAllByRole("link").map((a) => a.textContent)).toEqual(["Главная", "Тест и грейд", "Приглашения", "Профиль"]);
+  expect(within(nav).getByRole("link", { name: "Приглашения" })).toHaveAttribute("aria-current", "page");
+  expect(within(nav).getByRole("link", { name: "Главная" })).not.toHaveAttribute("aria-current");
 });
 
 test("PageContainer ограничивает ширину 1440", () => {
@@ -29,7 +29,7 @@ test("инициалы", () => {
   expect(initials("")).toBe("?");
 });
 
-test("счётчик офферов: у нового кандидата без офферов бейджа нет, свои отклики не считаются", async () => {
+test("счётчик приглашений: у нового кандидата без приглашений бейджа нет, свои отклики не считаются", async () => {
   const { offerCount } = await import("./Shell");
   expect(offerCount({ status: 200, data: [] })).toBeUndefined();
   expect(offerCount({ status: 403, data: [] })).toBeUndefined();
@@ -50,4 +50,26 @@ test("шапка: вкладки не раздувают страницу на 8
   expect(tabs.className).toContain("overflow-x-auto");
   expect(tabs.className).toContain("min-w-0");
   expect(within(tabs).getAllByRole("link")[0].className).toContain("shrink-0");
+});
+
+test("вкладки раздела: «Приглашения» кандидата показывают интересы и отклики", async () => {
+  const { SectionTabs } = await import("./SectionTabs");
+  render(
+    <MemoryRouter initialEntries={["/me/interests"]}>
+      <SectionTabs nav={NAV.candidate} />
+    </MemoryRouter>,
+  );
+  const tabs = screen.getByRole("navigation", { name: "Вкладки раздела" });
+  expect(within(tabs).getAllByRole("link").map((a) => a.getAttribute("href"))).toEqual(["/me/offers", "/me/interests", "/me/responses"]);
+  expect(within(tabs).getByRole("link", { name: "Вами интересуются" })).toHaveAttribute("aria-current", "page");
+});
+
+test("вкладок нет у раздела без вкладок", async () => {
+  const { SectionTabs } = await import("./SectionTabs");
+  render(
+    <MemoryRouter initialEntries={["/me"]}>
+      <SectionTabs nav={NAV.candidate} />
+    </MemoryRouter>,
+  );
+  expect(screen.queryByRole("navigation", { name: "Вкладки раздела" })).toBeNull();
 });

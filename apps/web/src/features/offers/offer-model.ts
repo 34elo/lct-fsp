@@ -1,4 +1,4 @@
-/** Чистая логика формы оффера: разбор вилки и проверки. Используют страница и модалка оффера. */
+/** Чистая логика формы приглашения: разбор вилки и проверки. Используют страница и модалка приглашения. */
 import type { CircuitStep } from "@fsp/ui";
 
 import type { OfferForCandidate, VacancyBrief } from "@/api/model";
@@ -43,7 +43,7 @@ export function columnOf(status: string): BoardColumn {
   return (BOARD_COLUMNS as readonly string[]).includes(status) && status !== "closed" ? (status as BoardColumn) : "closed";
 }
 
-/** Разложить офферы по колонкам, новые сверху. Пустые колонки остаются. */
+/** Разложить приглашения по колонкам, новые сверху. Пустые колонки остаются. */
 export function groupByColumn<T extends { status: string; created_at: string }>(offers: T[]): Record<BoardColumn, T[]> {
   const out = Object.fromEntries(BOARD_COLUMNS.map((c) => [c, [] as T[]])) as Record<BoardColumn, T[]>;
   for (const o of [...offers].sort((a, b) => b.created_at.localeCompare(a.created_at))) out[columnOf(o.status)].push(o);
@@ -52,7 +52,7 @@ export function groupByColumn<T extends { status: string; created_at: string }>(
 
 export interface BoardStats {
   total: number;
-  /** Доля просмотренных (всё, что ушло дальше «Отправлен»), % или null без офферов. */
+  /** Доля просмотренных (всё, что ушло дальше «Отправлен»), % или null без приглашений. */
   viewedPct: number | null;
   accepted: number;
   hired: number;
@@ -60,7 +60,7 @@ export interface BoardStats {
 
 /** Сводка над доской. Принявшие: принят, интервью, нанят, не нанят (после принятия). */
 export function boardStats(all: { status: string }[]): BoardStats {
-  // Интересы (до приглашения) в воронку офферов не входят.
+  // Интересы (до приглашения) в воронку приглашений не входят.
   const offers = all.filter((o) => columnOf(o.status) !== "interest");
   const total = offers.length;
   const seen = offers.filter((o) => !["sent", "expired", "withdrawn"].includes(o.status)).length;
@@ -85,7 +85,7 @@ export function declineBreakdown(offers: { decline?: { reason: string } | null }
 }
 
 /**
- * Оффер глазами кандидата. Сгенерированный `OfferForCandidate` ещё без `title` и `initiator`
+ * Приглашение глазами кандидата. Сгенерированный `OfferForCandidate` ещё без `title` и `initiator`
  * и с обязательной вакансией, а API отдаёт `vacancy: null` для приглашения без вакансии (ADR-022).
  */
 export type CandidateOffer = Omit<OfferForCandidate, "vacancy"> & {
@@ -101,7 +101,7 @@ export function offerTitle(o: Pick<CandidateOffer, "title" | "vacancy">): string
   return o.vacancy?.title ?? o.title ?? "Приглашение";
 }
 
-/** Оффер ждёт ответа кандидата. */
+/** Приглашение ждёт ответа кандидата. */
 export function isAwaiting(status: string): boolean {
   return status === "sent" || status === "viewed";
 }
@@ -113,7 +113,7 @@ export interface PastSummary {
   expired: number;
 }
 
-/** Сводка «Прошлые офферы: принято … · отклонено … · истёк …». */
+/** Сводка «Прошлые приглашения: принято … · отклонено … · истёк …». */
 export function pastSummary(past: { status: string }[]): PastSummary {
   const n = (...s: string[]) => past.filter((o) => s.includes(o.status)).length;
   return { total: past.length, accepted: n("accepted", "interview", "hired", "not_hired"), declined: n("declined"), expired: n("expired", "withdrawn") };
@@ -123,7 +123,7 @@ export function pastSummary(past: { status: string }[]): PastSummary {
 export function nextSteps(status: string): CircuitStep[] {
   const decided = status === "hired" || status === "not_hired";
   return [
-    { id: "accepted", label: "Оффер принят", state: "done" },
+    { id: "accepted", label: "Приглашение принят", state: "done" },
     { id: "contacts", label: "Контакты переданы", state: "done" },
     { id: "interview", label: "Интервью", state: decided ? "done" : "current" },
     { id: "decision", label: "Решение", state: decided ? "done" : "future" },

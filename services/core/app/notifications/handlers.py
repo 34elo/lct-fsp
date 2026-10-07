@@ -36,6 +36,7 @@ from app.notifications import service
 from app.notifications.service import UiPublish
 from app.offers import service as offers
 from app.offers.models import Offer
+from app.taxonomy import service as taxonomy
 from app.vacancies import service as vacancies
 
 log = structlog.get_logger()
@@ -357,6 +358,8 @@ def register(
     @idempotent(session_factory, "notifications.fsp_imported")
     async def on_fsp_imported(envelope: Envelope, session: AsyncSession) -> None:
         ev = FspResultsImported.model_validate(envelope.payload)
+        if not ev.results:  # синхронизация без новых результатов (сменился только состав команд)
+            return
         out: list[UiMessage] = []
         await service.notify(
             session, ev.candidate_id, type="fsp_imported", title="Новый результат ФСП",
@@ -370,14 +373,16 @@ def register(
     async def on_regular_task(envelope: Envelope, session: AsyncSession) -> None:
         ev = RegularTaskPublished.model_validate(envelope.payload)
         out: list[UiMessage] = []
-        # Отправляем уведомления каждому кандидату в списке
+        # человеку — название профессии, не slug (публичное API Б1, blocks.md §4.3)
+        titles = {p.slug: p.title for p in await taxonomy.list_professions(session)}
+        title = titles.get(ev.profession, ev.profession)
         for candidate_id in ev.candidate_ids:
             await service.notify(
                 session, candidate_id, type="regular_task_published",
-                title=f"Новое задание по {ev.profession}",
+                title=f"Новое задание: {title}",
                 payload={"family_id": str(ev.family_id), "profession": ev.profession}, out=out,
                 tg=TgTemplate.regular_task_published,
-                tg_data={"profession": ev.profession},
+                tg_data={"profession": ev.profession, "profession_title": title},
             )  # fmt: skip
         await service.push(ui_publish, out)
 

@@ -151,7 +151,7 @@ test("карточка кандидата: тёмная, навыки без п�
   expect(screen.getAllByText(/Кубок · всероссийский этап/)).toHaveLength(1);
 });
 
-test("E4: интерес кандидата, переключатель сортировки и кнопка «Оффер»", async () => {
+test("E4: интерес кандидата, переключатель сортировки и кнопка «Приглашение»", async () => {
   const f = fetch as unknown as ReturnType<typeof vi.fn>;
   const prev = f.getMockImplementation()!;
   f.mockImplementation(async (url: string, init?: RequestInit) => {
@@ -173,7 +173,7 @@ test("E4: интерес кандидата, переключатель сорт
   expect(within(sixth).getByText("Почему подходит")).toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "Только по соответствию" }));
   await vi.waitFor(() => expect(bodies.at(-1)).toMatchObject({ sort: "match", vacancy_id: "v1" }));
-  fireEvent.click(within(first).getByRole("button", { name: "Оффер" }));
+  fireEvent.click(within(first).getByRole("button", { name: "Приглашение" }));
   await vi.waitFor(() => expect(feedback.at(-1)).toMatchObject({ candidate_pseudo_id: "p1", event: "shortlist" }));
 });
 

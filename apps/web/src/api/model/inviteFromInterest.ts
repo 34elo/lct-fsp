@@ -5,6 +5,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { ContactMethod } from './contactMethod';
+import type { TaskAttach } from './taskAttach';
 
 /**
  * Приглашение по открытому интересу; пустые поля берутся из интереса.
@@ -16,4 +17,5 @@ export interface InviteFromInterest {
   title?: string | null;
   description?: string | null;
   contact_method?: ContactMethod | null;
+  task?: TaskAttach | null;
 }

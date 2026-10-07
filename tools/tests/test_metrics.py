@@ -129,7 +129,10 @@ def test_load_collector_reads_p95(monkeypatch, tmp_path):
 def test_main_writes_reports_with_all_skipped(tmp_path):
     out = tmp_path / "m"
     skips = [x for name in cli.COLLECTORS for x in ("--skip", name)]
-    assert cli.main(["--out", str(out), *skips]) == 0
+    # --web в tmp: иначе тест перезаписывает закоммиченный metrics.generated.json фронта
+    web = tmp_path / "web.json"
+    assert cli.main(["--out", str(out), "--web", str(web), *skips]) == 0
+    assert web.exists()
     rep = json.loads((out / "report.json").read_text(encoding="utf-8"))
     assert rep["summary"]["green"] == 0
     assert (out / "report.md").read_text(encoding="utf-8").startswith("# Офлайн-метрики")

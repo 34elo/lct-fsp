@@ -151,7 +151,7 @@ test("magic-ссылка: токен отправляется один раз и
   installFetch();
   consentsGranted = true;
   mount("/auth/magic?token=abc&redirect=/me/offers");
-  expect(await screen.findByRole("heading", { name: "Офферы" })).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { name: "Приглашения" })).toBeInTheDocument();
   const magic = calls.filter((c) => c.url.endsWith("/auth/magic"));
   expect(magic).toHaveLength(1);
   expect(magic[0].body).toEqual({ token: "abc" });
