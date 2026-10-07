@@ -93,9 +93,13 @@ def _not_found() -> ProblemError:
 
 
 async def _own_attempt(
-    session: AsyncSession, candidate_id: uuid.UUID, attempt_id: uuid.UUID
+    session: AsyncSession, candidate_id: uuid.UUID, attempt_id: uuid.UUID, *, lock: bool = False
 ) -> Attempt:
-    att = await session.get(Attempt, attempt_id)
+    """`lock` — `SELECT … FOR UPDATE`: параллельные ответы/выдачи одной попытки идут по очереди
+    (двойной клик иначе дважды прибавляет LLR и плодит задание с тем же `seq`)."""
+    att = await session.get(
+        Attempt, attempt_id, with_for_update=True if lock else None, populate_existing=lock
+    )
     if att is None or att.candidate_id != candidate_id:
         raise _not_found()  # чужой ресурс → 404
     return att
@@ -395,7 +399,7 @@ async def next_item(
     session: AsyncSession, candidate_id: uuid.UUID, attempt_id: uuid.UUID, cfg: AssessmentConfig
 ) -> dict[str, Any]:
     """Текущее неотвеченное задание или новое; `{done: true}`, если попытка завершена."""
-    att = await _own_attempt(session, candidate_id, attempt_id)
+    att = await _own_attempt(session, candidate_id, attempt_id, lock=True)
     cfg = cfg.for_mode(att.mode)
     for _ in range(2):  # второй проход — первое задание бонусного этапа
         if att.status != "active":
@@ -433,7 +437,7 @@ async def submit_answer(
     cfg: AssessmentConfig,
 ) -> dict[str, Any]:
     """Проверка на сервере пересборкой; SPRT после оцениваемого ответа. Повтор ничего не меняет."""
-    att = await _own_attempt(session, candidate_id, attempt_id)
+    att = await _own_attempt(session, candidate_id, attempt_id, lock=True)
     cfg = cfg.for_mode(att.mode)
     resp = await session.get(Response, response_id)
     if resp is None or resp.attempt_id != att.id:
