@@ -8,8 +8,6 @@ from fsp_contracts.ml import (
     EmbeddingsRequest,
     EmbeddingsResponse,
     MlHealth,
-    ParsedQuery,
-    QueryParseRequest,
     SkillCardDraft,
     SkillCardDraftRequest,
     SkillResolveItem,
@@ -18,7 +16,7 @@ from fsp_contracts.ml import (
 from fsp_platform.app import ProblemError, create_app
 from fsp_platform.logging import configure_logging
 
-from fsp_ml import answer_explain, fake, family_bank, family_key, skill_card
+from fsp_ml import answer_explain, fake, family_bank, family_key, query_parse, skill_card
 from fsp_ml.config import Settings
 from fsp_ml.embedder import Embedder, embed, load_embedder
 from fsp_ml.llm import LlmClient, OpenAiLlm
@@ -55,6 +53,7 @@ def build_app(
     app.include_router(answer_explain.build_router(settings))  # E24-2: «Объясни ответ»
     # <<< block1
     # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
+    app.include_router(query_parse.build_router(settings, llm))  # AU-2: разбор запроса без 503
     # <<< block2
     # у ml-api свой формат /healthz (api.md §2.10), вместо базового {"status": "ok"}
     app.router.routes[:] = [r for r in app.router.routes if getattr(r, "path", "") != "/healthz"]
@@ -63,11 +62,6 @@ def build_app(
         # без LLM (lite) этот путь — правиловый разбор запроса
         if not settings.ml_fake and settings.llm_enabled:
             raise ProblemError(503, "ml_unavailable", "Модели ещё не подключены (ML_FAKE=false)")
-
-    @app.post("/v1/query/parse")
-    async def query_parse(req: QueryParseRequest) -> ParsedQuery:
-        require_fake()
-        return fake.parse_query(req)
 
     @app.post("/v1/embeddings")
     async def embeddings(req: EmbeddingsRequest) -> EmbeddingsResponse:
