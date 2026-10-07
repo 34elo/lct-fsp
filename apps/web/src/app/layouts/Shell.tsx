@@ -4,6 +4,7 @@ import { cn } from "@fsp/ui";
 
 import { useListOffersOffersGet, useMyInterestsCandidatesMeInterestsGet, useMyOffersCandidatesMeOffersGet } from "@/api/endpoints/offers/offers";
 import { type NavItem } from "@/app/routes";
+import { JuryPanel } from "@/features/landing/JuryPanel";
 import { useAuth } from "@/shared/lib/auth";
 import { AdminSidebar } from "./AdminSidebar";
 import { AppHeader } from "./AppHeader";
@@ -51,6 +52,7 @@ export function Shell({ nav, variant }: { nav: NavItem[]; variant: "top" | "side
         <PageContainer className={cn("flex-1 px-0 md:px-0 lg:px-0", bottom && "pb-20 md:pb-0")} as="main">
           <Outlet />
         </PageContainer>
+        <JuryPanel />
         {bottom && <BottomNav items={CANDIDATE_BOTTOM} all={nav} />}
       </div>
     </div>

@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
 import re
 import subprocess
 import sys
@@ -21,12 +22,22 @@ from .report import build_report, render_md
 ROOT = Path(__file__).resolve().parents[2]
 TIMEOUT_S = 900
 Comp = dict[str, Any]
+# Подпроцессы печатают «≥», «θ»: на Windows консоль cp1251 роняет print, отчёт теряется
+ENV = {**os.environ, "PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1"}
 
 
 def _run(cmd: list[str], cwd: Path = ROOT) -> tuple[int, str]:
     try:
         p = subprocess.run(
-            cmd, cwd=cwd, capture_output=True, text=True, timeout=TIMEOUT_S, check=False
+            cmd,
+            cwd=cwd,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=TIMEOUT_S,
+            check=False,
+            env=ENV,
         )
     except (OSError, subprocess.TimeoutExpired) as e:
         return -1, f"{type(e).__name__}: {e}"
@@ -37,15 +48,26 @@ def _fail(msg: str) -> Comp:
     return {"ok": False, "reason": " ".join(msg.strip().splitlines()[-1:])[:200] or "ошибка"}
 
 
-def collect_assessment(seed: int, parts: Path) -> Comp:
-    out = parts / "eval-assessment"
+def _assessment(seed: int, out: Path, mode: str) -> Comp:
     rc, log = _run(
         [sys.executable, "-m", "tools.eval_assessment", "--seed", str(seed), "--out", str(out)]
+        + ["--mode", mode]
     )
     f = out / "report.json"
     if rc != 0 or not f.exists():
-        return _fail(f"eval-assessment: код {rc}; {log}")
-    return {"ok": True, "data": json.loads(f.read_text(encoding="utf-8"))["metrics"]}
+        return _fail(f"eval-assessment --mode {mode}: код {rc}; {log}")
+    rep = json.loads(f.read_text(encoding="utf-8"))
+    return {"ok": True, "data": {**rep["metrics"], "llm": rep.get("llm", {})}}
+
+
+def collect_assessment(seed: int, parts: Path) -> Comp:
+    """Симулятор теста: честные, списывающие, «знающие утечку», LLM-«кандидат» (E27-1)."""
+    return _assessment(seed, parts / "eval-assessment", "standard")
+
+
+def collect_express(seed: int, parts: Path) -> Comp:
+    """Тот же симулятор в экспресс-режиме (ADR-025, E32-4a)."""
+    return _assessment(seed, parts / "eval-assessment-express", "express")
 
 
 def collect_matching(seed: int, parts: Path) -> Comp:
@@ -72,6 +94,23 @@ def collect_families(seed: int, parts: Path) -> Comp:
     return {"ok": True, "data": {"families": total, "pass_rate": rate}}
 
 
+def collect_bank(seed: int, parts: Path) -> Comp:
+    """Покрытие банка, уникальность вариантов, справедливость — `core_probe.py` в окружении core."""
+    probe = Path(__file__).resolve().parent / "core_probe.py"
+    rc, log = _run(
+        ["uv", "run", "python", str(probe), "--seeds", "1000", "--seed", str(seed)],
+        cwd=ROOT / "services" / "core",
+    )
+    line = next((x for x in reversed(log.splitlines()) if x.startswith("{")), "")
+    if rc != 0 or not line:
+        return _fail(f"core_probe: код {rc}; {log}")
+    data = json.loads(line)
+    (parts / "core_probe.json").write_text(
+        json.dumps(data, ensure_ascii=False, indent=1, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    return {"ok": True, "data": data}
+
+
 def collect_load(seed: int, parts: Path) -> Comp:
     f = ROOT / "reports" / "load" / "load_stats.csv"
     if not f.exists():
@@ -95,6 +134,8 @@ COLLECTORS: dict[str, Callable[[int, Path], Comp]] = {
     "assessment": collect_assessment,
     "matching": collect_matching,
     "families": collect_families,
+    "express": collect_express,
+    "bank": collect_bank,
     "load": collect_load,
 }
 
@@ -118,13 +159,23 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--out", type=Path, default=ROOT / "reports" / "metrics")
+    ap.add_argument(
+        "--web",
+        type=Path,
+        default=ROOT / "apps" / "web" / "src" / "features" / "quality" / "metrics.generated.json",
+        help="куда положить копию report.json для веб-страницы качества",
+    )
     ap.add_argument("--skip", action="append", default=[], choices=sorted(COLLECTORS))
     a = ap.parse_args(argv)
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")  # Windows: cp1251 не знает «≥», «θ»
     rep = run(a.seed, a.out, set(a.skip))
     a.out.mkdir(parents=True, exist_ok=True)
-    (a.out / "report.json").write_text(
-        json.dumps(rep, ensure_ascii=False, indent=1, sort_keys=True) + "\n", encoding="utf-8"
-    )
+    dump = json.dumps(rep, ensure_ascii=False, indent=1, sort_keys=True) + "\n"
+    (a.out / "report.json").write_text(dump, encoding="utf-8")
+    if a.web is not None:  # копия для страницы качества: reports/ в git не входит
+        a.web.parent.mkdir(parents=True, exist_ok=True)
+        a.web.write_text(dump, encoding="utf-8")
     md = render_md(rep)
     (a.out / "report.md").write_text(md, encoding="utf-8")
     print(md)
