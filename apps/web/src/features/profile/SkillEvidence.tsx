@@ -35,7 +35,7 @@ export default function SkillEvidence() {
   }
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
-      <Link to="/me" className="inline-flex min-h-11 items-center font-semibold text-brand-fg">
+      <Link to="/me/profile" className="inline-flex min-h-11 items-center font-semibold text-brand-fg">
         ← Профиль
       </Link>
       <section className="flex flex-col gap-3 rounded-xl border border-hairline bg-card p-5">

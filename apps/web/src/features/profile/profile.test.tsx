@@ -76,7 +76,7 @@ function mount(path: string) {
 }
 
 test("профиль: категория, предварительный грейд, разбивка, навыки, командные сигналы", async () => {
-  mount("/me");
+  mount("/me/profile");
   expect(await screen.findByRole("heading", { name: "Backend #4821" })).toBeInTheDocument();
   expect(screen.getByText("Junior+ · Backend · Python")).toBeInTheDocument();
   expect(screen.getByText(/Предварительно.*уверенность 40%/)).toBeInTheDocument();
@@ -105,7 +105,7 @@ test("профиль: достижения ФСП, разряд, опыт и м�
     },
     experience: [{ title: "Backend-разработчик", company: "Кедр Софт", start: "2024-08-01", end: null, skills: [] }],
   };
-  mount("/me");
+  mount("/me/profile");
   const fsp = await screen.findByRole("region", { name: "Достижения ФСП" });
   expect(within(fsp).getByText(/Финал по продуктовому программированию/)).toBeInTheDocument();
   expect(within(fsp).getByRole("img", { name: "2 место, медаль" })).toBeInTheDocument();
@@ -115,7 +115,7 @@ test("профиль: достижения ФСП, разряд, опыт и м�
   // Меню (E35-1): шапка (десктоп) и нижняя панель — одни и те же четыре раздела.
   const [top, bottom] = screen.getAllByRole("navigation", { name: "Разделы" });
   expect(within(top).getByRole("link", { name: "Приглашения" })).toHaveAttribute("href", "/me/offers");
-  expect(within(top).getByRole("link", { name: "Профиль" })).toHaveAttribute("href", "/me/profile/edit");
+  expect(within(top).getByRole("link", { name: "Профиль" })).toHaveAttribute("href", "/me/profile");
   expect(within(bottom).getByRole("link", { name: "Приглашения" })).toHaveAttribute("href", "/me/offers");
   expect(within(bottom).getByRole("link", { name: "Тест и грейд" })).toHaveAttribute("href", "/me/assessment");
 });
@@ -125,7 +125,7 @@ test("профиль: навыки по группам, чек-лист «что
     ...full,
     claimed_vs_confirmed: [{ profession: "backend", declared_grade: "senior", confirmed_grade: "middle", status: "overclaimed" }],
   };
-  mount("/me");
+  mount("/me/profile");
   await screen.findByTestId("profile-page");
   expect(within(screen.getByTestId("profile-skill-group-language")).getByText("Python")).toBeInTheDocument();
   expect(screen.getByTestId("profile-skill-group-db")).toHaveTextContent("Redis");
@@ -145,14 +145,14 @@ test("ошибка загрузки профиля: сообщение и пов
     if (u.endsWith("/me")) return res(200, { id: "u1", email: "a@b.ru", role: "candidate", consents: ["pd_processing"] });
     return res(500, { code: "boom" });
   });
-  mount("/me");
+  mount("/me/profile");
   expect(await screen.findByRole("alert", {}, { timeout: 8000 })).toHaveTextContent("Не удалось загрузить профиль");
   expect(screen.getByRole("button", { name: "Повторить" })).toBeInTheDocument();
 }, 15000);
 
 test("пустой профиль: подсказка вместо грейда и навыков", async () => {
   profile = { ...base, claimed_soft: [], category: null, skills: [], team_signals: [], grade: { grade: null, score: null, confidence: null, preliminary: true, breakdown: [] } };
-  mount("/me");
+  mount("/me/profile");
   expect(await screen.findByText(/Категория и грейд появятся/)).toBeInTheDocument();
   expect(screen.getByText(/Пока нет навыков/)).toBeInTheDocument();
   expect(screen.queryByRole("region", { name: "Почему такой грейд" })).not.toBeInTheDocument();

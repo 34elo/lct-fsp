@@ -5,13 +5,16 @@ import { useHistoryAssessmentHistoryGet } from "@/api/endpoints/assessment/asses
 import { PATH_START, pathStep } from "./model";
 import { T } from "./text";
 
+const HOME_PATH = "/me";
+
 /**
  * Баннер главного пути кандидата (E35-2a): пока нет опроса или теста, на любом экране кандидата —
  * одна фраза и одна кнопка. На экранах самого опроса и теста не показывается; при ошибке API — тоже.
+ * На Главной (`/me`, E38-1) тоже нет: там до теста весь экран — та же одна кнопка.
  */
 export function PathBanner() {
   const { pathname } = useLocation();
-  const onPath = pathname === PATH_START || pathname.startsWith(`${PATH_START}/`);
+  const onPath = pathname === PATH_START || pathname.startsWith(`${PATH_START}/`) || pathname === HOME_PATH;
   const hq = useHistoryAssessmentHistoryGet({ query: { enabled: !onPath, retry: false } });
   if (onPath || hq.data?.status !== 200) return null;
   const history = hq.data.data;

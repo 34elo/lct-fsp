@@ -8,6 +8,7 @@ import Login from "@/pages/Login";
 import MagicLogin from "@/pages/MagicLogin";
 import Onboarding from "@/pages/Onboarding";
 import Profile from "@/features/profile/Profile";
+import Home from "@/features/profile/Home";
 import SkillEvidence from "@/features/profile/SkillEvidence";
 import CandidateView from "@/features/employer/CandidateView";
 import EmployerSearch from "@/features/employer/Search";
@@ -80,7 +81,7 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
         {section === "candidate" && (
           <>
             <Route path="/onboarding" element={<Onboarding />} />
-            <Route path="/me" element={<Profile />} />
+            <Route path="/me" element={<Home />} />
             <Route path="/me/skills/:slug" element={<SkillEvidence />} />
             <Route path="/me/offers" element={<CandidateOffers />} />
             <Route path="/me/offers/:id" element={<CandidateOfferDetail />} />
@@ -89,6 +90,7 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
             <Route path="/me/assessment/history" element={<History />} />
             <Route path="/me/assessment/attempts/:id" element={<Attempt />} />
             <Route path="/me/assessment/attempts/:id/result" element={<Result />} />
+            <Route path="/me/profile" element={<Profile />} />
             <Route path="/me/profile/edit" element={<ProfileEdit />} />
             <Route path="/me/tasks" element={<CandidateTasks />} />
             <Route path="/me/graph" element={<Graph />} />
