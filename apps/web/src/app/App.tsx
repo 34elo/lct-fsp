@@ -56,6 +56,7 @@ import NeedCategories from "@/features/needs/NeedCategories";
 import CategoryCandidates from "@/features/needs/CategoryCandidates";
 import Subscriptions from "@/features/needs/Subscriptions";
 import { CandidateInterests } from "@/features/offers/CandidateInterests";
+import EmployerMatch from "@/features/employer/Match";
 // <<< block2 imports
 
 // Разделы по ролям грузятся лениво (frontend.md: «ленивые разделы»).
@@ -116,6 +117,7 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
             <Route path="/employer/families/new" element={<Constructor />} />
             {/* <<< block1 (employer) */}
             {/* >>> block2 (employer) */}
+            <Route path="/employer" element={<EmployerMatch />} />
             <Route path="/employer/responses" element={<EmployerResponses />} />
             <Route path="/employer/needs/new" element={<NeedNew />} />
             <Route path="/employer/needs/:id" element={<NeedCategories />} />
