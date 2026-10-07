@@ -19,7 +19,7 @@ class AnalyticsEventRow(Base):
 
     __tablename__ = "analytics_events"
 
-    id: Mapped[int] = mapped_column(sa.BigInteger, primary_key=True, autoincrement=False)
+    id: Mapped[int] = mapped_column(sa.BigInteger, primary_key=True, autoincrement=True)
     ts: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), primary_key=True)
     event: Mapped[str] = mapped_column(sa.Text)
     actor: Mapped[str | None] = mapped_column(sa.Text)
