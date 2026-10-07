@@ -189,11 +189,16 @@ assessment-llm-bank:
 .PHONY: eval-llm
 eval-llm:
 	uv run python -m tools.eval_llm --env-file $(ENV_FILE) $(ARGS)
-# Документ сдачи (E27-4): список библиотек из lock-файлов → docs/libraries.md; PDF из docs/submission.md
-# (WeasyPrint из зависимостей core) → reports/submission/submission.pdf (reports/ не коммитим)
-.PHONY: submission-libs submission-pdf
+# Документ сдачи (E27-4, AU-4): список библиотек из lock-файлов → docs/libraries.md; сверка 8 пунктов ТЗ;
+# PDF (WeasyPrint из зависимостей core) и DOCX (python-docx из зависимостей ml) из docs/submission.md →
+# reports/submission/ (reports/ не коммитим). `make submission-pdf` собирает оба файла.
+.PHONY: submission-libs submission-check submission-pdf submission-docx
 submission-libs:
 	python3 tools/submission/libs.py --out docs/libraries.md
-submission-pdf:
+submission-check:
+	uv run python tools/submission/check_tz.py
+submission-docx:
+	uv run python tools/submission/build_docx.py --src docs/submission.md --out reports/submission/submission.docx
+submission-pdf: submission-check submission-docx
 	uv run python tools/submission/build_pdf.py --src docs/submission.md --out reports/submission/submission.pdf
 # <<< block1
