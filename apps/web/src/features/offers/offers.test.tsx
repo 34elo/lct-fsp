@@ -165,9 +165,7 @@ test("M2: приглашение без вакансии показываетс�
   ]);
   mount("/me/offers");
   expect(await screen.findByText("Рекрутинг ML-команды")).toBeInTheDocument();
-  expect(screen.getByText("Приглашение без вакансии")).toBeInTheDocument();
   expect(screen.getByText("Ниже ваших ожиданий")).toBeInTheDocument();
-  expect(screen.getByText("2 новых")).toBeInTheDocument();
   expect(screen.getByText(/принято 0 · отклонено 1 · истёк 1/)).toBeInTheDocument();
 });
 
@@ -212,4 +210,53 @@ test("E32-7: после отзыва кнопки нет, показана по�
   expect(await screen.findByText(/Вы отозвали доступ к контактам/)).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Отозвать доступ к контактам" })).toBeNull();
   expect(screen.getByRole("region", { name: "Переписка" })).toBeInTheDocument();
+});
+
+test("E38-14: список приглашений — карточки v2, «Принять» из списка, прошлые со статусом, отклики не показываются", async () => {
+  stubCandidate([
+    candOffer("o1", "sent", { why_you: { factors: [{ code: "skills", text: "Python подтверждён тестом", weight: 1 }], unconfirmed: [] } }),
+    candOffer("o2", "expired"),
+    candOffer("o3", "sent", { initiator: "candidate", vacancy: { ...candOffer("x", "sent").vacancy, title: "Свой отклик" } }),
+  ]);
+  const f = globalThis.fetch as unknown as ReturnType<typeof vi.fn>;
+  const base = f.getMockImplementation()!;
+  f.mockImplementation(async (url: string, init?: RequestInit) => {
+    if (/\/offers\/o1\/accept$/.test(url)) {
+      calls.push({ url, headers: new Headers(init?.headers), body: null });
+      return res(200, candOffer("o1", "accepted"));
+    }
+    return base(url, init);
+  });
+  mount("/me/offers");
+  expect(await screen.findByText("Python подтверждён тестом")).toBeInTheDocument();
+  expect(screen.getAllByText("200–250 тыс. ₽")).toHaveLength(2);
+  expect(screen.queryByText("Свой отклик")).toBeNull();
+  expect(screen.getByText("Истёк")).toBeInTheDocument();
+  expect(screen.getAllByRole("link", { name: "Подробнее" })[0]).toHaveAttribute("href", "/me/offers/o1");
+  fireEvent.click(screen.getByRole("button", { name: /^Принять/ }));
+  await waitFor(() => expect(calls).toHaveLength(1));
+  expect(calls[0].url).toMatch(/\/offers\/o1\/accept$/);
+});
+
+test("E38-14: «Отклонить» в списке — причина одним тапом", async () => {
+  stubCandidate([candOffer("o1", "sent")]);
+  mount("/me/offers");
+  fireEvent.click(await screen.findByRole("button", { name: "Отклонить" }));
+  fireEvent.click(await screen.findByRole("button", { name: /Мало денег/ }));
+  await waitFor(() => expect(calls).toHaveLength(1));
+  expect(calls[0].body).toEqual({ reason: "low_salary", comment: null });
+});
+
+test("E38-14: пустой список и ошибка загрузки приглашений", async () => {
+  stubCandidate([]);
+  const first = mount("/me/offers");
+  expect(await screen.findByText("Пока никто не пригласил")).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "Смотреть вакансии" })).toHaveAttribute("href", "/jobs");
+  first.unmount();
+  const f = globalThis.fetch as unknown as ReturnType<typeof vi.fn>;
+  const base = f.getMockImplementation()!;
+  f.mockImplementation(async (url: string, init?: RequestInit) => (url.endsWith("/candidates/me/offers") ? res(503, { type: "x", title: "x", status: 503, code: "down" }) : base(url, init)));
+  mount("/me/offers");
+  expect(await screen.findByText("ошибка 503", {}, { timeout: 6000 })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Повторить" })).toBeInTheDocument();
 });

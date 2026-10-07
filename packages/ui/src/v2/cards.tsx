@@ -429,6 +429,8 @@ export interface OfferCardV2Data {
   verified?: boolean;
   /** «отвечает в 85 % · 18 ч». */
   responseNote?: string;
+  /** Название вакансии или приглашения без вакансии. */
+  title?: string;
   /** «150–220 тыс. ₽». */
   salary: string;
   /** «до НДФЛ» или «на руки». */
@@ -500,6 +502,7 @@ export function OfferCardV2({
     >
       {head}
       <div className="flex flex-col gap-1.5">
+        {o.title && <span className="break-words text-13 text-muted">{o.title}</span>}
         <div className="flex flex-col gap-0.5">
           <span className="num text-[22px] leading-[1.1]">{o.salary}</span>
           {o.salaryNote && <Lbl>{o.salaryNote}</Lbl>}
