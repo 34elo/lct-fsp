@@ -331,6 +331,20 @@ def test_fsp_imported_redelivery_is_idempotent(world):
     assert len(_notes(c)) == 1 and len(_tg(c)) == 1
 
 
+def test_fsp_imported_without_results_is_silent(world):
+    """E9-6/E37-2: импорт без новых результатов (смена команды) не шлёт уведомление."""
+    c, e, e_uid, vid, ch, ch_uid = world
+    _link_tg(c, ch, ch_uid)
+    consumers = {"core.handlers": Consumer(QUEUES["core.handlers"])}
+    register(consumers, c.factory, None)
+    env = new_envelope(
+        "fsp.results.imported", "fsp-connector",
+        FspResultsImported(candidate_id=uuid.UUID(ch_uid), participant_id="p123", results=[]),
+    )  # fmt: skip
+    asyncio.run(consumers["core.handlers"].dispatch(env))
+    assert _notes(c) == [] and _tg(c) == []
+
+
 def test_regular_task_published_notifies_candidates(world):
     """E9-6: публикация регулярного задания отправляет уведомления кандидатам."""
     c, e, e_uid, vid, ch, ch_uid = world
