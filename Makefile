@@ -202,3 +202,10 @@ submission-docx:
 submission-pdf: submission-check submission-docx
 	uv run python tools/submission/build_pdf.py --src docs/submission.md --out reports/submission/submission.pdf
 # <<< block1
+# >>> block2 (цели)
+# PNG макетов v2 (E38-0): docs/design/v2/screens/*.html → docs/design/v2/png/ через Playwright
+# (Chromium Playwright или системный Edge/Chrome). ONLY=<подстрока> — часть экранов.
+.PHONY: design-shots
+design-shots:
+	pnpm --filter @fsp/ui design-shots $(if $(ONLY),--only $(ONLY))
+# <<< block2
