@@ -48,6 +48,8 @@ const finished = {
   result: {
     grade: "middle",
     theta: 0.4,
+    se: 0.2,
+    theta_by_type: { hard: 0.2, fundamental: 0.6, soft: -0.4 },
     integrity: 0.92,
     needs_confirmation: false,
     by_skill: [
@@ -403,6 +405,7 @@ describe("результат (S3)", () => {
     mount("/me/assessment/attempts/a1/result", routes(calls));
     expect(await tid("assessment-grade")).toHaveTextContent("Middle");
     expect(screen.getByTestId("assessment-integrity")).toHaveTextContent("0.92");
+    fireEvent.click(screen.getByTestId("assessment-topics-toggle"));
     expect(screen.getByTestId("assessment-skill-python")).toHaveTextContent("83%");
     expect(screen.getByTestId("assessment-skill-system_design")).toHaveTextContent("подтянуть");
     expect(await screen.findByText(/Следующая смена грейда — с 04\.01\.2999/)).toBeInTheDocument();
@@ -412,6 +415,59 @@ describe("результат (S3)", () => {
     fireEvent.click(screen.getByTestId("assessment-invite-start"));
     await waitFor(() => expect(calls.n).toBe(1));
     expect(await tid("assessment-item")).toBeInTheDocument();
+  });
+
+  it("макет v2 (E38-5): шкала 0–100 с порогом следующего грейда, разбивка по типам, «?»", async () => {
+    mount("/me/assessment/attempts/a1/result", (url) => {
+      if (url.endsWith("/attempts/a1")) return res(200, { ...finished, invited_grade: null });
+      if (url.endsWith("/candidates/me/interests")) return res(200, { companies: 3, salary_from_min: 140000, salary_to_max: 220000, items: [] });
+      if (url.endsWith("/assessment/history")) return res(200, { surveys: [], attempts: [finished], cooldowns: [], retries: [] });
+    });
+    expect(await tid("assessment-grade")).toHaveTextContent("Backend-разработчик · Middle — подтверждён");
+    // θ 0.4 → 55 + 25·0.4 = 65; подтверждён Middle → порог Senior (θ 1 → 80)
+    expect(screen.getByTestId("assessment-scale-aside")).toHaveTextContent("твой результат 65 · порог Senior 80");
+    expect(screen.getByRole("img", { name: /Результат 65/ })).toBeInTheDocument();
+    const types = screen.getByTestId("assessment-types");
+    expect(within(types).getAllByText(/Фундамент|Хард|Софт/).map((e) => e.textContent)).toEqual(["Фундамент", "Хард", "Софт"]);
+    expect(within(types).getByText("70")).toBeInTheDocument(); // фундамент θ 0.6
+    expect(await tid("assessment-opened-count")).toHaveTextContent("3");
+    expect(screen.getByTestId("assessment-to-offers")).toHaveAttribute("href", "/me/offers");
+    expect(screen.getByTestId("assessment-to-growth")).toHaveAttribute("href", "/me/navigator");
+    expect(screen.queryByTestId("assessment-rules")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Как устроен тест" }));
+    expect(screen.getByTestId("assessment-rules")).toHaveTextContent("90 дней");
+    expect(screen.queryByTestId("assessment-skills")).toBeNull();
+    fireEvent.click(screen.getByTestId("assessment-topics-toggle"));
+    expect(screen.getByTestId("assessment-skills")).toBeInTheDocument();
+  });
+
+  it("не подтверждён (E38-5): главная — тест грейдом ниже, заявленный стек пунктиром", async () => {
+    mount("/me/assessment/attempts/a1/result", (url) => {
+      if (url.endsWith("/attempts/a1"))
+        return res(200, { ...finished, status: "failed", invited_grade: null, result: { ...finished.result, grade: null, theta: -0.4 } });
+      if (url.endsWith("/assessment/history"))
+        return res(200, { surveys: [{ ...survey, id: "s1", created_at: "2026-10-06T08:00:00Z" }], attempts: [], cooldowns: [], retries: [] });
+    });
+    expect(await tid("assessment-grade")).toHaveTextContent("Middle не подтверждён");
+    expect(screen.getByTestId("assessment-scale-aside")).toHaveTextContent("твой результат 45 · порог Middle 55");
+    expect(screen.getByTestId("assessment-lower")).toHaveAttribute("href", "/me/assessment?profession=backend&grade=junior");
+    expect(screen.getByTestId("assessment-lower")).toHaveTextContent("Пройти Junior сейчас");
+    expect(screen.getByTestId("assessment-to-profile")).toHaveAttribute("href", "/me");
+    const claimed = await tid("assessment-claimed");
+    expect(within(claimed).getByText("fastapi")).toBeInTheDocument();
+    expect(claimed).toHaveTextContent("200 000");
+    expect(screen.getByTestId("assessment-explain")).toHaveTextContent("Задание 2");
+  });
+
+  it("загрузка: скелетон по композиции; ошибка: «Повторить»; чужая попытка: 404 без повтора", async () => {
+    mount("/me/assessment/attempts/a1/result", (url) => (url.endsWith("/attempts/a1") ? res(503, { code: "unavailable" }) : undefined));
+    expect(await tid("assessment-result-loading")).toBeInTheDocument();
+    expect(await screen.findByTestId("assessment-error", {}, { timeout: 5000 })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Повторить" })).toBeInTheDocument();
+    cleanup();
+    mount("/me/assessment/attempts/a1/result", () => undefined);
+    expect(await tid("assessment-error")).toHaveTextContent("Попытка не найдена");
+    expect(screen.queryByRole("button", { name: "Повторить" })).toBeNull();
   });
 
   it("экспресс-результат помечен меткой", async () => {
@@ -510,12 +566,15 @@ describe("«Объясни ответ» (E24-2)", () => {
     });
     expect(await tid("assessment-explain")).toBeInTheDocument();
     expect(screen.queryByTestId("assessment-explain-1")).not.toBeInTheDocument(); // верный ответ
-    fireEvent.change(screen.getByTestId("assessment-explain-self-2"), { target: { value: "guess" } });
     fireEvent.click(screen.getByTestId("assessment-explain-ask-2"));
     expect(await tid("assessment-explain-out-2")).toHaveTextContent("Кэш добавляет рассинхрон.");
     expect(screen.getByTestId("assessment-explain-reason-2")).toHaveTextContent("Ложное представление о теме");
-    const post = calls.find((c) => c.url.includes("/explain"))!;
-    expect(post.body).toEqual({ self_reason: "guess" });
+    expect(calls.find((c) => c.url.includes("/explain"))!.body).toBeUndefined();
+    // своя версия причины — после первого разбора, затем сверка
+    fireEvent.change(screen.getByTestId("assessment-explain-self-2"), { target: { value: "guess" } });
+    fireEvent.click(screen.getByTestId("assessment-explain-ask-2"));
+    await waitFor(() => expect(calls.filter((c) => c.url.includes("/explain"))).toHaveLength(2));
+    expect(calls.filter((c) => c.url.includes("/explain"))[1]!.body).toEqual({ self_reason: "guess" });
   });
 
   it("ошибка лимита показывается строкой", async () => {

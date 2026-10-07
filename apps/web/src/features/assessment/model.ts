@@ -214,3 +214,57 @@ export function pathStep(history: {
   if (!history.attempts.some((a) => a.status === "passed" || a.status === "failed")) return { kind: "test", to: PATH_START };
   return null;
 }
+
+/* ---------- Результат v2 (E38-5): шкала 0–100 для GradeScale и TypeBar ---------- */
+
+const GRADE_ORDER = ["junior", "middle", "senior"] as const;
+
+/** Пороги θ грейдов (assessment.md §2): Junior −1, Middle 0, Senior 1. */
+export const GRADE_CUTS: Record<string, number> = { junior: -1, middle: 0, senior: 1 };
+
+/**
+ * θ → балл шкалы 0–100: 55 + 25·θ. Пороги ложатся на полосы `GradeScale` по умолчанию:
+ * Junior −1 → 30, Middle 0 → 55, Senior 1 → 80.
+ */
+export function toScale(theta: number): number {
+  return Math.round(Math.max(0, Math.min(100, 55 + 25 * theta)));
+}
+
+/** Погрешность θ (`se`) в баллах шкалы. Нет или не число — `undefined`. */
+export function seScale(se: number | null | undefined): number | undefined {
+  return typeof se === "number" && Number.isFinite(se) && se > 0 ? Math.round(25 * se) : undefined;
+}
+
+export const nextGrade = (g: string): string | null => GRADE_ORDER[GRADE_ORDER.indexOf(g as never) + 1] ?? null;
+
+export function lowerGrade(g: string): string | null {
+  const i = GRADE_ORDER.indexOf(g as never);
+  return i > 0 ? GRADE_ORDER[i - 1]! : null;
+}
+
+/** Порог, с которым сравниваем результат: подтверждён — следующий грейд (Senior — свой), нет — заявленный. */
+export function thresholdGrade(grade: string | null | undefined, declared: string): string {
+  return grade ? (nextGrade(grade) ?? grade) : declared;
+}
+
+export const SKILL_TYPES = ["fundamental", "hard", "thinking", "business", "soft", "experience"] as const;
+
+export interface TypeRow {
+  type: string;
+  value: number;
+}
+
+/** `theta_by_type` → строки TypeBar в порядке типов; неизвестные типы и не-числа отбрасываются. */
+export function typeRows(raw: Record<string, number> | null | undefined): TypeRow[] {
+  if (!raw || typeof raw !== "object") return [];
+  return SKILL_TYPES.filter((t) => typeof raw[t] === "number" && Number.isFinite(raw[t])).map((t) => ({ type: t, value: toScale(raw[t]!) }));
+}
+
+/** Последний опрос по профессии (по `created_at`): заявленный стек и вилка для «не подтверждён». */
+export function latestSurvey<S extends { profession?: string | null; created_at?: string | null }>(surveys: S[], profession: string): S | null {
+  return (
+    surveys
+      .filter((s) => s.profession === profession)
+      .sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""))[0] ?? null
+  );
+}
