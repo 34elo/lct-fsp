@@ -130,6 +130,28 @@ async def test_publish_goes_to_category_with_consent_only(api, factory, taxonomy
         assert api.get(f"/assessment/tasks/{task['id']}", headers=h).status_code == 404
 
 
+async def test_minor_without_parent_consent_gets_no_tasks(api, factory, taxonomy_loaded):
+    """E32-5b: профиль 15–17 лет без согласия родителя не получает рассылку и не видит задания."""
+    emp, minor = _employer(api), register(api)
+    uid = await _grade(factory, minor, api=api)
+    async with session_scope(factory) as s:
+        from app.candidates.models import Candidate
+
+        (await s.get(Candidate, uid)).age_group = "minor"
+    task = _task(api, emp)
+    assert api.post(f"/employer/tasks/{task['id']}/publish", headers=emp).status_code == 200
+    assert (await _events(factory))[0].recipients == []
+    assert api.get("/assessment/tasks", headers=minor).json() == []
+    assert api.get(f"/assessment/tasks/{task['id']}", headers=minor).status_code == 404
+
+    async with session_scope(factory) as s:
+        from app.candidates.models import Candidate
+        from app.identity.models import utcnow
+
+        (await s.get(Candidate, uid)).parent_consent_at = utcnow()
+    assert [t["id"] for t in api.get("/assessment/tasks", headers=minor).json()] == [task["id"]]
+
+
 async def test_new_round_after_period(api, factory, taxonomy_loaded):
     emp, cand = _employer(api), register(api)
     uid = await _grade(factory, cand, api=api)

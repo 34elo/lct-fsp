@@ -33,6 +33,7 @@ from app.assessment.attempts import build_item, family_of, item_seed
 from app.assessment.families.base import Kind
 from app.assessment.families.spec import score_open
 from app.assessment.models import FamilyRow, RegularTask, TaskSubmission
+from app.candidates import service as candidates
 from app.candidates.models import Candidate
 from app.consents import service as consents
 from app.identity.models import utcnow
@@ -120,11 +121,15 @@ async def list_company_tasks(session: AsyncSession, company_id: uuid.UUID) -> li
 async def recipients_of(session: AsyncSession, task: RegularTask) -> list[uuid.UUID]:
     """Кандидаты категории задания с согласием `profile_publication`."""
     members = await grades_service.category_members(session, task.profession, task.grade)
-    return [
-        cid
-        for cid in sorted(members, key=str)
-        if await consents.has_consent(session, cid, ConsentType.profile_publication)
-    ]
+    return [cid for cid in sorted(members, key=str) if await _visible(session, cid)]
+
+
+async def _visible(session: AsyncSession, candidate_id: uuid.UUID) -> bool:
+    """Согласие `profile_publication`, профиль не удалён, 15–17 лет — с согласием родителя."""
+    if not await consents.has_consent(session, candidate_id, ConsentType.profile_publication):
+        return False
+    cand = await session.get(Candidate, candidate_id)
+    return cand is not None and cand.deleted_at is None and candidates.is_publishable(cand)
 
 
 async def publish(
@@ -234,7 +239,7 @@ async def score_submission(
 
 async def my_tasks(session: AsyncSession, candidate_id: uuid.UUID) -> list[RegularTask]:
     """Открытые задания категорий кандидата; без согласия `profile_publication` — пусто."""
-    if not await consents.has_consent(session, candidate_id, ConsentType.profile_publication):
+    if not await _visible(session, candidate_id):
         return []
     cats = {
         (g.profession, g.grade.value)
