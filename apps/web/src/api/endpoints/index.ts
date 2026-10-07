@@ -8,6 +8,7 @@ export * from './candidates/candidates';
 export * from './companies/companies';
 export * from './consents/consents';
 export * from './credentials/credentials';
+export * from './employer/employer';
 export * from './events/events';
 export * from './fsp/fsp';
 export * from './graph/graph';

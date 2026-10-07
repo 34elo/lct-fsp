@@ -44,3 +44,16 @@ def test_interest_payload_requires_salary():
         OfferInterestEvent(
             offer_id=uuid4(), candidate_id=uuid4(), company_id=uuid4(), status="interest"
         )
+
+
+def test_activity_feed_roundtrip():
+    from fsp_contracts.hiring import ActivityFeed
+
+    raw = {"items": [{
+        "id": "interest_opened:o1:c1", "kind": "interest_opened", "at": "2026-10-07T10:00:00Z",
+        "candidate": {"pseudo_id": "p1", "pseudonym": "Лис"}, "link": "/employer/offers/o1",
+    }]}  # fmt: skip
+    feed = ActivityFeed.model_validate(raw)
+    assert feed.items[0].candidate.grade is None and feed.items[0].offer_id is None
+    with pytest.raises(ValidationError):
+        ActivityFeed.model_validate({"items": [{**raw["items"][0], "kind": "nope"}]})

@@ -12,6 +12,7 @@ import type { MatchSnapshot } from './matchSnapshot';
 import type { OfferInitiator } from './offerInitiator';
 import type { OfferStatus } from './offerStatus';
 import type { SalaryBasis } from './salaryBasis';
+import type { TaskResult } from './taskResult';
 import type { VacancyBrief } from './vacancyBrief';
 
 export interface OfferForCompany {
@@ -39,4 +40,5 @@ export interface OfferForCompany {
   invited_at?: string | null;
   candidate?: CandidateCard | null;
   contacts?: ContactsOutput | null;
+  task?: TaskResult | null;
 }
