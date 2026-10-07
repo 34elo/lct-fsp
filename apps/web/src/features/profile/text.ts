@@ -255,3 +255,41 @@ export const SOURCE_TAG: Record<string, string> = { test: "тест", fsp: "ФС
 
 /** Формат работы в карточке профиля: «Удалёнка или гибрид». */
 export const FORMAT_WORD: Record<string, string> = { remote: "удалёнка", hybrid: "гибрид", office: "офис" };
+
+/** Статистика кандидата `/me/stats` (E38-2, макеты v2_me-stats__*). */
+export const STATS = {
+  title: "Статистика",
+  link: "Статистика",
+  linkViews: (n: number) => `смотрели: ${n} ›`,
+  loading: "Загрузка статистики…",
+  empty: "Статистики пока нет",
+  emptyAction: "Пройти тест",
+  loadError: "Не загрузилось",
+  errorCode: (status: number) => `ошибка ${status}`,
+  views: "Смотрели",
+  viewsHint: "за 30 дней",
+  peers: "Где ты среди своих",
+  peersSize: (n: number) => `${n} чел.`,
+  peersLabel: (category: string) => `Точечная диаграмма категории ${category}`,
+  you: "ты",
+  yLabel: "ожидания, ₽",
+  heatmap: "Просмотры профиля",
+  heatmapLabel: (total: number) => `Просмотры профиля по дням: ${total} за 30 дней`,
+  heatmapCaption: (n: number) => `${n} ${plural(n, "компания смотрела", "компании смотрели", "компаний смотрели")} за 30 дней`,
+  seenAs: "Как тебя видят",
+  fspConfirmed: "подтверждён ФСП",
+  history: "История тестов",
+  passed: "подтверждён",
+  failed: "не подтверждён",
+  mode: { express: "экспресс", full: "полный" } as Record<string, string>,
+} as const;
+
+/** Русское множественное число: 1 компания, 2 компании, 5 компаний. */
+export function plural(n: number, one: string, few: string, many: string): string {
+  const a = Math.abs(n) % 100;
+  const b = a % 10;
+  if (a > 10 && a < 20) return many;
+  if (b === 1) return one;
+  if (b >= 2 && b <= 4) return few;
+  return many;
+}
