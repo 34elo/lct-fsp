@@ -162,6 +162,7 @@ export default function Survey() {
       const r = await create.mutateAsync({
         data: { profession, declared_grade: g as TestGrade, ...(express ? { mode: "express" as const } : {}) },
       });
+      void qc.invalidateQueries({ queryKey: getHistoryAssessmentHistoryGetQueryKey() }); // баннер пути: «продолжить тест»
       if (r.status === 201) nav(`/me/assessment/attempts/${r.data.id}`);
     } catch {
       // Ошибки показаны через put.error / create.error.
@@ -351,8 +352,13 @@ export default function Survey() {
             {put.isError && <ErrorLine error={put.error} data-testid="assessment-survey-error" />}
             {create.isError && <ErrorLine error={create.error} data-testid="assessment-start-error" />}
             {done && (
-              <p role="status" className="rounded-lg bg-success-bg px-3 py-2 text-14 text-success" data-testid="assessment-saved">
-                {T.saved}
+              <p role="status" className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-success-bg px-3 py-2 text-14 text-success" data-testid="assessment-saved">
+                <span>
+                  {T.saved}. {T.savedLater}
+                </span>
+                <Link to="/me" className="font-semibold underline" data-testid="assessment-later">
+                  {T.toHome}
+                </Link>
               </p>
             )}
             <div className="flex flex-wrap items-center gap-3">
