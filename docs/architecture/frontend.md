@@ -54,11 +54,16 @@ packages/ui/              # @fsp/ui — дизайн-система, без сб
 │   ├── styles/           # tokens.css (CSS-переменные), index.css (@theme для Tailwind 4) → "@fsp/ui/styles.css"
 │   ├── primitives/       # базовые компоненты (Button…)
 │   ├── brand/            # TrustDots, SkillChip, ConstellationAvatar, MatchRing, Logo
+│   ├── v2/               # макеты v2 (E38-0): примитивы (Panel, H1/H2, Lbl, SkillTag/StatusTag/GradeTag, MeterBar),
+│   │                     #   графики (MetricTile, SkillConstellation, ScatterPlot, ActivityHeatmap, GradeScale, TypeBar),
+│   │                     #   карточки (CategoryCard, CandidateCardV2, FeedEvent, QueryBar, OfferCardV2),
+│   │                     #   тест (TaskHeader, OptionRow, CodeLines, ErrorBlock), каркас (AppBar, TabBar, MobileBar, AccountMenu)
 │   ├── lib/cn.ts
 │   └── index.ts
-├── playground/           # витрина: Токены / Базовые / Фирменные, светлая и тёмная тема (порт 28174)
+├── playground/           # витрина: Токены / Базовые / Фирменные / v2 (доска v2_components), обе темы (порт 28174)
 └── scripts/shot.mjs      # pnpm shot <маршрут> [--as candidate|employer|admin] [--playground]
                           #   → reports/shots/<имя>-<1440|1024|390>-<light|dark>.png
+    scripts/design-shots.mjs  # make design-shots: PNG всех docs/design/v2/screens/*.html → docs/design/v2/png/
 
 apps/web/
 ├── src/
@@ -96,7 +101,7 @@ apps/web/
 ## 5. Тема и токены
 
 **Из дизайна** (v1 — [design/pack/components](../design/pack/components/) и [pack/tokens](../design/pack/tokens/); v2 — [design/v2](../design/v2/README.md)):
-- `globals.css` → `packages/ui/src/styles/tokens.css` (`@fsp/ui`): CSS-переменные, светлая в `:root`, тёмная в `.dark` (переключение классом на `<html>`, по умолчанию светлая, режим «как в системе» выбирает пользователь; `<ThemeScope dark>` включает тёмную тему для области; шкала текста `text-11…text-48`, метка `lbl`, тени `shadow-xs`/`shadow-card`).
+- `globals.css` → `packages/ui/src/styles/tokens.css` (`@fsp/ui`): CSS-переменные, светлая в `:root`, тёмная в `.dark` (переключение классом на `<html>`, по умолчанию светлая, режим «как в системе» выбирает пользователь; `<ThemeScope dark>` включает тёмную тему для области; шкала текста `text-11…text-48`, метка `lbl`, тени `shadow-xs`/`shadow-card`). **v2:** имена из `docs/design/v2/fsp2.css` (`--deep`, `--mid`, `--t50…t200`, `--hair`, `--ok`, `--warn*`, `--err*`) — алиасы тех же токенов, плюс `--chip-fg`, `--code-*`, `--err-border`, `--shadow-menu`; `<ThemeScope light>` (класс `.light`) — светлая область внутри тёмной (`.dark .lt` макетов). Утилиты `num`, `skl`. Шапка `.hd`, нижняя панель `.tb` и меню аватара — `AppBar`/`TabBar`/`AccountMenu` из `@fsp/ui`, приложение передаёт `renderLink`.
 - **Tailwind 4** (CSS-first): цвета из `tailwind.config.ts` переносятся в `@theme inline` и **ссылаются на переменные**, например `--color-brand: var(--brand)`, `--color-tint-50: var(--tint-50)`. Тогда классы `bg-brand`, `border-tint-200`, `text-brand-deep` из `fsp-ui.tsx` работают в обеих темах.
 - `fsp-ui.tsx` → `packages/ui/src/brand/`. Захардкоженные цвета заменить токенами (см. [design/brief.md §0](../design/brief.md#0-дизайн-получен-2026-10-02--с-чего-начинать-фронтенду)).
 - shadcn/ui: Dialog, Sheet, Drawer, Tabs, Tooltip, Popover, Select, Toast — макеты на них и рассчитаны.

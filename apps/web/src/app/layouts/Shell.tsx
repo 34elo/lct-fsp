@@ -55,7 +55,7 @@ export function Shell({ nav, variant }: { nav: NavItem[]; variant: "top" | "side
           <Outlet />
         </PageContainer>
         <JuryPanel />
-        {bottom && <BottomNav items={CANDIDATE_BOTTOM} all={nav} />}
+        {bottom && <BottomNav items={CANDIDATE_BOTTOM} all={nav} counts={counts} />}
       </div>
     </div>
   );

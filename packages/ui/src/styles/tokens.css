@@ -71,3 +71,66 @@
   --shadow-card: 0 20px 50px rgba(0, 0, 0, 0.35);
   color-scheme: dark;
 }
+
+/* Токены v2 (docs/design/v2/fsp2.css :root и .dark): имена макетов как алиасы токенов @fsp/ui.
+   Значения те же, что выше, поэтому старые имена (--hairline, --tint-*, --success…) остаются рабочими.
+   Объявлены и на :root, и на .dark: var() вычисляется там, где объявлен алиас, иначе тёмная область унаследовала бы светлые значения. */
+:root,
+.dark,
+.light {
+  --deep: var(--brand-deep);
+  --mid: var(--brand-mid);
+  --t50: var(--tint-50);
+  --t100: var(--tint-100);
+  --t200: var(--tint-200);
+  --hair: var(--hairline);
+  --ok: var(--success);
+  --ok-bg: var(--success-bg);
+  --warn: var(--warning);
+  --warn-bg: var(--warning-bg);
+  --warn-bd: var(--warning-border);
+  --warn-fg: var(--warning-fg);
+  --err: var(--error);
+  --err-bg: var(--error-bg);
+  /* v2: рамка блока ошибки (.errc), подсветка строки кода, фон кода, тень меню. */
+  --err-border: #f3b7be;
+  --code-bg: var(--ink);
+  --code-fg: #ededed;
+  --code-muted: #7c7e88;
+  --code-mark: rgba(245, 158, 11, 0.28);
+  --code-sel: rgba(64, 47, 255, 0.35);
+  --shadow-menu: 0 8px 24px rgba(27, 28, 33, 0.12);
+  --shadow-dialog: 0 20px 50px rgba(0, 0, 0, 0.35);
+  --scrim: rgba(27, 28, 33, 0.55);
+  /* Текст чипов: в светлой — deep, в тёмной — светлый оттенок (.dark .sk). */
+  --chip-fg: var(--brand-deep);
+  --v2-h1: 26px;
+}
+
+.dark {
+  --err-border: #6b2530;
+  --code-bg: #15161a;
+  --chip-fg: #cdc9ff;
+}
+
+/* Светлая область внутри тёмной (.dark .lt в макетах): карточка кандидата на тёмном экране. */
+.light {
+  --brand-fg: #402fff;
+  --tint-50: #f4f3ff;
+  --tint-100: #e6e4ff;
+  --tint-200: #cdc9ff;
+  --ink: #1b1c21;
+  --muted: #5b5d66;
+  --hairline: #e1e1e5;
+  --page: #fafafc;
+  --card: #fff;
+  --signal: #d4152d;
+  --success: #15803d;
+  --success-bg: #ecfdf3;
+  --error: #b91c2d;
+  --error-bg: #fdecee;
+  --err-border: #f3b7be;
+  --code-bg: #1b1c21;
+  --chip-fg: #201880;
+  color-scheme: light;
+}
