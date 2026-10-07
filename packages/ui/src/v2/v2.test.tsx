@@ -7,6 +7,8 @@ import {
   ActivityHeatmap,
   AppBar,
   CandidateCardV2,
+  FilterChip,
+  RankedCandidateCard,
   CategoryCard,
   CodeLines,
   ErrorBlock,
@@ -271,5 +273,45 @@ describe("v2: каркас", () => {
     fireEvent.keyDown(btn, { key: "Enter" });
     fireEvent.click(await screen.findByRole("menuitem", { name: "Выйти" }));
     expect(out).toHaveBeenCalled();
+  });
+
+  it("RankedCandidateCard: неподтверждённый пунктиром, факты и действия", () => {
+    const onOpen = vi.fn();
+    render(
+      <RankedCandidateCard
+        c={{
+          pseudonym: "Backend #2210",
+          match: 91,
+          grade: "Middle",
+          confirmed: false,
+          note: "грейд заявлен",
+          skills: [{ name: "Go", level: 0, claimed: true }],
+          reasons: [{ text: "Навыки не подтверждены тестом", warn: true }],
+        }}
+        onOpen={onOpen}
+        actions={<button type="button">Интерес</button>}
+      />,
+    );
+    const a = screen.getByRole("article", { name: "Backend #2210" });
+    expect(a).toHaveAttribute("data-confirmed", "false");
+    expect(within(a).getByText("не подтверждён")).toBeInTheDocument();
+    expect(within(a).getByText("грейд заявлен")).toBeInTheDocument();
+    expect(within(a).getByText("!")).toBeInTheDocument();
+    fireEvent.click(within(a).getByRole("button", { name: "Открыть профиль Backend #2210" }));
+    expect(onOpen).toHaveBeenCalled();
+    expect(within(a).getByRole("button", { name: "Интерес" })).toBeInTheDocument();
+  });
+
+  it("FilterChip: aria-pressed и переключение", () => {
+    const onToggle = vi.fn();
+    render(
+      <FilterChip pressed onToggle={onToggle}>
+        ФСП
+      </FilterChip>,
+    );
+    const b = screen.getByRole("button", { name: /ФСП/ });
+    expect(b).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(b);
+    expect(onToggle).toHaveBeenCalled();
   });
 });
