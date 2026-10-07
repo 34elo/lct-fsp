@@ -37,5 +37,5 @@ test("подвал лендинга ведёт на /terms и /privacy, а не 
     </Providers>,
   );
   expect(screen.getByRole("link", { name: "Условия" })).toHaveAttribute("href", "/terms");
-  expect(screen.getByRole("link", { name: "Приватность" })).toHaveAttribute("href", "/privacy");
+  expect(screen.getByRole("link", { name: "Политика ПДн" })).toHaveAttribute("href", "/privacy");
 });
