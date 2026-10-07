@@ -486,11 +486,14 @@ export function OfferCardV2({
         {head}
       </article>
     );
+  // Без действий и срока (лента «Вами интересуются» на Главной) — три колонки, как в макете v2_me__after.
+  const side = Boolean(actions || o.deadline);
   return (
     <article
       aria-label={o.company}
       className={cn(
-        "grid min-w-0 items-center gap-4 rounded-xl border border-hairline bg-card p-4 md:grid-cols-[1.1fr_.9fr_1.5fr_190px] md:gap-5",
+        "grid min-w-0 items-center gap-4 rounded-xl border border-hairline bg-card p-4 md:gap-5",
+        side ? "md:grid-cols-[1.1fr_.9fr_1.5fr_190px]" : "md:grid-cols-[1.1fr_1fr_1.6fr]",
         dimmed && "opacity-60",
         className,
       )}
@@ -513,10 +516,12 @@ export function OfferCardV2({
           <CheckItem key={r}>{r}</CheckItem>
         ))}
       </div>
-      <div className="flex flex-col items-stretch gap-1.5">
-        {o.deadline && <span className="num text-12 text-muted">{o.deadline}</span>}
-        {actions}
-      </div>
+      {side && (
+        <div className="flex flex-col items-stretch gap-1.5">
+          {o.deadline && <span className="num text-12 text-muted">{o.deadline}</span>}
+          {actions}
+        </div>
+      )}
     </article>
   );
 }
