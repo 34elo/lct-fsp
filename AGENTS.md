@@ -4,7 +4,7 @@
 
 ## Проект
 
-**ФСП Карьера** — ИТ-агрегатор с обратной механикой найма для кейса Федерации спортивного программирования. Профиль кандидата — граф доказательств: факты (результаты ФСП, код, тесты, опыт) → навыки с силой и датой → доверие ○○○○…●●●●, категория, грейд. Работодатель ищет анонимных проверенных кандидатов и шлёт оффер с обязательной вилкой. Оффер приходит в Telegram. Хакатон: 10 дней, 4–5 человек, всё работает на домашнем сервере с одной GPU (RX 5700 XT).
+**ФСП Карьера** — платформа найма в ИТ с обратной механикой для кейса Федерации спортивного программирования. Кандидат проходит опрос и тест (у каждого свой «мир», общая шкала, Rasch + SPRT) и получает категорию «профессия × грейд»; доказательства и результаты ФСП дают доверие ○○○○…●●●● и место внутри категории. Работодатель описывает потребность, видит категории и кандидатов с объяснением и сам выходит на контакт: интерес → приглашение с обязательной вилкой (сайт и Telegram). Хакатон, 4–5 человек, домашний сервер с одной GPU; обязательный путь работает без GPU и LLM.
 
 > ⚠️ **ТЗ (2026) изменило задачу:** категория определяется опросом и **тестом**, а не резюме. Концепция v2 (рабочая) — [docs/solution.md](docs/solution.md), выжимка ТЗ — [docs/case.md](docs/case.md). Документы в `docs/architecture/` описывают текущую реализацию и обновляются по мере задач E20–E27.
 
@@ -15,12 +15,13 @@
 ```
 apps/web/                 React + Vite + TS (кандидат, работодатель, админ)
 services/core/            FastAPI: api + worker (FastStream) + scheduler — домен, граф, подбор, офферы
-services/ml/              FastAPI: ml-api + ml-worker-llm + ml-worker-code — резюме, навыки, GitHub, интервью
+services/ml/              FastAPI: ml-api + ml-worker-llm + ml-worker-code — резюме, навыки, LLM-черновики (опционально)
 services/fsp-connector/   порт ФСП, привязка, синхронизация, вебхуки (своя БД)
 services/bot/             aiogram 3, без бизнес-логики
 services/fsp-mock/        имитация API ФСП
 packages/contracts/       pydantic-схемы событий, команд, DTO — общие для всех сервисов
 packages/platform/        общая платформа: конфиг, БД, outbox/inbox, FastStream, JWT, логи
+packages/ui/              @fsp/ui: токены и компоненты фронта (дизайн v2 — docs/design/v2)
 tools/agents/vibe.sh      запасной запуск /vibe без открытого чата
 data/                     ядро навыков, правила ФСП, банк вопросов, scoring.yaml, обезличенные эталоны
 tools/                    seed (демо), synth (синтетический рынок), eval (метрики)
@@ -28,7 +29,7 @@ infra/                    compose, Caddy, Prometheus/Grafana, скрипты
 docs/                     документация (карта — docs/README.md)
 ```
 
-Каркас монорепо создан (E0-1): uv workspace, `packages/contracts`, `packages/platform`, `apps/web`. Новый сервис: `make new-service NAME=<имя>` (шаблон `tools/service-template`).
+Новый сервис: `make new-service NAME=<имя>` (шаблон `tools/service-template`). Работа идёт двумя блоками — [docs/process/blocks.md](docs/process/blocks.md).
 
 ## Что читать под задачу
 
@@ -47,8 +48,8 @@ docs/                     документация (карта — docs/README.m
 | ML: резюме, GitHub, тест, интервью | [ml.md](docs/architecture/ml.md) (нужный раздел) |
 | ФСП | [fsp.md](docs/architecture/fsp.md) |
 | Бот | [telegram.md](docs/architecture/telegram.md) |
-| Фронт | [frontend.md](docs/architecture/frontend.md), [design/brief.md](docs/design/brief.md) §0 (экран → файл → маршрут), нужный макет из `docs/design/screens/`, компоненты и токены из `docs/design/handoff/` |
-| Редизайн, вид экранов, `packages/ui` | [backlog.md §E19](docs/process/backlog.md#e19-редизайн-по-пакету-дизайна), эталоны в [docs/design/pack/](docs/design/pack/) |
+| Фронт | [frontend.md](docs/architecture/frontend.md), **вид экранов — [design/v2/README.md](docs/design/v2/README.md)** (макет экрана → маршрут → задача E38), смысл и данные экранов — [design/claude-design/brief.md](docs/design/claude-design/brief.md), UX-правила — [ux/ux-spec.md](docs/ux/ux-spec.md), компоненты — `packages/ui` |
+| Редизайн, вид экранов, `packages/ui` | **v2:** [docs/design/v2/README.md](docs/design/v2/README.md) (эталон вида, задачи E38); старый пакет — [docs/design/pack/](docs/design/pack/) |
 | Метрики, события аналитики | [metrics.md](docs/architecture/metrics.md) (v2 — §9) |
 | Эталоны, синтетика, seed, eval | [evaluation.md](docs/architecture/evaluation.md) |
 | Инфраструктура | [deployment.md](docs/architecture/deployment.md), [security.md](docs/architecture/security.md) |
@@ -101,7 +102,7 @@ docs/                     документация (карта — docs/README.m
 
 ## Команды
 
-Уже работают: `make sync`, `make lint`, `make test`, `make new-service`. Целевые остальные: `make up`, `make dev-core`, `make lint`, `make test`, `make migrate`, `make seed`, `make demo-reset`, `make eval`, `make api-gen`.
+Основные: `make sync`, `make lint`, `make test`, `make e2e`, `make up` / `make up-lite`, `make seed`, `make demo-reset`, `make families-check`, `make eval`, `make eval-assessment`, `make metrics`, `make load`, `make openapi`, `make api-gen`, `make submission-pdf`. Полный список — `Makefile`, пояснения — [docs/deploy.md](docs/deploy.md).
 Вывод сокращай: `pytest -q`, `docker compose logs --tail 50 <svc>`.
 
 ## Ловушки

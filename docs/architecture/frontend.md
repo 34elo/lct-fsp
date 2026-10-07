@@ -95,7 +95,7 @@ apps/web/
 
 ## 5. Тема и токены
 
-**Из дизайна** ([design/handoff/](../design/handoff/)):
+**Из дизайна** (v1 — [design/pack/components](../design/pack/components/) и [pack/tokens](../design/pack/tokens/); v2 — [design/v2](../design/v2/README.md)):
 - `globals.css` → `packages/ui/src/styles/tokens.css` (`@fsp/ui`): CSS-переменные, светлая в `:root`, тёмная в `.dark` (переключение классом на `<html>`, по умолчанию светлая, режим «как в системе» выбирает пользователь; `<ThemeScope dark>` включает тёмную тему для области; шкала текста `text-11…text-48`, метка `lbl`, тени `shadow-xs`/`shadow-card`).
 - **Tailwind 4** (CSS-first): цвета из `tailwind.config.ts` переносятся в `@theme inline` и **ссылаются на переменные**, например `--color-brand: var(--brand)`, `--color-tint-50: var(--tint-50)`. Тогда классы `bg-brand`, `border-tint-200`, `text-brand-deep` из `fsp-ui.tsx` работают в обеих темах.
 - `fsp-ui.tsx` → `packages/ui/src/brand/`. Захардкоженные цвета заменить токенами (см. [design/brief.md §0](../design/brief.md#0-дизайн-получен-2026-10-02--с-чего-начинать-фронтенду)).
