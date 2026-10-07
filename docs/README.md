@@ -34,6 +34,8 @@ docs/
 │   ├── deployment.md    топология, compose, GPU, окружение, demo-reset
 │   └── decisions.md     журнал архитектурных решений (ADR)
 ├── design/
+│   ├── v2/              макеты UX v2 (Claude Design): 127 экранов HTML, fsp2.css, README — эталон вида
+│   ├── claude-design/   бриф и промпты для Claude Design
 │   ├── brief.md         что на экранах, фирменные элементы, вау-моменты
 │   ├── prompt.md        промпт для Claude Design
 │   ├── brand.md         токены и правила бренда
