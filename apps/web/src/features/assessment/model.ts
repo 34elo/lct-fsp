@@ -92,6 +92,14 @@ export function toggleLine(v: number[], no: number): number[] {
   return v.includes(no) ? v.filter((x) => x !== no) : [...v, no].sort((a, b) => a - b);
 }
 
+/** Переносит элемент с позиции `from` на позицию `to`, остальные сдвигаются. Вне границ — без изменений. */
+export function moveTo(list: number[], from: number, to: number): number[] {
+  if (from === to || from < 0 || to < 0 || from >= list.length || to >= list.length) return list;
+  const out = [...list];
+  out.splice(to, 0, out.splice(from, 1)[0]!);
+  return out;
+}
+
 /** Сдвиг элемента списка на `delta` (−1 вверх, +1 вниз). Выход за границы — без изменений. */
 export function move(list: number[], at: number, delta: -1 | 1): number[] {
   const to = at + delta;

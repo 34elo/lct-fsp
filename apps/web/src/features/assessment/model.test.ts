@@ -10,6 +10,7 @@ import {
   isAnswered,
   missedAnswers,
   move,
+  moveTo,
   parseListing,
   parseNumber,
   salaryError,
@@ -115,5 +116,17 @@ describe("missedAnswers", () => {
     ]);
     expect(rows.map((r) => r.responseId)).toEqual(["a", "b"]);
     expect(missedAnswers(undefined)).toEqual([]);
+  });
+});
+
+describe("перенос варианта на место (E38-4)", () => {
+  it("moveTo переносит элемент, остальные сдвигаются", () => {
+    expect(moveTo([0, 1, 2, 3], 0, 2)).toEqual([1, 2, 0, 3]);
+    expect(moveTo([0, 1, 2, 3], 3, 1)).toEqual([0, 3, 1, 2]);
+  });
+  it("вне границ и на то же место — без изменений", () => {
+    const l = [0, 1, 2];
+    expect(moveTo(l, 1, 1)).toBe(l);
+    expect(moveTo(l, 0, 5)).toBe(l);
   });
 });

@@ -306,7 +306,7 @@ describe("тест (S2)", () => {
   it("таймер: по истечении ответ уходит сам", async () => {
     const answers: { body: unknown }[] = [];
     mount("/me/assessment/attempts/a1", attemptRoutes([{ done: false, response_id: "t", seq: 1, kind: "exact", stem: "?", time_limit_s: 1 }, { done: true }], answers));
-    await tid("assessment-timer");
+    await screen.findByRole("timer");
     await waitFor(() => expect(answers).toHaveLength(1), { timeout: 3000 });
     expect((answers[0]!.body as { answer: unknown }).answer).toBeNull();
   });
@@ -316,6 +316,71 @@ describe("тест (S2)", () => {
     const box = await tid("assessment-error");
     expect(box).toHaveAttribute("data-code", "not_found");
     expect(within(box).queryByRole("button", { name: "Повторить" })).toBeNull();
+  });
+});
+
+describe("тест (S2) · макет v2 (E38-4)", () => {
+  it("шапка: номер из цели, таймер тикает; «?» открывает правила; «Не знаю» вторичное", async () => {
+    mount("/me/assessment/attempts/a1", attemptRoutes([{ done: false, response_id: "r1", seq: 7, kind: "choice", stem: "Что?", options: ["A", "B"], time_limit_s: 60 }]));
+    const timer = await screen.findByRole("timer");
+    expect(screen.getByLabelText("Задание 7 из 10")).toBeInTheDocument();
+    const before = timer.textContent;
+    await waitFor(() => expect(screen.getByRole("timer").textContent).not.toBe(before), { timeout: 3000 });
+    expect(screen.queryByText("Правила теста")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Пояснение" }));
+    expect(screen.getByText("Правила теста")).toBeInTheDocument();
+    expect(screen.getByTestId("assessment-skip").className).toMatch(/border/);
+  });
+
+  it("choice: код в условии отдельным блоком, клик по строке выбирает вариант", async () => {
+    mount("/me/assessment/attempts/a1", attemptRoutes([{ done: false, response_id: "c", seq: 1, kind: "choice", stem: "Какой запрос?\n\nusers(id)", options: ["A", "B"], time_limit_s: 60 }]));
+    const row = await tid("assessment-option-1");
+    expect(screen.getByLabelText("Код задания")).toHaveTextContent("users(id)");
+    expect(row).toHaveAttribute("aria-checked", "false");
+    fireEvent.click(row);
+    expect(row).toHaveAttribute("aria-checked", "true");
+  });
+
+  it("order: клик по строке и по месту переносит вариант", async () => {
+    const answers: { body: unknown }[] = [];
+    mount(
+      "/me/assessment/attempts/a1",
+      attemptRoutes([{ done: false, response_id: "o", seq: 1, kind: "order", stem: "Порядок", options: ["x", "y", "z"], time_limit_s: 60 }, { done: true }], answers),
+    );
+    fireEvent.click(await tid("assessment-row-0"));
+    fireEvent.click(screen.getByTestId("assessment-row-2"));
+    fireEvent.click(screen.getByTestId("assessment-next"));
+    await waitFor(() => expect(answers).toHaveLength(1));
+    expect((answers[0]!.body as { answer: unknown }).answer).toEqual([1, 2, 0]);
+  });
+
+  it("sjt: строки с номерами и подсказкой про эффективность", async () => {
+    mount("/me/assessment/attempts/a1", attemptRoutes([{ done: false, response_id: "s", seq: 1, kind: "sjt", stem: "Что делать?", options: ["a", "b"], time_limit_s: 60 }]));
+    const row = await tid("assessment-row-1");
+    expect(row).toHaveTextContent("2");
+    expect(screen.getByText(/самого эффективного/)).toBeInTheDocument();
+  });
+
+  it("find_bug: строки кода переключаются кликом, ответ — номера строк", async () => {
+    mount("/me/assessment/attempts/a1", attemptRoutes([{ done: false, response_id: "f", seq: 1, kind: "find_bug", stem: "Найдите.\n\n 1 | a\n 2 | b\n 3 | c", time_limit_s: 60 }]));
+    fireEvent.click(await tid("assessment-line-3"));
+    fireEvent.click(screen.getByTestId("assessment-line-1"));
+    expect(screen.getByTestId("assessment-line-3")).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(screen.getByTestId("assessment-line-3"));
+    expect(screen.getByTestId("assessment-find-hint")).toHaveTextContent("Выбрано строк: 1");
+  });
+
+  it("пусто: «Активного теста нет» и ссылка на тест; ошибка: «Повторить»; загрузка: скелетон", async () => {
+    mount("/me/assessment/attempts/a1", attemptRoutes([{ done: false }]));
+    expect(await screen.findByRole("status", { name: "Загружаем…" })).toBeInTheDocument();
+    expect(await tid("assessment-empty")).toHaveTextContent("Активного теста нет");
+    expect(screen.getByRole("link", { name: "Пройти тест" })).toHaveAttribute("href", "/me/assessment");
+  });
+
+  it("ошибка загрузки задания: «Повторить»", async () => {
+    mount("/me/assessment/attempts/a1", (url) => (url.includes("/next") ? res(503, { code: "unavailable" }) : undefined));
+    expect(await screen.findByTestId("assessment-error", {}, { timeout: 5000 })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Повторить" })).toBeInTheDocument();
   });
 });
 

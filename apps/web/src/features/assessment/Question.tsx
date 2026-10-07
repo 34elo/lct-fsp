@@ -1,12 +1,18 @@
-import { Input } from "@fsp/ui";
+import { CodeLines, Input, Lbl, OptionRow } from "@fsp/ui";
+import { useState } from "react";
 
-import { cn } from "@/shared/lib/cn";
-import { move, parseListing, splitStem, toggleLine, type AnswerValue, type TestItem } from "./model";
+import { move, moveTo, parseListing, splitStem, toggleLine, type AnswerValue, type TestItem } from "./model";
 import { T } from "./text";
 
-const Code = ({ children }: { children: string }) => (
-  <pre className="overflow-x-auto rounded-lg border border-hairline bg-tint-50 p-3 font-mono text-13 leading-relaxed">{children}</pre>
+/** Условие задания `.h2` крупнее обычного заголовка: это главный текст экрана. */
+const Stem = ({ children }: { children: string }) => (
+  <h2 className="m-0 font-mono text-16 leading-[1.35] font-semibold whitespace-pre-line md:text-[22px] md:leading-[1.3]">{children}</h2>
 );
+
+const Code = ({ children }: { children: string }) => <CodeLines lines={children.split("\n")} label="Код задания" />;
+
+const arrow =
+  "grid size-11 flex-none place-items-center rounded-md text-muted hover:bg-tint-50 hover:text-ink disabled:opacity-40 sm:size-9";
 
 /** Поле ответа одного задания (или шага цепочки). Правильность не показывается никогда. */
 export function Question({
@@ -23,35 +29,42 @@ export function Question({
   idPrefix?: string;
 }) {
   const opts = item.options ?? [];
+  // Для order/sjt: какая строка «взята» кликом, чтобы поставить её на другое место.
+  const [picked, setPicked] = useState<number | null>(null);
 
   switch (item.kind) {
     case "exact": {
       const { prose, code } = splitStem(item.stem);
       return (
-        <div className="flex flex-col gap-3">
-          <p className="whitespace-pre-line text-16">{prose}</p>
+        <div className="flex flex-col gap-4">
+          <Stem>{prose}</Stem>
           {code && <Code>{code}</Code>}
-          <label className="flex flex-col gap-1.5 text-14 font-medium" htmlFor={`${idPrefix}-exact`}>
-            {T.exactLabel}
+          <div className="flex flex-col gap-1.5">
+            <Lbl>
+              <label htmlFor={`${idPrefix}-exact`}>{T.exactLabel}</label>
+            </Lbl>
             <Input
               id={`${idPrefix}-exact`}
               value={typeof value === "string" ? value : ""}
               onChange={(e) => onChange(e.target.value)}
               disabled={disabled}
               autoComplete="off"
+              className="font-mono text-16"
               data-testid="assessment-input-exact"
             />
-            <span className="text-12 font-normal text-muted">{T.exactHint}</span>
-          </label>
+            <span className="text-12 text-muted">{T.exactHint}</span>
+          </div>
         </div>
       );
     }
     case "estimate":
       return (
-        <div className="flex flex-col gap-3">
-          <p className="whitespace-pre-line text-16">{item.stem}</p>
-          <label className="flex flex-col gap-1.5 text-14 font-medium" htmlFor={`${idPrefix}-estimate`}>
-            {T.estimateLabel}
+        <div className="flex flex-col gap-4">
+          <Stem>{item.stem}</Stem>
+          <div className="flex flex-col gap-1.5">
+            <Lbl>
+              <label htmlFor={`${idPrefix}-estimate`}>{T.estimateLabel}</label>
+            </Lbl>
             <Input
               id={`${idPrefix}-estimate`}
               inputMode="decimal"
@@ -59,70 +72,56 @@ export function Question({
               onChange={(e) => onChange(e.target.value)}
               disabled={disabled}
               autoComplete="off"
+              className="font-mono text-16"
               data-testid="assessment-input-estimate"
             />
-            <span className="text-12 font-normal text-muted">{T.estimateHint}</span>
-          </label>
+            <span className="text-12 text-muted">{T.estimateHint}</span>
+          </div>
         </div>
       );
-    case "choice":
+    case "choice": {
+      const { prose, code } = splitStem(item.stem);
       return (
-        <div className="flex flex-col gap-3">
-          <p className="whitespace-pre-line text-16">{item.stem}</p>
-          <div role="radiogroup" aria-label={item.stem} className="flex flex-col gap-2">
+        <div className="flex flex-col gap-4">
+          <Stem>{prose}</Stem>
+          {code && <Code>{code}</Code>}
+          <div role="radiogroup" aria-label={prose} className="flex flex-col gap-2">
             {opts.map((o, i) => (
-              <label
+              <OptionRow
                 key={i}
-                className={cn(
-                  "flex min-h-11 cursor-pointer items-start gap-3 rounded-lg border bg-card p-3 text-14",
-                  value === i ? "border-brand bg-tint-50" : "border-hairline hover:border-brand-mid",
-                )}
+                kind="choice"
+                selected={value === i}
+                disabled={disabled}
+                onClick={() => onChange(i)}
+                data-testid={`assessment-option-${i}`}
               >
-                <input
-                  type="radio"
-                  name={`${idPrefix}-choice`}
-                  className="mt-0.5 size-4 accent-[var(--brand)]"
-                  checked={value === i}
-                  onChange={() => onChange(i)}
-                  disabled={disabled}
-                  data-testid={`assessment-option-${i}`}
-                />
-                <span>{o}</span>
-              </label>
+                {o}
+              </OptionRow>
             ))}
           </div>
         </div>
       );
+    }
     case "find_bug": {
       const { prose, lines } = parseListing(item.stem);
       const chosen = Array.isArray(value) ? value : [];
+      const nos = lines.map((l) => l.no);
       return (
-        <div className="flex flex-col gap-3">
-          <p className="whitespace-pre-line text-16">{prose}</p>
-          <ul className="overflow-x-auto rounded-lg border border-hairline bg-tint-50 font-mono text-13" data-testid="assessment-listing">
-            {lines.map((l) => {
-              const on = chosen.includes(l.no);
-              return (
-                <li key={l.no}>
-                  <button
-                    type="button"
-                    aria-pressed={on}
-                    aria-label={`Строка ${l.no}`}
-                    disabled={disabled}
-                    onClick={() => onChange(toggleLine(chosen, l.no))}
-                    data-testid={`assessment-line-${l.no}`}
-                    className={cn(
-                      "flex min-h-11 w-full items-center gap-3 px-3 text-left sm:min-h-8",
-                      on ? "bg-brand text-on-brand" : "hover:bg-tint-100",
-                    )}
-                  >
-                    <span className="w-6 shrink-0 text-right opacity-70">{l.no}</span>
-                    <span className="whitespace-pre">{l.text}</span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+        <div className="flex flex-col gap-4">
+          <Stem>{prose}</Stem>
+          <div data-testid="assessment-listing">
+            <CodeLines
+              lines={lines.map((l) => l.text)}
+              start={nos[0] ?? 1}
+              selected={chosen.flatMap((no) => {
+                const at = nos.indexOf(no);
+                return at < 0 ? [] : [at];
+              })}
+              onSelect={disabled ? undefined : (i) => onChange(toggleLine(chosen, nos[i]!))}
+              lineTestId={(no) => `assessment-line-${no}`}
+              label="Код: выберите строки с ошибкой"
+            />
+          </div>
           <p className="text-12 text-muted" data-testid="assessment-find-hint">
             {T.findBugHint(chosen.length)}
           </p>
@@ -132,22 +131,43 @@ export function Question({
     case "order":
     case "sjt": {
       const order = Array.isArray(value) ? value : opts.map((_, i) => i);
+      const kind = item.kind;
+      const put = (to: number) => {
+        if (picked === null) return setPicked(to);
+        if (picked !== to) onChange(moveTo(order, picked, to));
+        setPicked(null);
+      };
       return (
-        <div className="flex flex-col gap-3">
-          <p className="whitespace-pre-line text-16">{item.stem}</p>
-          <p className="text-12 text-muted">{item.kind === "sjt" ? T.sjtHint : T.orderHint}</p>
-          <ol className="flex flex-col gap-2" data-testid="assessment-order">
+        <div className="flex flex-col gap-4">
+          <Stem>{item.stem}</Stem>
+          <p className="text-12 text-muted">
+            {kind === "sjt" ? T.sjtHint : T.orderHint} {T.orderPick}
+          </p>
+          <ol className="m-0 flex list-none flex-col gap-2 p-0" data-testid="assessment-order">
             {order.map((idx, pos) => (
-              <li key={idx} className="flex items-center gap-2 rounded-lg border border-hairline bg-card p-2 text-14">
-                <span className="w-6 shrink-0 text-center font-mono text-muted">{pos + 1}</span>
-                <span className="flex-1">{opts[idx]}</span>
+              <li key={idx} className="flex items-center gap-1">
+                <OptionRow
+                  kind={kind}
+                  index={pos + 1}
+                  selected={picked === pos}
+                  dragging={picked === pos}
+                  disabled={disabled}
+                  onClick={() => put(pos)}
+                  className="flex-1"
+                  data-testid={`assessment-row-${pos}`}
+                >
+                  {opts[idx] ?? ""}
+                </OptionRow>
                 <button
                   type="button"
                   aria-label={T.moveUp(opts[idx] ?? "")}
                   disabled={disabled || pos === 0}
-                  onClick={() => onChange(move(order, pos, -1))}
+                  onClick={() => {
+                    setPicked(null);
+                    onChange(move(order, pos, -1));
+                  }}
                   data-testid={`assessment-up-${pos}`}
-                  className="grid size-11 place-items-center rounded-md hover:bg-tint-50 disabled:opacity-40 sm:size-8"
+                  className={arrow}
                 >
                   <span aria-hidden>↑</span>
                 </button>
@@ -155,9 +175,12 @@ export function Question({
                   type="button"
                   aria-label={T.moveDown(opts[idx] ?? "")}
                   disabled={disabled || pos === order.length - 1}
-                  onClick={() => onChange(move(order, pos, 1))}
+                  onClick={() => {
+                    setPicked(null);
+                    onChange(move(order, pos, 1));
+                  }}
                   data-testid={`assessment-down-${pos}`}
-                  className="grid size-11 place-items-center rounded-md hover:bg-tint-50 disabled:opacity-40 sm:size-8"
+                  className={arrow}
                 >
                   <span aria-hidden>↓</span>
                 </button>
@@ -168,6 +191,6 @@ export function Question({
       );
     }
     default:
-      return <p className="whitespace-pre-line text-16">{item.stem}</p>;
+      return <Stem>{item.stem}</Stem>;
   }
 }
