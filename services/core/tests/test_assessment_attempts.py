@@ -184,6 +184,30 @@ async def test_empty_answer_moves_to_new_item(api, factory, taxonomy_loaded):
     assert len(ids) >= 2
 
 
+async def test_answer_and_next_lock_attempt_row(api, factory, taxonomy_loaded, monkeypatch):
+    """Параллельный повтор ответа не должен дважды менять LLR: попытка читается FOR UPDATE."""
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    h = register(api)
+    aid = _start(api, h).json()["id"]
+    locks: list[bool] = []
+    orig = AsyncSession.get
+
+    async def spy(self, entity, ident, **kw):
+        if entity is Attempt:
+            locks.append(bool(kw.get("with_for_update")))
+        return await orig(self, entity, ident, **kw)
+
+    monkeypatch.setattr(AsyncSession, "get", spy)
+    item = api.get(f"/assessment/attempts/{aid}/next", headers=h).json()
+    api.post(
+        f"/assessment/attempts/{aid}/answers",
+        json={"response_id": item["response_id"], "answer": "x"},
+        headers=h,
+    )
+    assert locks and locks[0] is True and locks[1] is True
+
+
 async def test_foreign_attempt_is_404(api, factory, taxonomy_loaded):
     owner = register(api)
     aid = _start(api, owner).json()["id"]
