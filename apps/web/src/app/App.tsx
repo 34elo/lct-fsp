@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ComponentType } from "react";
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 
 import { RequireRole } from "@/app/RequireRole";
 import { ROUTES, SECTION_ROLE } from "@/app/routes";
@@ -20,7 +20,6 @@ import { EmployerOfferDetail, EmployerOffers } from "@/features/offers/EmployerO
 import { CandidateOfferDetail, CandidateOffers } from "@/features/offers/CandidateOffers";
 import NotFound from "@/pages/NotFound";
 import Register from "@/pages/Register";
-import { Stub } from "@/pages/Stub";
 // >>> block1 imports
 import Survey from "@/features/assessment/Survey";
 import Attempt from "@/features/assessment/Attempt";
@@ -66,22 +65,17 @@ const EmployerLayout = lazy(() => import("@/app/layouts/EmployerLayout"));
 const AdminLayout = lazy(() => import("@/app/layouts/AdminLayout"));
 const RunPage = lazy(() => import("@/features/runs/RunPage"));
 
-// Эти пути уже реализованы настоящими страницами (E1-4).
-const IMPLEMENTED = new Set(["/", "/login", "/register", "/auth/magic", "/consents", "/onboarding", "/me", "/me/skills/:slug", "/employer/search", "/employer/candidates/:id", "/employer/vacancies", "/employer/vacancies/new", "/employer/vacancies/:id", "/employer/company", "/employer/vacancies/:id/shortlist", "/employer/offers/new", "/employer/offers", "/employer/offers/:id", "/me/offers", "/me/offers/:id", "/me/navigator", "/verify-email", "/me/profile/edit", "/me/responses", "/employer/responses", "/jobs", "/jobs/:id", "/terms", "/privacy", "/run/:token", "/federation", "/federation/moderation", "/admin/quality", "/admin/quality/fairness", "/admin/quality/runs", "/me/tasks", "/employer/tasks", "/employer/families/new", "/admin/families", "/admin/professions", "/admin/skills", "/employer/needs/new", "/employer/needs/:id", "/employer/categories/:profession/:grade", "/employer/subscriptions", "/me/interests"]);
-
-// Б1: страницы теста (E22-8).
-["/me/graph", "/me/assessment", "/me/assessment/history", "/me/assessment/attempts/:id", "/me/assessment/attempts/:id/result", "/admin/demo/two-worlds", "/admin/demo/llm-exam", "/admin/demo/new-profession"].forEach((p) => IMPLEMENTED.add(p));
-
-const stubs = (section: string) =>
-  ROUTES.filter((r) => r.section === section && !IMPLEMENTED.has(r.path)).map((r) => (
-    <Route key={r.path} path={r.path} element={<Stub routePath={r.path} />} />
+// Старые адреса без своего экрана ведут на рабочий экран (E35-1: заглушек нет).
+const redirects = (section: string) =>
+  ROUTES.filter((r) => r.section === section && r.redirect).map((r) => (
+    <Route key={r.path} path={r.path} element={<Navigate to={r.redirect!} replace />} />
   ));
 
 function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentType) {
   return (
     <Route element={<RequireRole role={SECTION_ROLE[section]!} />}>
       <Route element={<Layout />}>
-        {stubs(section)}
+        {redirects(section)}
         {section === "candidate" && (
           <>
             <Route path="/onboarding" element={<Onboarding />} />
@@ -159,12 +153,10 @@ export function App() {
     <Suspense fallback={<p role="status" className="p-6 text-muted">Загрузка…</p>}>
       <Routes>
         <Route element={<PublicLayout />}>
-          {stubs("public")}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/auth/magic" element={<MagicLogin />} />
           <Route path="/consents" element={<Consents />} />
-          {stubs("auth")}
           {/* >>> block1 (auth) */}
           <Route path="/verify-email" element={<VerifyEmail />} />
           {/* <<< block1 (auth) */}

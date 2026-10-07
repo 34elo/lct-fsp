@@ -1,12 +1,13 @@
-import { NavLink } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 import { cn } from "@fsp/ui";
 
 import type { NavItem } from "@/app/routes";
-import { BOTTOM_ICON, isPrefix } from "./shell-meta";
+import { BOTTOM_ICON, activeNav } from "./shell-meta";
 
 /** Нижняя навигация кандидата — до 768 px, иконка и подпись, цель касания ≥ 44 px. */
 export function BottomNav({ items, all }: { items: NavItem[]; all: NavItem[] }) {
+  const current = activeNav(all, useLocation().pathname);
   return (
     <nav
       aria-label="Разделы"
@@ -14,21 +15,20 @@ export function BottomNav({ items, all }: { items: NavItem[]; all: NavItem[] }) 
     >
       {items.map((n) => {
         const Icon = BOTTOM_ICON[n.to];
+        const active = current?.to === n.to;
         return (
-          <NavLink
+          <Link
             key={n.to}
             to={n.to}
-            end={isPrefix(all, n.to)}
-            className={({ isActive }) =>
-              cn(
-                "flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 text-12 font-semibold",
-                isActive ? "text-brand-fg" : "text-muted",
-              )
-            }
+            aria-current={active ? "page" : undefined}
+            className={cn(
+              "flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 text-12 font-semibold",
+              active ? "text-brand-fg" : "text-muted",
+            )}
           >
             {Icon && <Icon className="size-5" aria-hidden />}
             <span className="truncate">{n.label}</span>
-          </NavLink>
+          </Link>
         );
       })}
     </nav>
