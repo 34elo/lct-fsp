@@ -52,10 +52,10 @@ async function openDialog() {
       </Providers>
     </MemoryRouter>,
   );
-  fireEvent.click(await screen.findByRole("button", { name: "Отправить оффер" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Отправить приглашение" }));
   return await screen.findByRole("dialog");
 }
-const sendBtn = () => screen.getAllByRole("button", { name: "Отправить оффер" }).at(-1) as HTMLButtonElement;
+const sendBtn = () => screen.getAllByRole("button", { name: "Отправить приглашение" }).at(-1) as HTMLButtonElement;
 
 test("модалка: вилка вакансии, медиана и AcceptanceMeter из API, ключ идемпотентности", async () => {
   await openDialog();
@@ -63,7 +63,7 @@ test("модалка: вилка вакансии, медиана и AcceptanceM
   expect(screen.getByText(/Медиана категории/)).toBeInTheDocument();
   expect(screen.getByText(/не ниже ожиданий кандидата/)).toBeInTheDocument();
   fireEvent.click(sendBtn());
-  expect(await screen.findByText(/Лимит офферов на сутки/)).toBeInTheDocument();
+  expect(await screen.findByText(/Лимит приглашений на сутки/)).toBeInTheDocument();
   expect(posts[0].headers.get("Idempotency-Key")).toMatch(/.{8,}/);
   expect(posts[0].body).toMatchObject({ vacancy_id: "v1", candidate_pseudo_id: "p1", salary_from: 200000, salary_to: 250000 });
 });

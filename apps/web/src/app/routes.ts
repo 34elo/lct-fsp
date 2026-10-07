@@ -43,8 +43,8 @@ export const ROUTES: RouteDef[] = [
   { path: "/me", title: "Мой профиль", screen: "D", section: "candidate", owner: "b1", nav: true },
   { path: "/me/graph", title: "Граф доказательств", screen: "G1, G2", section: "candidate", owner: "b1", nav: true },
   { path: "/me/skills/:slug", title: "Доказательства навыка", section: "candidate", owner: "b1" },
-  { path: "/me/offers", title: "Офферы", screen: "M2", section: "candidate", owner: "b2", nav: true },
-  { path: "/me/offers/:id", title: "Оффер", screen: "M2", section: "candidate", owner: "b2" },
+  { path: "/me/offers", title: "Приглашения", screen: "M2", section: "candidate", owner: "b2", nav: true },
+  { path: "/me/offers/:id", title: "Приглашение", screen: "M2", section: "candidate", owner: "b2" },
   { path: "/me/growth", title: "Рост и тест", section: "candidate", owner: "b1", redirect: "/me/navigator" },
   { path: "/me/settings", title: "Настройки", section: "candidate", owner: "b1", redirect: "/me" },
   // >>> block1 (candidate)
@@ -63,13 +63,13 @@ export const ROUTES: RouteDef[] = [
 
   { path: "/employer/search", title: "Поиск", screen: "A, E2", section: "employer", owner: "b2", nav: true },
   { path: "/employer/candidates/:id", title: "Карточка кандидата", screen: "B", section: "employer", owner: "b2" },
-  { path: "/employer/offers/new", title: "Новый оффер", screen: "C", section: "employer", owner: "b2" },
+  { path: "/employer/offers/new", title: "Новое приглашение", screen: "C", section: "employer", owner: "b2" },
   { path: "/employer/vacancies", title: "Вакансии", screen: "E3", section: "employer", owner: "b2", nav: true },
   { path: "/employer/vacancies/new", title: "Новая вакансия", screen: "E3", section: "employer", owner: "b2" },
   { path: "/employer/vacancies/:id", title: "Вакансия", screen: "E3", section: "employer", owner: "b2" },
   { path: "/employer/vacancies/:id/shortlist", title: "Подборка", screen: "E4", section: "employer", owner: "b2" },
-  { path: "/employer/offers", title: "Мои офферы", screen: "E5", section: "employer", owner: "b2", nav: true },
-  { path: "/employer/offers/:id", title: "Оффер", screen: "E5", section: "employer", owner: "b2" },
+  { path: "/employer/offers", title: "Мои приглашения", screen: "E5", section: "employer", owner: "b2", nav: true },
+  { path: "/employer/offers/:id", title: "Приглашение", screen: "E5", section: "employer", owner: "b2" },
   { path: "/employer/company", title: "Компания", section: "employer", owner: "b2", nav: true },
   // >>> block1 (employer)
   { path: "/employer/tasks", title: "Задания компании", section: "employer", owner: "b1", nav: true },

@@ -54,7 +54,7 @@ function Row({ o }: { o: OfferForCompany }) {
   );
 }
 
-/** Отклики на вакансии (R1, работодатель): те же офферы с initiator = candidate. */
+/** Отклики на вакансии (R1, работодатель): те же приглашения с initiator = candidate. */
 export default function EmployerResponses() {
   const q = useListOffersOffersGet({ initiator: "candidate" });
   const all = (q.data?.status === 200 ? q.data.data : []) as OfferForCompany[];

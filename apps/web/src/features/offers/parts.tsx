@@ -49,7 +49,7 @@ export function Timeline({ offerId }: { offerId: string }) {
   );
 }
 
-/** Переписка по офферу. `side` — кто мы, чтобы подписать «Вы». */
+/** Переписка по приглашению. `side` — кто мы, чтобы подписать «Вы». */
 export function Conversation({ offerId, side, canWrite }: { offerId: string; side: "candidate" | "company"; canWrite: boolean }) {
   const qc = useQueryClient();
   const q = useListMessagesOffersOfferIdMessagesGet(offerId, { query: { refetchInterval: 15_000 } });
@@ -102,7 +102,7 @@ export function Conversation({ offerId, side, canWrite }: { offerId: string; sid
   );
 }
 
-/** Сбросить все кеши, зависящие от оффера: списки, карточки, переписку, историю. */
+/** Сбросить все кеши, зависящие от приглашения: списки, карточки, переписку, историю. */
 export function invalidateOffers(qc: ReturnType<typeof useQueryClient>) {
   const run = () =>
     qc.invalidateQueries({
