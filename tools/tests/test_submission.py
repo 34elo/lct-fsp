@@ -163,3 +163,38 @@ def test_pdf_builds(tmp_path):
     out = tmp_path / "out" / "a.pdf"
     assert pdf.build(src, out) > 0
     assert out.read_bytes().startswith(b"%PDF")
+
+
+check_tz = _load("check_tz")
+docx_builder = _load("build_docx")
+
+
+def test_tz_check_on_real_docs():
+    case = (ROOT / "docs" / "case.md").read_text(encoding="utf-8")
+    sub = (ROOT / "docs" / "submission.md").read_text(encoding="utf-8")
+    assert len(check_tz.tz_items(case)) == 8
+    assert check_tz.check(case, sub) == []
+
+
+def test_tz_check_detects_gaps():
+    case = "Документация должна включать:\n- a;\n- b.\n"
+    sub = "## Соответствие ТЗ\n\n| П | Г |\n|---|---|\n| a | §1 |\n\n## 1. A\n\nкоротко\n"
+    errors = check_tz.check(case, sub)
+    assert any("b" in e for e in errors) and any("§1" in e for e in errors)
+
+
+def test_docx_builds(tmp_path):
+    from docx import Document
+
+    src = tmp_path / "a.md"
+    src.write_text(
+        "# Тест\n\nТекст **жирный** и `код` [ссылка](x.md).\n\n- раз\n  - вложенный\n\n"
+        "| A | B |\n|---|---|\n| 1 | 2 |\n",
+        encoding="utf-8",
+    )
+    out = tmp_path / "o" / "a.docx"
+    assert docx_builder.build(src, out) > 0
+    d = Document(out)
+    texts = [p.text for p in d.paragraphs]
+    assert "Тест" in texts and "Текст жирный и код ссылка." in texts and "вложенный" in texts
+    assert d.tables[0].rows[1].cells[1].text == "2"
