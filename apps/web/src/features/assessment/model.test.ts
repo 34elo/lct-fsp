@@ -13,6 +13,7 @@ import {
   moveTo,
   parseListing,
   parseNumber,
+  pathStep,
   salaryError,
   skillRows,
   toPayload,
@@ -128,5 +129,26 @@ describe("перенос варианта на место (E38-4)", () => {
     const l = [0, 1, 2];
     expect(moveTo(l, 1, 1)).toBe(l);
     expect(moveTo(l, 0, 5)).toBe(l);
+  });
+});
+
+describe("путь кандидата (E35-2a)", () => {
+  const a = (id: string, status: string) => ({ id, status });
+  it("нет опроса → опрос", () => {
+    expect(pathStep({ surveys: [], attempts: [] })).toEqual({ kind: "survey", to: "/me/assessment" });
+  });
+  it("опрос есть, теста нет (или брошен) → тест", () => {
+    expect(pathStep({ surveys: [{}], attempts: [] })).toEqual({ kind: "test", to: "/me/assessment" });
+    expect(pathStep({ surveys: [{}], attempts: [a("x", "abandoned")] })?.kind).toBe("test");
+  });
+  it("идёт попытка → продолжить её", () => {
+    expect(pathStep({ surveys: [{}], attempts: [a("old", "failed"), a("a1", "active")] })).toEqual({
+      kind: "continue",
+      to: "/me/assessment/attempts/a1",
+    });
+  });
+  it("тест завершён (сдан или нет) → баннера нет", () => {
+    expect(pathStep({ surveys: [{}], attempts: [a("a1", "passed")] })).toBeNull();
+    expect(pathStep({ surveys: [{}], attempts: [a("a1", "failed")] })).toBeNull();
   });
 });
