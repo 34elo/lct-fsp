@@ -138,6 +138,18 @@ test("регистрация отправляет выбранную роль, �
   expect(await screen.findByRole("heading", { name: "Согласия" })).toBeInTheDocument();
 });
 
+test("новый кандидат: регистрация → согласия → опрос (E35-2a)", async () => {
+  installFetch();
+  mount("/register");
+  fireEvent.change(await screen.findByLabelText("Почта"), { target: { value: "new@b.ru" } });
+  fireEvent.change(screen.getByLabelText(/Пароль/), { target: { value: "long-enough-pass" } });
+  fireEvent.click(screen.getByRole("button", { name: "Создать аккаунт" }));
+  expect(await screen.findByRole("heading", { name: "Согласия" })).toBeInTheDocument();
+  fireEvent.click(await screen.findByRole("checkbox", { name: /Обработка персональных данных/ }));
+  fireEvent.click(screen.getByRole("button", { name: "Продолжить" }));
+  expect(await screen.findByRole("heading", { name: "Опрос" })).toBeInTheDocument();
+});
+
 test("регистрация: email_taken", async () => {
   installFetch({ loginStatus: 409 });
   mount("/register");

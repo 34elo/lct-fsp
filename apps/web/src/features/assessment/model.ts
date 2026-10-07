@@ -194,3 +194,23 @@ export function missedAnswers(raw: unknown): AnswerRow[] {
   }
   return rows.sort((a, b) => a.seq - b.seq);
 }
+
+/** Первый шаг пути кандидата после согласий (E35-2a): опрос, из него — тест. */
+export const PATH_START = "/me/assessment";
+
+export type PathStep = { kind: "survey" | "test"; to: string } | { kind: "continue"; to: string };
+
+/**
+ * Чего не хватает кандидату на главном пути (E35-2a): нет опроса → опрос; есть идущая попытка →
+ * продолжить её; нет завершённого теста → тест. Всё пройдено — `null` (баннер не нужен).
+ */
+export function pathStep(history: {
+  surveys: unknown[];
+  attempts: { id: string; status: string }[];
+}): PathStep | null {
+  if (history.surveys.length === 0) return { kind: "survey", to: PATH_START };
+  const active = history.attempts.find((a) => a.status === "active");
+  if (active) return { kind: "continue", to: `/me/assessment/attempts/${active.id}` };
+  if (!history.attempts.some((a) => a.status === "passed" || a.status === "failed")) return { kind: "test", to: PATH_START };
+  return null;
+}

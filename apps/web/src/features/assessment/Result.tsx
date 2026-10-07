@@ -21,7 +21,8 @@ export default function Result() {
   const { id = "" } = useParams();
   const qc = useQueryClient();
   const aq = useGetAttemptAssessmentAttemptsAttemptIdGet(id, { query: { retry: retryServerOnly } });
-  const hq = useHistoryAssessmentHistoryGet();
+  // Тест завершён: свежая история нужна и здесь (кулдауны), и баннеру пути на Главной (E35-2a).
+  const hq = useHistoryAssessmentHistoryGet({ query: { refetchOnMount: "always" } });
   const pq = useGetProfessionsTaxonomyProfessionsGet();
   const nav = useNavigate();
   const invite = useUpgradeAssessmentAttemptsAttemptIdUpgradePost();
@@ -233,7 +234,7 @@ export default function Result() {
         <Link to="/me" className={buttonVariants()} data-testid="assessment-to-profile">
           {T.openProfile}
         </Link>
-        <Link to="/me/growth" className={buttonVariants({ variant: "outline" })} data-testid="assessment-to-growth">
+        <Link to="/me/navigator" className={buttonVariants({ variant: "outline" })} data-testid="assessment-to-growth">
           {T.openGrowth}
         </Link>
         <Link to="/me/assessment/history" className={buttonVariants({ variant: "ghost" })} data-testid="assessment-to-history">
