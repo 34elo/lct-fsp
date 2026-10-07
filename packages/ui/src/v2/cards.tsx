@@ -2,7 +2,7 @@ import type { FormEvent, ReactNode } from "react";
 
 import { cn } from "../lib/cn";
 import { Button } from "../primitives/button";
-import { CheckItem, Chips, CompanyMark, GradeTag, Lbl, SkillTag, StatusTag, clamp } from "./primitives";
+import { CheckItem, Chips, CompanyMark, GradeTag, Lbl, MeterBar, SkillTag, StatusTag, clamp } from "./primitives";
 
 /* Карточки и лента v2: категория, кандидат, событие, строка запроса, приглашение. Данные и колбэки — снаружи. */
 
@@ -207,6 +207,149 @@ export function CandidateCardV2({
       {c.meta && <div className="text-13 text-muted">{c.meta}</div>}
       {act}
     </article>
+  );
+}
+
+/* ---------- RankedCandidateCard (страница категории) ---------- */
+
+export interface RankedCandidateData {
+  pseudonym: string;
+  match: number;
+  grade: string;
+  /** Грейд подтверждён тестом; иначе карточка пунктирная («не подтверждён»). */
+  confirmed: boolean;
+  /** Сила профиля 0–100 и подпись справа от полосы («сила 71 · № 1»). Нет — полосы нет. */
+  strength?: { value: number; label: string };
+  /** «190–220 тыс. ₽». */
+  salary?: string;
+  /** «Москва · удалёнка». */
+  place?: string;
+  skills: { name: string; level?: number; claimed?: boolean }[];
+  /** Достижение ФСП одной строкой. */
+  fsp?: string;
+  /** До трёх фактов «почему»; `warn` — с восклицанием. */
+  reasons: { text: string; warn?: boolean }[];
+  /** Подпись под грейдом неподтверждённого («грейд заявлен»). */
+  note?: string;
+  /** Метка «интересовался вами». */
+  interestedYou?: boolean;
+}
+
+/**
+ * Строка категории v2: слева кольцо, псевдоним, грейд и сила; затем вилка, навыки и ФСП; факты «почему»;
+ * справа действия. С 768 px — четыре колонки, на телефоне — столбиком. Неподтверждённые — пунктиром.
+ */
+export function RankedCandidateCard({
+  c,
+  actions,
+  onOpen,
+  openLabel,
+  className,
+}: {
+  c: RankedCandidateData;
+  actions?: ReactNode;
+  onOpen?: () => void;
+  openLabel?: string;
+  className?: string;
+}) {
+  const name = (
+    <b className="truncate font-mono text-[15px] font-semibold">{c.pseudonym}</b>
+  );
+  return (
+    <article
+      aria-label={c.pseudonym}
+      data-confirmed={c.confirmed}
+      className={cn(
+        "grid min-w-0 gap-3 rounded-xl border bg-card p-4 md:grid-cols-[1.35fr_1.1fr_1.5fr_150px] md:items-center md:gap-5",
+        c.confirmed ? "border-hairline" : "border-dashed border-hairline",
+        className,
+      )}
+    >
+      <div className="flex min-w-0 flex-col gap-3">
+        <div className="flex items-center gap-3">
+          <MatchRingV2 value={c.match} />
+          <div className="flex min-w-0 flex-col gap-1.5">
+            <div className="flex flex-wrap items-center gap-2">
+              {onOpen ? (
+                <button type="button" onClick={onOpen} aria-label={openLabel ?? `Открыть профиль ${c.pseudonym}`} className="min-w-0 text-left hover:underline">
+                  {name}
+                </button>
+              ) : (
+                name
+              )}
+              <GradeTag claimed={!c.confirmed}>{c.grade}</GradeTag>
+              <StatusTag state={c.confirmed ? "confirmed" : "claimed"}>{c.confirmed ? "подтверждён" : "не подтверждён"}</StatusTag>
+            </div>
+            {c.strength ? (
+              <div className="flex min-w-[120px] flex-col gap-1">
+                <MeterBar value={c.strength.value} label="Сила профиля" className="w-[120px]" />
+                <span className="num text-11 text-muted">{c.strength.label}</span>
+              </div>
+            ) : (
+              c.note && <Lbl>{c.note}</Lbl>
+            )}
+          </div>
+        </div>
+        {c.interestedYou && (
+          <StatusTag state="confirmed" className="self-start">
+            интересовался вами
+          </StatusTag>
+        )}
+      </div>
+      <div className="flex min-w-0 flex-col gap-2.5">
+        {(c.salary || c.place) && (
+          <div className="flex flex-col gap-0.5">
+            {c.salary && <span className="num text-xl leading-[1.1]">{c.salary}</span>}
+            {c.place && <span className="text-12 text-muted">{c.place}</span>}
+          </div>
+        )}
+        {c.skills.length > 0 && (
+          <Chips>
+            {c.skills.map((s) => (
+              <SkillTag key={s.name} name={s.name} level={s.level} state={s.claimed ? "claimed" : "confirmed"} />
+            ))}
+          </Chips>
+        )}
+        {c.fsp && <CheckItem>{c.fsp}</CheckItem>}
+      </div>
+      <div className="flex min-w-0 flex-col gap-1.5">
+        {c.reasons.map((r) => (
+          <CheckItem key={r.text} warn={r.warn}>
+            {r.text}
+          </CheckItem>
+        ))}
+      </div>
+      {actions && <div className="flex flex-col gap-2">{actions}</div>}
+    </article>
+  );
+}
+
+/** Переключатель-фильтр `.sk`: нажатый — сплошной brand, ненажатый — серый. */
+export function FilterChip({
+  pressed,
+  onToggle,
+  children,
+  className,
+}: {
+  pressed: boolean;
+  onToggle: () => void;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={pressed}
+      onClick={onToggle}
+      className={cn(
+        "inline-flex min-h-9 items-center gap-1.5 rounded-sm border px-2.5 py-[5px] font-mono text-12 leading-none font-medium whitespace-nowrap",
+        pressed ? "border-brand bg-tint-50 text-chip-fg" : "border-hairline bg-card text-muted hover:border-brand",
+        className,
+      )}
+    >
+      {children}
+      {pressed && <span aria-hidden>✓</span>}
+    </button>
   );
 }
 
