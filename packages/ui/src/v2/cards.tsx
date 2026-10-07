@@ -7,12 +7,13 @@ import { CheckItem, Chips, CompanyMark, GradeTag, Lbl, SkillTag, StatusTag, clam
 /* Карточки и лента v2: категория, кандидат, событие, строка запроса, приглашение. Данные и колбэки — снаружи. */
 
 /* ---------- MatchRing v2 (кольцо 44 px в карточке кандидата) ---------- */
-function Ring({ value, size = 44 }: { value: number; size?: number }) {
+/** Кольцо совпадения v2: число в центре, дуга brand. `className` может задать размер (`md:size-13`). */
+export function MatchRingV2({ value, size = 44, className }: { value: number; size?: number; className?: string }) {
   const v = Math.round(clamp(value));
   const r = size / 2 - 4;
   const c = 2 * Math.PI * r;
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label={`Совпадение ${v} %`} className="block flex-none">
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label={`Совпадение ${v} %`} className={cn("block flex-none", className)}>
       <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--tint-100)" strokeWidth="4" />
       <circle
         cx={size / 2}
@@ -25,7 +26,15 @@ function Ring({ value, size = 44 }: { value: number; size?: number }) {
         strokeDasharray={`${(c * v) / 100} ${c}`}
         transform={`rotate(-90 ${size / 2} ${size / 2})`}
       />
-      <text x={size / 2} y={size / 2 + 4} textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="13" fontWeight="700" fill="var(--ink)">
+      <text
+        x={size / 2}
+        y={size / 2 + Math.round(size / 11)}
+        textAnchor="middle"
+        fontFamily="JetBrains Mono, monospace"
+        fontSize={Math.round(size * 0.3)}
+        fontWeight="700"
+        fill="var(--ink)"
+      >
         {v}
       </text>
     </svg>
@@ -123,12 +132,17 @@ export interface CandidateCardV2Data {
   meta?: string;
 }
 
-/** Анонимная карточка кандидата v2: кольцо совпадения, псевдоним, грейд, вилка, навыки, одно действие. */
+/**
+ * Анонимная карточка кандидата v2: кольцо совпадения, псевдоним, грейд, вилка, навыки, одно действие.
+ * `wide` — с 768 px строкой, как в «Лучших совпадениях» (кольцо · данные · вилка и действие справа);
+ * на телефоне — столбиком, как без него.
+ */
 export function CandidateCardV2({
   c,
   action,
   onOpen,
   openLabel = "Открыть профиль",
+  wide,
   className,
 }: {
   c: CandidateCardV2Data;
@@ -136,35 +150,62 @@ export function CandidateCardV2({
   action?: ReactNode;
   onOpen?: () => void;
   openLabel?: string;
+  wide?: boolean;
   className?: string;
 }) {
+  const act =
+    action ??
+    (onOpen && (
+      <Button variant="outline" className="h-9 sm:h-9" onClick={onOpen}>
+        {openLabel}
+      </Button>
+    ));
+  const tags = (
+    <div className="flex items-center gap-1.5">
+      <GradeTag claimed={!c.confirmed}>{c.grade}</GradeTag>
+      <StatusTag state={c.confirmed ? "confirmed" : "claimed"}>{c.confirmed ? "подтверждён" : "заявлен"}</StatusTag>
+    </div>
+  );
+  const skills = c.skills.length > 0 && (
+    <Chips>
+      {c.skills.map((s) => (
+        <SkillTag key={s.name} name={s.name} level={s.level} state={s.claimed ? "claimed" : "confirmed"} />
+      ))}
+    </Chips>
+  );
+  if (wide)
+    return (
+      <article
+        aria-label={c.pseudonym}
+        className={cn(
+          "grid min-w-0 grid-cols-[44px_minmax(0,1fr)] items-center gap-3 rounded-xl border border-hairline bg-card p-4 md:grid-cols-[52px_minmax(0,1fr)_auto] md:gap-x-4 md:gap-y-2",
+          className,
+        )}
+      >
+        <MatchRingV2 value={c.match} className="md:row-span-3 md:size-13" />
+        <div className="flex min-w-0 flex-col gap-1.5 md:flex-row md:flex-wrap md:items-center md:gap-2">
+          <b className="truncate font-mono text-[15px] font-semibold">{c.pseudonym}</b>
+          {tags}
+        </div>
+        {c.salary && <div className="num col-span-2 text-[22px] leading-[1.1] md:col-span-1 md:col-start-3 md:row-start-1 md:text-right md:text-20">{c.salary}</div>}
+        {skills && <div className="col-span-2 md:col-span-1 md:col-start-2">{skills}</div>}
+        {c.meta && <div className="col-span-2 text-13 text-muted md:col-span-1 md:col-start-2">{c.meta}</div>}
+        {act && <div className="col-span-2 grid md:col-span-1 md:col-start-3 md:row-span-2 md:row-start-2 md:self-end md:justify-items-end">{act}</div>}
+      </article>
+    );
   return (
     <article aria-label={c.pseudonym} className={cn("flex min-w-0 flex-col gap-3 rounded-xl border border-hairline bg-card p-4", className)}>
       <div className="flex items-center gap-3">
-        <Ring value={c.match} />
+        <MatchRingV2 value={c.match} />
         <div className="flex min-w-0 flex-col gap-1.5">
           <b className="truncate font-mono text-[15px] font-semibold">{c.pseudonym}</b>
-          <div className="flex items-center gap-1.5">
-            <GradeTag claimed={!c.confirmed}>{c.grade}</GradeTag>
-            <StatusTag state={c.confirmed ? "confirmed" : "claimed"}>{c.confirmed ? "подтверждён" : "заявлен"}</StatusTag>
-          </div>
+          {tags}
         </div>
       </div>
       {c.salary && <div className="num text-[22px] leading-[1.1]">{c.salary}</div>}
-      {c.skills.length > 0 && (
-        <Chips>
-          {c.skills.map((s) => (
-            <SkillTag key={s.name} name={s.name} level={s.level} state={s.claimed ? "claimed" : "confirmed"} />
-          ))}
-        </Chips>
-      )}
+      {skills}
       {c.meta && <div className="text-13 text-muted">{c.meta}</div>}
-      {action ??
-        (onOpen && (
-          <Button variant="outline" className="h-9 sm:h-9" onClick={onOpen}>
-            {openLabel}
-          </Button>
-        ))}
+      {act}
     </article>
   );
 }
