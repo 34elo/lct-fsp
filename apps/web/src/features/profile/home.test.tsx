@@ -98,6 +98,7 @@ beforeEach(() => {
     "/candidates/me/standing": () => res(200, standing),
     "/candidates/me/interests": () => res(200, interests),
     "/candidates/me/navigator": () => res(200, navigator),
+    "/candidates/me/views": () => res(200, { total_30d: 5, companies_30d: 2, by_day: [{ date: "2026-10-07", count: 5 }] }),
     "/taxonomy/professions": () => res(200, { professions: [{ slug: "backend", title: "Backend" }] }),
   };
   vi.stubGlobal(
@@ -204,8 +205,10 @@ describe("Главная кандидата /me (E38-1)", () => {
     expect(tiles).toHaveTextContent("топ-30 %");
     expect(within(tiles).getByRole("meter", { name: "Место" })).toHaveAttribute("aria-valuenow", "70");
 
-    // «Статистика» (E38-2) ещё не готова — ссылки нет; баннера пути на Главной нет.
-    expect(screen.queryByText("Статистика")).not.toBeInTheDocument();
+    // Ссылка «Статистика» (E38-2) со счётчиком компаний, смотревших профиль; баннера пути на Главной нет.
+    const stats = screen.getByTestId("home-stats");
+    expect(stats).toHaveAttribute("href", "/me/stats");
+    expect(await within(stats).findByText("смотрели: 2 ›")).toBeInTheDocument();
     expect(screen.queryByTestId("path-banner")).not.toBeInTheDocument();
   });
 

@@ -27,7 +27,7 @@ import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 
 import { useHistoryAssessmentHistoryGet } from "@/api/endpoints/assessment/assessment";
-import { useGetProfileCandidatesMeProfileGet } from "@/api/endpoints/candidates/candidates";
+import { useGetProfileCandidatesMeProfileGet, useMyViewsCandidatesMeViewsGet } from "@/api/endpoints/candidates/candidates";
 import { useMyInterestsCandidatesMeInterestsGet } from "@/api/endpoints/offers/offers";
 import { useMyNavigatorCandidatesMeNavigatorGet, useMyStandingCandidatesMeStandingGet } from "@/api/endpoints/search/search";
 import { useGetProfessionsTaxonomyProfessionsGet } from "@/api/endpoints/taxonomy/taxonomy";
@@ -36,7 +36,8 @@ import { isFuture, pathStep, type PathStep } from "@/features/assessment/model";
 import { GRADE } from "@/features/assessment/text";
 import { ConstellationAvatar } from "@/shared/brand";
 import { constellationNodes, dayMonth, formatsText, nextStep, ratingText, skillSource, sortSkills } from "./home-model";
-import { FSP_LEVEL_LABEL, HOME, roleLabel } from "./text";
+import { parseViews, type ViewsStats } from "./stats-model";
+import { FSP_LEVEL_LABEL, HOME, STATS, roleLabel } from "./text";
 
 const PAGE = "mx-auto flex w-full max-w-[1328px] flex-col gap-4 px-4 py-4 md:px-6 md:py-6";
 const PENDING = new Set(["interest", "interest_opened"]);
@@ -152,11 +153,12 @@ function SkillsCard({ p, className }: { p: CandidateProfile; className?: string 
   );
 }
 
-function FspCard({ p }: { p: CandidateProfile }) {
+/** «Достижения ФСП» (три последних); общий для Главной и «Статистики». */
+export function FspCard({ p, className = "hidden lg:block", testId = "home-fsp" }: { p: CandidateProfile; className?: string; testId?: string }) {
   const items = p.fsp?.achievements ?? [];
   if (!items.length) return null;
   return (
-    <Panel className="hidden lg:block" data-testid="home-fsp" aria-label={HOME.fsp}>
+    <Panel className={className} data-testid={testId} aria-label={HOME.fsp}>
       <PanelCap title={HOME.fsp} />
       <ul className="flex flex-col gap-3">
         {items.slice(0, 3).map((a) => (
@@ -266,12 +268,27 @@ function Tiles({ standing, interests }: { standing?: CandidateStanding; interest
   );
 }
 
+/** Ссылка на «Статистику» (`/me/stats`, E38-2) под плитками. */
+function StatsLink({ views }: { views?: ViewsStats }) {
+  return (
+    <Link
+      to="/me/stats"
+      className="order-6 flex items-center justify-between gap-3 rounded-xl border border-hairline bg-card p-4 font-semibold hover:border-brand lg:order-none"
+      data-testid="home-stats"
+    >
+      <span>{STATS.link}</span>
+      {views && <Num className="text-12 text-muted">{STATS.linkViews(views.companies)}</Num>}
+    </Link>
+  );
+}
+
 function After(props: {
   p: CandidateProfile;
   standing?: CandidateStanding;
   interests?: InterestsSummary;
   navigator?: NavigatorOut;
   history?: HistoryOut;
+  views?: ViewsStats;
   profTitle: (s: string) => string;
 }) {
   const { p, navigator } = props;
@@ -290,6 +307,7 @@ function After(props: {
       </div>
       <div className="contents lg:col-span-3 lg:flex lg:flex-col lg:gap-4">
         <Tiles standing={props.standing} interests={props.interests} />
+        <StatsLink views={props.views} />
       </div>
     </div>
   );
@@ -331,6 +349,7 @@ export default function Home() {
   const iq = useMyInterestsCandidatesMeInterestsGet({ query: { retry: false } });
   const nq = useMyNavigatorCandidatesMeNavigatorGet({ query: { retry: false } });
   const tq = useGetProfessionsTaxonomyProfessionsGet();
+  const vq = useMyViewsCandidatesMeViewsGet({ query: { retry: false } });
 
   const page = (body: ReactNode, h1 = true) => (
     <div className={PAGE} data-testid="home-page">
@@ -354,6 +373,7 @@ export default function Home() {
   const standing = sq.data?.status === 200 ? sq.data.data : undefined;
   const interests = iq.data?.status === 200 ? iq.data.data : undefined;
   const navigator = nq.data?.status === 200 ? nq.data.data : undefined;
+  const views = vq.data?.status === 200 ? parseViews(vq.data.data) : undefined;
   const professions = tq.data?.status === 200 ? tq.data.data.professions : [];
   const profTitle = (slug: string) => professions.find((x) => x.slug === slug)?.title ?? roleLabel(slug);
 
@@ -363,5 +383,5 @@ export default function Home() {
     const nodes = constellationNodes(p.skills ?? [], { stack: survey?.stack ?? [], claimedOnly: true });
     return page(<Before p={p} step={step} nodes={nodes} />, false);
   }
-  return page(<After p={p} standing={standing} interests={interests} navigator={navigator} history={history} profTitle={profTitle} />);
+  return page(<After p={p} standing={standing} interests={interests} navigator={navigator} history={history} views={views} profTitle={profTitle} />);
 }

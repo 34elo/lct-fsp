@@ -103,6 +103,14 @@ test("joint: регистрация → опрос и тест → катего�
     await expect(page.getByTestId("home-after")).toBeVisible();
     await expect(page.getByTestId("home-next-action")).toBeVisible();
     await shot(page, info, ++n, "home");
+    // Статистика (E38-2): ссылка с Главной → /me/stats, сила, место и «Где ты среди своих».
+    await page.getByTestId("home-stats").click();
+    await expect(page).toHaveURL(/\/me\/stats$/);
+    await expect(page.getByTestId("stats-main")).toBeVisible();
+    await expect(page.getByTestId("stats-peers")).toBeVisible();
+    await shot(page, info, ++n, "stats");
+    await page.goBack();
+    await expect(page).toHaveURL(/\/me$/);
   });
 
   // --- 3. работодатель находит категорию и кандидата -------------------------------------------
