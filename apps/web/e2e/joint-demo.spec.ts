@@ -99,6 +99,9 @@ test("joint: регистрация → опрос и тест → катего�
     await page.getByTestId("assessment-to-profile").click();
     await expect(page).toHaveURL(/\/me$/);
     await expect(page.getByTestId("path-banner")).toHaveCount(0);
+    // Главная v2 (E38-1): после теста — следующий шаг и плитки «Сила», «Место», «Интересы».
+    await expect(page.getByTestId("home-after")).toBeVisible();
+    await expect(page.getByTestId("home-next-action")).toBeVisible();
     await shot(page, info, ++n, "home");
   });
 

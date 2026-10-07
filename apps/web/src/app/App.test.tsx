@@ -67,14 +67,14 @@ test("аноним на /me уходит на форму входа", async () =
 test("кандидат видит свой кабинет и открывает SSE", async () => {
   asUser("candidate");
   mount("/me");
-  expect(await screen.findByRole("heading", { name: "Мой профиль" })).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { name: "Главная" })).toBeInTheDocument();
   await waitFor(() => expect(FakeES.last?.url).toContain("/events/stream?access_token=t"));
 });
 
 test("кандидат не попадает в раздел работодателя", async () => {
   asUser("candidate");
   mount("/employer/search");
-  expect(await screen.findByRole("heading", { name: "Мой профиль" })).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { name: "Главная" })).toBeInTheDocument();
 });
 
 test("админ ФСП видит дашборд", async () => {
