@@ -94,7 +94,7 @@
 | 377 | E35-12a | 🔧 API: сила профиля и место в категории для кандидата (`GET /candidates/me/standing`) | — | 🤖 | sonnet | 1 база · UX | ⏳ |
 | 380 | E38-1 | 🎨 Главная кандидата — по docs/design/v2 | E38-0, E35-12a | 🤖 | opus | 1 база · UX v2 | ⏳ |
 | 381 | E38-2 | 🎨 Статистика — по docs/design/v2 | E38-0, E35-12a | 🤖 | opus | 1 база · UX v2 | ⏳ |
-| 382 | E38-3 | 🎨 Опрос — по docs/design/v2 | E38-0 | 🤖 | sonnet | 1 база · UX v2 | ⏳ |
+| 382 | E38-3 | 🎨 Опрос — по docs/design/v2 | E38-0 | 🤖 | sonnet | 1 база · UX v2 | ✅ eefac57 |
 | 383 | E38-4 | 🎨 Прохождение теста — по docs/design/v2 | E38-0 | 🤖 | sonnet | 1 база · UX v2 | ⏳ |
 | 384 | E38-5 | 🎨 Результат теста — по docs/design/v2 | E38-0, E35-2a | 🤖 | opus | 1 база · UX v2 | ⏳ |
 | 385 | E38-6 | 🎨 Профиль кандидата — по docs/design/v2 | E38-0 | 🤖 | sonnet | 1 база · UX v2 | ⏳ |
