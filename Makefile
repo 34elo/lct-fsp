@@ -99,9 +99,9 @@ eval:
 eval-quick:
 	uv run python tools/eval/run.py --quick --out reports/eval-quick
 
-# Все офлайн-метрики одним отчётом (E31-3, metrics.md §9.1): eval-assessment, eval, families-check, load (если был
-# прогон) → reports/metrics/report.{md,json} со светофором. make metrics [SEED=42] [ARGS="--skip load"].
-# Недоступное без стенда помечается «не измерено». Занимает около двух минут.
+# Все офлайн-метрики одним отчётом (E31-3, metrics.md §9.1): eval-assessment (обычный и экспресс), eval, families-check,
+# покрытие банка и справедливость (tools/metrics/core_probe.py), load (если был прогон) → reports/metrics/report.{md,json}
+# со светофором. make metrics [SEED=42] [ARGS="--skip load"]. Недоступное без стенда — «не измерено». Около 2,5 минут.
 .PHONY: metrics
 metrics:
 	uv run python -m tools.metrics --seed $(or $(SEED),42) --out reports/metrics $(ARGS)
