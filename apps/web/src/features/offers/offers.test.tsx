@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
 import { ApiError } from "@/api/mutator";
@@ -47,7 +47,7 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 function mount(path: string) {
-  render(
+  return render(
     <MemoryRouter initialEntries={[path]}>
       <Providers client={makeQueryClient()}>
         <App />
@@ -91,26 +91,45 @@ const mkOffer = (id: string, status: string, extra: Record<string, unknown> = {}
   candidate: { ...card, pseudonym: `Backend #${id}` }, ...extra,
 });
 
-test("канбан E5: семь колонок, счётчики равны карточкам, причины отказов", async () => {
+test("E38-13: воронка, таблица предложений, последняя переписка и отклики", async () => {
   const list = [
-    mkOffer("1", "sent"), mkOffer("2", "sent"), mkOffer("3", "viewed"),
-    mkOffer("4", "declined", { decline: { reason: "wrong_stack" } }), mkOffer("5", "expired"), mkOffer("6", "interest_opened"),
+    mkOffer("1", "interest", { interest_at: "2026-10-02T10:00:00Z" }),
+    mkOffer("2", "interest_opened", { interest_at: "2026-10-02T10:00:00Z", interest_opened_at: "2026-10-03T10:00:00Z" }),
+    mkOffer("3", "sent"),
+    mkOffer("4", "accepted", { invited_at: "2026-10-03T10:00:00Z", contacts: { name: "Иван" } }),
+    mkOffer("5", "sent", { initiator: "candidate" }),
   ];
   const f = globalThis.fetch as unknown as ReturnType<typeof vi.fn>;
   const base = f.getMockImplementation()!;
-  f.mockImplementation(async (url: string, init?: RequestInit) => (url.endsWith("/offers") && init?.method !== "POST" ? res(200, list) : base(url, init)));
+  f.mockImplementation(async (url: string, init?: RequestInit) => {
+    if (url.endsWith("/offers") && init?.method !== "POST") return res(200, list);
+    if (/\/offers\/4\/messages/.test(url)) return res(200, [{ id: "m1", author_side: "candidate", text: "Вилка подходит", created_at: "2026-10-04T10:00:00Z" }]);
+    return base(url, init);
+  });
   mount("/employer/offers");
-  const sent = await screen.findByRole("region", { name: "Отправлен" });
-  expect(sent.querySelectorAll("li")).toHaveLength(2);
-  expect(screen.getByRole("region", { name: "Нанят" })).toHaveTextContent("Пока пусто");
-  expect(screen.getByRole("region", { name: "Закрыто" }).querySelectorAll("li")).toHaveLength(2);
-  expect(screen.getAllByLabelText("Карточек: 2", { selector: "span" })).toHaveLength(2);
-  expect(screen.getByRole("region", { name: "Интерес" }).querySelectorAll("li")).toHaveLength(1);
-  const tabs = screen.getAllByRole("tab");
-  expect(tabs).toHaveLength(7);
-  expect(tabs[1]).toHaveTextContent("Отправлен2");
-  expect(screen.getByText(/Не тот стек/, { selector: "span" })).toBeInTheDocument();
-  expect(screen.getByText(/Отклонён · не тот стек/)).toBeInTheDocument();
+  const rows = await screen.findAllByTestId("offer-row");
+  expect(rows).toHaveLength(4);
+  expect(within(screen.getByRole("region", { name: "Воронка" })).getByText("интерес").previousElementSibling).toHaveTextContent("2");
+  expect(screen.getByRole("heading", { name: "Предложения" })).toBeInTheDocument();
+  expect(await screen.findByText("Вилка подходит")).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "Ответить" })).toHaveAttribute("href", "/employer/offers/4");
+  const resp = screen.getByRole("region", { name: "Отклики на вакансии" });
+  expect(within(resp).getByText("Backend #5")).toBeInTheDocument();
+  expect(within(resp).getByRole("link", { name: "Все отклики" })).toHaveAttribute("href", "/employer/responses");
+});
+
+test("E38-13: пустой список и ошибка загрузки", async () => {
+  const f = globalThis.fetch as unknown as ReturnType<typeof vi.fn>;
+  const base = f.getMockImplementation()!;
+  f.mockImplementation(async (url: string, init?: RequestInit) => (url.endsWith("/offers") && init?.method !== "POST" ? res(200, []) : base(url, init)));
+  const first = mount("/employer/offers");
+  expect(await screen.findByText("Приглашений пока нет")).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "Перейти к подбору" })).toHaveAttribute("href", "/employer");
+  first.unmount();
+  f.mockImplementation(async (url: string, init?: RequestInit) => (url.endsWith("/offers") && init?.method !== "POST" ? res(503, { type: "x", title: "x", status: 503, code: "down" }) : base(url, init)));
+  mount("/employer/offers");
+  expect(await screen.findByText("ошибка 503", {}, { timeout: 6000 })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Повторить" })).toBeInTheDocument();
 });
 
 const candOffer = (id: string, status: string, extra: Record<string, unknown> = {}) => ({
