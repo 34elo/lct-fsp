@@ -248,7 +248,7 @@ export default function CategoryCandidates() {
       }}
       onOpen={() => {
         react(c.pseudo_id, "open");
-        navigate(`/employer/candidates/${c.pseudo_id}?source=match`);
+        navigate(`/employer/candidates/${c.pseudo_id}?source=match${needId ? `&need_id=${encodeURIComponent(needId)}` : ""}`);
       }}
     />
   );

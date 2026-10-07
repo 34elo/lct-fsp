@@ -52,7 +52,7 @@ async function openDialog() {
       </Providers>
     </MemoryRouter>,
   );
-  fireEvent.click(await screen.findByRole("button", { name: "Отправить приглашение" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Пригласить" }));
   return await screen.findByRole("dialog");
 }
 const sendBtn = () => screen.getAllByRole("button", { name: "Отправить приглашение" }).at(-1) as HTMLButtonElement;

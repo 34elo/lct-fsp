@@ -29,7 +29,7 @@
 | `/employer/subscriptions` | E | Подписки на категорию (E33-4): профессия, грейды, формат, бюджет, навыки с уровнем, «только подтверждённые»; список и удаление. Ссылка из «Кандидаты категории» |
 | `/me/settings` | C | Переадресация на `/me` до экрана настроек (E36-4) |
 | `/employer/search` | E | Поиск: текст → чипсы → карточки (A, E2); с E38-8 не в меню |
-| `/employer/candidates/:id` | E | Карточка кандидата (B) |
+| `/employer/candidates/:id` | E | Карточка кандидата (B, макет v2: навыки, ФСП, заявлено и подтверждено, интерес; E38-10) |
 | `/employer/offers/new` | E | Модалка оффера (C) |
 | `/employer/vacancies`, `/employer/vacancies/new`, `/employer/vacancies/:id` | E | Вакансии и редактор вакансии (E3) |
 | `/employer/vacancies/:id/shortlist` | E | Подборка по вакансии (E4) |
