@@ -14,7 +14,10 @@ export function PathBanner() {
   const onPath = pathname === PATH_START || pathname.startsWith(`${PATH_START}/`);
   const hq = useHistoryAssessmentHistoryGet({ query: { enabled: !onPath, retry: false } });
   if (onPath || hq.data?.status !== 200) return null;
-  const step = pathStep(hq.data.data);
+  const history = hq.data.data;
+  // Неполный ответ (старый бэкенд, заглушка) — баннер не показываем, экран не роняем.
+  if (!Array.isArray(history?.surveys) || !Array.isArray(history?.attempts)) return null;
+  const step = pathStep(history);
   if (!step) return null;
   const copy = T.banner[step.kind];
   return (
