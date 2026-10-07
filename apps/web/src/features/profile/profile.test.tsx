@@ -112,12 +112,12 @@ test("профиль: достижения ФСП, разряд, опыт и м�
   expect(within(fsp).getByText("2 из 40")).toBeInTheDocument();
   expect(within(fsp).getByText("2 разряд · Продуктовое программирование")).toBeInTheDocument();
   expect(within(screen.getByRole("region", { name: "Опыт" })).getByText(/Кедр Софт/)).toBeInTheDocument();
-  // Меню: шапка (десктоп) ведёт во все разделы кандидата, нижняя панель (E19-5) — в четыре главных.
+  // Меню (E35-1): шапка (десктоп) и нижняя панель — одни и те же четыре раздела.
   const [top, bottom] = screen.getAllByRole("navigation", { name: "Разделы" });
-  expect(within(top).getByRole("link", { name: "Офферы" })).toHaveAttribute("href", "/me/offers");
-  expect(within(top).getByRole("link", { name: "Резюме" })).toHaveAttribute("href", "/onboarding");
-  expect(within(bottom).getByRole("link", { name: "Офферы" })).toHaveAttribute("href", "/me/offers");
-  expect(within(bottom).getByRole("link", { name: "ФСП" })).toHaveAttribute("href", "/me/settings");
+  expect(within(top).getByRole("link", { name: "Приглашения" })).toHaveAttribute("href", "/me/offers");
+  expect(within(top).getByRole("link", { name: "Профиль" })).toHaveAttribute("href", "/me/profile/edit");
+  expect(within(bottom).getByRole("link", { name: "Приглашения" })).toHaveAttribute("href", "/me/offers");
+  expect(within(bottom).getByRole("link", { name: "Тест и грейд" })).toHaveAttribute("href", "/me/assessment");
 });
 
 test("профиль: навыки по группам, чек-лист «что усилит», заявлено/подтверждено, PDF", async () => {

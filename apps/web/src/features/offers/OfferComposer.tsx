@@ -27,7 +27,7 @@ function Meter({ hint }: { hint: SalaryHint["acceptance_hint"] }) {
   );
 }
 
-/** Оффер кандидату (экран C): вилка обязательна, живая подсказка пересчитывается при вводе. */
+/** Приглашение кандидату (экран C): вилка обязательна, живая подсказка пересчитывается при вводе. */
 export default function OfferComposer() {
   const [params] = useSearchParams();
   const pseudoId = params.get("candidate") ?? "";
@@ -44,7 +44,7 @@ export default function OfferComposer() {
   const [to, setTo] = useState("");
   const [message, setMessage] = useState("");
   const [touched, setTouched] = useState(false);
-  // Один ключ на открытие формы: повторный клик/ретрай не создаст второй оффер.
+  // Один ключ на открытие формы: повторный клик/ретрай не создаст второй приглашение.
   const key = useRef(crypto.randomUUID());
 
   // Подставляем вилку вакансии как отправную точку.
@@ -58,7 +58,7 @@ export default function OfferComposer() {
 
   const lo = num(from);
   const hi = num(to);
-  const rangeError = lo === null || hi === null ? "Укажите обе границы вилки: оффер без вилки отправить нельзя." : hi < lo ? "Верхняя граница не может быть меньше нижней." : null;
+  const rangeError = lo === null || hi === null ? "Укажите обе границы вилки: приглашение без вилки отправить нельзя." : hi < lo ? "Верхняя граница не может быть меньше нижней." : null;
 
   const hintM = useSalaryHintOffersSalaryHintPost();
   const hintMutate = hintM.mutate;
@@ -89,7 +89,7 @@ export default function OfferComposer() {
   if (!pseudoId) {
     return (
       <main className="mx-auto w-full max-w-3xl p-4 md:p-6">
-        <ErrorNote>Не выбран кандидат. Откройте карточку кандидата и нажмите «Отправить оффер».</ErrorNote>
+        <ErrorNote>Не выбран кандидат. Откройте карточку кандидата и нажмите «Отправить приглашение».</ErrorNote>
       </main>
     );
   }
@@ -97,7 +97,7 @@ export default function OfferComposer() {
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4 md:p-6">
       <Link to={`/employer/candidates/${pseudoId}${vacancyId ? `?vacancy=${vacancyId}` : ""}`} className="text-sm font-semibold text-brand-fg hover:underline">← К карточке кандидата</Link>
-      <h1 className="font-mono text-2xl font-semibold">Оффер кандидату {card?.pseudonym ?? ""}</h1>
+      <h1 className="font-mono text-2xl font-semibold">Приглашение кандидату {card?.pseudonym ?? ""}</h1>
       {card && (
         <p className="text-sm text-muted">
           {[grade, card.primary_role && roleLabel(card.primary_role), card.primary_stack.slice(0, 3).join(", "), card.salary_min ? `ожидания от ${rub(card.salary_min)}` : null].filter(Boolean).join(" · ")}
@@ -106,7 +106,7 @@ export default function OfferComposer() {
       {cq.isError && <ErrorNote>Кандидат не найден или скрыл анкету.</ErrorNote>}
       {card && card.offers_from_you.length > 0 && (
         <p role="status" className="rounded-lg bg-warning-bg px-3 py-2 text-sm text-warning-fg">
-          Этому кандидату уже отправлялись офферы. Повторный оффер по той же вакансии сервер не примет.
+          Этому кандидату уже отправлялись приглашения. Повторное приглашение по той же вакансии сервер не примет.
         </p>
       )}
       <div className="grid gap-4 md:grid-cols-[1fr_320px]">
@@ -136,7 +136,7 @@ export default function OfferComposer() {
               </label>
             </div>
             <p className={cn("text-xs", touched && rangeError ? "text-error" : "text-muted")}>
-              {touched && rangeError ? rangeError : "Оффер без вилки отправить нельзя: кандидат видит её первой."}
+              {touched && rangeError ? rangeError : "Приглашение без вилки отправить нельзя: кандидат видит её первой."}
             </p>
           </fieldset>
           <label className="flex flex-col gap-1 text-sm font-semibold">
@@ -145,11 +145,11 @@ export default function OfferComposer() {
             <span className="self-end text-xs font-normal text-muted">{message.length} / 2000</span>
           </label>
           <p className="text-[13px] text-muted">
-            Срок ответа 7 дней. Формат вакансии: {vacancy ? vacancy.formats.map((f) => FORMAT_LABEL[f] ?? f).join(", ") : "выберите вакансию"}. Оффер придёт кандидату в Telegram и в кабинет. Контакты раскрываются только после принятия.
+            Срок ответа 7 дней. Формат вакансии: {vacancy ? vacancy.formats.map((f) => FORMAT_LABEL[f] ?? f).join(", ") : "выберите вакансию"}. Приглашение придёт кандидату в Telegram и в кабинет. Контакты раскрываются только после принятия.
           </p>
           {create.isError && <ErrorNote>{offerErrorText(create.error)}</ErrorNote>}
           <div className="flex flex-wrap gap-2">
-            <Button type="submit" size="lg" disabled={create.isPending || !card}>{create.isPending ? "Отправляем…" : "Отправить оффер"}</Button>
+            <Button type="submit" size="lg" disabled={create.isPending || !card}>{create.isPending ? "Отправляем…" : "Отправить приглашение"}</Button>
             <Link to={`/employer/candidates/${pseudoId}`} className="inline-flex h-12 items-center rounded-lg px-5 font-semibold hover:bg-tint-50">Отмена</Link>
           </div>
         </form>
@@ -159,7 +159,7 @@ export default function OfferComposer() {
           {!vacancyId || rangeError ? (
             <p className="text-sm text-muted">Выберите вакансию и укажите вилку: подсказка обновляется при вводе.</p>
           ) : !hint ? (
-            <p role="status" className="text-sm text-muted">{hintM.isError ? "Подсказка недоступна, оффер можно отправить." : "Считаем…"}</p>
+            <p role="status" className="text-sm text-muted">{hintM.isError ? "Подсказка недоступна, приглашение можно отправить." : "Считаем…"}</p>
           ) : (
             <>
               <div className="flex flex-col gap-1.5">

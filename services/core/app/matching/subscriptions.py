@@ -222,3 +222,17 @@ async def flush_due(
         sub.last_digest_at = now
     await session.flush()
     return out
+
+
+async def recent_hits(
+    session: AsyncSession, company_id: uuid.UUID, limit: int
+) -> list[tuple[Sub, Hit]]:
+    """Свежие попадания кандидатов в подписки компании (для ленты активности, E35-12b)."""
+    rows = await session.execute(
+        select(Sub, Hit)
+        .join(Hit, Hit.subscription_id == Sub.id)
+        .where(Sub.company_id == company_id)
+        .order_by(Hit.created_at.desc(), Hit.candidate_id)
+        .limit(limit)
+    )
+    return [(s, h) for s, h in rows]

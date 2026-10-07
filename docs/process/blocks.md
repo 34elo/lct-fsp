@@ -113,7 +113,7 @@ E29-3, E14-6, E31-3, E31-5, E14-4, E19-15, E27-4, E15-4. Эти задачи п�
 | `features/employer/`, `features/offers/`, `features/needs/`, `features/responses/`, `features/jobs/`, `features/fsp/`, `features/admin/`, `features/landing/` | **Б2** |
 | `shared/` (ui, brand, lib, charts, i18n), `app/layouts/`, `app/Providers.tsx`, `styles/` | **Б2** |
 | `pages/Login.tsx`, `Register.tsx`, `MagicLogin.tsx`, `Consents.tsx`, `Onboarding.tsx` | **Б1** |
-| `pages/NotFound.tsx`, `pages/Stub.tsx` | **Б2** |
+| `pages/NotFound.tsx` (`Stub.tsx` удалён в E35-1) | **Б2** |
 | `app/routes.ts`, `app/App.tsx` | **общие**, §5.4 |
 | `api/`, `openapi.json` | **сгенерированные**, §7.5 |
 | `e2e/` | файлы по блокам: `e2e/b1-*.spec.ts`, `e2e/b2-*.spec.ts`, общие — `e2e/joint-*.spec.ts` |
@@ -359,7 +359,7 @@ class FamilyStatusChanged(BaseModel):  # "assessment.family.status_changed" (в�
 
 ### 4.8. Фронт: маршруты, навигация, ссылки между блоками
 
-Этап 0 добавляет в `app/routes.ts` все маршруты v2 с полями `owner` и `nav`. Страницы-заглушки — `Stub`. Блок заменяет заглушку своей страницей только в своей секции `App.tsx` (§5.4). Навигацию строит каркас Б2 (E19-5) **из `routes.ts`** по полю `nav`, поэтому Б1 меню не трогает.
+Этап 0 добавляет в `app/routes.ts` все маршруты v2 с полями `owner` и `nav`. Заглушек нет (E35-1): маршрут добавляется в `routes.ts` вместе со страницей в своей секции `App.tsx` (§5.4); старый адрес без экрана — только `redirect` на рабочий экран. Меню (`NAV`) и флаг `nav` ведёт каркас Б2 (E19-5, E35-1), поэтому Б1 меню не трогает: нужен пункт или вкладка — заявка.
 
 | Маршрут | Раздел | Владелец | Назначение |
 |---|---|---|---|
@@ -528,6 +528,7 @@ from app.assessment.router import router as assessment_router
 - Данные — только через сгенерированные orval-хуки. Если эндпоинта ещё нет в клиенте, сначала эндпоинт и перегенерация.
 - Каждый экран проверяется на 375 px и в тёмной теме. В отчёте указать, что проверено.
 - Тест-идентификаторы: `data-testid="<фича>-<элемент>"`, например `assessment-next`.
+- **Нет пункта меню, ссылки или кнопки без работающего экрана** (E35-1). Не готово — скрываем; страниц-заглушек («раздел готовится») нет. `routes.test.ts` проверяет: у каждого маршрута есть страница в `App.tsx` или `redirect`, каждый пункт `NAV` и вкладка ведут на такой маршрут.
 
 ### 6.5. Коммиты и отчёты
 
@@ -743,3 +744,4 @@ from app.assessment.router import router as assessment_router
 | 2026-10-06 | С-2-02 | Б2 → Б1 | `analytics.py` теперь вливает `ASSESSMENT_ANALYTICS_EVENTS` и `HIRING_ANALYTICS_EVENTS` в `ANALYTICS_EVENTS`; события Б1 регистрируются в своём словаре. Совместимо | E31-1 | готово |
 | 2026-10-06 | С-2-03 | Б2 → Б1 | В `assessment.py` (контракты) заранее добавлен `RegularTaskPublished` (`regular_task.published`: family_id, profession, candidate_ids[]) для обработчика бота E9-6. Б1 в E25-1 публикует событие в этой форме или правит модель (при расхождении — править обработчик в `notifications/handlers.py`) | E9-6 | открыто, согласовать |
 | 2026-10-06 | Т2-a | Т2 → Б2 | `notifications.service.push`: при сбое `ui_publish` обработчик падал с `TypeError` (`log.warning(..., event=...)` конфликтует с позиционным `event` structlog), вместо «сбой не роняет обработчик». Минимально: ключ `ui_event=`. Найдено `test_joint_t2.py` | Т2 | исправлено |
+| 2026-10-07 | С-2-04 | Б2 → Б1 | E35-1: `Stub` и заглушки удалены; `RouteDef.redirect` для старых адресов. В записях Б1: `/me/growth` → `/me/navigator`, `/me/settings` → `/me` (на них ссылаются `Result.tsx` и `profile/text.ts` — при случае заменить ссылки), `/me/badge` и `/auth/fsp/callback` удалены (экранов нет); флаги `nav` — по новому меню. В `profile.test.tsx` обновлена проверка меню. Пункты «Настройки», «Согласия» в меню аватара появятся с экраном E36-4 | E35-1 | готово |

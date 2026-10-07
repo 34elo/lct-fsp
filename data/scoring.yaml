@@ -294,6 +294,10 @@ lead_requirements:
 ## 3. Matching (матчинг вакансия ↔ кандидат)
 
 # Base matching score weights (ml.md §6.2)
+# E36-6: веса проверены подбором на синтетике (tools/eval/tune.py, train — рынок dev, holdout — test;
+# отчёт docs/reports/matching-weights-2026-10-07.md). Лучшие на train веса (skills 0.40, grade 0.20,
+# salary 0.15, fsp 0.05, обязательный навык ×4) на holdout не улучшили nDCG@10 в режиме match
+# (−0.001 при шуме ±0.006) — веса оставлены прежними. Семантика в синтетике не моделируется.
 matching_weights:
   skills_coverage: 0.45  # покрытие навыков (доверие + смежность)
   semantic_similarity: 0.20  # смысловая близость (косинус)
@@ -444,7 +448,7 @@ strength:
   integrity_threshold: 0.6  # честность прохождения ниже порога → strength × integrity_mult
   integrity_mult: 0.8
   recency_days: 180  # R = exp(−дней / 180)
-  rank_match: 0.6  # rank = 0.6·match + 0.4·strength
+  rank_match: 0.6  # rank = 0.6·match + 0.4·strength; E36-6: 0.6 остаётся лучшим на train
   rank_strength: 0.4
   top_explanations: 3
 

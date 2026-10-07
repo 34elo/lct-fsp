@@ -136,7 +136,7 @@
 - **Данные:**
   - `POST /needs` {text} → filters (roles, grade_min/max, skills_must, salary_max, formats…) и `categories[]` (profession, title, grade, affinity, candidates, median_salary, fsp_share);
   - `GET /subscriptions`;
-  - **нет в API:** лента активности работодателя одним запросом (сейчас её можно собрать из `GET /offers` по статусам) — задача E35-12.
+  - **есть в API:** лента активности работодателя — `GET /employer/activity` (E35-12b).
 
 ### 6.4. Опрос — `/me/assessment`
 

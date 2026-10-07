@@ -46,6 +46,9 @@ import type {
   SalaryHint,
   SalaryHintIn,
   StatusIn,
+  TaskAnswerIn,
+  TaskBrief,
+  TaskView,
   TeamOfferOut,
   TeamOut
 } from '../../model';
@@ -2129,7 +2132,330 @@ export function useGetOfferOffersOfferIdGet<TData = Awaited<ReturnType<typeof ge
 
 
 
-export type acceptOfferOffersOfferIdAcceptPostResponse200 = {
+export type getOfferTaskOffersOfferIdTaskGetResponse200 = {
+  data: TaskView
+  status: 200
+}
+
+export type getOfferTaskOffersOfferIdTaskGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type getOfferTaskOffersOfferIdTaskGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type getOfferTaskOffersOfferIdTaskGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type getOfferTaskOffersOfferIdTaskGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type getOfferTaskOffersOfferIdTaskGetResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type getOfferTaskOffersOfferIdTaskGetResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type getOfferTaskOffersOfferIdTaskGetResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type getOfferTaskOffersOfferIdTaskGetResponse503ApplicationProblemJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type getOfferTaskOffersOfferIdTaskGetResponse503ApplicationJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type getOfferTaskOffersOfferIdTaskGetResponseSuccess = (getOfferTaskOffersOfferIdTaskGetResponse200) & {
+  headers: Headers;
+};
+export type getOfferTaskOffersOfferIdTaskGetResponseError = (getOfferTaskOffersOfferIdTaskGetResponse401ApplicationProblemJson | getOfferTaskOffersOfferIdTaskGetResponse401ApplicationJson | getOfferTaskOffersOfferIdTaskGetResponse403ApplicationProblemJson | getOfferTaskOffersOfferIdTaskGetResponse403ApplicationJson | getOfferTaskOffersOfferIdTaskGetResponse404ApplicationProblemJson | getOfferTaskOffersOfferIdTaskGetResponse404ApplicationJson | getOfferTaskOffersOfferIdTaskGetResponse422 | getOfferTaskOffersOfferIdTaskGetResponse503ApplicationProblemJson | getOfferTaskOffersOfferIdTaskGetResponse503ApplicationJson) & {
+  headers: Headers;
+};
+
+export type getOfferTaskOffersOfferIdTaskGetResponse = (getOfferTaskOffersOfferIdTaskGetResponseSuccess | getOfferTaskOffersOfferIdTaskGetResponseError)
+
+export const getGetOfferTaskOffersOfferIdTaskGetUrl = (offerId: string,) => {
+
+
+
+
+  return `/offers/${offerId}/task`
+}
+
+/**
+ * Задача приглашения: вариант без ключа. Чужой оффер или без задачи — 404.
+ * @summary Get Offer Task
+ */
+export const getOfferTaskOffersOfferIdTaskGet = async (offerId: string, options?: Parameters<typeof apiFetch>[1]): Promise<getOfferTaskOffersOfferIdTaskGetResponse> => {
+
+  return apiFetch<getOfferTaskOffersOfferIdTaskGetResponse>(getGetOfferTaskOffersOfferIdTaskGetUrl(offerId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetOfferTaskOffersOfferIdTaskGetQueryKey = (offerId: string,) => {
+    return [
+    `/offers/${offerId}/task`
+    ] as const;
+    }
+
+
+export const getGetOfferTaskOffersOfferIdTaskGetQueryOptions = <TData = Awaited<ReturnType<typeof getOfferTaskOffersOfferIdTaskGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(offerId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOfferTaskOffersOfferIdTaskGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetOfferTaskOffersOfferIdTaskGetQueryKey(offerId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getOfferTaskOffersOfferIdTaskGet>>> = ({ signal }) => getOfferTaskOffersOfferIdTaskGet(offerId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: offerId !== null && offerId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOfferTaskOffersOfferIdTaskGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetOfferTaskOffersOfferIdTaskGetQueryResult = NonNullable<Awaited<ReturnType<typeof getOfferTaskOffersOfferIdTaskGet>>>
+export type GetOfferTaskOffersOfferIdTaskGetQueryError = ErrorType<ProblemOut | HTTPValidationError>
+
+
+export function useGetOfferTaskOffersOfferIdTaskGet<TData = Awaited<ReturnType<typeof getOfferTaskOffersOfferIdTaskGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ offerId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOfferTaskOffersOfferIdTaskGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getOfferTaskOffersOfferIdTaskGet>>,
+          TError,
+          Awaited<ReturnType<typeof getOfferTaskOffersOfferIdTaskGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetOfferTaskOffersOfferIdTaskGet<TData = Awaited<ReturnType<typeof getOfferTaskOffersOfferIdTaskGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ offerId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOfferTaskOffersOfferIdTaskGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getOfferTaskOffersOfferIdTaskGet>>,
+          TError,
+          Awaited<ReturnType<typeof getOfferTaskOffersOfferIdTaskGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetOfferTaskOffersOfferIdTaskGet<TData = Awaited<ReturnType<typeof getOfferTaskOffersOfferIdTaskGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ offerId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOfferTaskOffersOfferIdTaskGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Offer Task
+ */
+
+export function useGetOfferTaskOffersOfferIdTaskGet<TData = Awaited<ReturnType<typeof getOfferTaskOffersOfferIdTaskGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ offerId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOfferTaskOffersOfferIdTaskGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetOfferTaskOffersOfferIdTaskGetQueryOptions(offerId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type answerOfferTaskOffersOfferIdTaskAnswerPostResponse200 = {
+  data: TaskBrief
+  status: 200
+}
+
+export type answerOfferTaskOffersOfferIdTaskAnswerPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type answerOfferTaskOffersOfferIdTaskAnswerPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type answerOfferTaskOffersOfferIdTaskAnswerPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type answerOfferTaskOffersOfferIdTaskAnswerPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type answerOfferTaskOffersOfferIdTaskAnswerPostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type answerOfferTaskOffersOfferIdTaskAnswerPostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type answerOfferTaskOffersOfferIdTaskAnswerPostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type answerOfferTaskOffersOfferIdTaskAnswerPostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type answerOfferTaskOffersOfferIdTaskAnswerPostResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type answerOfferTaskOffersOfferIdTaskAnswerPostResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type answerOfferTaskOffersOfferIdTaskAnswerPostResponse503ApplicationProblemJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type answerOfferTaskOffersOfferIdTaskAnswerPostResponse503ApplicationJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type answerOfferTaskOffersOfferIdTaskAnswerPostResponseSuccess = (answerOfferTaskOffersOfferIdTaskAnswerPostResponse200) & {
+  headers: Headers;
+};
+export type answerOfferTaskOffersOfferIdTaskAnswerPostResponseError = (answerOfferTaskOffersOfferIdTaskAnswerPostResponse401ApplicationProblemJson | answerOfferTaskOffersOfferIdTaskAnswerPostResponse401ApplicationJson | answerOfferTaskOffersOfferIdTaskAnswerPostResponse403ApplicationProblemJson | answerOfferTaskOffersOfferIdTaskAnswerPostResponse403ApplicationJson | answerOfferTaskOffersOfferIdTaskAnswerPostResponse404ApplicationProblemJson | answerOfferTaskOffersOfferIdTaskAnswerPostResponse404ApplicationJson | answerOfferTaskOffersOfferIdTaskAnswerPostResponse409ApplicationProblemJson | answerOfferTaskOffersOfferIdTaskAnswerPostResponse409ApplicationJson | answerOfferTaskOffersOfferIdTaskAnswerPostResponse422ApplicationProblemJson | answerOfferTaskOffersOfferIdTaskAnswerPostResponse422ApplicationJson | answerOfferTaskOffersOfferIdTaskAnswerPostResponse503ApplicationProblemJson | answerOfferTaskOffersOfferIdTaskAnswerPostResponse503ApplicationJson) & {
+  headers: Headers;
+};
+
+export type answerOfferTaskOffersOfferIdTaskAnswerPostResponse = (answerOfferTaskOffersOfferIdTaskAnswerPostResponseSuccess | answerOfferTaskOffersOfferIdTaskAnswerPostResponseError)
+
+export const getAnswerOfferTaskOffersOfferIdTaskAnswerPostUrl = (offerId: string,) => {
+
+
+
+
+  return `/offers/${offerId}/task/answer`
+}
+
+/**
+ * Один ответ на задачу; повтор возвращает принятый (`Idempotent-Replay: true`).
+ * @summary Answer Offer Task
+ */
+export const answerOfferTaskOffersOfferIdTaskAnswerPost = async (offerId: string,
+    taskAnswerIn: TaskAnswerIn, options?: Parameters<typeof apiFetch>[1]): Promise<answerOfferTaskOffersOfferIdTaskAnswerPostResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<answerOfferTaskOffersOfferIdTaskAnswerPostResponse>(getAnswerOfferTaskOffersOfferIdTaskAnswerPostUrl(offerId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(taskAnswerIn)
+  }
+);}
+
+
+
+
+
+export const getAnswerOfferTaskOffersOfferIdTaskAnswerPostMutationKey = () => ['answerOfferTaskOffersOfferIdTaskAnswerPost'] as const;
+
+export const getAnswerOfferTaskOffersOfferIdTaskAnswerPostMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof answerOfferTaskOffersOfferIdTaskAnswerPost>>, TError,AnswerOfferTaskOffersOfferIdTaskAnswerPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof answerOfferTaskOffersOfferIdTaskAnswerPost>>, TError,AnswerOfferTaskOffersOfferIdTaskAnswerPostMutationVariables, TContext> => {
+
+const mutationKey = getAnswerOfferTaskOffersOfferIdTaskAnswerPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof answerOfferTaskOffersOfferIdTaskAnswerPost>>, AnswerOfferTaskOffersOfferIdTaskAnswerPostMutationVariables> = (props) => {
+          const {offerId,data} = props ?? {};
+
+          return  answerOfferTaskOffersOfferIdTaskAnswerPost(offerId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AnswerOfferTaskOffersOfferIdTaskAnswerPostMutationResult = NonNullable<Awaited<ReturnType<typeof answerOfferTaskOffersOfferIdTaskAnswerPost>>>
+    export type AnswerOfferTaskOffersOfferIdTaskAnswerPostMutationBody = TaskAnswerIn
+    export type AnswerOfferTaskOffersOfferIdTaskAnswerPostMutationError = ErrorType<ProblemOut>
+    export type AnswerOfferTaskOffersOfferIdTaskAnswerPostMutationVariables = {offerId: string;data: TaskAnswerIn}
+
+    /**
+ * @summary Answer Offer Task
+ */
+export const useAnswerOfferTaskOffersOfferIdTaskAnswerPost = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof answerOfferTaskOffersOfferIdTaskAnswerPost>>, TError,AnswerOfferTaskOffersOfferIdTaskAnswerPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof answerOfferTaskOffersOfferIdTaskAnswerPost>>,
+        TError,
+        AnswerOfferTaskOffersOfferIdTaskAnswerPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAnswerOfferTaskOffersOfferIdTaskAnswerPostMutationOptions(options), queryClient);
+    }
+    export type acceptOfferOffersOfferIdAcceptPostResponse200 = {
   data: OfferForCandidate
   status: 200
 }
