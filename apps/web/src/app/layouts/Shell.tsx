@@ -10,11 +10,12 @@ import { AdminSidebar } from "./AdminSidebar";
 import { AppHeader } from "./AppHeader";
 import { BottomNav } from "./BottomNav";
 import { PageContainer } from "./PageContainer";
+import { SectionTabs } from "./SectionTabs";
 import { CANDIDATE_BOTTOM } from "./shell-meta";
 
 export { ThemeToggle } from "./AppHeader";
 
-/** Счётчик «Офферы» в шапке (если API ответил). Запрос только для своей роли. */
+/** Счётчик «Приглашения» в шапке (если API ответил). Запрос только для своей роли. */
 function useOfferCounts(variant: "top" | "side"): Record<string, number | undefined> {
   const { role } = useAuth();
   const employer = useListOffersOffersGet(undefined, { query: { enabled: variant === "top" && role === "employer", retry: false } });
@@ -48,6 +49,7 @@ export function Shell({ nav, variant }: { nav: NavItem[]; variant: "top" | "side
       {variant === "side" && <AdminSidebar nav={nav} />}
       <div className="flex min-h-dvh min-w-0 flex-col">
         <AppHeader nav={nav} counts={counts} withTabs={variant === "top"} />
+        {variant === "top" && <SectionTabs nav={nav} />}
         {/* Поля задают сами страницы (p-4 md:p-6), поэтому контейнер без своих полей. */}
         <PageContainer className={cn("flex-1 px-0 md:px-0 lg:px-0", bottom && "pb-20 md:pb-0")} as="main">
           <Outlet />

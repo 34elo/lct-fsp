@@ -11,6 +11,7 @@ import type { MatchSnapshot } from './matchSnapshot';
 import type { OfferInitiator } from './offerInitiator';
 import type { OfferStatus } from './offerStatus';
 import type { SalaryBasis } from './salaryBasis';
+import type { TaskBrief } from './taskBrief';
 import type { VacancyBrief } from './vacancyBrief';
 import type { WhyYou } from './whyYou';
 
@@ -39,4 +40,5 @@ export interface OfferForCandidate {
   invited_at?: string | null;
   company: CompanyBrief;
   why_you?: WhyYou | null;
+  task?: TaskBrief | null;
 }

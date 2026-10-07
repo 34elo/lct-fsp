@@ -56,20 +56,20 @@ function mount(path: string) {
   );
 }
 
-test("тексты ошибок оффера по code", () => {
-  expect(offerErrorText(new ApiError(429, "offer_limit_exceeded", {}))).toMatch(/Лимит офферов/);
+test("тексты ошибок приглашения по code", () => {
+  expect(offerErrorText(new ApiError(429, "offer_limit_exceeded", {}))).toMatch(/Лимит приглашений/);
   expect(offerErrorText(new ApiError(409, "offer_exists", {}))).toMatch(/уже отправлен/);
   expect(offerErrorText(new ApiError(422, "salary_range_required", {}))).toMatch(/вилку/);
   expect(offerErrorText(new ApiError(429, undefined, {}))).toMatch(/Слишком много/);
 });
 
-test("форма оффера: подсказка p_accept и предупреждения, ключ идемпотентности, текст ошибки 429", async () => {
+test("форма приглашения: подсказка p_accept и предупреждения, ключ идемпотентности, текст ошибки 429", async () => {
   mount("/employer/offers/new?candidate=p1&vacancy=v1");
   expect(await screen.findByText(/Вероятность принятия: низкая/)).toBeInTheDocument();
   expect(screen.getByText(/ниже ожиданий кандидата/i)).toBeInTheDocument();
   expect(screen.getByText(/Слишком широкая вилка/)).toBeInTheDocument();
-  fireEvent.click(screen.getByRole("button", { name: "Отправить оффер" }));
-  expect(await screen.findByRole("alert")).toHaveTextContent(/Лимит офферов на сутки/);
+  fireEvent.click(screen.getByRole("button", { name: "Отправить приглашение" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent(/Лимит приглашений на сутки/);
   expect(calls[0].headers.get("Idempotency-Key")).toMatch(/.{8,}/);
   expect(calls[0].body).toMatchObject({ vacancy_id: "v1", candidate_pseudo_id: "p1", salary_from: 200000, salary_to: 280000 });
 });
@@ -79,7 +79,7 @@ test("пустая вилка не отправляется", async () => {
   await screen.findByText(/Вероятность принятия/);
   const [from] = screen.getAllByRole("textbox", { name: /от/ });
   fireEvent.change(from, { target: { value: "" } });
-  fireEvent.click(screen.getByRole("button", { name: "Отправить оффер" }));
+  fireEvent.click(screen.getByRole("button", { name: "Отправить приглашение" }));
   await waitFor(() => expect(screen.getAllByText(/Укажите обе границы вилки/).length).toBeGreaterThan(0));
   expect(calls).toHaveLength(0);
 });
@@ -164,7 +164,7 @@ test("M2: отказ одним тапом по причине в нижнем �
 test("M2: детали приглашения без вакансии открываются", async () => {
   stubCandidate([candOffer("o2", "accepted", { vacancy: null, title: "Рекрутинг ML-команды", description: "Нужен тимлид" })]);
   mount("/me/offers/o2");
-  expect(await screen.findByRole("heading", { name: "Оффер принят" })).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { name: "Приглашение принят" })).toBeInTheDocument();
   expect(screen.getByText("Нужен тимлид")).toBeInTheDocument();
   expect(screen.getByText(/Рекрутинг ML-команды/)).toBeInTheDocument();
 });

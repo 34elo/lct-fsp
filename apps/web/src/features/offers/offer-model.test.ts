@@ -33,7 +33,7 @@ test("canSendOffer: вилка и вакансия или название", () 
   expect(canSendOffer({ lo: 3, hi: 2, vacancyId: "v", title: "" })).toBe(false);
 });
 
-describe("канбан офферов", () => {
+describe("канбан приглашений", () => {
   const o = (status: string, created_at = "2026-10-01T00:00:00Z", reason?: string) => ({ status, created_at, decline: reason ? { reason } : null });
   test("колонка по статусу: закрытые и неизвестные уходят в «Закрыто»", () => {
     expect(columnOf("viewed")).toBe("viewed");

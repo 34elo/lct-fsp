@@ -93,7 +93,7 @@ test("кандидат: пустое состояние", async () => {
   expect(await screen.findByText("Пока никто не интересуется")).toBeInTheDocument();
 });
 
-test("на экране офферов кандидата есть плашка «Вами интересуются»", async () => {
+test("на экране приглашений кандидата есть плашка «Вами интересуются»", async () => {
   routes = (url) => {
     if (url.endsWith("/candidates/me/interests")) return res(200, { companies: 3, salary_from_min: 1, salary_to_max: 2, items: [] });
     if (url.endsWith("/candidates/me/offers")) return res(200, []);

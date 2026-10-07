@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from enum import StrEnum
 from typing import Literal
 from uuid import UUID
@@ -58,12 +59,53 @@ class OfferInterestEvent(BaseModel):
     salary_to: int = Field(ge=0)
 
 
+class ActivityKind(StrEnum):
+    """Тип события ленты активности работодателя (`GET /employer/activity`, E35-12b)."""
+
+    subscription_hit = "subscription_hit"  # новый кандидат по подписке на категорию
+    interest_opened = "interest_opened"  # кандидат открыл интерес
+    interest_declined = "interest_declined"  # кандидат отклонил интерес
+    invitation_accepted = "invitation_accepted"  # приглашение принято
+    invitation_declined = "invitation_declined"  # приглашение отклонено
+    task_answered = "task_answered"  # ответ на задание в приглашении
+
+
+class ActivityCandidate(BaseModel):
+    """Анонимная карточка-превью: только псевдоним, без ПДн и контактов."""
+
+    pseudo_id: str
+    pseudonym: str
+    primary_role: str | None = None
+    grade: str | None = None
+
+
+class ActivityEvent(BaseModel):
+    """Событие ленты. `link` — внутренний маршрут веба; `offer_id` — приглашение или интерес."""
+
+    id: str
+    kind: ActivityKind
+    at: datetime
+    candidate: ActivityCandidate
+    link: str
+    offer_id: UUID | None = None
+    subscription_id: UUID | None = None
+    detail: str | None = None  # код причины отказа / название подписки (profession)
+
+
+class ActivityFeed(BaseModel):
+    items: list[ActivityEvent]
+
+
 HIRING_EVENTS: dict[str, type[BaseModel]] = {
     f"offer.interest.{name}": OfferInterestEvent
     for name in ("sent", "opened", "declined", "expired", "withdrawn")
 }
 
 __all__ = [
+    "ActivityCandidate",
+    "ActivityEvent",
+    "ActivityFeed",
+    "ActivityKind",
     "HIRING_EVENTS",
     "INTEREST_SCHEMA_VERSION",
     "OFFER_SCHEMA_VERSION",

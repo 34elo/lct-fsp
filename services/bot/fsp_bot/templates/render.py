@@ -157,7 +157,8 @@ def fsp_imported(d: dict) -> str:
 
 
 def regular_task_published(d: dict) -> str:
-    return f"📋 Новое задание по профессии {_e(d.get('profession', ''))}"
+    name = d.get("profession_title") or d.get("profession", "")
+    return f"📋 Новое задание по профессии {_e(name)}"
 
 
 def category_subscription(d: dict) -> str:
