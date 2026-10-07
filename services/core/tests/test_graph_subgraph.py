@@ -179,6 +179,15 @@ def test_hidden_candidate_is_404(api, world):
     assert_foreign_is_404(api, "GET", f"/candidates/{world['pid']}/graph", _h(world, "emp"))
 
 
+def test_minor_without_parent_consent_is_404(api, world):
+    async def minor():
+        async with session_scope(world["factory"]) as s:
+            (await s.scalars(select(Candidate))).one().age_group = "minor"
+
+    asyncio.run(minor())
+    assert_foreign_is_404(api, "GET", f"/candidates/{world['pid']}/graph", _h(world, "emp"))
+
+
 def test_graph_edges_view(api, world):
     import sqlite3
 
