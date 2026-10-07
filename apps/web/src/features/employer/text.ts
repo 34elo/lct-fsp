@@ -247,3 +247,24 @@ export const FEED_TEXT: Record<string, (detail: string | null) => string> = {
   invitation_declined: () => "отклонил приглашение",
   task_answered: (d) => (d ? `ответил на задание «${d}»` : "ответил на задание"),
 };
+
+/** Общий шорт-лист работодателя `/employer/shortlist` (E38-12, бриф §6.12). */
+export const SHORTLIST_PAGE_TEXT = {
+  title: "Шорт-лист",
+  list: "Отмеченные кандидаты",
+  invite: "Пригласить",
+  interest: "Интерес",
+  open: "Открыть",
+  empty: "Шорт-лист пуст",
+  toMatch: "Перейти к подбору",
+  failed: "Не загрузилось",
+  code: (status: number) => `ошибка ${status}`,
+  colCandidate: "кандидат",
+  colGrade: "грейд",
+  colSkills: "навыки",
+  colSalary: "вилка",
+  colInterest: "интерес",
+  noInterest: "интерес не отправлен",
+  waiting: "ожидает ответа",
+  opened: "кандидат открыл интерес",
+} as const;
