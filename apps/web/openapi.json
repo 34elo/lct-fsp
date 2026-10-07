@@ -4411,6 +4411,58 @@
         }
       }
     },
+    "/candidates/me/standing": {
+      "get": {
+        "tags": [
+          "search"
+        ],
+        "summary": "My Standing",
+        "description": "Сила профиля и место в категории «профессия × грейд» (E35-12a). Без теста — пусто.",
+        "operationId": "my_standing_candidates_me_standing_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandidateStanding"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/candidates/me/uplift": {
       "get": {
         "tags": [
@@ -16375,6 +16427,84 @@
         "title": "CandidateProfile",
         "description": "`CandidateProfile` (api.md §3). Пока без `code`, `completeness`."
       },
+      "CandidateStanding": {
+        "properties": {
+          "profession": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]{1,31}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profession"
+          },
+          "grade": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TestGrade"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "mode": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "standard",
+                  "express"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mode"
+          },
+          "confirmed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmed At"
+          },
+          "strength": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StandingStrength"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "category_size": {
+            "type": "integer",
+            "title": "Category Size",
+            "default": 0
+          },
+          "peers": {
+            "items": {
+              "$ref": "#/components/schemas/StandingPeer"
+            },
+            "type": "array",
+            "title": "Peers"
+          }
+        },
+        "type": "object",
+        "title": "CandidateStanding",
+        "description": "`GET /candidates/me/standing` (E35-12a). Без действующего грейда все поля пустые."
+      },
       "CandidateTaskDetail": {
         "properties": {
           "id": {
@@ -25471,6 +25601,101 @@
         ],
         "title": "StackItem"
       },
+      "StandingPart": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "value": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Value"
+          },
+          "weight": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Weight"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "text",
+          "value",
+          "weight"
+        ],
+        "title": "StandingPart",
+        "description": "Слагаемое силы профиля (T/F/S/R/C): что даёт больше всего."
+      },
+      "StandingPeer": {
+        "properties": {
+          "strength": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Strength"
+          },
+          "salary_min": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary Min"
+          }
+        },
+        "type": "object",
+        "required": [
+          "strength"
+        ],
+        "title": "StandingPeer",
+        "description": "Точка графика «Где ты среди своих»: без идентификаторов, только числа."
+      },
+      "StandingStrength": {
+        "properties": {
+          "value": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Value"
+          },
+          "rank": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Rank"
+          },
+          "top_percent": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Top Percent"
+          },
+          "parts": {
+            "items": {
+              "$ref": "#/components/schemas/StandingPart"
+            },
+            "type": "array",
+            "title": "Parts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "rank",
+          "top_percent"
+        ],
+        "title": "StandingStrength",
+        "description": "Сила профиля и место среди кандидатов той же категории (ранг 1 — сильнейший)."
+      },
       "StartIn": {
         "properties": {
           "tg_user_id": {
@@ -27658,6 +27883,37 @@
           "role"
         ],
         "title": "UserOut"
+      },
+      "UserTokenIn": {
+        "properties": {
+          "tg_user_id": {
+            "type": "integer",
+            "title": "Tg User Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tg_user_id"
+        ],
+        "title": "UserTokenIn"
+      },
+      "UserTokenOut": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "expires_in": {
+            "type": "integer",
+            "title": "Expires In"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "expires_in"
+        ],
+        "title": "UserTokenOut"
       },
       "VacancyBrief": {
         "properties": {

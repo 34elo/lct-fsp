@@ -128,10 +128,14 @@ export function RadioGroupItem({ className, ...p }: ComponentProps<typeof RRadio
 export function Switch({ className, ...p }: ComponentProps<typeof RSwitch.Root>) {
   return (
     <RSwitch.Root
-      className={cn("inline-flex h-6 w-11 shrink-0 items-center rounded-full bg-hairline p-0.5 transition-colors data-[state=checked]:bg-brand disabled:opacity-50", className)}
+      className={cn(
+        // v2 `.sw`: 36×20, выкл — tint-200, вкл — brand; цель касания добирается полями строки настроек.
+        "inline-flex h-5 w-9 shrink-0 items-center rounded-full bg-tint-200 p-0.5 transition-colors data-[state=checked]:bg-brand disabled:opacity-50",
+        className,
+      )}
       {...p}
     >
-      <RSwitch.Thumb className="block size-5 rounded-full bg-card shadow-xs transition-transform data-[state=checked]:translate-x-5" />
+      <RSwitch.Thumb className="block size-4 rounded-full bg-on-brand shadow-xs transition-transform data-[state=checked]:translate-x-4" />
     </RSwitch.Root>
   );
 }

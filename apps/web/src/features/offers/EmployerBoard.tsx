@@ -1,163 +1,191 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 
-import { ConstellationAvatar, EmptyState, ErrorState, SectionLabel, Skeleton, StatusBadge, Zap, buttonVariants, cn, formatRubRangeShort, type OfferStatus } from "@fsp/ui";
+import { buttonVariants, cn, EmptyState, ErrorState, formatRubRangeShort, GradeTag, H1, Lbl, Num, Panel, Skeleton, StatusBadge, type OfferStatus } from "@fsp/ui";
 
-import { useListOffersOffersGet } from "@/api/endpoints/offers/offers";
+import { useListMessagesOffersOfferIdMessagesGet, useListOffersOffersGet } from "@/api/endpoints/offers/offers";
 import type { OfferForCompany } from "@/api/model";
-import { GRADE_LABEL, roleLabel } from "@/features/profile/text";
-import { BOARD_COLUMNS, boardStats, declineBreakdown, groupByColumn, type BoardColumn } from "./offer-model";
-import { BOARD_TEXT as T, DECLINE_LABEL, OFFER_STATUS_LABEL, dateOnly } from "./text";
+import { ApiError } from "@/api/mutator";
+import { GRADE_LABEL } from "@/features/profile/text";
+import { funnelOf, funnelSpanDays, lastActive, sortOffers } from "./offer-model";
+import { BOARD_TEXT as T } from "./text";
 
-const shortDate = (iso: string) => new Date(iso).toLocaleDateString("ru-RU", { day: "numeric", month: "short" });
+const COLS = "md:grid-cols-[1.1fr_0.6fr_1.1fr_1fr_1.2fr]";
+const shortDate = (iso: string) => new Date(iso).toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit" });
 
-/** Карточка приглашения на доске: кандидат, вилка, статус, даты. */
-function OfferCardRow({ o }: { o: OfferForCompany }) {
-  const c = o.candidate;
-  const name = c?.pseudonym ?? T.deleted;
-  const sub = c ? [c.primary_role && roleLabel(c.primary_role), c.grade && (GRADE_LABEL[c.grade] ?? c.grade)].filter(Boolean).join(" · ") : "";
-  const waiting = o.status === "sent" || o.status === "viewed" || o.status === "interest" || o.status === "interest_opened";
-  const reason = o.decline ? (DECLINE_LABEL[o.decline.reason] ?? o.decline.reason).toLowerCase() : null;
-  return (
-    <li>
-      <Link
-        to={`/employer/offers/${o.id}`}
-        aria-label={`${name}, ${OFFER_STATUS_LABEL[o.status] ?? o.status}`}
-        className="grid gap-2.5 rounded-xl border border-hairline bg-card p-3 shadow-xs hover:border-brand-mid focus-visible:outline-2 focus-visible:outline-brand"
-      >
-        <span className="flex items-center gap-2.5">
-          {c && <ConstellationAvatar seed={c.avatar_seed} size={36} />}
-          <span className="grid min-w-0">
-            <span className="break-words font-mono text-13 font-semibold">{name}</span>
-            {sub && <span className="text-12 text-muted">{sub}</span>}
-          </span>
-        </span>
-        <span className="font-mono text-14 font-semibold">{formatRubRangeShort(o.salary_from, o.salary_to)}</span>
-        <span className="flex flex-wrap items-center gap-1.5">
-          <StatusBadge status={o.status as OfferStatus} />
-          {reason && <span className="text-12 text-error">{T.reason(reason)}</span>}
-        </span>
-        <span className="text-12 text-muted">
-          {shortDate(o.created_at)}
-          {waiting && <> · {T.replyBy(dateOnly(o.expires_at))}</>}
-        </span>
-        {(o.awaiting_reply_from === "company" || o.status === "interest_opened") && <span className="text-12 font-semibold text-brand-fg">{T.yourTurn}</span>}
-      </Link>
-    </li>
-  );
+/** Вилка: обе границы — «150–220 тыс. ₽», только нижняя — «от 220 000 ₽». */
+const salary = (o: OfferForCompany) => (o.salary_to > o.salary_from ? formatRubRangeShort(o.salary_from, o.salary_to) : T.from(o.salary_from));
+
+function note(o: OfferForCompany): string {
+  if (o.status === "interest") return T.waiting;
+  if (o.status === "interest_opened") return shortDate(o.interest_opened_at ?? o.created_at);
+  if (o.contacts) return T.contactsOpen;
+  if (o.status === "sent" || o.status === "viewed") return [o.task ? T.task : null, T.contactsHidden].filter(Boolean).join(" · ");
+  return shortDate(o.created_at);
 }
 
-function Column({ id, items, hiddenOnPhone }: { id: BoardColumn; items: OfferForCompany[]; hiddenOnPhone: boolean }) {
-  const title = T.columns[id];
-  return (
-    <section aria-label={title} className={cn("min-w-0 flex-col gap-2.5 rounded-xl bg-tint-50/60 p-3 md:w-[220px] md:shrink-0 xl:w-auto xl:flex-1", hiddenOnPhone ? "hidden md:flex" : "flex")}>
-      <h2 className="hidden items-center justify-between font-mono text-13 font-semibold md:flex">
-        {title}
-        <span aria-label={T.count(items.length)} className="rounded-full bg-card px-2 text-12 text-muted">{items.length}</span>
-      </h2>
-      {items.length === 0 ? <p className="rounded-lg border border-dashed border-hairline p-3 text-12 text-muted">{T.emptyColumn}</p> : <ul className="grid gap-2.5">{items.map((o) => <OfferCardRow key={o.id} o={o} />)}</ul>}
-    </section>
-  );
+function Name({ o }: { o: OfferForCompany }) {
+  return <span className="break-words font-mono text-14 font-semibold">{o.candidate?.pseudonym ?? T.deleted}</span>;
 }
 
-/** Причины отказов: считаем по самим приглашениям (отдельной выдачи в API нет). */
-function Declines({ offers }: { offers: OfferForCompany[] }) {
-  const rows = declineBreakdown(offers);
-  if (rows.length === 0) return null;
-  const total = rows.reduce((n, r) => n + r.count, 0);
-  const top = rows[0];
-  const topLabel = DECLINE_LABEL[top.reason] ?? top.reason;
+function grade(o: OfferForCompany) {
+  const g = o.candidate?.grade;
+  return g ? (GRADE_LABEL[g] ?? g) : null;
+}
+
+function Funnel({ offers }: { offers: OfferForCompany[] }) {
+  const f = funnelOf(offers);
+  const days = funnelSpanDays(offers, Date.now());
+  const steps = [
+    [f.interest, T.funnel.interest],
+    [f.opened, T.funnel.opened],
+    [f.invited, T.funnel.invited],
+    [f.accepted, T.funnel.accepted],
+  ] as const;
   return (
-    <section aria-label={T.declinesTitle} className="grid gap-5 rounded-2xl border border-hairline bg-card p-4 md:p-6 lg:grid-cols-2">
-      <div className="grid content-start gap-3">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="font-mono text-20 font-semibold">{T.declinesTitle}</h2>
-          <span className="font-mono text-12 text-muted">{T.declinesTotal(total)}</span>
-        </div>
-        <ul className="grid gap-2.5">
-          {rows.map((r) => (
-            <li key={r.reason} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 md:grid-cols-[140px_minmax(0,1fr)_44px]">
-              <span className="text-14">{DECLINE_LABEL[r.reason] ?? r.reason}</span>
-              <span className="font-mono text-13 font-semibold md:order-3 md:text-right">{r.pct}%</span>
-              <span aria-hidden className="col-span-2 h-2.5 overflow-hidden rounded-full bg-tint-100 md:order-2 md:col-span-1">
-                <span className="block h-full rounded-full bg-brand" style={{ width: `${r.pct}%` }} />
-              </span>
-            </li>
-          ))}
-        </ul>
+    <Panel aria-label={T.funnelTitle} className="flex flex-col gap-3.5">
+      <div className="flex items-baseline justify-between gap-2">
+        <h2 className="font-mono text-16 font-semibold">{T.funnelTitle}</h2>
+        <Lbl>{T.days(days)}</Lbl>
       </div>
-      <aside className="grid content-start gap-3 rounded-xl border border-tint-200 bg-tint-50 p-4">
-        <SectionLabel className="inline-flex items-center gap-1.5"><Zap aria-hidden className="size-3.5" />{T.hintLabel}</SectionLabel>
-        <p className="text-15"><b className="font-mono text-brand-fg">{topLabel} — {top.pct}%.</b> {T.hint[top.reason] ?? T.hintDefault}</p>
-        <Link to="/employer/vacancies" className={cn(buttonVariants({ variant: "primary" }), "w-fit")}>{T.openVacancies}</Link>
-      </aside>
-    </section>
+      <ol className="m-0 mt-2 grid list-none grid-cols-4 border-t-2 border-brand p-0">
+        {steps.map(([n, label], i) => (
+          <li key={label} className="relative pr-2 pt-3.5 text-12">
+            <span aria-hidden className={cn("absolute -top-[9px] left-0 size-3.5 rounded-full border-[3px] border-card ring-1", i === 2 ? "bg-signal ring-signal" : "bg-brand ring-brand")} />
+            <Num className="block text-20 font-semibold">{n}</Num>
+            <Lbl>{label}</Lbl>
+          </li>
+        ))}
+      </ol>
+    </Panel>
   );
 }
 
-/** Мои приглашения (экран E5): канбан по статусам, на телефоне — вкладки со счётчиками. */
+function OffersTable({ offers }: { offers: OfferForCompany[] }) {
+  return (
+    <Panel className="overflow-hidden p-0" aria-label={T.listTitle}>
+      <div className="flex items-baseline justify-between px-4 pb-2.5 pt-3.5">
+        <h2 className="font-mono text-16 font-semibold">{T.listTitle}</h2>
+        <Lbl>{offers.length}</Lbl>
+      </div>
+      <div className={cn("hidden min-h-9 items-center gap-3 px-4 md:grid", COLS)} aria-hidden>
+        {[T.colCandidate, T.colGrade, T.colStatus, T.colSalary, T.colNote].map((h) => (
+          <Lbl key={h}>{h}</Lbl>
+        ))}
+      </div>
+      <ul className="m-0 hidden list-none p-0 md:block">
+        {offers.map((o) => (
+          <li key={o.id} className="border-t border-hairline">
+            <Link
+              to={`/employer/offers/${o.id}`}
+              data-testid="offer-row"
+              aria-label={`${o.candidate?.pseudonym ?? T.deleted}, ${T.open}`}
+              className={cn("grid items-center gap-3 px-4 py-3 hover:bg-tint-50 focus-visible:outline-2 focus-visible:outline-brand", COLS)}
+            >
+              <Name o={o} />
+              <span className="justify-self-start">{grade(o) && <GradeTag>{grade(o)}</GradeTag>}</span>
+              <span className="justify-self-start"><StatusBadge status={o.status as OfferStatus} /></span>
+              <Num className="whitespace-nowrap text-14">{salary(o)}</Num>
+              <span className="text-13 text-muted">{note(o)}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+      <ul className="m-0 grid list-none gap-2 p-2 md:hidden">
+        {offers.map((o) => (
+          <li key={o.id}>
+            <Link to={`/employer/offers/${o.id}`} aria-label={`${o.candidate?.pseudonym ?? T.deleted}, ${T.open}`} className="grid gap-2 rounded-xl border border-hairline bg-card p-3 shadow-xs hover:border-brand-mid">
+              <span className="flex items-center justify-between gap-2"><Name o={o} /><StatusBadge status={o.status as OfferStatus} /></span>
+              <span className="flex items-center justify-between gap-2"><Num className="text-14">{salary(o)}</Num><span className="text-12 text-muted">{note(o)}</span></span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </Panel>
+  );
+}
+
+/** Последняя переписка по активному приглашению: быстрый «Ответить» без поиска по списку. */
+function Latest({ offer }: { offer: OfferForCompany }) {
+  const q = useListMessagesOffersOfferIdMessagesGet(offer.id, { query: { refetchInterval: 30_000 } });
+  const msgs = q.data?.status === 200 ? q.data.data : [];
+  const last = [...msgs].reverse().find((m) => m.author_side !== "company") ?? msgs[msgs.length - 1];
+  return (
+    <Panel className="flex flex-col gap-2.5" aria-label={T.latestTitle}>
+      <div className="flex items-center justify-between gap-2">
+        <Name o={offer} />
+        <StatusBadge status={offer.status as OfferStatus} />
+      </div>
+      <p className="m-0 whitespace-pre-wrap break-words rounded-lg border border-tint-200 bg-tint-50 p-3 text-14">{last?.text ?? T.noMessages}</p>
+      <Link to={`/employer/offers/${offer.id}`} className={cn(buttonVariants({ size: "lg" }), "w-full")}>{T.reply}</Link>
+    </Panel>
+  );
+}
+
+function Responses({ items }: { items: OfferForCompany[] }) {
+  if (items.length === 0) return null;
+  return (
+    <Panel aria-label={T.responsesTitle} className="flex flex-col gap-1">
+      <div className="flex items-baseline justify-between gap-2 pb-1.5">
+        <h2 className="font-mono text-16 font-semibold">{T.responsesTitle}</h2>
+        <Lbl>{items.length}</Lbl>
+      </div>
+      {items.slice(0, 5).map((o) => (
+        <Link key={o.id} to={`/employer/offers/${o.id}`} className="flex items-center justify-between gap-2 border-t border-hairline py-2.5 first:border-t-0 hover:underline">
+          <Name o={o} />
+          {grade(o) && <GradeTag>{grade(o)}</GradeTag>}
+        </Link>
+      ))}
+      <Link to="/employer/responses" className="pt-2 text-14 font-semibold text-brand-fg hover:underline">{T.allResponses}</Link>
+    </Panel>
+  );
+}
+
+function Loading() {
+  return (
+    <div aria-hidden data-testid="offers-loading" className="grid gap-3 md:grid-cols-3">
+      {[0, 1, 2].map((i) => (
+        <Panel key={i} className="flex flex-col gap-2.5">
+          <Skeleton className="h-4 w-2/5" />
+          <Skeleton className="h-3 w-full" />
+          <Skeleton className="h-3 w-full" />
+          <Skeleton className="h-3 w-[70%]" />
+        </Panel>
+      ))}
+    </div>
+  );
+}
+
+/** Приглашения работодателя `/employer/offers` (E38-13, бриф §6.13): воронка, таблица предложений, последняя переписка, отклики. */
 export function EmployerOffers() {
   const q = useListOffersOffersGet();
-  const [picked, setTab] = useState<BoardColumn | null>(null);
-  const offers = q.data?.status === 200 ? q.data.data : [];
-  const groups = groupByColumn(offers);
-  const st = boardStats(offers);
-  // Пока ничего не выбрано: первая непустая из «Отправлен» и «Интерес» (на телефоне иначе открылась бы пустая вкладка).
-  const tab: BoardColumn = picked ?? (groups.sent.length === 0 && groups.interest.length > 0 ? "interest" : "sent");
+  const all = q.data?.status === 200 ? (q.data.data as OfferForCompany[]) : [];
+  const offers = sortOffers(all.filter((o) => o.initiator !== "candidate"));
+  const responses = all.filter((o) => o.initiator === "candidate");
+  const active = lastActive(offers);
+  const code = q.error instanceof ApiError ? T.code(q.error.status) : undefined;
+  const empty = q.isSuccess && all.length === 0;
   return (
-    <main className="mx-auto flex w-full max-w-[1400px] flex-col gap-5 p-4 md:p-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div className="grid gap-1">
-          <h1 className="font-mono text-28 font-semibold">{T.title}</h1>
-          {q.isSuccess && <p className="text-14 text-muted">{T.subtitle(st.total)}</p>}
-        </div>
-        {q.isSuccess && offers.length > 0 && (
-          <dl className="flex gap-6">
-            {[
-              [T.kpiViewed, st.viewedPct === null ? "—" : `${st.viewedPct}%`],
-              [T.kpiAccepted, String(st.accepted)],
-              [T.kpiHired, String(st.hired)],
-            ].map(([k, v]) => (
-              <div key={k} className="grid gap-0.5">
-                <dt className="font-mono text-11 uppercase tracking-[.06em] text-muted">{k}</dt>
-                <dd className="font-mono text-24 font-semibold text-brand-fg">{v}</dd>
-              </div>
-            ))}
-          </dl>
-        )}
-      </header>
-
-      {q.isPending && <div role="status" aria-label="Загрузка" className="grid gap-3 md:grid-cols-3 xl:grid-cols-7">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-40" />)}</div>}
-      {q.isError && <ErrorState title={T.loadError} onRetry={() => void q.refetch()} />}
-      {q.isSuccess && offers.length === 0 && (
+    <main className="mx-auto flex w-full max-w-[1328px] flex-col gap-4 px-4 py-4 md:px-6 md:py-6">
+      {q.isPending ? <Skeleton className="h-7 w-56" /> : <H1 className="text-[22px] md:text-[26px]">{T.title}</H1>}
+      {q.isPending && <Loading />}
+      {q.isError && <ErrorState title={T.loadError} code={code} onRetry={() => void q.refetch()} />}
+      {empty && (
         <EmptyState
           title={T.empty}
-          description={T.emptyHint}
-          action={<Link to="/employer/search" className={buttonVariants({ variant: "primary" })}>{T.toSearch}</Link>}
+          action={<Link to="/employer" className={buttonVariants({ size: "lg" })}>{T.toSearch}</Link>}
         />
       )}
-      {q.isSuccess && offers.length > 0 && (
-        <>
-          <div role="tablist" aria-label={T.tabs} className="-mx-4 flex gap-1 overflow-x-auto border-b border-hairline px-4 md:hidden">
-            {BOARD_COLUMNS.map((id) => (
-              <button
-                key={id}
-                role="tab"
-                type="button"
-                aria-selected={tab === id}
-                onClick={() => setTab(id)}
-                className="-mb-px inline-flex min-h-11 shrink-0 items-center gap-2 border-b-2 border-transparent px-3 text-14 font-medium text-muted aria-selected:border-brand aria-selected:text-ink"
-              >
-                {T.columns[id]}
-                <span className="rounded-full bg-tint-100 px-1.5 font-mono text-12 text-brand-fg">{groups[id].length}</span>
-              </button>
-            ))}
+      {q.isSuccess && !empty && (
+        <div className="grid items-start gap-4 lg:grid-cols-12">
+          <div className="order-2 flex min-w-0 flex-col gap-4 lg:order-1 lg:col-span-8">
+            {offers.length > 0 && <Funnel offers={offers} />}
+            {offers.length > 0 && <OffersTable offers={offers} />}
           </div>
-          <div className="flex flex-col gap-3 md:flex-row md:overflow-x-auto md:pb-2">
-            {BOARD_COLUMNS.map((id) => <Column key={id} id={id} items={groups[id]} hiddenOnPhone={tab !== id} />)}
+          <div className="order-1 flex min-w-0 flex-col gap-4 lg:order-2 lg:col-span-4">
+            {active && <Latest offer={active} />}
+            <Responses items={responses} />
           </div>
-          <Declines offers={offers} />
-        </>
+        </div>
       )}
     </main>
   );
