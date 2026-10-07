@@ -357,6 +357,8 @@ def register(
     @idempotent(session_factory, "notifications.fsp_imported")
     async def on_fsp_imported(envelope: Envelope, session: AsyncSession) -> None:
         ev = FspResultsImported.model_validate(envelope.payload)
+        if not ev.results:  # синхронизация без новых результатов (сменился только состав команд)
+            return
         out: list[UiMessage] = []
         await service.notify(
             session, ev.candidate_id, type="fsp_imported", title="Новый результат ФСП",
