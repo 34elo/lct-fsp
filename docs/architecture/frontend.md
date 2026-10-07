@@ -33,6 +33,7 @@
 | `/employer/candidates/:id` | E | Карточка кандидата (B, макет v2: навыки, ФСП, заявлено и подтверждено, интерес; E38-10) |
 | `/employer/offers/new` | E | Модалка оффера (C) |
 | `/employer/vacancies`, `/employer/vacancies/new`, `/employer/vacancies/:id` | E | Вакансии и редактор вакансии (E3) |
+| `/employer/shortlist` | E | Шорт-лист (E38-12, макет `v2_employer-shortlist__*`): кандидаты из `GET /needs/{id}/categories` → `shortlist[]` (`?need=` или последний запрос) с карточками `GET /candidates/{id}/card`, статус интереса по `GET /offers`; «Интерес» / «Пригласить» — `OfferDialog` на месте, «Открыть» ведёт к приглашению. Состояния: загрузка, ошибка с кодом и «Повторить», пусто с переходом к подбору |
 | `/employer/vacancies/:id/shortlist` | E | Подборка по вакансии (E4) |
 | `/employer/offers` | E | Мои офферы, канбан (E5) |
 | `/employer/company` | EA | Компания, участники, статус модерации |
