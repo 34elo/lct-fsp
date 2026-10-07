@@ -29,7 +29,7 @@ test("инициалы", () => {
   expect(initials("")).toBe("?");
 });
 
-test("счётчик офферов: у нового кандидата без офферов бейджа нет, свои отклики не считаются", async () => {
+test("счётчик приглашений: у нового кандидата без приглашений бейджа нет, свои отклики не считаются", async () => {
   const { offerCount } = await import("./Shell");
   expect(offerCount({ status: 200, data: [] })).toBeUndefined();
   expect(offerCount({ status: 403, data: [] })).toBeUndefined();

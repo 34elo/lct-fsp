@@ -56,7 +56,7 @@ export default function Company() {
       <h1 className="font-mono text-2xl font-semibold">Компания</h1>
       {q.isPending && <p role="status" className="text-muted">Загрузка…</p>}
       {q.isError && !missing && <ErrorNote>Не удалось загрузить компанию.</ErrorNote>}
-      {missing && <p className="rounded-xl border border-hairline bg-card p-4 text-sm">Компания ещё не зарегистрирована. Заполните данные: после проверки администратором ФСП откроются публикация вакансий и офферы.</p>}
+      {missing && <p className="rounded-xl border border-hairline bg-card p-4 text-sm">Компания ещё не зарегистрирована. Заполните данные: после проверки администратором ФСП откроются публикация вакансий и приглашения.</p>}
       {company && (
         <section aria-label="Статус" className="flex flex-col gap-1 rounded-xl border border-hairline bg-card p-4">
           <p className="text-sm font-semibold">

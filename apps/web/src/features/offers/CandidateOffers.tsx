@@ -77,7 +77,7 @@ function OfferItem({ o, past }: { o: CandidateOffer; past?: boolean }) {
   );
 }
 
-/** Офферы кандидата (M2): ждущие ответа сверху, прошлые ниже. На 1440 — сетка карточек в ширину контейнера. */
+/** Приглашения кандидата (M2): ждущие ответа сверху, прошлые ниже. На 1440 — сетка карточек в ширину контейнера. */
 export function CandidateOffers() {
   const q = useMyOffersCandidatesMeOffersGet();
   const all = (q.data?.status === 200 ? q.data.data : []) as unknown as CandidateOffer[];

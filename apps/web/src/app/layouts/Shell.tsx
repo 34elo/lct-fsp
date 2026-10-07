@@ -15,7 +15,7 @@ import { CANDIDATE_BOTTOM } from "./shell-meta";
 
 export { ThemeToggle } from "./AppHeader";
 
-/** Счётчик «Офферы» в шапке (если API ответил). Запрос только для своей роли. */
+/** Счётчик «Приглашения» в шапке (если API ответил). Запрос только для своей роли. */
 function useOfferCounts(variant: "top" | "side"): Record<string, number | undefined> {
   const { role } = useAuth();
   const employer = useListOffersOffersGet(undefined, { query: { enabled: variant === "top" && role === "employer", retry: false } });
