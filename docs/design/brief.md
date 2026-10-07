@@ -1,6 +1,8 @@
 # Дизайн-бриф
 
-> Для дизайнера, фронтендера и Claude Design. Токены и правила бренда: [brand.md](brand.md). Готовый промпт: [prompt.md](prompt.md).
+> ⚠️ **Бриф v1** (пакет `design/pack`, экраны до ТЗ 2026). Вид экранов v2 — [design/v2](v2/README.md), бриф v2 — [claude-design/brief.md](claude-design/brief.md). Отсюда по-прежнему действует словарь текстов §7.
+
+> Для дизайнера, фронтендера и Claude Design. Токены и правила бренда: [brand.md](brand.md). Готовый промпт: [prompt.md](claude-design/brief.md).
 
 ## 0. Дизайн получен (2026-10-02) — с чего начинать фронтенду
 
@@ -10,10 +12,10 @@
 
 | Что | Где | Как использовать |
 |---|---|---|
-| Токены (CSS-переменные, светлая и тёмная тема) | [handoff/globals.css](handoff/globals.css) | Основа `apps/web/src/styles/tokens.css` |
-| Tailwind-тема | [handoff/tailwind.config.ts](handoff/tailwind.config.ts) | Перенести в `@theme` Tailwind 4 (см. [frontend.md §5](../architecture/frontend.md#5-тема-и-токены)) |
-| Готовые компоненты | [handoff/fsp-ui.tsx](handoff/fsp-ui.tsx) | `TrustDots`, `SkillChip`, `ConstellationAvatar`, `MatchRing`, `CandidateCard`, `OfferCard`, `UpliftCard` → `apps/web/src/shared/brand/` |
-| Экраны (41 макет) | [screens/](screens/) | Открой нужный `.dc.html`: разметка с инлайн-стилями плюс логика интерактива в `<script data-dc-script>` (например, живая подсказка вилки в `C_Offer`) |
+| Токены (CSS-переменные, светлая и тёмная тема) | [handoff/globals.css](pack/tokens/globals.css) | Основа `apps/web/src/styles/tokens.css` |
+| Tailwind-тема | [handoff/tailwind.config.ts](pack/tokens/tailwind.config.ts) | Перенести в `@theme` Tailwind 4 (см. [frontend.md §5](../architecture/frontend.md#5-тема-и-токены)) |
+| Готовые компоненты | [handoff/fsp-ui.tsx](pack/components/fsp-ui.tsx) | `TrustDots`, `SkillChip`, `ConstellationAvatar`, `MatchRing`, `CandidateCard`, `OfferCard`, `UpliftCard` → `apps/web/src/shared/brand/` |
+| Экраны (41 макет) | [screens/](pack/screens/html/) | Открой нужный `.dc.html`: разметка с инлайн-стилями плюс логика интерактива в `<script data-dc-script>` (например, живая подсказка вилки в `C_Offer`) |
 
 **Экран → файл → маршрут.** Маршруты из макетов приняты, они же в [frontend.md §1](../architecture/frontend.md#1-карта-маршрутов). Точки адаптива: 1440 / 1024 / 390.
 
