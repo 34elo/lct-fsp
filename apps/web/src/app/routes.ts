@@ -83,6 +83,7 @@ export const ROUTES: RouteDef[] = [
   { path: "/employer/needs/new", title: "Новая потребность", section: "employer", owner: "b2" },
   { path: "/employer/needs/:id", title: "Рекомендованные категории", section: "employer", owner: "b2" },
   { path: "/employer/categories/:profession/:grade", title: "Кандидаты категории", section: "employer", owner: "b2" },
+  { path: "/employer/shortlist", title: "Шорт-лист", screen: "v2_employer-shortlist", section: "employer", owner: "b2", nav: true },
   { path: "/employer/responses", title: "Отклики на вакансии", section: "employer", owner: "b2", nav: true },
   { path: "/employer/subscriptions", title: "Подписки на категории", section: "employer", owner: "b2", nav: true },
   // <<< block2 (employer)
@@ -122,7 +123,7 @@ export interface NavItem {
 /**
  * Меню по ролям (E35-1, ux-spec §2). Правило: нет пункта меню, ссылки или кнопки без работающего
  * экрана — каждый пункт и вкладка ведут на маршрут с `nav: true` и настоящей страницей (routes.test.ts).
- * «Шорт-лист» работодателя появится в меню вместе с общим экраном (E38-12), «Настройки» и «Согласия»
+ * «Настройки» и «Согласия»
  * в меню аватара — вместе с экраном настроек (E36-4).
  */
 export const NAV: Record<"candidate" | "employer" | "admin", NavItem[]> = {
@@ -154,6 +155,7 @@ export const NAV: Record<"candidate" | "employer" | "admin", NavItem[]> = {
   employer: [
     // Подбор (E38-8): «Поиск» и «Кого ищете» больше не вкладки — их заменяет строка запроса на /employer.
     { to: "/employer", label: "Подбор" },
+    { to: "/employer/shortlist", label: "Шорт-лист" },
     {
       to: "/employer/offers",
       label: "Приглашения",

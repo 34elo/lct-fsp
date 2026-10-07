@@ -61,7 +61,7 @@ describe("routes", () => {
   it("меню: кандидат и работодатель по ux-spec, админ не больше 6 пунктов", () => {
     expect(NAV.candidate.map((n) => n.label)).toEqual(["Главная", "Тест и грейд", "Приглашения", "Профиль"]);
     // «Шорт-лист» добавится вместе с общим экраном (E35-4): без экрана пункта нет.
-    expect(NAV.employer.map((n) => n.label)).toEqual(["Подбор", "Приглашения", "Компания"]);
+    expect(NAV.employer.map((n) => n.label)).toEqual(["Подбор", "Шорт-лист", "Приглашения", "Компания"]);
     expect(NAV.admin.length).toBeLessThanOrEqual(6);
   });
 
