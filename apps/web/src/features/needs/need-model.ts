@@ -40,9 +40,11 @@ export interface CategoryFilters {
   fspOnly: boolean;
   remoteOnly: boolean;
   budgetMax: number | null;
+  /** Название навыка из топа карточки; null — любой. */
+  skill: string | null;
 }
 
-export const EMPTY_CATEGORY_FILTERS: CategoryFilters = { minStrength: 0, confirmedOnly: false, fspOnly: false, remoteOnly: false, budgetMax: null };
+export const EMPTY_CATEGORY_FILTERS: CategoryFilters = { minStrength: 0, confirmedOnly: false, fspOnly: false, remoteOnly: false, budgetMax: null, skill: null };
 
 export const isDefaultFilters = (f: CategoryFilters): boolean => JSON.stringify(f) === JSON.stringify(EMPTY_CATEGORY_FILTERS);
 
@@ -54,6 +56,7 @@ export function applyFilters(items: CandidateCard[], f: CategoryFilters, profess
     if (f.confirmedOnly && claimedVsConfirmed(c, profession).confirmed === null) return false;
     if (f.fspOnly && c.fsp_highlights.length === 0) return false;
     if (f.remoteOnly && !c.formats.includes("remote")) return false;
+    if (f.skill !== null && !c.top_skills.some((x) => x.name === f.skill)) return false;
     if (f.budgetMax !== null && c.salary_min !== null && c.salary_min > f.budgetMax) return false;
     return true;
   });
