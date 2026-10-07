@@ -1,9 +1,12 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 import { Badge, Card, CardContent, CardHeader, CardTitle, ErrorState, Skeleton } from "@fsp/ui";
 
 import { useGetDashboardAdminDashboardGet } from "@/api/endpoints/admin-dashboard/admin-dashboard";
 import type { AppAnalyticsDashboardStage as Stage, Ratio } from "@/api/model";
+import { Summary } from "@/features/quality/Quality";
+import { T as QT } from "@/features/quality/text";
 import { cell, T } from "./text";
 
 const PERIODS = [7, 30, 90];
@@ -97,6 +100,18 @@ export default function Dashboard() {
           <Badge variant="muted" className="self-start">
             {T.dash.period(d.days)}
           </Badge>
+          <Card>
+            <CardHeader>
+              <CardTitle>{QT.fspBlock}</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3">
+              <p className="text-14 text-muted">{QT.fspBlockLead}</p>
+              <Summary />
+              <Link to="/admin/quality" className="self-start text-14 font-semibold text-brand-deep underline">
+                {QT.open}
+              </Link>
+            </CardContent>
+          </Card>
         </>
       )}
     </div>

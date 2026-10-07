@@ -1,0 +1,762 @@
+{
+ "components": {
+  "assessment": {
+   "ok": true,
+   "reason": ""
+  },
+  "bank": {
+   "ok": true,
+   "reason": ""
+  },
+  "express": {
+   "ok": true,
+   "reason": ""
+  },
+  "families": {
+   "ok": true,
+   "reason": ""
+  },
+  "load": {
+   "ok": false,
+   "reason": "нет reports/load/load_stats.csv (нужен `make up`, `make seed`, `make load`)"
+  },
+  "matching": {
+   "ok": true,
+   "reason": ""
+  }
+ },
+ "rows": [
+  {
+   "area": "Тест",
+   "id": "grade_acc_outside",
+   "name": "Точность грейда вне зоны безразличия |θ − cut| ≥ δ",
+   "note": "",
+   "source": "make eval-assessment",
+   "status": "green",
+   "target": {
+    "op": ">=",
+    "value": 0.9
+   },
+   "target_text": "≥ 90.0 %",
+   "unit": "%",
+   "value": 0.942,
+   "value_text": "94.2 %"
+  },
+  {
+   "area": "Тест",
+   "id": "kappa",
+   "name": "Повторяемость κ (две попытки)",
+   "note": "",
+   "source": "make eval-assessment",
+   "status": "info",
+   "target": {
+    "op": null,
+    "value": null
+   },
+   "target_text": "отчёт",
+   "unit": "",
+   "value": 0.52,
+   "value_text": "0.52"
+  },
+  {
+   "area": "Тест",
+   "id": "mean_items",
+   "name": "Длина теста, заданий",
+   "note": "",
+   "source": "make eval-assessment",
+   "status": "green",
+   "target": {
+    "op": "<=",
+    "value": 14
+   },
+   "target_text": "≤ 14",
+   "unit": "",
+   "value": 13.1264,
+   "value_text": "13.126"
+  },
+  {
+   "area": "Тест",
+   "id": "max_share",
+   "name": "Доля дошедших до максимума",
+   "note": "",
+   "source": "make eval-assessment",
+   "status": "green",
+   "target": {
+    "op": "<=",
+    "value": 0.1
+   },
+   "target_text": "≤ 10.0 %",
+   "unit": "%",
+   "value": 0.0968,
+   "value_text": "9.7 %"
+  },
+  {
+   "area": "Тест",
+   "id": "theta_r",
+   "name": "Восстановление θ: r(θ̂, θ) на полной длине",
+   "note": "",
+   "source": "make eval-assessment",
+   "status": "green",
+   "target": {
+    "op": ">=",
+    "value": 0.85
+   },
+   "target_text": "≥ 0.85",
+   "unit": "",
+   "value": 0.8685,
+   "value_text": "0.869"
+  },
+  {
+   "area": "Тест",
+   "id": "calib30",
+   "name": "Калибровка RMSE после 30 ответов",
+   "note": "",
+   "source": "make eval-assessment",
+   "status": "green",
+   "target": {
+    "op": "<=",
+    "value": 0.4
+   },
+   "target_text": "≤ 0.4",
+   "unit": "",
+   "value": 0.3704,
+   "value_text": "0.37"
+  },
+  {
+   "area": "Тест",
+   "id": "calib100",
+   "name": "Калибровка RMSE после 100 ответов",
+   "note": "",
+   "source": "make eval-assessment",
+   "status": "info",
+   "target": {
+    "op": null,
+    "value": null
+   },
+   "target_text": "отчёт",
+   "unit": "",
+   "value": 0.3064,
+   "value_text": "0.306"
+  },
+  {
+   "area": "Тест",
+   "id": "rpb",
+   "name": "Дискриминативность: медиана r_pb",
+   "note": "",
+   "source": "make eval-assessment",
+   "status": "green",
+   "target": {
+    "op": ">=",
+    "value": 0.3
+   },
+   "target_text": "≥ 0.3",
+   "unit": "",
+   "value": 0.406,
+   "value_text": "0.406"
+  },
+  {
+   "area": "Тест",
+   "id": "exposure",
+   "name": "Максимальная экспозиция семейства",
+   "note": "",
+   "source": "make eval-assessment",
+   "status": "green",
+   "target": {
+    "op": "<=",
+    "value": 0.3
+   },
+   "target_text": "≤ 30.0 %",
+   "unit": "%",
+   "value": 0.2578,
+   "value_text": "25.8 %"
+  },
+  {
+   "area": "Тест",
+   "id": "leak_quarantine",
+   "name": "Ответов до карантина утёкшего семейства",
+   "note": "",
+   "source": "make eval-assessment",
+   "status": "green",
+   "target": {
+    "op": "<=",
+    "value": 100
+   },
+   "target_text": "≤ 100",
+   "unit": "",
+   "value": 79.5,
+   "value_text": "79.5"
+  },
+  {
+   "area": "Тест",
+   "id": "leak_false_up",
+   "name": "Утечка: ложные повышения у «знающих»",
+   "note": "",
+   "source": "make eval-assessment",
+   "status": "info",
+   "target": {
+    "op": null,
+    "value": null
+   },
+   "target_text": "отчёт",
+   "unit": "%",
+   "value": 0.2427,
+   "value_text": "24.3 %"
+  },
+  {
+   "area": "Тест",
+   "id": "integrity_fpr",
+   "name": "Детектор честности: FPR",
+   "note": "",
+   "source": "make eval-assessment",
+   "status": "green",
+   "target": {
+    "op": "<=",
+    "value": 0.05
+   },
+   "target_text": "≤ 5.0 %",
+   "unit": "%",
+   "value": 0.0028,
+   "value_text": "0.3 %"
+  },
+  {
+   "area": "Тест",
+   "id": "integrity_tpr",
+   "name": "Детектор честности: TPR",
+   "note": "",
+   "source": "make eval-assessment",
+   "status": "info",
+   "target": {
+    "op": null,
+    "value": null
+   },
+   "target_text": "отчёт",
+   "unit": "%",
+   "value": 0.8093,
+   "value_text": "80.9 %"
+  },
+  {
+   "area": "Тест",
+   "id": "grade_acc_all",
+   "name": "Общая точность грейда (вся выборка)",
+   "note": "",
+   "source": "make eval-assessment",
+   "status": "info",
+   "target": {
+    "op": null,
+    "value": null
+   },
+   "target_text": "отчёт",
+   "unit": "%",
+   "value": 0.7398,
+   "value_text": "74.0 %"
+  },
+  {
+   "area": "Тест",
+   "id": "grade_within1",
+   "name": "Грейд ±1",
+   "note": "",
+   "source": "make eval-assessment",
+   "status": "info",
+   "target": {
+    "op": null,
+    "value": null
+   },
+   "target_text": "отчёт",
+   "unit": "%",
+   "value": 0.9889,
+   "value_text": "98.9 %"
+  },
+  {
+   "area": "Тест",
+   "id": "ai_solvable",
+   "name": "Решаемость ИИ: доля семейств (симулятор LLM)",
+   "note": "",
+   "source": "make eval-assessment",
+   "status": "info",
+   "target": {
+    "op": null,
+    "value": null
+   },
+   "target_text": "отчёт",
+   "unit": "%",
+   "value": 0.4633,
+   "value_text": "46.3 %"
+  },
+  {
+   "area": "Подбор",
+   "id": "ndcg_lift",
+   "name": "Релевантность: прирост nDCG@10 к BM25",
+   "note": "",
+   "source": "make eval",
+   "status": "green",
+   "target": {
+    "op": ">=",
+    "value": 0.2
+   },
+   "target_text": "≥ 20.0 %",
+   "unit": "%",
+   "value": 1.3012,
+   "value_text": "130.1 %"
+  },
+  {
+   "area": "Подбор",
+   "id": "p10_lift",
+   "name": "Релевантность: прирост precision@10 к BM25",
+   "note": "",
+   "source": "make eval",
+   "status": "info",
+   "target": {
+    "op": null,
+    "value": null
+   },
+   "target_text": "отчёт",
+   "unit": "%",
+   "value": 1.1378,
+   "value_text": "113.8 %"
+  },
+  {
+   "area": "Подбор",
+   "id": "category_hit",
+   "name": "Категории потребности: роль среди предложенных",
+   "note": "",
+   "source": "make eval",
+   "status": "info",
+   "target": {
+    "op": null,
+    "value": null
+   },
+   "target_text": "отчёт",
+   "unit": "%",
+   "value": 1.0,
+   "value_text": "100.0 %"
+  },
+  {
+   "area": "Банк",
+   "id": "families_pass",
+   "name": "Качество генераторов: доля семейств, прошедших families-check",
+   "note": "",
+   "source": "make families-check",
+   "status": "green",
+   "target": {
+    "op": ">=",
+    "value": 1.0
+   },
+   "target_text": "≥ 100.0 %",
+   "unit": "%",
+   "value": 1.0,
+   "value_text": "100.0 %"
+  },
+  {
+   "area": "Тест",
+   "id": "express_acc",
+   "name": "Экспресс-режим: точность вне зоны безразличия",
+   "note": "",
+   "source": "eval-assessment --mode express",
+   "status": "info",
+   "target": {
+    "op": null,
+    "value": null
+   },
+   "target_text": "отчёт",
+   "unit": "%",
+   "value": 0.6957,
+   "value_text": "69.6 %"
+  },
+  {
+   "area": "Тест",
+   "id": "express_items",
+   "name": "Экспресс-режим: длина, заданий (план 6–8)",
+   "note": "",
+   "source": "eval-assessment --mode express",
+   "status": "info",
+   "target": {
+    "op": null,
+    "value": null
+   },
+   "target_text": "отчёт",
+   "unit": "",
+   "value": 6.9773,
+   "value_text": "6.977"
+  },
+  {
+   "area": "Тест",
+   "id": "llm_junior_granted",
+   "name": "LLM-«кандидат» заявил junior: получил заявленный грейд",
+   "note": "",
+   "source": "make eval-assessment",
+   "status": "info",
+   "target": {
+    "op": null,
+    "value": null
+   },
+   "target_text": "отчёт",
+   "unit": "%",
+   "value": 0.8666666666666667,
+   "value_text": "86.7 %"
+  },
+  {
+   "area": "Тест",
+   "id": "llm_junior_flagged",
+   "name": "LLM-«кандидат» заявил junior: сработал индекс честности",
+   "note": "",
+   "source": "make eval-assessment",
+   "status": "info",
+   "target": {
+    "op": null,
+    "value": null
+   },
+   "target_text": "отчёт",
+   "unit": "%",
+   "value": 0.1,
+   "value_text": "10.0 %"
+  },
+  {
+   "area": "Тест",
+   "id": "llm_middle_granted",
+   "name": "LLM-«кандидат» заявил middle: получил заявленный грейд",
+   "note": "",
+   "source": "make eval-assessment",
+   "status": "info",
+   "target": {
+    "op": null,
+    "value": null
+   },
+   "target_text": "отчёт",
+   "unit": "%",
+   "value": 0.36666666666666664,
+   "value_text": "36.7 %"
+  },
+  {
+   "area": "Тест",
+   "id": "llm_middle_flagged",
+   "name": "LLM-«кандидат» заявил middle: сработал индекс честности",
+   "note": "",
+   "source": "make eval-assessment",
+   "status": "info",
+   "target": {
+    "op": null,
+    "value": null
+   },
+   "target_text": "отчёт",
+   "unit": "%",
+   "value": 0.9,
+   "value_text": "90.0 %"
+  },
+  {
+   "area": "Тест",
+   "id": "llm_senior_granted",
+   "name": "LLM-«кандидат» заявил senior: получил заявленный грейд",
+   "note": "",
+   "source": "make eval-assessment",
+   "status": "info",
+   "target": {
+    "op": null,
+    "value": null
+   },
+   "target_text": "отчёт",
+   "unit": "%",
+   "value": 0.2,
+   "value_text": "20.0 %"
+  },
+  {
+   "area": "Тест",
+   "id": "llm_senior_flagged",
+   "name": "LLM-«кандидат» заявил senior: сработал индекс честности",
+   "note": "",
+   "source": "make eval-assessment",
+   "status": "info",
+   "target": {
+    "op": null,
+    "value": null
+   },
+   "target_text": "отчёт",
+   "unit": "%",
+   "value": 1.0,
+   "value_text": "100.0 %"
+  },
+  {
+   "area": "Банк",
+   "id": "bank_coverage",
+   "name": "Покрытие: пустых ячеек «профессия MVP × тип навыка × грейд»",
+   "note": "backend/fundamental/senior, backend/business/senior, backend/soft/senior, backend/experience/senior, frontend/thinking/junior, frontend/fundamental/senior, frontend/hard/senior, frontend/business/senior, frontend/soft/senior, frontend/experience/senior, ml/experience/middle, ml/fundamental/senior, ml/soft/senior, ml/experience/senior, ai_engineer/experience/middle, ai_engineer/fundamental/senior, ai_engineer/soft/senior, ai_engineer/experience/senior",
+   "source": "tools/metrics/core_probe.py",
+   "status": "red",
+   "target": {
+    "op": "==",
+    "value": 0
+   },
+   "target_text": "= 0",
+   "unit": "",
+   "value": 18,
+   "value_text": "18"
+  },
+  {
+   "area": "Банк",
+   "id": "gen_unique",
+   "name": "Уникальность вариантов на 1000 сидов",
+   "note": "меньше всего: py_find_bug 30 %, rag_retriever_find_bug 34 %, sjt_code_review 42 %",
+   "source": "tools/metrics/core_probe.py",
+   "status": "yellow",
+   "target": {
+    "op": ">=",
+    "value": 0.99
+   },
+   "target_text": "≥ 99.0 %",
+   "unit": "%",
+   "value": 0.8416,
+   "value_text": "84.2 %"
+  },
+  {
+   "area": "Подбор",
+   "id": "fairness",
+   "name": "Справедливость: impact ratio «без ФСП / с ФСП» при равном T",
+   "note": "синтетический пул, веса strength из scoring.yaml",
+   "source": "matching.strength.fsp_impact_ratio",
+   "status": "red",
+   "target": {
+    "op": "in",
+    "value": [
+     0.8,
+     1.25
+    ]
+   },
+   "target_text": "0.8–1.25",
+   "unit": "",
+   "value": 0.3417,
+   "value_text": "0.342"
+  },
+  {
+   "area": "Скорость",
+   "id": "p95_search",
+   "name": "p95 поиска при 50 пользователях",
+   "note": "нет reports/load/load_stats.csv (нужен `make up`, `make seed`, `make load`)",
+   "source": "make load",
+   "status": "unmeasured",
+   "target": {
+    "op": "<=",
+    "value": 1000
+   },
+   "target_text": "≤ 1000 мс",
+   "unit": "ms",
+   "value": null,
+   "value_text": "—"
+  },
+  {
+   "area": "Скорость",
+   "id": "p95_matches",
+   "name": "p95 подборки при 50 пользователях",
+   "note": "нет reports/load/load_stats.csv (нужен `make up`, `make seed`, `make load`)",
+   "source": "make load",
+   "status": "unmeasured",
+   "target": {
+    "op": "<=",
+    "value": 1000
+   },
+   "target_text": "≤ 1000 мс",
+   "unit": "ms",
+   "value": null,
+   "value_text": "—"
+  },
+  {
+   "area": "Банк",
+   "id": "mutation_mining",
+   "name": "Майнинг мутаций: доля годных семейств",
+   "note": "нужен отчёт майнинга (SRC/DIR, песочница)",
+   "source": "—",
+   "status": "unmeasured",
+   "target": {
+    "op": null,
+    "value": null
+   },
+   "target_text": "отчёт",
+   "unit": "",
+   "value": null,
+   "value_text": "—"
+  },
+  {
+   "area": "Подбор",
+   "id": "categorization",
+   "name": "Категоризация: точность профессия × грейд",
+   "note": "`make eval` мерит только попадание роли, без грейда",
+   "source": "—",
+   "status": "unmeasured",
+   "target": {
+    "op": ">=",
+    "value": 0.9
+   },
+   "target_text": "≥ 90.0 %",
+   "unit": "%",
+   "value": null,
+   "value_text": "—"
+  },
+  {
+   "area": "Подбор",
+   "id": "unconfirmed_below",
+   "name": "Неподтверждённые ниже подтверждённых",
+   "note": "нет раннера",
+   "source": "—",
+   "status": "unmeasured",
+   "target": {
+    "op": "==",
+    "value": 0
+   },
+   "target_text": "= 0",
+   "unit": "",
+   "value": null,
+   "value_text": "—"
+  },
+  {
+   "area": "Подбор",
+   "id": "fsp_effort",
+   "name": "ФСП по результативности (явки < призёрство)",
+   "note": "нет раннера",
+   "source": "—",
+   "status": "unmeasured",
+   "target": {
+    "op": null,
+    "value": null
+   },
+   "target_text": "отчёт",
+   "unit": "",
+   "value": null,
+   "value_text": "—"
+  },
+  {
+   "area": "Подбор",
+   "id": "explainability",
+   "name": "Объяснимость: карточек с ≥ 3 факторами",
+   "note": "нужен core с БД (matching)",
+   "source": "—",
+   "status": "unmeasured",
+   "target": {
+    "op": "==",
+    "value": 1.0
+   },
+   "target_text": "= 100.0 %",
+   "unit": "%",
+   "value": null,
+   "value_text": "—"
+  },
+  {
+   "area": "Резюме",
+   "id": "resume_f1",
+   "name": "F1 навыков на эталоне резюме",
+   "note": "нет раннера resume.py и эталонов; LLM нужен GPU",
+   "source": "—",
+   "status": "unmeasured",
+   "target": {
+    "op": ">=",
+    "value": 0.8
+   },
+   "target_text": "≥ 0.8",
+   "unit": "",
+   "value": null,
+   "value_text": "—"
+  },
+  {
+   "area": "Резюме",
+   "id": "resume_contacts",
+   "name": "Точность контактов",
+   "note": "нет раннера resume.py",
+   "source": "—",
+   "status": "unmeasured",
+   "target": {
+    "op": ">=",
+    "value": 0.6
+   },
+   "target_text": "≥ 0.6",
+   "unit": "",
+   "value": null,
+   "value_text": "—"
+  },
+  {
+   "area": "Скорость",
+   "id": "p95_assessment",
+   "name": "p95 `next`/`answer`",
+   "note": "нужен стенд (make up) и нагрузка на тест",
+   "source": "—",
+   "status": "unmeasured",
+   "target": {
+    "op": "<=",
+    "value": 200
+   },
+   "target_text": "≤ 200 мс",
+   "unit": "ms",
+   "value": null,
+   "value_text": "—"
+  },
+  {
+   "area": "Ресурсы",
+   "id": "ram_lite",
+   "name": "RAM профиля lite, ГБ",
+   "note": "нужен стенд (docker stats)",
+   "source": "—",
+   "status": "unmeasured",
+   "target": {
+    "op": "<=",
+    "value": 1.5
+   },
+   "target_text": "≤ 1.5",
+   "unit": "",
+   "value": null,
+   "value_text": "—"
+  },
+  {
+   "area": "Ресурсы",
+   "id": "make_up_time",
+   "name": "Время `make up` с нуля, мин",
+   "note": "нужен стенд",
+   "source": "—",
+   "status": "unmeasured",
+   "target": {
+    "op": "<=",
+    "value": 10
+   },
+   "target_text": "≤ 10",
+   "unit": "",
+   "value": null,
+   "value_text": "—"
+  },
+  {
+   "area": "Качество кода",
+   "id": "code_coverage",
+   "name": "Покрытие тестами core",
+   "note": "не входит в офлайн-сборку (pytest-cov — отдельный прогон)",
+   "source": "—",
+   "status": "unmeasured",
+   "target": {
+    "op": ">=",
+    "value": 0.7
+   },
+   "target_text": "≥ 70.0 %",
+   "unit": "%",
+   "value": null,
+   "value_text": "—"
+  },
+  {
+   "area": "Качество кода",
+   "id": "e2e",
+   "name": "Сквозной путь (e2e)",
+   "note": "нужен стенд (make e2e)",
+   "source": "—",
+   "status": "unmeasured",
+   "target": {
+    "op": null,
+    "value": null
+   },
+   "target_text": "отчёт",
+   "unit": "",
+   "value": null,
+   "value_text": "—"
+  }
+ ],
+ "seed": 42,
+ "summary": {
+  "green": 11,
+  "info": 17,
+  "red": 2,
+  "unmeasured": 14,
+  "yellow": 1
+ },
+ "tolerance": 0.2
+}
