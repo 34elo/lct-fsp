@@ -1,4 +1,4 @@
-import { boardStats, canSendOffer, columnOf, declineBreakdown, groupByColumn, groupDigits, isWideRange, parseRub, rangeProblem } from "./offer-model";
+import { canSendOffer, declineBreakdown, funnelOf, funnelSpanDays, groupDigits, isWideRange, lastActive, parseRub, rangeProblem, sortOffers } from "./offer-model";
 
 test("parseRub понимает разряды и пустоту", () => {
   expect(parseRub("230 000")).toBe(230000);
@@ -33,29 +33,31 @@ test("canSendOffer: вилка и вакансия или название", () 
   expect(canSendOffer({ lo: 3, hi: 2, vacancyId: "v", title: "" })).toBe(false);
 });
 
-describe("канбан приглашений", () => {
-  const o = (status: string, created_at = "2026-10-01T00:00:00Z", reason?: string) => ({ status, created_at, decline: reason ? { reason } : null });
-  test("колонка по статусу: закрытые и неизвестные уходят в «Закрыто»", () => {
-    expect(columnOf("viewed")).toBe("viewed");
-    expect(columnOf("declined")).toBe("closed");
-    expect(columnOf("not_hired")).toBe("closed");
-    expect(columnOf("???")).toBe("closed");
-    expect(columnOf("interest")).toBe("interest");
-    expect(columnOf("interest_opened")).toBe("interest");
+describe("воронка приглашений", () => {
+  const o = (status: string, created_at = "2026-10-01T00:00:00Z", extra: Record<string, unknown> = {}) => ({ status, created_at, ...extra });
+  test("шаги накопительные, прямые приглашения идут сразу в «приглашение»", () => {
+    const list = [
+      o("interest", undefined, { interest_at: "2026-10-01T00:00:00Z" }),
+      o("interest_opened", undefined, { interest_at: "2026-10-01T00:00:00Z", interest_opened_at: "2026-10-02T00:00:00Z" }),
+      o("accepted", undefined, { interest_at: "2026-10-01T00:00:00Z", interest_opened_at: "2026-10-02T00:00:00Z", invited_at: "2026-10-03T00:00:00Z" }),
+      o("sent"),
+    ];
+    expect(funnelOf(list)).toEqual({ interest: 3, opened: 2, invited: 2, accepted: 1 });
+    expect(funnelOf([])).toEqual({ interest: 0, opened: 0, invited: 0, accepted: 0 });
   });
-  test("счётчики равны числу карточек, пустые колонки остаются, новые выше", () => {
-    const g = groupByColumn([o("sent", "2026-10-01T00:00:00Z"), o("sent", "2026-10-03T00:00:00Z"), o("declined"), o("expired")]);
-    expect(Object.keys(g)).toHaveLength(7);
-    expect(g.sent.map((x) => x.created_at)[0]).toBe("2026-10-03T00:00:00Z");
-    expect(g.closed).toHaveLength(2);
-    expect(g.hired).toEqual([]);
-    expect(Object.values(g).reduce((n, l) => n + l.length, 0)).toBe(4);
+  test("период воронки в днях", () => {
+    const now = Date.parse("2026-10-09T00:00:00Z");
+    expect(funnelSpanDays([o("sent"), o("sent", "2026-10-05T00:00:00Z")], now)).toBe(8);
+    expect(funnelSpanDays([], now)).toBe(0);
   });
-  test("сводка и причины отказов", () => {
-    const list = [o("sent"), o("viewed"), o("accepted"), o("hired"), o("declined", undefined, "wrong_stack"), o("declined", undefined, "wrong_stack"), o("declined", undefined, "low_salary")];
-    expect(boardStats(list)).toEqual({ total: 7, viewedPct: 86, accepted: 2, hired: 1 });
-    expect(boardStats([]).viewedPct).toBeNull();
-    expect(boardStats([...list, o("interest"), o("interest_opened")]).total).toBe(7);
+  test("порядок: сначала то, что ждёт работодателя, и «Ответить» по свежему принятому", () => {
+    const list = [o("sent", "2026-10-04T00:00:00Z"), o("accepted", "2026-10-01T00:00:00Z"), o("interest_opened", "2026-10-02T00:00:00Z"), o("interview", "2026-10-03T00:00:00Z")];
+    expect(sortOffers(list).map((x) => x.status)).toEqual(["interview", "interest_opened", "accepted", "sent"]);
+    expect(lastActive(list)?.status).toBe("interview");
+    expect(lastActive([o("sent")])).toBeUndefined();
+  });
+  test("причины отказов", () => {
+    const list = [o("declined"), o("declined"), o("declined")].map((x, i) => ({ ...x, decline: { reason: i < 2 ? "wrong_stack" : "low_salary" } }));
     expect(declineBreakdown(list)).toEqual([
       { reason: "wrong_stack", count: 2, pct: 67 },
       { reason: "low_salary", count: 1, pct: 33 },
