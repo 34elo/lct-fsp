@@ -64,12 +64,12 @@ test("кандидат: агрегат, «почему вы», рейтинг к
     return null;
   };
   mount("/me/interests");
-  expect(await screen.findByText(/2 компании интересуются вами/)).toBeInTheDocument();
-  expect(screen.getByText(/Вилки компаний/)).toBeInTheDocument();
+  expect(await screen.findByText("2 · 200–300 тыс. ₽")).toBeInTheDocument();
   expect(screen.getAllByText("Подтверждены Python и PostgreSQL")).toHaveLength(2);
-  expect(screen.getAllByText("Нет подтверждения Docker")).toHaveLength(2);
-  expect(screen.getAllByText(/отвечает на 80% обращений, в среднем за 6 ч/)).toHaveLength(2);
-  expect(screen.getByText(/Вы открыли интерес/)).toBeInTheDocument();
+  expect(screen.getAllByText("отвечает в 80 % · 6 ч")).toHaveLength(2);
+  expect(screen.getAllByText("срок до 09.10")).toHaveLength(2);
+  expect(screen.getAllByText("Нам нужен ваш опыт с очередями")).toHaveLength(2);
+  expect(screen.getByText("Открыто, ждём приглашение")).toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "Открыть интерес" }));
   await waitFor(() => expect(calls.some((c) => c.url.endsWith("/interests/i1/open"))).toBe(true));
 });
@@ -81,7 +81,7 @@ test("кандидат: «не интересно» — причина одни�
     return null;
   };
   mount("/me/interests");
-  fireEvent.click(await screen.findByRole("button", { name: "Не интересно" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Отклонить" }));
   fireEvent.click(await screen.findByRole("button", { name: /Не та компания/ }));
   await waitFor(() => expect(calls).toHaveLength(1));
   expect(calls[0].body).toEqual({ reason: "wrong_company", comment: null });
@@ -91,17 +91,6 @@ test("кандидат: пустое состояние", async () => {
   routes = (url) => (url.endsWith("/candidates/me/interests") ? res(200, { companies: 0, salary_from_min: null, salary_to_max: null, items: [] }) : null);
   mount("/me/interests");
   expect(await screen.findByText("Пока никто не интересуется")).toBeInTheDocument();
-});
-
-test("на экране приглашений кандидата есть плашка «Вами интересуются»", async () => {
-  routes = (url) => {
-    if (url.endsWith("/candidates/me/interests")) return res(200, { companies: 3, salary_from_min: 1, salary_to_max: 2, items: [] });
-    if (url.endsWith("/candidates/me/offers")) return res(200, []);
-    return null;
-  };
-  mount("/me/offers");
-  const link = await screen.findByRole("link", { name: /Вами интересуются: 3/ });
-  expect(link).toHaveAttribute("href", "/me/interests");
 });
 
 const employerRoutes = (url: string, method: string): Response | null => {

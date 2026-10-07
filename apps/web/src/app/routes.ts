@@ -134,8 +134,8 @@ export const NAV: Record<"candidate" | "employer" | "admin", NavItem[]> = {
       to: "/me/offers",
       label: "Приглашения",
       tabs: [
+        { to: "/me/interests", label: "Интересы" },
         { to: "/me/offers", label: "Приглашения" },
-        { to: "/me/interests", label: "Вами интересуются" },
         { to: "/me/responses", label: "Отклики" },
       ],
     },
