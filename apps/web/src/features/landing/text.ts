@@ -8,6 +8,8 @@ export const T = {
   juryTitle: "Для жюри: без регистрации",
   juryCandidate: "Войти как кандидат",
   juryEmployer: "Войти как работодатель",
+  juryHide: "свернуть",
+  juryShow: "развернуть",
   juryError: "Не удалось войти. Демо-аккаунты создаёт make seed.",
   juryTry: [
     "Кандидат: пройдите экспресс-тест на 3–5 минут и получите грейд.",
@@ -48,4 +50,16 @@ export const T = {
   terms: "Условия",
   privacy: "Приватность",
   contacts: "Контакты",
+} as const;
+
+/** Панель «что попробовать» (E34-2): сценарий жюри за 5 минут. */
+export const PANEL = {
+  title: "Что попробовать",
+  steps: [
+    { to: "/me/assessment?mode=express", label: "Пройти экспресс-тест", who: "Кандидат · 3–5 минут" },
+    { to: "/me", label: "Посмотреть грейд и доверие", who: "Кандидат" },
+    { to: "/employer/search", label: "Найти кандидата в поиске", who: "Работодатель (вход с лендинга)" },
+    { to: "/employer/offers", label: "Отправить оффер с вилкой", who: "Работодатель" },
+    { to: "/me/offers", label: "Открыть оффер у кандидата", who: "Кандидат" },
+  ],
 } as const;
