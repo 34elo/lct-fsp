@@ -165,7 +165,7 @@
 | 497 | E35-12b | 🔧 API: лента активности работодателя (`GET /employer/activity`) | — | 🤖 | sonnet | 1 база · UX | ✅ e7de8a6 |
 | 500 | E38-0 | 🎨 `@fsp/ui` v2 по макетам — по docs/design/v2 | E35-1 | 🤖 | opus | 1 база · UX v2 | ✅ 837bed5 |
 | 501 | E38-8 | 🎨 Подбор — по docs/design/v2 | E38-0, E35-12b | 🤖 | opus | 1 база · UX v2 | ✅ f4a5fab |
-| 502 | E38-9 | 🎨 Категория — по docs/design/v2 | E38-0 | 🤖 | sonnet | 1 база · UX v2 | ⏳ |
+| 502 | E38-9 | 🎨 Категория — по docs/design/v2 | E38-0 | 🤖 | sonnet | 1 база · UX v2 | ✅ 0d88382 |
 | 503 | E38-10 | 🎨 Карточка кандидата — по docs/design/v2 | E38-0 | 🤖 | sonnet | 1 база · UX v2 | ⏳ |
 | 504 | E38-11 | 🎨 Модалка интереса и приглашения — по docs/design/v2 | E38-0 | 🤖 | sonnet | 1 база · UX v2 | ⏳ |
 | 505 | E38-12 | 🎨 Шорт-лист — по docs/design/v2 | E38-0 | 🤖 | sonnet | 1 база · UX v2 | ⏳ |
