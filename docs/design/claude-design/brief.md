@@ -92,7 +92,7 @@
   - `GET /candidates/me/interests` → companies, salary_from_min, salary_to_max, items[];
   - `GET /candidates/me/offers` → новые приглашения;
   - `GET /candidates/me/navigator` → следующий шаг: test (grade, path), skill_gaps[], competitions[];
-  - **нет в API:** сила профиля и место в категории для самого кандидата (у работодателя это `strength {value, rank, top}`) — задача E35-12.
+  - **есть в API:** сила профиля и место в категории — `GET /candidates/me/standing` → `strength {value, rank, top_percent, parts[]}`, `category_size`, `peers[]` для графика (E35-12a).
 
 ### 6.2. Результат теста — `/me/assessment/attempts/:id/result` · ключевой
 

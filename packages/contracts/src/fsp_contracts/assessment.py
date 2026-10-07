@@ -46,6 +46,43 @@ class CategoryRef(BaseModel):
     grade: TestGrade
 
 
+class StandingPart(BaseModel):
+    """Слагаемое силы профиля (T/F/S/R/C): что даёт больше всего."""
+
+    code: str
+    text: str
+    value: float = Field(ge=0, le=1)
+    weight: float = Field(ge=0)
+
+
+class StandingStrength(BaseModel):
+    """Сила профиля и место среди кандидатов той же категории (ранг 1 — сильнейший)."""
+
+    value: float = Field(ge=0, le=1)
+    rank: int = Field(ge=1)
+    top_percent: int = Field(ge=1, le=100)  # «топ-30 %»: ceil(rank / category_size · 100)
+    parts: list[StandingPart] = Field(default_factory=list)
+
+
+class StandingPeer(BaseModel):
+    """Точка графика «Где ты среди своих»: без идентификаторов, только числа."""
+
+    strength: float = Field(ge=0, le=1)
+    salary_min: int | None = None
+
+
+class CandidateStanding(BaseModel):
+    """`GET /candidates/me/standing` (E35-12a). Без действующего грейда все поля пустые."""
+
+    profession: ProfessionSlug | None = None
+    grade: TestGrade | None = None
+    mode: AttemptMode | None = None
+    confirmed_at: datetime | None = None
+    strength: StandingStrength | None = None
+    category_size: int = 0
+    peers: list[StandingPeer] = Field(default_factory=list)  # включая самого кандидата
+
+
 class CandidateGrade(BaseModel):
     candidate_id: UUID
     profession: ProfessionSlug
@@ -182,6 +219,7 @@ __all__ = [
     "AttemptFinished",
     "AttemptMode",
     "CandidateGrade",
+    "CandidateStanding",
     "CategoryChanged",
     "CategoryRef",
     "ClaimedVsConfirmed",
@@ -191,5 +229,8 @@ __all__ = [
     "ProfessionSlug",
     "RegularTaskPublished",
     "SkillType",
+    "StandingPart",
+    "StandingPeer",
+    "StandingStrength",
     "TestGrade",
 ]
