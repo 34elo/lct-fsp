@@ -218,17 +218,17 @@ export const INT_TEXT = {
 };
 
 export const EMP_INT_TEXT = {
-  titleInterest: (name: string) => `Интерес к кандидату ${name}`,
+  titleInterest: (name: string) => `Интерес · ${name}`,
   leadInterest: "Первый шаг без обязательств: кандидат увидит вилку и «почему вы». Контакты не раскрываются.",
-  titleInvite: (name: string) => `Приглашение кандидату ${name}`,
+  titleInvite: (name: string) => `Приглашение · ${name}`,
   leadInvite: "Кандидат открыл интерес. Уточните вилку и отправьте приглашение: после принятия раскроются контакты.",
   infoInterest: "Интерес действует 7 дней. Кандидат получит его в кабинет и Telegram. Лимит интересов в неделю ограничен.",
   infoInvite: "Срок ответа на приглашение 7 дней.",
-  sendInterest: "Отметить «интересен»",
-  sendInvite: "Отправить приглашение",
+  sendInterest: "Отправить",
+  sendInvite: "Отправить",
   invite: "Пригласить",
   interestBtn: "Проявить интерес",
-  messageInterest: "Короткое сообщение (до 300 символов)",
+  messageInterest: "Сообщение",
   suggest: (to: string, pct: number) => `Поднимите верх вилки до ${to}: ответ вероятнее (${pct}%).`,
   apply: "Применить",
   respHours: (h: number) => `Кандидаты категории отвечают в среднем за ${h < 24 ? `${Math.max(1, Math.round(h))} ч` : `${Math.round(h / 24)} дн.`}.`,
