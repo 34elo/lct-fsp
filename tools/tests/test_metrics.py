@@ -56,6 +56,12 @@ def status(rep: dict, rid: str) -> str:
         (30, "<=", 14, RED),
         (0.5, None, None, INFO),
         (None, ">=", 0.9, NONE),
+        (1.0, "in", [0.8, 1.25], GREEN),
+        (0.7, "in", [0.8, 1.25], YELLOW),
+        (0.34, "in", [0.8, 1.25], RED),
+        (1.4, "in", [0.8, 1.25], YELLOW),
+        (0, "==", 0, GREEN),
+        (18, "==", 0, RED),
     ],
 )
 def test_light(value, op, target, expected):
@@ -101,7 +107,8 @@ def test_deterministic_and_pipe_escaped():
 def test_collectors_degrade_without_tools(monkeypatch, tmp_path):
     monkeypatch.setattr(cli, "_run", lambda cmd, cwd=cli.ROOT: (127, "нет такой команды"))
     monkeypatch.setattr(cli, "ROOT", tmp_path)  # нет reports/load
-    for name in ("assessment", "matching", "families", "load"):
+    (tmp_path / "parts").mkdir()
+    for name in cli.COLLECTORS:
         c = cli.COLLECTORS[name](42, tmp_path / "parts")
         assert c["ok"] is False
         assert c["reason"]
@@ -121,23 +128,53 @@ def test_load_collector_reads_p95(monkeypatch, tmp_path):
 
 def test_main_writes_reports_with_all_skipped(tmp_path):
     out = tmp_path / "m"
-    assert (
-        cli.main(
-            [
-                "--out",
-                str(out),
-                "--skip",
-                "assessment",
-                "--skip",
-                "matching",
-                "--skip",
-                "families",
-                "--skip",
-                "load",
-            ]
-        )
-        == 0
-    )
+    skips = [x for name in cli.COLLECTORS for x in ("--skip", name)]
+    assert cli.main(["--out", str(out), *skips]) == 0
     rep = json.loads((out / "report.json").read_text(encoding="utf-8"))
     assert rep["summary"]["green"] == 0
     assert (out / "report.md").read_text(encoding="utf-8").startswith("# Офлайн-метрики")
+
+
+BANK = {
+    "coverage": {"cells": 72, "empty": 2, "empty_cells": ["ml/soft/senior", "qa/hard/junior"]},
+    "uniqueness": {"share": 0.995, "lowest": [{"family": "py_find_bug", "share": 0.9}]},
+    "fairness": {"impact_ratio": 0.34},
+}
+LLM = {
+    "junior": {"flagged_share": 0.0, "granted": {"junior": 23, "none": 7}},
+    "senior": {"flagged_share": 0.8667, "granted": {"middle": 5, "none": 23, "senior": 2}},
+}
+
+
+def row(rep: dict, rid: str) -> dict:
+    return next(r for r in rep["rows"] if r["id"] == rid)
+
+
+def test_bank_express_llm_rows():
+    comp = {
+        "assessment": {"ok": True, "data": {**ASSESSMENT, "llm": LLM}},
+        "express": {
+            "ok": True,
+            "data": {"grade_accuracy_outside_indifference": 0.7, "mean_items": 7},
+        },
+        "bank": {"ok": True, "data": BANK},
+    }
+    rep = build_report(42, comp)
+    cov = row(rep, "bank_coverage")
+    assert cov["status"] == RED and cov["value"] == 2 and "ml/soft/senior" in cov["note"]
+    assert status(rep, "gen_unique") == GREEN
+    assert status(rep, "fairness") == RED  # 0.34 вне 0.8–1.25
+    assert row(rep, "express_items")["value"] == 7 and status(rep, "express_acc") == INFO
+    assert row(rep, "llm_junior_granted")["value"] == pytest.approx(23 / 30)
+    assert row(rep, "llm_senior_flagged")["value"] == pytest.approx(0.8667)
+    assert status(rep, "llm_middle_granted") == NONE  # прогона нет — не измерено
+    md = render_md(rep)
+    assert "0.8–1.25" in md
+
+
+def test_bank_collector_parses_probe_output(monkeypatch, tmp_path):
+    out = '{"coverage": {"cells": 1, "empty": 0, "empty_cells": []}}'
+    monkeypatch.setattr(cli, "_run", lambda cmd, cwd=cli.ROOT: (0, f"warning\n{out}\n"))
+    c = cli.collect_bank(42, tmp_path)
+    assert c["ok"] and c["data"]["coverage"]["empty"] == 0
+    assert (tmp_path / "core_probe.json").exists()
