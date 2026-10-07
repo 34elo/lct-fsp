@@ -5,6 +5,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './activityCandidate';
+export * from './activityEvent';
+export * from './activityFeed';
+export * from './activityKind';
 export * from './adminComplaintOut';
 export * from './adminComplaintsAdminComplaintsGetParams';
 export * from './adminComplaintsAdminComplaintsGetStatus';
@@ -123,6 +127,7 @@ export * from './distinctPair';
 export * from './distinctSaved';
 export * from './edge';
 export * from './edgeType';
+export * from './employerActivityEmployerActivityGetParams';
 export * from './employmentType';
 export * from './evidenceBrief';
 export * from './experienceBrief';
@@ -341,7 +346,13 @@ export * from './subscriptionOut';
 export * from './surveyIn';
 export * from './surveyOut';
 export * from './susIn';
+export * from './taskAnswerIn';
+export * from './taskAttach';
+export * from './taskBrief';
 export * from './taskIn';
+export * from './taskResult';
+export * from './taskView';
+export * from './taskViewItem';
 export * from './teamFactBrief';
 export * from './teamMemberOut';
 export * from './teamOfferOut';

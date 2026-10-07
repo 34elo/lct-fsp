@@ -44,6 +44,7 @@ from app.identity.router import router as identity_router
 from app.matching.needs_router import router as needs_router
 from app.matching.router import router as search_router
 from app.matching.subscriptions_router import router as subscriptions_router
+from app.offers.activity import router as employer_activity_router
 from app.offers.router import admin_router as admin_complaints_router
 from app.offers.router import router as offers_router
 from app.recommendations.router import router as recommendations_router
@@ -117,6 +118,7 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(graph_router)  # /candidates/me/graph раньше {pseudo_id}
     # <<< block1
     # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
+    app.include_router(employer_activity_router)
     app.include_router(analytics_router)
     app.include_router(analytics_internal_router)
     app.include_router(live_runs_admin_router)

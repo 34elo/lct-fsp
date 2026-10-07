@@ -6,6 +6,7 @@
  */
 import type { ContactMethod } from './contactMethod';
 import type { SalaryBasis } from './salaryBasis';
+import type { TaskAttach } from './taskAttach';
 
 /**
  * Приглашение работодателя. Без `vacancy_id` (ADR-022) обязателен `title`.
@@ -24,4 +25,5 @@ export interface CreateOffer {
   title?: string | null;
   description?: string | null;
   contact_method?: ContactMethod | null;
+  task?: TaskAttach | null;
 }
