@@ -133,7 +133,7 @@ export function EmployerOffers() {
         <EmptyState
           title={T.empty}
           description={T.emptyHint}
-          action={<Link to="/employer/search" className={buttonVariants({ variant: "primary" })}>{T.toSearch}</Link>}
+          action={<Link to="/employer" className={buttonVariants({ variant: "primary" })}>{T.toSearch}</Link>}
         />
       )}
       {q.isSuccess && offers.length > 0 && (

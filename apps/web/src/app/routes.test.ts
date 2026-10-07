@@ -72,6 +72,10 @@ describe("routes", () => {
     expect(activeNav(NAV.candidate, "/me/interests")?.label).toBe("Приглашения");
     expect(activeNav(NAV.candidate, "/me/graph")?.label).toBe("Профиль");
     expect(activeNav(NAV.employer, "/employer/needs/7")?.label).toBe("Подбор");
+    expect(activeNav(NAV.employer, "/employer")?.label).toBe("Подбор");
+    expect(activeNav(NAV.employer, "/employer/categories/backend/middle")?.label).toBe("Подбор");
+    expect(activeNav(NAV.employer, "/employer/responses")?.label).toBe("Приглашения");
+    expect(activeNav(NAV.employer, "/employer/subscriptions")?.label).toBe("Компания");
     expect(activeNav(NAV.employer, "/employer/vacancies/1/shortlist")?.label).toBe("Компания");
     expect(activeNav(NAV.admin, "/federation/moderation")?.label).toBe("Модерация");
   });

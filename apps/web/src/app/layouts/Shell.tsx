@@ -39,13 +39,14 @@ export function offerCount(res?: { status: number; data: unknown }): number | un
 
 /**
  * Каркас по ролям (E19-5). Кабинеты кандидата и работодателя: шапка с вкладками на десктопе,
- * у кандидата на ≤768 px ещё и нижняя панель; админка — боковая панель. `banner` — над страницей
+ * на ≤768 px ещё и нижняя панель (у работодателя — с E38-8); админка — боковая панель. `banner` — над страницей
  * (у кандидата — баннер пути «опрос → тест», E35-2a).
  */
 export function Shell({ nav, variant, banner }: { nav: NavItem[]; variant: "top" | "side"; banner?: ReactNode }) {
   const { role } = useAuth();
   const counts = useOfferCounts(variant);
-  const bottom = variant === "top" && role === "candidate";
+  // Нижняя панель на телефоне — у кандидата и работодателя (макеты v2: `.tb` на 4 пункта).
+  const bottom = variant === "top" && (role === "candidate" || role === "employer");
   return (
     <div className={cn("min-h-dvh overflow-x-clip bg-page text-ink", variant === "side" && "md:grid md:grid-cols-[220px_1fr]")}>
       {variant === "side" && <AdminSidebar nav={nav} />}
@@ -58,7 +59,7 @@ export function Shell({ nav, variant, banner }: { nav: NavItem[]; variant: "top"
           <Outlet />
         </PageContainer>
         <JuryPanel />
-        {bottom && <BottomNav items={CANDIDATE_BOTTOM} all={nav} counts={counts} />}
+        {bottom && <BottomNav items={role === "candidate" ? CANDIDATE_BOTTOM : nav} all={nav} counts={counts} />}
       </div>
     </div>
   );

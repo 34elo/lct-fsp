@@ -13,7 +13,7 @@ import { dedupeExperience, fspResults, groupSkills, kindOf, radarAxes, skillLeve
 import { FORMAT_LABEL, percent, rub, SEARCH_STATUS_LABEL } from "./text";
 
 const T = {
-  back: "К результатам поиска",
+  back: "К подбору",
   header: "Шапка карточки",
   offer: "Отправить приглашение",
   offered: "Приглашение уже отправлялся",
@@ -255,7 +255,7 @@ export default function CandidateView() {
   const vacancyId = params.get("vacancy");
   const source = (["search", "match", "similar", "direct"] as const).find((s) => s === params.get("source")) ?? "direct";
   const q = useCandidateCardCandidatesPseudoIdCardGet(id, { vacancy_id: vacancyId ?? undefined, source }, { query: { retry: false } });
-  const back = vacancyId ? `/employer/vacancies/${vacancyId}/shortlist` : "/employer/search";
+  const back = vacancyId ? `/employer/vacancies/${vacancyId}/shortlist` : "/employer";
   return (
     <ThemeScope dark className="min-h-[calc(100dvh-4rem)]">
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-4 p-4 md:p-6">
