@@ -433,6 +433,10 @@ def summarize(rows: list[dict[str, Any]]) -> dict[str, int]:
 
 def build_report(seed: int, comp: dict[str, dict[str, Any]]) -> dict[str, Any]:
     rows = build_rows(comp)
+    for r in rows:  # готовые строки для веб-страницы качества (E31-5): цифры совпадают с report.md
+        t = r["target"]
+        r["value_text"] = fmt(r["value"], r["unit"])
+        r["target_text"] = fmt_target(t["op"], t["value"], r["unit"])
     return {
         "seed": seed,
         "tolerance": TOLERANCE,
