@@ -121,13 +121,13 @@ test("работодатель: модалка интереса с подска�
   expect(await screen.findByText("Вами интересовался")).toBeInTheDocument();
   fireEvent.click(await screen.findByRole("button", { name: "Интерес" }));
   const dialog = await screen.findByRole("dialog");
-  expect(await within(dialog).findByText(/Поднимите верх вилки до 280\s000\s₽/)).toBeInTheDocument();
+  expect(await within(dialog).findByText("280 тыс.")).toBeInTheDocument();
   expect(within(dialog).getByText(/в среднем за 1 дн\./)).toBeInTheDocument();
-  const msg = within(dialog).getByLabelText(/Короткое сообщение/) as HTMLTextAreaElement;
+  const msg = within(dialog).getByLabelText(/Сообщение/) as HTMLTextAreaElement;
   expect(msg.maxLength).toBe(300);
   fireEvent.click(within(dialog).getByRole("button", { name: "Применить" }));
   fireEvent.change(msg, { target: { value: "Здравствуйте" } });
-  fireEvent.click(within(dialog).getByRole("button", { name: "Отметить «интересен»" }));
+  fireEvent.click(within(dialog).getByRole("button", { name: "Отправить" }));
   await waitFor(() => expect(calls.some((c) => c.url.endsWith("/interests"))).toBe(true));
   expect(calls.find((c) => c.url.endsWith("/interests"))?.body).toMatchObject({ candidate_pseudo_id: "p1", vacancy_id: "v1", salary_from: 200000, salary_to: 280000, message: "Здравствуйте" });
 });
@@ -145,7 +145,7 @@ test("работодатель: приглашение по открытому �
   expect(await screen.findByText(/Кандидат открыл интерес/)).toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "Пригласить" }));
   const dialog = await screen.findByRole("dialog");
-  fireEvent.click(await within(dialog).findByRole("button", { name: "Отправить приглашение" }));
+  fireEvent.click(await within(dialog).findByRole("button", { name: "Отправить" }));
   await waitFor(() => expect(calls.some((c) => c.url.endsWith("/interests/i9/invite"))).toBe(true));
   expect(calls.find((c) => c.url.endsWith("/interests/i9/invite"))?.body).toMatchObject({ salary_from: 200000, salary_to: 260000 });
 });

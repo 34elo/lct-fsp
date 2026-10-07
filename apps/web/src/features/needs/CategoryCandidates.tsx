@@ -27,6 +27,7 @@ import {
 } from "@/api/endpoints/recommendations/recommendations";
 import type { CandidateCard, Chip } from "@/api/model";
 import { ApiError } from "@/api/mutator";
+import { OfferDialog } from "@/features/offers/OfferDialog";
 import { splitConfirmed, stackOptions, toRankedCard } from "./category-model";
 import {
   applyFilters,
@@ -104,6 +105,7 @@ export default function CategoryCandidates() {
   const { profession = "", grade = "" } = useParams();
   const [params] = useSearchParams();
   const needId = params.get("need_id");
+  const [interestFor, setInterestFor] = useState<CandidateCard | null>(null);
   const navigate = useNavigate();
 
   const [items, setItems] = useState<CandidateCard[]>([]);
@@ -241,7 +243,7 @@ export default function CategoryCandidates() {
       shortlisted={shortlist.has(c.pseudo_id)}
       canShortlist={!!needId}
       onToggleShortlist={() => toggleShortlist(c.pseudo_id)}
-      onInterest={() => navigate(`/employer/offers/new?candidate=${c.pseudo_id}`)}
+      onInterest={() => setInterestFor(c)}
       onDismiss={() => {
         react(c.pseudo_id, "dismiss");
         setDismissed((x) => new Set(x).add(c.pseudo_id));
@@ -382,6 +384,15 @@ export default function CategoryCandidates() {
         <Button variant="outline" onClick={() => void load(cursor)} loading={loading} className="justify-self-center">
           {T.more}
         </Button>
+      )}
+      {interestFor && (
+        <OfferDialog
+          open
+          stay
+          mode="interest"
+          onOpenChange={(v) => !v && setInterestFor(null)}
+          candidate={{ pseudoId: interestFor.pseudo_id, pseudonym: interestFor.pseudonym, salaryMin: interestFor.salary_min ?? null }}
+        />
       )}
     </div>
   );

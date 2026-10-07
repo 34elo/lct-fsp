@@ -133,12 +133,15 @@ test("фильтры категории: стек и «ФСП» дают пус�
   expect(await screen.findByRole("article", { name: "Backend #4821" })).toBeInTheDocument();
 });
 
-test("«не подходит» скрывает карточку, интерес ведёт к приглашению", async () => {
+test("«не подходит» скрывает карточку, «Интерес» открывает модалку на месте", async () => {
   mount("/employer/categories/backend/middle?need_id=n1");
   const first = await screen.findByRole("article", { name: "Backend #4821" });
   fireEvent.click(within(screen.getByRole("article", { name: "Backend #3077" })).getByRole("button", { name: "Не подходит" }));
   expect(screen.queryByRole("article", { name: "Backend #3077" })).toBeNull();
-  expect(within(first).getByRole("button", { name: "Интерес" })).toBeInTheDocument();
+  fireEvent.click(within(first).getByRole("button", { name: "Интерес" }));
+  const dialog = await screen.findByRole("dialog");
+  expect(within(dialog).getByText("Интерес · Backend #4821")).toBeInTheDocument();
+  expect(within(dialog).getByRole("button", { name: "Отправить" })).toBeDisabled();
 });
 
 test("реакции уходят в /recs/feedback, чипсы «Учли» появляются и сбрасываются", async () => {
