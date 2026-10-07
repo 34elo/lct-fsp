@@ -31,6 +31,7 @@ class ProfessionIn(BaseModel):
 class ProfessionPatch(BaseModel):
     title: str | None = Field(default=None, min_length=1, max_length=80)
     skill_weights: dict[str, float] | None = Field(default=None, min_length=1)
+    active: bool | None = None  # E36-2: скрыть / показать профессию в опросе и UI
 
 
 class RetiredOut(BaseModel):
@@ -107,8 +108,10 @@ async def update_profession(
     _: User = Depends(_admin),
     session: AsyncSession = Depends(get_session),
 ):
-    """Название и/или веса навыков (замена целиком)."""
-    info, version = await admin.update_profession(session, slug, body.title, body.skill_weights)
+    """Название, веса навыков (замена целиком) и/или видимость `active`."""
+    info, version = await admin.update_profession(
+        session, slug, body.title, body.skill_weights, active=body.active
+    )
     return _prof(info, version)
 
 

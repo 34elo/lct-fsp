@@ -6,6 +6,7 @@ from app.assessment.families import (
     ai_engineer,
     behavior,
     code,
+    depth,
     incident_chains,
     reasoning,
     starter,
@@ -13,7 +14,16 @@ from app.assessment.families import (
 )
 from app.assessment.families.base import BaseFamily, Family, Item, Kind
 
-_MODULES = [starter, code, reasoning, behavior, world_tasks, incident_chains, ai_engineer]
+_MODULES = [
+    starter,
+    code,
+    reasoning,
+    behavior,
+    world_tasks,
+    incident_chains,
+    ai_engineer,
+    depth,
+]
 
 REGISTRY: dict[str, Family] = {}
 

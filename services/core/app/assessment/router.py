@@ -333,7 +333,7 @@ async def get_survey(
     row = await survey.last_survey(session, user.id)
     if row is not None:
         return _survey_out(row)
-    professions = {p.slug for p in await taxonomy.list_professions(session)}
+    professions = {p.slug for p in await taxonomy.list_professions(session, active_only=True)}
     draft = survey.prefill(await candidates.get(session, user.id), professions)
     return SurveyOut(prefilled=True, **draft) if draft else SurveyOut()
 
@@ -458,7 +458,8 @@ async def plan_preview_(
         domain = world.domain_for_vacancy(vac.role, vac.title, vac.description)
         source = "vacancy"
     elif body.profession is not None:
-        prof = {p.slug: p for p in await taxonomy.list_professions(session)}.get(body.profession)
+        profs = await taxonomy.list_professions(session, active_only=True)
+        prof = {p.slug: p for p in profs}.get(body.profession)
         if prof is None:
             raise ProblemError(
                 422,

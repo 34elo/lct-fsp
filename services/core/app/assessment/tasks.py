@@ -76,7 +76,9 @@ async def create_task(
         raise ProblemError(409, "open_not_in_bank", "Открытые задания берутся только из своих")
     if family_of(row) is None:
         raise ProblemError(409, "family_unavailable", "Семейство заданий недоступно")
-    if profession not in {p.slug for p in await taxonomy.list_professions(session)}:
+    if profession not in {
+        p.slug for p in await taxonomy.list_professions(session, active_only=True)
+    }:
         raise ProblemError(
             422,
             "unknown_profession",

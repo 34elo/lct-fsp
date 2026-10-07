@@ -25,7 +25,7 @@ CORE = ROOT / "services" / "core"
 if str(CORE) not in sys.path:
     sys.path.insert(0, str(CORE))
 
-MVP_PROFESSIONS = ("backend", "frontend", "ml", "ai_engineer")  # ADR-025
+MVP_PROFESSIONS = ("backend", "frontend", "ai_engineer")  # ADR-027 п. 1 (E36-2): видимые профессии
 
 
 def coverage() -> dict[str, Any]:

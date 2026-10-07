@@ -2400,7 +2400,7 @@ export const getUpdateProfessionAdminProfessionsSlugPatchUrl = (slug: string,) =
 }
 
 /**
- * Название и/или веса навыков (замена целиком).
+ * Название, веса навыков (замена целиком) и/или видимость `active`.
  * @summary Update Profession
  */
 export const updateProfessionAdminProfessionsSlugPatch = async (slug: string,

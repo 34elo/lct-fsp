@@ -63,6 +63,9 @@ def test_survey_validation_and_isolation(api, taxonomy_loaded):
     h, other = register(api), register(api)
     r = api.put("/assessment/survey", json={**BODY, "profession": "nope"}, headers=h)
     assert (r.status_code, r.json()["code"]) == (422, "unknown_profession")
+    # скрытая профессия (E36-2, ADR-027 п. 1) в опросе недоступна
+    r = api.put("/assessment/survey", json={**BODY, "profession": "ml"}, headers=h)
+    assert (r.status_code, r.json()["code"]) == (422, "unknown_profession")
     r = api.put("/assessment/survey", json={**BODY, "salary_from": 9, "salary_to": 1}, headers=h)
     assert (r.status_code, r.json()["code"]) == (422, "invalid_salary_range")
     assert (

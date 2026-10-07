@@ -262,6 +262,20 @@ def test_grades_plan_distribution_and_coverage(plan):
     assert plan_grades(build_plan(seed=8, anchor=ANCHOR)) != g
 
 
+def test_grades_hidden_professions_match_taxonomy():
+    """E36-2: скрытые в `roles.yaml` профессии = `HIDDEN_PROFESSIONS`; герои — в видимых."""
+    import yaml
+
+    from tools.seed.grades import HERO_GRADES, HIDDEN_PROFESSIONS, PROFESSIONS
+
+    roles = yaml.safe_load((ROOT / "data/taxonomy/roles.yaml").read_text(encoding="utf-8"))
+    hidden = {
+        r["slug"] for r in roles["roles"] if r.get("profession") and not r.get("active", True)
+    }
+    assert hidden == HIDDEN_PROFESSIONS and HIDDEN_PROFESSIONS <= set(PROFESSIONS)
+    assert all(p not in HIDDEN_PROFESSIONS for p, *_ in HERO_GRADES.values())
+
+
 async def test_seed_grades_core_and_idempotent(factory):
     from app.assessment import service as assessment
     from app.identity.models import User

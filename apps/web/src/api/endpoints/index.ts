@@ -11,6 +11,7 @@ export * from './credentials/credentials';
 export * from './events/events';
 export * from './fsp/fsp';
 export * from './graph/graph';
+export * from './internal/internal';
 export * from './live-runs/live-runs';
 export * from './needs/needs';
 export * from './offers/offers';

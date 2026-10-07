@@ -133,8 +133,13 @@ async def update_profession(
     slug: str,
     title: str | None,
     weights: dict[str, float] | None,
+    *,
+    active: bool | None = None,
 ) -> tuple[ProfessionInfo, int]:
     role = await _profession(session, slug)
+    if active is not None and active != role.active:
+        role.active = active
+        await session.flush()
     changed: list[uuid.UUID] = []
     if weights is not None:
         changed = await _write_weights(session, slug, await _validated_weights(session, weights))

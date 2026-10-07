@@ -153,6 +153,11 @@ up-lite: demo-env
 .PHONY: families-check
 families-check:
 	uv run python -m app.assessment.families.check --seeds 1000
+# Покрытие банка «профессия × грейд × тип навыка» (E36-2, ADR-027 п. 1) → reports/bank/coverage.{json,md};
+# падает на пустой ячейке видимой профессии (Backend, Frontend, AI Engineer).
+.PHONY: bank-coverage
+bank-coverage:
+	uv run python -m app.assessment.families.coverage
 # Майнинг мутаций открытого кода → семейства find_bug (E30-3, assessment.md §4). Код проектов только
 # читается (AST + песочница), не импортируется и не запускается. SRC — имя из
 # data/questions/mutations/sources.yaml; DIR — локальная копия (без неё нужен MUTMINE_GITHUB=1)

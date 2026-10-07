@@ -226,7 +226,8 @@ async def verify_code(
     if user.email_verified_at is not None:
         return True
     now = now or datetime.now(UTC)
-    row = await session.get(EmailVerification, user.id)
+    # FOR UPDATE: параллельные угадывания не теряют инкремент счётчика попыток
+    row = await session.get(EmailVerification, user.id, with_for_update=True)
     if row is None:
         return False
     if row.attempts >= settings.email_code_max_attempts:

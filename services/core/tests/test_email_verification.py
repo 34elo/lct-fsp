@@ -60,6 +60,24 @@ def test_wrong_code_400_and_attempts_limit(api, mail):
     assert r.status_code == 429 and r.json()["code"] == "too_many_attempts"
 
 
+def test_verify_locks_code_row(api, mail, monkeypatch):
+    """Счётчик попыток читается FOR UPDATE: параллельные угадывания не теряют инкремент."""
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    h, _ = _reg(api)
+    locks: list[bool] = []
+    orig = AsyncSession.get
+
+    async def spy(self, entity, ident, **kw):
+        if entity is EmailVerification:
+            locks.append(bool(kw.get("with_for_update")))
+        return await orig(self, entity, ident, **kw)
+
+    monkeypatch.setattr(AsyncSession, "get", spy)
+    api.post("/auth/email/verify", json={"code": "abcdef"}, headers=h)
+    assert locks == [True]
+
+
 def test_expired_code(api, mail):
     h, uid = _reg(api)
     past = datetime.now(UTC) - timedelta(minutes=1)

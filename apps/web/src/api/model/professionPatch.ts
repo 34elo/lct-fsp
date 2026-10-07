@@ -9,4 +9,5 @@ import type { ProfessionPatchSkillWeights } from './professionPatchSkillWeights'
 export interface ProfessionPatch {
   title?: string | null;
   skill_weights?: ProfessionPatchSkillWeights;
+  active?: boolean | null;
 }

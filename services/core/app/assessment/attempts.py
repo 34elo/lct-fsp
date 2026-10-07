@@ -109,8 +109,8 @@ def _skills_of(prof) -> tuple[dict[str, float], dict[str, str]]:
     return dict(prof.skill_weights), {k: SkillType(v).value for k, v in prof.skill_types.items()}
 
 
-async def _profession(session: AsyncSession, profession: str):
-    profs = {p.slug: p for p in await taxonomy.list_professions(session)}
+async def _profession(session: AsyncSession, profession: str, *, active_only: bool = False):
+    profs = {p.slug: p for p in await taxonomy.list_professions(session, active_only=active_only)}
     return profs.get(profession)
 
 
@@ -129,7 +129,8 @@ async def create_attempt(
     if mode == "express" and not cfg.express_enabled:
         raise ProblemError(422, "express_disabled", "Экспресс-режим выключен")
     cfg = cfg.for_mode(mode)
-    prof = await _profession(session, profession)
+    # скрытая профессия (E36-2): новый тест нельзя, кроме приглашения бонусного этапа
+    prof = await _profession(session, profession, active_only=invited_by is None)
     if prof is None:
         raise ProblemError(
             422,

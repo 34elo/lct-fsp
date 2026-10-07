@@ -4,6 +4,8 @@
 `candidate.category.changed`).
 Распределение детерминировано по SEED плана: junior 40 %, middle 40 %, senior 20 %, у 5 %
 `needs_confirmation`. Профессии — 6 существующих; каждая из 18 категорий (6 × 3) непуста.
+`mobile`, `ml`, `devops`, `qa` скрыты флагом `active` (E36-2, ADR-027 п. 1): их грейды остаются
+данными (выдача и старые категории читаются как раньше), но в опросе и выборе категории их нет.
 Герои получают грейды по своей истории: Аня — backend/junior, Дима — backend/middle
 (Ольга — работодатель, грейда у неё нет).
 """
@@ -23,6 +25,7 @@ from fsp_platform.db import session_scope
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 PROFESSIONS = ("backend", "frontend", "mobile", "ml", "devops", "qa")
+HIDDEN_PROFESSIONS = frozenset({"mobile", "ml", "devops", "qa"})  # roles.yaml active: false
 GRADE_SHARES = (("junior", 0.40), ("middle", 0.40), ("senior", 0.20))
 NEEDS_CONFIRMATION_SHARE = 0.05
 # Роли синтетики, которых нет среди 6 профессий, → ближайшая профессия.
@@ -138,4 +141,4 @@ async def seed_grades(
     return stats
 
 
-__all__ = ["PROFESSIONS", "plan_grades", "profession_of", "seed_grades"]
+__all__ = ["HIDDEN_PROFESSIONS", "PROFESSIONS", "plan_grades", "profession_of", "seed_grades"]

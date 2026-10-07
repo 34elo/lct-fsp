@@ -183,3 +183,21 @@ def test_cards_list_get_put(api, seeded):
         == 422
     )
     assert api.put("/admin/skill-cards/no-such", json=doc, headers=adm).status_code == 404
+
+
+def test_hidden_professions_admin_sees_all_and_toggles(api, seeded):
+    """E36-2 (ADR-027 п. 1): скрытые профессии — у админа с `active=false`, публично их нет."""
+    adm = _admin(api)
+    profs = {p["slug"]: p["active"] for p in api.get("/admin/professions", headers=adm).json()}
+    assert {s for s, a in profs.items() if not a} == {"ml", "mobile", "devops", "qa"}
+
+    def public() -> set[str]:
+        return {p["slug"] for p in api.get("/taxonomy/professions").json()["professions"]}
+
+    assert public() == {"backend", "frontend", "ai_engineer"}
+    r = api.patch("/admin/professions/ml", json={"active": True}, headers=adm)
+    assert r.status_code == 200 and r.json()["active"] is True
+    assert "ml" in public()
+    r = api.patch("/admin/professions/ml", json={"active": False}, headers=adm)
+    assert r.json()["active"] is False and "ml" not in public()
+    assert api.get("/admin/professions/ml", headers=adm).json()["skill_weights"]  # данные целы

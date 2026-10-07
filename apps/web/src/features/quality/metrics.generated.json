@@ -1,28 +1,28 @@
 {
  "components": {
   "assessment": {
-   "ok": true,
-   "reason": ""
+   "ok": false,
+   "reason": "пропущен (--skip)"
   },
   "bank": {
-   "ok": true,
-   "reason": ""
+   "ok": false,
+   "reason": "пропущен (--skip)"
   },
   "express": {
-   "ok": true,
-   "reason": ""
+   "ok": false,
+   "reason": "пропущен (--skip)"
   },
   "families": {
-   "ok": true,
-   "reason": ""
+   "ok": false,
+   "reason": "пропущен (--skip)"
   },
   "load": {
    "ok": false,
-   "reason": "нет reports/load/load_stats.csv (нужен `make up`, `make seed`, `make load`)"
+   "reason": "пропущен (--skip)"
   },
   "matching": {
-   "ok": true,
-   "reason": ""
+   "ok": false,
+   "reason": "пропущен (--skip)"
   }
  },
  "rows": [
@@ -30,489 +30,489 @@
    "area": "Тест",
    "id": "grade_acc_outside",
    "name": "Точность грейда вне зоны безразличия |θ − cut| ≥ δ",
-   "note": "",
+   "note": "пропущен (--skip)",
    "source": "make eval-assessment",
-   "status": "green",
+   "status": "unmeasured",
    "target": {
     "op": ">=",
     "value": 0.9
    },
    "target_text": "≥ 90.0 %",
    "unit": "%",
-   "value": 0.942,
-   "value_text": "94.2 %"
+   "value": null,
+   "value_text": "—"
   },
   {
    "area": "Тест",
    "id": "kappa",
    "name": "Повторяемость κ (две попытки)",
-   "note": "",
+   "note": "пропущен (--skip)",
    "source": "make eval-assessment",
-   "status": "info",
+   "status": "unmeasured",
    "target": {
     "op": null,
     "value": null
    },
    "target_text": "отчёт",
    "unit": "",
-   "value": 0.52,
-   "value_text": "0.52"
+   "value": null,
+   "value_text": "—"
   },
   {
    "area": "Тест",
    "id": "mean_items",
    "name": "Длина теста, заданий",
-   "note": "",
+   "note": "пропущен (--skip)",
    "source": "make eval-assessment",
-   "status": "green",
+   "status": "unmeasured",
    "target": {
     "op": "<=",
     "value": 14
    },
    "target_text": "≤ 14",
    "unit": "",
-   "value": 13.1264,
-   "value_text": "13.126"
+   "value": null,
+   "value_text": "—"
   },
   {
    "area": "Тест",
    "id": "max_share",
    "name": "Доля дошедших до максимума",
-   "note": "",
+   "note": "пропущен (--skip)",
    "source": "make eval-assessment",
-   "status": "green",
+   "status": "unmeasured",
    "target": {
     "op": "<=",
     "value": 0.1
    },
    "target_text": "≤ 10.0 %",
    "unit": "%",
-   "value": 0.0968,
-   "value_text": "9.7 %"
+   "value": null,
+   "value_text": "—"
   },
   {
    "area": "Тест",
    "id": "theta_r",
    "name": "Восстановление θ: r(θ̂, θ) на полной длине",
-   "note": "",
+   "note": "пропущен (--skip)",
    "source": "make eval-assessment",
-   "status": "green",
+   "status": "unmeasured",
    "target": {
     "op": ">=",
     "value": 0.85
    },
    "target_text": "≥ 0.85",
    "unit": "",
-   "value": 0.8685,
-   "value_text": "0.869"
+   "value": null,
+   "value_text": "—"
   },
   {
    "area": "Тест",
    "id": "calib30",
    "name": "Калибровка RMSE после 30 ответов",
-   "note": "",
+   "note": "пропущен (--skip)",
    "source": "make eval-assessment",
-   "status": "green",
+   "status": "unmeasured",
    "target": {
     "op": "<=",
     "value": 0.4
    },
    "target_text": "≤ 0.4",
    "unit": "",
-   "value": 0.3704,
-   "value_text": "0.37"
+   "value": null,
+   "value_text": "—"
   },
   {
    "area": "Тест",
    "id": "calib100",
    "name": "Калибровка RMSE после 100 ответов",
-   "note": "",
+   "note": "пропущен (--skip)",
    "source": "make eval-assessment",
-   "status": "info",
+   "status": "unmeasured",
    "target": {
     "op": null,
     "value": null
    },
    "target_text": "отчёт",
    "unit": "",
-   "value": 0.3064,
-   "value_text": "0.306"
+   "value": null,
+   "value_text": "—"
   },
   {
    "area": "Тест",
    "id": "rpb",
    "name": "Дискриминативность: медиана r_pb",
-   "note": "",
+   "note": "пропущен (--skip)",
    "source": "make eval-assessment",
-   "status": "green",
+   "status": "unmeasured",
    "target": {
     "op": ">=",
     "value": 0.3
    },
    "target_text": "≥ 0.3",
    "unit": "",
-   "value": 0.406,
-   "value_text": "0.406"
+   "value": null,
+   "value_text": "—"
   },
   {
    "area": "Тест",
    "id": "exposure",
    "name": "Максимальная экспозиция семейства",
-   "note": "",
+   "note": "пропущен (--skip)",
    "source": "make eval-assessment",
-   "status": "green",
+   "status": "unmeasured",
    "target": {
     "op": "<=",
     "value": 0.3
    },
    "target_text": "≤ 30.0 %",
    "unit": "%",
-   "value": 0.2578,
-   "value_text": "25.8 %"
+   "value": null,
+   "value_text": "—"
   },
   {
    "area": "Тест",
    "id": "leak_quarantine",
    "name": "Ответов до карантина утёкшего семейства",
-   "note": "",
+   "note": "пропущен (--skip)",
    "source": "make eval-assessment",
-   "status": "green",
+   "status": "unmeasured",
    "target": {
     "op": "<=",
     "value": 100
    },
    "target_text": "≤ 100",
    "unit": "",
-   "value": 79.5,
-   "value_text": "79.5"
+   "value": null,
+   "value_text": "—"
   },
   {
    "area": "Тест",
    "id": "leak_false_up",
    "name": "Утечка: ложные повышения у «знающих»",
-   "note": "",
+   "note": "пропущен (--skip)",
    "source": "make eval-assessment",
-   "status": "info",
+   "status": "unmeasured",
    "target": {
     "op": null,
     "value": null
    },
    "target_text": "отчёт",
    "unit": "%",
-   "value": 0.2427,
-   "value_text": "24.3 %"
+   "value": null,
+   "value_text": "—"
   },
   {
    "area": "Тест",
    "id": "integrity_fpr",
    "name": "Детектор честности: FPR",
-   "note": "",
+   "note": "пропущен (--skip)",
    "source": "make eval-assessment",
-   "status": "green",
+   "status": "unmeasured",
    "target": {
     "op": "<=",
     "value": 0.05
    },
    "target_text": "≤ 5.0 %",
    "unit": "%",
-   "value": 0.0028,
-   "value_text": "0.3 %"
+   "value": null,
+   "value_text": "—"
   },
   {
    "area": "Тест",
    "id": "integrity_tpr",
    "name": "Детектор честности: TPR",
-   "note": "",
+   "note": "пропущен (--skip)",
    "source": "make eval-assessment",
-   "status": "info",
+   "status": "unmeasured",
    "target": {
     "op": null,
     "value": null
    },
    "target_text": "отчёт",
    "unit": "%",
-   "value": 0.8093,
-   "value_text": "80.9 %"
+   "value": null,
+   "value_text": "—"
   },
   {
    "area": "Тест",
    "id": "grade_acc_all",
    "name": "Общая точность грейда (вся выборка)",
-   "note": "",
+   "note": "пропущен (--skip)",
    "source": "make eval-assessment",
-   "status": "info",
+   "status": "unmeasured",
    "target": {
     "op": null,
     "value": null
    },
    "target_text": "отчёт",
    "unit": "%",
-   "value": 0.7398,
-   "value_text": "74.0 %"
+   "value": null,
+   "value_text": "—"
   },
   {
    "area": "Тест",
    "id": "grade_within1",
    "name": "Грейд ±1",
-   "note": "",
+   "note": "пропущен (--skip)",
    "source": "make eval-assessment",
-   "status": "info",
+   "status": "unmeasured",
    "target": {
     "op": null,
     "value": null
    },
    "target_text": "отчёт",
    "unit": "%",
-   "value": 0.9889,
-   "value_text": "98.9 %"
+   "value": null,
+   "value_text": "—"
   },
   {
    "area": "Тест",
    "id": "ai_solvable",
    "name": "Решаемость ИИ: доля семейств (симулятор LLM)",
-   "note": "",
+   "note": "пропущен (--skip)",
    "source": "make eval-assessment",
-   "status": "info",
+   "status": "unmeasured",
    "target": {
     "op": null,
     "value": null
    },
    "target_text": "отчёт",
    "unit": "%",
-   "value": 0.4633,
-   "value_text": "46.3 %"
+   "value": null,
+   "value_text": "—"
   },
   {
    "area": "Подбор",
    "id": "ndcg_lift",
    "name": "Релевантность: прирост nDCG@10 к BM25",
-   "note": "",
+   "note": "пропущен (--skip)",
    "source": "make eval",
-   "status": "green",
+   "status": "unmeasured",
    "target": {
     "op": ">=",
     "value": 0.2
    },
    "target_text": "≥ 20.0 %",
    "unit": "%",
-   "value": 1.3012,
-   "value_text": "130.1 %"
+   "value": null,
+   "value_text": "—"
   },
   {
    "area": "Подбор",
    "id": "p10_lift",
    "name": "Релевантность: прирост precision@10 к BM25",
-   "note": "",
+   "note": "пропущен (--skip)",
    "source": "make eval",
-   "status": "info",
+   "status": "unmeasured",
    "target": {
     "op": null,
     "value": null
    },
    "target_text": "отчёт",
    "unit": "%",
-   "value": 1.1378,
-   "value_text": "113.8 %"
+   "value": null,
+   "value_text": "—"
   },
   {
    "area": "Подбор",
    "id": "category_hit",
    "name": "Категории потребности: роль среди предложенных",
-   "note": "",
+   "note": "пропущен (--skip)",
    "source": "make eval",
-   "status": "info",
+   "status": "unmeasured",
    "target": {
     "op": null,
     "value": null
    },
    "target_text": "отчёт",
    "unit": "%",
-   "value": 1.0,
-   "value_text": "100.0 %"
+   "value": null,
+   "value_text": "—"
   },
   {
    "area": "Банк",
    "id": "families_pass",
    "name": "Качество генераторов: доля семейств, прошедших families-check",
-   "note": "",
+   "note": "пропущен (--skip)",
    "source": "make families-check",
-   "status": "green",
+   "status": "unmeasured",
    "target": {
     "op": ">=",
     "value": 1.0
    },
    "target_text": "≥ 100.0 %",
    "unit": "%",
-   "value": 1.0,
-   "value_text": "100.0 %"
+   "value": null,
+   "value_text": "—"
   },
   {
    "area": "Тест",
    "id": "express_acc",
    "name": "Экспресс-режим: точность вне зоны безразличия",
-   "note": "",
+   "note": "пропущен (--skip)",
    "source": "eval-assessment --mode express",
-   "status": "info",
+   "status": "unmeasured",
    "target": {
     "op": null,
     "value": null
    },
    "target_text": "отчёт",
    "unit": "%",
-   "value": 0.6957,
-   "value_text": "69.6 %"
+   "value": null,
+   "value_text": "—"
   },
   {
    "area": "Тест",
    "id": "express_items",
    "name": "Экспресс-режим: длина, заданий (план 6–8)",
-   "note": "",
+   "note": "пропущен (--skip)",
    "source": "eval-assessment --mode express",
-   "status": "info",
+   "status": "unmeasured",
    "target": {
     "op": null,
     "value": null
    },
    "target_text": "отчёт",
    "unit": "",
-   "value": 6.9773,
-   "value_text": "6.977"
+   "value": null,
+   "value_text": "—"
   },
   {
    "area": "Тест",
    "id": "llm_junior_granted",
    "name": "LLM-«кандидат» заявил junior: получил заявленный грейд",
-   "note": "",
+   "note": "пропущен (--skip)",
    "source": "make eval-assessment",
-   "status": "info",
+   "status": "unmeasured",
    "target": {
     "op": null,
     "value": null
    },
    "target_text": "отчёт",
    "unit": "%",
-   "value": 0.8666666666666667,
-   "value_text": "86.7 %"
+   "value": null,
+   "value_text": "—"
   },
   {
    "area": "Тест",
    "id": "llm_junior_flagged",
    "name": "LLM-«кандидат» заявил junior: сработал индекс честности",
-   "note": "",
+   "note": "пропущен (--skip)",
    "source": "make eval-assessment",
-   "status": "info",
+   "status": "unmeasured",
    "target": {
     "op": null,
     "value": null
    },
    "target_text": "отчёт",
    "unit": "%",
-   "value": 0.1,
-   "value_text": "10.0 %"
+   "value": null,
+   "value_text": "—"
   },
   {
    "area": "Тест",
    "id": "llm_middle_granted",
    "name": "LLM-«кандидат» заявил middle: получил заявленный грейд",
-   "note": "",
+   "note": "пропущен (--skip)",
    "source": "make eval-assessment",
-   "status": "info",
+   "status": "unmeasured",
    "target": {
     "op": null,
     "value": null
    },
    "target_text": "отчёт",
    "unit": "%",
-   "value": 0.36666666666666664,
-   "value_text": "36.7 %"
+   "value": null,
+   "value_text": "—"
   },
   {
    "area": "Тест",
    "id": "llm_middle_flagged",
    "name": "LLM-«кандидат» заявил middle: сработал индекс честности",
-   "note": "",
+   "note": "пропущен (--skip)",
    "source": "make eval-assessment",
-   "status": "info",
+   "status": "unmeasured",
    "target": {
     "op": null,
     "value": null
    },
    "target_text": "отчёт",
    "unit": "%",
-   "value": 0.9,
-   "value_text": "90.0 %"
+   "value": null,
+   "value_text": "—"
   },
   {
    "area": "Тест",
    "id": "llm_senior_granted",
    "name": "LLM-«кандидат» заявил senior: получил заявленный грейд",
-   "note": "",
+   "note": "пропущен (--skip)",
    "source": "make eval-assessment",
-   "status": "info",
+   "status": "unmeasured",
    "target": {
     "op": null,
     "value": null
    },
    "target_text": "отчёт",
    "unit": "%",
-   "value": 0.2,
-   "value_text": "20.0 %"
+   "value": null,
+   "value_text": "—"
   },
   {
    "area": "Тест",
    "id": "llm_senior_flagged",
    "name": "LLM-«кандидат» заявил senior: сработал индекс честности",
-   "note": "",
+   "note": "пропущен (--skip)",
    "source": "make eval-assessment",
-   "status": "info",
+   "status": "unmeasured",
    "target": {
     "op": null,
     "value": null
    },
    "target_text": "отчёт",
    "unit": "%",
-   "value": 1.0,
-   "value_text": "100.0 %"
+   "value": null,
+   "value_text": "—"
   },
   {
    "area": "Банк",
    "id": "bank_coverage",
    "name": "Покрытие: пустых ячеек «профессия MVP × тип навыка × грейд»",
-   "note": "backend/fundamental/senior, backend/business/senior, backend/soft/senior, backend/experience/senior, frontend/thinking/junior, frontend/fundamental/senior, frontend/hard/senior, frontend/business/senior, frontend/soft/senior, frontend/experience/senior, ml/experience/middle, ml/fundamental/senior, ml/soft/senior, ml/experience/senior, ai_engineer/experience/middle, ai_engineer/fundamental/senior, ai_engineer/soft/senior, ai_engineer/experience/senior",
+   "note": "пропущен (--skip)",
    "source": "tools/metrics/core_probe.py",
-   "status": "red",
+   "status": "unmeasured",
    "target": {
     "op": "==",
     "value": 0
    },
    "target_text": "= 0",
    "unit": "",
-   "value": 18,
-   "value_text": "18"
+   "value": null,
+   "value_text": "—"
   },
   {
    "area": "Банк",
    "id": "gen_unique",
    "name": "Уникальность вариантов на 1000 сидов",
-   "note": "меньше всего: py_find_bug 30 %, rag_retriever_find_bug 34 %, sjt_code_review 42 %",
+   "note": "пропущен (--skip)",
    "source": "tools/metrics/core_probe.py",
-   "status": "yellow",
+   "status": "unmeasured",
    "target": {
     "op": ">=",
     "value": 0.99
    },
    "target_text": "≥ 99.0 %",
    "unit": "%",
-   "value": 0.8416,
-   "value_text": "84.2 %"
+   "value": null,
+   "value_text": "—"
   },
   {
    "area": "Подбор",
    "id": "fairness",
    "name": "Справедливость: impact ratio «без ФСП / с ФСП» при равном T",
-   "note": "синтетический пул, веса strength из scoring.yaml",
+   "note": "пропущен (--skip)",
    "source": "matching.strength.fsp_impact_ratio",
-   "status": "red",
+   "status": "unmeasured",
    "target": {
     "op": "in",
     "value": [
@@ -522,14 +522,14 @@
    },
    "target_text": "0.8–1.25",
    "unit": "",
-   "value": 0.3417,
-   "value_text": "0.342"
+   "value": null,
+   "value_text": "—"
   },
   {
    "area": "Скорость",
    "id": "p95_search",
    "name": "p95 поиска при 50 пользователях",
-   "note": "нет reports/load/load_stats.csv (нужен `make up`, `make seed`, `make load`)",
+   "note": "пропущен (--skip)",
    "source": "make load",
    "status": "unmeasured",
    "target": {
@@ -545,7 +545,7 @@
    "area": "Скорость",
    "id": "p95_matches",
    "name": "p95 подборки при 50 пользователях",
-   "note": "нет reports/load/load_stats.csv (нужен `make up`, `make seed`, `make load`)",
+   "note": "пропущен (--skip)",
    "source": "make load",
    "status": "unmeasured",
    "target": {
@@ -752,11 +752,11 @@
  ],
  "seed": 42,
  "summary": {
-  "green": 11,
-  "info": 17,
-  "red": 2,
-  "unmeasured": 14,
-  "yellow": 1
+  "green": 0,
+  "info": 0,
+  "red": 0,
+  "unmeasured": 45,
+  "yellow": 0
  },
  "tolerance": 0.2
 }

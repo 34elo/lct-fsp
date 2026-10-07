@@ -71,7 +71,7 @@ async def save_survey(
     session: AsyncSession, candidate_id: uuid.UUID, data: dict[str, Any]
 ) -> tuple[Survey, bool]:
     """Сохраняет опрос; возвращает `(строка, создана_новая)`."""
-    professions = {p.slug for p in await taxonomy.list_professions(session)}
+    professions = {p.slug for p in await taxonomy.list_professions(session, active_only=True)}
     if data["profession"] not in professions:
         raise ProblemError(422, code="unknown_profession", title="Неизвестная профессия")
     sf, st = data.get("salary_from"), data.get("salary_to")

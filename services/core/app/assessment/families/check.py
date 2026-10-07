@@ -13,6 +13,7 @@
 
 По банку: каждый тип навыка покрыт ≥ 2 семействами, каждый `kind` (кроме `open`) — хотя бы одним,
 навык семейства есть в `data/taxonomy` и его тип совпадает, есть якорные семейства.
+Покрытие «профессия × грейд × тип навыка» видимых профессий без пустых ячеек (`coverage`, E36-2).
 
 Исполняется только код, который сгенерировали сами семейства. Код кандидатов не исполняется.
 """
@@ -244,6 +245,9 @@ def main(argv: list[str] | None = None) -> int:
 
     errs = run(families, args.seeds, args.taxonomy) + check_hashseed(args.seeds)
     errs += check_fsp_banks()
+    from app.assessment.families import coverage  # E36-2: пустая ячейка видимой профессии — провал
+
+    errs += coverage.errors(args.taxonomy)
     for f in sorted(families, key=lambda f: (SkillType(f.skill_type).value, f.slug)):
         anchor = " anchor" if getattr(f, "anchor", False) else ""
         print(f"  {f.skill_type:<11} {f.kind.value:<9} L{f.level} {f.slug} ({f.skill}){anchor}")

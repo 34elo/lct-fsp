@@ -11174,7 +11174,7 @@
           "admin"
         ],
         "summary": "Update Profession",
-        "description": "Название и/или веса навыков (замена целиком).",
+        "description": "Название, веса навыков (замена целиком) и/или видимость `active`.",
         "operationId": "update_profession_admin_professions__slug__patch",
         "parameters": [
           {
@@ -24141,6 +24141,11 @@
             },
             "type": "object",
             "title": "Skill Types"
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active",
+            "default": true
           }
         },
         "type": "object",
@@ -24175,6 +24180,11 @@
             },
             "type": "object",
             "title": "Skill Types"
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active",
+            "default": true
           },
           "taxonomy_version": {
             "anyOf": [
@@ -24225,6 +24235,17 @@
               }
             ],
             "title": "Skill Weights"
+          },
+          "active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active"
           }
         },
         "type": "object",

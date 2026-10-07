@@ -92,6 +92,8 @@ class ProfessionInfo(BaseModel):
     # slug навыка → вес 0..1 («насколько типичен», как в roles.yaml); не нормирован
     skill_weights: dict[str, float]
     skill_types: dict[str, SkillType] = Field(default_factory=dict)  # заполняет E21-1
+    # E36-2 (ADR-027 п. 1): скрытая профессия остаётся данными, но не отдаётся публично
+    active: bool = True
 
 
 # --- события (outbox -> exchange events) ---

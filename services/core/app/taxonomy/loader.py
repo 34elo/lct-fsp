@@ -94,6 +94,7 @@ class RoleIn(_Strict):
     slug: str
     name: str = Field(min_length=1)
     profession: bool = False
+    active: bool = True  # E36-2: false — профессия скрыта в опросе и UI (ADR-027 п. 1)
     skills: dict[str, float] = Field(default_factory=dict)
 
     @field_validator("slug")

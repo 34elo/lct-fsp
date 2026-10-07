@@ -135,7 +135,7 @@ async def get_professions(
     path = Path(request.app.state.settings.scoring_config_path or DEFAULT_SCORING_PATH)
     cuts = load_grade_cuts(path)
     return ProfessionsOut(
-        professions=await service.list_professions(session),
+        professions=await service.list_professions(session, active_only=True),
         skill_types=list(SkillType),
         grades=[GradeCut(grade=TestGrade(g), cut=c) for g, c in cuts.items()],
     )

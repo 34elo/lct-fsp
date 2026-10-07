@@ -178,6 +178,11 @@ async def test_list_professions(factory):
     for p in profs.values():
         assert set(p.skill_types.values()) == set(SkillType), p.slug
     assert {"rag", "llm_serving"} <= set(profs["ai_engineer"].skill_weights)
+    # E36-2 (ADR-027 п. 1): видимы Backend, Frontend, AI Engineer; остальные — данные
+    assert {s for s, p in profs.items() if p.active} == {"backend", "frontend", "ai_engineer"}
+    async with session_scope(factory) as s:
+        active = [p.slug for p in await tax.list_professions(s, active_only=True)]
+    assert active == ["ai_engineer", "backend", "frontend"]
 
 
 async def test_professions_endpoint(factory, db_url):
@@ -193,7 +198,9 @@ async def test_professions_endpoint(factory, db_url):
         r = c.get("/taxonomy/professions")
     assert r.status_code == 200
     body = r.json()
-    assert len(body["professions"]) == 7
+    # скрытые профессии (E36-2) публично не отдаются
+    assert [p["slug"] for p in body["professions"]] == ["ai_engineer", "backend", "frontend"]
+    assert all(p["active"] for p in body["professions"])
     assert body["skill_types"] == [t.value for t in SkillType]
     assert body["grades"] == [
         {"grade": "junior", "cut": -1.0},
