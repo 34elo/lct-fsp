@@ -33,39 +33,50 @@ export function canSendOffer(opts: { lo: number | null; hi: number | null; vacan
   return rangeProblem(opts.lo, opts.hi) === null && (opts.vacancyId !== "" || opts.title.trim() !== "");
 }
 
-/** Колонки канбана работодателя (макет E5): порядок как на макете. */
-export const BOARD_COLUMNS = ["interest", "sent", "viewed", "interview", "accepted", "hired", "closed"] as const;
-export type BoardColumn = (typeof BOARD_COLUMNS)[number];
+const IN_INTEREST = ["interest", "interest_opened"];
+const ACCEPTED = ["accepted", "interview", "hired", "not_hired"];
 
-/** Статус из API → колонка. Неизвестный статус не теряем: уходит в «Закрыто». */
-export function columnOf(status: string): BoardColumn {
-  if (status === "interest" || status === "interest_opened") return "interest";
-  return (BOARD_COLUMNS as readonly string[]).includes(status) && status !== "closed" ? (status as BoardColumn) : "closed";
-}
-
-/** Разложить приглашения по колонкам, новые сверху. Пустые колонки остаются. */
-export function groupByColumn<T extends { status: string; created_at: string }>(offers: T[]): Record<BoardColumn, T[]> {
-  const out = Object.fromEntries(BOARD_COLUMNS.map((c) => [c, [] as T[]])) as Record<BoardColumn, T[]>;
-  for (const o of [...offers].sort((a, b) => b.created_at.localeCompare(a.created_at))) out[columnOf(o.status)].push(o);
-  return out;
-}
-
-export interface BoardStats {
-  total: number;
-  /** Доля просмотренных (всё, что ушло дальше «Отправлен»), % или null без приглашений. */
-  viewedPct: number | null;
+export interface Funnel {
+  interest: number;
+  opened: number;
+  invited: number;
   accepted: number;
-  hired: number;
 }
 
-/** Сводка над доской. Принявшие: принят, интервью, нанят, не нанят (после принятия). */
-export function boardStats(all: { status: string }[]): BoardStats {
-  // Интересы (до приглашения) в воронку приглашений не входят.
-  const offers = all.filter((o) => columnOf(o.status) !== "interest");
-  const total = offers.length;
-  const seen = offers.filter((o) => !["sent", "expired", "withdrawn"].includes(o.status)).length;
-  const accepted = offers.filter((o) => ["accepted", "interview", "hired", "not_hired"].includes(o.status)).length;
-  return { total, viewedPct: total ? Math.round((seen / total) * 100) : null, accepted, hired: offers.filter((o) => o.status === "hired").length };
+interface FunnelOffer {
+  status: string;
+  interest_at?: string | null;
+  interest_opened_at?: string | null;
+  invited_at?: string | null;
+}
+
+/** Воронка работодателя: сколько приглашений дошло до каждого шага (шаги накопительные, по отметкам времени и статусу). */
+export function funnelOf(offers: FunnelOffer[]): Funnel {
+  const inv = (o: FunnelOffer) => !IN_INTEREST.includes(o.status) || !!o.invited_at;
+  return {
+    interest: offers.filter((o) => !!o.interest_at || IN_INTEREST.includes(o.status)).length,
+    opened: offers.filter((o) => !!o.interest_opened_at || o.status === "interest_opened").length,
+    invited: offers.filter(inv).length,
+    accepted: offers.filter((o) => ACCEPTED.includes(o.status)).length,
+  };
+}
+
+/** За сколько дней набрана воронка: от самого раннего приглашения до сейчас (минимум 1). */
+export function funnelSpanDays(offers: { created_at: string }[], now: number): number {
+  if (offers.length === 0) return 0;
+  const first = Math.min(...offers.map((o) => Date.parse(o.created_at)));
+  return Math.max(1, Math.ceil((now - first) / 86_400_000));
+}
+
+/** Сначала то, что ждёт ответа работодателя (интерес открыт, приняты), потом остальные; внутри — новые выше. */
+export function sortOffers<T extends { status: string; created_at: string }>(offers: T[]): T[] {
+  const order = (s: string) => (s === "interest_opened" || s === "accepted" || s === "interview" ? 0 : 1);
+  return [...offers].sort((a, b) => order(a.status) - order(b.status) || b.created_at.localeCompare(a.created_at));
+}
+
+/** Приглашение для быстрого «Ответить»: самое свежее из принятых и идущих на интервью. */
+export function lastActive<T extends { status: string; created_at: string }>(offers: T[]): T | undefined {
+  return [...offers].filter((o) => o.status === "accepted" || o.status === "interview").sort((a, b) => b.created_at.localeCompare(a.created_at))[0];
 }
 
 export interface DeclineShare {
@@ -83,6 +94,7 @@ export function declineBreakdown(offers: { decline?: { reason: string } | null }
     .map(([reason, count]) => ({ reason, count, pct: Math.round((count / total) * 100) }))
     .sort((a, b) => b.count - a.count || a.reason.localeCompare(b.reason));
 }
+
 
 /**
  * Приглашение глазами кандидата. Сгенерированный `OfferForCandidate` ещё без `title` и `initiator`

@@ -27,6 +27,7 @@ import type {
   CandidateCardCandidatesPseudoIdCardGetParams,
   CandidateCardFull,
   CandidateSimilarCandidatesPseudoIdSimilarGetParams,
+  CandidateStanding,
   HTTPValidationError,
   MarkCandidateInterestCompaniesCompanyIdInterestPost200,
   NavigatorOut,
@@ -791,6 +792,141 @@ export function useMyNavigatorCandidatesMeNavigatorGet<TData = Awaited<ReturnTyp
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getMyNavigatorCandidatesMeNavigatorGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type myStandingCandidatesMeStandingGetResponse200 = {
+  data: CandidateStanding
+  status: 200
+}
+
+export type myStandingCandidatesMeStandingGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type myStandingCandidatesMeStandingGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type myStandingCandidatesMeStandingGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type myStandingCandidatesMeStandingGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type myStandingCandidatesMeStandingGetResponseSuccess = (myStandingCandidatesMeStandingGetResponse200) & {
+  headers: Headers;
+};
+export type myStandingCandidatesMeStandingGetResponseError = (myStandingCandidatesMeStandingGetResponse401ApplicationProblemJson | myStandingCandidatesMeStandingGetResponse401ApplicationJson | myStandingCandidatesMeStandingGetResponse403ApplicationProblemJson | myStandingCandidatesMeStandingGetResponse403ApplicationJson) & {
+  headers: Headers;
+};
+
+export type myStandingCandidatesMeStandingGetResponse = (myStandingCandidatesMeStandingGetResponseSuccess | myStandingCandidatesMeStandingGetResponseError)
+
+export const getMyStandingCandidatesMeStandingGetUrl = () => {
+
+
+
+
+  return `/candidates/me/standing`
+}
+
+/**
+ * Сила профиля и место в категории «профессия × грейд» (E35-12a). Без теста — пусто.
+ * @summary My Standing
+ */
+export const myStandingCandidatesMeStandingGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<myStandingCandidatesMeStandingGetResponse> => {
+
+  return apiFetch<myStandingCandidatesMeStandingGetResponse>(getMyStandingCandidatesMeStandingGetUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getMyStandingCandidatesMeStandingGetQueryKey = () => {
+    return [
+    `/candidates/me/standing`
+    ] as const;
+    }
+
+
+export const getMyStandingCandidatesMeStandingGetQueryOptions = <TData = Awaited<ReturnType<typeof myStandingCandidatesMeStandingGet>>, TError = ErrorType<ProblemOut>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myStandingCandidatesMeStandingGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMyStandingCandidatesMeStandingGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof myStandingCandidatesMeStandingGet>>> = ({ signal }) => myStandingCandidatesMeStandingGet({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof myStandingCandidatesMeStandingGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type MyStandingCandidatesMeStandingGetQueryResult = NonNullable<Awaited<ReturnType<typeof myStandingCandidatesMeStandingGet>>>
+export type MyStandingCandidatesMeStandingGetQueryError = ErrorType<ProblemOut>
+
+
+export function useMyStandingCandidatesMeStandingGet<TData = Awaited<ReturnType<typeof myStandingCandidatesMeStandingGet>>, TError = ErrorType<ProblemOut>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof myStandingCandidatesMeStandingGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof myStandingCandidatesMeStandingGet>>,
+          TError,
+          Awaited<ReturnType<typeof myStandingCandidatesMeStandingGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMyStandingCandidatesMeStandingGet<TData = Awaited<ReturnType<typeof myStandingCandidatesMeStandingGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myStandingCandidatesMeStandingGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof myStandingCandidatesMeStandingGet>>,
+          TError,
+          Awaited<ReturnType<typeof myStandingCandidatesMeStandingGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMyStandingCandidatesMeStandingGet<TData = Awaited<ReturnType<typeof myStandingCandidatesMeStandingGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myStandingCandidatesMeStandingGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary My Standing
+ */
+
+export function useMyStandingCandidatesMeStandingGet<TData = Awaited<ReturnType<typeof myStandingCandidatesMeStandingGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myStandingCandidatesMeStandingGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMyStandingCandidatesMeStandingGetQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

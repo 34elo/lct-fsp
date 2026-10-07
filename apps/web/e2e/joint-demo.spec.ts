@@ -1,7 +1,7 @@
 /**
  * Сквозной демо-сценарий в порядке ТЗ (AU-5, audit E-1), одним тестом по шагам:
  *   1. регистрация нового соискателя → согласия;
- *   2. опрос и экспресс-тест → результат (категория/грейд);
+ *   2. опрос (сразу после согласий, E35-2a) и экспресс-тест → результат (категория/грейд) → Главная;
  *   3. работодатель (Ольга) описывает потребность и находит категорию с кандидатами;
  *   4. приглашение (оффер с вилкой) выбранному кандидату;
  *   5. отклик кандидата (Аня) на вакансию Ольги и отклик в кабинете работодателя.
@@ -61,28 +61,22 @@ test("joint: регистрация → опрос и тест → катего�
     await expect(page).not.toHaveURL(/\/consents/);
   });
 
-  await test.step("онбординг виден", async () => {
+  // --- 2. опрос и экспресс-тест ----------------------------------------------------------------
+  // Главный путь (E35-2a): после согласий новый кандидат сразу попадает в опрос.
+  await test.step("опрос", async () => {
     // Если включено подтверждение email, дальше нужен код из письма (Mailpit): вручную, не в этом тесте.
     test.skip(/\/verify-email/.test(page.url()), "включено подтверждение email: код приходит в Mailpit, сценарий требует ручного шага");
-    await expect(page.getByTestId("onboarding-root")).toBeVisible();
-    await shot(page, info, ++n, "onboarding");
-  });
-
-  // --- 2. опрос и экспресс-тест ----------------------------------------------------------------
-  await test.step("опрос", async () => {
-    await page.goto("/me/assessment");
+    await expect(page).toHaveURL(/\/me\/assessment$/);
+    // Без резюме направление не выбрано: экран начинается с одной кнопки «выбрать направление».
+    const pick = page.getByTestId("assessment-pick");
+    await expect(page.getByTestId("assessment-survey").or(pick)).toBeVisible();
+    if (await pick.isVisible()) await pick.click();
     await expect(page.getByTestId("assessment-survey")).toBeVisible();
-    const nextStep = page.getByTestId("assessment-step-next"); // есть только на 375 px
-    const advance = async () => {
-      if (await nextStep.isVisible()) await nextStep.click();
-    };
-    await page.locator('[data-testid^="assessment-profession-"]').first().check();
-    await advance();
-    await advance(); // стек не обязателен
-    await page.getByTestId("assessment-format-remote").check();
-    await advance();
-    await page.getByTestId("assessment-grade-junior").check();
-    await page.getByTestId("assessment-express-toggle").check();
+    // Радио и переключатель экспресса — скрытые input с видимой меткой-родителем: кликаем по метке.
+    await page.locator('label:has([data-testid^="assessment-profession-"])').first().click();
+    await page.getByTestId("assessment-format-remote").click(); // кнопка с aria-pressed
+    await page.locator('label:has([data-testid="assessment-grade-junior"])').click();
+    await page.locator('label:has([data-testid="assessment-express-toggle"])').click();
     await shot(page, info, ++n, "survey");
     await page.getByTestId("assessment-start").click();
     await expect(page).toHaveURL(/\/me\/assessment\/attempts\/[^/]+$/);
@@ -99,6 +93,24 @@ test("joint: регистрация → опрос и тест → катего�
     await expect(page.getByTestId("assessment-grade")).toBeVisible();
     await expect(page.getByTestId("assessment-express")).toBeVisible();
     await shot(page, info, ++n, "result");
+  });
+
+  await test.step("результат → Главная без баннера «пройдите тест»", async () => {
+    await page.getByTestId("assessment-to-profile").click();
+    await expect(page).toHaveURL(/\/me$/);
+    await expect(page.getByTestId("path-banner")).toHaveCount(0);
+    // Главная v2 (E38-1): после теста — следующий шаг и плитки «Сила», «Место», «Интересы».
+    await expect(page.getByTestId("home-after")).toBeVisible();
+    await expect(page.getByTestId("home-next-action")).toBeVisible();
+    await shot(page, info, ++n, "home");
+    // Статистика (E38-2): ссылка с Главной → /me/stats, сила, место и «Где ты среди своих».
+    await page.getByTestId("home-stats").click();
+    await expect(page).toHaveURL(/\/me\/stats$/);
+    await expect(page.getByTestId("stats-main")).toBeVisible();
+    await expect(page.getByTestId("stats-peers")).toBeVisible();
+    await shot(page, info, ++n, "stats");
+    await page.goBack();
+    await expect(page).toHaveURL(/\/me$/);
   });
 
   // --- 3. работодатель находит категорию и кандидата -------------------------------------------
@@ -121,7 +133,7 @@ test("joint: регистрация → опрос и тест → катего�
   // --- 4. приглашение (оффер с вилкой) ---------------------------------------------------------
   await test.step("работодатель: приглашение кандидату", async () => {
     const categoryUrl = olga.url();
-    const invites = olga.getByRole("button", { name: "Пригласить" });
+    const invites = olga.getByRole("button", { name: "Интерес" });
     const total = Math.min(await invites.count(), 5);
     expect(total, "в категории нет кандидатов для приглашения").toBeGreaterThan(0);
     for (let i = 0; i < total; i++) {

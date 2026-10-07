@@ -1,59 +1,71 @@
-import { useRef, useState } from "react";
-import { Link } from "react-router-dom";
-
 import {
   Badge,
   Button,
-  Card,
+  Chips,
   EmptyState,
   ErrorState,
   FspProtocol,
-  GradeBadge,
-  SectionLabel,
+  GradeTag,
+  H1,
+  Lbl,
+  Num,
+  Panel,
+  PanelCap,
   Skeleton,
+  SkillTag,
+  StatusTag,
+  Tag,
   TeamSignal as TeamSignalRow,
+  buttonVariants,
+  cn,
+  dotsText,
+  formatRub,
   type FspResult,
 } from "@fsp/ui";
+import { useState, type ReactNode } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 
 import { useGetProfileCandidatesMeProfileGet } from "@/api/endpoints/candidates/candidates";
-import type { CandidateProfile, ExperienceItem, GradeInfo, OwnerFsp, SkillWithTrust, TeamSignal } from "@/api/model";
+import { useMyStandingCandidatesMeStandingGet } from "@/api/endpoints/search/search";
+import type { CandidateProfile, CandidateStanding, GradeInfo, SkillWithTrust } from "@/api/model";
+import { GRADE } from "@/features/assessment/text";
 import { FspLinkPanel } from "@/features/fsp/FspLinkPanel";
+import GraphView from "@/features/graph/Graph";
 import { downloadProfilePdf } from "@/features/profile/pdf";
+import { dayMonth, formatsText, sortSkills } from "./home-model";
 import {
   CLAIM_STATUS_LABEL,
   DISCIPLINE_LABEL,
-  dots,
   FSP_LEVEL_LABEL,
   GRADE_LABEL,
-  GROUP_LABEL,
-  periodRu,
-  points,
+  HOME,
+  PROFILE,
   RANK_LABEL,
-  roleLabel,
   SIGNAL_LABEL,
+  SOURCE_TAG,
   STATUS_LABEL,
   STRENGTH_ITEMS,
   T,
   TEAM_ROLE_LABEL,
-} from "@/features/profile/text";
-import { ConstellationAvatar, SkillChip, type TrustKind } from "@/shared/brand";
-import { cn } from "@/shared/lib/cn";
+  periodRu,
+  points,
+  roleLabel,
+} from "./text";
 import { useEventStream } from "@/shared/lib/useEventStream";
 
-function Section({ title, label, children, className, testid }: { title: string; label?: string; children: React.ReactNode; className?: string; testid: string }) {
-  return (
-    <Card role="region" aria-label={label ?? title} data-testid={testid} className={cn("flex flex-col gap-3 p-5", className)}>
-      <h2 className="font-mono text-17 font-semibold">{title}</h2>
-      {children}
-    </Card>
-  );
-}
+const PAGE = "mx-auto flex w-full max-w-[1328px] flex-col gap-4 px-4 py-4 md:px-6 md:py-6";
+const TABS = ["skills", "fsp", "resume", "graph"] as const;
+type Tab = (typeof TABS)[number];
+const gradeLabel = (g: string) => GRADE[g] ?? GRADE_LABEL[g] ?? g;
 
-function kindOf(s: SkillWithTrust): TrustKind {
-  if (s.claimed_only) return "claimed";
-  if (s.derived_from) return "inferred";
-  if (s.status === "provisional") return "provisional";
-  return "verified";
+/** Карточка с именем для скринридера и тестов: регион + заголовок. */
+function Section({ title, label, aside, children, className, testid }: { title: string; label?: string; aside?: ReactNode; children: ReactNode; className?: string; testid: string }) {
+  return (
+    <Panel role="region" aria-label={label ?? title} data-testid={testid} className={cn("flex flex-col gap-3", className)}>
+      <PanelCap title={title} aside={aside} className="mb-0" />
+      {children}
+    </Panel>
+  );
 }
 
 function PdfButton({ name }: { name: string }) {
@@ -81,55 +93,137 @@ function PdfButton({ name }: { name: string }) {
   );
 }
 
-function Header({ p }: { p: CandidateProfile }) {
-  const g = p.grade;
+/* ---------- Каркас: заголовок, действие, вкладки ---------- */
+
+function Frame({ tab, children, bare }: { tab: Tab; children: ReactNode; bare?: boolean }) {
+  return (
+    <div className={PAGE} data-testid="profile-page" data-tab={tab}>
+      <div className="flex flex-col gap-2.5 md:flex-row md:items-center md:justify-between">
+        <H1 className="text-[22px] leading-[1.2] md:text-[26px]">{PROFILE.title}</H1>
+        {!bare && (
+          <Link to="/onboarding" className={cn(buttonVariants({ variant: "outline", size: "md" }), "hidden md:inline-flex")} data-testid="profile-add">
+            {PROFILE.addEvidence}
+          </Link>
+        )}
+      </div>
+      {!bare && (
+        <nav aria-label={PROFILE.tabsLabel} className="flex gap-0 overflow-x-auto border-b border-hairline md:gap-1" data-testid="profile-tabs">
+          {TABS.map((k) => (
+            <Link
+              key={k}
+              to={k === "skills" ? "/me/profile" : `/me/profile?tab=${k}`}
+              replace
+              aria-current={k === tab ? "page" : undefined}
+              data-testid={`profile-tab-${k}`}
+              className={cn(
+                "-mb-px flex min-h-11 items-center whitespace-nowrap border-b-2 px-2 text-13 md:px-3.5 md:text-14",
+                k === tab ? "border-brand font-semibold text-ink" : "border-transparent font-medium text-muted",
+              )}
+            >
+              {PROFILE.tabs[k]}
+            </Link>
+          ))}
+        </nav>
+      )}
+      {!bare && (
+        <Link to="/onboarding" className={cn(buttonVariants({ size: "lg" }), "w-full md:hidden")} data-testid="profile-add-mobile">
+          {PROFILE.addEvidence}
+        </Link>
+      )}
+      {children}
+    </div>
+  );
+}
+
+/* ---------- Навыки ---------- */
+
+function skillTags(s: SkillWithTrust): string[] {
+  if (s.claimed_only) return [s.sources.includes("resume") ? PROFILE.claimedInResume : PROFILE.claimedSelf];
+  const testEv = s.top_evidence?.find((e) => e.source === "test");
+  const tags = ["test", "fsp", "github", "task", "resume"].filter((k) => s.sources.includes(k)).map((k) => (k === "test" ? PROFILE.testTag(dayMonth(testEv?.observed_at)) : SOURCE_TAG[k]));
+  if (!tags.length) tags.push(s.derived_from ? PROFILE.derived : PROFILE.claimedSelf);
+  return tags;
+}
+
+function SkillRows({ items }: { items: SkillWithTrust[] }) {
+  return (
+    <ul className="flex flex-col">
+      {items.map((s) => (
+        <li key={s.skill.slug} className="border-t border-hairline first:border-t-0">
+          <Link to={`/me/skills/${encodeURIComponent(s.skill.slug)}`} aria-label={PROFILE.skillLink(s.skill.name)} className="flex min-h-11 items-center gap-3 py-2">
+            <SkillTag name={s.skill.name} state={s.claimed_only ? "claimed" : "confirmed"} className="min-w-24" />
+            <span aria-label={`доверие ${s.claimed_only ? 0 : Math.round(s.level)} из 4`} className="font-mono text-12 font-semibold tracking-[1px] text-brand-fg">
+              {dotsText(s.claimed_only ? 0 : s.level)}
+            </span>
+            <Chips className="min-w-0 flex-1 justify-end">
+              {skillTags(s).map((t) => (
+                <Tag key={t}>{t}</Tag>
+              ))}
+            </Chips>
+            <span aria-hidden className="text-muted">
+              ›
+            </span>
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function SkillsCard({ title, items, testid }: { title: string; items: SkillWithTrust[]; testid: string }) {
+  if (!items.length) return null;
+  return (
+    <Section title={title} testid={testid} aside={<Num className="text-12 text-muted">{items.length}</Num>}>
+      <SkillRows items={items} />
+    </Section>
+  );
+}
+
+function StatusCard({ p, standing }: { p: CandidateProfile; standing?: CandidateStanding }) {
+  const confirmed = standing?.grade ?? null;
+  const shown = confirmed ?? p.grade.grade ?? null;
+  const role = standing?.profession ?? p.category?.primary_role;
   const until = p.active_until ? new Date(p.active_until) : null;
   return (
-    <Card role="region" aria-label="Шапка профиля" data-testid="profile-header" className="flex flex-col gap-4 p-5">
-      <div className="flex items-center gap-4">
-        <ConstellationAvatar seed={p.pseudonym} size={72} />
-        <div className="flex min-w-0 flex-col gap-0.5">
-          <h2 className="break-words font-mono text-24 font-semibold">{p.pseudonym}</h2>
-          <span className="text-13 text-muted">{T.seenAs}</span>
-        </div>
-      </div>
-      {g.grade ? (
-        <div className="flex flex-col items-start gap-1.5">
-          <GradeBadge
-            grade={GRADE_LABEL[g.grade] ?? g.grade}
-            role={p.category ? roleLabel(p.category.primary_role) : undefined}
-            stack={p.category?.primary_stack[0]}
-            preliminary={g.preliminary}
-            hint={g.next_grade?.hints[0]}
-          />
-          {g.preliminary && (
-            <span className="text-12 text-muted">
+    <Panel role="region" aria-label={PROFILE.claimedAndConfirmed} data-testid="profile-status-card" className="flex flex-col gap-2.5">
+      <Lbl>{PROFILE.claimedAndConfirmed}</Lbl>
+      {shown ? (
+        <>
+          <Chips className="items-center">
+            <GradeTag claimed={!confirmed} data-testid="profile-grade">
+              {[gradeLabel(shown), role ? roleLabel(role) : null].filter(Boolean).join(" · ")}
+            </GradeTag>
+            <StatusTag state={confirmed ? "confirmed" : "claimed"} data-testid="profile-grade-status">
+              {confirmed ? HOME.confirmed(dayMonth(standing?.confirmed_at), standing?.mode === "express") : HOME.notConfirmed}
+            </StatusTag>
+          </Chips>
+          {!confirmed && p.grade.preliminary && (
+            <p className="text-12 text-muted">
               {T.preliminary}
-              {g.confidence != null ? `, уверенность ${Math.round(g.confidence * 100)}%` : ""}
-            </span>
+              {p.grade.confidence != null ? `, уверенность ${Math.round(p.grade.confidence * 100)}%` : ""}
+            </p>
           )}
-        </div>
+        </>
       ) : (
         <p className="text-14 text-muted">{T.noGrade}</p>
       )}
-      <p className="flex items-center gap-2 rounded-lg border border-hairline px-4 py-3 text-14" data-testid="profile-status">
-        <b className="font-semibold">{STATUS_LABEL[p.search_status]}</b>
-        {p.search_status === "active" && until && (
-          <span className="font-mono text-13">до {until.toLocaleDateString("ru-RU", { day: "numeric", month: "long" })}</span>
-        )}
+      <Chips>
+        <StatusTag state={p.publishable === false ? "claimed" : "ok"} data-testid="profile-published">
+          {p.publishable === false ? PROFILE.hidden : PROFILE.published}
+        </StatusTag>
+      </Chips>
+      <p className="text-13 text-muted" data-testid="profile-status">
+        <b className="font-semibold text-ink">{STATUS_LABEL[p.search_status]}</b>
+        {p.search_status === "active" && until && <> до {until.toLocaleDateString("ru-RU", { day: "numeric", month: "long" })}</>}
       </p>
-      <div className="flex flex-wrap gap-2">
+      <p className="text-12 text-muted">{T.seenAs}</p>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
         <PdfButton name={p.pseudonym} />
         <Link to="/me/profile/edit" data-testid="profile-edit-link" className="inline-flex min-h-11 items-center font-semibold text-brand-fg">
           {T.editLink}
         </Link>
-        <Link to="/me/graph" data-testid="profile-graph-link">
-          <Button variant="ghost" size="sm" tabIndex={-1}>
-            {T.graph}
-          </Button>
-        </Link>
       </div>
-    </Card>
+    </Panel>
   );
 }
 
@@ -238,68 +332,9 @@ function Claimed({ p }: { p: CandidateProfile }) {
   );
 }
 
-/** Навыки, у которых после обновления выросла сила или которых раньше не было: они «загораются» волной. */
-function useIgnited(skills: SkillWithTrust[]): Map<string, number> {
-  const prev = useRef<Map<string, number> | null>(null);
-  const out = useRef(new Map<string, number>());
-  const sig = skills.map((s) => `${s.skill.slug}:${s.claimed_only ? 0 : s.level}`).join("|");
-  const seen = useRef<string | null>(null);
-  if (seen.current !== sig) {
-    const cur = new Map(skills.map((s) => [s.skill.slug, s.claimed_only ? 0 : s.level] as const));
-    const lit = new Map<string, number>();
-    if (prev.current) {
-      let i = 0;
-      for (const [slug, lvl] of cur) if (lvl > (prev.current.get(slug) ?? -1) && lvl > 0) lit.set(slug, i++);
-    }
-    out.current = lit;
-    prev.current = cur;
-    seen.current = sig;
-  }
-  return out.current;
-}
-
-function groupSkills(skills: SkillWithTrust[]): [string, SkillWithTrust[]][] {
-  const by = new Map<string, SkillWithTrust[]>();
-  for (const s of skills) by.set(s.skill.group, [...(by.get(s.skill.group) ?? []), s]);
-  const order = Object.keys(GROUP_LABEL);
-  const rank = (k: string) => (order.includes(k) ? order.indexOf(k) : order.length);
-  return [...by.entries()].sort((a, b) => rank(a[0]) - rank(b[0]));
-}
-
-function Skills({ skills }: { skills: SkillWithTrust[] }) {
-  const lit = useIgnited(skills);
-  return (
-    <Section title="Навыки" testid="profile-skills">
-      {skills.length === 0 ? (
-        <p className="text-14 text-muted">{T.skillsEmpty}</p>
-      ) : (
-        <>
-          {groupSkills(skills).map(([group, items]) => (
-            <div key={group} className="flex flex-col gap-2" data-testid={`profile-skill-group-${group}`}>
-              <SectionLabel>{GROUP_LABEL[group] ?? "Другое"}</SectionLabel>
-              <ul className="flex flex-wrap gap-2">
-                {items.map((s) => (
-                  <li
-                    key={`${s.skill.slug}-${lit.has(s.skill.slug) ? "lit" : ""}`}
-                    className={lit.has(s.skill.slug) ? "fsp-ignite rounded-md" : undefined}
-                    style={lit.has(s.skill.slug) ? ({ "--i": lit.get(s.skill.slug) } as React.CSSProperties) : undefined}
-                  >
-                    <Link to={`/me/skills/${encodeURIComponent(s.skill.slug)}`} aria-label={`${s.skill.name}: чем подтверждён`} className="inline-flex min-h-11 items-center rounded-md sm:min-h-0">
-                      <SkillChip name={s.skill.name} level={s.claimed_only ? 0 : dots(s.level)} variant={kindOf(s)} />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-          <p className="text-13 text-muted">{T.skillsHint}</p>
-        </>
-      )}
-    </Section>
-  );
-}
-
-function TeamSignals({ signals, soft }: { signals: TeamSignal[]; soft: string[] }) {
+function TeamSignals({ p }: { p: CandidateProfile }) {
+  const signals = p.team_signals ?? [];
+  const soft = p.claimed_soft ?? [];
   if (!signals.length && !soft.length) return null;
   return (
     <Section title="Командные сигналы" testid="profile-team">
@@ -320,9 +355,32 @@ function TeamSignals({ signals, soft }: { signals: TeamSignal[]; soft: string[] 
   );
 }
 
-function FspCard({ fsp, imported }: { fsp?: OwnerFsp | null; imported: boolean }) {
-  const items = fsp?.achievements ?? [];
-  const ranks = fsp?.ranks ?? [];
+function SkillsTab({ p, standing }: { p: CandidateProfile; standing?: CandidateStanding }) {
+  const skills = sortSkills(p.skills ?? []);
+  const confirmed = skills.filter((s) => !s.claimed_only);
+  const claimed = skills.filter((s) => s.claimed_only);
+  return (
+    <div className="flex flex-col gap-4 lg:grid lg:grid-cols-12 lg:items-start" data-testid="profile-skills">
+      <div className="order-2 flex flex-col gap-4 lg:order-none lg:col-span-8">
+        <SkillsCard title={PROFILE.confirmed} items={confirmed} testid="profile-skills-confirmed" />
+        <SkillsCard title={PROFILE.claimed} items={claimed} testid="profile-skills-claimed" />
+        <GradeWhy g={p.grade} />
+        <Claimed p={p} />
+        <TeamSignals p={p} />
+      </div>
+      <div className="order-1 flex flex-col gap-4 lg:order-none lg:col-span-4">
+        <StatusCard p={p} standing={standing} />
+        <Strength p={p} />
+      </div>
+    </div>
+  );
+}
+
+/* ---------- ФСП ---------- */
+
+function FspTab({ p, imported }: { p: CandidateProfile; imported: boolean }) {
+  const items = p.fsp?.achievements ?? [];
+  const ranks = p.fsp?.ranks ?? [];
   const placed: FspResult[] = items
     .filter((a) => a.place != null)
     .map((a) => ({
@@ -334,115 +392,176 @@ function FspCard({ fsp, imported }: { fsp?: OwnerFsp | null; imported: boolean }
       year: a.year,
     }));
   const unplaced = items.filter((a) => a.place == null);
+  const linked = Boolean(p.fsp?.verified);
   return (
-    <Section title="Достижения ФСП" testid="profile-fsp">
-      {items.length === 0 && ranks.length === 0 ? (
-        <p className="text-14 text-muted">{T.fspEmpty}</p>
-      ) : (
-        <>
-          {placed.length > 0 && <FspProtocol results={placed} />}
-          {unplaced.length > 0 && (
-            <ul className="flex flex-col gap-1">
-              {unplaced.map((a) => (
-                <li key={a.fact_id} className="text-14">
-                  {a.title} <span className="font-mono text-12 text-muted">· {a.year}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-          {ranks.length > 0 && (
-            <ul className="flex flex-wrap gap-2 border-t border-hairline pt-3">
-              {ranks.map((r) => (
-                <li key={r.discipline}>
-                  <Badge>
-                    {RANK_LABEL[r.rank] ?? r.rank} · {DISCIPLINE_LABEL[r.discipline] ?? r.discipline}
-                  </Badge>
-                </li>
-              ))}
-            </ul>
-          )}
-        </>
-      )}
-      {imported && (
-        <p role="status" className="text-14 font-semibold text-brand-fg">
-          {T.fspImported}
-        </p>
-      )}
-      <FspLinkPanel next="/me" />
-    </Section>
+    <div className="flex flex-col gap-4" data-testid="profile-fsp-tab">
+      <Section
+        title={PROFILE.fspTitle}
+        label="Достижения ФСП"
+        testid="profile-fsp"
+        aside={<StatusTag state={linked ? "ok" : "claimed"}>{linked ? PROFILE.fspLinked : PROFILE.fspNotLinked}</StatusTag>}
+      >
+        {items.length === 0 && ranks.length === 0 ? (
+          <p className="text-14 text-muted">{T.fspEmpty}</p>
+        ) : (
+          <>
+            {placed.length > 0 && <FspProtocol results={placed} />}
+            {unplaced.length > 0 && (
+              <ul className="flex flex-col gap-1">
+                {unplaced.map((a) => (
+                  <li key={a.fact_id} className="text-14">
+                    {a.title} <span className="font-mono text-12 text-muted">· {a.year}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {ranks.length > 0 && (
+              <ul className="flex flex-wrap gap-2 border-t border-hairline pt-3">
+                {ranks.map((r) => (
+                  <li key={r.discipline}>
+                    <Badge>
+                      {RANK_LABEL[r.rank] ?? r.rank} · {DISCIPLINE_LABEL[r.discipline] ?? r.discipline}
+                    </Badge>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </>
+        )}
+        {imported && (
+          <p role="status" className="text-14 font-semibold text-brand-fg">
+            {T.fspImported}
+          </p>
+        )}
+        <FspLinkPanel next="/me/profile?tab=fsp" />
+      </Section>
+    </div>
   );
 }
 
-function ExperienceCard({ items }: { items: ExperienceItem[] }) {
-  if (!items.length) return null;
+/* ---------- Резюме ---------- */
+
+function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <Section title="Опыт" testid="profile-experience">
-      <ul className="flex flex-col gap-3">
-        {items.map((e, i) => (
-          <li key={`${e.title}-${i}`} className="flex flex-col gap-0.5">
-            <span className="font-semibold">{e.title}</span>
-            <span className="text-14 text-muted">{[e.company, periodRu(e.start, e.end)].filter(Boolean).join(" · ")}</span>
-          </li>
-        ))}
-      </ul>
-    </Section>
+    <div className="flex min-h-11 items-center gap-3 border-t border-hairline py-2.5 first:border-t-0 first:pt-0">
+      <Lbl className="w-24 flex-none">{label}</Lbl>
+      <div className="min-w-0 flex-1">{children}</div>
+    </div>
   );
 }
 
-/** «Мой профиль» (макет D): шапка, что усилит, почему такой грейд, навыки по группам, ФСП, командные сигналы. */
+function ResumeTab({ p }: { p: CandidateProfile }) {
+  const pref = p.preferences;
+  const formats = formatsText(pref.formats ?? []);
+  const months = p.experience_months;
+  const exp = p.experience ?? [];
+  const roles = (p.desired_roles ?? []).map(roleLabel);
+  const none = <StatusTag state="claimed">{PROFILE.notSpecified}</StatusTag>;
+  return (
+    <div className="flex flex-col gap-4" data-testid="profile-resume">
+      <Section title={PROFILE.resume} label="Резюме" testid="profile-resume-card">
+        <div>
+          <Row label={PROFILE.city}>{pref.city ? <Num className="text-14">{pref.city}</Num> : none}</Row>
+          <Row label={PROFILE.salary}>{pref.salary_min != null ? <Num className="text-14">{PROFILE.salaryFrom(formatRub(pref.salary_min))}</Num> : none}</Row>
+          <Row label={PROFILE.format}>{formats ? <Num className="text-14">{formats.toLowerCase()}</Num> : none}</Row>
+          <Row label={PROFILE.experience}>{months != null ? <Num className="text-14">{PROFILE.experienceMonths(months)}</Num> : none}</Row>
+          {roles.length > 0 && (
+            <Row label={PROFILE.roles}>
+              <Num className="text-14">{roles.join(", ")}</Num>
+            </Row>
+          )}
+        </div>
+        <Link to="/me/profile/edit" data-testid="profile-edit-link" className="inline-flex min-h-11 items-center self-start font-semibold text-brand-fg">
+          {T.editLink}
+        </Link>
+      </Section>
+      {exp.length > 0 && (
+        <Section title="Опыт" testid="profile-experience">
+          <ul className="flex flex-col gap-3">
+            {exp.map((e, i) => (
+              <li key={`${e.title}-${i}`} className="flex flex-col gap-0.5">
+                <span className="font-semibold">{e.title}</span>
+                <span className="text-14 text-muted">{[e.company, periodRu(e.start, e.end)].filter(Boolean).join(" · ")}</span>
+              </li>
+            ))}
+          </ul>
+        </Section>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Профиль кандидата `/me/profile` (E38-6, макеты v2_me-profile__*, бриф §6.7): вкладки «Навыки · ФСП · Резюме · Граф»
+ * (`?tab=`), «Подтверждено» и «Заявлено» отдельно, справа статус и грейд. Граф — бывший `/me/graph`.
+ */
 export default function Profile() {
+  const [sp] = useSearchParams();
+  const raw = sp.get("tab");
+  const tab: Tab = TABS.includes(raw as Tab) ? (raw as Tab) : "skills";
+  if (tab === "graph")
+    return (
+      <Frame tab={tab}>
+        <GraphView />
+      </Frame>
+    );
+  return <ProfileData tab={tab} />;
+}
+
+function ProfileData({ tab }: { tab: Tab }) {
   const q = useGetProfileCandidatesMeProfileGet();
+  const sq = useMyStandingCandidatesMeStandingGet({ query: { retry: false } });
   const [imported, setImported] = useState(false);
   useEventStream(() => setImported(true), ["fsp.imported"]);
-  const title = <h1 className="sr-only">{T.title}</h1>;
+
   if (q.isPending)
     return (
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-4" data-testid="profile-loading">
-        {title}
-        <p role="status" className="sr-only">
-          {T.loading}
-        </p>
-        <Skeleton className="h-52" />
-        <Skeleton className="h-40" />
-      </div>
+      <Frame tab={tab} bare>
+        <div className="flex flex-col gap-3" data-testid="profile-loading">
+          <p role="status" className="sr-only">
+            {PROFILE.loading}
+          </p>
+          <div className="grid gap-4 lg:grid-cols-3">
+            {[0, 1, 2].map((i) => (
+              <Skeleton key={i} className="h-40" />
+            ))}
+          </div>
+        </div>
+      </Frame>
     );
-  if (q.isError || q.data.status !== 200)
+  if (q.isError || q.data.status !== 200) {
+    const status = q.error?.status;
     return (
-      <div className="mx-auto w-full max-w-2xl">
-        {title}
-        <ErrorState title={T.loadError} description={T.loadErrorHint} onRetry={() => void q.refetch()} />
-      </div>
+      <Frame tab={tab} bare>
+        <div className="w-full max-w-2xl" data-testid="profile-error">
+          <ErrorState title={PROFILE.loadError} code={status ? PROFILE.errorCode(status) : undefined} onRetry={() => void q.refetch()} />
+        </div>
+      </Frame>
     );
+  }
   const p = q.data.data;
-  const empty = !p.grade.grade && !(p.skills ?? []).length;
+  const standing = sq.data?.status === 200 ? sq.data.data : undefined;
+  const empty = !(p.skills ?? []).length && !(p.fsp?.achievements.length) && !(p.fsp?.ranks.length) && !p.grade.grade;
+  if (empty && tab === "skills")
+    return (
+      <Frame tab={tab} bare>
+        <EmptyState
+          className="min-h-[200px]"
+          title={PROFILE.empty}
+          description={T.noGrade}
+          action={
+            <Link to="/onboarding" className={buttonVariants({ size: "lg" })} data-testid="profile-empty-action">
+              {PROFILE.addEvidence}
+            </Link>
+          }
+        />
+      </Frame>
+    );
   return (
-    <div className="mx-auto grid w-full max-w-5xl items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]" data-testid="profile-page">
-      {title}
-      <div className="flex min-w-0 flex-col gap-4">
-        <Header p={p} />
-        <Strength p={p} />
-        <GradeWhy g={p.grade} />
-        <Claimed p={p} />
-      </div>
-      <div className="flex min-w-0 flex-col gap-4">
-        {empty && !(p.fsp?.achievements.length) ? (
-          <EmptyState
-            title="Профиль пока пуст"
-            description="Загрузите резюме или подключите ФСП: навыки и грейд появятся сами."
-            action={
-              <Link to="/onboarding">
-                <Button size="sm" tabIndex={-1}>
-                  Загрузить резюме
-                </Button>
-              </Link>
-            }
-          />
-        ) : null}
-        <Skills skills={p.skills ?? []} />
-        <FspCard fsp={p.fsp} imported={imported} />
-        <TeamSignals signals={p.team_signals ?? []} soft={p.claimed_soft ?? []} />
-        <ExperienceCard items={p.experience ?? []} />
-      </div>
-    </div>
+    <Frame tab={tab}>
+      {tab === "skills" && <SkillsTab p={p} standing={standing} />}
+      {tab === "fsp" && <FspTab p={p} imported={imported} />}
+      {tab === "resume" && <ResumeTab p={p} />}
+    </Frame>
   );
 }

@@ -3,18 +3,15 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 
 import {
   Button,
-  Checkbox,
-  cn,
-  ConstellationAvatar,
+  buttonVariants,
   EmptyState,
   ErrorState,
-  FspProtocol,
-  GradeBadge,
-  MatchRing,
-  MatchWhy,
-  pseudonymLabel,
-  SectionLabel,
-  SkillChip,
+  FilterChip,
+  formatRub,
+  H1,
+  H2,
+  Num,
+  RankedCandidateCard,
   Skeleton,
 } from "@fsp/ui";
 
@@ -30,24 +27,20 @@ import {
 } from "@/api/endpoints/recommendations/recommendations";
 import type { CandidateCard, Chip } from "@/api/model";
 import { ApiError } from "@/api/mutator";
-import { toCardData } from "@/features/employer/search-model";
+import { OfferDialog } from "@/features/offers/OfferDialog";
+import { splitConfirmed, stackOptions, toRankedCard } from "./category-model";
 import {
   applyFilters,
-  claimedVsConfirmed,
   type CandidateSort,
   type CategoryFilters,
   EMPTY_CATEGORY_FILTERS,
-  fixed2,
   gradeTitle,
-  isDefaultFilters,
   professionTitle,
   sortCards,
 } from "./need-model";
 import { CAT_TEXT as T, SUB_TEXT } from "./text";
 
 const PAGE = 20;
-const STATUS_TEXT = { match: T.stMatch, below: T.stBelow, above: T.stAbove, none: T.stNone } as const;
-const STATUS_MARK = { match: "✓", below: "⚠", above: "↑", none: "—" } as const;
 const SORTS: [CandidateSort, string][] = [
   ["rank", T.sortRank],
   ["match", T.sortMatch],
@@ -56,116 +49,54 @@ const SORTS: [CandidateSort, string][] = [
 
 interface RowProps {
   c: CandidateCard;
-  place: number;
   profession: string;
+  primary: boolean;
   shortlisted: boolean;
   canShortlist: boolean;
   onToggleShortlist: () => void;
-  onInvite: () => void;
+  onInterest: () => void;
   onDismiss: () => void;
   onOpen: () => void;
 }
 
-function Row({ c, place, profession, shortlisted, canShortlist, onToggleShortlist, onInvite, onDismiss, onOpen }: RowProps) {
-  const d = toCardData(c);
-  const pseudo = pseudonymLabel(d.role, d.number);
-  const cv = claimedVsConfirmed(c, profession);
-  const rank = c.strength?.rank != null ? fixed2(c.strength.rank) : null;
-  const why = d.why ?? [];
-  const top = c.strength?.top ?? [];
+function Row({ c, profession, primary, shortlisted, canShortlist, onToggleShortlist, onInterest, onDismiss, onOpen }: RowProps) {
   return (
     <li>
-      <article aria-label={pseudo} className="grid gap-4 rounded-xl border border-hairline bg-card p-4 shadow-xs">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <button type="button" onClick={onOpen} aria-label={`Открыть профиль ${pseudo}`} className="flex min-w-0 items-center gap-3 text-left">
-            <ConstellationAvatar seed={pseudo} />
-            <span className="grid min-w-0 gap-1">
-              <span className="font-mono text-15 font-semibold">{pseudo}</span>
-              <span className="flex flex-wrap items-center gap-2">
-                <GradeBadge grade={d.grade} preliminary={d.gradePreliminary} />
-                <span className="text-12 text-muted">{T.place(place, rank)}</span>
-              </span>
-            </span>
-          </button>
-          <div className="flex items-center gap-4">
-            <div className="grid justify-items-center gap-1 text-center">
-              <MatchRing value={d.match} size={52} />
-              <span className="text-xs text-muted">{T.match}</span>
-            </div>
-            <div className="grid gap-0.5 text-center">
-              <span className="font-mono text-18 font-semibold">{c.strength ? fixed2(c.strength.value) : "—"}</span>
-              <span className="text-xs text-muted">{T.strength}</span>
-            </div>
-          </div>
-        </div>
-
-        <ul className="flex flex-wrap gap-1.5" aria-label="Ключевые навыки">
-          {d.skills.slice(0, 5).map((s) => (
-            <li key={s.name}>
-              <SkillChip name={s.name} level={s.level} variant={s.variant} />
-            </li>
-          ))}
-        </ul>
-
-        <section aria-label={T.claimedVs} className="grid gap-2 rounded-lg border border-tint-200 bg-tint-50 p-3">
-          <SectionLabel>{T.claimedVs}</SectionLabel>
-          <div className="flex flex-wrap items-center gap-3 font-mono text-13">
-            <span>
-              <span className="text-muted">{T.claimed}: </span>
-              <b>{cv.claimed ? gradeTitle(cv.claimed) : T.notSpecified}</b>
-            </span>
-            <span aria-hidden>→</span>
-            <span>
-              <span className="text-muted">{T.confirmed}: </span>
-              <b>{cv.confirmed ? gradeTitle(cv.confirmed) : T.noTest}</b>
-            </span>
-            <span
-              className={cn(
-                "rounded-md px-2 py-0.5 text-12 font-semibold",
-                cv.status === "below" ? "bg-warning-bg text-warning-fg" : cv.status === "none" ? "bg-card text-muted" : "bg-card text-brand-fg",
-              )}
-            >
-              {STATUS_MARK[cv.status]} {STATUS_TEXT[cv.status]}
-            </span>
-          </div>
-          <p className="text-12 text-muted">{cv.confirmed ? T.noteTest : T.noteNone}</p>
-        </section>
-
-        {why.length > 0 || top.length > 0 ? (
-          <div className="grid gap-3 md:grid-cols-2">
-            {why.length > 0 && <MatchWhy items={why} />}
-            {top.length > 0 && (
-              <ul className="grid gap-1 text-13" aria-label={T.strength}>
-                {top.map((p) => (
-                  <li key={p.code} className="flex justify-between gap-3">
-                    <span>{p.text}</span>
-                    <span className="font-mono text-muted">{fixed2(p.value)}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        ) : (
-          <p className="text-13 text-muted">{T.noWhy}</p>
-        )}
-        {d.fsp && d.fsp.length > 0 ? <FspProtocol results={d.fsp.slice(0, 1)} /> : <p className="text-12 text-muted">{T.noFsp}</p>}
-
-        <div className="flex flex-wrap items-center gap-2">
-          <Button size="sm" onClick={onInvite}>
-            {T.invite}
-          </Button>
-          {canShortlist && (
-            <Button size="sm" variant="outline" aria-pressed={shortlisted} onClick={onToggleShortlist}>
-              {shortlisted ? `✓ ${T.shortlisted}` : T.shortlist}
+      <RankedCandidateCard
+        c={toRankedCard(c, profession)}
+        onOpen={onOpen}
+        actions={
+          <>
+            <Button variant={primary ? "default" : "outline"} className="h-10 md:h-9" onClick={onInterest}>
+              {T.interest}
             </Button>
-          )}
-          <Button size="sm" variant="ghost" onClick={onDismiss}>
-            {T.dismiss}
-          </Button>
-          {d.expectations?.[0] && <span className="ml-auto font-mono text-13 font-semibold">{d.expectations[0]}</span>}
-        </div>
-      </article>
+            {canShortlist && (
+              <Button variant="outline" className="h-10 md:h-9" aria-pressed={shortlisted} onClick={onToggleShortlist}>
+                {shortlisted ? `✓ ${T.shortlisted}` : T.shortlist}
+              </Button>
+            )}
+            <Button variant="ghost" size="sm" className="h-9 md:h-8" onClick={onDismiss}>
+              {T.dismiss}
+            </Button>
+          </>
+        }
+      />
     </li>
+  );
+}
+
+function Skeletons() {
+  return (
+    <div className="grid gap-4" aria-hidden data-testid="category-loading">
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="grid gap-2.5 rounded-xl border border-hairline bg-card p-4">
+          <Skeleton className="h-4 w-2/5" />
+          <Skeleton className="h-3 w-full" />
+          <Skeleton className="h-3 w-full" />
+          <Skeleton className="h-3 w-[70%]" />
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -174,6 +105,7 @@ export default function CategoryCandidates() {
   const { profession = "", grade = "" } = useParams();
   const [params] = useSearchParams();
   const needId = params.get("need_id");
+  const [interestFor, setInterestFor] = useState<CandidateCard | null>(null);
   const navigate = useNavigate();
 
   const [items, setItems] = useState<CandidateCard[]>([]);
@@ -274,22 +206,20 @@ export default function CategoryCandidates() {
     const base = items.filter((c) => !dismissed.has(c.pseudo_id));
     return sortCards(applyFilters(base, filters, profession, shortlist), sort);
   }, [items, dismissed, filters, profession, shortlist, sort]);
+  const groups = useMemo(() => splitConfirmed(visible, profession), [visible, profession]);
+  const stacks = useMemo(() => stackOptions(items), [items]);
 
   const set = <K extends keyof CategoryFilters>(k: K, v: CategoryFilters[K]) => setFilters((f) => ({ ...f, [k]: v }));
-  const check = (k: "confirmedOnly" | "fspOnly" | "remoteOnly", label: string) => (
-    <label className="flex min-h-11 items-center gap-2 text-13">
-      <Checkbox checked={filters[k]} onCheckedChange={(v) => set(k, v === true)} aria-label={label} />
-      {label}
-    </label>
-  );
+  const cat = catList?.find((x) => x.profession === profession && x.grade === grade);
+  const back = needId ? `/employer?need=${encodeURIComponent(needId)}&cat=${encodeURIComponent(`${profession}:${grade}`)}` : "/employer";
 
   if (failed === "invalid") {
     return (
-      <div className="p-6">
+      <div className="mx-auto w-full max-w-[1328px] px-4 py-6 md:px-6">
         <EmptyState
           title={T.invalid}
           action={
-            <Link to="/employer/needs/new" className="font-semibold text-brand-fg hover:underline">
+            <Link to="/employer" className={buttonVariants({ variant: "outline" })}>
               {T.back}
             </Link>
           }
@@ -298,141 +228,172 @@ export default function CategoryCandidates() {
     );
   }
 
+  const first = loading && items.length === 0 && !failed;
+  const stat = (value: string, label: string) => (
+    <span>
+      <Num className="text-lg">{value}</Num> <span className="font-mono text-11 font-medium text-muted">{label}</span>
+    </span>
+  );
+  const row = (c: CandidateCard, primary: boolean) => (
+    <Row
+      key={c.pseudo_id}
+      c={c}
+      profession={profession}
+      primary={primary}
+      shortlisted={shortlist.has(c.pseudo_id)}
+      canShortlist={!!needId}
+      onToggleShortlist={() => toggleShortlist(c.pseudo_id)}
+      onInterest={() => setInterestFor(c)}
+      onDismiss={() => {
+        react(c.pseudo_id, "dismiss");
+        setDismissed((x) => new Set(x).add(c.pseudo_id));
+      }}
+      onOpen={() => {
+        react(c.pseudo_id, "open");
+        navigate(`/employer/candidates/${c.pseudo_id}?source=match${needId ? `&need_id=${encodeURIComponent(needId)}` : ""}`);
+      }}
+    />
+  );
+
   return (
-    <div className="grid gap-6 px-4 py-6 md:px-6 lg:px-10 lg:py-8">
-      <header className="grid gap-2">
-        <nav aria-label="Навигация" className="text-13 text-muted">
-          <Link to={needId ? `/employer/needs/${needId}` : "/employer/needs/new"} className="font-semibold text-brand-fg hover:underline">
-            {T.kicker}
-          </Link>{" "}
-          / {title}
+    <div className="mx-auto flex w-full max-w-[1328px] flex-col gap-4 px-4 py-4 md:px-6 md:py-6">
+      <header className="flex flex-col gap-2">
+        <nav aria-label="Навигация">
+          <Link to={back} className="text-13 font-semibold text-brand-fg hover:underline">
+            ← {T.back}
+          </Link>
         </nav>
-        <h1 className="font-mono text-24 font-semibold">{title}</h1>
-        {total !== null && <p className="text-14 text-muted">{T.lead(total)}</p>}
-        <Link to={`/employer/subscriptions?profession=${encodeURIComponent(profession)}&grade=${encodeURIComponent(grade)}`} className="w-fit text-14 font-semibold text-brand-fg hover:underline">
-          {SUB_TEXT.fromCategory}
-        </Link>
-        {needId && shortlist.size > 0 && <p className="font-mono text-13 font-semibold text-brand-fg">{T.shortlistCount(shortlist.size)}</p>}
-      </header>
-
-      <div className="grid items-start gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <aside aria-label={T.filters} className="grid gap-3 rounded-xl border border-hairline bg-card p-4">
-          <SectionLabel>{T.sort}</SectionLabel>
-          <div role="group" aria-label={T.sort} className="inline-flex overflow-hidden rounded-lg border border-hairline">
-            {SORTS.map(([k, label]) => (
-              <button
-                key={k}
-                type="button"
-                aria-pressed={sort === k}
-                onClick={() => setSort(k)}
-                className={cn("h-11 flex-1 px-2 text-12 font-semibold sm:h-10", sort === k ? "bg-brand text-on-brand" : "bg-card text-ink hover:bg-tint-50")}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          <SectionLabel>{T.filters}</SectionLabel>
-          <label className="grid gap-1 text-13">
-            {T.minStrength}
-            <select
-              value={filters.minStrength}
-              onChange={(e) => set("minStrength", Number(e.target.value))}
-              className="h-11 rounded-lg border border-hairline bg-card px-3 text-14"
-            >
-              <option value={0}>Любая</option>
-              <option value={0.3}>от 0,30</option>
-              <option value={0.5}>от 0,50</option>
-              <option value={0.7}>от 0,70</option>
-            </select>
-          </label>
-          {check("confirmedOnly", T.confirmedOnly)}
-          {check("fspOnly", T.fspOnly)}
-          {check("remoteOnly", T.remote)}
-          <label className="grid gap-1 text-13">
-            {T.budget}
-            <input
-              inputMode="numeric"
-              value={filters.budgetMax ?? ""}
-              onChange={(e) => {
-                const n = Number(e.target.value.replace(/\D/g, ""));
-                set("budgetMax", n > 0 ? n : null);
-              }}
-              placeholder="220000"
-              className="h-11 rounded-lg border border-hairline bg-card px-3 font-mono text-14"
-            />
-          </label>
-          <Button variant="ghost" size="sm" disabled={isDefaultFilters(filters)} onClick={() => setFilters(EMPTY_CATEGORY_FILTERS)}>
-            {T.reset}
-          </Button>
-          <p className="text-12 text-muted">{T.filterNote}</p>
-        </aside>
-
-        <section className="grid min-w-0 gap-4">
-          {failed === "load" && <ErrorState title={T.failed} onRetry={() => void load(null)} />}
-          {chips.length > 0 && (
-            <ul aria-label={T.tuned} className="flex flex-wrap items-center gap-2">
-              {chips.map((c) => (
-                <li key={c.feature} className="flex items-center gap-1 rounded-full border border-tint-200 bg-tint-50 py-1 pl-3 pr-1 text-13">
-                  <span>
-                    {T.tuned}: {c.text}
-                  </span>
-                  <button
-                    type="button"
-                    aria-label={T.tunedReset}
-                    onClick={resetChips}
-                    className="flex size-8 items-center justify-center rounded-full text-muted hover:bg-tint-100"
-                  >
-                    ×
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-          {shortlistError && (
-            <p role="alert" className="text-13 text-error">
-              {T.shortlistFailed}
-            </p>
-          )}
-          {loading && items.length === 0 && !failed && (
-            <div className="grid gap-3" aria-hidden>
-              <Skeleton className="h-56 rounded-xl" />
-              <Skeleton className="h-56 rounded-xl" />
+        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
+          <H1 className="text-[22px] md:text-[26px]">{title}</H1>
+          {!first && !failed && (
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-1" data-testid="category-stats">
+              {stat(String(total ?? cat?.candidates ?? 0), T.people)}
+              {cat?.median_salary ? stat(formatRub(cat.median_salary), T.median) : null}
+              {cat?.fsp_share !== null && cat?.fsp_share !== undefined ? stat(`${Math.round(cat.fsp_share * 100)} %`, T.withFsp) : null}
             </div>
           )}
-          {!loading && !failed && total === 0 && <EmptyState title={T.empty} />}
-          {!failed && total !== 0 && items.length > 0 && visible.length === 0 && <EmptyState title={T.emptyFiltered} description={T.emptyFilteredHint} />}
-          {visible.length > 0 && (
-            <ol aria-label={T.list} className="grid gap-4">
-              {visible.map((c, i) => (
-                <Row
-                  key={c.pseudo_id}
-                  c={c}
-                  place={i + 1}
-                  profession={profession}
-                  shortlisted={shortlist.has(c.pseudo_id)}
-                  canShortlist={!!needId}
-                  onToggleShortlist={() => toggleShortlist(c.pseudo_id)}
-                  onInvite={() => navigate(`/employer/offers/new?candidate=${c.pseudo_id}`)}
-                  onDismiss={() => {
-                    react(c.pseudo_id, "dismiss");
-                    setDismissed((s) => new Set(s).add(c.pseudo_id));
-                  }}
-                  onOpen={() => {
-                    react(c.pseudo_id, "open");
-                    navigate(`/employer/candidates/${c.pseudo_id}?source=match`);
-                  }}
-                />
+        </div>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-14">
+          <Link
+            to={`/employer/subscriptions?profession=${encodeURIComponent(profession)}&grade=${encodeURIComponent(grade)}`}
+            className="font-semibold text-brand-fg hover:underline"
+          >
+            {SUB_TEXT.fromCategory}
+          </Link>
+          {needId && shortlist.size > 0 && <span className="font-mono text-13 font-semibold text-brand-fg">{T.shortlistCount(shortlist.size)}</span>}
+        </div>
+      </header>
+
+      {first && <Skeletons />}
+      {failed === "load" && <ErrorState title={T.failed} onRetry={() => void load(null)} />}
+
+      {!first && !failed && items.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2" role="group" aria-label={T.filters}>
+          {stacks.length > 0 && (
+            <select
+              aria-label={T.stack}
+              value={filters.skill ?? ""}
+              onChange={(e) => set("skill", e.target.value || null)}
+              className="h-9 rounded-sm border border-hairline bg-card px-2 font-mono text-12 text-ink"
+            >
+              <option value="">{T.stackAny}</option>
+              {stacks.map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
               ))}
+            </select>
+          )}
+          <FilterChip pressed={filters.fspOnly} onToggle={() => set("fspOnly", !filters.fspOnly)}>
+            {T.fspOnly}
+          </FilterChip>
+          <FilterChip pressed={filters.remoteOnly} onToggle={() => set("remoteOnly", !filters.remoteOnly)}>
+            {T.remote}
+          </FilterChip>
+          <FilterChip pressed={filters.confirmedOnly} onToggle={() => set("confirmedOnly", !filters.confirmedOnly)}>
+            {T.confirmedOnly}
+          </FilterChip>
+          <select
+            aria-label={T.sort}
+            value={sort}
+            onChange={(e) => setSort(e.target.value as CandidateSort)}
+            className="ml-auto h-9 rounded-sm border border-hairline bg-card px-2 font-mono text-12 text-ink"
+          >
+            {SORTS.map(([k, label]) => (
+              <option key={k} value={k}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {chips.length > 0 && (
+        <ul aria-label={T.tuned} className="m-0 flex list-none flex-wrap items-center gap-2 p-0">
+          {chips.map((c) => (
+            <li key={c.feature} className="flex items-center gap-1 rounded-sm border border-tint-200 bg-tint-50 py-0.5 pr-1 pl-2.5 font-mono text-12 text-chip-fg">
+              <span>
+                {T.tuned}: {c.text}
+              </span>
+              <button type="button" aria-label={T.tunedReset} onClick={resetChips} className="flex size-8 items-center justify-center rounded-sm text-muted hover:bg-tint-100">
+                ×
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {shortlistError && (
+        <p role="alert" className="text-13 text-error">
+          {T.shortlistFailed}
+        </p>
+      )}
+
+      {!loading && !failed && total === 0 && <EmptyState title={T.empty} />}
+      {!failed && total !== 0 && items.length > 0 && visible.length === 0 && (
+        <EmptyState
+          title={T.emptyFiltered}
+          action={
+            <Button size="lg" onClick={() => setFilters(EMPTY_CATEGORY_FILTERS)}>
+              {T.reset}
+            </Button>
+          }
+        />
+      )}
+      {visible.length > 0 && (
+        <>
+          {groups.confirmed.length > 0 && (
+            <ol aria-label={T.list} className="m-0 grid list-none gap-4 p-0">
+              {groups.confirmed.map((c, i) => row(c, i === 0))}
             </ol>
           )}
-          {total !== null && items.length > 0 && <p className="text-12 text-muted">{T.shown(visible.length, total)}</p>}
-          {cursor && (
-            <Button variant="outline" onClick={() => void load(cursor)} loading={loading} className="justify-self-center">
-              {T.more}
-            </Button>
+          {groups.unconfirmed.length > 0 && (
+            <section aria-label={T.unconfirmed} className="grid gap-4">
+              <div className="mt-1 flex items-center justify-between gap-2">
+                <H2>{T.unconfirmed}</H2>
+                <Num className="text-12 text-muted">{groups.unconfirmed.length}</Num>
+              </div>
+              <ol aria-label={`${T.unconfirmed}: ${T.list}`} className="m-0 grid list-none gap-4 p-0">
+                {groups.unconfirmed.map((c) => row(c, false))}
+              </ol>
+            </section>
           )}
-        </section>
-      </div>
+        </>
+      )}
+      {total !== null && items.length > 0 && <p className="m-0 text-12 text-muted">{T.shown(visible.length, total)}</p>}
+      {cursor && (
+        <Button variant="outline" onClick={() => void load(cursor)} loading={loading} className="justify-self-center">
+          {T.more}
+        </Button>
+      )}
+      {interestFor && (
+        <OfferDialog
+          open
+          stay
+          mode="interest"
+          onOpenChange={(v) => !v && setInterestFor(null)}
+          candidate={{ pseudoId: interestFor.pseudo_id, pseudonym: interestFor.pseudonym, salaryMin: interestFor.salary_min ?? null }}
+        />
+      )}
     </div>
   );
 }

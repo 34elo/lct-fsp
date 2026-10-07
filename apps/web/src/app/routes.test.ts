@@ -35,8 +35,9 @@ describe("routes", () => {
   it("у каждого маршрута есть страница или переадресация (заглушек нет)", () => {
     for (const r of ROUTES) {
       if (r.redirect) {
-        expect(byPath.get(r.redirect)?.redirect, `${r.path} → ${r.redirect}`).toBeUndefined();
-        expect(byPath.has(r.redirect), r.redirect).toBe(true);
+        const target = r.redirect.split("?")[0];
+        expect(byPath.get(target)?.redirect, `${r.path} → ${r.redirect}`).toBeUndefined();
+        expect(byPath.has(target), r.redirect).toBe(true);
       } else {
         expect(appSource, `${r.path} подключён в App.tsx`).toContain(`path="${r.path}"`);
       }
@@ -61,7 +62,7 @@ describe("routes", () => {
   it("меню: кандидат и работодатель по ux-spec, админ не больше 6 пунктов", () => {
     expect(NAV.candidate.map((n) => n.label)).toEqual(["Главная", "Тест и грейд", "Приглашения", "Профиль"]);
     // «Шорт-лист» добавится вместе с общим экраном (E35-4): без экрана пункта нет.
-    expect(NAV.employer.map((n) => n.label)).toEqual(["Подбор", "Приглашения", "Компания"]);
+    expect(NAV.employer.map((n) => n.label)).toEqual(["Подбор", "Шорт-лист", "Приглашения", "Компания"]);
     expect(NAV.admin.length).toBeLessThanOrEqual(6);
   });
 
@@ -70,8 +71,12 @@ describe("routes", () => {
     expect(activeNav(NAV.candidate, "/me/skills/python")?.label).toBe("Главная");
     expect(activeNav(NAV.candidate, "/me/assessment/attempts/1")?.label).toBe("Тест и грейд");
     expect(activeNav(NAV.candidate, "/me/interests")?.label).toBe("Приглашения");
-    expect(activeNav(NAV.candidate, "/me/graph")?.label).toBe("Профиль");
+    expect(activeNav(NAV.candidate, "/me/profile/edit")?.label).toBe("Профиль");
     expect(activeNav(NAV.employer, "/employer/needs/7")?.label).toBe("Подбор");
+    expect(activeNav(NAV.employer, "/employer")?.label).toBe("Подбор");
+    expect(activeNav(NAV.employer, "/employer/categories/backend/middle")?.label).toBe("Подбор");
+    expect(activeNav(NAV.employer, "/employer/responses")?.label).toBe("Приглашения");
+    expect(activeNav(NAV.employer, "/employer/subscriptions")?.label).toBe("Компания");
     expect(activeNav(NAV.employer, "/employer/vacancies/1/shortlist")?.label).toBe("Компания");
     expect(activeNav(NAV.admin, "/federation/moderation")?.label).toBe("Модерация");
   });

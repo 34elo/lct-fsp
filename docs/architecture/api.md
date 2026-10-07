@@ -73,6 +73,7 @@
 | `POST /candidates/me/github` | **Не реализовано** (E10-1 «ДНК кода» вне прототипа). План: `{login}` → `202 {analysis_id}` |
 | `GET /candidates/me/code-analysis` | **Не реализовано** (вместе с анализом GitHub, E10-1). План: последний `CodeAnalysis` |
 | `GET /candidates/me/navigator` | `Navigator` |
+| `GET /candidates/me/standing` | `CandidateStanding {profession, grade, mode, confirmed_at, strength {value, rank, top_percent, parts[]}, category_size, peers[{strength, salary_min}]}` (E35-12a) — сила профиля и место среди кандидатов своей категории «профессия × грейд» (основная профессия, иначе старший грейд). Сила — формула [assessment.md §9](assessment.md) без запроса (S — доверие по навыкам); `rank` 1 — сильнейший, равные делят место, `top_percent = ceil(rank / category_size · 100)`; `peers` — до 200 точек для графика «Где ты среди своих» (своя первой, без идентификаторов). Без действующего грейда — `200` с пустыми полями (`strength: null`, `category_size: 0`). Только роль `candidate` (иначе 403). Код — `services/core/app/matching/standing.py` |
 | `GET /candidates/me/uplift` | `Uplift` — какой навык подтвердить, чтобы подходить под N% больше вакансий ([matching.md §6](matching.md#6-uplift-для-кандидата-какой-навык-добавить)) |
 | `GET /candidates/me/graph?skills=top|all&depth=facts|competitions` | `Subgraph` — граф доказательств (в т.ч. тесты `test`) для визуализации ([graph.md §6](graph.md#6-api-подграфа)) |
 | `POST /candidates/me/navigator/clicks` | **Не реализовано** (ручки в коде нет). План: `{competition_id, skill_id}` |

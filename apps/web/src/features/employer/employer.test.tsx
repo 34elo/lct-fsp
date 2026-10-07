@@ -146,7 +146,8 @@ test("карточка кандидата: тёмная, навыки без п�
   );
   await screen.findByRole("heading", { name: "Candidate #1" });
   expect(container.querySelector('[data-theme-scope="dark"]')).not.toBeNull();
-  expect(within(screen.getByRole("region", { name: "Навыки" })).getAllByText("Python")).toHaveLength(1);
+  const tags = [...screen.getByRole("region", { name: "Навыки" }).querySelectorAll("[data-state]")].filter((e) => e.textContent?.startsWith("Python"));
+  expect(tags).toHaveLength(1);
   expect(screen.getByText("ещё 1 без подтверждения")).toBeInTheDocument();
   expect(screen.getAllByText(/Кубок · всероссийский этап/)).toHaveLength(1);
 });
@@ -182,4 +183,48 @@ test("E3: список вакансий строками, из строки — 
   const list = await screen.findByRole("list", { name: "Вакансии" });
   expect(within(list).getByText("Backend (Python)")).toBeInTheDocument();
   expect(within(list).getByRole("link", { name: "Подборка" })).toHaveAttribute("href", "/employer/vacancies/v1/shortlist");
+});
+
+function stubCard(status: number, extra?: Record<string, unknown>) {
+  const f = fetch as unknown as ReturnType<typeof vi.fn>;
+  const prev = f.getMockImplementation()!;
+  f.mockImplementation(async (url: string, init?: RequestInit) => {
+    if (url.includes("/candidates/p1/card")) {
+      if (status !== 200) return res(status, { code: "x", status });
+      const base = (await prev(url, init).then((r: Response) => r.json())) as Record<string, unknown>;
+      return res(200, { ...base, ...extra });
+    }
+    return prev(url, init);
+  });
+}
+
+test("карточка кандидата: заявлено и подтверждено, анонимный опыт, шорт-лист по need_id", async () => {
+  stubCard(200, {
+    categories: [{ profession: "backend", grade: "junior" }],
+    claimed_vs_confirmed: [{ profession: "backend", declared_grade: "middle", confirmed_grade: "junior", status: "overclaimed" }],
+    strength: { value: 0.64, rank: 0.3, top: [] },
+  });
+  mount("/employer/candidates/p1?source=match&need_id=n1");
+  const panel = await screen.findByRole("region", { name: "Заявлено и подтверждено" });
+  expect(within(panel).getByText("Заявлен")).toBeInTheDocument();
+  expect(within(panel).getByText("Подтверждён")).toBeInTheDocument();
+  expect(screen.getByText("скрыто приватностью")).toBeInTheDocument();
+  const crumb = screen.getByRole("navigation", { name: "Навигация" });
+  expect(within(crumb).getByRole("link", { name: /Junior/ })).toHaveAttribute("href", "/employer/categories/backend/junior?need_id=n1");
+  expect(screen.getByRole("button", { name: "В шорт-лист" })).toBeInTheDocument();
+});
+
+test("карточка кандидата: профиль скрыт (404) — пустое состояние со ссылкой назад", async () => {
+  stubCard(404);
+  mount("/employer/candidates/p1");
+  expect(await screen.findByText("Профиль недоступен — кандидат скрыл его")).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "К подбору" })).toHaveAttribute("href", "/employer");
+});
+
+test("карточка кандидата: ошибка 503 с кодом и «Повторить»", async () => {
+  stubCard(503);
+  mount("/employer/candidates/p1");
+  expect(await screen.findByText("Не загрузилось")).toBeInTheDocument();
+  expect(screen.getByText("ошибка 503")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Повторить" })).toBeInTheDocument();
 });

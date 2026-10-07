@@ -37,7 +37,7 @@ const Ctx = createContext<AuthApi | null>(null);
 /** Куда вести пользователя после входа и на что у него есть права. */
 export const HOME_BY_ROLE: Record<Role, string> = {
   candidate: "/me",
-  employer: "/employer/search",
+  employer: "/employer",
   fsp_admin: "/federation",
 };
 
