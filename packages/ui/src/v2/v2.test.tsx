@@ -188,6 +188,13 @@ describe("v2: карточки", () => {
     expect(card).toHaveTextContent("Финалист ФСП");
     expect(within(card).getByRole("button", { name: "Принять" })).toBeInTheDocument();
   });
+
+  it("OfferCardV2 без действий и срока — три колонки, пустой колонки нет", () => {
+    render(<OfferCardV2 o={{ company: "Кедр Софт", salary: "140–190 тыс. ₽", reasons: ["Удалёнка совпадает"] }} />);
+    const card = screen.getByRole("article", { name: "Кедр Софт" });
+    expect(card.children).toHaveLength(3);
+    expect(card.className).toContain("md:grid-cols-[1.1fr_1fr_1.6fr]");
+  });
 });
 
 describe("v2: тест", () => {
