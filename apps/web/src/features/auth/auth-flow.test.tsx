@@ -106,7 +106,7 @@ test("вход без согласия ведёт на экран согласи
   expect(submit).toBeEnabled();
   fireEvent.click(submit);
 
-  expect(await screen.findByRole("heading", { name: "Мой профиль" })).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { name: "Главная" })).toBeInTheDocument();
   const put = calls.find((c) => c.method === "PUT");
   expect(put?.body).toMatchObject({
     consents: expect.arrayContaining([{ type: "pd_processing", granted: true, version: "2025-09-01" }]),
@@ -173,7 +173,7 @@ test("magic-ссылка: чужой redirect игнорируется", async (
   installFetch();
   consentsGranted = true;
   mount("/auth/magic?token=abc&redirect=//evil.example");
-  expect(await screen.findByRole("heading", { name: "Мой профиль" })).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { name: "Главная" })).toBeInTheDocument();
 });
 
 test("magic-ссылка: недействительный токен", async () => {

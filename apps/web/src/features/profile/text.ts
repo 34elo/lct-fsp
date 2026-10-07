@@ -209,3 +209,49 @@ export const editText = {
   invalidPhone: "Телефон: от 7 цифр",
   invalidExp: "Стаж: целое число от 0 до 600 месяцев",
 } as const;
+
+/** Главная кандидата `/me` (E38-1, макеты v2_me__before / v2_me__after). */
+export const HOME = {
+  title: "Главная",
+  loading: "Загрузка главной…",
+  loadError: "Не удалось загрузить главную",
+  loadErrorHint: "Проверь соединение и повтори.",
+  beforeTitle: "Пройди тест — без него тебя не видят работодатели",
+  beforeAction: { survey: "Пройти тест", test: "Пройти тест", continue: "Продолжить тест" },
+  claimed: "заявлено",
+  express: "экспресс · 3–5 мин",
+  constellationEmpty: "Заявленные навыки без подтверждения",
+  nextStep: "Следующий шаг",
+  steps: {
+    test: { done: "Тест пройден", todo: "Пройти тест" },
+    fsp: { done: "ФСП привязан", todo: "Привязать ФСП" },
+    interest: { todo: "Ответить на интерес" },
+  },
+  nextTest: (grade: string) => `Тест на ${grade}`,
+  nextTestAction: (grade: string) => `Пройти тест на ${grade}`,
+  allDone: "Смотреть приглашения",
+  cooldown: (date: string) => `Следующая попытка — ${date}`,
+  confirmed: (date: string, express: boolean) => `подтверждён ${date}${express ? " · экспресс" : ""}`,
+  notConfirmed: "не подтверждён",
+  expectations: "Ожидания",
+  salaryFrom: (v: string) => `от ${v}`,
+  skills: "Навыки",
+  skillClaimed: "заявлен",
+  fsp: "Достижения ФСП",
+  fspPlace: (place: number) => `${place} место`,
+  constellation: "Созвездие навыков",
+  legend: { confirmed: "подтверждено", claimed: "заявлено", adjacent: "смежные" },
+  interests: "Вами интересуются",
+  strength: "Сила",
+  place: "Место",
+  interestsTile: "Интересы",
+  top: (p: number) => `топ-${p} %`,
+  none: "—",
+  rating: (v: string) => `${v} / 5`,
+} as const;
+
+/** Источник подтверждения навыка — метка в строке «Навыки» на Главной. */
+export const SOURCE_TAG: Record<string, string> = { test: "тест", fsp: "ФСП", github: "GitHub", resume: "резюме", task: "задание" };
+
+/** Формат работы в карточке профиля: «Удалёнка или гибрид». */
+export const FORMAT_WORD: Record<string, string> = { remote: "удалёнка", hybrid: "гибрид", office: "офис" };
