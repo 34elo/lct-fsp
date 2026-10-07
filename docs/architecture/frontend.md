@@ -9,14 +9,14 @@
 | Маршрут | Роль | Экран (макет) |
 |---|---|---|
 | `/` | все | Лендинг (L1, L2) |
-| `/login`, `/register`, `/auth/magic`, `/auth/fsp/callback` | — | Вход |
+| `/login`, `/register`, `/auth/magic` | — | Вход (возврат из ФСП — API `/api/v1/auth/fsp/callback`, своей страницы нет) |
 | `/consents` | любая | Согласия после входа или регистрации, пока не выдан `pd_processing` (шаг 1 из M1) |
 | `/onboarding` | C | Онбординг: согласия → резюме → ФСП → GitHub (M1) |
 | `/me` | C | Мой профиль: категория, грейд, навыки с доверием, командные сигналы, «Быстрый рост» (D) |
 | `/me/graph` | C | Граф доказательств (G1, G2) |
 | `/me/skills/:slug` | C | Доказательства навыка |
 | `/me/offers`, `/me/offers/:id` | C | Офферы и переписка (M2) |
-| `/me/growth` | C | Uplift, путь к грейду, соревнования, адаптивный тест (M3) |
+| `/me/growth` | C | Переадресация на `/me/navigator` (своего экрана нет, E35-1) |
 | `/me/navigator` | C | Навигатор роста (Б2, E12-3): `NavigatorPath`, uplift-карточки, соревнования ФСП; «Пройти тест» ведёт на `/me/assessment?profession=&grade=` |
 | `/jobs`, `/jobs/:id` | — | Публичные вакансии (Б2, E20-7b, J1): фильтры профессия/город/текст, вилка на карточке; отклик с сообщением после входа (состояния: не вошёл, не кандидат, `email_not_verified`, отправлено, `already_applied`). Отдельного публичного `GET` вакансии нет: деталь берётся из `GET /vacancies/public?limit=100` |
 | `/me/responses` | C | Мои отклики (R1): вкладки, отзыв из `sent/viewed`, переход к приглашению |
@@ -26,23 +26,21 @@
 | `/employer/categories/:profession/:grade?need_id=` | E | Кандидаты категории (N2): `GET /categories/{p}/{g}/candidates`, «заявлено vs подтверждено» (`card.grade` против `categories`), шорт-лист `POST/DELETE /needs/{id}/shortlist/{pseudo_id}`, фильтры и сортировка на клиенте поверх загруженных карточек (отмеченные не пропадают), «Пригласить» → `/employer/offers/new?candidate=` |
 | `/employer/responses` | E | Отклики на вакансии (R1): `GET /offers?initiator=candidate`, «Пригласить» → `interview`, «Отказать» → `not_hired`. Приглашение без вакансии — в окне оффера (название, описание, способ связи, вилка) |
 | `/employer/subscriptions` | E | Подписки на категорию (E33-4): профессия, грейды, формат, бюджет, навыки с уровнем, «только подтверждённые»; список и удаление. Ссылка из «Кандидаты категории» |
-| `/me/badge` | C | Open Badge (Q5) |
-| `/me/settings` | C | Статус, зарплата, формат, видимость, стоп-лист, согласия, удаление |
-| `/employer/market` | E | Рынок талантов (E1) |
+| `/me/settings` | C | Переадресация на `/me` до экрана настроек (E36-4) |
 | `/employer/search` | E | Поиск: текст → чипсы → карточки (A, E2) |
-| `/employer/candidates/:id` | E | Карточка кандидата (B), `…/graph` (G1), `…/interview` (Q4) |
+| `/employer/candidates/:id` | E | Карточка кандидата (B) |
 | `/employer/offers/new` | E | Модалка оффера (C) |
-| `/employer/vacancies`, `/employer/vacancies/:id` | E | Редактор вакансии (E3) |
+| `/employer/vacancies`, `/employer/vacancies/new`, `/employer/vacancies/:id` | E | Вакансии и редактор вакансии (E3) |
 | `/employer/vacancies/:id/shortlist` | E | Подборка по вакансии (E4) |
 | `/employer/offers` | E | Мои офферы, канбан (E5) |
 | `/employer/company` | EA | Компания, участники, статус модерации |
-| `/federation`, `/federation/matrix`, `/federation/moderation`, `/federation/demo` | A | Дашборд ФСП, матрица «дисциплина → навыки», модерация, демо-пульт (F1–F4) |
+| `/federation`, `/federation/moderation` | A | Дашборд ФСП, модерация (F1, F3) |
 | `/admin/skills` | A | Граф навыков: очередь, слияния, рост (G3) |
 | `/admin/demo/two-worlds`, `/admin/demo/llm-exam`, `/admin/demo/new-profession` | A | Вау-экраны питча: два мира, LLM сдаёт тест, новая профессия (E34-3) |
-| `/admin/quality`, `/admin/quality/fairness`, `/admin/quality/runs`, `/admin/health` | A | Качество, справедливость, живые прогоны, здоровье (Q1–Q3, Q6) |
+| `/admin/quality`, `/admin/quality/fairness`, `/admin/quality/runs` | A | Качество, справедливость, живые прогоны (Q1–Q3) |
 | `/run/:token` | испытатель | Живой прогон + SUS (Q3) |
-| `/athlete/:id` | все | Публичная карточка (P1); OG-картинка — бэкенд |
-| `/verify/:id` | все | Проверка Open Badge |
+
+**Меню (E35-1, `NAV` в `app/routes.ts`).** Кандидат: Главная (`/me`) · Тест и грейд (`/me/assessment`) · Приглашения (`/me/offers`; вкладки: интересы, отклики) · Профиль (`/me/profile/edit`; вкладки: резюме и ФСП, граф, задания); на ≤768 px те же 4 пункта внизу. Работодатель: Подбор (`/employer/search`; вкладка «Кого ищете») · Приглашения (`/employer/offers`; вкладка «Отклики») · Компания (вкладки: вакансии, задания, подписки); «Шорт-лист» — с общим экраном E35-4. Админ (≤ 6): Дашборд · Допуск заданий · Профессии · Граф навыков · Модерация · Качество. Меню аватара: тема, выход; настройки и согласия — с экраном E36-4. Пункт подсвечивается по самому длинному префиксу пути (`activeNav`), вкладки раздела — строка под шапкой (`SectionTabs`). Заглушек нет: маршрут без экрана удаляется или получает `redirect`; это проверяет `routes.test.ts`. Публичная карточка `/athlete/:id`, проверка бейджа `/verify/:id`, рынок E1, граф и интервью в карточке работодателя, матрица, демо-пульт и «Здоровье» убраны до появления экранов.
 
 Бейдж `/badge/:id.svg` отдаёт бэкенд (P2). Кабинет кандидата — **mobile-first** (основной макет 390), работодатель и админка — desktop-first (1440/1024).
 

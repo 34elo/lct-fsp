@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 
 import {
   DropdownMenu,
@@ -17,7 +17,7 @@ import type { NavItem } from "@/app/routes";
 import { useAuth } from "@/shared/lib/auth";
 import { useTheme, type ThemeMode } from "@/shared/lib/theme";
 import { PageContainer } from "./PageContainer";
-import { ROLE_LABEL, initials, isPrefix } from "./shell-meta";
+import { ROLE_LABEL, activeNav, initials } from "./shell-meta";
 
 const NEXT: Record<ThemeMode, ThemeMode> = { light: "dark", dark: "system", system: "light" };
 const LABEL: Record<ThemeMode, string> = { system: "Тема: системная", light: "Тема: светлая", dark: "Тема: тёмная" };
@@ -75,7 +75,7 @@ function UserMenu() {
   );
 }
 
-const tab = ({ isActive }: { isActive: boolean }) =>
+const tab = (isActive: boolean) =>
   cn(
     "relative flex h-14 shrink-0 items-center gap-1.5 whitespace-nowrap px-3 text-14 font-semibold",
     isActive
@@ -94,6 +94,7 @@ export function AppHeader({
   counts?: Record<string, number | undefined>;
   withTabs?: boolean;
 }) {
+  const current = activeNav(nav, useLocation().pathname);
   return (
     <header className="sticky top-0 z-20 border-b border-hairline bg-card">
       <PageContainer className="flex h-14 min-w-0 items-center gap-3">
@@ -103,12 +104,12 @@ export function AppHeader({
         {withTabs && (
           <nav aria-label="Разделы" className="ml-4 hidden min-w-0 items-stretch overflow-x-auto md:flex [scrollbar-width:none]">
             {nav.map((n) => (
-              <NavLink key={n.to} to={n.to} end={isPrefix(nav, n.to)} className={tab}>
+              <Link key={n.to} to={n.to} aria-current={current === n ? "page" : undefined} className={tab(current === n)}>
                 {n.label}
                 {counts[n.to] !== undefined && (
                   <span className="rounded-full bg-tint-100 px-1.5 font-mono text-12 text-brand-fg">{counts[n.to]}</span>
                 )}
-              </NavLink>
+              </Link>
             ))}
           </nav>
         )}
