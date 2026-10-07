@@ -11,7 +11,7 @@ import { BOARD_TEXT as T, DECLINE_LABEL, OFFER_STATUS_LABEL, dateOnly } from "./
 
 const shortDate = (iso: string) => new Date(iso).toLocaleDateString("ru-RU", { day: "numeric", month: "short" });
 
-/** Карточка оффера на доске: кандидат, вилка, статус, даты. */
+/** Карточка приглашения на доске: кандидат, вилка, статус, даты. */
 function OfferCardRow({ o }: { o: OfferForCompany }) {
   const c = o.candidate;
   const name = c?.pseudonym ?? T.deleted;
@@ -60,7 +60,7 @@ function Column({ id, items, hiddenOnPhone }: { id: BoardColumn; items: OfferFor
   );
 }
 
-/** Причины отказов: считаем по самим офферам (отдельной выдачи в API нет). */
+/** Причины отказов: считаем по самим приглашениям (отдельной выдачи в API нет). */
 function Declines({ offers }: { offers: OfferForCompany[] }) {
   const rows = declineBreakdown(offers);
   if (rows.length === 0) return null;
@@ -95,7 +95,7 @@ function Declines({ offers }: { offers: OfferForCompany[] }) {
   );
 }
 
-/** Мои офферы (экран E5): канбан по статусам, на телефоне — вкладки со счётчиками. */
+/** Мои приглашения (экран E5): канбан по статусам, на телефоне — вкладки со счётчиками. */
 export function EmployerOffers() {
   const q = useListOffersOffersGet();
   const [picked, setTab] = useState<BoardColumn | null>(null);
