@@ -211,6 +211,17 @@ describe("v2: тест", () => {
     fireEvent.click(screen.getByRole("button", { name: "Объясни ответ" }));
     expect(explain).toHaveBeenCalled();
   });
+
+  it("ErrorBlock: своё действие и разбор под кодом", () => {
+    render(
+      <ErrorBlock skill="Go" title="Задание 2" action={<button type="button">Своё</button>} onExplain={() => undefined}>
+        <p>Разбор</p>
+      </ErrorBlock>,
+    );
+    expect(screen.getByRole("button", { name: "Своё" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Объясни ответ" })).toBeNull();
+    expect(screen.getByText("Разбор")).toBeInTheDocument();
+  });
 });
 
 describe("v2: каркас", () => {

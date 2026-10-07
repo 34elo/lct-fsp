@@ -203,6 +203,8 @@ export function ErrorBlock({
   marked,
   onExplain,
   explainLabel = "Объясни ответ",
+  action,
+  children,
   className,
 }: {
   skill: string;
@@ -212,6 +214,10 @@ export function ErrorBlock({
   marked?: number[];
   onExplain?: () => void;
   explainLabel?: string;
+  /** Своё действие справа вместо кнопки «Объясни ответ» (например, с загрузкой). */
+  action?: ReactNode;
+  /** Под кодом: разбор, ответ модели. */
+  children?: ReactNode;
   className?: string;
 }) {
   return (
@@ -219,13 +225,14 @@ export function ErrorBlock({
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
         <SkillTag name={skill} />
         <b className="font-semibold">{title}</b>
-        {onExplain && (
+        {action ?? (onExplain && (
           <Button variant="link" className="ml-auto h-7 px-2 no-underline sm:h-7" onClick={onExplain}>
             {explainLabel}
           </Button>
-        )}
+        ))}
       </div>
       {code && <CodeLines lines={code.replace(/\n$/, "").split("\n")} marked={marked} />}
+      {children}
     </div>
   );
 }
