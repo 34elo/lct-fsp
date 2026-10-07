@@ -76,3 +76,13 @@ def test_offer_new_salary_basis_label():
     base = {"vacancy_title": "Dev", "salary_from": 100000, "salary_to": 150000}
     assert "150 000 ₽</b> до НДФЛ" in render(TgTemplate.offer_new, base)
     assert "150 000 ₽</b> на руки" in render(TgTemplate.offer_new, base | {"salary_basis": "net"})
+
+
+def test_regular_task_published_shows_profession_title():
+    """E9-6/E37-2: название профессии вместо slug; старые команды без названия — slug."""
+    text = render(
+        TgTemplate.regular_task_published,
+        {"profession": "backend", "profession_title": "Backend-разработчик"},
+    )
+    assert "Backend-разработчик" in text and "backend" not in text
+    assert "backend" in render(TgTemplate.regular_task_published, {"profession": "backend"})
