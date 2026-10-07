@@ -72,6 +72,14 @@ async def get(session: AsyncSession, user_id: uuid.UUID) -> Candidate | None:
     return await session.get(Candidate, user_id)
 
 
+async def get_many(session: AsyncSession, user_ids: list[uuid.UUID]) -> list[Candidate]:
+    """Анкеты пачкой (без удалённых)."""
+    if not user_ids:
+        return []
+    stmt = select(Candidate).where(Candidate.user_id.in_(user_ids), Candidate.deleted_at.is_(None))
+    return list(await session.scalars(stmt))
+
+
 async def get_by_pseudo_id(session: AsyncSession, pseudo_id: str) -> Candidate | None:
     return await session.scalar(
         select(Candidate).where(Candidate.pseudo_id == pseudo_id, Candidate.deleted_at.is_(None))

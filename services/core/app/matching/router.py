@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, Query, Request
-from fsp_contracts.assessment import CategoryRef
+from fsp_contracts.assessment import CandidateStanding, CategoryRef
 from fsp_contracts.ml import ParsedQuery, SearchFilters
 from fsp_platform.app import ProblemError
 from pydantic import BaseModel, ConfigDict, Field
@@ -20,7 +20,16 @@ from app.deps import get_redis, get_session
 from app.graph.trust import TrustConfig
 from app.identity.deps import require_roles
 from app.identity.models import User
-from app.matching import card, navigator, query_llm, query_parser, search, similar, uplift_service
+from app.matching import (
+    card,
+    navigator,
+    query_llm,
+    query_parser,
+    search,
+    similar,
+    standing,
+    uplift_service,
+)
 from app.matching import service as matching
 from app.matching.card import CandidateCardFull
 from app.matching.scoring import MatchConfig
@@ -384,6 +393,22 @@ async def my_navigator(
         return {"skill_gaps": [], "competitions": [], "uplift": []}
     up = await uplift_service.compute(session, redis, cand, _CFG, _TRUST, _UPLIFT)
     return await navigator.compute(session, cand, up["items"], _UPLIFT)
+
+
+@router.get(
+    "/candidates/me/standing",
+    response_model=CandidateStanding,
+    responses=problem_responses(401, 403),
+)
+async def my_standing(
+    user: User = Depends(_candidate),
+    session: AsyncSession = Depends(get_session),
+) -> Any:
+    """Сила профиля и место в категории «профессия × грейд» (E35-12a). Без теста — пусто."""
+    cand = await candidates.get(session, user.id)
+    if cand is None:
+        return CandidateStanding()
+    return await standing.compute(session, cand, _STRENGTH, _TRUST.fsp)
 
 
 @router.get(
