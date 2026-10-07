@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
 import { App } from "@/app/App";
@@ -39,6 +39,7 @@ const full = {
   team_signals: [{ signal: "leadership", value: 0.7, label: "strong", facts: [{ fact_id: "f1", title: "Капитан команды, 2026" }] }],
 };
 let profile: unknown = full;
+let standing: unknown = null;
 let evidenceStatus = 200;
 
 class NoES {
@@ -50,6 +51,7 @@ beforeEach(() => {
   vi.stubGlobal("EventSource", NoES);
   profile = full;
   evidenceStatus = 200;
+  standing = null;
   setAccessToken(null);
   vi.stubGlobal(
     "fetch",
@@ -57,6 +59,8 @@ beforeEach(() => {
       if (url.endsWith("/auth/refresh")) return res(200, { access_token: "t" });
       if (url.endsWith("/me")) return res(200, { id: "u1", email: "a@b.ru", role: "candidate", consents: ["pd_processing"] });
       if (url.endsWith("/candidates/me/profile")) return res(200, profile);
+      if (url.endsWith("/candidates/me/standing")) return standing ? res(200, standing) : res(404);
+      if (url.includes("/candidates/me/graph")) return res(200, { nodes: [], edges: [] });
       if (url.endsWith("/candidates/me/skills/python/evidence")) return evidenceStatus === 200 ? res(200, [ev]) : res(404, { code: "skill_not_found" });
       if (url.includes("/candidates/me/skills/")) return res(404, { code: "skill_not_found" });
       return res(404);
@@ -75,19 +79,27 @@ function mount(path: string) {
   );
 }
 
-test("профиль: категория, предварительный грейд, разбивка, навыки, командные сигналы", async () => {
+test("профиль: подтверждено и заявлено раздельно, грейд, разбивка, командные сигналы", async () => {
   mount("/me/profile");
-  expect(await screen.findByRole("heading", { name: "Backend #4821" })).toBeInTheDocument();
-  expect(screen.getByText("Junior+ · Backend · Python")).toBeInTheDocument();
-  expect(screen.getByText(/Предварительно.*уверенность 40%/)).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { name: "Профиль", level: 1 })).toBeInTheDocument();
+  const confirmed = await screen.findByRole("region", { name: "Подтверждено" });
+  const row = within(confirmed).getByRole("link", { name: "Python: чем подтверждён" });
+  expect(row).toHaveAttribute("href", "/me/skills/python");
+  expect(row).toHaveTextContent("●●●○");
+  expect(row).toHaveTextContent("ФСП");
+  const claimed = screen.getByRole("region", { name: "Заявлено" });
+  expect(within(claimed).getByRole("link", { name: "Redis: чем подтверждён" })).toHaveTextContent("заявлено в резюме");
+  expect(within(claimed).getByRole("link", { name: "Redis: чем подтверждён" })).toHaveTextContent("○○○○");
+  const card = screen.getByTestId("profile-status-card");
+  expect(within(card).getByTestId("profile-grade")).toHaveTextContent("Junior+ · Backend");
+  expect(within(card).getByTestId("profile-grade-status")).toHaveTextContent("не подтверждён");
+  expect(within(card).getByText(/Предварительно.*уверенность 40%/)).toBeInTheDocument();
+  expect(within(card).getByTestId("profile-published")).toHaveTextContent("профиль опубликован");
   const why = screen.getByRole("region", { name: "Почему такой грейд" });
   expect(within(why).getByText("Стаж")).toBeInTheDocument();
   expect(within(why).getByText("+3")).toBeInTheDocument();
   expect(within(why).getByText("4,5 → Junior+")).toBeInTheDocument();
   expect(within(why).getByText("Пройдите тест")).toBeInTheDocument();
-  const skills = screen.getByRole("region", { name: "Навыки" });
-  expect(within(skills).getByRole("link", { name: "Python: чем подтверждён" })).toHaveAttribute("href", "/me/skills/python");
-  expect(within(skills).getByRole("img", { name: /только из резюме/ })).toBeInTheDocument();
   const team = screen.getByRole("region", { name: "Командные сигналы" });
   expect(within(team).getByText("Лидерство")).toBeInTheDocument();
   expect(within(team).getByText(/сильное подтверждение/)).toBeInTheDocument();
@@ -95,7 +107,34 @@ test("профиль: категория, предварительный гре�
   expect(within(team).getByText(/коммуникабельный/)).toBeInTheDocument();
 });
 
-test("профиль: достижения ФСП, разряд, опыт и меню кандидата", async () => {
+test("профиль: подтверждённый тестом грейд и метка «тест 07.10» у навыка", async () => {
+  profile = {
+    ...full,
+    skills: [{ ...full.skills[0], sources: ["test", "fsp"], top_evidence: [{ ...ev, source: "test", observed_at: "2026-10-07" }] }],
+  };
+  standing = { profession: "backend", grade: "junior", mode: "express", confirmed_at: "2026-10-07T10:00:00Z" };
+  mount("/me/profile");
+  const card = await screen.findByTestId("profile-status-card");
+  await waitFor(() => expect(within(card).getByTestId("profile-grade-status")).toHaveTextContent("подтверждён 07.10 · экспресс"));
+  expect(within(card).getByTestId("profile-grade")).toHaveTextContent("Junior · Backend");
+  expect(screen.getByRole("link", { name: "Python: чем подтверждён" })).toHaveTextContent("тест 07.10");
+});
+
+test("профиль: вкладки ведут на ФСП, резюме и граф, действие «Добавить доказательство»", async () => {
+  mount("/me/profile");
+  await screen.findByTestId("profile-tabs");
+  const tabs = within(screen.getByTestId("profile-tabs"));
+  expect(tabs.getByRole("link", { name: "Навыки" })).toHaveAttribute("aria-current", "page");
+  expect(tabs.getByRole("link", { name: "ФСП" })).toHaveAttribute("href", "/me/profile?tab=fsp");
+  expect(tabs.getByRole("link", { name: "Резюме" })).toHaveAttribute("href", "/me/profile?tab=resume");
+  expect(tabs.getByRole("link", { name: "Граф" })).toHaveAttribute("href", "/me/profile?tab=graph");
+  expect(screen.getByTestId("profile-add")).toHaveAttribute("href", "/onboarding");
+  expect(screen.getByTestId("profile-pdf")).toBeInTheDocument();
+  expect(screen.getByTestId("profile-edit-link")).toHaveAttribute("href", "/me/profile/edit");
+  expect(within(screen.getByTestId("profile-strength")).getByRole("link", { name: "добавить: GitHub" })).toHaveAttribute("href", "/onboarding");
+});
+
+test("профиль: вкладка «ФСП» — достижения, разряд и меню кандидата", async () => {
   profile = {
     ...full,
     fsp: {
@@ -103,38 +142,41 @@ test("профиль: достижения ФСП, разряд, опыт и м�
       achievements: [{ fact_id: "f1", title: "Финал по продуктовому программированию", level: "national", place: 2, of: 40, year: 2026, team_role: "captain" }],
       ranks: [{ discipline: "product", rank: "rank_2" }],
     },
-    experience: [{ title: "Backend-разработчик", company: "Кедр Софт", start: "2024-08-01", end: null, skills: [] }],
   };
-  mount("/me/profile");
+  mount("/me/profile?tab=fsp");
   const fsp = await screen.findByRole("region", { name: "Достижения ФСП" });
   expect(within(fsp).getByText(/Финал по продуктовому программированию/)).toBeInTheDocument();
+  expect(within(fsp).getByText("привязан")).toBeInTheDocument();
   expect(within(fsp).getByRole("img", { name: "2 место, медаль" })).toBeInTheDocument();
   expect(within(fsp).getByText("2 из 40")).toBeInTheDocument();
   expect(within(fsp).getByText("2 разряд · Продуктовое программирование")).toBeInTheDocument();
-  expect(within(screen.getByRole("region", { name: "Опыт" })).getByText(/Кедр Софт/)).toBeInTheDocument();
+  expect(screen.getByTestId("profile-tab-fsp")).toHaveAttribute("aria-current", "page");
   // Меню (E35-1): шапка (десктоп) и нижняя панель — одни и те же четыре раздела.
   const [top, bottom] = screen.getAllByRole("navigation", { name: "Разделы" });
   expect(within(top).getByRole("link", { name: "Приглашения" })).toHaveAttribute("href", "/me/offers");
   expect(within(top).getByRole("link", { name: "Профиль" })).toHaveAttribute("href", "/me/profile");
-  expect(within(bottom).getByRole("link", { name: "Приглашения" })).toHaveAttribute("href", "/me/offers");
   expect(within(bottom).getByRole("link", { name: "Тест и грейд" })).toHaveAttribute("href", "/me/assessment");
 });
 
-test("профиль: навыки по группам, чек-лист «что усилит», заявлено/подтверждено, PDF", async () => {
+test("профиль: вкладка «Резюме» — город, ожидания, формат, опыт", async () => {
   profile = {
     ...full,
-    claimed_vs_confirmed: [{ profession: "backend", declared_grade: "senior", confirmed_grade: "middle", status: "overclaimed" }],
+    preferences: { city: "Санкт-Петербург", salary_min: 70000, formats: ["remote", "hybrid"], employment_types: [], relocation: false },
+    experience: [{ title: "Backend-разработчик", company: "Кедр Софт", start: "2024-08-01", end: null, skills: [] }],
   };
-  mount("/me/profile");
-  await screen.findByTestId("profile-page");
-  expect(within(screen.getByTestId("profile-skill-group-language")).getByText("Python")).toBeInTheDocument();
-  expect(screen.getByTestId("profile-skill-group-db")).toHaveTextContent("Redis");
-  const strength = screen.getByTestId("profile-strength");
-  expect(within(strength).getByTestId("profile-strength-fsp")).toHaveTextContent("есть");
-  expect(within(strength).getByRole("link", { name: "добавить: GitHub" })).toHaveAttribute("href", "/onboarding");
-  expect(within(screen.getByTestId("profile-claimed-backend")).getByText("тест ниже заявленного")).toBeInTheDocument();
-  expect(screen.getByTestId("profile-pdf")).toBeInTheDocument();
-  expect(screen.getByTestId("profile-graph-link")).toHaveAttribute("href", "/me/graph");
+  mount("/me/profile?tab=resume");
+  const card = await screen.findByRole("region", { name: "Резюме" });
+  expect(within(card).getByText("Санкт-Петербург")).toBeInTheDocument();
+  expect(within(card).getByText(/^от 70.000/)).toBeInTheDocument();
+  expect(within(card).getByText("удалёнка или гибрид")).toBeInTheDocument();
+  expect(within(card).getByText("не указан")).toBeInTheDocument();
+  expect(within(screen.getByRole("region", { name: "Опыт" })).getByText(/Кедр Софт/)).toBeInTheDocument();
+});
+
+test("/me/graph ведёт на вкладку «Граф» профиля", async () => {
+  mount("/me/graph");
+  expect(await screen.findByTestId("graph-view")).toBeInTheDocument();
+  expect(screen.getByTestId("profile-tab-graph")).toHaveAttribute("aria-current", "page");
 });
 
 test("ошибка загрузки профиля: сообщение и повтор", async () => {
@@ -143,18 +185,19 @@ test("ошибка загрузки профиля: сообщение и пов
     const u = String(url);
     if (u.endsWith("/auth/refresh")) return res(200, { access_token: "t" });
     if (u.endsWith("/me")) return res(200, { id: "u1", email: "a@b.ru", role: "candidate", consents: ["pd_processing"] });
-    return res(500, { code: "boom" });
+    return res(503, { code: "boom" });
   });
   mount("/me/profile");
-  expect(await screen.findByRole("alert", {}, { timeout: 8000 })).toHaveTextContent("Не удалось загрузить профиль");
+  expect(await screen.findByRole("alert", {}, { timeout: 8000 })).toHaveTextContent("Не загрузилось");
   expect(screen.getByRole("button", { name: "Повторить" })).toBeInTheDocument();
+  expect(screen.queryByTestId("profile-tabs")).not.toBeInTheDocument();
 }, 15000);
 
-test("пустой профиль: подсказка вместо грейда и навыков", async () => {
+test("пустой профиль: «Доказательств пока нет» и одна кнопка", async () => {
   profile = { ...base, claimed_soft: [], category: null, skills: [], team_signals: [], grade: { grade: null, score: null, confidence: null, preliminary: true, breakdown: [] } };
   mount("/me/profile");
-  expect(await screen.findByText(/Категория и грейд появятся/)).toBeInTheDocument();
-  expect(screen.getByText(/Пока нет навыков/)).toBeInTheDocument();
+  expect(await screen.findByText("Доказательств пока нет")).toBeInTheDocument();
+  expect(screen.getByTestId("profile-empty-action")).toHaveAttribute("href", "/onboarding");
   expect(screen.queryByRole("region", { name: "Почему такой грейд" })).not.toBeInTheDocument();
 });
 

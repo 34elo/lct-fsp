@@ -30,7 +30,6 @@ import History from "@/features/assessment/History";
 import VerifyEmail from "@/features/auth/VerifyEmail";
 import ProfileEdit from "@/features/profile/ProfileEdit";
 import Stats from "@/features/profile/Stats";
-import Graph from "@/features/graph/Graph";
 import CandidateTasks from "@/features/tasks/CandidateTasks";
 import EmployerTasks from "@/features/tasks/EmployerTasks";
 import Constructor from "@/features/constructor/Constructor";
@@ -96,7 +95,6 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
             <Route path="/me/profile/edit" element={<ProfileEdit />} />
             <Route path="/me/stats" element={<Stats />} />
             <Route path="/me/tasks" element={<CandidateTasks />} />
-            <Route path="/me/graph" element={<Graph />} />
             {/* <<< block1 (candidate) */}
             {/* >>> block2 (candidate) */}
             <Route path="/me/navigator" element={<Navigator />} />
