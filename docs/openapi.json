@@ -14334,6 +14334,97 @@
         }
       }
     },
+    "/employer/activity": {
+      "get": {
+        "tags": [
+          "employer"
+        ],
+        "summary": "Employer Activity",
+        "description": "Лента событий компании, новые сверху. Чужие данные в неё не попадают.",
+        "operationId": "employer_activity_employer_activity_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 30,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityFeed"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/track": {
       "post": {
         "tags": [
@@ -16394,6 +16485,144 @@
   },
   "components": {
     "schemas": {
+      "ActivityCandidate": {
+        "properties": {
+          "pseudo_id": {
+            "type": "string",
+            "title": "Pseudo Id"
+          },
+          "pseudonym": {
+            "type": "string",
+            "title": "Pseudonym"
+          },
+          "primary_role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primary Role"
+          },
+          "grade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pseudo_id",
+          "pseudonym"
+        ],
+        "title": "ActivityCandidate",
+        "description": "Анонимная карточка-превью: только псевдоним, без ПДн и контактов."
+      },
+      "ActivityEvent": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ActivityKind"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          },
+          "candidate": {
+            "$ref": "#/components/schemas/ActivityCandidate"
+          },
+          "link": {
+            "type": "string",
+            "title": "Link"
+          },
+          "offer_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offer Id"
+          },
+          "subscription_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subscription Id"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "at",
+          "candidate",
+          "link"
+        ],
+        "title": "ActivityEvent",
+        "description": "Событие ленты. `link` — внутренний маршрут веба; `offer_id` — приглашение или интерес."
+      },
+      "ActivityFeed": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ActivityEvent"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "ActivityFeed"
+      },
+      "ActivityKind": {
+        "type": "string",
+        "enum": [
+          "subscription_hit",
+          "interest_opened",
+          "interest_declined",
+          "invitation_accepted",
+          "invitation_declined",
+          "task_answered"
+        ],
+        "title": "ActivityKind",
+        "description": "Тип события ленты активности работодателя (`GET /employer/activity`, E35-12b)."
+      },
       "AdminComplaintOut": {
         "properties": {
           "id": {
