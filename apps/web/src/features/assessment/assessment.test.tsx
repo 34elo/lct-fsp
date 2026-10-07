@@ -106,7 +106,7 @@ describe("опрос (S1)", () => {
     expect(screen.getByTestId("assessment-grade-middle")).toBeChecked();
     fireEvent.change(screen.getByTestId("assessment-stack-input"), { target: { value: "Redis" } });
     fireEvent.click(screen.getByTestId("assessment-stack-add"));
-    expect(screen.getByText("redis")).toBeInTheDocument();
+    expect(within(screen.getByTestId("assessment-stack")).getByText(/redis/)).toBeInTheDocument();
     fireEvent.click(screen.getByTestId("assessment-start"));
     expect(await tid("assessment-item")).toBeInTheDocument();
     const put = calls.find((c) => c.method === "PUT")!;
@@ -162,6 +162,51 @@ describe("опрос (S1)", () => {
     fireEvent.click(screen.getByTestId("assessment-start"));
     await waitFor(() => expect(screen.getByTestId("assessment-start-error")).toHaveAttribute("data-code", "email_not_verified"));
     expect(within(screen.getByTestId("assessment-start-error")).getByRole("link")).toHaveAttribute("href", "/verify-email");
+  });
+});
+
+describe("опрос (S1) · состояния макета v2", () => {
+  const surveyGet = (url: string, init?: RequestInit) => (url.endsWith("/assessment/survey") && (init?.method ?? "GET") === "GET" ? res(200, survey) : undefined);
+
+  it("кулдаун: плашка с датой, грейд в контуре, старт предлагает грейд ниже", async () => {
+    const calls = mount("/me/assessment", (url, init) => {
+      if (url.endsWith("/assessment/history"))
+        return res(200, { surveys: [], attempts: [], cooldowns: [{ profession: "backend", grade: "middle", next_change_at: "2999-10-14T00:00:00Z" }] });
+      if (url.endsWith("/assessment/survey") && init?.method === "PUT") return res(200, survey);
+      if (url.endsWith("/assessment/attempts") && init?.method === "POST") return res(201, { ...attemptBase, declared_grade: "junior" });
+      return surveyGet(url, init);
+    });
+    expect(await tid("assessment-cooldown")).toHaveTextContent("Следующая попытка Middle");
+    expect(screen.getByTestId("assessment-cooldown-date")).toHaveTextContent("14.10.2999");
+    expect(screen.getByTestId("assessment-start")).toHaveTextContent("Пройти Junior сейчас");
+    fireEvent.click(screen.getByTestId("assessment-start"));
+    await waitFor(() => expect(calls.some((c) => c.url.endsWith("/assessment/attempts") && c.method === "POST")).toBe(true));
+    expect(calls.find((c) => c.url.endsWith("/assessment/attempts") && c.method === "POST")!.body).toEqual({ profession: "backend", declared_grade: "junior" });
+  });
+
+  it("кулдаун Junior: старта нет, показана дата", async () => {
+    mount("/me/assessment?grade=junior", (url, init) => {
+      if (url.endsWith("/assessment/history"))
+        return res(200, { surveys: [], attempts: [], cooldowns: [], retries: [{ profession: "backend", grade: "junior", next_attempt_at: "2999-10-14T00:00:00Z" }] });
+      return surveyGet(url, init);
+    });
+    await tid("assessment-cooldown");
+    expect(screen.getByTestId("assessment-start")).toBeDisabled();
+    expect(screen.getByText(/доступно с 14\.10\.2999/)).toBeInTheDocument();
+  });
+
+  it("пусто: направление не выбрано, кнопка открывает форму", async () => {
+    mount("/me/assessment", (url) => (url.endsWith("/assessment/survey") ? res(200, { ...survey, profession: null, declared_grade: null }) : undefined));
+    expect(await tid("assessment-empty")).toHaveTextContent("Направление не выбрано");
+    fireEvent.click(screen.getByTestId("assessment-pick"));
+    expect(await tid("assessment-survey")).toBeInTheDocument();
+  });
+
+  it("загрузка: скелетон; ошибка: «Повторить»", async () => {
+    mount("/me/assessment", (url) => (url.endsWith("/assessment/survey") ? res(503, { code: "unavailable" }) : undefined));
+    expect(await screen.findByRole("status", { name: "Загружаем…" })).toBeInTheDocument();
+    expect(await screen.findByTestId("assessment-error", {}, { timeout: 5000 })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Повторить" })).toBeInTheDocument();
   });
 });
 
