@@ -2,6 +2,7 @@ import { Badge, Card, CardContent, CardHeader, CardTitle, Skeleton } from "@fsp/
 
 import { useGetMetricsAdminMetricsGet } from "@/api/endpoints/admin-metrics/admin-metrics";
 import type { AppAnalyticsMetricsStage as Stage } from "@/api/model";
+import { QualityNav } from "./Nav";
 import { byArea, report, STATUS_ORDER, type Status } from "./report";
 import { T } from "./text";
 
@@ -120,6 +121,7 @@ export default function Quality() {
         <h1 className="text-24 font-semibold">{T.title}</h1>
         <p className="max-w-2xl text-14 text-muted">{T.lead}</p>
       </header>
+      <QualityNav />
       <Summary />
       {unavailable.length > 0 && (
         <ul className="flex flex-col gap-1 text-13 text-muted">
