@@ -104,7 +104,7 @@
 | `POST /assessment/attempts/{id}/upgrade` | C | Тест следующего грейда по приглашению бонусного этапа (ADR-025): `201`, новая попытка |
 | `POST /assessment/attempts/{id}/responses/{response_id}/explain` | C | «Объясни ответ» после завершения попытки: `{self_reason?}` → причина ошибки по правилам |
 | `GET /assessment/history` | C | История опросов и попыток, даты кулдаунов |
-| `POST /assessment/plan/preview` | C, E | `{vacancy_id \| skills}` → план теста и 3 примера заданий (демо «вакансия → тест»); ключей в ответе нет |
+| `POST /assessment/plan/preview` | C, E | `{vacancy_id \| skills}` → план по навыкам вакансии и 3 примера заданий: подсказка работодателю для задания к приглашению, на грейд не влияет (ADR-027 п. 5); ключей в ответе нет |
 | `GET /assessment/tasks`, `GET /assessment/tasks/{task_id}` | C | Открытые регулярные задания действующих категорий; вариант без ключа и рубрики |
 | `POST /assessment/tasks/{task_id}/answer` | C | `{answer}` — один ответ на раунд, повтор возвращает принятый |
 | `POST /families`, `GET /families`, `GET /families/{family_id}` | E, A | Конструктор заданий: черновик семейства, свои семейства (E30-1) |
