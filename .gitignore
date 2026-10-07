@@ -8,6 +8,7 @@ infra/llm/models/
 infra/snapshots/
 data/gold/private/
 reports/
+!docs/reports/
 
 # Python
 __pycache__/
