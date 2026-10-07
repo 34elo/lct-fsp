@@ -1,4 +1,4 @@
-import { EmptyState, ErrorState, Skeleton } from "@fsp/ui";
+import { EmptyState, ErrorState, Panel, PanelCap, SkillTag, Skeleton } from "@fsp/ui";
 import { Link, useSearchParams } from "react-router-dom";
 
 import { useMyGraphCandidatesMeGraphGet } from "@/api/endpoints/graph/graph";
@@ -26,8 +26,8 @@ function Toggle<V extends string>({ label, value, options, onChange, testid }: {
   );
 }
 
-/** Граф доказательств кандидата (`/me/graph`, G1/G2). */
-export default function Graph() {
+/** Граф доказательств: вкладка «Граф» профиля (`/me/profile?tab=graph`, E38-6). Фильтры живут в адресе. */
+export default function GraphView() {
   const [sp, setSp] = useSearchParams();
   const skills = sp.get("skills") === "all" ? MyGraphCandidatesMeGraphGetSkills.all : MyGraphCandidatesMeGraphGetSkills.top;
   const depth = sp.get("depth") === "competitions" ? MyGraphCandidatesMeGraphGetDepth.competitions : MyGraphCandidatesMeGraphGetDepth.facts;
@@ -61,18 +61,24 @@ export default function Graph() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
-      <header className="flex flex-col gap-1">
-        <h1 className="font-mono text-xl font-semibold">{T.title}</h1>
-        <p className="text-sm text-muted">{T.lead}</p>
-      </header>
+    <div className="flex flex-col gap-4" data-testid="graph-view">
+      <p className="text-14 text-muted">{T.lead}</p>
       <div data-testid="graph-filters" role="group" aria-label={T.filtersLabel} className="flex flex-col gap-2 md:flex-row md:gap-6">
         <Toggle label={T.skillsLabel} value={skills} testid="graph-skills" onChange={(v) => set("skills", v)} options={[["top", T.skillsTop], ["all", T.skillsAll]]} />
         <Toggle label={T.depthLabel} value={depth} testid="graph-depth" onChange={(v) => set("depth", v)} options={[["facts", T.depthFacts], ["competitions", T.depthCompetitions]]} />
       </div>
-      <section aria-label={T.title} className="rounded-xl border border-hairline bg-card p-4 md:p-5">
+      <Panel aria-label={T.title} className="p-4 md:p-5">
+        <PanelCap
+          title={T.title}
+          aside={
+            <div className="flex gap-1.5">
+              <SkillTag name="факт" />
+              <SkillTag name="заявлено" state="claimed" />
+            </div>
+          }
+        />
         {body}
-      </section>
+      </Panel>
     </div>
   );
 }

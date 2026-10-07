@@ -106,7 +106,7 @@ test("вход без согласия ведёт на экран согласи
   expect(submit).toBeEnabled();
   fireEvent.click(submit);
 
-  expect(await screen.findByRole("heading", { name: "Мой профиль" })).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { name: "Главная" })).toBeInTheDocument();
   const put = calls.find((c) => c.method === "PUT");
   expect(put?.body).toMatchObject({
     consents: expect.arrayContaining([{ type: "pd_processing", granted: true, version: "2025-09-01" }]),
@@ -138,6 +138,18 @@ test("регистрация отправляет выбранную роль, �
   expect(await screen.findByRole("heading", { name: "Согласия" })).toBeInTheDocument();
 });
 
+test("новый кандидат: регистрация → согласия → опрос (E35-2a)", async () => {
+  installFetch();
+  mount("/register");
+  fireEvent.change(await screen.findByLabelText("Почта"), { target: { value: "new@b.ru" } });
+  fireEvent.change(screen.getByLabelText(/Пароль/), { target: { value: "long-enough-pass" } });
+  fireEvent.click(screen.getByRole("button", { name: "Создать аккаунт" }));
+  expect(await screen.findByRole("heading", { name: "Согласия" })).toBeInTheDocument();
+  fireEvent.click(await screen.findByRole("checkbox", { name: /Обработка персональных данных/ }));
+  fireEvent.click(screen.getByRole("button", { name: "Продолжить" }));
+  expect(await screen.findByRole("heading", { name: "Опрос" })).toBeInTheDocument();
+});
+
 test("регистрация: email_taken", async () => {
   installFetch({ loginStatus: 409 });
   mount("/register");
@@ -161,7 +173,7 @@ test("magic-ссылка: чужой redirect игнорируется", async (
   installFetch();
   consentsGranted = true;
   mount("/auth/magic?token=abc&redirect=//evil.example");
-  expect(await screen.findByRole("heading", { name: "Мой профиль" })).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { name: "Главная" })).toBeInTheDocument();
 });
 
 test("magic-ссылка: недействительный токен", async () => {

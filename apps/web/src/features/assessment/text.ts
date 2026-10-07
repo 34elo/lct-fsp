@@ -27,9 +27,35 @@ export const KIND_LABEL: Record<string, string> = {
 /** ADR-025 п.4: первый шаг — IT-направление (это и есть профессия), отрасль не спрашиваем. */
 export const STEPS = ["IT-направление", "Стек", "Формат и вилка", "Грейд"] as const;
 
+/** Русское множественное: 1 работодатель, 3 работодателя, 5 работодателей. */
+export function plural(n: number, one: string, few: string, many: string): string {
+  const a = Math.abs(n) % 100;
+  const b = a % 10;
+  if (a > 10 && a < 20) return many;
+  if (b === 1) return one;
+  return b >= 2 && b <= 4 ? few : many;
+}
+
 export const T = {
   // опрос (S1)
   surveyTitle: "Опрос и выбор грейда",
+  surveyHeading: "Опрос",
+  fromResume: "из резюме",
+  direction: "Направление",
+  format: "Формат",
+  fork: "Вилка",
+  gradeLabel: "Грейд",
+  gradeHelp: "Пояснение",
+  expressShort: "Экспресс",
+  expressMinutes: "3–5 мин",
+  declares: "Заявляешь",
+  expectations: "Ожидания",
+  salaryFromShort: "от",
+  startTest: "Начать тест",
+  startLower: (g: string) => `Пройти ${g} сейчас`,
+  nextAttempt: (g: string) => `Следующая попытка ${g}`,
+  noProfession: "Направление не выбрано",
+  pickProfession: "Выбрать направление",
   surveyLead: "Опрос — это твои ожидания. Грейд на профиле станет подтверждённым только после теста.",
   prefilled: "Заполнили из резюме · проверь",
   stepOf: (n: number, total: number) => `Шаг ${n} из ${total}`,
@@ -61,6 +87,8 @@ export const T = {
   back: "Назад",
   save: "Сохранить опрос",
   saved: "Опрос сохранён",
+  savedLater: "Тест можно пройти позже — кнопка будет на главной.",
+  toHome: "На главную",
   saveAndStart: "Сохранить и начать тест",
   historyLink: "История попыток",
   invalidRange: "«От» не может быть больше «До».",
@@ -69,6 +97,10 @@ export const T = {
   loading: "Загружаем…",
   // тест (S2)
   testTitle: "Тест",
+  noActiveTitle: "Активного теста нет",
+  takeTest: "Пройти тест",
+  helpLabel: "Пояснение",
+  orderPick: "Нажмите на вариант, затем на место, куда его поставить. Стрелки сдвигают на одну позицию.",
   taskN: (n: number) => `Задание ${n}`,
   answered: (n: number) => `отвечено ${n}`,
   progressHint: "тест закончится сам, когда результат станет ясен",
@@ -161,7 +193,38 @@ export const T = {
   nextChange: (d: string) => `Следующая смена грейда — с ${d}`,
   retryAt: (g: string, d: string) => `Повтор ${g} — с ${d}`,
   cooldownRules: "Смена грейда — не чаще раза в 90 дней. Повтор того же грейда после неудачи — через 30 дней. Грейд принудительно не понижается.",
-  openProfile: "Открыть профиль",
+  openProfile: "На главную",
+  // результат v2 (E38-5): макеты v2_me-assessment-result__*
+  confirmedTitle: (cat: string) => `${cat} — подтверждён`,
+  notConfirmedTitle: (g: string) => `${g} не подтверждён`,
+  howItWorks: "Как устроен тест",
+  scaleTitle: "Шкала грейда",
+  scaleAside: (v: number, g: string, cut: number) => `твой результат ${v} · порог ${g} ${cut}`,
+  scaleAsideShort: (v: number, cut: number) => `${v} · порог ${cut}`,
+  scaleNoData: "Шкала появится, когда оценка уровня будет посчитана.",
+  typesTitle: "Разбивка по типам",
+  typesAside: (g: string) => `тик — порог ${g}`,
+  typesAsideShort: "тик — порог",
+  types: { fundamental: "Фундамент", hard: "Хард", thinking: "Мышление", business: "Бизнес", soft: "Софт", experience: "Опыт" } as Record<string, string>,
+  opened: "Что открылось",
+  openedInterests: (n: number) => `${plural(n, "работодатель интересуется", "работодателя интересуются", "работодателей интересуются")} тобой`,
+  openedCategory: (cat: string) => `Категория ${cat} открыта работодателям: они видят тебя в выдаче.`,
+  claimedTitle: "Заявлено, не подтверждено",
+  claimedSalary: "Ожидания от",
+  topics: "Ответы по темам",
+  growthLink: "Рост: подтянуть слабые навыки",
+  errorsTitle: "Ошибки",
+  noErrors: "Все задания засчитаны полностью.",
+  toOffers: "Смотреть приглашения",
+  passGrade: (g: string) => `Пройти ${g}`,
+  lowerHint: (g: string) => `Можно пройти ${g} сейчас`,
+  explainShort: "Объясни ответ",
+  // баннер пути кандидата (E35-2a): одна фраза и одна кнопка
+  banner: {
+    survey: { text: "Пройдите опрос и тест — без них работодатели вас не найдут.", action: "Пройти опрос" },
+    test: { text: "Опрос сохранён. Осталось пройти тест — он подтвердит грейд.", action: "Пройти тест" },
+    continue: { text: "Тест не закончен.", action: "Продолжить тест" },
+  },
   openGrowth: "Рост",
   toHistory: "История попыток",
   inProgress: "Тест ещё идёт",

@@ -354,3 +354,15 @@ def test_assessment_mode_fields_are_optional():
         }
     )
     assert (ev.mode, ev.invited_grade) == ("standard", None)
+
+
+def test_candidate_standing_defaults_and_bounds():
+    from fsp_contracts.assessment import CandidateStanding, StandingStrength
+    from pydantic import ValidationError
+
+    empty = CandidateStanding()
+    assert empty.strength is None and empty.category_size == 0 and empty.peers == []
+    with pytest.raises(ValidationError):
+        StandingStrength(value=0.5, rank=0, top_percent=10)
+    with pytest.raises(ValidationError):
+        StandingStrength(value=0.5, rank=1, top_percent=101)

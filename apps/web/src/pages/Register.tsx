@@ -5,6 +5,7 @@ import { Link, Navigate, useLocation } from "react-router-dom";
 import { authErrorText } from "@/features/auth/errors";
 import { authText } from "@/features/auth/text";
 import { AuthCard, ErrorNote } from "@/features/auth/ui";
+import { PATH_START } from "@/features/assessment/model";
 import { postAuthPath, useAuth } from "@/shared/lib/auth";
 
 const t = authText.register;
@@ -18,14 +19,20 @@ export default function Register() {
   const [role, setRole] = useState<SignupRole>("candidate");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [fresh, setFresh] = useState(false);
 
-  if (status === "authenticated" && me) return <Navigate to={postAuthPath(me, from)} replace state={{ from }} />;
+  // Главный путь (E35-2a): новый кандидат после согласий идёт в опрос, а не на пустую Главную.
+  if (status === "authenticated" && me) {
+    const next = from ?? (fresh && me.role === "candidate" ? PATH_START : undefined);
+    return <Navigate to={postAuthPath(me, next)} replace state={{ from: next }} />;
+  }
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
     setBusy(true);
     setError(null);
+    setFresh(true);
     try {
       await register(String(f.get("email")).trim(), String(f.get("password")), role);
     } catch (err) {

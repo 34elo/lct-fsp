@@ -55,7 +55,7 @@ afterEach(() => vi.unstubAllGlobals());
 test("публичный лендинг доступен без входа", async () => {
   mockFetch(() => ({ status: 401 }));
   mount("/");
-  expect(await screen.findByRole("heading", { level: 1, name: "Не резюме, а доказательства" })).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { level: 1, name: "Тест подтверждает грейд. Работодатель приходит с вилкой." })).toBeInTheDocument();
 });
 
 test("аноним на /me уходит на форму входа", async () => {
@@ -67,14 +67,14 @@ test("аноним на /me уходит на форму входа", async () =
 test("кандидат видит свой кабинет и открывает SSE", async () => {
   asUser("candidate");
   mount("/me");
-  expect(await screen.findByRole("heading", { name: "Мой профиль" })).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { name: "Главная" })).toBeInTheDocument();
   await waitFor(() => expect(FakeES.last?.url).toContain("/events/stream?access_token=t"));
 });
 
 test("кандидат не попадает в раздел работодателя", async () => {
   asUser("candidate");
   mount("/employer/search");
-  expect(await screen.findByRole("heading", { name: "Мой профиль" })).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { name: "Главная" })).toBeInTheDocument();
 });
 
 test("админ ФСП видит дашборд", async () => {

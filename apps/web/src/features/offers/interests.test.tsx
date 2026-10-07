@@ -64,12 +64,12 @@ test("кандидат: агрегат, «почему вы», рейтинг к
     return null;
   };
   mount("/me/interests");
-  expect(await screen.findByText(/2 компании интересуются вами/)).toBeInTheDocument();
-  expect(screen.getByText(/Вилки компаний/)).toBeInTheDocument();
+  expect(await screen.findByText("2 · 200–300 тыс. ₽")).toBeInTheDocument();
   expect(screen.getAllByText("Подтверждены Python и PostgreSQL")).toHaveLength(2);
-  expect(screen.getAllByText("Нет подтверждения Docker")).toHaveLength(2);
-  expect(screen.getAllByText(/отвечает на 80% обращений, в среднем за 6 ч/)).toHaveLength(2);
-  expect(screen.getByText(/Вы открыли интерес/)).toBeInTheDocument();
+  expect(screen.getAllByText("отвечает в 80 % · 6 ч")).toHaveLength(2);
+  expect(screen.getAllByText("срок до 09.10")).toHaveLength(2);
+  expect(screen.getAllByText("Нам нужен ваш опыт с очередями")).toHaveLength(2);
+  expect(screen.getByText("Открыто, ждём приглашение")).toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "Открыть интерес" }));
   await waitFor(() => expect(calls.some((c) => c.url.endsWith("/interests/i1/open"))).toBe(true));
 });
@@ -81,7 +81,7 @@ test("кандидат: «не интересно» — причина одни�
     return null;
   };
   mount("/me/interests");
-  fireEvent.click(await screen.findByRole("button", { name: "Не интересно" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Отклонить" }));
   fireEvent.click(await screen.findByRole("button", { name: /Не та компания/ }));
   await waitFor(() => expect(calls).toHaveLength(1));
   expect(calls[0].body).toEqual({ reason: "wrong_company", comment: null });
@@ -91,17 +91,6 @@ test("кандидат: пустое состояние", async () => {
   routes = (url) => (url.endsWith("/candidates/me/interests") ? res(200, { companies: 0, salary_from_min: null, salary_to_max: null, items: [] }) : null);
   mount("/me/interests");
   expect(await screen.findByText("Пока никто не интересуется")).toBeInTheDocument();
-});
-
-test("на экране приглашений кандидата есть плашка «Вами интересуются»", async () => {
-  routes = (url) => {
-    if (url.endsWith("/candidates/me/interests")) return res(200, { companies: 3, salary_from_min: 1, salary_to_max: 2, items: [] });
-    if (url.endsWith("/candidates/me/offers")) return res(200, []);
-    return null;
-  };
-  mount("/me/offers");
-  const link = await screen.findByRole("link", { name: /Вами интересуются: 3/ });
-  expect(link).toHaveAttribute("href", "/me/interests");
 });
 
 const employerRoutes = (url: string, method: string): Response | null => {
@@ -119,15 +108,15 @@ test("работодатель: модалка интереса с подска�
   routes = employerRoutes;
   mount("/employer/candidates/p1?vacancy=v1");
   expect(await screen.findByText("Вами интересовался")).toBeInTheDocument();
-  fireEvent.click(await screen.findByRole("button", { name: "Проявить интерес" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Интерес" }));
   const dialog = await screen.findByRole("dialog");
-  expect(await within(dialog).findByText(/Поднимите верх вилки до 280\s000\s₽/)).toBeInTheDocument();
+  expect(await within(dialog).findByText("280 тыс.")).toBeInTheDocument();
   expect(within(dialog).getByText(/в среднем за 1 дн\./)).toBeInTheDocument();
-  const msg = within(dialog).getByLabelText(/Короткое сообщение/) as HTMLTextAreaElement;
+  const msg = within(dialog).getByLabelText(/Сообщение/) as HTMLTextAreaElement;
   expect(msg.maxLength).toBe(300);
   fireEvent.click(within(dialog).getByRole("button", { name: "Применить" }));
   fireEvent.change(msg, { target: { value: "Здравствуйте" } });
-  fireEvent.click(within(dialog).getByRole("button", { name: "Отметить «интересен»" }));
+  fireEvent.click(within(dialog).getByRole("button", { name: "Отправить" }));
   await waitFor(() => expect(calls.some((c) => c.url.endsWith("/interests"))).toBe(true));
   expect(calls.find((c) => c.url.endsWith("/interests"))?.body).toMatchObject({ candidate_pseudo_id: "p1", vacancy_id: "v1", salary_from: 200000, salary_to: 280000, message: "Здравствуйте" });
 });
@@ -145,7 +134,7 @@ test("работодатель: приглашение по открытому �
   expect(await screen.findByText(/Кандидат открыл интерес/)).toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "Пригласить" }));
   const dialog = await screen.findByRole("dialog");
-  fireEvent.click(await within(dialog).findByRole("button", { name: "Отправить приглашение" }));
+  fireEvent.click(await within(dialog).findByRole("button", { name: "Отправить" }));
   await waitFor(() => expect(calls.some((c) => c.url.endsWith("/interests/i9/invite"))).toBe(true));
   expect(calls.find((c) => c.url.endsWith("/interests/i9/invite"))?.body).toMatchObject({ salary_from: 200000, salary_to: 260000 });
 });

@@ -40,8 +40,9 @@ export const ROUTES: RouteDef[] = [
   // <<< block2 (auth)
 
   { path: "/onboarding", title: "Онбординг", screen: "M1", section: "candidate", owner: "b1", nav: true },
-  { path: "/me", title: "Мой профиль", screen: "D", section: "candidate", owner: "b1", nav: true },
-  { path: "/me/graph", title: "Граф доказательств", screen: "G1, G2", section: "candidate", owner: "b1", nav: true },
+  { path: "/me", title: "Главная", screen: "v2_me__before, v2_me__after", section: "candidate", owner: "b1", nav: true },
+  // Граф переехал во вкладку профиля (E38-6).
+  { path: "/me/graph", title: "Граф доказательств", section: "candidate", owner: "b1", redirect: "/me/profile?tab=graph" },
   { path: "/me/skills/:slug", title: "Доказательства навыка", section: "candidate", owner: "b1" },
   { path: "/me/offers", title: "Приглашения", screen: "M2", section: "candidate", owner: "b2", nav: true },
   { path: "/me/offers/:id", title: "Приглашение", screen: "M2", section: "candidate", owner: "b2" },
@@ -53,7 +54,10 @@ export const ROUTES: RouteDef[] = [
   { path: "/me/assessment/attempts/:id", title: "Прохождение теста", section: "candidate", owner: "b1" },
   { path: "/me/assessment/attempts/:id/result", title: "Результат теста", section: "candidate", owner: "b1" },
   { path: "/me/tasks", title: "Регулярные задания", section: "candidate", owner: "b1", nav: true },
+  { path: "/me/profile", title: "Мой профиль", screen: "v2_me-profile", section: "candidate", owner: "b1", nav: true },
   { path: "/me/profile/edit", title: "Редактирование профиля", section: "candidate", owner: "b1", nav: true },
+  // Статистика (E38-2): ссылка с Главной, не в меню.
+  { path: "/me/stats", title: "Статистика", screen: "v2_me-stats", section: "candidate", owner: "b1" },
   // <<< block1 (candidate)
   // >>> block2 (candidate)
   { path: "/me/responses", title: "Мои отклики", section: "candidate", owner: "b2", nav: true },
@@ -61,7 +65,7 @@ export const ROUTES: RouteDef[] = [
   { path: "/me/interests", title: "Вами интересуются", section: "candidate", owner: "b2", nav: true },
   // <<< block2 (candidate)
 
-  { path: "/employer/search", title: "Поиск", screen: "A, E2", section: "employer", owner: "b2", nav: true },
+  { path: "/employer/search", title: "Поиск", screen: "A, E2", section: "employer", owner: "b2" },
   { path: "/employer/candidates/:id", title: "Карточка кандидата", screen: "B", section: "employer", owner: "b2" },
   { path: "/employer/offers/new", title: "Новое приглашение", screen: "C", section: "employer", owner: "b2" },
   { path: "/employer/vacancies", title: "Вакансии", screen: "E3", section: "employer", owner: "b2", nav: true },
@@ -76,9 +80,11 @@ export const ROUTES: RouteDef[] = [
   { path: "/employer/families/new", title: "Конструктор задания", section: "employer", owner: "b1" },
   // <<< block1 (employer)
   // >>> block2 (employer)
-  { path: "/employer/needs/new", title: "Новая потребность", section: "employer", owner: "b2", nav: true },
+  { path: "/employer", title: "Подбор", screen: "v2_employer__first, v2_employer__results", section: "employer", owner: "b2", nav: true },
+  { path: "/employer/needs/new", title: "Новая потребность", section: "employer", owner: "b2" },
   { path: "/employer/needs/:id", title: "Рекомендованные категории", section: "employer", owner: "b2" },
   { path: "/employer/categories/:profession/:grade", title: "Кандидаты категории", section: "employer", owner: "b2" },
+  { path: "/employer/shortlist", title: "Шорт-лист", screen: "v2_employer-shortlist", section: "employer", owner: "b2", nav: true },
   { path: "/employer/responses", title: "Отклики на вакансии", section: "employer", owner: "b2", nav: true },
   { path: "/employer/subscriptions", title: "Подписки на категории", section: "employer", owner: "b2", nav: true },
   // <<< block2 (employer)
@@ -118,7 +124,7 @@ export interface NavItem {
 /**
  * Меню по ролям (E35-1, ux-spec §2). Правило: нет пункта меню, ссылки или кнопки без работающего
  * экрана — каждый пункт и вкладка ведут на маршрут с `nav: true` и настоящей страницей (routes.test.ts).
- * «Шорт-лист» работодателя появится в меню вместе с общим экраном (E35-4), «Настройки» и «Согласия»
+ * «Настройки» и «Согласия»
  * в меню аватара — вместе с экраном настроек (E36-4).
  */
 export const NAV: Record<"candidate" | "employer" | "admin", NavItem[]> = {
@@ -129,32 +135,27 @@ export const NAV: Record<"candidate" | "employer" | "admin", NavItem[]> = {
       to: "/me/offers",
       label: "Приглашения",
       tabs: [
+        { to: "/me/interests", label: "Интересы" },
         { to: "/me/offers", label: "Приглашения" },
-        { to: "/me/interests", label: "Вами интересуются" },
         { to: "/me/responses", label: "Отклики" },
       ],
     },
     {
-      to: "/me/profile/edit",
+      to: "/me/profile",
       label: "Профиль",
       tabs: [
+        // Внутри «Профиля» свои вкладки: Навыки · ФСП · Резюме · Граф (E38-6).
+        { to: "/me/profile", label: "Обзор" },
         { to: "/me/profile/edit", label: "Данные" },
         { to: "/onboarding", label: "Резюме и ФСП" },
-        { to: "/me/graph", label: "Граф" },
         { to: "/me/tasks", label: "Задания" },
       ],
     },
   ],
   employer: [
-    {
-      to: "/employer/search",
-      label: "Подбор",
-      tabs: [
-        { to: "/employer/search", label: "Поиск" },
-        { to: "/employer/needs/new", label: "Кого ищете" },
-      ],
-      match: ["/employer/needs", "/employer/categories", "/employer/candidates"],
-    },
+    // Подбор (E38-8): «Поиск» и «Кого ищете» больше не вкладки — их заменяет строка запроса на /employer.
+    { to: "/employer", label: "Подбор" },
+    { to: "/employer/shortlist", label: "Шорт-лист" },
     {
       to: "/employer/offers",
       label: "Приглашения",

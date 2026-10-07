@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
 import { App } from "@/app/App";
@@ -48,6 +48,8 @@ const finished = {
   result: {
     grade: "middle",
     theta: 0.4,
+    se: 0.2,
+    theta_by_type: { hard: 0.2, fundamental: 0.6, soft: -0.4 },
     integrity: 0.92,
     needs_confirmation: false,
     by_skill: [
@@ -106,7 +108,7 @@ describe("опрос (S1)", () => {
     expect(screen.getByTestId("assessment-grade-middle")).toBeChecked();
     fireEvent.change(screen.getByTestId("assessment-stack-input"), { target: { value: "Redis" } });
     fireEvent.click(screen.getByTestId("assessment-stack-add"));
-    expect(screen.getByText("redis")).toBeInTheDocument();
+    expect(within(screen.getByTestId("assessment-stack")).getByText(/redis/)).toBeInTheDocument();
     fireEvent.click(screen.getByTestId("assessment-start"));
     expect(await tid("assessment-item")).toBeInTheDocument();
     const put = calls.find((c) => c.method === "PUT")!;
@@ -162,6 +164,51 @@ describe("опрос (S1)", () => {
     fireEvent.click(screen.getByTestId("assessment-start"));
     await waitFor(() => expect(screen.getByTestId("assessment-start-error")).toHaveAttribute("data-code", "email_not_verified"));
     expect(within(screen.getByTestId("assessment-start-error")).getByRole("link")).toHaveAttribute("href", "/verify-email");
+  });
+});
+
+describe("опрос (S1) · состояния макета v2", () => {
+  const surveyGet = (url: string, init?: RequestInit) => (url.endsWith("/assessment/survey") && (init?.method ?? "GET") === "GET" ? res(200, survey) : undefined);
+
+  it("кулдаун: плашка с датой, грейд в контуре, старт предлагает грейд ниже", async () => {
+    const calls = mount("/me/assessment", (url, init) => {
+      if (url.endsWith("/assessment/history"))
+        return res(200, { surveys: [], attempts: [], cooldowns: [{ profession: "backend", grade: "middle", next_change_at: "2999-10-14T00:00:00Z" }] });
+      if (url.endsWith("/assessment/survey") && init?.method === "PUT") return res(200, survey);
+      if (url.endsWith("/assessment/attempts") && init?.method === "POST") return res(201, { ...attemptBase, declared_grade: "junior" });
+      return surveyGet(url, init);
+    });
+    expect(await tid("assessment-cooldown")).toHaveTextContent("Следующая попытка Middle");
+    expect(screen.getByTestId("assessment-cooldown-date")).toHaveTextContent("14.10.2999");
+    expect(screen.getByTestId("assessment-start")).toHaveTextContent("Пройти Junior сейчас");
+    fireEvent.click(screen.getByTestId("assessment-start"));
+    await waitFor(() => expect(calls.some((c) => c.url.endsWith("/assessment/attempts") && c.method === "POST")).toBe(true));
+    expect(calls.find((c) => c.url.endsWith("/assessment/attempts") && c.method === "POST")!.body).toEqual({ profession: "backend", declared_grade: "junior" });
+  });
+
+  it("кулдаун Junior: старта нет, показана дата", async () => {
+    mount("/me/assessment?grade=junior", (url, init) => {
+      if (url.endsWith("/assessment/history"))
+        return res(200, { surveys: [], attempts: [], cooldowns: [], retries: [{ profession: "backend", grade: "junior", next_attempt_at: "2999-10-14T00:00:00Z" }] });
+      return surveyGet(url, init);
+    });
+    await tid("assessment-cooldown");
+    expect(screen.getByTestId("assessment-start")).toBeDisabled();
+    expect(screen.getByText(/доступно с 14\.10\.2999/)).toBeInTheDocument();
+  });
+
+  it("пусто: направление не выбрано, кнопка открывает форму", async () => {
+    mount("/me/assessment", (url) => (url.endsWith("/assessment/survey") ? res(200, { ...survey, profession: null, declared_grade: null }) : undefined));
+    expect(await tid("assessment-empty")).toHaveTextContent("Направление не выбрано");
+    fireEvent.click(screen.getByTestId("assessment-pick"));
+    expect(await tid("assessment-survey")).toBeInTheDocument();
+  });
+
+  it("загрузка: скелетон; ошибка: «Повторить»", async () => {
+    mount("/me/assessment", (url) => (url.endsWith("/assessment/survey") ? res(503, { code: "unavailable" }) : undefined));
+    expect(await screen.findByRole("status", { name: "Загружаем…" })).toBeInTheDocument();
+    expect(await screen.findByTestId("assessment-error", {}, { timeout: 5000 })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Повторить" })).toBeInTheDocument();
   });
 });
 
@@ -261,7 +308,7 @@ describe("тест (S2)", () => {
   it("таймер: по истечении ответ уходит сам", async () => {
     const answers: { body: unknown }[] = [];
     mount("/me/assessment/attempts/a1", attemptRoutes([{ done: false, response_id: "t", seq: 1, kind: "exact", stem: "?", time_limit_s: 1 }, { done: true }], answers));
-    await tid("assessment-timer");
+    await screen.findByRole("timer");
     await waitFor(() => expect(answers).toHaveLength(1), { timeout: 3000 });
     expect((answers[0]!.body as { answer: unknown }).answer).toBeNull();
   });
@@ -271,6 +318,71 @@ describe("тест (S2)", () => {
     const box = await tid("assessment-error");
     expect(box).toHaveAttribute("data-code", "not_found");
     expect(within(box).queryByRole("button", { name: "Повторить" })).toBeNull();
+  });
+});
+
+describe("тест (S2) · макет v2 (E38-4)", () => {
+  it("шапка: номер из цели, таймер тикает; «?» открывает правила; «Не знаю» вторичное", async () => {
+    mount("/me/assessment/attempts/a1", attemptRoutes([{ done: false, response_id: "r1", seq: 7, kind: "choice", stem: "Что?", options: ["A", "B"], time_limit_s: 60 }]));
+    const timer = await screen.findByRole("timer");
+    expect(screen.getByLabelText("Задание 7 из 10")).toBeInTheDocument();
+    const before = timer.textContent;
+    await waitFor(() => expect(screen.getByRole("timer").textContent).not.toBe(before), { timeout: 3000 });
+    expect(screen.queryByText("Правила теста")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Пояснение" }));
+    expect(screen.getByText("Правила теста")).toBeInTheDocument();
+    expect(screen.getByTestId("assessment-skip").className).toMatch(/border/);
+  });
+
+  it("choice: код в условии отдельным блоком, клик по строке выбирает вариант", async () => {
+    mount("/me/assessment/attempts/a1", attemptRoutes([{ done: false, response_id: "c", seq: 1, kind: "choice", stem: "Какой запрос?\n\nusers(id)", options: ["A", "B"], time_limit_s: 60 }]));
+    const row = await tid("assessment-option-1");
+    expect(screen.getByLabelText("Код задания")).toHaveTextContent("users(id)");
+    expect(row).toHaveAttribute("aria-checked", "false");
+    fireEvent.click(row);
+    expect(row).toHaveAttribute("aria-checked", "true");
+  });
+
+  it("order: клик по строке и по месту переносит вариант", async () => {
+    const answers: { body: unknown }[] = [];
+    mount(
+      "/me/assessment/attempts/a1",
+      attemptRoutes([{ done: false, response_id: "o", seq: 1, kind: "order", stem: "Порядок", options: ["x", "y", "z"], time_limit_s: 60 }, { done: true }], answers),
+    );
+    fireEvent.click(await tid("assessment-row-0"));
+    fireEvent.click(screen.getByTestId("assessment-row-2"));
+    fireEvent.click(screen.getByTestId("assessment-next"));
+    await waitFor(() => expect(answers).toHaveLength(1));
+    expect((answers[0]!.body as { answer: unknown }).answer).toEqual([1, 2, 0]);
+  });
+
+  it("sjt: строки с номерами и подсказкой про эффективность", async () => {
+    mount("/me/assessment/attempts/a1", attemptRoutes([{ done: false, response_id: "s", seq: 1, kind: "sjt", stem: "Что делать?", options: ["a", "b"], time_limit_s: 60 }]));
+    const row = await tid("assessment-row-1");
+    expect(row).toHaveTextContent("2");
+    expect(screen.getByText(/самого эффективного/)).toBeInTheDocument();
+  });
+
+  it("find_bug: строки кода переключаются кликом, ответ — номера строк", async () => {
+    mount("/me/assessment/attempts/a1", attemptRoutes([{ done: false, response_id: "f", seq: 1, kind: "find_bug", stem: "Найдите.\n\n 1 | a\n 2 | b\n 3 | c", time_limit_s: 60 }]));
+    fireEvent.click(await tid("assessment-line-3"));
+    fireEvent.click(screen.getByTestId("assessment-line-1"));
+    expect(screen.getByTestId("assessment-line-3")).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(screen.getByTestId("assessment-line-3"));
+    expect(screen.getByTestId("assessment-find-hint")).toHaveTextContent("Выбрано строк: 1");
+  });
+
+  it("пусто: «Активного теста нет» и ссылка на тест; ошибка: «Повторить»; загрузка: скелетон", async () => {
+    mount("/me/assessment/attempts/a1", attemptRoutes([{ done: false }]));
+    expect(await screen.findByRole("status", { name: "Загружаем…" })).toBeInTheDocument();
+    expect(await tid("assessment-empty")).toHaveTextContent("Активного теста нет");
+    expect(screen.getByRole("link", { name: "Пройти тест" })).toHaveAttribute("href", "/me/assessment");
+  });
+
+  it("ошибка загрузки задания: «Повторить»", async () => {
+    mount("/me/assessment/attempts/a1", (url) => (url.includes("/next") ? res(503, { code: "unavailable" }) : undefined));
+    expect(await screen.findByTestId("assessment-error", {}, { timeout: 5000 })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Повторить" })).toBeInTheDocument();
   });
 });
 
@@ -293,6 +405,7 @@ describe("результат (S3)", () => {
     mount("/me/assessment/attempts/a1/result", routes(calls));
     expect(await tid("assessment-grade")).toHaveTextContent("Middle");
     expect(screen.getByTestId("assessment-integrity")).toHaveTextContent("0.92");
+    fireEvent.click(screen.getByTestId("assessment-topics-toggle"));
     expect(screen.getByTestId("assessment-skill-python")).toHaveTextContent("83%");
     expect(screen.getByTestId("assessment-skill-system_design")).toHaveTextContent("подтянуть");
     expect(await screen.findByText(/Следующая смена грейда — с 04\.01\.2999/)).toBeInTheDocument();
@@ -302,6 +415,59 @@ describe("результат (S3)", () => {
     fireEvent.click(screen.getByTestId("assessment-invite-start"));
     await waitFor(() => expect(calls.n).toBe(1));
     expect(await tid("assessment-item")).toBeInTheDocument();
+  });
+
+  it("макет v2 (E38-5): шкала 0–100 с порогом следующего грейда, разбивка по типам, «?»", async () => {
+    mount("/me/assessment/attempts/a1/result", (url) => {
+      if (url.endsWith("/attempts/a1")) return res(200, { ...finished, invited_grade: null });
+      if (url.endsWith("/candidates/me/interests")) return res(200, { companies: 3, salary_from_min: 140000, salary_to_max: 220000, items: [] });
+      if (url.endsWith("/assessment/history")) return res(200, { surveys: [], attempts: [finished], cooldowns: [], retries: [] });
+    });
+    expect(await tid("assessment-grade")).toHaveTextContent("Backend-разработчик · Middle — подтверждён");
+    // θ 0.4 → 55 + 25·0.4 = 65; подтверждён Middle → порог Senior (θ 1 → 80)
+    expect(screen.getByTestId("assessment-scale-aside")).toHaveTextContent("твой результат 65 · порог Senior 80");
+    expect(screen.getByRole("img", { name: /Результат 65/ })).toBeInTheDocument();
+    const types = screen.getByTestId("assessment-types");
+    expect(within(types).getAllByText(/Фундамент|Хард|Софт/).map((e) => e.textContent)).toEqual(["Фундамент", "Хард", "Софт"]);
+    expect(within(types).getByText("70")).toBeInTheDocument(); // фундамент θ 0.6
+    expect(await tid("assessment-opened-count")).toHaveTextContent("3");
+    expect(screen.getByTestId("assessment-to-offers")).toHaveAttribute("href", "/me/offers");
+    expect(screen.getByTestId("assessment-to-growth")).toHaveAttribute("href", "/me/navigator");
+    expect(screen.queryByTestId("assessment-rules")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Как устроен тест" }));
+    expect(screen.getByTestId("assessment-rules")).toHaveTextContent("90 дней");
+    expect(screen.queryByTestId("assessment-skills")).toBeNull();
+    fireEvent.click(screen.getByTestId("assessment-topics-toggle"));
+    expect(screen.getByTestId("assessment-skills")).toBeInTheDocument();
+  });
+
+  it("не подтверждён (E38-5): главная — тест грейдом ниже, заявленный стек пунктиром", async () => {
+    mount("/me/assessment/attempts/a1/result", (url) => {
+      if (url.endsWith("/attempts/a1"))
+        return res(200, { ...finished, status: "failed", invited_grade: null, result: { ...finished.result, grade: null, theta: -0.4 } });
+      if (url.endsWith("/assessment/history"))
+        return res(200, { surveys: [{ ...survey, id: "s1", created_at: "2026-10-06T08:00:00Z" }], attempts: [], cooldowns: [], retries: [] });
+    });
+    expect(await tid("assessment-grade")).toHaveTextContent("Middle не подтверждён");
+    expect(screen.getByTestId("assessment-scale-aside")).toHaveTextContent("твой результат 45 · порог Middle 55");
+    expect(screen.getByTestId("assessment-lower")).toHaveAttribute("href", "/me/assessment?profession=backend&grade=junior");
+    expect(screen.getByTestId("assessment-lower")).toHaveTextContent("Пройти Junior сейчас");
+    expect(screen.getByTestId("assessment-to-profile")).toHaveAttribute("href", "/me");
+    const claimed = await tid("assessment-claimed");
+    expect(within(claimed).getByText("fastapi")).toBeInTheDocument();
+    expect(claimed).toHaveTextContent("200 000");
+    expect(screen.getByTestId("assessment-explain")).toHaveTextContent("Задание 2");
+  });
+
+  it("загрузка: скелетон по композиции; ошибка: «Повторить»; чужая попытка: 404 без повтора", async () => {
+    mount("/me/assessment/attempts/a1/result", (url) => (url.endsWith("/attempts/a1") ? res(503, { code: "unavailable" }) : undefined));
+    expect(await tid("assessment-result-loading")).toBeInTheDocument();
+    expect(await screen.findByTestId("assessment-error", {}, { timeout: 5000 })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Повторить" })).toBeInTheDocument();
+    cleanup();
+    mount("/me/assessment/attempts/a1/result", () => undefined);
+    expect(await tid("assessment-error")).toHaveTextContent("Попытка не найдена");
+    expect(screen.queryByRole("button", { name: "Повторить" })).toBeNull();
   });
 
   it("экспресс-результат помечен меткой", async () => {
@@ -400,12 +566,15 @@ describe("«Объясни ответ» (E24-2)", () => {
     });
     expect(await tid("assessment-explain")).toBeInTheDocument();
     expect(screen.queryByTestId("assessment-explain-1")).not.toBeInTheDocument(); // верный ответ
-    fireEvent.change(screen.getByTestId("assessment-explain-self-2"), { target: { value: "guess" } });
     fireEvent.click(screen.getByTestId("assessment-explain-ask-2"));
     expect(await tid("assessment-explain-out-2")).toHaveTextContent("Кэш добавляет рассинхрон.");
     expect(screen.getByTestId("assessment-explain-reason-2")).toHaveTextContent("Ложное представление о теме");
-    const post = calls.find((c) => c.url.includes("/explain"))!;
-    expect(post.body).toEqual({ self_reason: "guess" });
+    expect(calls.find((c) => c.url.includes("/explain"))!.body).toBeUndefined();
+    // своя версия причины — после первого разбора, затем сверка
+    fireEvent.change(screen.getByTestId("assessment-explain-self-2"), { target: { value: "guess" } });
+    fireEvent.click(screen.getByTestId("assessment-explain-ask-2"));
+    await waitFor(() => expect(calls.filter((c) => c.url.includes("/explain"))).toHaveLength(2));
+    expect(calls.filter((c) => c.url.includes("/explain"))[1]!.body).toEqual({ self_reason: "guess" });
   });
 
   it("ошибка лимита показывается строкой", async () => {
@@ -416,5 +585,61 @@ describe("«Объясни ответ» (E24-2)", () => {
     });
     fireEvent.click(await tid("assessment-explain-ask-2"));
     expect(await tid("assessment-explain-error-2")).toHaveTextContent("Слишком много запросов");
+  });
+});
+
+describe("баннер пути кандидата (E35-2a)", () => {
+  const history = (surveys: unknown[], attempts: unknown[]) => (url: string) =>
+    url.endsWith("/assessment/history") ? res(200, { surveys, attempts, cooldowns: [], retries: [] }) : undefined;
+
+  it("без опроса на экране кандидата — одна кнопка в опрос", async () => {
+    mount("/me/offers", history([], []));
+    const banner = await screen.findByTestId("path-banner");
+    expect(banner).toHaveAttribute("data-step", "survey");
+    const links = within(banner).getAllByRole("link");
+    expect(links).toHaveLength(1);
+    expect(links[0]).toHaveAttribute("href", "/me/assessment");
+    expect(links[0]).toHaveTextContent("Пройти опрос");
+  });
+
+  it("опрос есть, теста нет — «Пройти тест»; идёт попытка — «Продолжить тест»", async () => {
+    mount("/me/offers", history([{ id: "s1" }], []));
+    expect(await screen.findByTestId("path-banner-action")).toHaveTextContent("Пройти тест");
+    cleanup();
+    mount("/me/offers", history([{ id: "s1" }], [attemptBase]));
+    expect(await screen.findByTestId("path-banner-action")).toHaveAttribute("href", "/me/assessment/attempts/a1");
+  });
+
+  it("после теста баннера нет; на экране опроса — тоже", async () => {
+    const calls = mount("/me/offers", history([{ id: "s1" }], [finished]));
+    await waitFor(() => expect(calls.some((c) => c.url.endsWith("/assessment/history"))).toBe(true));
+    await waitFor(() => expect(screen.queryByTestId("path-banner")).not.toBeInTheDocument());
+    cleanup();
+    mount("/me/assessment", (url) => (url.endsWith("/assessment/survey") ? res(200, survey) : history([], [])(url)));
+    expect(await screen.findByTestId("assessment-survey")).toBeInTheDocument();
+    expect(screen.queryByTestId("path-banner")).not.toBeInTheDocument();
+  });
+});
+
+describe("путь: тест сейчас или позже, результат → Главная (E35-2a)", () => {
+  it("«Сохранить опрос» предлагает пройти тест позже и ведёт на Главную", async () => {
+    mount("/me/assessment", (url, init) => {
+      if (url.endsWith("/assessment/survey") && (init?.method ?? "GET") === "GET") return res(200, survey);
+      if (url.endsWith("/assessment/survey")) return res(200, { ...survey, id: "s1", prefilled: false });
+      if (url.endsWith("/assessment/history")) return res(200, { surveys: [], attempts: [], cooldowns: [] });
+    });
+    fireEvent.click(await tid("assessment-save"));
+    expect(await tid("assessment-saved")).toHaveTextContent("позже");
+    expect(screen.getByTestId("assessment-later")).toHaveAttribute("href", "/me");
+  });
+
+  it("результат: главная кнопка — «На главную»", async () => {
+    mount("/me/assessment/attempts/a1/result", (url) => {
+      if (url.endsWith("/attempts/a1")) return res(200, finished);
+      if (url.endsWith("/assessment/history")) return res(200, { surveys: [], attempts: [finished], cooldowns: [], retries: [] });
+    });
+    const home = await tid("assessment-to-profile");
+    expect(home).toHaveAttribute("href", "/me");
+    expect(home).toHaveTextContent("На главную");
   });
 });

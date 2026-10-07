@@ -30,6 +30,7 @@ beforeEach(() => {
       if (url.endsWith("/auth/refresh")) return res(200, { access_token: "t" });
       if (url.endsWith("/me")) return res(200, { id: "u1", email: "o@b.ru", role: "employer", consents: ["pd_processing"] });
       if (url.includes("/vacancies")) return res(200, [vac]);
+      if (url.includes("/employer/tasks")) return res(200, [{ id: "t1", family_id: "f1", title: "Мини-задание: REST-клиент", profession: "backend", grade: "middle", kind: "regular", period_days: 7, status: "published", round: 1 }]);
       if (url.includes("/candidates/p1/card")) return res(200, card);
       if (url.includes("/offers/salary-hint")) {
         return res(200, { candidate_min: 230000, below_candidate_min: false, category_median: 275000, p_accept: 0.7, acceptance_hint: "high", range_too_wide: false, message: "" });
@@ -52,10 +53,10 @@ async function openDialog() {
       </Providers>
     </MemoryRouter>,
   );
-  fireEvent.click(await screen.findByRole("button", { name: "Отправить приглашение" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Пригласить" }));
   return await screen.findByRole("dialog");
 }
-const sendBtn = () => screen.getAllByRole("button", { name: "Отправить приглашение" }).at(-1) as HTMLButtonElement;
+const sendBtn = () => screen.getAllByRole("button", { name: "Отправить" }).at(-1) as HTMLButtonElement;
 
 test("модалка: вилка вакансии, медиана и AcceptanceMeter из API, ключ идемпотентности", async () => {
   await openDialog();
@@ -87,7 +88,7 @@ test("«Отправить» заблокирована без вилки и п�
 test("без вакансии название обязательно, уходит vacancy_id=null и title", async () => {
   await openDialog();
   await screen.findByLabelText(/Вероятность принятия/);
-  fireEvent.change(screen.getByRole("combobox"), { target: { value: "" } });
+  fireEvent.change(screen.getByLabelText(/^Вакансия/), { target: { value: "" } });
   const [from, to] = screen.getAllByRole("textbox").filter((e) => e.getAttribute("inputmode") === "numeric");
   fireEvent.change(from, { target: { value: "200000" } });
   fireEvent.change(to, { target: { value: "240000" } });
@@ -99,4 +100,16 @@ test("без вакансии название обязательно, уход�
   fireEvent.click(sendBtn());
   await waitFor(() => expect(posts).toHaveLength(1));
   expect(posts[0].body).toMatchObject({ vacancy_id: null, title: "Бэкенд", description: "Команда платформы", contact_method: "telegram", salary_from: 200000, salary_to: 240000 });
+});
+
+test("база вилки «на руки» и задание уходят в POST /offers, пустая вилка блокирует отправку", async () => {
+  await openDialog();
+  await screen.findByLabelText(/Вероятность принятия/);
+  fireEvent.click(screen.getByRole("radio", { name: "на руки" }));
+  fireEvent.change(await screen.findByLabelText(/Задание/), { target: { value: "f1" } });
+  fireEvent.click(sendBtn());
+  await waitFor(() => expect(posts).toHaveLength(1));
+  expect(posts[0].body).toMatchObject({ salary_basis: "net", task: { family_id: "f1" } });
+  expect(await screen.findByText(/Не отправилось · ошибка 429/)).toBeInTheDocument();
+  expect(screen.getAllByRole("button", { name: "Повторить" }).length).toBeGreaterThan(0);
 });

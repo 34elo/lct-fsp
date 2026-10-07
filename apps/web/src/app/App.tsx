@@ -8,10 +8,12 @@ import Login from "@/pages/Login";
 import MagicLogin from "@/pages/MagicLogin";
 import Onboarding from "@/pages/Onboarding";
 import Profile from "@/features/profile/Profile";
+import Home from "@/features/profile/Home";
 import SkillEvidence from "@/features/profile/SkillEvidence";
 import CandidateView from "@/features/employer/CandidateView";
 import EmployerSearch from "@/features/employer/Search";
 import Shortlist from "@/features/employer/Shortlist";
+import ShortlistPage from "@/features/employer/ShortlistPage";
 import Company from "@/features/employer/Company";
 import Vacancies from "@/features/employer/Vacancies";
 import VacancyEditor from "@/features/employer/VacancyEditor";
@@ -27,7 +29,7 @@ import Result from "@/features/assessment/Result";
 import History from "@/features/assessment/History";
 import VerifyEmail from "@/features/auth/VerifyEmail";
 import ProfileEdit from "@/features/profile/ProfileEdit";
-import Graph from "@/features/graph/Graph";
+import Stats from "@/features/profile/Stats";
 import CandidateTasks from "@/features/tasks/CandidateTasks";
 import EmployerTasks from "@/features/tasks/EmployerTasks";
 import Constructor from "@/features/constructor/Constructor";
@@ -56,6 +58,7 @@ import NeedCategories from "@/features/needs/NeedCategories";
 import CategoryCandidates from "@/features/needs/CategoryCandidates";
 import Subscriptions from "@/features/needs/Subscriptions";
 import { CandidateInterests } from "@/features/offers/CandidateInterests";
+import EmployerMatch from "@/features/employer/Match";
 // <<< block2 imports
 
 // Разделы по ролям грузятся лениво (frontend.md: «ленивые разделы»).
@@ -79,7 +82,7 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
         {section === "candidate" && (
           <>
             <Route path="/onboarding" element={<Onboarding />} />
-            <Route path="/me" element={<Profile />} />
+            <Route path="/me" element={<Home />} />
             <Route path="/me/skills/:slug" element={<SkillEvidence />} />
             <Route path="/me/offers" element={<CandidateOffers />} />
             <Route path="/me/offers/:id" element={<CandidateOfferDetail />} />
@@ -88,9 +91,10 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
             <Route path="/me/assessment/history" element={<History />} />
             <Route path="/me/assessment/attempts/:id" element={<Attempt />} />
             <Route path="/me/assessment/attempts/:id/result" element={<Result />} />
+            <Route path="/me/profile" element={<Profile />} />
             <Route path="/me/profile/edit" element={<ProfileEdit />} />
+            <Route path="/me/stats" element={<Stats />} />
             <Route path="/me/tasks" element={<CandidateTasks />} />
-            <Route path="/me/graph" element={<Graph />} />
             {/* <<< block1 (candidate) */}
             {/* >>> block2 (candidate) */}
             <Route path="/me/navigator" element={<Navigator />} />
@@ -111,11 +115,13 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
             <Route path="/employer/offers" element={<EmployerOffers />} />
             <Route path="/employer/offers/:id" element={<EmployerOfferDetail />} />
             <Route path="/employer/vacancies/:id/shortlist" element={<Shortlist />} />
+            <Route path="/employer/shortlist" element={<ShortlistPage />} />
             {/* >>> block1 (employer) */}
             <Route path="/employer/tasks" element={<EmployerTasks />} />
             <Route path="/employer/families/new" element={<Constructor />} />
             {/* <<< block1 (employer) */}
             {/* >>> block2 (employer) */}
+            <Route path="/employer" element={<EmployerMatch />} />
             <Route path="/employer/responses" element={<EmployerResponses />} />
             <Route path="/employer/needs/new" element={<NeedNew />} />
             <Route path="/employer/needs/:id" element={<NeedCategories />} />

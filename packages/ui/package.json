@@ -14,7 +14,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint src playground scripts",
     "test": "vitest run",
-    "shot": "node scripts/shot.mjs"
+    "shot": "node scripts/shot.mjs",
+    "design-shots": "node scripts/design-shots.mjs"
   },
   "peerDependencies": {
     "react": "^19.0.0",

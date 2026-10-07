@@ -3,6 +3,12 @@ import { describe, expect, it } from "vitest";
 import { cooldownDate, errorView } from "./text";
 import { ApiError } from "@/api/mutator";
 import {
+  latestSurvey,
+  lowerGrade,
+  seScale,
+  thresholdGrade,
+  toScale,
+  typeRows,
   addStack,
   chainSteps,
   formatClock,
@@ -10,8 +16,10 @@ import {
   isAnswered,
   missedAnswers,
   move,
+  moveTo,
   parseListing,
   parseNumber,
+  pathStep,
   salaryError,
   skillRows,
   toPayload,
@@ -115,5 +123,68 @@ describe("missedAnswers", () => {
     ]);
     expect(rows.map((r) => r.responseId)).toEqual(["a", "b"]);
     expect(missedAnswers(undefined)).toEqual([]);
+  });
+});
+
+describe("перенос варианта на место (E38-4)", () => {
+  it("moveTo переносит элемент, остальные сдвигаются", () => {
+    expect(moveTo([0, 1, 2, 3], 0, 2)).toEqual([1, 2, 0, 3]);
+    expect(moveTo([0, 1, 2, 3], 3, 1)).toEqual([0, 3, 1, 2]);
+  });
+  it("вне границ и на то же место — без изменений", () => {
+    const l = [0, 1, 2];
+    expect(moveTo(l, 1, 1)).toBe(l);
+    expect(moveTo(l, 0, 5)).toBe(l);
+  });
+});
+
+describe("путь кандидата (E35-2a)", () => {
+  const a = (id: string, status: string) => ({ id, status });
+  it("нет опроса → опрос", () => {
+    expect(pathStep({ surveys: [], attempts: [] })).toEqual({ kind: "survey", to: "/me/assessment" });
+  });
+  it("опрос есть, теста нет (или брошен) → тест", () => {
+    expect(pathStep({ surveys: [{}], attempts: [] })).toEqual({ kind: "test", to: "/me/assessment" });
+    expect(pathStep({ surveys: [{}], attempts: [a("x", "abandoned")] })?.kind).toBe("test");
+  });
+  it("идёт попытка → продолжить её", () => {
+    expect(pathStep({ surveys: [{}], attempts: [a("old", "failed"), a("a1", "active")] })).toEqual({
+      kind: "continue",
+      to: "/me/assessment/attempts/a1",
+    });
+  });
+  it("тест завершён (сдан или нет) → баннера нет", () => {
+    expect(pathStep({ surveys: [{}], attempts: [a("a1", "passed")] })).toBeNull();
+    expect(pathStep({ surveys: [{}], attempts: [a("a1", "failed")] })).toBeNull();
+  });
+});
+
+describe("результат v2: шкала 0–100 (E38-5)", () => {
+  it("пороги θ ложатся на полосы GradeScale: −1 → 30, 0 → 55, 1 → 80; края обрезаются", () => {
+    expect([toScale(-1), toScale(0), toScale(1)]).toEqual([30, 55, 80]);
+    expect([toScale(-5), toScale(5), toScale(0.4)]).toEqual([0, 100, 65]);
+    expect([seScale(0.2), seScale(null), seScale(0)]).toEqual([5, undefined, undefined]);
+  });
+
+  it("порог: подтверждён — следующий грейд, Senior — свой, не подтверждён — заявленный", () => {
+    expect(thresholdGrade("junior", "junior")).toBe("middle");
+    expect(thresholdGrade("senior", "senior")).toBe("senior");
+    expect(thresholdGrade(null, "middle")).toBe("middle");
+    expect([lowerGrade("middle"), lowerGrade("junior")]).toEqual(["junior", null]);
+  });
+
+  it("типы в порядке справочника, мусор отброшен; последний опрос по профессии", () => {
+    expect(typeRows({ soft: 0, hard: -1, x: 1 } as Record<string, number>)).toEqual([
+      { type: "hard", value: 30 },
+      { type: "soft", value: 55 },
+    ]);
+    expect(typeRows(undefined)).toEqual([]);
+    const s = [
+      { id: "a", profession: "backend", created_at: "2026-01-01" },
+      { id: "b", profession: "backend", created_at: "2026-02-01" },
+      { id: "c", profession: "frontend", created_at: "2026-03-01" },
+    ];
+    expect(latestSurvey(s, "backend")?.id).toBe("b");
+    expect(latestSurvey(s, "qa")).toBeNull();
   });
 });

@@ -209,3 +209,128 @@ export const editText = {
   invalidPhone: "Телефон: от 7 цифр",
   invalidExp: "Стаж: целое число от 0 до 600 месяцев",
 } as const;
+
+/** Главная кандидата `/me` (E38-1, макеты v2_me__before / v2_me__after). */
+export const HOME = {
+  title: "Главная",
+  loading: "Загрузка главной…",
+  loadError: "Не удалось загрузить главную",
+  loadErrorHint: "Проверь соединение и повтори.",
+  beforeTitle: "Пройди тест — без него тебя не видят работодатели",
+  beforeAction: { survey: "Пройти тест", test: "Пройти тест", continue: "Продолжить тест" },
+  claimed: "заявлено",
+  express: "экспресс · 3–5 мин",
+  constellationEmpty: "Заявленные навыки без подтверждения",
+  nextStep: "Следующий шаг",
+  steps: {
+    test: { done: "Тест пройден", todo: "Пройти тест" },
+    fsp: { done: "ФСП привязан", todo: "Привязать ФСП" },
+    interest: { todo: "Ответить на интерес" },
+  },
+  nextTest: (grade: string) => `Тест на ${grade}`,
+  nextTestAction: (grade: string) => `Пройти тест на ${grade}`,
+  allDone: "Смотреть приглашения",
+  cooldown: (date: string) => `Следующая попытка — ${date}`,
+  confirmed: (date: string, express: boolean) => `подтверждён ${date}${express ? " · экспресс" : ""}`,
+  notConfirmed: "не подтверждён",
+  expectations: "Ожидания",
+  salaryFrom: (v: string) => `от ${v}`,
+  skills: "Навыки",
+  skillClaimed: "заявлен",
+  fsp: "Достижения ФСП",
+  fspPlace: (place: number) => `${place} место`,
+  constellation: "Созвездие навыков",
+  legend: { confirmed: "подтверждено", claimed: "заявлено", adjacent: "смежные" },
+  interests: "Вами интересуются",
+  strength: "Сила",
+  place: "Место",
+  interestsTile: "Интересы",
+  top: (p: number) => `топ-${p} %`,
+  none: "—",
+  rating: (v: string) => `${v} / 5`,
+} as const;
+
+/** Источник подтверждения навыка — метка в строке «Навыки» на Главной. */
+export const SOURCE_TAG: Record<string, string> = { test: "тест", fsp: "ФСП", github: "GitHub", resume: "резюме", task: "задание" };
+
+/** Формат работы в карточке профиля: «Удалёнка или гибрид». */
+export const FORMAT_WORD: Record<string, string> = { remote: "удалёнка", hybrid: "гибрид", office: "офис" };
+
+/** Статистика кандидата `/me/stats` (E38-2, макеты v2_me-stats__*). */
+export const STATS = {
+  title: "Статистика",
+  link: "Статистика",
+  linkViews: (n: number) => `смотрели: ${n} ›`,
+  loading: "Загрузка статистики…",
+  empty: "Статистики пока нет",
+  emptyAction: "Пройти тест",
+  loadError: "Не загрузилось",
+  errorCode: (status: number) => `ошибка ${status}`,
+  views: "Смотрели",
+  viewsHint: "за 30 дней",
+  peers: "Где ты среди своих",
+  peersSize: (n: number) => `${n} чел.`,
+  peersLabel: (category: string) => `Точечная диаграмма категории ${category}`,
+  you: "ты",
+  yLabel: "ожидания, ₽",
+  heatmap: "Просмотры профиля",
+  heatmapLabel: (total: number) => `Просмотры профиля по дням: ${total} за 30 дней`,
+  heatmapCaption: (n: number) => `${n} ${plural(n, "компания смотрела", "компании смотрели", "компаний смотрели")} за 30 дней`,
+  seenAs: "Как тебя видят",
+  fspConfirmed: "подтверждён ФСП",
+  history: "История тестов",
+  passed: "подтверждён",
+  failed: "не подтверждён",
+  mode: { express: "экспресс", full: "полный" } as Record<string, string>,
+} as const;
+
+/** Русское множественное число: 1 компания, 2 компании, 5 компаний. */
+export function plural(n: number, one: string, few: string, many: string): string {
+  const a = Math.abs(n) % 100;
+  const b = a % 10;
+  if (a > 10 && a < 20) return many;
+  if (b === 1) return one;
+  if (b >= 2 && b <= 4) return few;
+  return many;
+}
+
+/** Профиль кандидата `/me/profile` (E38-6, макеты v2_me-profile__*). */
+export const PROFILE = {
+  title: "Профиль",
+  addEvidence: "Добавить доказательство",
+  tabsLabel: "Разделы профиля",
+  tabs: { skills: "Навыки", fsp: "ФСП", resume: "Резюме", graph: "Граф" },
+  loading: "Загрузка профиля…",
+  loadError: "Не загрузилось",
+  errorCode: (status: number) => `ошибка ${status}`,
+  empty: "Доказательств пока нет",
+  confirmed: "Подтверждено",
+  claimed: "Заявлено",
+  claimedAndConfirmed: "Заявлено и подтверждено",
+  published: "профиль опубликован",
+  hidden: "профиль скрыт от компаний",
+  testTag: (date: string) => (date ? `тест ${date}` : "тест"),
+  claimedInResume: "заявлено в резюме",
+  claimedSelf: "заявлено",
+  derived: "выведено",
+  skillLink: (name: string) => `${name}: чем подтверждён`,
+  fspTitle: "Достижения ФСП",
+  fspLinked: "привязан",
+  fspNotLinked: "не привязан",
+  resume: "Резюме",
+  city: "Город",
+  salary: "Ожидания",
+  salaryFrom: (v: string) => `от ${v}`,
+  format: "Формат",
+  experience: "Опыт",
+  roles: "Роли",
+  notSpecified: "не указан",
+  experienceMonths: (m: number) => {
+    const y = Math.floor(m / 12);
+    const mo = m % 12;
+    return [y ? `${y} ${plural(y, "год", "года", "лет")}` : "", mo || !y ? `${mo} мес.` : ""].filter(Boolean).join(" ");
+  },
+  graphTitle: "Граф доказательств",
+  legendFact: "факт",
+  legendClaimed: "заявлено",
+} as const;

@@ -1,14 +1,6 @@
-import { Building2, Handshake, LayoutDashboard, Trophy, User, type LucideIcon } from "@fsp/ui";
+import { Building2, LayoutDashboard } from "@fsp/ui";
 
 import { NAV, activeNav, type NavItem } from "@/app/routes";
-
-/** Иконки пунктов нижней панели кандидата (E19-5, E35-1). */
-export const BOTTOM_ICON: Record<string, LucideIcon> = {
-  "/me": LayoutDashboard,
-  "/me/assessment": Trophy,
-  "/me/offers": Handshake,
-  "/me/profile/edit": User,
-};
 
 /** Нижняя панель кандидата — те же четыре пункта, что в шапке (E35-1). */
 export const CANDIDATE_BOTTOM: NavItem[] = NAV.candidate;
