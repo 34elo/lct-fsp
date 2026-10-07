@@ -154,7 +154,10 @@ def test_markdown_converter():
 def test_pdf_builds(tmp_path):
     import pytest
 
-    pytest.importorskip("weasyprint")
+    try:
+        import weasyprint  # noqa: F401
+    except (ImportError, OSError) as exc:  # нет системных библиотек Pango/GTK (Windows)
+        pytest.skip(f"WeasyPrint недоступен: {exc}")
     src = tmp_path / "a.md"
     src.write_text("# Тест\n\nРусский текст.\n", encoding="utf-8")
     out = tmp_path / "out" / "a.pdf"
