@@ -72,17 +72,11 @@ test("joint: регистрация → опрос и тест → катего�
   await test.step("опрос", async () => {
     await page.goto("/me/assessment");
     await expect(page.getByTestId("assessment-survey")).toBeVisible();
-    const nextStep = page.getByTestId("assessment-step-next"); // есть только на 375 px
-    const advance = async () => {
-      if (await nextStep.isVisible()) await nextStep.click();
-    };
-    await page.locator('[data-testid^="assessment-profession-"]').first().check();
-    await advance();
-    await advance(); // стек не обязателен
-    await page.getByTestId("assessment-format-remote").check();
-    await advance();
-    await page.getByTestId("assessment-grade-junior").check();
-    await page.getByTestId("assessment-express-toggle").check();
+    // Радио и переключатель экспресса — скрытые input с видимой меткой-родителем: кликаем по метке.
+    await page.locator('label:has([data-testid^="assessment-profession-"])').first().click();
+    await page.getByTestId("assessment-format-remote").click(); // кнопка с aria-pressed
+    await page.locator('label:has([data-testid="assessment-grade-junior"])').click();
+    await page.locator('label:has([data-testid="assessment-express-toggle"])').click();
     await shot(page, info, ++n, "survey");
     await page.getByTestId("assessment-start").click();
     await expect(page).toHaveURL(/\/me\/assessment\/attempts\/[^/]+$/);
