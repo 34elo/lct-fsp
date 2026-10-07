@@ -196,6 +196,14 @@ describe("v2: тест", () => {
     expect(pick).toHaveBeenCalledWith(1);
   });
 
+  it("CodeLines: несколько строк и своя нумерация", () => {
+    const pick = vi.fn();
+    render(<CodeLines lines={["a", "b"]} start={5} selected={[1]} onSelect={pick} lineTestId={(n) => `l-${n}`} />);
+    expect(screen.getByRole("button", { name: "Строка 6" })).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(screen.getByTestId("l-5"));
+    expect(pick).toHaveBeenCalledWith(0);
+  });
+
   it("ErrorBlock: навык, суть, код и «Объясни ответ»", () => {
     const explain = vi.fn();
     render(<ErrorBlock skill="SQL" title="путаешь LEFT и INNER JOIN" code={"SELECT 1\nWHERE x"} marked={[1]} onExplain={explain} />);

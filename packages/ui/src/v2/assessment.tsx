@@ -131,52 +131,63 @@ function highlight(line: string): ReactNode[] {
   return out;
 }
 
-/** Код с номерами строк `.cd`. С `onSelect` строки выбираются кликом (задание find_bug). `marked` — жёлтая подсветка. */
+/**
+ * Код с номерами строк `.cd`. С `onSelect` строки выбираются кликом (задание find_bug). `marked` — жёлтая подсветка.
+ * `selected` — индекс (с 0) или список индексов: со списком строки переключаются по одной (`aria-pressed`).
+ * `start` — номер первой строки в подписях; `lineTestId` — data-testid строки по её номеру.
+ */
 export function CodeLines({
   lines,
   selected,
   onSelect,
   marked = [],
   label = "Код",
+  start = 1,
+  lineTestId,
   className,
 }: {
   lines: string[];
-  /** Индекс выбранной строки, с 0. */
-  selected?: number;
+  selected?: number | number[];
   onSelect?: (index: number) => void;
   marked?: number[];
   label?: string;
+  start?: number;
+  lineTestId?: (no: number) => string;
   className?: string;
 }) {
   const box = "m-0 overflow-x-auto rounded-lg bg-code-bg px-3 py-2.5 font-mono text-12 leading-[1.65] whitespace-pre text-code-fg";
+  const multi = Array.isArray(selected);
+  const isOn = (i: number) => (Array.isArray(selected) ? selected.includes(i) : selected === i);
   if (!onSelect)
     return (
       <pre aria-label={label} className={cn(box, className)}>
         {lines.map((l, i) => (
           <span key={i} className={cn("-mx-3 block px-3", marked.includes(i) && "bg-code-mark")}>
-            <span className="inline-block w-[22px] text-code-muted select-none">{i + 1}</span>
+            <span className="inline-block w-[22px] text-code-muted select-none">{start + i}</span>
             {highlight(l)}
           </span>
         ))}
       </pre>
     );
   return (
-    <div role="radiogroup" aria-label={label} className={cn(box, "whitespace-normal", className)}>
+    <div role={multi ? "group" : "radiogroup"} aria-label={label} className={cn(box, "whitespace-normal", className)}>
       {lines.map((l, i) => (
         <button
           key={i}
           type="button"
-          role="radio"
-          aria-checked={selected === i}
-          aria-label={`Строка ${i + 1}`}
+          role={multi ? undefined : "radio"}
+          aria-checked={multi ? undefined : isOn(i)}
+          aria-pressed={multi ? isOn(i) : undefined}
+          aria-label={`Строка ${start + i}`}
+          data-testid={lineTestId?.(start + i)}
           onClick={() => onSelect(i)}
           className={cn(
-            "-mx-3 block w-[calc(100%+1.5rem)] cursor-pointer px-3 text-left whitespace-pre text-code-fg hover:bg-code-sel/30",
+            "-mx-3 block min-h-8 w-[calc(100%+1.5rem)] cursor-pointer px-3 text-left whitespace-pre text-code-fg hover:bg-code-sel/30",
             marked.includes(i) && "bg-code-mark",
-            selected === i && "bg-code-sel shadow-[inset_3px_0_0_var(--brand-mid)]",
+            isOn(i) && "bg-code-sel shadow-[inset_3px_0_0_var(--brand-mid)]",
           )}
         >
-          <span className="inline-block w-[22px] text-code-muted select-none">{i + 1}</span>
+          <span className="inline-block w-[22px] text-code-muted select-none">{start + i}</span>
           {highlight(l)}
         </button>
       ))}
