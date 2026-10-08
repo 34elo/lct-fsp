@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { Badge, Button, Card, CardContent, EmptyState, ErrorState, Field, Skeleton, useFieldProps } from "@fsp/ui";
+import { Badge, Button, Card, CardContent, cn, EmptyState, ErrorState, Field, Skeleton, useFieldProps } from "@fsp/ui";
 
 import {
   getListProfessionsAdminProfessionsGetQueryKey,
@@ -13,7 +13,6 @@ import {
 import { useGetTaxonomyTaxonomyGet } from "@/api/endpoints/taxonomy/taxonomy";
 import type { ProfessionOut } from "@/api/model";
 import { fieldClass } from "@/features/auth/ui";
-import { cn } from "@/shared/lib/cn";
 import { buildWeights, nextId, problemText, professionErrors, weightRows, type WeightRow } from "./model";
 import { T } from "./text";
 

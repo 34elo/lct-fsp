@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { Badge, Button, Card, CardContent, EmptyState, ErrorState, Field, Skeleton, useFieldProps } from "@fsp/ui";
+import { Badge, Button, Card, CardContent, cn, EmptyState, ErrorState, Field, Skeleton, useFieldProps } from "@fsp/ui";
 
 import {
   getListCardsAdminSkillCardsGetQueryKey,
@@ -11,7 +11,6 @@ import {
 } from "@/api/endpoints/admin/admin";
 import type { CardOut } from "@/api/model";
 import { fieldClass } from "@/features/auth/ui";
-import { cn } from "@/shared/lib/cn";
 import { GRADES, buildCard, cardErrors, cardToForm, nextId, problemText, splitLines, type CardForm } from "./model";
 import { T } from "./text";
 

@@ -10,9 +10,9 @@ import {
   useFspSyncCandidatesMeFspSyncPost,
   useFspVerifyCandidatesMeFspVerifyPost,
 } from "@/api/endpoints/fsp/fsp";
+import { Button } from "@fsp/ui";
 import { ErrorNote, fieldClass } from "@/features/auth/ui";
 import { fspApiError, fspErrorText } from "@/features/fsp/text";
-import { Button } from "@/shared/ui/button";
 
 type Mode = "idle" | "manual" | "code";
 

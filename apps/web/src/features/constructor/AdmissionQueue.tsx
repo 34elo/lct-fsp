@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { Badge, Button, Card, CardContent, EmptyState, ErrorState, Skeleton } from "@fsp/ui";
+import { Badge, Button, Card, CardContent, cn, EmptyState, ErrorState, Skeleton } from "@fsp/ui";
 
 import {
   getAdmissionQueueAdminFamiliesGetQueryKey,
@@ -14,7 +14,6 @@ import {
 } from "@/api/endpoints/admin/admin";
 import type { AdminFamilyOut, KeyApproveInSource } from "@/api/model";
 import { ApiError } from "@/api/mutator";
-import { cn } from "@/shared/lib/cn";
 import { admissionClosedNames } from "./model";
 import { T } from "./text";
 
