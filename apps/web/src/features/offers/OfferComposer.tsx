@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 
+import { Button, cn } from "@fsp/ui";
 import { useCreateOfferOffersPost, useSalaryHintOffersSalaryHintPost } from "@/api/endpoints/offers/offers";
 import { useCandidateCardCandidatesPseudoIdCardGet } from "@/api/endpoints/search/search";
 import { useListVacanciesVacanciesGet } from "@/api/endpoints/vacancies/vacancies";
@@ -9,8 +10,7 @@ import type { SalaryHint } from "@/api/model";
 import { ErrorNote, fieldClass } from "@/features/auth/ui";
 import { FORMAT_LABEL, rub } from "@/features/employer/text";
 import { GRADE_LABEL, roleLabel } from "@/features/profile/text";
-import { cn } from "@/shared/lib/cn";
-import { Button } from "@/shared/ui/button";
+import { displayPseudonym } from "@/shared/lib/pseudonym";
 import { invalidateOffers } from "./parts";
 import { ACCEPT_LABEL, offerErrorText } from "./text";
 
@@ -97,7 +97,7 @@ export default function OfferComposer() {
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4 md:p-6">
       <Link to={`/employer/candidates/${pseudoId}${vacancyId ? `?vacancy=${vacancyId}` : ""}`} className="text-sm font-semibold text-brand-fg hover:underline">← К карточке кандидата</Link>
-      <h1 className="font-mono text-2xl font-semibold">Приглашение кандидату {card?.pseudonym ?? ""}</h1>
+      <h1 className="font-mono text-2xl font-semibold">Приглашение кандидату {card ? displayPseudonym(card.pseudonym, card.primary_role) : ""}</h1>
       {card && (
         <p className="text-sm text-muted">
           {[grade, card.primary_role && roleLabel(card.primary_role), card.primary_stack.slice(0, 3).join(", "), card.salary_min ? `ожидания от ${rub(card.salary_min)}` : null].filter(Boolean).join(" · ")}

@@ -27,7 +27,7 @@ function Filter<V extends string>({ value, options, labels, onChange }: { value:
           type="button"
           aria-pressed={value === o}
           onClick={() => onChange(o)}
-          className={`min-h-9 rounded-lg border px-3 text-14 font-semibold ${value === o ? "border-tint-200 bg-tint-100 text-brand-deep" : "border-hairline text-muted"}`}
+          className={`min-h-9 rounded-lg border px-3 text-14 font-semibold ${value === o ? "border-tint-200 bg-tint-100 text-brand-deep dark:text-brand-mid" : "border-hairline text-muted"}`}
         >
           {o === "all" ? T.mod.statusAll : labels[o]}
         </button>

@@ -25,6 +25,7 @@ from fsp_ml.resume_text import DOCX_MIME, PDF_MIME, ResumeFileError, extract_tex
 from fsp_ml.taxonomy import TaxonomyIndex, TaxonomyProvider
 from fsp_ml.worker import MlWorker
 from fsp_platform.messaging import EVENTS_EXCHANGE, UI_EXCHANGE, durable_queue
+from pydantic import ValidationError
 
 FIX = Path(__file__).parent / "fixtures"
 TAX = Path(__file__).resolve().parents[3] / "data" / "taxonomy"
@@ -325,7 +326,7 @@ async def test_handler_completed_progress_and_redelivery():
     assert first[0].message_id == again[0].message_id  # inbox core отбросит дубль
     assert first[0].payload == again[0].payload
     parsed = first[0].payload["parsed"]
-    assert parsed["parser_version"] == "resume-v1:qwen3-vl-4b"
+    assert parsed["parser_version"] == "resume-v2:qwen3-vl-4b"
     assert {s["slug"] for s in parsed["skills"]} >= {"python", "postgresql", "docker"}
     pcts = [x for _, x in stages]
     assert pcts == sorted(pcts) and stages[-1] == ("done", 100)
@@ -400,3 +401,107 @@ async def test_real_resume_parse_publishes_progress_and_result():
     assert ui and all(m["event"] == "job.progress" for m in ui)
     assert ui[0]["user_id"] == str(p.candidate_id)
     assert ui[-1]["data"]["pct"] == 100 and ui[-1]["data"]["job_id"] == str(p.resume_id)
+
+
+# --- заявленное в резюме (E20-5) ---
+
+DECL_TEXT = (
+    "Пётр Вымыслов\n"
+    "Middle backend-разработчик\n"
+    "Коммуникабельный, беру на себя наставничество джунов.\n"
+    "Python, FastAPI, PostgreSQL\n"
+)
+
+
+def _decl_assemble(extra: dict, text: str = DECL_TEXT):
+    out = resume_parser.LlmResume.model_validate(
+        {"skills": [{"name": "Python", "quote": "Python, FastAPI, PostgreSQL"}], **extra}
+    )
+    return resume_parser.assemble(text, out, INDEX, version="resume-v2:test", today=TODAY)
+
+
+def test_declared_fields_extracted_with_quotes():
+    p = _decl_assemble(
+        {
+            "soft_skills": [
+                {"name": "Коммуникабельность", "quote": "Коммуникабельный, беру на себя"},
+                {"name": "Наставничество", "quote": "беру на себя наставничество джунов"},
+            ],
+            "declared_grade": {"grade": "middle", "quote": "Middle backend-разработчик"},
+            "roles": [{"role": "backend", "quote": "Middle backend-разработчик"}],
+        }
+    )
+    assert [s.name for s in p.soft_skills] == ["Коммуникабельность", "Наставничество"]
+    assert all(s.quote for s in p.soft_skills)
+    assert p.declared_grade is not None and p.declared_grade.grade == "middle"
+    assert [r.role for r in p.declared_roles] == ["backend"]
+    assert not any(w.endswith("_dropped") or "_dropped:" in w for w in p.warnings)
+
+
+def test_declared_fields_dropped_without_quote():
+    p = _decl_assemble(
+        {
+            "soft_skills": [
+                {
+                    "name": "Лидерство",
+                    "quote": "Руководил командой из десяти человек",
+                },  # нет в тексте
+                {
+                    "name": "Стрессоустойчивость",
+                    "quote": "Коммуникабельный, беру на себя",
+                },  # не в цитате
+            ],
+            "declared_grade": {"grade": "senior", "quote": "Senior-разработчик с 10 годами опыта"},
+            "roles": [
+                {"role": "devops", "quote": "Middle backend-разработчик"},  # роль не читается
+                {"role": "frontend", "quote": "Фронтенд-разработчик на React"},  # нет в тексте
+            ],
+        }
+    )
+    assert p.soft_skills == [] and p.declared_grade is None and p.declared_roles == []
+    for w in (
+        "soft_dropped:Лидерство",
+        "soft_dropped:Стрессоустойчивость",
+        "grade_dropped:senior",
+        "role_dropped:devops",
+        "role_dropped:frontend",
+    ):
+        assert w in p.warnings
+
+
+def test_declared_grade_must_match_quote():
+    # грейд в цитате есть, но модель назвала другой
+    p = _decl_assemble(
+        {"declared_grade": {"grade": "senior", "quote": "Middle backend-разработчик"}}
+    )
+    assert p.declared_grade is None and "grade_dropped:senior" in p.warnings
+
+
+def test_declared_does_not_change_skills_or_experience():
+    """Заявленное не влияет ни на навыки, ни на стаж (категорию даёт только тест)."""
+    base = _decl_assemble({})
+    withd = _decl_assemble(
+        {
+            "soft_skills": [
+                {"name": "Коммуникабельность", "quote": "Коммуникабельный, беру на себя"}
+            ],
+            "declared_grade": {"grade": "middle", "quote": "Middle backend-разработчик"},
+            "roles": [{"role": "backend", "quote": "Middle backend-разработчик"}],
+        }
+    )
+    assert withd.skills == base.skills and withd.experience == base.experience
+    assert withd.total_experience_months == base.total_experience_months
+    assert withd.unknown_skills == base.unknown_skills
+    assert base.soft_skills == [] and base.declared_grade is None and base.declared_roles == []
+
+
+def test_declared_schema_rejects_unknown_grade_and_role():
+    with pytest.raises(ValidationError):
+        resume_parser.LlmResume.model_validate({"declared_grade": {"grade": "guru", "quote": "x"}})
+    with pytest.raises(ValidationError):
+        resume_parser.LlmResume.model_validate({"roles": [{"role": "wizard", "quote": "x"}]})
+
+
+def test_rules_mode_has_no_declared_fields():
+    out = resume_parser.extract_rules(TEXT, INDEX)
+    assert out.soft_skills == [] and out.declared_grade is None and out.roles == []

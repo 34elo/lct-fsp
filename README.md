@@ -22,7 +22,7 @@ make seed       # демо-данные: кандидаты, компании, �
 
 Остановка: `make down`. Профили `standard` (LLM на CPU) и `full` (GPU), порты, типичные ошибки и полный список команд — в [docs/deploy.md](docs/deploy.md). Публичного стенда пока нет.
 
-На Windows без `make` команды Makefile запускайте из Git Bash или WSL.
+На Windows без `make` команды Makefile запускайте из Git Bash или WSL, либо вручную по разделу «Windows без make» в [docs/deploy.md](docs/deploy.md).
 
 ## Демо-аккаунты
 
@@ -44,7 +44,8 @@ make seed       # демо-данные: кандидаты, компании, �
 |---|---|
 | http://localhost:28080 | приложение (SPA) |
 | http://localhost:28080/api/docs | Swagger UI |
-| http://localhost:28080/api/asyncapi | события и команды (AsyncAPI) |
+| [docs/asyncapi.json](docs/asyncapi.json) | события и команды (AsyncAPI), `make asyncapi` |
+| [docs/openapi.json](docs/openapi.json) | схема REST API (OpenAPI), `make openapi` |
 
 Наружу открыт только gateway на порту 28080; остальные порты на хосте — 28xxx.
 

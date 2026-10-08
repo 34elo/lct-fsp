@@ -1,4 +1,4 @@
-import { Button, EmptyState, H1, Lbl, Panel, Skeleton, TaskHeader } from "@fsp/ui";
+import { Button, cn, EmptyState, H1, Lbl, Panel, Skeleton, TaskHeader } from "@fsp/ui";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 
@@ -9,7 +9,6 @@ import {
 } from "@/api/endpoints/assessment/assessment";
 import { useGetProfessionsTaxonomyProfessionsGet } from "@/api/endpoints/taxonomy/taxonomy";
 import type { NextOut } from "@/api/model";
-import { cn } from "@/shared/lib/cn";
 import { chainSteps, initialAnswer, isAnswered, toPayload, type AnswerValue, type TestItem } from "./model";
 import { Question } from "./Question";
 import { GRADE, T } from "./text";

@@ -505,6 +505,10 @@ interface ParsedResume {
   unknown_skills: string[];
   total_experience_months: number;
   warnings: string[];              // «не нашёл даты в опыте №2»
+  // E20-5: только «заявлено в резюме», с цитатой; на категорию, грейд и подбор не влияет
+  soft_skills: { name: string; quote: string }[];
+  declared_grade?: { grade: Grade; quote: string };
+  declared_roles: { role: RoleSlug; quote: string }[];
 }
 
 // Правки при подтверждении: убрать навык из разбора (slug), добавить свой (source=self, 0.15), заменить опыт/образование целиком

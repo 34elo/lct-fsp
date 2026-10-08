@@ -6,6 +6,7 @@ import { useListMessagesOffersOfferIdMessagesGet, useListOffersOffersGet } from 
 import type { OfferForCompany } from "@/api/model";
 import { ApiError } from "@/api/mutator";
 import { GRADE_LABEL } from "@/features/profile/text";
+import { displayPseudonym } from "@/shared/lib/pseudonym";
 import { funnelOf, funnelSpanDays, lastActive, sortOffers } from "./offer-model";
 import { BOARD_TEXT as T } from "./text";
 
@@ -24,7 +25,7 @@ function note(o: OfferForCompany): string {
 }
 
 function Name({ o }: { o: OfferForCompany }) {
-  return <span className="break-words font-mono text-14 font-semibold">{o.candidate?.pseudonym ?? T.deleted}</span>;
+  return <span className="break-words font-mono text-14 font-semibold">{o.candidate ? displayPseudonym(o.candidate.pseudonym, o.candidate.primary_role) : T.deleted}</span>;
 }
 
 function grade(o: OfferForCompany) {
@@ -78,7 +79,7 @@ function OffersTable({ offers }: { offers: OfferForCompany[] }) {
             <Link
               to={`/employer/offers/${o.id}`}
               data-testid="offer-row"
-              aria-label={`${o.candidate?.pseudonym ?? T.deleted}, ${T.open}`}
+              aria-label={`${o.candidate ? displayPseudonym(o.candidate.pseudonym, o.candidate.primary_role) : T.deleted}, ${T.open}`}
               className={cn("grid items-center gap-3 px-4 py-3 hover:bg-tint-50 focus-visible:outline-2 focus-visible:outline-brand", COLS)}
             >
               <Name o={o} />
@@ -93,7 +94,7 @@ function OffersTable({ offers }: { offers: OfferForCompany[] }) {
       <ul className="m-0 grid list-none gap-2 p-2 md:hidden">
         {offers.map((o) => (
           <li key={o.id}>
-            <Link to={`/employer/offers/${o.id}`} aria-label={`${o.candidate?.pseudonym ?? T.deleted}, ${T.open}`} className="grid gap-2 rounded-xl border border-hairline bg-card p-3 shadow-xs hover:border-brand-mid">
+            <Link to={`/employer/offers/${o.id}`} aria-label={`${o.candidate ? displayPseudonym(o.candidate.pseudonym, o.candidate.primary_role) : T.deleted}, ${T.open}`} className="grid gap-2 rounded-xl border border-hairline bg-card p-3 shadow-xs hover:border-brand-mid">
               <span className="flex items-center justify-between gap-2"><Name o={o} /><StatusBadge status={o.status as OfferStatus} /></span>
               <span className="flex items-center justify-between gap-2"><Num className="text-14">{salary(o)}</Num><span className="text-12 text-muted">{note(o)}</span></span>
             </Link>
