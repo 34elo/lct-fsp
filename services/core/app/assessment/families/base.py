@@ -79,7 +79,7 @@ def score_exact(key: Any, answer: Any) -> float:
         return 0.0
     try:
         return 1.0 if math.isclose(float(answer), float(key), rel_tol=1e-9) else 0.0
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):  # огромное целое из JSON — не число
         return 1.0 if _norm(answer) == _norm(key) else 0.0
 
 
@@ -87,7 +87,7 @@ def score_estimate(key: float, answer: Any) -> float:
     """1 — |log₁₀(ответ/истина)| ≤ 0.3; 0.5 — ≤ 0.6; иначе 0."""
     try:
         a = float(answer)
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         return 0.0
     if a <= 0 or key <= 0:
         return 0.0
@@ -112,7 +112,11 @@ def score_find_bug(key: list[int], answer: Any) -> float:
 
 def score_order(key: list[int], answer: Any) -> float:
     """1 − D / D_max, D = Σ|позиция кандидата − позиция ключа| (`order`, `sjt`)."""
-    if not isinstance(answer, list) or sorted(answer) != sorted(key):
+    if not isinstance(answer, list) or not all(
+        isinstance(a, int) and not isinstance(a, bool) for a in answer
+    ):
+        return 0.0  # строки, списки и прочее от клиента — неверный ответ, а не 500
+    if sorted(answer) != sorted(key):
         return 0.0
     n = len(key)
     pos = {v: i for i, v in enumerate(key)}
