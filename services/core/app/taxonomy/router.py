@@ -137,11 +137,18 @@ class ProfessionsOut(BaseModel):
 async def get_professions(
     request: Request, session: AsyncSession = Depends(get_session)
 ) -> ProfessionsOut:
-    """Профессии теста, веса и типы навыков, грейды с порогами θ (assessment.md §10)."""
+    """Профессии теста, веса и типы навыков, грейды с порогами θ (assessment.md §10).
+
+    `beta` — тонкий банк семейств (E39-6): профессия открыта, в опросе помечена «бета».
+    """
+    from app.assessment import service as assessment  # публичное API модуля, без цикла импорта
+
     path = Path(request.app.state.settings.scoring_config_path or DEFAULT_SCORING_PATH)
     cuts = load_grade_cuts(path)
+    profs = await service.list_professions(session)
+    beta = assessment.thin_professions(profs)
     return ProfessionsOut(
-        professions=await service.list_professions(session),
+        professions=[p.model_copy(update={"beta": p.slug in beta}) for p in profs],
         skill_types=list(SkillType),
         grades=[GradeCut(grade=TestGrade(g), cut=c) for g, c in cuts.items()],
     )

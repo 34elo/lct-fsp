@@ -3982,7 +3982,7 @@
           "taxonomy"
         ],
         "summary": "Get Professions",
-        "description": "Профессии теста, веса и типы навыков, грейды с порогами θ (assessment.md §10).",
+        "description": "Профессии теста, веса и типы навыков, грейды с порогами θ (assessment.md §10).\n\n`beta` — тонкий банк семейств (E39-6): профессия открыта, в опросе помечена «бета».",
         "operationId": "get_professions_taxonomy_professions_get",
         "responses": {
           "200": {
@@ -24909,6 +24909,11 @@
             "type": "boolean",
             "title": "Active",
             "default": true
+          },
+          "beta": {
+            "type": "boolean",
+            "title": "Beta",
+            "default": false
           }
         },
         "type": "object",
@@ -24948,6 +24953,11 @@
             "type": "boolean",
             "title": "Active",
             "default": true
+          },
+          "beta": {
+            "type": "boolean",
+            "title": "Beta",
+            "default": false
           },
           "taxonomy_version": {
             "anyOf": [

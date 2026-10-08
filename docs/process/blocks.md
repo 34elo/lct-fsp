@@ -184,7 +184,7 @@ TEST_GRADE_ORDER: tuple[TestGrade, ...] = (TestGrade.junior, TestGrade.middle, T
 ProfessionSlug = Annotated[str, Field(pattern=r"^[a-z][a-z0-9_]{1,31}$")]
 ```
 
-- **Профессии MVP** (ADR-027, уточняет ADR-025): `backend`, `frontend` с полным покрытием банка + `ai_engineer` как витрина (добавляет E21-1, Б1), грейды Junior / Middle / Senior. `ml` (Data/ML), `mobile`, `devops`, `qa` остаются в `roles.yaml`, но в опросе скрыты (флаг `active` у профессии — E36-2, Б1; до него опрос показывает все). Код не должен на скрытые профессии рассчитывать, но и ломаться на них (и на уже выданных по ним грейдах) не должен.
+- **Профессии MVP** (ADR-027, уточняет ADR-025): `backend`, `frontend` с полным покрытием банка + `ai_engineer` как витрина (добавляет E21-1, Б1), грейды Junior / Middle / Senior. `ml` (Data/ML), `mobile`, `devops`, `qa` остаются в `roles.yaml`; с E39-6 они снова открыты в опросе с меткой «бета» (тонкий банк, `ProfessionInfo.beta`), флаг `active` (E36-2) остаётся механизмом скрытия. Код не должен на скрытые профессии рассчитывать, но и ломаться на них (и на уже выданных по ним грейдах) не должен.
 - `enums.RoleSlug` и `enums.Grade` остаются для старых полей (резюме, вакансии). Новые поля v2 используют `ProfessionSlug` и `TestGrade`.
 - **Категория** — пара `(profession, grade)`. В URL и ключах записывается как `backend/middle`, в логах и аналитике — как `backend.middle`.
 
@@ -263,6 +263,7 @@ class ProfessionInfo(BaseModel):
     ]  # slug навыка → вес 0..1 («насколько типичен», как в roles.yaml); не нормирован
     skill_types: dict[str, SkillType] = {}  # заполняет E21-1
     active: bool = True  # E36-2: false — скрыта в опросе (ADR-027 п.1)
+    beta: bool = False  # E39-6: тонкий банк семейств, в опросе метка «бета»
 ```
 
 Сигнатуры заморожены. Все функции асинхронные, первый аргумент — `session: AsyncSession`:
@@ -745,6 +746,7 @@ from app.assessment.router import router as assessment_router
 | 2026-10-06 | З-1-09 | Т2 → Б1 | Тот же дефект логирования, что Т2-a: `log.warning("...", event=...)` в `resumes/handlers.py:48` и `assessment/track.py:56` — при сбое ломает обработчик вместо предупреждения. Переименовать ключ (например `ui_event`, `analytics_event`) | Т2 | открыта |
 | 2026-10-06 | З-1-10 | Б1 → Б2 | F13: `DELETE /candidates/me` стирает данные зоны Б1 и шлёт `candidate.deleted` (`CandidateDeleted{candidate_id}`, уже был в `events.py`, контракт не менялся); строка `candidates` остаётся обезличенной (`deleted_at`, псевдоним), `matching` уже отсекает `deleted`. Нужно в Б2 (обработчики с inbox): удалить `matches`, `profile_views`, `impressions`/`rec_feedback`, `issued_credentials` (бейджи), `telegram_accounts`, `fsp_*` кандидата (в т.ч. команда fsp-connector на `fsp_links`); офферы — оставить только псевдоним, личные поля и сообщения кандидата обезличить, открытые офферы закрыть; пуш/SSE не слать | F13 | открыта |
 | 2026-10-08 | B1-e | Б1 ↔ Б2 | ADR-027 (ответы в чате): профессии MVP — `backend`, `frontend` + `ai_engineer`, остальные скрыты в опросе (§4.1, E36-2); F × релевантность дисциплины профессии (§4.3, E36-3, Б2); поля карточки и `visibility` — ФИО по выбору, опыт и компании видны по умолчанию, контакты закрыты до принятия или отклика (§4.5, E36-4 Б1, E36-5 Б2). Контракты в коде пока не менялись, только документы | E36-1 | ждёт подтверждения обоих блоков |
+| 2026-10-09 | B1-f | Б1 → оба | E39-6 (решение владельца): все профессии открыты — в `roles.yaml` скрытых нет, `ProfessionInfo.beta` (по умолчанию `false`, `GET /taxonomy/professions`) — тонкий банк семейств, метка «бета» в опросе; `assessment.service.thin_professions(professions)`; `families-check` предупреждает о пустой ячейке, а не падает. Совместимо | E39-6 | готово |
 
 ### 13.2. Блок 2
 
