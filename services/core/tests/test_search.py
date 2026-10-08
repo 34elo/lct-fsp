@@ -376,7 +376,8 @@ def test_speed_on_500_candidates(c, market):
     t = time.perf_counter()
     r = _search(c, market, sort="trust", filters={"skills_must": [{"slug": "python"}]})
     assert r.status_code == 200 and r.json()["total"] >= 500
-    assert time.perf_counter() - t < 0.3
+    # бюджет — p95 поиска ≤ 1 с (metrics.md); 0.3 с падало на общих раннерах CI (0.34 с)
+    assert time.perf_counter() - t < 1.0
 
 
 # --- E7-4: карточка и журнал просмотров -------------------------------------------------
