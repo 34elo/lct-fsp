@@ -1,4 +1,4 @@
-import { Button, Field, FieldInput, Label, RadioGroup, RadioGroupItem, cn } from "@fsp/ui";
+import { Button, Checkbox, Field, FieldInput, Label, RadioGroup, RadioGroupItem, cn } from "@fsp/ui";
 import { useState, type FormEvent } from "react";
 import { Link, Navigate, useLocation } from "react-router-dom";
 
@@ -20,8 +20,11 @@ export default function Register() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [fresh, setFresh] = useState(false);
+  const [consent, setConsent] = useState(false);
+  const [needConsent, setNeedConsent] = useState(false);
 
-  // Главный путь (E35-2a): новый кандидат после согласий идёт в опрос, а не на пустую Главную.
+  // Главный путь (E39-6): обязательное согласие — в самой форме, новый кандидат сразу идёт в поток
+  // «направление и навыки → грейд и ожидания → тест», без Главной и без экрана согласий.
   if (status === "authenticated" && me) {
     const next = from ?? (fresh && me.role === "candidate" ? PATH_START : undefined);
     return <Navigate to={postAuthPath(me, next)} replace state={{ from: next }} />;
@@ -30,11 +33,15 @@ export default function Register() {
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
+    if (!consent) {
+      setNeedConsent(true);
+      return;
+    }
     setBusy(true);
     setError(null);
     setFresh(true);
     try {
-      await register(String(f.get("email")).trim(), String(f.get("password")), role);
+      await register(String(f.get("email")).trim(), String(f.get("password")), role, ["pd_processing"]);
     } catch (err) {
       setError(authErrorText(err, t.fallbackError, { credentials: false }));
       setBusy(false);
@@ -82,6 +89,35 @@ export default function Register() {
             data-testid="auth-password"
           />
         </Field>
+        <Label
+          htmlFor="register-consent"
+          data-testid="auth-consent"
+          className={cn(
+            "flex min-h-11 cursor-pointer items-start gap-3 rounded-lg border p-3",
+            consent ? "border-brand bg-tint-50" : "border-hairline bg-card",
+          )}
+        >
+          <Checkbox
+            id="register-consent"
+            className="mt-0.5"
+            checked={consent}
+            onCheckedChange={(v) => {
+              setConsent(v === true);
+              setNeedConsent(false);
+            }}
+            data-testid="auth-consent-pd"
+          />
+          <span className="flex flex-col gap-0.5">
+            <span className="font-semibold">{t.consent}</span>
+            <span className="text-13 font-normal text-muted">
+              {t.consentHint}{" "}
+              <Link to="/privacy" target="_blank" className="font-semibold text-brand-fg underline">
+                {t.consentLink}
+              </Link>
+            </span>
+          </span>
+        </Label>
+        {needConsent && <ErrorNote data-testid="auth-need-consent">{t.needConsent}</ErrorNote>}
         {error && <ErrorNote>{error}</ErrorNote>}
         <Button type="submit" size="lg" loading={busy} data-testid="auth-submit">
           {busy ? t.busy : t.submit}

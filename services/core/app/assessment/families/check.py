@@ -315,7 +315,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"FAIL {e}", file=sys.stderr)
     beta = sorted(thin_professions(families, _active_professions(args.taxonomy)))
     if beta:
-        print(f"families-check: тонкий банк, в опросе «бета» — {', '.join(beta)}")
+        print(f"families-check: тонкий банк, помечены «бета» — {', '.join(beta)}")
     state = "OK" if not errs else f"ошибок: {len(errs)}"
     print(f"families-check: семейств {len(families)}, сидов {args.seeds} — {state}")
     return 1 if errs else 0
