@@ -31,6 +31,18 @@ router = APIRouter(tags=["assessment"])
 _candidate = require_roles("candidate")
 
 
+DEMO_EMAIL_DOMAIN = "@demo.fsp.test"
+
+
+def _demo_bypass(request: Request, user: User) -> bool:
+    """E35-8: в `DEMO_MODE` кулдауны не действуют для демо-аккаунтов (`*@demo.fsp.test`)."""
+    return bool(
+        request.app.state.settings.demo_mode
+        and user.email
+        and str(user.email).lower().endswith(DEMO_EMAIL_DOMAIN)
+    )
+
+
 def _cfg(request: Request) -> AssessmentConfig:
     return load_config(request.app.state.settings.scoring_config_path or None)
 
@@ -116,7 +128,13 @@ async def create_attempt(
     identity.require_verified_email(user)
     await candidates.get_or_create(session, user.id, request.app.state.settings.pseudo_id_secret)
     att = await attempts.create_attempt(
-        session, user.id, body.profession, body.declared_grade, _cfg(request), mode=body.mode
+        session,
+        user.id,
+        body.profession,
+        body.declared_grade,
+        _cfg(request),
+        mode=body.mode,
+        skip_cooldown=_demo_bypass(request, user),
     )
     return await attempts.attempt_summary(session, user.id, att.id)
 
@@ -366,7 +384,11 @@ async def history(
     retries = [
         RetryOut(profession=p, grade=c.grade, next_attempt_at=c.until)
         for p in sorted({a.profession for a in atts_list})
-        for c in await grading.cooldowns(session, user.id, p, _cfg(request))
+        for c in (
+            []
+            if _demo_bypass(request, user)
+            else await grading.cooldowns(session, user.id, p, _cfg(request))
+        )
         if c.kind == "retry" and c.grade is not None
     ]
     return HistoryOut(
