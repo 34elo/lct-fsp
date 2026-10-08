@@ -291,10 +291,14 @@ def _card(
     ordered = sorted(skills, key=lambda s: (s.claimed_only, -s.confidence, str(s.skill_id)))
     top = [
         SkillBrief(slug=names[s.skill_id][0], name=names[s.skill_id][1], level=s.level,
-                   sources=list(s.sources or ()))
+                   sources=[x for x in s.sources or () if vis["fsp"] or x != "fsp"])
         for s in ordered[:TOP_SKILLS]
         if s.skill_id in names
     ]  # fmt: skip
+    if strength_view is not None and not vis["fsp"]:  # ФСП скрыт: слагаемого F в объяснении нет
+        strength_view = strength_view.model_copy(
+            update={"top": [p for p in strength_view.top if p.code != "F"]}
+        )
     return CandidateCard(
         pseudo_id=c.pseudo_id,
         pseudonym=c.pseudonym,

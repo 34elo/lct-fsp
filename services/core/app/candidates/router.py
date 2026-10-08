@@ -95,6 +95,7 @@ class CandidateProfile(BaseModel):
     team_signals: list[card.TeamSignal] = []
     claimed_soft: list[str] = []
     contacts: ContactsIO | None = None  # только владельцу; в карточку работодателя не идёт
+    full_name: str | None = None  # только владельцу; работодателю — при visibility.full_name
     desired_roles: list[str] = []
     experience_months: int | None = None
     age_group: Literal["adult", "minor"] | None = None  # minor = 15–17 лет
@@ -150,6 +151,7 @@ class ProfileIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     contacts: ContactsIO | None = None  # null очищает
+    full_name: str | None = Field(default=None, max_length=120)  # null или пусто очищает
     stack: list[StackItem] | None = Field(default=None, max_length=60)  # полный список
     experience_months: int | None = Field(default=None, ge=0, le=720)
     desired_roles: list[RoleSlug] | None = Field(default=None, max_length=5)
@@ -185,6 +187,7 @@ async def profile_out(session: AsyncSession, c: Candidate, settings: Settings) -
         team_signals=parts.team_signals,
         claimed_soft=list(c.claimed_soft or []),
         contacts=ContactsIO(**contacts) if contacts else None,
+        full_name=service.full_name_of(c, settings.pii_key),
         desired_roles=list(c.desired_roles or []),
         experience_months=c.experience_months,
         age_group=c.age_group,

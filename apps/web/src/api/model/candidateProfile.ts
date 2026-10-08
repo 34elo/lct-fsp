@@ -33,6 +33,7 @@ export interface CandidateProfile {
   team_signals?: TeamSignal[];
   claimed_soft?: string[];
   contacts?: ContactsIO | null;
+  full_name?: string | null;
   desired_roles?: string[];
   experience_months?: number | null;
   age_group?: CandidateProfileAgeGroup;

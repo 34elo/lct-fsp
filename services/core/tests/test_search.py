@@ -408,6 +408,7 @@ def test_card_full_is_anonymous_and_logs_view(c, market):
     body = r.json()
     assert set(body) == CARD_FIELDS | {
         "skills", "grade_info", "experience", "offers_from_you", "claimed_vs_confirmed",
+        "full_name",
     }  # fmt: skip
     assert body["pseudonym"] == "Backend #40" and body["offers_from_you"] == []
     assert [s["skill"]["slug"] for s in body["skills"]] == ["python", "fastapi"]
@@ -446,7 +447,7 @@ def test_card_applies_candidate_privacy_settings(c, market):
         )
     full = _card(c, market, "pid0042").json()  # анкета с пустой visibility = умолчания
     assert full["city"] == "Казань" and full["experience"][0]["company"] == "Открытая Компания"
-    assert "full_name" not in full and "contacts" not in json.dumps(full)
+    assert full["full_name"] is None and "contacts" not in json.dumps(full)
     with sqlite3.connect(c.db) as con:
         hide = json.dumps({"region": False, "companies": False, "fsp": False})
         con.execute("update candidates set visibility=? where user_id=?", (hide, uid))

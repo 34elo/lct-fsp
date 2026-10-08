@@ -17718,6 +17718,17 @@
             "title": "Interested You",
             "default": false
           },
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name"
+          },
           "skills": {
             "items": {
               "$ref": "#/components/schemas/SkillWithTrust"
@@ -17853,6 +17864,17 @@
                 "type": "null"
               }
             ]
+          },
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name"
           },
           "desired_roles": {
             "items": {
@@ -24668,6 +24690,18 @@
                 "type": "null"
               }
             ]
+          },
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name"
           },
           "stack": {
             "anyOf": [
