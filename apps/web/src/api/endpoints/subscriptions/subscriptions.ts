@@ -78,20 +78,10 @@ export type listSubscriptionsSubscriptionsGetResponse403ApplicationJson = {
   status: 403
 }
 
-export type listSubscriptionsSubscriptionsGetResponse404ApplicationProblemJson = {
-  data: ProblemOut
-  status: 404
-}
-
-export type listSubscriptionsSubscriptionsGetResponse404ApplicationJson = {
-  data: ProblemOut
-  status: 404
-}
-
 export type listSubscriptionsSubscriptionsGetResponseSuccess = (listSubscriptionsSubscriptionsGetResponse200) & {
   headers: Headers;
 };
-export type listSubscriptionsSubscriptionsGetResponseError = (listSubscriptionsSubscriptionsGetResponse401ApplicationProblemJson | listSubscriptionsSubscriptionsGetResponse401ApplicationJson | listSubscriptionsSubscriptionsGetResponse403ApplicationProblemJson | listSubscriptionsSubscriptionsGetResponse403ApplicationJson | listSubscriptionsSubscriptionsGetResponse404ApplicationProblemJson | listSubscriptionsSubscriptionsGetResponse404ApplicationJson) & {
+export type listSubscriptionsSubscriptionsGetResponseError = (listSubscriptionsSubscriptionsGetResponse401ApplicationProblemJson | listSubscriptionsSubscriptionsGetResponse401ApplicationJson | listSubscriptionsSubscriptionsGetResponse403ApplicationProblemJson | listSubscriptionsSubscriptionsGetResponse403ApplicationJson) & {
   headers: Headers;
 };
 

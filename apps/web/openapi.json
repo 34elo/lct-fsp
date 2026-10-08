@@ -6953,7 +6953,7 @@
           "offers"
         ],
         "summary": "List Offers",
-        "description": "Офферы компании; `initiator=candidate` - отклики на её вакансии.",
+        "description": "Офферы компании; `initiator=candidate` - её отклики. Без компании - пусто (E39-7).",
         "operationId": "list_offers_offers_get",
         "parameters": [
           {
@@ -13604,21 +13604,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Не найдено (в том числе чужой ресурс)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemOut"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemOut"
-                }
-              }
-            }
           }
         }
       },
@@ -14724,7 +14709,7 @@
           "employer"
         ],
         "summary": "Employer Activity",
-        "description": "Лента событий компании, новые сверху. Чужие данные в неё не попадают.",
+        "description": "Лента событий компании, новые сверху. Чужих данных нет. Без компании - пусто.",
         "operationId": "employer_activity_employer_activity_get",
         "parameters": [
           {
@@ -14768,21 +14753,6 @@
           },
           "403": {
             "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemOut"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemOut"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Не найдено (в том числе чужой ресурс)",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -16187,21 +16157,6 @@
           },
           "403": {
             "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemOut"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemOut"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Не найдено (в том числе чужой ресурс)",
             "content": {
               "application/problem+json": {
                 "schema": {

@@ -1976,20 +1976,10 @@ export type listTasksEmployerTasksGetResponse403ApplicationJson = {
   status: 403
 }
 
-export type listTasksEmployerTasksGetResponse404ApplicationProblemJson = {
-  data: ProblemOut
-  status: 404
-}
-
-export type listTasksEmployerTasksGetResponse404ApplicationJson = {
-  data: ProblemOut
-  status: 404
-}
-
 export type listTasksEmployerTasksGetResponseSuccess = (listTasksEmployerTasksGetResponse200) & {
   headers: Headers;
 };
-export type listTasksEmployerTasksGetResponseError = (listTasksEmployerTasksGetResponse401ApplicationProblemJson | listTasksEmployerTasksGetResponse401ApplicationJson | listTasksEmployerTasksGetResponse403ApplicationProblemJson | listTasksEmployerTasksGetResponse403ApplicationJson | listTasksEmployerTasksGetResponse404ApplicationProblemJson | listTasksEmployerTasksGetResponse404ApplicationJson) & {
+export type listTasksEmployerTasksGetResponseError = (listTasksEmployerTasksGetResponse401ApplicationProblemJson | listTasksEmployerTasksGetResponse401ApplicationJson | listTasksEmployerTasksGetResponse403ApplicationProblemJson | listTasksEmployerTasksGetResponse403ApplicationJson) & {
   headers: Headers;
 };
 

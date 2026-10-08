@@ -46,7 +46,7 @@ beforeEach(() => {
     vi.fn(async (url: string, init?: RequestInit) => {
       const method = init?.method ?? "GET";
       if (url.endsWith("/auth/refresh")) return res(200, { access_token: "t" });
-      if (url.endsWith("/me")) return res(200, { id: "u1", email: "o@b.ru", role: "employer", consents: ["pd_processing"] });
+      if (url.endsWith("/me")) return res(200, { id: "u1", email: "o@b.ru", role: "employer", consents: ["pd_processing"], company: { id: "co1", name: "Acme", status: "verified", role: "admin" } });
       calls.push({ method, url, body: init?.body ? JSON.parse(String(init.body)) : undefined });
       if (url.endsWith("/needs") && method === "POST") return createStatus === 201 ? res(201, need) : res(422, { type: "x", title: "x", status: 422, code: "need_empty" });
       if (url.includes("/needs/n1/categories")) return res(200, { need_id: "n1", shortlist: [], categories });
@@ -115,7 +115,7 @@ test("запрос → категории, чипсы, топ-3 и «Ещё», �
 });
 
 test("повторный вход: категории последнего запроса и топ-3 без «Ещё»", async () => {
-  localStorage.setItem("fsp.employer.lastNeed", JSON.stringify({ id: "n1", text: "Backend", chips: ["Backend"] }));
+  localStorage.setItem("fsp.employer.lastNeed", JSON.stringify({ id: "n1", text: "Backend", chips: ["Backend"], company: "co1" }));
   mount("/employer");
   expect(await screen.findByTestId("match-categories")).toBeInTheDocument();
   expect(await screen.findByText("топ-3")).toBeInTheDocument();
@@ -125,7 +125,7 @@ test("повторный вход: категории последнего за�
 });
 
 test("запомненный запрос пропал — снова примеры", async () => {
-  localStorage.setItem("fsp.employer.lastNeed", JSON.stringify({ id: "gone", text: "x", chips: [] }));
+  localStorage.setItem("fsp.employer.lastNeed", JSON.stringify({ id: "gone", text: "x", chips: [], company: "co1" }));
   mount("/employer");
   expect(await screen.findByTestId("match-examples")).toBeInTheDocument();
   expect(localStorage.getItem("fsp.employer.lastNeed")).toBeNull();

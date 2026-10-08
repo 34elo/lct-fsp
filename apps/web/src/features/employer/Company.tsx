@@ -7,14 +7,18 @@ import { Button, cn } from "@fsp/ui";
 import { getGetMyCompanyCompaniesMeGetQueryKey, useGetMyCompanyCompaniesMeGet, usePatchMyCompanyCompaniesMePatch, useRegisterCompanyCompaniesPost } from "@/api/endpoints/companies/companies";
 import { ApiError } from "@/api/mutator";
 import { ErrorNote, fieldClass } from "@/features/auth/ui";
+import { useAuth } from "@/shared/lib/auth";
 import { COMPANY_STATUS_HINT, COMPANY_STATUS_LABEL, vacancyErrorText } from "./text";
 
 /** Компания работодателя: регистрация, правка, статус модерации. */
 export default function Company() {
   const qc = useQueryClient();
-  const q = useGetMyCompanyCompaniesMeGet({ query: { retry: false } });
+  const { me, reloadMe } = useAuth();
+  // Есть ли компания, известно из `GET /me`: без неё запрос дал бы 404 в консоли нового аккаунта (E39-7).
+  const hasCompany = !!me?.company;
+  const q = useGetMyCompanyCompaniesMeGet({ query: { retry: false, enabled: hasCompany } });
   const company = q.data?.status === 200 ? q.data.data : null;
-  const missing = q.error instanceof ApiError && q.error.status === 404;
+  const missing = !hasCompany || (q.error instanceof ApiError && q.error.status === 404);
 
   const [name, setName] = useState("");
   const [inn, setInn] = useState("");
@@ -35,6 +39,7 @@ export default function Company() {
   const done = () => {
     setSaved(true);
     void qc.invalidateQueries({ queryKey: getGetMyCompanyCompaniesMeGetQueryKey() });
+    void reloadMe();
   };
   const register = useRegisterCompanyCompaniesPost({ mutation: { onSuccess: done } });
   const patch = usePatchMyCompanyCompaniesMePatch({ mutation: { onSuccess: done } });
@@ -55,7 +60,7 @@ export default function Company() {
   return (
     <main className={PAGE.narrow}>
       <h1 className="font-mono text-2xl font-semibold">Компания</h1>
-      {q.isPending && <p role="status" className="text-muted">Загрузка…</p>}
+      {hasCompany && q.isPending && <p role="status" className="text-muted">Загрузка…</p>}
       {q.isError && !missing && <ErrorNote>Не удалось загрузить компанию.</ErrorNote>}
       {missing && <p className="rounded-xl border border-hairline bg-card p-4 text-sm">Компания ещё не зарегистрирована. Заполните данные: после проверки администратором ФСП откроются публикация вакансий и приглашения.</p>}
       {company && (
