@@ -14,7 +14,7 @@ test("нижняя навигация кандидата: четыре пунк�
     </MemoryRouter>,
   );
   const nav = screen.getByRole("navigation", { name: "Разделы" });
-  expect(within(nav).getAllByRole("link").map((a) => a.textContent)).toEqual(["Главная", "Тест и грейд", "Приглашения", "Профиль"]);
+  expect(within(nav).getAllByRole("link").map((a) => a.textContent)).toEqual(["Главная", "Тест и грейд", "Вакансии", "Приглашения", "Профиль"]);
   expect(within(nav).getByRole("link", { name: "Приглашения" })).toHaveAttribute("aria-current", "page");
   expect(within(nav).getByRole("link", { name: "Главная" })).not.toHaveAttribute("aria-current");
 });

@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, Response
-from fsp_contracts.enums import EmploymentType, Grade, RoleSlug, TeamSignalKind, WorkFormat
+from fsp_contracts.enums import EmploymentType, Grade, TeamSignalKind, WorkFormat
 from fsp_contracts.hiring import SalaryBasis
 from fsp_platform.app import ProblemError
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -50,7 +51,7 @@ class VacancyIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     title: str = Field(min_length=2, max_length=200)
-    role: RoleSlug
+    role: str = Field(min_length=1, max_length=100)
     grade_min: Grade
     grade_max: Grade
     formats: list[WorkFormat] = Field(min_length=1, max_length=3)
@@ -68,7 +69,7 @@ class VacancyPatch(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     title: str | None = Field(default=None, min_length=2, max_length=200)
-    role: RoleSlug | None = None
+    role: str | None = Field(default=None, min_length=1, max_length=100)
     grade_min: Grade | None = None
     grade_max: Grade | None = None
     formats: list[WorkFormat] | None = Field(default=None, min_length=1, max_length=3)
@@ -93,7 +94,7 @@ class VacancyOut(BaseModel):
     id: UUID
     company_id: UUID
     title: str
-    role: RoleSlug
+    role: str
     grade_min: Grade
     grade_max: Grade
     formats: list[WorkFormat]
@@ -119,7 +120,7 @@ def vacancy_out(v: Vacancy, skills: list, cfg: VacancyConfig | None = None) -> V
         id=v.id,
         company_id=v.company_id,
         title=v.title,
-        role=RoleSlug(v.role),
+        role=v.role,
         grade_min=Grade(v.grade_min),
         grade_max=Grade(v.grade_max),
         formats=[WorkFormat(f) for f in v.formats],
@@ -175,7 +176,7 @@ class PublicVacancyOut(BaseModel):
 
     id: UUID
     title: str
-    role: RoleSlug
+    role: str
     grade_min: Grade
     grade_max: Grade
     formats: list[WorkFormat]
@@ -196,36 +197,57 @@ class ApplyIn(BaseModel):
     message: str | None = Field(default=None, max_length=2000)
 
 
+async def _public_out(session: AsyncSession, v: Vacancy, skills: list) -> PublicVacancyOut:
+    full = vacancy_out(v, skills)
+    co = await companies.get_company(session, v.company_id)
+    return PublicVacancyOut(
+        **full.model_dump(include=set(PublicVacancyOut.model_fields) - {"company"}),
+        company=PublicCompany(
+            id=v.company_id,
+            name=co.name if co else "",
+            verified=bool(co and companies.badge_visible(co)),
+            responsibility_score=co.responsibility_score if co else None,
+        ),
+    )
+
+
 @router.get("/public", response_model=list[PublicVacancyOut], responses=problem_responses(422))
 async def list_public_vacancies(
-    role: RoleSlug | None = None,
+    role: str | None = Query(default=None, max_length=100),
     city: str | None = Query(default=None, max_length=100),
     q: str | None = Query(default=None, max_length=100),
+    grade: Grade | None = None,
+    skills: Annotated[list[str] | None, Query(max_length=10)] = None,
+    salary_min: int | None = Query(default=None, ge=0, le=100_000_000),
+    salary_max: int | None = Query(default=None, ge=0, le=100_000_000),
+    work_format: Annotated[WorkFormat | None, Query(alias="format")] = None,
     limit: int = Query(default=50, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     session: AsyncSession = Depends(get_session),
 ):
-    """Опубликованные вакансии без авторизации: название, вилка, компания, навыки."""
+    """Опубликованные вакансии без авторизации: название, вилка, компания, навыки.
+
+    Фильтры: профессия, грейд (входит в вилку), навыки (все), вилка зарплаты, формат, город.
+    """
     items = await service.list_public(
-        session, role=role.value if role else None, city=city, q=q, limit=limit, offset=offset
-    )
-    skills = await service.skills_of(session, [v.id for v in items])
-    out = []
-    for v in items:
-        full = vacancy_out(v, skills[v.id])
-        co = await companies.get_company(session, v.company_id)
-        out.append(
-            PublicVacancyOut(
-                **full.model_dump(include=set(PublicVacancyOut.model_fields) - {"company"}),
-                company=PublicCompany(
-                    id=v.company_id,
-                    name=co.name if co else "",
-                    verified=bool(co and companies.badge_visible(co)),
-                    responsibility_score=co.responsibility_score if co else None,
-                ),
-            )
-        )
-    return out
+        session, role=role, city=city, q=q, limit=limit, offset=offset,
+        grade=grade.value if grade else None, skills=skills,
+        salary_min=salary_min, salary_max=salary_max,
+        work_format=work_format.value if work_format else None,
+    )  # fmt: skip
+    skills_by_id = await service.skills_of(session, [v.id for v in items])
+    return [await _public_out(session, v, skills_by_id[v.id]) for v in items]
+
+
+@router.get(
+    "/public/{vacancy_id}", response_model=PublicVacancyOut, responses=problem_responses(404, 422)
+)
+async def get_public_vacancy(vacancy_id: UUID, session: AsyncSession = Depends(get_session)):
+    """Одна опубликованная вакансия для карточки; черновик и закрытая — 404."""
+    v = await service.get_public(session, vacancy_id)
+    if v is None:
+        raise ProblemError(404, "vacancy_not_found", "Вакансия не найдена")
+    return await _public_out(session, v, (await service.skills_of(session, [v.id]))[v.id])
 
 
 @router.post(
