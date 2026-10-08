@@ -1,5 +1,3 @@
-import subprocess
-import sys
 import uuid
 from datetime import UTC, date, datetime
 from pathlib import Path
@@ -15,6 +13,7 @@ from app.graph.recompute import recompute_profile
 from app.graph.trust import TrustConfig
 from app.identity.models import User
 from app.taxonomy.models import Discipline, DisciplineSkillRule, Skill
+from core_helpers import upgrade_head
 from fsp_contracts import new_envelope
 from fsp_contracts.events import (
     FspCompetitionsUpdated,
@@ -72,12 +71,7 @@ def test_strength_config_matches_scoring_yaml():
 @pytest.fixture
 def factory(tmp_path):
     url = f"sqlite+aiosqlite:///{tmp_path / 'f.db'}"
-    subprocess.run(
-        [sys.executable, "-m", "alembic", "-x", f"url={url}", "upgrade", "head"],
-        cwd=CORE,
-        check=True,
-        capture_output=True,
-    )
+    upgrade_head(url)
     return make_session_factory(make_engine(url))
 
 

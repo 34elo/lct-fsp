@@ -1,8 +1,6 @@
 """Подбор: жёсткие фильтры, скоринг, объяснения — примеры из ml.md §6, matching.md §3–4,
 skills.md §8.3."""
 
-import subprocess
-import sys
 import uuid
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
@@ -35,6 +33,7 @@ from app.matching.service import match_candidate, match_vacancy, match_vacancy_c
 from app.taxonomy.models import Skill, SkillRelation
 from app.vacancies.models import Vacancy, VacancySkill
 from app.worker import Worker
+from core_helpers import upgrade_head
 from fsp_contracts import new_envelope
 from fsp_contracts.commands import CoreMatchCandidate, CoreMatchVacancy
 from fsp_platform.db import make_engine, make_session_factory, session_scope
@@ -264,12 +263,7 @@ def test_claimed_only_is_warning():
 @pytest.fixture
 def db(tmp_path):
     url = f"sqlite+aiosqlite:///{tmp_path / 'm.db'}"
-    subprocess.run(
-        [sys.executable, "-m", "alembic", "-x", f"url={url}", "upgrade", "head"],
-        cwd=CORE,
-        check=True,
-        capture_output=True,
-    )
+    upgrade_head(url)
     return url
 
 

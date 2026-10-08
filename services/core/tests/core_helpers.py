@@ -1,10 +1,47 @@
-"""Хелперы тестов: «чужой ресурс → 404» и «повторная доставка события не меняет результат»."""
+"""Хелперы тестов: «чужой ресурс → 404», повторная доставка события, БД с миграциями."""
 
 import itertools
+import shutil
+import subprocess
+import sys
+import tempfile
 import uuid
 from collections.abc import Awaitable, Callable
+from pathlib import Path
 
 _seq = itertools.count(1)
+_CORE = Path(__file__).resolve().parents[1]
+_template: Path | None = None
+
+
+def upgrade_head(target: str | Path) -> None:
+    """SQLite-файл `target` (путь или `sqlite+aiosqlite:///…`) с миграциями `head`.
+
+    alembic запускается один раз на процесс в шаблон, дальше файл копируется: прогон миграций
+    подпроцессом — секунды, копия — миллисекунды. Сами миграции проверяет test_migrations.py.
+    """
+    global _template
+    path = Path(str(target).removeprefix("sqlite+aiosqlite:///"))
+    if _template is None:
+        tpl = Path(tempfile.mkdtemp(prefix="core-migrated-")) / "template.db"
+        subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "alembic",
+                "-x",
+                f"url=sqlite+aiosqlite:///{tpl}",
+                "upgrade",
+                "head",
+            ],
+            cwd=_CORE,
+            check=True,
+            capture_output=True,
+        )
+        _template = tpl
+    shutil.copy(_template, path)
+
+
 PASSWORD = "correct-horse-battery"
 
 

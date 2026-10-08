@@ -1,6 +1,4 @@
 import json
-import subprocess
-import sys
 import uuid
 from datetime import UTC, datetime
 from pathlib import Path
@@ -22,6 +20,7 @@ from app.graph.service import EvidenceIn
 from app.graph.trust import TrustConfig
 from app.identity.models import User
 from app.taxonomy.models import Skill
+from core_helpers import upgrade_head
 from fsp_platform.db import make_engine, make_session_factory, session_scope
 from fsp_platform.outbox import OutboxRecord
 from sqlalchemy import func, select
@@ -34,12 +33,7 @@ NOW = datetime(2026, 6, 1, 12, tzinfo=UTC)
 @pytest.fixture
 def factory(tmp_path):
     url = f"sqlite+aiosqlite:///{tmp_path / 'e.db'}"
-    subprocess.run(
-        [sys.executable, "-m", "alembic", "-x", f"url={url}", "upgrade", "head"],
-        cwd=CORE,
-        check=True,
-        capture_output=True,
-    )
+    upgrade_head(url)
     return make_session_factory(make_engine(url))
 
 
