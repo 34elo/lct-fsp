@@ -1,9 +1,9 @@
 import { useState } from "react";
 
+import { Button } from "@fsp/ui";
 import { useSubmitSusRunTokenSusPost } from "@/api/endpoints/live-runs/live-runs";
 import { ErrorNote } from "@/features/auth/ui";
 import { runError, SUS_ITEMS, T } from "@/features/runs/text";
-import { Button } from "@/shared/ui/button";
 
 type Agree = "yes" | "no" | "none";
 

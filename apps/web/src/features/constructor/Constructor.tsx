@@ -1,14 +1,13 @@
 import { useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import { Badge, Button, Card, CardContent, Field, useFieldProps } from "@fsp/ui";
+import { Badge, Button, Card, CardContent, cn, Field, useFieldProps } from "@fsp/ui";
 
 import { useCreateFamilyFamiliesPost } from "@/api/endpoints/assessment/assessment";
 import { useGetTaxonomyTaxonomyGet } from "@/api/endpoints/taxonomy/taxonomy";
 import type { FamilyOut } from "@/api/model";
 import { fieldClass } from "@/features/auth/ui";
 import { useAuth } from "@/shared/lib/auth";
-import { cn } from "@/shared/lib/cn";
 import { KINDS, buildSpec, emptyVar, initialForm, localErrors, problemView, type FormState, type ProblemView, type VarRow } from "./model";
 import { T } from "./text";
 
@@ -356,7 +355,7 @@ export default function Constructor() {
               <h2 className="text-16 font-semibold">{T.preview.title}</h2>
               <FamilyPreview family={created} />
               {created && role === "employer" && (
-                <Link to="/employer/tasks" className="text-14 font-semibold text-brand-deep underline">
+                <Link to="/employer/tasks" className="text-14 font-semibold text-brand-deep dark:text-brand-mid underline">
                   {T.preview.toTasks}
                 </Link>
               )}

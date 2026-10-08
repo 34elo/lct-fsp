@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { Badge, Button, Card, CardContent, EmptyState, ErrorState, Skeleton } from "@fsp/ui";
+import { Badge, Button, Card, CardContent, cn, EmptyState, ErrorState, Skeleton } from "@fsp/ui";
 
 import {
   getAdmissionQueueAdminFamiliesGetQueryKey,
@@ -14,7 +14,6 @@ import {
 } from "@/api/endpoints/admin/admin";
 import type { AdminFamilyOut, KeyApproveInSource } from "@/api/model";
 import { ApiError } from "@/api/mutator";
-import { cn } from "@/shared/lib/cn";
 import { admissionClosedNames } from "./model";
 import { T } from "./text";
 
@@ -224,7 +223,7 @@ export default function AdmissionQueue() {
               setStatus(s);
               setOpenId(null);
             }}
-            className={cn("min-h-9 rounded-lg border px-3 text-14 font-semibold", status === s ? "border-tint-200 bg-tint-100 text-brand-deep" : "border-hairline text-muted")}
+            className={cn("min-h-9 rounded-lg border px-3 text-14 font-semibold", status === s ? "border-tint-200 bg-tint-100 text-brand-deep dark:text-brand-mid" : "border-hairline text-muted")}
           >
             {T.queue.tabs[s]}
           </button>

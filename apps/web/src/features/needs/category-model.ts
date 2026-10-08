@@ -38,7 +38,7 @@ export function toRankedCard(card: CandidateCard, profession: string): RankedCan
   const h = card.fsp_highlights[0];
   const fsp = h ? (h.place && h.of ? `${h.title}: ${h.place} из ${h.of}` : h.title) : undefined;
   return {
-    pseudonym: card.pseudonym,
+    pseudonym: base.pseudonym,
     match: base.match,
     grade: base.grade,
     confirmed: base.confirmed,

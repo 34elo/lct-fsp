@@ -6,10 +6,9 @@ import {
   useListMessagesOffersOfferIdMessagesGet,
   usePostMessageOffersOfferIdMessagesPost,
 } from "@/api/endpoints/offers/offers";
+import { Button, cn } from "@fsp/ui";
 import type { MessageOut } from "@/api/model";
 import { ErrorNote, fieldClass } from "@/features/auth/ui";
-import { Button } from "@/shared/ui/button";
-import { cn } from "@/shared/lib/cn";
 import { ACTOR_LABEL, dateTime, OFFER_STATUS_LABEL, offerErrorText, statusTone } from "./text";
 
 export function StatusBadge({ status }: { status: string }) {

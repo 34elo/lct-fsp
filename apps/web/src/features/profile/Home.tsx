@@ -1,28 +1,4 @@
-import {
-  Chips,
-  CircuitLine,
-  ErrorState,
-  GradeTag,
-  H1,
-  H2,
-  Lbl,
-  ListRow,
-  MetricTile,
-  Num,
-  OfferCardV2,
-  Panel,
-  PanelCap,
-  Skeleton,
-  SkillConstellation,
-  SkillTag,
-  StatusTag,
-  buttonVariants,
-  cn,
-  dotsText,
-  formatRub,
-  formatRubRangeShort,
-  type ConstellationNode,
-} from "@fsp/ui";
+import { buttonVariants, Chips, CircuitLine, cn, ConstellationAvatar, type ConstellationNode, dotsText, ErrorState, formatRub, formatRubRangeShort, GradeTag, H1, H2, Lbl, ListRow, MetricTile, Num, OfferCardV2, Panel, PanelCap, Skeleton, SkillConstellation, SkillTag, StatusTag } from "@fsp/ui";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 
@@ -34,7 +10,7 @@ import { useGetProfessionsTaxonomyProfessionsGet } from "@/api/endpoints/taxonom
 import type { CandidateProfile, CandidateStanding, HistoryOut, InterestsSummary, NavigatorOut, OfferForCandidate } from "@/api/model";
 import { isFuture, pathStep, type PathStep } from "@/features/assessment/model";
 import { GRADE } from "@/features/assessment/text";
-import { ConstellationAvatar } from "@/shared/brand";
+import { displayPseudonym } from "@/shared/lib/pseudonym";
 import { constellationNodes, dayMonth, formatsText, nextStep, ratingText, skillSource, sortSkills } from "./home-model";
 import { parseViews, type ViewsStats } from "./stats-model";
 import { FSP_LEVEL_LABEL, HOME, STATS, roleLabel } from "./text";
@@ -51,7 +27,7 @@ function Who({ p, size = 44, big }: { p: CandidateProfile; size?: number; big?: 
         <ConstellationAvatar seed={p.pseudonym} size={size - 8} />
       </span>
       <div className="flex min-w-0 flex-col">
-        <span className={cn("break-words font-mono font-semibold", big ? "text-20" : "text-16")}>{p.pseudonym}</span>
+        <span className={cn("break-words font-mono font-semibold", big ? "text-20" : "text-16")}>{displayPseudonym(p.pseudonym, p.category?.primary_role)}</span>
         {p.preferences.city && <span className="text-13 text-muted">{p.preferences.city}</span>}
       </div>
     </div>

@@ -1,24 +1,4 @@
-import {
-  ActivityHeatmap,
-  Chips,
-  EmptyState,
-  ErrorState,
-  GradeTag,
-  H1,
-  Lbl,
-  MetricTile,
-  Num,
-  Panel,
-  PanelCap,
-  ScatterPlot,
-  Skeleton,
-  SkillTag,
-  StatusTag,
-  buttonVariants,
-  cn,
-  formatRub,
-  formatRubRangeShort,
-} from "@fsp/ui";
+import { ActivityHeatmap, buttonVariants, Chips, cn, ConstellationAvatar, EmptyState, ErrorState, formatRub, formatRubRangeShort, GradeTag, H1, Lbl, MetricTile, Num, Panel, PanelCap, ScatterPlot, Skeleton, SkillTag, StatusTag } from "@fsp/ui";
 import { useMemo, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 
@@ -29,7 +9,7 @@ import { useMyNavigatorCandidatesMeNavigatorGet, useMyStandingCandidatesMeStandi
 import { useGetProfessionsTaxonomyProfessionsGet } from "@/api/endpoints/taxonomy/taxonomy";
 import type { AttemptOut, CandidateProfile, CandidateStanding, InterestsSummary } from "@/api/model";
 import { GRADE } from "@/features/assessment/text";
-import { ConstellationAvatar } from "@/shared/brand";
+import { displayPseudonym } from "@/shared/lib/pseudonym";
 import { FspCard } from "./Home";
 import { dayMonth, nextStep, sortSkills } from "./home-model";
 import { finishedAttempts, parseViews, scatter, viewsSeries, type ViewsStats } from "./stats-model";
@@ -86,7 +66,7 @@ function SeenAs({ p, standing, prof }: { p: CandidateProfile; standing: Candidat
           <ConstellationAvatar seed={p.pseudonym} size={36} />
         </span>
         <div className="flex min-w-0 flex-col items-start gap-1">
-          <span className="break-words font-mono text-14 font-semibold">{p.pseudonym}</span>
+          <span className="break-words font-mono text-14 font-semibold">{displayPseudonym(p.pseudonym, prof)}</span>
           {p.fsp?.verified && <StatusTag>{STATS.fspConfirmed}</StatusTag>}
         </div>
       </div>
