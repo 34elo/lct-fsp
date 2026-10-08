@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import { Badge, Button, Card, CardContent, cn, Field, useFieldProps } from "@fsp/ui";
+import { Badge, Button, Card, CardContent, cn, Combobox, Field, Select, useFieldProps } from "@fsp/ui";
 
 import { useCreateFamilyFamiliesPost } from "@/api/endpoints/assessment/assessment";
 import { useGetTaxonomyTaxonomyGet } from "@/api/endpoints/taxonomy/taxonomy";
@@ -21,10 +21,6 @@ function Area(p: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
   const fp = useFieldProps();
   return <textarea {...fp} className={areaClass} {...p} />;
 }
-function Sel({ className, ...p }: React.SelectHTMLAttributes<HTMLSelectElement>) {
-  const fp = useFieldProps();
-  return <select {...fp} className={cn(fieldClass, className)} {...p} />;
-}
 const sel = (s: string) => `constructor-${s}`;
 
 function Row({ children }: { children: ReactNode }) {
@@ -39,14 +35,21 @@ function VarEditor({ row, onChange, onRemove }: { row: VarRow; onChange: (r: Var
         {T.builder.varName}
         <input className={cn(fieldClass, "font-mono")} data-testid={sel(`var-name-${row.id}`)} value={row.name} onChange={(e) => set({ name: e.target.value })} />
       </label>
-      <label className="flex flex-col gap-1 text-13 text-muted">
-        {T.builder.varType}
-        <select className={fieldClass} data-testid={sel(`var-type-${row.id}`)} value={row.type} onChange={(e) => set({ type: e.target.value as VarRow["type"] })}>
-          <option value="range">{T.builder.varRange}</option>
-          <option value="values">{T.builder.varValues}</option>
-          <option value="expr">{T.builder.varExpr}</option>
-        </select>
-      </label>
+      <div className="flex flex-col gap-1 text-13 text-muted">
+        <span>{T.builder.varType}</span>
+        <Select
+          data-testid={sel(`var-type-${row.id}`)}
+          aria-label={T.builder.varType}
+          value={row.type}
+          onChange={(v) => v && set({ type: v as VarRow["type"] })}
+          options={[
+            { value: "range", label: T.builder.varRange },
+            { value: "values", label: T.builder.varValues },
+            { value: "expr", label: T.builder.varExpr },
+          ]}
+          className="text-ink"
+        />
+      </div>
       {row.type === "range" && (
         <div className="grid grid-cols-3 gap-2">
           {(["min", "max", "step"] as const).map((k) => (
@@ -243,24 +246,28 @@ export default function Constructor() {
               </Field>
               <Row>
                 <Field label={T.builder.skill} hint={T.builder.skillHint} error={errs.skill}>
-                  <In list="constructor-skills" data-testid={sel("skill")} value={f.skill} onChange={(e) => set({ skill: e.target.value })} />
+                  <Combobox
+                    data-testid={sel("skill")}
+                    value={f.skill || null}
+                    onChange={(v) => set({ skill: v ?? "" })}
+                    options={skills.map((s) => ({ value: s.slug, label: s.name, hint: s.slug }))}
+                    creatable
+                    createLabel={(q) => `Взять «${q}»`}
+                    placeholder="system_design"
+                  />
                 </Field>
                 <Field label={T.builder.level}>
-                  <Sel data-testid={sel("level")} value={f.level} onChange={(e) => set({ level: Number(e.target.value) })}>
-                    {[1, 2, 3, 4, 5].map((n) => (
-                      <option key={n} value={n}>{`${n} из 5`}</option>
-                    ))}
-                  </Sel>
+                  <Select
+                    data-testid={sel("level")}
+                    value={String(f.level)}
+                    onChange={(v) => v && set({ level: Number(v) })}
+                    options={[1, 2, 3, 4, 5].map((n) => ({ value: String(n), label: `${n} из 5` }))}
+                  />
                 </Field>
                 <Field label={T.builder.time} hint={T.builder.timeHint}>
                   <In inputMode="numeric" data-testid={sel("time")} value={f.timeLimit} onChange={(e) => set({ timeLimit: e.target.value })} />
                 </Field>
               </Row>
-              <datalist id="constructor-skills">
-                {skills.map((s) => (
-                  <option key={s.slug} value={s.slug}>{s.name}</option>
-                ))}
-              </datalist>
               <fieldset className="flex flex-col gap-2">
                 <legend className="mb-1 text-14 font-semibold">{T.builder.kind}</legend>
                 <div role="radiogroup" aria-label={T.builder.kind} className="flex flex-wrap gap-2">

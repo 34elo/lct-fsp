@@ -4,6 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 import { App } from "@/app/App";
 import { Providers, makeQueryClient } from "@/app/Providers";
 import { setAccessToken } from "@/shared/lib/token";
+import { pickOption } from "@/test-pick";
 
 const res = (status: number, body?: unknown) => new Response(body === undefined ? null : JSON.stringify(body), { status });
 
@@ -107,7 +108,7 @@ describe("опрос (S1)", () => {
     expect(screen.getByTestId("assessment-profession-backend")).toBeChecked();
     expect(screen.getByTestId("assessment-grade-middle")).toBeChecked();
     fireEvent.change(screen.getByTestId("assessment-stack-input"), { target: { value: "Redis" } });
-    fireEvent.click(screen.getByTestId("assessment-stack-add"));
+    fireEvent.keyDown(screen.getByTestId("assessment-stack-input"), { key: "Enter" });
     expect(within(screen.getByTestId("assessment-stack")).getByText(/redis/)).toBeInTheDocument();
     fireEvent.click(screen.getByTestId("assessment-start"));
     expect(await tid("assessment-item")).toBeInTheDocument();
@@ -598,7 +599,7 @@ describe("«Объясни ответ» (E24-2)", () => {
     expect(screen.getByTestId("assessment-explain-reason-2")).toHaveTextContent("Ложное представление о теме");
     expect(calls.find((c) => c.url.includes("/explain"))!.body).toBeUndefined();
     // своя версия причины — после первого разбора, затем сверка
-    fireEvent.change(screen.getByTestId("assessment-explain-self-2"), { target: { value: "guess" } });
+    pickOption(screen.getByTestId("assessment-explain-self-2"), "Угадывал");
     fireEvent.click(screen.getByTestId("assessment-explain-ask-2"));
     await waitFor(() => expect(calls.filter((c) => c.url.includes("/explain"))).toHaveLength(2));
     expect(calls.filter((c) => c.url.includes("/explain"))[1]!.body).toEqual({ self_reason: "guess" });

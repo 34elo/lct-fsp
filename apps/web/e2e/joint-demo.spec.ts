@@ -146,7 +146,9 @@ test("joint: регистрация → опрос и тест → катего�
     for (let i = 0; i < total && !sent; i++) {
       await invites.nth(i).click();
       await expect(dialog.getByRole("heading", { name: /^Интерес · / })).toBeVisible();
-      await dialog.getByRole("combobox", { name: "Вакансия" }).selectOption({ label: VACANCY_OPTION });
+      // Свой Select из @fsp/ui: открыть список и выбрать вариант (список — в портале, вне диалога).
+      await dialog.getByRole("combobox", { name: "Вакансия" }).click();
+      await olga.getByRole("option", { name: VACANCY_OPTION }).click();
       await dialog.getByRole("textbox", { name: "от", exact: true }).fill("150000");
       await dialog.getByRole("textbox", { name: "до", exact: true }).fill("220000");
       await dialog.getByRole("textbox", { name: /^Сообщение/ }).fill("Здравствуйте! Ваш профиль подходит под нашу вакансию: вилка указана сразу.");

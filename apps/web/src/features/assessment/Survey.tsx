@@ -1,4 +1,4 @@
-import { Button, Chips, cn, Field, FieldInput, GradeTag, H1, Input, Lbl, Num, Panel, Skeleton, SkillTag, StatusTag } from "@fsp/ui";
+import { Button, Chips, cn, GradeTag, H1, Lbl, Num, Panel, SalaryRangeInput, Skeleton, SkillInput, SkillTag, StatusTag } from "@fsp/ui";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
@@ -12,6 +12,7 @@ import {
 } from "@/api/endpoints/assessment/assessment";
 import { useGetProfessionsTaxonomyProfessionsGet } from "@/api/endpoints/taxonomy/taxonomy";
 import type { SurveyIn, TestGrade, WorkFormat } from "@/api/model";
+import { useSkillSource } from "@/shared/lib/skills";
 import { addStack, isFuture, salaryError } from "./model";
 import { FORMAT_OPTIONS, GRADE, GRADE_CARDS, T, dateShort } from "./text";
 import { ErrorLine, LoadError, Page } from "./ui";
@@ -87,11 +88,11 @@ export default function Survey() {
   const hq = useHistoryAssessmentHistoryGet();
   const survey = sq.data?.status === 200 ? sq.data.data : undefined;
   const history = hq.data?.status === 200 ? hq.data.data : undefined;
+  const { suggest } = useSkillSource();
   const professions = useMemo(() => (pq.data?.status === 200 ? pq.data.data.professions : []), [pq.data]);
 
   const [profession, setProfession] = useState("");
   const [stack, setStack] = useState<string[]>([]);
-  const [stackDraft, setStackDraft] = useState("");
   const [formats, setFormats] = useState<WorkFormat[]>([]);
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
@@ -235,33 +236,17 @@ export default function Survey() {
               </Fld>
 
               <Fld label={T.stack} resume={resume}>
-                <Chips data-testid="assessment-stack">
-                  {stack.map((s) => (
-                    <button key={s} type="button" aria-label={T.stackRemove(s)} onClick={() => setStack(stack.filter((x) => x !== s))} className="rounded-sm">
-                      <SkillTag
-                        name={
-                          <>
-                            {s} <span aria-hidden>×</span>
-                          </>
-                        }
-                        state="claimed"
-                      />
-                    </button>
-                  ))}
-                </Chips>
-                <form
-                  className="flex gap-2"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    setStack(addStack(stack, stackDraft));
-                    setStackDraft("");
-                  }}
-                >
-                  <Input aria-label={T.stackAdd} placeholder={T.stackAdd} value={stackDraft} onChange={(e) => setStackDraft(e.target.value)} data-testid="assessment-stack-input" />
-                  <Button type="submit" variant="outline" data-testid="assessment-stack-add">
-                    {T.stackAddBtn}
-                  </Button>
-                </form>
+                <div data-testid="assessment-stack">
+                  <SkillInput
+                    aria-label={T.stackAdd}
+                    placeholder={T.stackAdd}
+                    value={stack.map((s) => ({ value: s, label: s }))}
+                    onChange={(v) => setStack(v.reduce<string[]>((acc, x) => addStack(acc, x.label), []))}
+                    suggest={suggest}
+                    max={30}
+                    data-testid="assessment-stack-input"
+                  />
+                </div>
               </Fld>
 
               <Fld label={T.format} resume={resume}>
@@ -288,14 +273,23 @@ export default function Survey() {
               </Fld>
 
               <Fld label={T.fork} resume={resume}>
-                <div className="grid grid-cols-2 gap-3">
-                  <Field label={T.salaryFrom} error={rangeBad ? T.invalidRange : undefined}>
-                    <FieldInput type="number" inputMode="numeric" min={0} value={from} onChange={(e) => setFrom(e.target.value)} data-testid="assessment-salary-from" />
-                  </Field>
-                  <Field label={T.salaryTo}>
-                    <FieldInput type="number" inputMode="numeric" min={0} value={to} onChange={(e) => setTo(e.target.value)} data-testid="assessment-salary-to" />
-                  </Field>
-                </div>
+                <SalaryRangeInput
+                  value={{ from: from ? Number(from) : null, to: to ? Number(to) : null }}
+                  onChange={(v) => {
+                    setFrom(v.from == null ? "" : String(v.from));
+                    setTo(v.to == null ? "" : String(v.to));
+                  }}
+                  fromLabel={T.salaryFrom}
+                  toLabel={T.salaryTo}
+                  invalid={rangeBad}
+                  fromTestId="assessment-salary-from"
+                  toTestId="assessment-salary-to"
+                />
+                {rangeBad && (
+                  <p role="alert" className="text-12 text-error">
+                    {T.invalidRange}
+                  </p>
+                )}
               </Fld>
 
               <Fld label={T.gradeLabel}>

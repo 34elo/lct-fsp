@@ -2,7 +2,7 @@ import { useMemo, useState, type FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { Button, EmptyState, ErrorState, SectionLabel, Skeleton, formatRub } from "@fsp/ui";
+import { Button, Combobox, EmptyState, ErrorState, NumberInput, SectionLabel, Select, Skeleton, formatRub } from "@fsp/ui";
 
 import {
   getListSubscriptionsSubscriptionsGetQueryKey,
@@ -13,10 +13,10 @@ import {
 import { useGetTaxonomyTaxonomyGet } from "@/api/endpoints/taxonomy/taxonomy";
 import { TestGrade, type SkillMin, type SubscriptionOut } from "@/api/model";
 import { ApiError } from "@/api/mutator";
-import { ErrorNote, fieldClass } from "@/features/auth/ui";
+import { ErrorNote } from "@/features/auth/ui";
 import { FORMAT_LABEL } from "@/features/employer/text";
 import { GRADE_LABEL, ROLE_LABEL, roleLabel } from "@/features/profile/text";
-import { groupDigits, parseRub } from "@/features/offers/offer-model";
+import { parseRub } from "@/features/offers/offer-model";
 import { SUB_TEXT as T } from "./text";
 
 const LEVELS = [1, 2, 3, 4];
@@ -100,14 +100,16 @@ export default function Subscriptions() {
 
       <form onSubmit={submit} aria-label={T.new} className="grid content-start gap-4 rounded-xl border border-hairline bg-card p-4 md:p-5">
         <h2 className="font-mono text-17 font-semibold">{T.new}</h2>
-        <label className="grid gap-1 text-sm font-semibold">
-          {T.profession}
-          <select value={profession} onChange={(e) => setProfession(e.target.value)} className={fieldClass}>
-            {Object.entries(ROLE_LABEL).map(([k, v]) => (
-              <option key={k} value={k}>{v}</option>
-            ))}
-          </select>
-        </label>
+        <div className="grid gap-1 text-sm font-semibold">
+          <span>{T.profession}</span>
+          <Select
+            aria-label={T.profession}
+            value={profession}
+            onChange={(v) => v && setProfession(v)}
+            options={Object.entries(ROLE_LABEL).map(([k, v]) => ({ value: k, label: v }))}
+            className="font-normal"
+          />
+        </div>
         <fieldset className="grid gap-2">
           <legend className="mb-1 text-sm font-semibold">{T.grades}</legend>
           <div className="flex flex-wrap gap-2">
@@ -130,31 +132,43 @@ export default function Subscriptions() {
             ))}
           </div>
         </fieldset>
-        <label className="grid gap-1 text-sm font-semibold">
-          {T.salaryMax}
-          <input inputMode="numeric" value={groupDigits(salary)} onChange={(e) => setSalary(e.target.value.replace(/\D/g, ""))} className={fieldClass} />
+        <div className="grid gap-1 text-sm font-semibold">
+          <span>{T.salaryMax}</span>
+          <NumberInput
+            aria-label={T.salaryMax}
+            value={salary ? Number(salary) : null}
+            onChange={(v) => setSalary(v == null ? "" : String(v))}
+            min={0}
+            grouped
+            stepper={false}
+            suffix="₽"
+          />
           <span className="text-xs font-normal text-muted">{T.salaryHint}</span>
-        </label>
+        </div>
         <fieldset className="grid gap-2">
           <legend className="mb-1 text-sm font-semibold">{T.skills}</legend>
           <div className="flex flex-wrap items-end gap-2">
-            <label className="grid min-w-0 flex-1 gap-1 text-xs text-muted">
-              {T.skillPick}
-              <select value={skillSlug} onChange={(e) => setSkillSlug(e.target.value)} className={fieldClass}>
-                <option value="">—</option>
-                {skills.map((s) => (
-                  <option key={s.slug} value={s.slug}>{s.name}</option>
-                ))}
-              </select>
-            </label>
-            <label className="grid gap-1 text-xs text-muted">
-              {T.skillLevel}
-              <select value={skillLevel} onChange={(e) => setSkillLevel(Number(e.target.value))} className={fieldClass}>
-                {LEVELS.map((l) => (
-                  <option key={l} value={l}>≥ {l}</option>
-                ))}
-              </select>
-            </label>
+            <div className="grid min-w-0 flex-1 basis-48 gap-1 text-xs text-muted">
+              <span>{T.skillPick}</span>
+              <Combobox
+                aria-label={T.skillPick}
+                placeholder="—"
+                value={skillSlug || null}
+                onChange={(v) => setSkillSlug(v ?? "")}
+                options={skills.map((s) => ({ value: s.slug, label: s.name }))}
+                className="text-ink"
+              />
+            </div>
+            <div className="grid gap-1 text-xs text-muted">
+              <span>{T.skillLevel}</span>
+              <Select
+                aria-label={T.skillLevel}
+                value={String(skillLevel)}
+                onChange={(v) => v && setSkillLevel(Number(v))}
+                options={LEVELS.map((l) => ({ value: String(l), label: `≥ ${l}` }))}
+                className="w-24 text-ink"
+              />
+            </div>
             <Button type="button" variant="outline" onClick={addSkill} disabled={!skillSlug}>{T.skillAdd}</Button>
           </div>
           {picked.length > 0 && (
