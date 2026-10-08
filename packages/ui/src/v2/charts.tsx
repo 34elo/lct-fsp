@@ -221,7 +221,8 @@ export function ScatterPlot({
 
 /* ---------- ActivityHeatmap ---------- */
 
-const HEAT = ["bg-tint-100", "bg-tint-200", "bg-brand-mid", "bg-brand", "bg-brand-deep"] as const;
+// В тёмной теме шкала светлеет к максимуму (tint-200 там серый, brand-deep сливается с фоном).
+const HEAT = ["bg-tint-100", "bg-tint-200 dark:bg-brand-deep", "bg-brand-mid dark:bg-brand", "bg-brand dark:bg-brand-mid", "bg-brand-deep dark:bg-ink"] as const;
 
 /** Уровень 0–4 для значения относительно максимума. */
 export function heatLevel(v: number, max: number): number {

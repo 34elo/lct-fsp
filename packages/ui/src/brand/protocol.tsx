@@ -97,7 +97,7 @@ function Medal({ place }: { place: number }) {
       : place === 2
         ? "border-brand-mid bg-brand-mid text-brand-deep"
         : place === 3
-          ? "border-tint-200 bg-tint-100 text-brand-deep"
+          ? "border-tint-200 bg-tint-100 text-brand-deep dark:text-ink"
           : "border-transparent bg-transparent text-muted";
   return (
     <span
