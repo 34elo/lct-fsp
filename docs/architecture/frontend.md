@@ -61,9 +61,12 @@ packages/ui/              # @fsp/ui — дизайн-система, без сб
 │   │                     #   графики (MetricTile, SkillConstellation, ScatterPlot, ActivityHeatmap, GradeScale, TypeBar),
 │   │                     #   карточки (CategoryCard, CandidateCardV2, FeedEvent, QueryBar, OfferCardV2),
 │   │                     #   тест (TaskHeader, OptionRow, CodeLines, ErrorBlock), каркас (AppBar, TabBar, MobileBar, AccountMenu)
+│   ├── v3/               # свои контролы (E39-1): Select/Combobox/MultiSelect, SkillInput, ProfessionInput, NumberInput,
+│   │                     #   SalaryRangeInput, InfoTip/Term, Markdown/MarkdownEditor (react-markdown + remark-gfm),
+│   │                     #   ScrollTabs, Avatar, скелетоны-пресеты (SkeletonLine/Card/Table/Chart/Profile)
 │   ├── lib/cn.ts
 │   └── index.ts
-├── playground/           # витрина: Токены / Базовые / Фирменные / v2 (доска v2_components), обе темы (порт 28174)
+├── playground/           # витрина: Токены / Базовые / Фирменные / v2 (доска v2_components) / Контролы (#v3, светлая и тёмная рядом), порт 28174
 └── scripts/shot.mjs      # pnpm shot <маршрут> [--as candidate|employer|admin] [--playground]
                           #   → reports/shots/<имя>-<1440|1024|390>-<light|dark>.png
     scripts/design-shots.mjs  # make design-shots: PNG всех docs/design/v2/screens/*.html → docs/design/v2/png/
@@ -153,6 +156,11 @@ apps/web/
 | `CredentialExport` | профиль | Выпуск Open Badge 3.0, ссылка на проверку, скачивание JSON |
 | `QualityPage`, `FairnessPanel`, `LiveRuns`, `SusForm`, `HealthPanel` | админка, испытатель | Страница качества, справедливость, живые прогоны, анкета SUS, SLO |
 | `useTrack()` | везде | Трекер событий: очередь, батч раз в 5 с, `sendBeacon` при уходе со страницы |
+| `Select`, `Combobox`, `MultiSelect` | все формы и фильтры | Свой выпадающий список вместо `<select>` (E39-1): поиск, ↑ ↓ Home End Enter Esc, Backspace убирает чипс, мультивыбор чипсами, `loadOptions` — асинхронный источник, `creatable` — своё значение. Голые `<select>`, `type="number"`, `type="range"` в `apps/web/src` не используем |
+| `SkillInput suggest=` | опрос, фильтры поиска | Навыки чипсами, подсказки из асинхронного источника, своё значение помечено «новый». Источник — `useSkillSource()` (`shared/lib/skills.ts`): пока справочник `/taxonomy` на клиенте, после E39-3 — `/taxonomy/skills/suggest` |
+| `SalaryRangeInput`, `NumberInput` | опрос, вакансия, оффер, подписки | Текстовые поля `inputMode=numeric` с разрядами и `₽`, ползунок вилки, без стрелок браузера |
+| `InfoTip`, `Term` | рядом с терминами | ⓘ → карточка: мышь — наведение, касание и клавиатура — нажатие (словарь — E39-5) |
+| `Markdown`, `MarkdownEditor` | условия заданий, описания | GFM-таблицы в обёртке с горизонтальной прокруткой; сырой HTML не исполняется, картинки не грузятся |
 | `SkillsAdmin` | админка | Очередь спорных решений графа навыков, слияние, «точно разные», стоп-лист, рост графа |
 
 ## 7. Качество

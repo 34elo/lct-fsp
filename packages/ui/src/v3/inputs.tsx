@@ -309,8 +309,10 @@ export function SalaryRangeInput({
   return (
     <div className={cn("flex flex-col gap-1", className)}>
       <div className="grid grid-cols-2 gap-3">
-        <label className="flex flex-col gap-1">
-          <span className="lbl text-muted">{fromLabel}</span>
+        <div className="flex flex-col gap-1">
+          <span className="lbl text-muted" aria-hidden>
+            {fromLabel}
+          </span>
           <NumberInput
             value={value.from}
             onChange={(from) => onChange({ ...value, from })}
@@ -320,12 +322,14 @@ export function SalaryRangeInput({
             suffix="₽"
             disabled={disabled}
             aria-invalid={bad || undefined}
-            aria-label={`${fromLabel}, ₽ в месяц`}
+            aria-label={fromLabel}
             data-testid={fromTestId}
           />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="lbl text-muted">{toLabel}</span>
+        </div>
+        <div className="flex flex-col gap-1">
+          <span className="lbl text-muted" aria-hidden>
+            {toLabel}
+          </span>
           <NumberInput
             value={value.to}
             onChange={(to) => onChange({ ...value, to })}
@@ -335,10 +339,10 @@ export function SalaryRangeInput({
             suffix="₽"
             disabled={disabled}
             aria-invalid={bad || undefined}
-            aria-label={`${toLabel}, ₽ в месяц`}
+            aria-label={toLabel}
             data-testid={toTestId}
           />
-        </label>
+        </div>
       </div>
       {slider && (
         <Slider

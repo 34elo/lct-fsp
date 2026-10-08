@@ -1,14 +1,10 @@
-import { useId, type ReactNode } from "react";
+import { useId, useMemo, type ReactNode } from "react";
 
-import { Checkbox, SectionLabel, SegmentedControl, Separator, Slider, X, cn, formatRub } from "@fsp/ui";
+import { Checkbox, SectionLabel, SegmentedControl, Select, Separator, SkillInput, Slider, cn, formatRub, localSkillSource } from "@fsp/ui";
 
 import { GRADE_LABEL, ROLE_LABEL } from "@/features/profile/text";
 import { GRADES, type SearchForm } from "./search-model";
 import { BUDGET_MAX, BUDGET_MIN, BUDGET_STEP, FORMAT_LABEL, SEARCH_TEXT as T } from "./text";
-
-/** Нативный select в стиле полей @fsp/ui: на телефоне открывает системный список. */
-export const selectClass =
-  "h-11 w-full min-w-0 appearance-none rounded-lg border border-hairline bg-card px-3 text-14 text-ink hover:border-brand-mid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand sm:h-10";
 
 const TRUST_OPTIONS = [
   { value: "any", label: T.trustAny },
@@ -76,6 +72,7 @@ export function SearchFiltersPanel({
   className?: string;
 }) {
   const budget = form.salaryMax ?? BUDGET_MAX;
+  const suggest = useMemo(() => localSkillSource(skills), [skills]);
   return (
     <section aria-label={T.filters} className={cn("grid gap-5", className)}>
       <div className="flex items-center justify-between gap-3">
@@ -86,30 +83,28 @@ export function SearchFiltersPanel({
       </div>
 
       {vacancies.length > 0 && (
-        <label className="grid gap-1.5 text-13 font-medium text-muted">
-          {T.vacancy}
-          <select className={selectClass} value={vacancyId ?? ""} onChange={(e) => onPickVacancy(e.target.value)} aria-label="Вакансия">
-            <option value="">{T.vacancyNone}</option>
-            {vacancies.map((v) => (
-              <option key={v.id} value={v.id}>
-                {v.title}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="grid gap-1.5 text-13 font-medium text-muted">
+          <span>{T.vacancy}</span>
+          <Select
+            aria-label="Вакансия"
+            value={vacancyId ?? ""}
+            onChange={(v) => onPickVacancy(v ?? "")}
+            options={[{ value: "", label: T.vacancyNone }, ...vacancies.map((v) => ({ value: v.id, label: v.title }))]}
+            className="font-normal"
+          />
+        </div>
       )}
 
-      <label className="grid gap-1.5 text-13 font-medium text-muted">
-        {T.role}
-        <select className={selectClass} value={form.roles[0] ?? ""} onChange={(e) => set("roles", e.target.value ? [e.target.value] : [])} aria-label="Роль">
-          <option value="">{T.any}</option>
-          {Object.entries(ROLE_LABEL).map(([k, v]) => (
-            <option key={k} value={k}>
-              {v}
-            </option>
-          ))}
-        </select>
-      </label>
+      <div className="grid gap-1.5 text-13 font-medium text-muted">
+        <span>{T.role}</span>
+        <Select
+          aria-label="Роль"
+          value={form.roles[0] ?? ""}
+          onChange={(v) => set("roles", v ? [v] : [])}
+          options={[{ value: "", label: T.any }, ...Object.entries(ROLE_LABEL).map(([k, v]) => ({ value: k, label: v }))]}
+          className="font-normal"
+        />
+      </div>
 
       <Separator />
       <Group title={T.trust}>
@@ -172,30 +167,14 @@ export function SearchFiltersPanel({
 
       <Separator />
       <Group title={T.skills}>
-        <select className={selectClass} value="" onChange={(e) => e.target.value && !form.skills.includes(e.target.value) && set("skills", [...form.skills, e.target.value])} aria-label="Добавить навык">
-          <option value="">{T.addSkill}</option>
-          {skills.map((s) => (
-            <option key={s.slug} value={s.slug}>
-              {s.name}
-            </option>
-          ))}
-        </select>
-        {form.skills.length > 0 && (
-          <ul className="flex flex-wrap gap-1.5">
-            {form.skills.map((s) => (
-              <li key={s}>
-                <button
-                  type="button"
-                  onClick={() => set("skills", form.skills.filter((x) => x !== s))}
-                  aria-label={`Убрать навык ${skillName(s)}`}
-                  className="inline-flex h-[30px] items-center gap-1.5 rounded-md border border-tint-200 bg-tint-50 px-[11px] font-mono text-[12.5px] text-brand-deep hover:border-brand-mid dark:text-brand-mid"
-                >
-                  {skillName(s)} <X aria-hidden className="size-3.5" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+        <SkillInput
+          aria-label="Добавить навык"
+          placeholder={T.addSkill}
+          allowNew={false}
+          suggest={suggest}
+          value={form.skills.map((s) => ({ value: s, label: skillName(s) }))}
+          onChange={(v) => set("skills", v.map((x) => x.value))}
+        />
       </Group>
     </section>
   );
