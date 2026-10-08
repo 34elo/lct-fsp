@@ -132,6 +132,25 @@ class ProfessionInfo(BaseModel):
     active: bool = True  # false — скрыта в опросе и выдаче, данные остаются (ADR-027 п.1)
 
 
+class SkillSuggestion(BaseModel):
+    """Подсказка навыка `GET /taxonomy/skills/suggest` (E39-3)."""
+
+    slug: str
+    name: str
+    group: str | None = None
+    provisional: bool = False  # новый навык, ещё не подтверждён (сила доказательства ≤ 0.25)
+    matched: str | None = None  # синоним, по которому нашли (если не название)
+    score: float = Field(ge=0, le=1)
+
+
+class ProfessionSuggestion(BaseModel):
+    """Подсказка профессии `GET /taxonomy/professions/suggest` (E39-3)."""
+
+    slug: str
+    title: str
+    score: float = Field(ge=0, le=1)
+
+
 # --- события (outbox -> exchange events) ---
 
 
@@ -241,7 +260,9 @@ __all__ = [
     "FamilyStatusChanged",
     "ProfessionInfo",
     "ProfessionSlug",
+    "ProfessionSuggestion",
     "RegularTaskPublished",
+    "SkillSuggestion",
     "SkillType",
     "StandingPart",
     "StandingPeer",
