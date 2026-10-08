@@ -1,8 +1,8 @@
 name: ci
+# PR — проверки; push в main — через cd.yml (вызывает этот файл перед деплоем)
 on:
   pull_request:
-  push:
-    branches: [main]
+  workflow_call:
 jobs:
   python:
     runs-on: ubuntu-latest
