@@ -53,3 +53,68 @@ def test_recency_is_soft_and_unverified_halves():
     assert fsp_term([r(30, 40, when=TODAY, verified=False)], TODAY, CFG) == pytest.approx(
         fresh * 0.5
     )
+
+
+# --- релевантность дисциплины профессии (ADR-027 п. 2, E36-3) -------------------------------
+
+from dataclasses import replace  # noqa: E402
+from pathlib import Path  # noqa: E402
+
+from app.graph.fsp_strength import (  # noqa: E402
+    discipline_relevance,
+    is_relevant,
+    relevance_multiplier,
+)
+from app.taxonomy.loader import parse_discipline_rules  # noqa: E402
+
+RULES = parse_discipline_rules(
+    Path(__file__).resolve().parents[3] / "data" / "fsp" / "discipline_rules.yaml"
+)
+SEC_PROFILE = {"security": 1.0, "pentest": 0.8, "networks": 0.7, "linux": 0.6}
+
+
+def rel(discipline, profile=SEC_PROFILE, track=None):
+    return discipline_relevance(RULES[discipline], profile, track)
+
+
+def test_relevance_is_weight_share_of_discipline_skills_in_profile():
+    # security: сумма весов 4.3; в профиле нет reverse_engineering и cryptography
+    assert rel("security") == pytest.approx((1.0 + 0.8 + 0.7 + 0.7) / 4.3, abs=1e-5)
+    assert rel("uav") == pytest.approx(0.0)  # ни одного навыка дисциплины нет в профиле
+    assert discipline_relevance([], SEC_PROFILE) is None  # правил нет — множитель не применяется
+
+
+def test_relevant_discipline_weighs_more_than_robotics():
+    sec = fsp_term([replace(r(2, 40), relevance=rel("security"))], TODAY, CFG)
+    uav = fsp_term([replace(r(2, 40), relevance=rel("uav"))], TODAY, CFG)
+    none = fsp_term([r(2, 40)], TODAY, CFG)
+    assert uav < sec <= none
+    assert uav > 0  # нерелевантная дисциплина весит меньше, но не ноль
+    assert uav == pytest.approx(none * CFG.f_relevance_floor, rel=1e-3)
+
+
+def test_multiplier_bounds_and_labels():
+    assert relevance_multiplier(None, CFG) == 1.0
+    assert relevance_multiplier(1.0, CFG) == 1.0
+    assert relevance_multiplier(0.0, CFG) == CFG.f_relevance_floor == 0.4
+    assert is_relevant(rel("security"), CFG) is True
+    assert is_relevant(rel("uav"), CFG) is False
+    assert is_relevant(None, CFG) is None
+
+
+def test_track_rules_only_for_matching_track():
+    web = {"frontend": 1.0, "backend": 1.0}
+    assert discipline_relevance(RULES["product"], web, "web") > discipline_relevance(
+        RULES["product"], web, "ml"
+    )
+
+
+def test_relevance_ctx_marks_highlight_relevance():
+    from app.matching.search import RelevanceCtx
+
+    ctx = RelevanceCtx(
+        {d: [(s, w, t) for s, w, t in rs] for d, rs in RULES.items()}, {"security": SEC_PROFILE}
+    )
+    assert is_relevant(ctx.of("security", "security", None), CFG) is True  # «релевантно»
+    assert is_relevant(ctx.of("security", "uav", None), CFG) is False  # «другое направление»
+    assert ctx.of("backend", "security", None) is None  # профиль профессии неизвестен
