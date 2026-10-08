@@ -84,15 +84,6 @@ export default function Onboarding() {
             </div>
           )}
 
-          {step.id === "github" && (
-            <div className="flex flex-col gap-3">
-              <p className="rounded-lg border border-hairline bg-tint-50 px-3 py-2 text-14">{ONBOARDING.githubSoon}</p>
-              <Button variant="ghost" data-testid="onboarding-skip" onClick={() => finish("github", "skipped")}>
-                {ONBOARDING.skip}
-              </Button>
-            </div>
-          )}
-
           {step.id === "done" && (
             <div className="flex flex-col gap-3">
               <p className="text-14 text-muted">

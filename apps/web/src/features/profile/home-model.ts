@@ -85,7 +85,7 @@ export function constellationNodes(
 /** Метка источника в строке навыка: заявленный — «заявлен», иначе самый сильный источник. */
 export function skillSource(s: SkillLike): { text: string; claimed: boolean } {
   if (s.claimed_only) return { text: HOME.skillClaimed, claimed: true };
-  const src = ["test", "fsp", "github", "task", "resume"].find((k) => s.sources.includes(k)) ?? s.sources[0];
+  const src = ["test", "fsp", "task", "resume"].find((k) => s.sources.includes(k)) ?? s.sources[0];
   return { text: (src && SOURCE_TAG[src]) ?? src ?? HOME.skillClaimed, claimed: !src };
 }
 
