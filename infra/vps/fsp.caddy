@@ -1,6 +1,7 @@
 # Caddy на VPS (2.26.52.44): HTTPS (Let's Encrypt) и проксирование через Tailscale на домашний сервер,
 # где gateway стенда слушает :28080 и маршрутизирует по Host (infra/caddy/Caddyfile).
-# Установка и обновление — infra/vps/README.md. Не трогать блоки других проектов на этом VPS.
+# На VPS лежит как /etc/caddy/fsp.caddy и подключается строкой `import /etc/caddy/fsp.caddy` в основном Caddyfile.
+# Установка и обновление — infra/vps/README.md. Блоки других проектов — в основном Caddyfile, их не трогаем.
 
 (fsp_security) {
 	header {
@@ -43,7 +44,7 @@ http://100.66.64.126:28443 {
 }
 
 # Корень — на кабинет (лендинг там же, `/`)
-fsp.patissons.tech, www.fsp.patissons.tech {
+fsp.patissons.tech {
 	import fsp_security
 	redir https://dashboard.fsp.patissons.tech{uri} permanent
 }

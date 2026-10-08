@@ -4,7 +4,7 @@ from fsp_platform.config import BaseServiceSettings
 class Settings(BaseServiceSettings):
     service_name: str = "bot"
     tg_bot_token: str = ""  # TG_BOT_TOKEN из .env; пусто → бот не стартует
-    # TG_API_BASE: свой адрес Bot API (ретранслятор на VPS, infra/vps/Caddyfile), если
+    # TG_API_BASE: свой адрес Bot API (ретранслятор на VPS, infra/vps/fsp.caddy), если
     # api.telegram.org недоступен с сервера напрямую; пусто → api.telegram.org
     tg_api_base: str = ""
     service_token_bot: str = ""  # SERVICE_TOKEN_BOT из .env
