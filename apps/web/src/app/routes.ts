@@ -47,7 +47,8 @@ export const ROUTES: RouteDef[] = [
   { path: "/me/offers", title: "Приглашения", screen: "M2", section: "candidate", owner: "b2", nav: true },
   { path: "/me/offers/:id", title: "Приглашение", screen: "M2", section: "candidate", owner: "b2" },
   { path: "/me/growth", title: "Рост и тест", section: "candidate", owner: "b1", redirect: "/me/navigator" },
-  { path: "/me/settings", title: "Настройки", section: "candidate", owner: "b1", redirect: "/me" },
+  // Настройки (E38-7): пункт меню аватара, не вкладка.
+  { path: "/me/settings", title: "Настройки", screen: "v2_me-settings", section: "candidate", owner: "b1" },
   // >>> block1 (candidate)
   { path: "/me/assessment", title: "Опрос и грейд", section: "candidate", owner: "b1", nav: true },
   { path: "/me/assessment/history", title: "История тестов", section: "candidate", owner: "b1" },

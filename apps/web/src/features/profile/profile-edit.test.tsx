@@ -15,7 +15,7 @@ const profile = {
   search_status: "active",
   active_until: "2026-10-20T00:00:00Z",
   preferences: { work_format: [], relocation: false },
-  visibility: { public_profile: false, teams: true },
+  visibility: { full_name: false, companies: true, fsp: true, region: true, education: false, repos: false, public_profile: false, teams: true },
   claimed_soft: ["Коммуникация"],
   experience: [],
   contacts: { email: "me@x.ru", phone: null, telegram: null },
@@ -48,6 +48,10 @@ function install(patch: () => Response = () => json(200, profile)) {
       if (url.endsWith("/auth/refresh")) return json(200, { access_token: "t" });
       if (url.endsWith("/me")) return json(200, { id: "u1", email: "a@b.ru", role: "candidate", email_verified: true, consents: ["pd_processing"] });
       if (url.endsWith("/taxonomy")) return json(200, taxonomy);
+      if (url.endsWith("/candidates/me/visibility") && init?.method === "PATCH") {
+        bodies.push(JSON.parse(String(init.body)));
+        return json(200, profile);
+      }
       if (url.endsWith("/candidates/me/profile") && init?.method === "PATCH") {
         bodies.push(JSON.parse(String(init.body)));
         return patch();
