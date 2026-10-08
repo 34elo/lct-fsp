@@ -1,4 +1,4 @@
-import { Card } from "@fsp/ui";
+import { Panel, PanelCap, Switch } from "@fsp/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
@@ -11,7 +11,36 @@ import { privacyText as P } from "@/features/profile/text";
 
 type Key = (typeof P.items)[number]["key"];
 
-/** Переключатели видимости для работодателя; каждый сразу сохраняется (`PATCH /candidates/me/visibility`). */
+/** Строка настройки `.rw`: название с пояснением слева, переключатель справа. */
+export function SettingRow({
+  id,
+  label,
+  hint,
+  checked,
+  disabled,
+  onChange,
+  testId,
+}: {
+  id: string;
+  label: string;
+  hint?: string;
+  checked: boolean;
+  disabled?: boolean;
+  onChange?: (value: boolean) => void;
+  testId?: string;
+}) {
+  return (
+    <div className="flex min-h-11 items-center gap-3 border-t border-hairline py-2.5 first:border-t-0 first:pt-0">
+      <label htmlFor={id} className="flex min-w-0 flex-1 flex-col">
+        <span className="font-medium">{label}</span>
+        {hint && <span className="text-13 text-muted">{hint}</span>}
+      </label>
+      <Switch id={id} checked={checked} disabled={disabled} onCheckedChange={onChange} data-testid={testId} />
+    </div>
+  );
+}
+
+/** Что видят компании: каждый переключатель сразу сохраняется (`PATCH /candidates/me/visibility`). */
 export function PrivacySettings({ visibility }: { visibility: Visibility }) {
   const qc = useQueryClient();
   const patch = usePatchVisibilityCandidatesMeVisibilityPatch();
@@ -29,31 +58,26 @@ export function PrivacySettings({ visibility }: { visibility: Visibility }) {
   }
 
   return (
-    <Card className="flex flex-col gap-3 p-5" data-testid="privacy-settings">
-      <h2 className="font-mono text-17 font-semibold">{P.title}</h2>
-      <p className="text-13 text-muted">{P.hint}</p>
+    <Panel data-testid="privacy-settings" aria-label={P.title}>
+      <PanelCap title={P.title} />
+      <p className="mb-2 text-13 text-muted">{P.hint}</p>
       {P.items.map((it) => (
-        <label key={it.key} className="flex min-h-11 items-start gap-3 text-14">
-          <input
-            type="checkbox"
-            role="switch"
-            className="mt-1 size-5"
-            checked={Boolean(visibility[it.key])}
-            disabled={patch.isPending}
-            onChange={(e) => void toggle(it.key, e.target.checked)}
-            data-testid={`privacy-${it.key}`}
-          />
-          <span className="flex flex-col">
-            <span className="font-semibold">{it.label}</span>
-            <span className="text-13 text-muted">{it.hint}</span>
-          </span>
-        </label>
+        <SettingRow
+          key={it.key}
+          id={`privacy-${it.key}`}
+          label={it.label}
+          hint={it.hint}
+          checked={Boolean(visibility[it.key])}
+          disabled={patch.isPending}
+          onChange={(v) => void toggle(it.key, v)}
+          testId={`privacy-${it.key}`}
+        />
       ))}
       {error && (
-        <p role="alert" className="rounded-lg bg-tint-50 px-3 py-2 text-13" data-testid="privacy-error">
+        <p role="alert" className="mt-2 rounded-lg bg-tint-50 px-3 py-2 text-13" data-testid="privacy-error">
           {P.saveError}
         </p>
       )}
-    </Card>
+    </Panel>
   );
 }
