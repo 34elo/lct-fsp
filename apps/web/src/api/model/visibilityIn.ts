@@ -6,7 +6,10 @@
  */
 
 export interface VisibilityIn {
+  full_name?: boolean | null;
   companies?: boolean | null;
+  fsp?: boolean | null;
+  region?: boolean | null;
   education?: boolean | null;
   repos?: boolean | null;
   public_profile?: boolean | null;
