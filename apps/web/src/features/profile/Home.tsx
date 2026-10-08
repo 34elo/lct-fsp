@@ -1,3 +1,4 @@
+import { PAGE } from "@/shared/lib/page";
 import { buttonVariants, Chips, CircuitLine, cn, ConstellationAvatar, type ConstellationNode, dotsText, ErrorState, formatRub, formatRubRangeShort, GradeTag, H1, H2, Lbl, ListRow, MetricTile, Num, OfferCardV2, Panel, PanelCap, Skeleton, SkillConstellation, SkillTag, StatusTag } from "@fsp/ui";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
@@ -15,7 +16,6 @@ import { constellationNodes, dayMonth, formatsText, nextStep, ratingText, skillS
 import { parseViews, type ViewsStats } from "./stats-model";
 import { FSP_LEVEL_LABEL, HOME, STATS, roleLabel } from "./text";
 
-const PAGE = "mx-auto flex w-full max-w-[1328px] flex-col gap-4 px-4 py-4 md:px-6 md:py-6";
 const PENDING = new Set(["interest", "interest_opened"]);
 const gradeLabel = (g: string) => GRADE[g] ?? g;
 
@@ -328,7 +328,7 @@ export default function Home() {
   const vq = useMyViewsCandidatesMeViewsGet({ query: { retry: false } });
 
   const page = (body: ReactNode, h1 = true) => (
-    <div className={PAGE} data-testid="home-page">
+    <div className={PAGE.normal} data-testid="home-page">
       {h1 && <h1 className="sr-only">{HOME.title}</h1>}
       {body}
     </div>

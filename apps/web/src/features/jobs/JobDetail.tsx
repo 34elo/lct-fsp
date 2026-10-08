@@ -1,3 +1,4 @@
+import { PAGE } from "@/shared/lib/page";
 import { useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
@@ -105,7 +106,7 @@ export default function JobDetail() {
   const q = useGetPublicVacancyVacanciesPublicVacancyIdGet(id, { query: { retry: false } });
   const v = q.data?.status === 200 ? q.data.data : undefined;
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
+    <div className={PAGE.narrow}>
       <Link to={`/jobs${search}`} className="text-sm font-semibold text-brand-fg hover:underline">← {T.back}</Link>
       {q.isPending && <Skeleton role="status" aria-label="Загрузка" className="h-64" />}
       {q.isError && <ErrorState title={T.notFound} onRetry={() => void q.refetch()} />}

@@ -1,3 +1,4 @@
+import { PAGE } from "@/shared/lib/page";
 import { useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
@@ -150,7 +151,7 @@ export function CandidateOfferDetail() {
   const hasWhyYou = !!o && whyYouItems(o.why_you).length > 0;
   const err = accept.error;
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4 md:p-6">
+    <main className={PAGE.normal}>
       <Link to="/me/offers" className="text-sm font-semibold text-brand-fg hover:underline">← {T.back}</Link>
       {q.isPending && <Skeleton role="status" aria-label="Загрузка" className="h-64" />}
       {q.isError && <ErrorNote>{T.notFound}</ErrorNote>}

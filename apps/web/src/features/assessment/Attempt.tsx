@@ -1,3 +1,4 @@
+import { PAGE } from "@/shared/lib/page";
 import { Button, cn, EmptyState, H1, Lbl, Panel, Skeleton, TaskHeader } from "@fsp/ui";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
@@ -317,7 +318,7 @@ export default function Attempt() {
     );
 
   return (
-    <div className="mx-auto flex w-full max-w-[760px] flex-col gap-4">
+    <div className={PAGE.narrow}>
       <ItemRunner
         key={item.response_id}
         item={item}

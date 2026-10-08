@@ -1,3 +1,4 @@
+import { PAGE } from "@/shared/lib/page";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
@@ -88,14 +89,14 @@ export default function OfferComposer() {
 
   if (!pseudoId) {
     return (
-      <main className="mx-auto w-full max-w-3xl p-4 md:p-6">
+      <main className={PAGE.narrow}>
         <ErrorNote>Не выбран кандидат. Откройте карточку кандидата и нажмите «Отправить приглашение».</ErrorNote>
       </main>
     );
   }
   const grade = card?.grade ? (GRADE_LABEL[card.grade] ?? card.grade) : null;
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4 md:p-6">
+    <main className={PAGE.normal}>
       <Link to={`/employer/candidates/${pseudoId}${vacancyId ? `?vacancy=${vacancyId}` : ""}`} className="text-sm font-semibold text-brand-fg hover:underline">← К карточке кандидата</Link>
       <h1 className="font-mono text-2xl font-semibold">Приглашение кандидату {card ? displayPseudonym(card.pseudonym, card.primary_role) : ""}</h1>
       {card && (

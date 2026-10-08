@@ -1,3 +1,4 @@
+import { PAGE } from "@/shared/lib/page";
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
@@ -36,7 +37,7 @@ export function EmployerOfferDetail() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const isInterest = !!o && (o.status === "interest" || o.status === "interest_opened");
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4 md:p-6">
+    <main className={PAGE.normal}>
       <Link to="/employer/offers" className="text-sm font-semibold text-brand-fg hover:underline">← Все приглашения</Link>
       {q.isPending && <p role="status" className="text-muted">Загрузка…</p>}
       {q.isError && <ErrorNote>Приглашение не найден.</ErrorNote>}

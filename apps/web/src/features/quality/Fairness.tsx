@@ -1,3 +1,4 @@
+import { PAGE } from "@/shared/lib/page";
 import { Card, CardContent, CardHeader, CardTitle } from "@fsp/ui";
 
 import { QualityNav } from "./Nav";
@@ -12,7 +13,7 @@ export default function Fairness() {
   const main = report.rows.find((r) => r.id === "fairness");
   const related = RELATED.flatMap((id) => report.rows.filter((r) => r.id === id));
   return (
-    <div className="flex flex-col gap-6 p-4 md:p-6">
+    <div className={PAGE.wide}>
       <header>
         <h1 className="text-24 font-semibold">{T.fair.title}</h1>
         <p className="max-w-2xl text-14 text-muted">{T.fair.lead}</p>

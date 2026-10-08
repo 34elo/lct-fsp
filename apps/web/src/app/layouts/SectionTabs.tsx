@@ -3,16 +3,15 @@ import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@fsp/ui";
 
 import type { NavItem } from "@/app/routes";
-import { PageContainer } from "./PageContainer";
 import { activeNav } from "./shell-meta";
 
-/** Вкладки открытого раздела меню (E35-1): например, «Приглашения · Вами интересуются · Отклики». */
+/** Вкладки открытого раздела меню (E35-1) — внутри страницы, над её содержимым (E39-4), а не второй строкой шапки. */
 export function SectionTabs({ nav, counts }: { nav: NavItem[]; counts?: Record<string, number | undefined> }) {
   const tabs = activeNav(nav, useLocation().pathname)?.tabs;
   if (!tabs?.length) return null;
   return (
-    <div className="border-b border-hairline bg-card">
-      <PageContainer>
+    <div className="mx-auto w-full max-w-[1328px] px-4 pt-4 md:px-6">
+      <div className="border-b border-hairline">
         <nav aria-label="Вкладки раздела" className="flex min-w-0 gap-1 overflow-x-auto [scrollbar-width:none]">
           {tabs.map((t) => (
             <NavLink
@@ -31,7 +30,7 @@ export function SectionTabs({ nav, counts }: { nav: NavItem[]; counts?: Record<s
             </NavLink>
           ))}
         </nav>
-      </PageContainer>
+      </div>
     </div>
   );
 }

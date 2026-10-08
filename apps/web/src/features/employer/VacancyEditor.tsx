@@ -1,3 +1,4 @@
+import { PAGE } from "@/shared/lib/page";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
@@ -229,7 +230,7 @@ export default function VacancyEditor() {
 
   if (!isNew && vq.isError) {
     return (
-      <main className="mx-auto w-full max-w-3xl p-4 md:p-6">
+      <main className={PAGE.wide}>
         <ErrorNote>Вакансия не найдена.</ErrorNote>
         <Link to="/employer/vacancies" className="mt-3 inline-block text-sm font-semibold text-brand-fg hover:underline">← К вакансиям</Link>
       </main>
@@ -238,7 +239,7 @@ export default function VacancyEditor() {
   if (!isNew && vq.isPending) return <Skeleton aria-hidden className="m-6 h-96 rounded-xl" />;
 
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-6 md:px-6">
+    <main className={PAGE.wide}>
       <Link to="/employer/vacancies" className="text-sm font-semibold text-brand-fg hover:underline">← К вакансиям</Link>
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="font-mono text-2xl font-semibold">{isNew ? "Новая вакансия" : "Вакансия"}</h1>
