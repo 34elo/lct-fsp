@@ -1,12 +1,11 @@
 import sqlite3
-import subprocess
-import sys
 from pathlib import Path
 
 import fakeredis
 import pytest
 from app.config import Settings
 from app.main import build_app
+from core_helpers import upgrade_head
 from fastapi.testclient import TestClient
 from fsp_platform.ratelimit import RateLimiter
 
@@ -18,12 +17,7 @@ INN = "7707083893"
 @pytest.fixture
 def c(tmp_path):
     db = tmp_path / "c.db"
-    subprocess.run(
-        [sys.executable, "-m", "alembic", "-x", f"url=sqlite+aiosqlite:///{db}", "upgrade", "head"],
-        cwd=CORE,
-        check=True,
-        capture_output=True,
-    )
+    upgrade_head(f"sqlite+aiosqlite:///{db}")
     app = build_app(Settings(database_url=f"sqlite+aiosqlite:///{db}", ui_bus_enabled=False))
     with TestClient(app) as client:
         app.state.redis = fakeredis.FakeAsyncRedis()

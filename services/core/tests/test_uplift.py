@@ -1,7 +1,5 @@
 """Uplift (matching.md §6): релевантные вакансии, симуляция, комбинация, способы подтверждения."""
 
-import subprocess
-import sys
 import uuid
 from datetime import date, timedelta
 from pathlib import Path
@@ -25,6 +23,7 @@ from app.matching.uplift import UpliftConfig, is_relevant, raise_skills, simulat
 from app.matching.uplift_service import compute
 from app.taxonomy.models import Discipline, DisciplineSkillRule, Skill
 from app.vacancies.models import Vacancy, VacancySkill
+from core_helpers import upgrade_head
 from fsp_platform.db import make_engine, make_session_factory, session_scope
 
 CORE = Path(__file__).resolve().parents[1]
@@ -140,10 +139,7 @@ def test_top_roles():
 @pytest.fixture
 def factory(tmp_path):
     url = f"sqlite+aiosqlite:///{tmp_path / 'u.db'}"
-    subprocess.run(
-        [sys.executable, "-m", "alembic", "-x", f"url={url}", "upgrade", "head"],
-        cwd=CORE, check=True, capture_output=True,
-    )  # fmt: skip
+    upgrade_head(url)
     return make_session_factory(make_engine(url))
 
 
