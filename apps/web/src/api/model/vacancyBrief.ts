@@ -6,13 +6,12 @@
  */
 import type { EmploymentType } from './employmentType';
 import type { Grade } from './grade';
-import type { RoleSlug } from './roleSlug';
 import type { WorkFormat } from './workFormat';
 
 export interface VacancyBrief {
   id: string;
   title: string;
-  role: RoleSlug;
+  role: string;
   grade_min: Grade;
   grade_max: Grade;
   formats: WorkFormat[];

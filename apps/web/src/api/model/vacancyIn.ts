@@ -6,7 +6,6 @@
  */
 import type { EmploymentType } from './employmentType';
 import type { Grade } from './grade';
-import type { RoleSlug } from './roleSlug';
 import type { SalaryBasis } from './salaryBasis';
 import type { SkillReqIn } from './skillReqIn';
 import type { TeamSignalKind } from './teamSignalKind';
@@ -18,7 +17,11 @@ export interface VacancyIn {
      * @maxLength 200
      */
   title: string;
-  role: RoleSlug;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  role: string;
   grade_min: Grade;
   grade_max: Grade;
   /**

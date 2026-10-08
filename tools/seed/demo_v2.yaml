@@ -127,7 +127,7 @@ vacancies:
   - key: neiron_ai
     company: neiron
     title: "AI Engineer (Junior)"
-    role: ml  # RoleSlug (контракт вакансий) не знает ai_engineer: иначе GET /vacancies/public падает 500
+    role: ai_engineer
     grade_min: junior
     grade_max: junior_plus
     formats: [remote]

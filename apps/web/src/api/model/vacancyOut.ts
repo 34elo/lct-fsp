@@ -6,7 +6,6 @@
  */
 import type { EmploymentType } from './employmentType';
 import type { Grade } from './grade';
-import type { RoleSlug } from './roleSlug';
 import type { SalaryBasis } from './salaryBasis';
 import type { SkillReqOut } from './skillReqOut';
 import type { TeamSignalKind } from './teamSignalKind';
@@ -17,7 +16,7 @@ export interface VacancyOut {
   id: string;
   company_id: string;
   title: string;
-  role: RoleSlug;
+  role: string;
   grade_min: Grade;
   grade_max: Grade;
   formats: WorkFormat[];

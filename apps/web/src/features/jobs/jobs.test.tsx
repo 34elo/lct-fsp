@@ -16,10 +16,12 @@ const vac = {
 let role: string | null = null;
 let applyResp: Response | null = null;
 const applied: unknown[] = [];
+const requested: string[] = [];
 
 beforeEach(() => {
   setAccessToken(null);
   applied.length = 0;
+  requested.length = 0;
   applyResp = null;
   vi.stubGlobal("EventSource", class { addEventListener() {} close() {} });
   vi.stubGlobal(
@@ -27,7 +29,12 @@ beforeEach(() => {
     vi.fn(async (url: string, init?: RequestInit) => {
       if (url.endsWith("/auth/refresh")) return role ? res(200, { access_token: "t" }) : res(401);
       if (url.endsWith("/me")) return res(200, { id: "u1", email: "a@b.ru", role, consents: ["pd_processing"] });
-      if (url.includes("/vacancies/public")) return res(200, [vac]);
+      if (url.includes("/vacancies/public/v1")) return res(200, vac);
+      if (url.includes("/vacancies/public/")) return res(404, { code: "vacancy_not_found", status: 404 });
+      if (url.includes("/vacancies/public")) {
+        requested.push(url);
+        return res(200, [vac]);
+      }
       if (url.includes("/vacancies/v1/apply")) {
         applied.push(JSON.parse(String(init?.body)));
         return applyResp ?? res(201, { id: "o1" });
@@ -97,4 +104,27 @@ test("работодатель не видит формы отклика", async
   role = "employer";
   mount("/jobs/v1");
   expect(await screen.findByText(/только кандидаты/)).toBeInTheDocument();
+});
+
+test("/jobs: фильтры читаются из URL и уходят в запрос", async () => {
+  mount("/jobs?role=backend&grade=middle&format=remote&smin=150000&skills=python");
+  expect(await screen.findByText("Python-разработчик (API)")).toBeInTheDocument();
+  const u = new URL(requested[0], "http://x");
+  expect(u.searchParams.get("role")).toBe("backend");
+  expect(u.searchParams.get("grade")).toBe("middle");
+  expect(u.searchParams.get("format")).toBe("remote");
+  expect(u.searchParams.get("salary_min")).toBe("150000");
+  expect(u.searchParams.getAll("skills")).toEqual(["python"]);
+});
+
+test("карточка: «Назад к списку» возвращает на список с теми же фильтрами", async () => {
+  mount("/jobs?role=backend&grade=middle");
+  fireEvent.click(await screen.findByRole("link", { name: "Подробнее" }));
+  const back = await screen.findByRole("link", { name: /Назад к списку/ });
+  expect(back).toHaveAttribute("href", "/jobs?role=backend&grade=middle");
+});
+
+test("карточка несуществующей вакансии: понятное сообщение", async () => {
+  mount("/jobs/zzz");
+  expect(await screen.findByText(/не найдена/)).toBeInTheDocument();
 });
