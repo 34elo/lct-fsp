@@ -1,0 +1,59 @@
+# Caddy на VPS (2.26.52.44): HTTPS (Let's Encrypt) и проксирование через Tailscale на домашний сервер,
+# где gateway стенда слушает :28080 и маршрутизирует по Host (infra/caddy/Caddyfile).
+# Установка и обновление — infra/vps/README.md. Не трогать блоки других проектов на этом VPS.
+
+(fsp_security) {
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		X-Frame-Options "DENY"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server
+	}
+	encode zstd gzip
+}
+
+(fsp_upstream) {
+	reverse_proxy 100.78.22.33:28080 {
+		header_up Host {host}
+		header_up X-Forwarded-Proto https
+		# SSE и долгие ответы LLM
+		flush_interval -1
+		transport http {
+			read_timeout 600s
+			write_timeout 600s
+		}
+		health_uri /healthz
+		health_interval 30s
+	}
+}
+
+# Корень — на кабинет (лендинг там же, `/`)
+fsp.patissons.tech, www.fsp.patissons.tech {
+	import fsp_security
+	redir https://dashboard.fsp.patissons.tech{uri} permanent
+}
+
+dashboard.fsp.patissons.tech, api.fsp.patissons.tech, mock.fsp.patissons.tech {
+	import fsp_security
+	request_body {
+		max_size 25MB
+	}
+	import fsp_upstream
+	log {
+		output file /var/log/caddy/fsp.log {
+			roll_size 50MiB
+			roll_keep 5
+		}
+	}
+}
+
+# Файлы MinIO (аватары, резюме по подписанным ссылкам): без X-Frame-Options DENY для превью PDF
+s3.fsp.patissons.tech {
+	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	request_body {
+		max_size 25MB
+	}
+	import fsp_upstream
+}
