@@ -91,7 +91,8 @@ function ResultSkeleton() {
 export default function Result() {
   const { id = "" } = useParams();
   const qc = useQueryClient();
-  const aq = useGetAttemptAssessmentAttemptsAttemptIdGet(id, { query: { retry: retryServerOnly } });
+  // Попытка в кеше осталась «активной» (последний ответ вернул done без перечитывания): всегда перечитываем.
+  const aq = useGetAttemptAssessmentAttemptsAttemptIdGet(id, { query: { retry: retryServerOnly, refetchOnMount: "always" } });
   // Тест завершён: свежая история нужна и здесь (кулдауны), и баннеру пути на Главной (E35-2a).
   const hq = useHistoryAssessmentHistoryGet({ query: { refetchOnMount: "always" } });
   const pq = useGetProfessionsTaxonomyProfessionsGet();
