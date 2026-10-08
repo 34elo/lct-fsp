@@ -5,7 +5,7 @@ import { Lbl, MeterBar, clamp, dotsText } from "./primitives";
 
 /* Графики v2 (доска docs/design/v2/screens/v2_components.html). SVG без библиотек, цвета — var(--токен). */
 
-const MONO = "JetBrains Mono, monospace";
+const MONO = "\"JetBrains Mono Variable\", \"JetBrains Mono\", ui-monospace, monospace";
 
 /** Ломаная-спарклайн по значениям (масштаб по min/max). */
 function sparkPath(values: number[], w: number, h: number, pad = 2): string {
