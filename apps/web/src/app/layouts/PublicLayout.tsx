@@ -1,7 +1,7 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
 
+import { Logo } from "@fsp/ui";
 import { useAuth } from "@/shared/lib/auth";
-import { Logo } from "@/shared/brand";
 import { ThemeToggle } from "./Shell";
 
 export default function PublicLayout() {

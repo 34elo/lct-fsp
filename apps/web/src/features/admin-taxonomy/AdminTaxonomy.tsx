@@ -1,8 +1,8 @@
 import { useState } from "react";
 
-import { cn } from "@/shared/lib/cn";
 import { CardsTab } from "./Cards";
 import { ProfessionsTab } from "./Professions";
+import { cn } from "@fsp/ui";
 import { T } from "./text";
 
 type Tab = "professions" | "cards";

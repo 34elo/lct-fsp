@@ -1,9 +1,8 @@
-import { ErrorState } from "@fsp/ui";
+import { cn, ErrorState } from "@fsp/ui";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 
 import { ApiError } from "@/api/mutator";
-import { cn } from "@/shared/lib/cn";
 import { errorView, T } from "./text";
 
 /** Общая колонка страниц теста. */

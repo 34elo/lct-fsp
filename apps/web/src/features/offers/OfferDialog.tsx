@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { AcceptanceMeter, Button, Dialog, DialogContent, DialogDescription, DialogTitle, Lbl, Num, SegmentedControl, Sheet, SheetContent, SheetDescription, SheetTitle, Skeleton, formatRub, type AcceptanceLevel } from "@fsp/ui";
+import { type AcceptanceLevel, AcceptanceMeter, Button, cn, Dialog, DialogContent, DialogDescription, DialogTitle, formatRub, Lbl, Num, SegmentedControl, Sheet, SheetContent, SheetDescription, SheetTitle, Skeleton } from "@fsp/ui";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -10,7 +10,6 @@ import { ContactMethod, SalaryBasis, type OfferForCompany } from "@/api/model";
 import { ApiError } from "@/api/mutator";
 import { fieldClass } from "@/features/auth/ui";
 import { FORMAT_LABEL } from "@/features/employer/text";
-import { cn } from "@/shared/lib/cn";
 import { canSendOffer, groupDigits, isWideRange, parseRub, rangeProblem } from "./offer-model";
 import { invalidateOffers } from "./parts";
 import { CONTACT_LABEL, EMP_INT_TEXT as IT, offerErrorText } from "./text";

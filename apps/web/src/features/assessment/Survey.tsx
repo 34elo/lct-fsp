@@ -1,4 +1,4 @@
-import { Button, Chips, Field, FieldInput, GradeTag, H1, Input, Lbl, Num, Panel, Skeleton, SkillTag, StatusTag } from "@fsp/ui";
+import { Button, Chips, cn, Field, FieldInput, GradeTag, H1, Input, Lbl, Num, Panel, Skeleton, SkillTag, StatusTag } from "@fsp/ui";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
@@ -12,7 +12,6 @@ import {
 } from "@/api/endpoints/assessment/assessment";
 import { useGetProfessionsTaxonomyProfessionsGet } from "@/api/endpoints/taxonomy/taxonomy";
 import type { SurveyIn, TestGrade, WorkFormat } from "@/api/model";
-import { cn } from "@/shared/lib/cn";
 import { addStack, isFuture, salaryError } from "./model";
 import { FORMAT_OPTIONS, GRADE, GRADE_CARDS, T, dateShort } from "./text";
 import { ErrorLine, LoadError, Page } from "./ui";
