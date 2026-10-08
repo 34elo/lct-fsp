@@ -9,6 +9,7 @@ import { useMyLinkMeTelegramLinkPost } from "@/api/endpoints/telegram/telegram";
 import type { ConsentOut } from "@/api/model";
 import { authText } from "@/features/auth/text";
 import { useAuth } from "@/shared/lib/auth";
+import { useTheme } from "@/shared/lib/theme";
 import { PrivacySettings, SettingRow } from "./PrivacySettings";
 import { SETTINGS as S } from "./text";
 
@@ -133,6 +134,28 @@ function NotificationsCard({ consent }: { consent?: ConsentOut }) {
   );
 }
 
+/** Тема: светлая или тёмная (режима «системная» нет: до первого выбора тема следует системной). */
+function AppearanceCard() {
+  const { mode, setMode } = useTheme();
+  const opts = [
+    { v: "light", label: S.themeLight },
+    { v: "dark", label: S.themeDark },
+  ] as const;
+  return (
+    <Panel data-testid="settings-appearance" aria-label={S.appearance}>
+      <PanelCap title={S.appearance} />
+      <p className="mb-2 text-13 text-muted">{S.appearanceHint}</p>
+      <div role="group" aria-label={S.themeLabel} className="flex gap-2">
+        {opts.map((o) => (
+          <Button key={o.v} variant={mode === o.v ? "default" : "outline"} aria-pressed={mode === o.v} onClick={() => setMode(o.v)} data-testid={`settings-theme-${o.v}`}>
+            {o.label}
+          </Button>
+        ))}
+      </div>
+    </Panel>
+  );
+}
+
 /**
  * Настройки кандидата `/me/settings` (E38-7, макеты v2_me-settings__*, бриф §6.8): «Что видят компании»,
  * согласия и уведомления. Переключатели применяются сразу. Нет `pd_processing` — пустое состояние.
@@ -183,6 +206,7 @@ export default function Settings() {
     <div className="flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:items-start" data-testid="settings-main">
       <PrivacySettings visibility={pq.data.data.visibility} />
       <div className="flex flex-col gap-4">
+        <AppearanceCard />
         <ConsentsCard items={items.filter((c) => c.type !== "telegram_notifications")} />
         <NotificationsCard consent={items.find((c) => c.type === "telegram_notifications")} />
       </div>

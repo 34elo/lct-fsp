@@ -383,19 +383,17 @@ function OfferForm({ candidate, vacancyId: initialVacancy, alreadyOffered, onClo
  * Экран C (v2, E38-11): интерес или приглашение в модалке (≥ 1024 px — Dialog, на телефоне — полноэкранный Sheet).
  * Форма монтируется только при открытии: ключ идемпотентности и черновик свежие на каждое открытие.
  * `stay` — после отправки остаться на месте (экран категории): подтверждение в модалке вместо перехода к приглашению.
- * `dark` — хозяин экрана тёмный (карточка кандидата): портал живёт вне его, тему задаём явно.
  */
-export function OfferDialog({ open, onOpenChange, candidate, vacancyId = "", alreadyOffered = false, dark = false, mode = "offer", interest, stay = false }: { open: boolean; onOpenChange: (v: boolean) => void; candidate: OfferCandidate; vacancyId?: string; alreadyOffered?: boolean; dark?: boolean; mode?: DialogMode; interest?: OfferForCompany; stay?: boolean }) {
+export function OfferDialog({ open, onOpenChange, candidate, vacancyId = "", alreadyOffered = false, mode = "offer", interest, stay = false }: { open: boolean; onOpenChange: (v: boolean) => void; candidate: OfferCandidate; vacancyId?: string; alreadyOffered?: boolean; mode?: DialogMode; interest?: OfferForCompany; stay?: boolean }) {
   const desktop = useMedia("(min-width: 1024px)");
   const close = () => onOpenChange(false);
   const title = mode === "interest" ? IT.titleInterest(displayPseudonym(candidate.pseudonym)) : T.title(displayPseudonym(candidate.pseudonym));
   const lead = mode === "interest" ? IT.leadInterest : mode === "invite" ? IT.leadInvite : T.lead;
-  const theme = dark ? "dark bg-card text-ink" : "";
   const form = <OfferForm candidate={candidate} vacancyId={vacancyId} alreadyOffered={alreadyOffered} onClose={close} mode={mode} interest={interest} stay={stay} />;
   if (desktop) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className={cn("max-h-[90dvh] max-w-[560px] overflow-y-auto", theme)}>
+        <DialogContent className={cn("max-h-[90dvh] max-w-[560px] overflow-y-auto")}>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{lead}</DialogDescription>
           {form}
@@ -405,7 +403,7 @@ export function OfferDialog({ open, onOpenChange, candidate, vacancyId = "", alr
   }
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className={cn("top-0 h-dvh max-h-none rounded-none border-t-0", theme)}>
+      <SheetContent className={cn("top-0 h-dvh max-h-none rounded-none border-t-0")}>
         <SheetTitle>{title}</SheetTitle>
         <SheetDescription>{lead}</SheetDescription>
         {form}

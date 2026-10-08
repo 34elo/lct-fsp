@@ -282,6 +282,13 @@ describe("v2: каркас", () => {
     expect(out).toHaveBeenCalled();
   });
 
+  it("AccountMenu: пункт danger («Выйти») красный", async () => {
+    render(<AccountMenu letter="анна" items={[{ label: "Тема", onSelect: () => {} }, { label: "Выйти", danger: true, onSelect: () => {} }]} />);
+    fireEvent.keyDown(screen.getByRole("button", { name: "Меню аккаунта" }), { key: "Enter" });
+    expect((await screen.findByRole("menuitem", { name: "Выйти" })).className).toContain("text-error");
+    expect(screen.getByRole("menuitem", { name: "Тема" }).className).not.toContain("text-error");
+  });
+
   it("RankedCandidateCard: неподтверждённый пунктиром, факты и действия", () => {
     const onOpen = vi.fn();
     render(

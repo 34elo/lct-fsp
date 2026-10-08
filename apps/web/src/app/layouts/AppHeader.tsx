@@ -1,15 +1,15 @@
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 
-import { AccountMenu, AppBar, BrandMark, Moon, Sun, SunMoon, type ShellLinkProps } from "@fsp/ui";
+import { AccountMenu, AppBar, BrandMark, Moon, Sun, type ShellLinkProps } from "@fsp/ui";
 
 import type { NavItem } from "@/app/routes";
 import { useAuth } from "@/shared/lib/auth";
 import { useTheme, type ThemeMode } from "@/shared/lib/theme";
 import { ROLE_LABEL, activeNav, initials } from "./shell-meta";
 
-const NEXT: Record<ThemeMode, ThemeMode> = { light: "dark", dark: "system", system: "light" };
-const LABEL: Record<ThemeMode, string> = { system: "Тема: системная", light: "Тема: светлая", dark: "Тема: тёмная" };
-const ICON = { light: Sun, dark: Moon, system: SunMoon };
+const NEXT: Record<ThemeMode, ThemeMode> = { light: "dark", dark: "light" };
+const LABEL: Record<ThemeMode, string> = { light: "Тема: светлая", dark: "Тема: тёмная" };
+const ICON = { light: Sun, dark: Moon };
 
 export function ThemeToggle() {
   const { mode, setMode } = useTheme();
@@ -27,7 +27,7 @@ export function ThemeToggle() {
   );
 }
 
-const THEME_HINT: Record<ThemeMode, string> = { system: "системная", light: "светлая", dark: "тёмная" };
+const THEME_HINT: Record<ThemeMode, string> = { light: "светлая", dark: "тёмная" };
 
 /** Меню аватара v2 (`.menu`): тема и выход. «Настройки» — только у кандидата (`/me/settings`, E38-7). */
 function UserMenu() {
@@ -44,7 +44,7 @@ function UserMenu() {
       items={[
         ...(me.role === "candidate" ? [{ label: "Настройки", onSelect: () => navigate("/me/settings"), active: pathname === "/me/settings" }] : []),
         { label: "Тема", hint: THEME_HINT[mode], onSelect: () => setMode(NEXT[mode]) },
-        { label: "Выйти", separatorBefore: true, onSelect: () => void logout() },
+        { label: "Выйти", separatorBefore: true, danger: true, onSelect: () => void logout() },
       ]}
     />
   );
@@ -79,7 +79,12 @@ export function AppHeader({
       isCurrent={(i) => current?.to === i.href}
       renderLink={link}
       navLabel="Разделы"
-      aside={<UserMenu />}
+      aside={
+        <>
+          <ThemeToggle />
+          <UserMenu />
+        </>
+      }
     />
   );
 }
