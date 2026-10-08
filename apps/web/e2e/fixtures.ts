@@ -13,7 +13,7 @@ export type Hero = keyof typeof HEROES;
 
 /** Вход через API: access-токен для прямых запросов (в приложении он живёт только в памяти). */
 export async function apiLogin(request: APIRequestContext, hero: Hero): Promise<string> {
-  const r = await request.post("/api/auth/login", {
+  const r = await request.post("/api/v1/auth/login", {
     data: { email: HEROES[hero].email, password: DEMO_PASSWORD },
   });
   expect(r.ok(), `вход ${hero}: ${r.status()}`).toBeTruthy();
