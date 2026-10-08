@@ -1,6 +1,7 @@
 import { PAGE } from "@/shared/lib/page";
 import { useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import type { ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import {
@@ -36,6 +37,9 @@ import { DeclineSheet, DetailLink, LIST_PAGE, ListEmpty, ListError, ListHeader, 
 import { isAwaiting, nextSteps, offerTitle, pastSummary, type CandidateOffer } from "./offer-model";
 import { ACTIVE_STATUSES, CAND_TEXT as T, CONTACT_LABEL, dateOnly, DECLINE_LABEL, offerErrorText } from "./text";
 import { WhyYouBlock, whyYouItems } from "./WhyYou";
+import CandidateResponses from "@/features/responses/CandidateResponses";
+import { CandidateInterests } from "./CandidateInterests";
+import { ShowFilter, useShow } from "./ShowFilter";
 
 function OfferItem({ o, onDecline }: { o: CandidateOffer; onDecline: (id: string) => void }) {
   const qc = useQueryClient();
@@ -70,7 +74,16 @@ function OfferItem({ o, onDecline }: { o: CandidateOffer; onDecline: (id: string
 }
 
 /** Вкладка «Приглашения» (E38-14): ждущие ответа сверху, прошлые приглушены ниже; отклики кандидата — в своей вкладке. */
+/** «Приглашения» кандидата (E39-25): один экран с фильтром — приглашения, интересы компаний, свои отклики. */
 export function CandidateOffers() {
+  const show = useShow(["offers", "interests", "responses"] as const);
+  const filter = <ShowFilter options={T.filter} label={T.filterLabel} />;
+  if (show === "interests") return <CandidateInterests filter={filter} />;
+  if (show === "responses") return <CandidateResponses filter={filter} />;
+  return <OffersList filter={filter} />;
+}
+
+function OffersList({ filter }: { filter: ReactNode }) {
   const qc = useQueryClient();
   const q = useMyOffersCandidatesMeOffersGet();
   const all = ((q.data?.status === 200 ? q.data.data : []) as unknown as CandidateOffer[]).filter((o) => o.initiator !== "candidate");
@@ -90,6 +103,7 @@ export function CandidateOffers() {
   return (
     <main className={LIST_PAGE}>
       <ListHeader />
+      {filter}
       {q.isPending && <ListSkeleton />}
       {q.isError && <ListError error={q.error} onRetry={() => void q.refetch()} />}
       {q.isSuccess && all.length === 0 && <ListEmpty title={T.empty} />}

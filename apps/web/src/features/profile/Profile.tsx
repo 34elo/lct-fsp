@@ -100,9 +100,14 @@ function Frame({ tab, children, bare }: { tab: Tab; children: ReactNode; bare?: 
       <div className="flex flex-col gap-2.5 md:flex-row md:items-center md:justify-between">
         <H1 className="text-[22px] leading-[1.2] md:text-[26px]">{PROFILE.title}</H1>
         {!bare && (
-          <Link to="/onboarding" className={cn(buttonVariants({ variant: "outline", size: "md" }), "hidden md:inline-flex")} data-testid="profile-add">
-            {PROFILE.addEvidence}
-          </Link>
+          <div className="hidden items-center gap-2 md:flex">
+            <Link to="/me/tasks" className={buttonVariants({ variant: "ghost", size: "md" })} data-testid="profile-tasks">
+              {PROFILE.tasks}
+            </Link>
+            <Link to="/onboarding" className={buttonVariants({ variant: "outline", size: "md" })} data-testid="profile-add">
+              {PROFILE.addEvidence}
+            </Link>
+          </div>
         )}
       </div>
       {!bare && (
@@ -125,9 +130,14 @@ function Frame({ tab, children, bare }: { tab: Tab; children: ReactNode; bare?: 
         </nav>
       )}
       {!bare && (
-        <Link to="/onboarding" className={cn(buttonVariants({ size: "lg" }), "w-full md:hidden")} data-testid="profile-add-mobile">
-          {PROFILE.addEvidence}
-        </Link>
+        <div className="flex flex-col gap-2 md:hidden">
+          <Link to="/onboarding" className={cn(buttonVariants({ size: "lg" }), "w-full")} data-testid="profile-add-mobile">
+            {PROFILE.addEvidence}
+          </Link>
+          <Link to="/me/tasks" className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full")} data-testid="profile-tasks-mobile">
+            {PROFILE.tasks}
+          </Link>
+        </div>
       )}
       {children}
     </div>

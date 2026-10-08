@@ -40,7 +40,7 @@ function ApplyBox({ vacancyId }: { vacancyId: string }) {
       <section role="status" className="flex flex-col gap-2 rounded-xl border border-brand-mid bg-tint-50 p-4">
         <h2 className="font-mono text-16 font-semibold">{T.sentTitle}</h2>
         <p className="text-14">{T.sentHint}</p>
-        <Link to="/me/responses" className="text-14 font-semibold text-brand-fg hover:underline">{T.toResponses}</Link>
+        <Link to="/me/offers?show=responses" className="text-14 font-semibold text-brand-fg hover:underline">{T.toResponses}</Link>
       </section>
     );
   }

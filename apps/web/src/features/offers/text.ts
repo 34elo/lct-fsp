@@ -115,6 +115,8 @@ export function offerErrorText(err: unknown, fallback = "Не удалось в�
 /** Тексты экрана E5 (мои приглашения, канбан). */
 export const BOARD_TEXT = {
   title: "Приглашения",
+  filterLabel: "Что показать",
+  filter: { offers: "Приглашения", responses: "Отклики на вакансии" },
   funnelTitle: "Воронка",
   days: (n: number) => `${n} ${n % 10 === 1 && n % 100 !== 11 ? "день" : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? "дня" : "дней"}`,
   funnel: { interest: "интерес", opened: "открыл", invited: "приглашение", accepted: "принято" },
@@ -145,6 +147,8 @@ export const BOARD_TEXT = {
 /** Тексты экрана M2 (приглашения кандидата). */
 export const CAND_TEXT = {
   title: "Приглашения",
+  filterLabel: "Что показать",
+  filter: { offers: "Приглашения", interests: "Интересы", responses: "Мои отклики" },
   newCount: (n: number) => `${n} ${n % 10 === 1 && n % 100 !== 11 ? "новый" : "новых"}`,
   empty: "Пока никто не пригласил",
   toJobs: "Смотреть вакансии",

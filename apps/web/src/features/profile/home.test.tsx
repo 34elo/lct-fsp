@@ -133,7 +133,7 @@ describe("модель Главной (E38-1)", () => {
       ["Ответить на интерес", "current"],
       ["Тест на Middle", "future"],
     ]);
-    expect(a.current).toEqual({ key: "interest", label: "Ответить на интерес", to: "/me/interests" });
+    expect(a.current).toEqual({ key: "interest", label: "Ответить на интерес", to: "/me/offers?show=interests" });
 
     const b = nextStep({ tested: true, fspLinked: false, pendingInterests: 0 });
     expect(b.steps.map((s) => s.id)).toEqual(["test", "fsp"]);
@@ -191,7 +191,7 @@ describe("Главная кандидата /me (E38-1)", () => {
     expect(next).toHaveAttribute("data-step", "interest");
     const action = screen.getByTestId("home-next-action");
     expect(action).toHaveTextContent("Ответить на интерес");
-    expect(action).toHaveAttribute("href", "/me/interests");
+    expect(action).toHaveAttribute("href", "/me/offers?show=interests");
 
     expect(screen.getByRole("img", { name: /Созвездие навыков: Python, SQL, Git, Docker/ })).toBeInTheDocument();
 

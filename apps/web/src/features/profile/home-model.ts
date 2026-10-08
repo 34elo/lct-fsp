@@ -33,7 +33,7 @@ export function nextStep(i: NextStepInput): NextStep {
     { key: "fsp", done: i.fspLinked, label: i.fspLinked ? HOME.steps.fsp.done : HOME.steps.fsp.todo, action: HOME.steps.fsp.todo, to: "/onboarding" },
   ];
   if (i.pendingInterests > 0)
-    raw.push({ key: "interest", done: false, label: HOME.steps.interest.todo, action: HOME.steps.interest.todo, to: "/me/interests" });
+    raw.push({ key: "interest", done: false, label: HOME.steps.interest.todo, action: HOME.steps.interest.todo, to: "/me/offers?show=interests" });
   if (i.nextTest)
     raw.push({ key: "next", done: false, label: HOME.nextTest(i.nextTest.grade), action: HOME.nextTestAction(i.nextTest.grade), to: i.nextTest.path });
   const cur = raw.findIndex((s) => !s.done);
