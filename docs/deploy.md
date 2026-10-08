@@ -44,7 +44,8 @@
 git clone <repo-url> lct-fsp
 cd lct-fsp
 
-# Скопировать пример переменных окружения
+# Для lite (стенд жюри) отдельный .env не нужен: `make up-lite` сам создаёт .env.demo со случайными секретами.
+# Для остальных профилей скопировать пример переменных окружения:
 cp .env.example .env
 
 # Для развёртывания на хосте обновить CHANGE_ME:
@@ -57,20 +58,16 @@ cp .env.example .env
 
 ### 2. Запуск (выберите один вариант)
 
-**Для стенда жюри (lite, без GPU):**
+**Для стенда жюри (lite, без GPU и LLM):**
 ```bash
-make up-lite
-make migrate
-make taxonomy-load
-make seed
+make up-lite     # сборка, миграции и справочники (сервис core-migrate), без LLM
+make seed        # демо-данные и демо-аккаунты
 # Приложение доступно на http://localhost:28080
 ```
 
 **Для разработки с LLM на CPU (standard):**
 ```bash
 LLM_PROFILE=cpu make up
-make migrate
-make taxonomy-load
 make seed
 ```
 
@@ -78,10 +75,28 @@ make seed
 ```bash
 # Убедиться, что llama-server запущен на хосте (см. ниже)
 make up
-make migrate
-make taxonomy-load
 make seed
 ```
+
+Миграции БД и загрузка справочника (`alembic upgrade head`, `python -m app.taxonomy`) выполняются сервисом `core-migrate` при каждом `make up`/`make up-lite`; отдельных команд не нужно.
+
+### 2a. Windows без make
+
+`make` на Windows обычно нет. Команды выше можно выполнять вручную из **Git Bash** (нужны Docker Desktop, `uv`, Node.js 20+ с pnpm). Из корня репозитория:
+
+```bash
+sh infra/scripts/gen-demo-env.sh                      # .env.demo (как make demo-env)
+mkdir -p reports/seed
+LLM_ENABLED=false ML_FAKE=false EMBEDDING_MODEL=multilingual-e5-small \
+  docker compose --env-file .env.demo --profile core --profile ml up -d --build --wait
+
+uv run python -m tools.seed all --env-file .env.demo
+uv run python -m tools.seed grades --env-file .env.demo
+uv run python -m tools.seed demo2 --env-file .env.demo
+docker compose --env-file .env.demo --profile core up -d --build --no-deps --force-recreate fsp-mock
+```
+
+Это последовательность `make up-lite` и `make seed` из Makefile (`SEED` по умолчанию берётся из `tools/seed/config.yaml`). Скрипты `*.sh` должны сохраниться с окончаниями LF (правило в `.gitattributes`): если стек падает на `set -eu` в `rabbitmq-init`, проверьте окончания строк и перекачайте репозиторий.
 
 ### 3. Проверка здоровья
 
@@ -158,10 +173,11 @@ make down
 ```
 
 ### 2. `failed to authenticate with 'postgres/postgres'`
-Базы ещё не инициализированы. Выполнить инициализацию и миграции:
+Роли и базы создаются при первом старте postgres (`infra/postgres/init.sh`); если том создан со старыми паролями, стенд не подключается. Смотрите `docker compose --env-file .env.demo logs postgres core-migrate`. Чистый перезапуск с удалением данных стенда (осторожно):
 ```bash
-docker compose exec -T postgres /init.sh  # инициализация ролей и БД
-make migrate
+make down
+docker compose --env-file .env.demo --profile core down -v   # удаляет тома стенда
+make up-lite
 ```
 
 ### 3. `reports/seed от root после первого запуска Docker`
@@ -218,19 +234,17 @@ mock.fsp.patissons.tech → caddy → :28080/mock.fsp.patissons.tech
 ## Основные команды
 
 ```bash
-# Поднять весь стек (по умолчанию full с GPU)
+# Поднять весь стек (профили core, ml, llm; нужен LLM-сервер или LLM_ENABLED=false)
 make up
 
 # Альтернативы
-make up-lite        # lite: без LLM
+make up-lite        # lite: без LLM (миграции и справочники — в core-migrate)
 make dev-core       # только core + ML_FAKE=true
 
 # Остановить
 make down
 
 # Инициализация данных
-make migrate         # миграции Alembic
-make taxonomy-load   # загрузка справочников (skills, professions, rules)
 make seed            # генерация 400 кандидатов, 25 компаний и т.д. (детерминировано, SEED=20261003)
 
 # Снимок и восстановление демо-данных
@@ -246,8 +260,9 @@ make compose-config  # вывести итоговый compose-файл
 make test            # pytest + vitest
 make lint            # ruff + eslint
 make eval            # метрики качества теста/подбора
+cd apps/web && pnpm e2e   # Playwright на поднятом стеке с сидом (см. ниже)
 
-# Экспорт
+# Экспорт (не требует запущенного стека)
 make openapi         # сгенерировать docs/openapi.json
 make asyncapi        # сгенерировать docs/asyncapi.json
 
@@ -263,12 +278,27 @@ make api-gen         # orval: генерировать hooks из OpenAPI для
 
 | Роль | Логин | Пароль | Для чего |
 |---|---|---|---|
-| Кандидат | `cand0001@demo.fsp.test` … `cand0400@demo.fsp.test` | `demo-pass-1234` | Профиль, тест, резюме |
-| Работодатель | `hr01@demo.fsp.test` … `hr25@demo.fsp.test` | `demo-pass-1234` | Вакансии, подборка, офферы |
+| Жюри, кандидат (без грейда, экспресс-тест) | `jury-candidate@demo.fsp.test` | `demo-pass-1234` | Путь по ТЗ за 3–5 минут |
+| Жюри, работодатель (проверенная компания) | `jury-hr@demo.fsp.test` | `demo-pass-1234` | Поиск категории, приглашение |
+| Герои демо | `anya@`, `dima@`, `olga@demo.fsp.test` | `demo-pass-1234` | Сценарии из `tools/seed/heroes/` (Ольга — работодатель «Северный код») |
+| Кандидаты | `cand0001@demo.fsp.test` … `cand0400@demo.fsp.test` | `demo-pass-1234` | Профиль, тест, резюме |
+| Работодатели | `hr01@demo.fsp.test` … `hr25@demo.fsp.test` | `demo-pass-1234` | Вакансии, подборка, офферы |
 | ФСП участник | `participant0001@example.test` … | `demo-pass-1234` | Результаты соревнований (fsp-mock) |
-| Админист. | `admin@demo.fsp.test` | `demo-pass-1234` | Модерация, справочники, метрики |
+| Администратор | `admin@demo.fsp.test` | `demo-pass-1234` | Модерация, справочники, метрики |
 
-Все 400 кандидатов и 25 компаний вымышленные.
+Пароль — тестовый, из `tools/seed/config.yaml`. Все люди и компании вымышленные. Актуальный список логинов печатает `make seed` в конце.
+
+### E2E-тесты (Playwright)
+
+На поднятом стенде с сидом (`make up-lite && make seed`):
+```bash
+cd apps/web
+pnpm install          # при первом запуске; нужен Node.js 20+
+pnpm e2e              # по умолчанию E2E_BASE_URL=http://localhost:28080
+```
+- Системный Chrome вместо скачанного Chromium: `E2E_CHANNEL=chrome pnpm e2e` (без `playwright install`).
+- Лимит входа на сервере — 5 попыток в минуту на email и 10 на IP. Хелперы `apiLogin` кешируют токен и при 429 ждут окно (до 4 раз по 20 с), поэтому полный прогон может идти несколько минут; это ожидание, а не зависание.
+- Аккаунты и пути героев — в `apps/web/e2e/fixtures.ts`; без `make seed` тесты не найдут данные.
 
 ### Изменение семени данных
 
