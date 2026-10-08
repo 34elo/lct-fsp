@@ -449,3 +449,20 @@ async def test_express_disabled_is_422():
             None, uuid.uuid4(), "backend", M, replace(CFG, express_enabled=False), mode="express"
         )
     assert (e.value.status, e.value.code) == (422, "express_disabled")
+
+
+async def test_demo_mode_skips_cooldown_for_demo_accounts_only(
+    api, factory, taxonomy_loaded, fake_bank
+):
+    """E35-8: в DEMO_MODE кулдаун не блокирует `*@demo.fsp.test`, обычного кандидата — блокирует."""
+    api.app.state.settings.demo_mode = True
+    demo = register(api, email=f"boris-{uuid.uuid4().hex[:6]}@demo.fsp.test")
+    plain = register(api)
+    for h in (demo, plain):
+        _run(api, h, _start(api, h, grade="middle").json()["id"])  # подтверждённый middle
+    r = _start(api, plain, grade="senior")
+    assert (r.status_code, r.json()["code"]) == (409, "cooldown")
+    assert _start(api, demo, grade="senior").status_code == 201
+    api.app.state.settings.demo_mode = False
+    done = api.get("/assessment/history", headers=demo)
+    assert done.status_code == 200
