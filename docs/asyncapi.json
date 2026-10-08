@@ -1,0 +1,7356 @@
+{
+  "asyncapi": "3.0.0",
+  "info": {
+    "title": "ФСП Карьера: события и команды",
+    "version": "1",
+    "description": "Сгенерировано из packages/contracts (messaging.md)."
+  },
+  "defaultContentType": "application/json",
+  "channels": {
+    "candidate_registered": {
+      "address": "candidate.registered",
+      "messages": {
+        "candidate_registered__candidate_registered": {
+          "$ref": "#/components/messages/candidate_registered__candidate_registered"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "candidate_preferences_updated": {
+      "address": "candidate.preferences.updated",
+      "messages": {
+        "candidate_preferences_updated__candidate_preferences_updated": {
+          "$ref": "#/components/messages/candidate_preferences_updated__candidate_preferences_updated"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "candidate_deleted": {
+      "address": "candidate.deleted",
+      "messages": {
+        "candidate_deleted__candidate_deleted": {
+          "$ref": "#/components/messages/candidate_deleted__candidate_deleted"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "resume_parsed": {
+      "address": "resume.parsed",
+      "messages": {
+        "resume_parsed__resume_parsed": {
+          "$ref": "#/components/messages/resume_parsed__resume_parsed"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "resume_confirmed": {
+      "address": "resume.confirmed",
+      "messages": {
+        "resume_confirmed__resume_confirmed": {
+          "$ref": "#/components/messages/resume_confirmed__resume_confirmed"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "evidence_changed": {
+      "address": "evidence.changed",
+      "messages": {
+        "evidence_changed__evidence_changed": {
+          "$ref": "#/components/messages/evidence_changed__evidence_changed"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "skills_profile_updated": {
+      "address": "skills.profile.updated",
+      "messages": {
+        "skills_profile_updated__skills_profile_updated": {
+          "$ref": "#/components/messages/skills_profile_updated__skills_profile_updated"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "category_disputed": {
+      "address": "category.disputed",
+      "messages": {
+        "category_disputed__category_disputed": {
+          "$ref": "#/components/messages/category_disputed__category_disputed"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "taxonomy_updated": {
+      "address": "taxonomy.updated",
+      "messages": {
+        "taxonomy_updated__taxonomy_updated": {
+          "$ref": "#/components/messages/taxonomy_updated__taxonomy_updated"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "vacancy_published": {
+      "address": "vacancy.published",
+      "messages": {
+        "vacancy_published__vacancy_published": {
+          "$ref": "#/components/messages/vacancy_published__vacancy_published"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "vacancy_updated": {
+      "address": "vacancy.updated",
+      "messages": {
+        "vacancy_updated__vacancy_updated": {
+          "$ref": "#/components/messages/vacancy_updated__vacancy_updated"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "vacancy_closed": {
+      "address": "vacancy.closed",
+      "messages": {
+        "vacancy_closed__vacancy_closed": {
+          "$ref": "#/components/messages/vacancy_closed__vacancy_closed"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "offer_sent": {
+      "address": "offer.sent",
+      "messages": {
+        "offer_sent__offer_sent": {
+          "$ref": "#/components/messages/offer_sent__offer_sent"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "offer_viewed": {
+      "address": "offer.viewed",
+      "messages": {
+        "offer_viewed__offer_viewed": {
+          "$ref": "#/components/messages/offer_viewed__offer_viewed"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "offer_accepted": {
+      "address": "offer.accepted",
+      "messages": {
+        "offer_accepted__offer_accepted": {
+          "$ref": "#/components/messages/offer_accepted__offer_accepted"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "offer_declined": {
+      "address": "offer.declined",
+      "messages": {
+        "offer_declined__offer_declined": {
+          "$ref": "#/components/messages/offer_declined__offer_declined"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "offer_expired": {
+      "address": "offer.expired",
+      "messages": {
+        "offer_expired__offer_expired": {
+          "$ref": "#/components/messages/offer_expired__offer_expired"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "offer_withdrawn": {
+      "address": "offer.withdrawn",
+      "messages": {
+        "offer_withdrawn__offer_withdrawn": {
+          "$ref": "#/components/messages/offer_withdrawn__offer_withdrawn"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "offer_message": {
+      "address": "offer.message",
+      "messages": {
+        "offer_message__offer_message": {
+          "$ref": "#/components/messages/offer_message__offer_message"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "offer_status_changed": {
+      "address": "offer.status_changed",
+      "messages": {
+        "offer_status_changed__offer_status_changed": {
+          "$ref": "#/components/messages/offer_status_changed__offer_status_changed"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "matches_ready": {
+      "address": "matches.ready",
+      "messages": {
+        "matches_ready__matches_ready": {
+          "$ref": "#/components/messages/matches_ready__matches_ready"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "fsp_linked": {
+      "address": "fsp.linked",
+      "messages": {
+        "fsp_linked__fsp_linked": {
+          "$ref": "#/components/messages/fsp_linked__fsp_linked"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "fsp_results_imported": {
+      "address": "fsp.results.imported",
+      "messages": {
+        "fsp_results_imported__fsp_results_imported": {
+          "$ref": "#/components/messages/fsp_results_imported__fsp_results_imported"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "fsp_competitions_updated": {
+      "address": "fsp.competitions.updated",
+      "messages": {
+        "fsp_competitions_updated__fsp_competitions_updated": {
+          "$ref": "#/components/messages/fsp_competitions_updated__fsp_competitions_updated"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "ml_resume_completed": {
+      "address": "ml.resume.completed",
+      "messages": {
+        "ml_resume_completed__ml_resume_completed": {
+          "$ref": "#/components/messages/ml_resume_completed__ml_resume_completed"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "ml_resume_failed": {
+      "address": "ml.resume.failed",
+      "messages": {
+        "ml_resume_failed__ml_resume_failed": {
+          "$ref": "#/components/messages/ml_resume_failed__ml_resume_failed"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "ml_code_completed": {
+      "address": "ml.code.completed",
+      "messages": {
+        "ml_code_completed__ml_code_completed": {
+          "$ref": "#/components/messages/ml_code_completed__ml_code_completed"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "ml_code_failed": {
+      "address": "ml.code.failed",
+      "messages": {
+        "ml_code_failed__ml_code_failed": {
+          "$ref": "#/components/messages/ml_code_failed__ml_code_failed"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "ml_interview_generated": {
+      "address": "ml.interview.generated",
+      "messages": {
+        "ml_interview_generated__ml_interview_generated": {
+          "$ref": "#/components/messages/ml_interview_generated__ml_interview_generated"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "ml_interview_graded": {
+      "address": "ml.interview.graded",
+      "messages": {
+        "ml_interview_graded__ml_interview_graded": {
+          "$ref": "#/components/messages/ml_interview_graded__ml_interview_graded"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "ml_interview_kit_generated": {
+      "address": "ml.interview_kit.generated",
+      "messages": {
+        "ml_interview_kit_generated__ml_interview_kit_generated": {
+          "$ref": "#/components/messages/ml_interview_kit_generated__ml_interview_kit_generated"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "ml_skills_resolved": {
+      "address": "ml.skills.resolved",
+      "messages": {
+        "ml_skills_resolved__ml_skills_resolved": {
+          "$ref": "#/components/messages/ml_skills_resolved__ml_skills_resolved"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "ml_matches_explained": {
+      "address": "ml.matches.explained",
+      "messages": {
+        "ml_matches_explained__ml_matches_explained": {
+          "$ref": "#/components/messages/ml_matches_explained__ml_matches_explained"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "ml_questions_generated": {
+      "address": "ml.questions.generated",
+      "messages": {
+        "ml_questions_generated__ml_questions_generated": {
+          "$ref": "#/components/messages/ml_questions_generated__ml_questions_generated"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "assessment_attempt_finished": {
+      "address": "assessment.attempt.finished",
+      "messages": {
+        "assessment_attempt_finished__assessment_attempt_finished": {
+          "$ref": "#/components/messages/assessment_attempt_finished__assessment_attempt_finished"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "candidate_category_changed": {
+      "address": "candidate.category.changed",
+      "messages": {
+        "candidate_category_changed__candidate_category_changed": {
+          "$ref": "#/components/messages/candidate_category_changed__candidate_category_changed"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "candidate_visibility_changed": {
+      "address": "candidate.visibility.changed",
+      "messages": {
+        "candidate_visibility_changed__candidate_visibility_changed": {
+          "$ref": "#/components/messages/candidate_visibility_changed__candidate_visibility_changed"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "assessment_family_status_changed": {
+      "address": "assessment.family.status_changed",
+      "messages": {
+        "assessment_family_status_changed__assessment_family_status_changed": {
+          "$ref": "#/components/messages/assessment_family_status_changed__assessment_family_status_changed"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "regular_task_published": {
+      "address": "regular_task.published",
+      "messages": {
+        "regular_task_published__regular_task_published": {
+          "$ref": "#/components/messages/regular_task_published__regular_task_published"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "offer_interest_sent": {
+      "address": "offer.interest.sent",
+      "messages": {
+        "offer_interest_sent__offer_interest_sent": {
+          "$ref": "#/components/messages/offer_interest_sent__offer_interest_sent"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "offer_interest_opened": {
+      "address": "offer.interest.opened",
+      "messages": {
+        "offer_interest_opened__offer_interest_opened": {
+          "$ref": "#/components/messages/offer_interest_opened__offer_interest_opened"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "offer_interest_declined": {
+      "address": "offer.interest.declined",
+      "messages": {
+        "offer_interest_declined__offer_interest_declined": {
+          "$ref": "#/components/messages/offer_interest_declined__offer_interest_declined"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "offer_interest_expired": {
+      "address": "offer.interest.expired",
+      "messages": {
+        "offer_interest_expired__offer_interest_expired": {
+          "$ref": "#/components/messages/offer_interest_expired__offer_interest_expired"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "offer_interest_withdrawn": {
+      "address": "offer.interest.withdrawn",
+      "messages": {
+        "offer_interest_withdrawn__offer_interest_withdrawn": {
+          "$ref": "#/components/messages/offer_interest_withdrawn__offer_interest_withdrawn"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "ml_llm": {
+      "address": "ml.llm",
+      "messages": {
+        "ml_llm__ml_resume_parse": {
+          "$ref": "#/components/messages/ml_llm__ml_resume_parse"
+        },
+        "ml_llm__ml_interview_grade": {
+          "$ref": "#/components/messages/ml_llm__ml_interview_grade"
+        },
+        "ml_llm__ml_interview_generate": {
+          "$ref": "#/components/messages/ml_llm__ml_interview_generate"
+        },
+        "ml_llm__ml_interview_kit_generate": {
+          "$ref": "#/components/messages/ml_llm__ml_interview_kit_generate"
+        },
+        "ml_llm__ml_skills_resolve": {
+          "$ref": "#/components/messages/ml_llm__ml_skills_resolve"
+        },
+        "ml_llm__ml_matches_explain": {
+          "$ref": "#/components/messages/ml_llm__ml_matches_explain"
+        },
+        "ml_llm__ml_questions_generate": {
+          "$ref": "#/components/messages/ml_llm__ml_questions_generate"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "commands",
+            "type": "direct",
+            "durable": true
+          },
+          "queue": {
+            "name": "ml.llm",
+            "durable": true,
+            "x-max-priority": 10
+          }
+        }
+      }
+    },
+    "ml_code": {
+      "address": "ml.code",
+      "messages": {
+        "ml_code__ml_code_analyze": {
+          "$ref": "#/components/messages/ml_code__ml_code_analyze"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "commands",
+            "type": "direct",
+            "durable": true
+          },
+          "queue": {
+            "name": "ml.code",
+            "durable": true
+          }
+        }
+      }
+    },
+    "fsp_sync": {
+      "address": "fsp.sync",
+      "messages": {
+        "fsp_sync__fsp_sync": {
+          "$ref": "#/components/messages/fsp_sync__fsp_sync"
+        },
+        "fsp_sync__fsp_sync_all": {
+          "$ref": "#/components/messages/fsp_sync__fsp_sync_all"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "commands",
+            "type": "direct",
+            "durable": true
+          },
+          "queue": {
+            "name": "fsp.sync",
+            "durable": true
+          }
+        }
+      }
+    },
+    "bot_telegram": {
+      "address": "bot.telegram",
+      "messages": {
+        "bot_telegram__notify_telegram": {
+          "$ref": "#/components/messages/bot_telegram__notify_telegram"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "commands",
+            "type": "direct",
+            "durable": true
+          },
+          "queue": {
+            "name": "bot.telegram",
+            "durable": true
+          }
+        }
+      }
+    },
+    "core_recompute": {
+      "address": "core.recompute",
+      "messages": {
+        "core_recompute__core_recompute": {
+          "$ref": "#/components/messages/core_recompute__core_recompute"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "commands",
+            "type": "direct",
+            "durable": true
+          },
+          "queue": {
+            "name": "core.recompute",
+            "durable": true
+          }
+        }
+      }
+    },
+    "core_match": {
+      "address": "core.match",
+      "messages": {
+        "core_match__core_match_vacancy": {
+          "$ref": "#/components/messages/core_match__core_match_vacancy"
+        },
+        "core_match__core_match_candidate": {
+          "$ref": "#/components/messages/core_match__core_match_candidate"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "commands",
+            "type": "direct",
+            "durable": true
+          },
+          "queue": {
+            "name": "core.match",
+            "durable": true
+          }
+        }
+      }
+    },
+    "core_jobs": {
+      "address": "core.jobs",
+      "messages": {
+        "core_jobs__offers_expire": {
+          "$ref": "#/components/messages/core_jobs__offers_expire"
+        },
+        "core_jobs__active_status_expire": {
+          "$ref": "#/components/messages/core_jobs__active_status_expire"
+        },
+        "core_jobs__market_refresh": {
+          "$ref": "#/components/messages/core_jobs__market_refresh"
+        },
+        "core_jobs__company_rating": {
+          "$ref": "#/components/messages/core_jobs__company_rating"
+        },
+        "core_jobs__candidate_links_refresh": {
+          "$ref": "#/components/messages/core_jobs__candidate_links_refresh"
+        },
+        "core_jobs__cleanup": {
+          "$ref": "#/components/messages/core_jobs__cleanup"
+        },
+        "core_jobs__recompute_all": {
+          "$ref": "#/components/messages/core_jobs__recompute_all"
+        },
+        "core_jobs__candidate_delete": {
+          "$ref": "#/components/messages/core_jobs__candidate_delete"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "commands",
+            "type": "direct",
+            "durable": true
+          },
+          "queue": {
+            "name": "core.jobs",
+            "durable": true
+          }
+        }
+      }
+    },
+    "ui_user": {
+      "address": "ui.user.{user_id}",
+      "messages": {
+        "ui__job_progress": {
+          "$ref": "#/components/messages/ui__job_progress"
+        },
+        "ui__resume_parsed": {
+          "$ref": "#/components/messages/ui__resume_parsed"
+        },
+        "ui__resume_failed": {
+          "$ref": "#/components/messages/ui__resume_failed"
+        },
+        "ui__fsp_imported": {
+          "$ref": "#/components/messages/ui__fsp_imported"
+        },
+        "ui__code_analysis_completed": {
+          "$ref": "#/components/messages/ui__code_analysis_completed"
+        },
+        "ui__profile_updated": {
+          "$ref": "#/components/messages/ui__profile_updated"
+        },
+        "ui__offer_created": {
+          "$ref": "#/components/messages/ui__offer_created"
+        },
+        "ui__offer_updated": {
+          "$ref": "#/components/messages/ui__offer_updated"
+        },
+        "ui__offer_message": {
+          "$ref": "#/components/messages/ui__offer_message"
+        },
+        "ui__matches_ready": {
+          "$ref": "#/components/messages/ui__matches_ready"
+        },
+        "ui__matches_rationale_ready": {
+          "$ref": "#/components/messages/ui__matches_rationale_ready"
+        },
+        "ui__notification_new": {
+          "$ref": "#/components/messages/ui__notification_new"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "ui",
+            "type": "topic"
+          }
+        }
+      },
+      "parameters": {
+        "user_id": {
+          "description": "UUID пользователя"
+        }
+      }
+    }
+  },
+  "operations": {
+    "send_candidate_registered__candidate_registered": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/candidate_registered"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/candidate_registered/messages/candidate_registered__candidate_registered"
+        }
+      ]
+    },
+    "send_candidate_preferences_updated__candidate_preferences_updated": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/candidate_preferences_updated"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/candidate_preferences_updated/messages/candidate_preferences_updated__candidate_preferences_updated"
+        }
+      ]
+    },
+    "send_candidate_deleted__candidate_deleted": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/candidate_deleted"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/candidate_deleted/messages/candidate_deleted__candidate_deleted"
+        }
+      ]
+    },
+    "send_resume_parsed__resume_parsed": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/resume_parsed"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/resume_parsed/messages/resume_parsed__resume_parsed"
+        }
+      ]
+    },
+    "send_resume_confirmed__resume_confirmed": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/resume_confirmed"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/resume_confirmed/messages/resume_confirmed__resume_confirmed"
+        }
+      ]
+    },
+    "send_evidence_changed__evidence_changed": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/evidence_changed"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/evidence_changed/messages/evidence_changed__evidence_changed"
+        }
+      ]
+    },
+    "send_skills_profile_updated__skills_profile_updated": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/skills_profile_updated"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/skills_profile_updated/messages/skills_profile_updated__skills_profile_updated"
+        }
+      ]
+    },
+    "send_category_disputed__category_disputed": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/category_disputed"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/category_disputed/messages/category_disputed__category_disputed"
+        }
+      ]
+    },
+    "send_taxonomy_updated__taxonomy_updated": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/taxonomy_updated"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/taxonomy_updated/messages/taxonomy_updated__taxonomy_updated"
+        }
+      ]
+    },
+    "send_vacancy_published__vacancy_published": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/vacancy_published"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/vacancy_published/messages/vacancy_published__vacancy_published"
+        }
+      ]
+    },
+    "send_vacancy_updated__vacancy_updated": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/vacancy_updated"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/vacancy_updated/messages/vacancy_updated__vacancy_updated"
+        }
+      ]
+    },
+    "send_vacancy_closed__vacancy_closed": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/vacancy_closed"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/vacancy_closed/messages/vacancy_closed__vacancy_closed"
+        }
+      ]
+    },
+    "send_offer_sent__offer_sent": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/offer_sent"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/offer_sent/messages/offer_sent__offer_sent"
+        }
+      ]
+    },
+    "send_offer_viewed__offer_viewed": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/offer_viewed"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/offer_viewed/messages/offer_viewed__offer_viewed"
+        }
+      ]
+    },
+    "send_offer_accepted__offer_accepted": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/offer_accepted"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/offer_accepted/messages/offer_accepted__offer_accepted"
+        }
+      ]
+    },
+    "send_offer_declined__offer_declined": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/offer_declined"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/offer_declined/messages/offer_declined__offer_declined"
+        }
+      ]
+    },
+    "send_offer_expired__offer_expired": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/offer_expired"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/offer_expired/messages/offer_expired__offer_expired"
+        }
+      ]
+    },
+    "send_offer_withdrawn__offer_withdrawn": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/offer_withdrawn"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/offer_withdrawn/messages/offer_withdrawn__offer_withdrawn"
+        }
+      ]
+    },
+    "send_offer_message__offer_message": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/offer_message"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/offer_message/messages/offer_message__offer_message"
+        }
+      ]
+    },
+    "send_offer_status_changed__offer_status_changed": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/offer_status_changed"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/offer_status_changed/messages/offer_status_changed__offer_status_changed"
+        }
+      ]
+    },
+    "send_matches_ready__matches_ready": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/matches_ready"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/matches_ready/messages/matches_ready__matches_ready"
+        }
+      ]
+    },
+    "send_fsp_linked__fsp_linked": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/fsp_linked"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/fsp_linked/messages/fsp_linked__fsp_linked"
+        }
+      ]
+    },
+    "send_fsp_results_imported__fsp_results_imported": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/fsp_results_imported"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/fsp_results_imported/messages/fsp_results_imported__fsp_results_imported"
+        }
+      ]
+    },
+    "send_fsp_competitions_updated__fsp_competitions_updated": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/fsp_competitions_updated"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/fsp_competitions_updated/messages/fsp_competitions_updated__fsp_competitions_updated"
+        }
+      ]
+    },
+    "send_ml_resume_completed__ml_resume_completed": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/ml_resume_completed"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/ml_resume_completed/messages/ml_resume_completed__ml_resume_completed"
+        }
+      ]
+    },
+    "send_ml_resume_failed__ml_resume_failed": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/ml_resume_failed"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/ml_resume_failed/messages/ml_resume_failed__ml_resume_failed"
+        }
+      ]
+    },
+    "send_ml_code_completed__ml_code_completed": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/ml_code_completed"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/ml_code_completed/messages/ml_code_completed__ml_code_completed"
+        }
+      ]
+    },
+    "send_ml_code_failed__ml_code_failed": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/ml_code_failed"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/ml_code_failed/messages/ml_code_failed__ml_code_failed"
+        }
+      ]
+    },
+    "send_ml_interview_generated__ml_interview_generated": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/ml_interview_generated"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/ml_interview_generated/messages/ml_interview_generated__ml_interview_generated"
+        }
+      ]
+    },
+    "send_ml_interview_graded__ml_interview_graded": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/ml_interview_graded"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/ml_interview_graded/messages/ml_interview_graded__ml_interview_graded"
+        }
+      ]
+    },
+    "send_ml_interview_kit_generated__ml_interview_kit_generated": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/ml_interview_kit_generated"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/ml_interview_kit_generated/messages/ml_interview_kit_generated__ml_interview_kit_generated"
+        }
+      ]
+    },
+    "send_ml_skills_resolved__ml_skills_resolved": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/ml_skills_resolved"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/ml_skills_resolved/messages/ml_skills_resolved__ml_skills_resolved"
+        }
+      ]
+    },
+    "send_ml_matches_explained__ml_matches_explained": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/ml_matches_explained"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/ml_matches_explained/messages/ml_matches_explained__ml_matches_explained"
+        }
+      ]
+    },
+    "send_ml_questions_generated__ml_questions_generated": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/ml_questions_generated"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/ml_questions_generated/messages/ml_questions_generated__ml_questions_generated"
+        }
+      ]
+    },
+    "send_assessment_attempt_finished__assessment_attempt_finished": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/assessment_attempt_finished"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/assessment_attempt_finished/messages/assessment_attempt_finished__assessment_attempt_finished"
+        }
+      ]
+    },
+    "send_candidate_category_changed__candidate_category_changed": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/candidate_category_changed"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/candidate_category_changed/messages/candidate_category_changed__candidate_category_changed"
+        }
+      ]
+    },
+    "send_candidate_visibility_changed__candidate_visibility_changed": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/candidate_visibility_changed"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/candidate_visibility_changed/messages/candidate_visibility_changed__candidate_visibility_changed"
+        }
+      ]
+    },
+    "send_assessment_family_status_changed__assessment_family_status_changed": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/assessment_family_status_changed"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/assessment_family_status_changed/messages/assessment_family_status_changed__assessment_family_status_changed"
+        }
+      ]
+    },
+    "send_regular_task_published__regular_task_published": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/regular_task_published"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/regular_task_published/messages/regular_task_published__regular_task_published"
+        }
+      ]
+    },
+    "send_offer_interest_sent__offer_interest_sent": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/offer_interest_sent"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/offer_interest_sent/messages/offer_interest_sent__offer_interest_sent"
+        }
+      ]
+    },
+    "send_offer_interest_opened__offer_interest_opened": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/offer_interest_opened"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/offer_interest_opened/messages/offer_interest_opened__offer_interest_opened"
+        }
+      ]
+    },
+    "send_offer_interest_declined__offer_interest_declined": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/offer_interest_declined"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/offer_interest_declined/messages/offer_interest_declined__offer_interest_declined"
+        }
+      ]
+    },
+    "send_offer_interest_expired__offer_interest_expired": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/offer_interest_expired"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/offer_interest_expired/messages/offer_interest_expired__offer_interest_expired"
+        }
+      ]
+    },
+    "send_offer_interest_withdrawn__offer_interest_withdrawn": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/offer_interest_withdrawn"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/offer_interest_withdrawn/messages/offer_interest_withdrawn__offer_interest_withdrawn"
+        }
+      ]
+    },
+    "receive_ml_llm__ml_resume_parse": {
+      "action": "receive",
+      "channel": {
+        "$ref": "#/channels/ml_llm"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/ml_llm/messages/ml_llm__ml_resume_parse"
+        }
+      ]
+    },
+    "receive_ml_llm__ml_interview_grade": {
+      "action": "receive",
+      "channel": {
+        "$ref": "#/channels/ml_llm"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/ml_llm/messages/ml_llm__ml_interview_grade"
+        }
+      ]
+    },
+    "receive_ml_llm__ml_interview_generate": {
+      "action": "receive",
+      "channel": {
+        "$ref": "#/channels/ml_llm"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/ml_llm/messages/ml_llm__ml_interview_generate"
+        }
+      ]
+    },
+    "receive_ml_llm__ml_interview_kit_generate": {
+      "action": "receive",
+      "channel": {
+        "$ref": "#/channels/ml_llm"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/ml_llm/messages/ml_llm__ml_interview_kit_generate"
+        }
+      ]
+    },
+    "receive_ml_llm__ml_skills_resolve": {
+      "action": "receive",
+      "channel": {
+        "$ref": "#/channels/ml_llm"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/ml_llm/messages/ml_llm__ml_skills_resolve"
+        }
+      ]
+    },
+    "receive_ml_llm__ml_matches_explain": {
+      "action": "receive",
+      "channel": {
+        "$ref": "#/channels/ml_llm"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/ml_llm/messages/ml_llm__ml_matches_explain"
+        }
+      ]
+    },
+    "receive_ml_llm__ml_questions_generate": {
+      "action": "receive",
+      "channel": {
+        "$ref": "#/channels/ml_llm"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/ml_llm/messages/ml_llm__ml_questions_generate"
+        }
+      ]
+    },
+    "receive_ml_code__ml_code_analyze": {
+      "action": "receive",
+      "channel": {
+        "$ref": "#/channels/ml_code"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/ml_code/messages/ml_code__ml_code_analyze"
+        }
+      ]
+    },
+    "receive_fsp_sync__fsp_sync": {
+      "action": "receive",
+      "channel": {
+        "$ref": "#/channels/fsp_sync"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/fsp_sync/messages/fsp_sync__fsp_sync"
+        }
+      ]
+    },
+    "receive_fsp_sync__fsp_sync_all": {
+      "action": "receive",
+      "channel": {
+        "$ref": "#/channels/fsp_sync"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/fsp_sync/messages/fsp_sync__fsp_sync_all"
+        }
+      ]
+    },
+    "receive_bot_telegram__notify_telegram": {
+      "action": "receive",
+      "channel": {
+        "$ref": "#/channels/bot_telegram"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/bot_telegram/messages/bot_telegram__notify_telegram"
+        }
+      ]
+    },
+    "receive_core_recompute__core_recompute": {
+      "action": "receive",
+      "channel": {
+        "$ref": "#/channels/core_recompute"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/core_recompute/messages/core_recompute__core_recompute"
+        }
+      ]
+    },
+    "receive_core_match__core_match_vacancy": {
+      "action": "receive",
+      "channel": {
+        "$ref": "#/channels/core_match"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/core_match/messages/core_match__core_match_vacancy"
+        }
+      ]
+    },
+    "receive_core_match__core_match_candidate": {
+      "action": "receive",
+      "channel": {
+        "$ref": "#/channels/core_match"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/core_match/messages/core_match__core_match_candidate"
+        }
+      ]
+    },
+    "receive_core_jobs__offers_expire": {
+      "action": "receive",
+      "channel": {
+        "$ref": "#/channels/core_jobs"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/core_jobs/messages/core_jobs__offers_expire"
+        }
+      ]
+    },
+    "receive_core_jobs__active_status_expire": {
+      "action": "receive",
+      "channel": {
+        "$ref": "#/channels/core_jobs"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/core_jobs/messages/core_jobs__active_status_expire"
+        }
+      ]
+    },
+    "receive_core_jobs__market_refresh": {
+      "action": "receive",
+      "channel": {
+        "$ref": "#/channels/core_jobs"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/core_jobs/messages/core_jobs__market_refresh"
+        }
+      ]
+    },
+    "receive_core_jobs__company_rating": {
+      "action": "receive",
+      "channel": {
+        "$ref": "#/channels/core_jobs"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/core_jobs/messages/core_jobs__company_rating"
+        }
+      ]
+    },
+    "receive_core_jobs__candidate_links_refresh": {
+      "action": "receive",
+      "channel": {
+        "$ref": "#/channels/core_jobs"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/core_jobs/messages/core_jobs__candidate_links_refresh"
+        }
+      ]
+    },
+    "receive_core_jobs__cleanup": {
+      "action": "receive",
+      "channel": {
+        "$ref": "#/channels/core_jobs"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/core_jobs/messages/core_jobs__cleanup"
+        }
+      ]
+    },
+    "receive_core_jobs__recompute_all": {
+      "action": "receive",
+      "channel": {
+        "$ref": "#/channels/core_jobs"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/core_jobs/messages/core_jobs__recompute_all"
+        }
+      ]
+    },
+    "receive_core_jobs__candidate_delete": {
+      "action": "receive",
+      "channel": {
+        "$ref": "#/channels/core_jobs"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/core_jobs/messages/core_jobs__candidate_delete"
+        }
+      ]
+    },
+    "send_ui_user": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/ui_user"
+      }
+    }
+  },
+  "components": {
+    "messages": {
+      "candidate_registered__candidate_registered": {
+        "name": "candidate.registered",
+        "title": "candidate.registered",
+        "summary": "Событие от core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "candidate.registered"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/CandidateRegistered"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "candidate_preferences_updated__candidate_preferences_updated": {
+        "name": "candidate.preferences.updated",
+        "title": "candidate.preferences.updated",
+        "summary": "Событие от core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "candidate.preferences.updated"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/CandidatePreferencesUpdated"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "candidate_deleted__candidate_deleted": {
+        "name": "candidate.deleted",
+        "title": "candidate.deleted",
+        "summary": "Событие от core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "candidate.deleted"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/CandidateDeleted"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "resume_parsed__resume_parsed": {
+        "name": "resume.parsed",
+        "title": "resume.parsed",
+        "summary": "Событие от core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "resume.parsed"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/ResumeEvent"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "resume_confirmed__resume_confirmed": {
+        "name": "resume.confirmed",
+        "title": "resume.confirmed",
+        "summary": "Событие от core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "resume.confirmed"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/ResumeEvent"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "evidence_changed__evidence_changed": {
+        "name": "evidence.changed",
+        "title": "evidence.changed",
+        "summary": "Событие от core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "evidence.changed"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/EvidenceChanged"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "skills_profile_updated__skills_profile_updated": {
+        "name": "skills.profile.updated",
+        "title": "skills.profile.updated",
+        "summary": "Событие от core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "skills.profile.updated"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/SkillsProfileUpdated"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "category_disputed__category_disputed": {
+        "name": "category.disputed",
+        "title": "category.disputed",
+        "summary": "Событие от core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "category.disputed"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/CategoryDisputed"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "taxonomy_updated__taxonomy_updated": {
+        "name": "taxonomy.updated",
+        "title": "taxonomy.updated",
+        "summary": "Событие от core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "taxonomy.updated"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/TaxonomyUpdated"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "vacancy_published__vacancy_published": {
+        "name": "vacancy.published",
+        "title": "vacancy.published",
+        "summary": "Событие от core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "vacancy.published"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/VacancyEvent"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "vacancy_updated__vacancy_updated": {
+        "name": "vacancy.updated",
+        "title": "vacancy.updated",
+        "summary": "Событие от core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "vacancy.updated"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/VacancyEvent"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "vacancy_closed__vacancy_closed": {
+        "name": "vacancy.closed",
+        "title": "vacancy.closed",
+        "summary": "Событие от core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "vacancy.closed"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/VacancyEvent"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "offer_sent__offer_sent": {
+        "name": "offer.sent",
+        "title": "offer.sent",
+        "summary": "Событие от core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "offer.sent"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/OfferEvent"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "offer_viewed__offer_viewed": {
+        "name": "offer.viewed",
+        "title": "offer.viewed",
+        "summary": "Событие от core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "offer.viewed"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/OfferEvent"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "offer_accepted__offer_accepted": {
+        "name": "offer.accepted",
+        "title": "offer.accepted",
+        "summary": "Событие от core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "offer.accepted"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/OfferEvent"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "offer_declined__offer_declined": {
+        "name": "offer.declined",
+        "title": "offer.declined",
+        "summary": "Событие от core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "offer.declined"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/OfferEvent"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "offer_expired__offer_expired": {
+        "name": "offer.expired",
+        "title": "offer.expired",
+        "summary": "Событие от core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "offer.expired"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/OfferEvent"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "offer_withdrawn__offer_withdrawn": {
+        "name": "offer.withdrawn",
+        "title": "offer.withdrawn",
+        "summary": "Событие от core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "offer.withdrawn"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/OfferEvent"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "offer_message__offer_message": {
+        "name": "offer.message",
+        "title": "offer.message",
+        "summary": "Событие от core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "offer.message"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/OfferEvent"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "offer_status_changed__offer_status_changed": {
+        "name": "offer.status_changed",
+        "title": "offer.status_changed",
+        "summary": "Событие от core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "offer.status_changed"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/OfferEvent"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "matches_ready__matches_ready": {
+        "name": "matches.ready",
+        "title": "matches.ready",
+        "summary": "Событие от core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "matches.ready"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/MatchesReady"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "fsp_linked__fsp_linked": {
+        "name": "fsp.linked",
+        "title": "fsp.linked",
+        "summary": "Событие от fsp-connector",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "fsp.linked"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/FspLinked"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "fsp_results_imported__fsp_results_imported": {
+        "name": "fsp.results.imported",
+        "title": "fsp.results.imported",
+        "summary": "Событие от fsp-connector",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "fsp.results.imported"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/FspResultsImported"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "fsp_competitions_updated__fsp_competitions_updated": {
+        "name": "fsp.competitions.updated",
+        "title": "fsp.competitions.updated",
+        "summary": "Событие от fsp-connector",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "fsp.competitions.updated"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/FspCompetitionsUpdated"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ml_resume_completed__ml_resume_completed": {
+        "name": "ml.resume.completed",
+        "title": "ml.resume.completed",
+        "summary": "Событие от ml",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "ml.resume.completed"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/MlResumeResult"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ml_resume_failed__ml_resume_failed": {
+        "name": "ml.resume.failed",
+        "title": "ml.resume.failed",
+        "summary": "Событие от ml",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "ml.resume.failed"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/MlResumeResult"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ml_code_completed__ml_code_completed": {
+        "name": "ml.code.completed",
+        "title": "ml.code.completed",
+        "summary": "Событие от ml",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "ml.code.completed"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/MlCodeResult"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ml_code_failed__ml_code_failed": {
+        "name": "ml.code.failed",
+        "title": "ml.code.failed",
+        "summary": "Событие от ml",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "ml.code.failed"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/MlCodeResult"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ml_interview_generated__ml_interview_generated": {
+        "name": "ml.interview.generated",
+        "title": "ml.interview.generated",
+        "summary": "Событие от ml",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "ml.interview.generated"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/MlInterviewGenerated"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ml_interview_graded__ml_interview_graded": {
+        "name": "ml.interview.graded",
+        "title": "ml.interview.graded",
+        "summary": "Событие от ml",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "ml.interview.graded"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/MlInterviewGraded"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ml_interview_kit_generated__ml_interview_kit_generated": {
+        "name": "ml.interview_kit.generated",
+        "title": "ml.interview_kit.generated",
+        "summary": "Событие от ml",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "ml.interview_kit.generated"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/MlInterviewKitGenerated"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ml_skills_resolved__ml_skills_resolved": {
+        "name": "ml.skills.resolved",
+        "title": "ml.skills.resolved",
+        "summary": "Событие от ml",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "ml.skills.resolved"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/MlSkillsResolved"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ml_matches_explained__ml_matches_explained": {
+        "name": "ml.matches.explained",
+        "title": "ml.matches.explained",
+        "summary": "Событие от ml",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "ml.matches.explained"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/MlMatchesExplained"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ml_questions_generated__ml_questions_generated": {
+        "name": "ml.questions.generated",
+        "title": "ml.questions.generated",
+        "summary": "Событие от ml",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "ml.questions.generated"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/MlQuestionsGenerated"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "assessment_attempt_finished__assessment_attempt_finished": {
+        "name": "assessment.attempt.finished",
+        "title": "assessment.attempt.finished",
+        "summary": "Событие от core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "assessment.attempt.finished"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/AttemptFinished"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "candidate_category_changed__candidate_category_changed": {
+        "name": "candidate.category.changed",
+        "title": "candidate.category.changed",
+        "summary": "Событие от core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "candidate.category.changed"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/CategoryChanged"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "candidate_visibility_changed__candidate_visibility_changed": {
+        "name": "candidate.visibility.changed",
+        "title": "candidate.visibility.changed",
+        "summary": "Событие от core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "candidate.visibility.changed"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/VisibilityChanged"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "assessment_family_status_changed__assessment_family_status_changed": {
+        "name": "assessment.family.status_changed",
+        "title": "assessment.family.status_changed",
+        "summary": "Событие от core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "assessment.family.status_changed"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/FamilyStatusChanged"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "regular_task_published__regular_task_published": {
+        "name": "regular_task.published",
+        "title": "regular_task.published",
+        "summary": "Событие от core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "regular_task.published"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/RegularTaskPublished"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "offer_interest_sent__offer_interest_sent": {
+        "name": "offer.interest.sent",
+        "title": "offer.interest.sent",
+        "summary": "Событие от core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "offer.interest.sent"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/OfferInterestEvent"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "offer_interest_opened__offer_interest_opened": {
+        "name": "offer.interest.opened",
+        "title": "offer.interest.opened",
+        "summary": "Событие от core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "offer.interest.opened"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/OfferInterestEvent"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "offer_interest_declined__offer_interest_declined": {
+        "name": "offer.interest.declined",
+        "title": "offer.interest.declined",
+        "summary": "Событие от core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "offer.interest.declined"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/OfferInterestEvent"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "offer_interest_expired__offer_interest_expired": {
+        "name": "offer.interest.expired",
+        "title": "offer.interest.expired",
+        "summary": "Событие от core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "offer.interest.expired"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/OfferInterestEvent"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "offer_interest_withdrawn__offer_interest_withdrawn": {
+        "name": "offer.interest.withdrawn",
+        "title": "offer.interest.withdrawn",
+        "summary": "Событие от core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "offer.interest.withdrawn"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/OfferInterestEvent"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ml_llm__ml_resume_parse": {
+        "name": "ml.resume.parse",
+        "title": "ml.resume.parse",
+        "summary": "Команда для ml, приоритет 9",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "ml.resume.parse"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/MlResumeParse"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ml_llm__ml_interview_grade": {
+        "name": "ml.interview.grade",
+        "title": "ml.interview.grade",
+        "summary": "Команда для ml, приоритет 8",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "ml.interview.grade"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/MlInterviewGrade"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ml_llm__ml_interview_generate": {
+        "name": "ml.interview.generate",
+        "title": "ml.interview.generate",
+        "summary": "Команда для ml, приоритет 7",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "ml.interview.generate"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/MlInterviewGenerate"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ml_llm__ml_interview_kit_generate": {
+        "name": "ml.interview_kit.generate",
+        "title": "ml.interview_kit.generate",
+        "summary": "Команда для ml, приоритет 5",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "ml.interview_kit.generate"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/MlInterviewKitGenerate"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ml_llm__ml_skills_resolve": {
+        "name": "ml.skills.resolve",
+        "title": "ml.skills.resolve",
+        "summary": "Команда для ml, приоритет 3",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "ml.skills.resolve"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/MlSkillsResolve"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ml_llm__ml_matches_explain": {
+        "name": "ml.matches.explain",
+        "title": "ml.matches.explain",
+        "summary": "Команда для ml, приоритет 2",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "ml.matches.explain"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/MlMatchesExplain"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ml_llm__ml_questions_generate": {
+        "name": "ml.questions.generate",
+        "title": "ml.questions.generate",
+        "summary": "Команда для ml, приоритет 1",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "ml.questions.generate"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/MlQuestionsGenerate"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ml_code__ml_code_analyze": {
+        "name": "ml.code.analyze",
+        "title": "ml.code.analyze",
+        "summary": "Команда для ml",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "ml.code.analyze"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/MlCodeAnalyze"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "fsp_sync__fsp_sync": {
+        "name": "fsp.sync",
+        "title": "fsp.sync",
+        "summary": "Команда для fsp-connector",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "fsp.sync"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/FspSync"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "fsp_sync__fsp_sync_all": {
+        "name": "fsp.sync_all",
+        "title": "fsp.sync_all",
+        "summary": "Команда для fsp-connector",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "fsp.sync_all"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/FspSyncAll"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "bot_telegram__notify_telegram": {
+        "name": "notify.telegram",
+        "title": "notify.telegram",
+        "summary": "Команда для bot",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "notify.telegram"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/NotifyTelegram"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "core_recompute__core_recompute": {
+        "name": "core.recompute",
+        "title": "core.recompute",
+        "summary": "Команда для core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "core.recompute"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/CoreRecompute"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "core_match__core_match_vacancy": {
+        "name": "core.match.vacancy",
+        "title": "core.match.vacancy",
+        "summary": "Команда для core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "core.match.vacancy"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/CoreMatchVacancy"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "core_match__core_match_candidate": {
+        "name": "core.match.candidate",
+        "title": "core.match.candidate",
+        "summary": "Команда для core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "core.match.candidate"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/CoreMatchCandidate"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "core_jobs__offers_expire": {
+        "name": "offers.expire",
+        "title": "offers.expire",
+        "summary": "Команда для core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "offers.expire"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/CoreJob"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "core_jobs__active_status_expire": {
+        "name": "active_status.expire",
+        "title": "active_status.expire",
+        "summary": "Команда для core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "active_status.expire"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/CoreJob"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "core_jobs__market_refresh": {
+        "name": "market.refresh",
+        "title": "market.refresh",
+        "summary": "Команда для core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "market.refresh"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/CoreJob"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "core_jobs__company_rating": {
+        "name": "company.rating",
+        "title": "company.rating",
+        "summary": "Команда для core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "company.rating"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/CoreJob"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "core_jobs__candidate_links_refresh": {
+        "name": "candidate_links.refresh",
+        "title": "candidate_links.refresh",
+        "summary": "Команда для core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "candidate_links.refresh"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/CoreJob"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "core_jobs__cleanup": {
+        "name": "cleanup",
+        "title": "cleanup",
+        "summary": "Команда для core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "cleanup"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/CoreJob"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "core_jobs__recompute_all": {
+        "name": "recompute_all",
+        "title": "recompute_all",
+        "summary": "Команда для core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "recompute_all"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/CoreJob"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "core_jobs__candidate_delete": {
+        "name": "candidate.delete",
+        "title": "candidate.delete",
+        "summary": "Команда для core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "candidate.delete"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/CoreJob"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ui__job_progress": {
+        "name": "job.progress",
+        "title": "SSE job.progress",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/UiMessage"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "event": {
+                  "const": "job.progress"
+                },
+                "data": {
+                  "$ref": "#/components/schemas/JobProgress"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ui__resume_parsed": {
+        "name": "resume.parsed",
+        "title": "SSE resume.parsed",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/UiMessage"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "event": {
+                  "const": "resume.parsed"
+                },
+                "data": {
+                  "$ref": "#/components/schemas/ResumeStatus"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ui__resume_failed": {
+        "name": "resume.failed",
+        "title": "SSE resume.failed",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/UiMessage"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "event": {
+                  "const": "resume.failed"
+                },
+                "data": {
+                  "$ref": "#/components/schemas/ResumeStatus"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ui__fsp_imported": {
+        "name": "fsp.imported",
+        "title": "SSE fsp.imported",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/UiMessage"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "event": {
+                  "const": "fsp.imported"
+                },
+                "data": {
+                  "$ref": "#/components/schemas/FspImported"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ui__code_analysis_completed": {
+        "name": "code.analysis.completed",
+        "title": "SSE code.analysis.completed",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/UiMessage"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "event": {
+                  "const": "code.analysis.completed"
+                },
+                "data": {
+                  "$ref": "#/components/schemas/CodeAnalysisCompleted"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ui__profile_updated": {
+        "name": "profile.updated",
+        "title": "SSE profile.updated",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/UiMessage"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "event": {
+                  "const": "profile.updated"
+                },
+                "data": {
+                  "$ref": "#/components/schemas/ProfileUpdated"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ui__offer_created": {
+        "name": "offer.created",
+        "title": "SSE offer.created",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/UiMessage"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "event": {
+                  "const": "offer.created"
+                },
+                "data": {
+                  "$ref": "#/components/schemas/OfferCreated"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ui__offer_updated": {
+        "name": "offer.updated",
+        "title": "SSE offer.updated",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/UiMessage"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "event": {
+                  "const": "offer.updated"
+                },
+                "data": {
+                  "$ref": "#/components/schemas/OfferUpdated"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ui__offer_message": {
+        "name": "offer.message",
+        "title": "SSE offer.message",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/UiMessage"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "event": {
+                  "const": "offer.message"
+                },
+                "data": {
+                  "$ref": "#/components/schemas/OfferMessage"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ui__matches_ready": {
+        "name": "matches.ready",
+        "title": "SSE matches.ready",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/UiMessage"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "event": {
+                  "const": "matches.ready"
+                },
+                "data": {
+                  "$ref": "#/components/schemas/UiMatchesReady"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ui__matches_rationale_ready": {
+        "name": "matches.rationale_ready",
+        "title": "SSE matches.rationale_ready",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/UiMessage"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "event": {
+                  "const": "matches.rationale_ready"
+                },
+                "data": {
+                  "$ref": "#/components/schemas/MatchesRationaleReady"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ui__notification_new": {
+        "name": "notification.new",
+        "title": "SSE notification.new",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/UiMessage"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "event": {
+                  "const": "notification.new"
+                },
+                "data": {
+                  "$ref": "#/components/schemas/NotificationNew"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "schemas": {
+      "AttemptFinished": {
+        "description": "`assessment.attempt.finished`.",
+        "properties": {
+          "candidate_id": {
+            "format": "uuid",
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "attempt_id": {
+            "format": "uuid",
+            "title": "Attempt Id",
+            "type": "string"
+          },
+          "profession": {
+            "pattern": "^[a-z][a-z0-9_]{1,31}$",
+            "title": "Profession",
+            "type": "string"
+          },
+          "declared_grade": {
+            "$ref": "#/components/schemas/TestGrade"
+          },
+          "stage": {
+            "enum": [
+              "main",
+              "bonus"
+            ],
+            "title": "Stage",
+            "type": "string"
+          },
+          "result": {
+            "enum": [
+              "passed",
+              "failed",
+              "abandoned"
+            ],
+            "title": "Result",
+            "type": "string"
+          },
+          "grade": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TestGrade"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "theta": {
+            "title": "Theta",
+            "type": "number"
+          },
+          "se": {
+            "title": "Se",
+            "type": "number"
+          },
+          "integrity": {
+            "title": "Integrity",
+            "type": "number"
+          },
+          "needs_confirmation": {
+            "title": "Needs Confirmation",
+            "type": "boolean"
+          },
+          "low_confidence": {
+            "title": "Low Confidence",
+            "type": "boolean"
+          },
+          "finished_at": {
+            "format": "date-time",
+            "title": "Finished At",
+            "type": "string"
+          },
+          "profile_version": {
+            "title": "Profile Version",
+            "type": "integer"
+          },
+          "mode": {
+            "default": "standard",
+            "enum": [
+              "standard",
+              "express"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "invited_grade": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TestGrade"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "candidate_id",
+          "attempt_id",
+          "profession",
+          "declared_grade",
+          "stage",
+          "result",
+          "theta",
+          "se",
+          "integrity",
+          "needs_confirmation",
+          "low_confidence",
+          "finished_at",
+          "profile_version"
+        ],
+        "title": "AttemptFinished",
+        "type": "object"
+      },
+      "CandidateDeleted": {
+        "properties": {
+          "candidate_id": {
+            "format": "uuid",
+            "title": "Candidate Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "candidate_id"
+        ],
+        "title": "CandidateDeleted",
+        "type": "object"
+      },
+      "CandidatePreferencesUpdated": {
+        "properties": {
+          "candidate_id": {
+            "format": "uuid",
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "fields": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Fields",
+            "type": "array"
+          }
+        },
+        "required": [
+          "candidate_id",
+          "fields"
+        ],
+        "title": "CandidatePreferencesUpdated",
+        "type": "object"
+      },
+      "CandidateRegistered": {
+        "properties": {
+          "candidate_id": {
+            "format": "uuid",
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "channel": {
+            "enum": [
+              "web",
+              "tg"
+            ],
+            "title": "Channel",
+            "type": "string"
+          }
+        },
+        "required": [
+          "candidate_id",
+          "channel"
+        ],
+        "title": "CandidateRegistered",
+        "type": "object"
+      },
+      "CategoryChange": {
+        "properties": {
+          "from": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RoleSlug"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "to": {
+            "$ref": "#/components/schemas/RoleSlug"
+          }
+        },
+        "required": [
+          "to"
+        ],
+        "title": "CategoryChange",
+        "type": "object"
+      },
+      "CategoryChanged": {
+        "description": "`candidate.category.changed`: полный текущий набор категорий, а не дельта.",
+        "properties": {
+          "candidate_id": {
+            "format": "uuid",
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryRef"
+            },
+            "title": "Categories",
+            "type": "array"
+          },
+          "profile_version": {
+            "title": "Profile Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "candidate_id",
+          "categories",
+          "profile_version"
+        ],
+        "title": "CategoryChanged",
+        "type": "object"
+      },
+      "CategoryDisputed": {
+        "description": "Оспаривание категории кандидатом; комментарий (ПДн) в событие не попадает.",
+        "properties": {
+          "dispute_id": {
+            "format": "uuid",
+            "title": "Dispute Id",
+            "type": "string"
+          },
+          "candidate_id": {
+            "format": "uuid",
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "claimed_role": {
+            "$ref": "#/components/schemas/RoleSlug"
+          },
+          "claimed_grade": {
+            "$ref": "#/components/schemas/Grade"
+          }
+        },
+        "required": [
+          "dispute_id",
+          "candidate_id",
+          "claimed_role",
+          "claimed_grade"
+        ],
+        "title": "CategoryDisputed",
+        "type": "object"
+      },
+      "CategoryRef": {
+        "properties": {
+          "profession": {
+            "pattern": "^[a-z][a-z0-9_]{1,31}$",
+            "title": "Profession",
+            "type": "string"
+          },
+          "grade": {
+            "$ref": "#/components/schemas/TestGrade"
+          }
+        },
+        "required": [
+          "profession",
+          "grade"
+        ],
+        "title": "CategoryRef",
+        "type": "object"
+      },
+      "CodeAnalysisCompleted": {
+        "properties": {
+          "analysis_id": {
+            "format": "uuid",
+            "title": "Analysis Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "analysis_id"
+        ],
+        "title": "CodeAnalysisCompleted",
+        "type": "object"
+      },
+      "CodeAnalysisResult": {
+        "properties": {
+          "analyzer_version": {
+            "title": "Analyzer Version",
+            "type": "string"
+          },
+          "radar": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "propertyNames": {
+              "enum": [
+                "backend",
+                "frontend",
+                "devops",
+                "data",
+                "quality",
+                "open_source"
+              ]
+            },
+            "title": "Radar",
+            "type": "object"
+          },
+          "languages": {
+            "items": {
+              "$ref": "#/components/schemas/CodeLanguage"
+            },
+            "title": "Languages",
+            "type": "array"
+          },
+          "technologies": {
+            "items": {
+              "$ref": "#/components/schemas/CodeTechnology"
+            },
+            "title": "Technologies",
+            "type": "array"
+          },
+          "maturity": {
+            "additionalProperties": true,
+            "title": "Maturity",
+            "type": "object"
+          },
+          "flags": {
+            "items": {
+              "enum": [
+                "fork_no_changes",
+                "giant_commit",
+                "overnight",
+                "author_mismatch",
+                "template_like"
+              ],
+              "type": "string"
+            },
+            "title": "Flags",
+            "type": "array"
+          },
+          "repos": {
+            "items": {
+              "$ref": "#/components/schemas/CodeRepo"
+            },
+            "title": "Repos",
+            "type": "array"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Summary"
+          }
+        },
+        "required": [
+          "analyzer_version"
+        ],
+        "title": "CodeAnalysisResult",
+        "type": "object"
+      },
+      "CodeLanguage": {
+        "properties": {
+          "lang": {
+            "title": "Lang",
+            "type": "string"
+          },
+          "share": {
+            "maximum": 1,
+            "minimum": 0,
+            "title": "Share",
+            "type": "number"
+          },
+          "loc_authored": {
+            "default": 0,
+            "title": "Loc Authored",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "lang",
+          "share"
+        ],
+        "title": "CodeLanguage",
+        "type": "object"
+      },
+      "CodeRepo": {
+        "properties": {
+          "full_name": {
+            "title": "Full Name",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          },
+          "is_fork": {
+            "default": false,
+            "title": "Is Fork",
+            "type": "boolean"
+          },
+          "stars": {
+            "default": 0,
+            "title": "Stars",
+            "type": "integer"
+          },
+          "pushed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Pushed At"
+          },
+          "deep": {
+            "default": false,
+            "title": "Deep",
+            "type": "boolean"
+          },
+          "own_commit_share": {
+            "anyOf": [
+              {
+                "maximum": 1,
+                "minimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Own Commit Share"
+          },
+          "metrics": {
+            "additionalProperties": true,
+            "title": "Metrics",
+            "type": "object"
+          },
+          "flags": {
+            "items": {
+              "enum": [
+                "fork_no_changes",
+                "giant_commit",
+                "overnight",
+                "author_mismatch",
+                "template_like"
+              ],
+              "type": "string"
+            },
+            "title": "Flags",
+            "type": "array"
+          },
+          "contributors": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Contributors",
+            "type": "array"
+          }
+        },
+        "required": [
+          "full_name",
+          "url"
+        ],
+        "title": "CodeRepo",
+        "type": "object"
+      },
+      "CodeTechnology": {
+        "properties": {
+          "skill": {
+            "title": "Skill",
+            "type": "string"
+          },
+          "strength": {
+            "maximum": 1,
+            "minimum": 0,
+            "title": "Strength",
+            "type": "number"
+          },
+          "repos": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Repos",
+            "type": "array"
+          }
+        },
+        "required": [
+          "skill",
+          "strength"
+        ],
+        "title": "CodeTechnology",
+        "type": "object"
+      },
+      "CoreJob": {
+        "description": "Cron-команды и фоновые задачи `core.jobs` (messaging.md §4).",
+        "properties": {
+          "candidate_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Candidate Id"
+          }
+        },
+        "title": "CoreJob",
+        "type": "object"
+      },
+      "CoreMatchCandidate": {
+        "properties": {
+          "candidate_id": {
+            "format": "uuid",
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "profile_version": {
+            "title": "Profile Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "candidate_id",
+          "profile_version"
+        ],
+        "title": "CoreMatchCandidate",
+        "type": "object"
+      },
+      "CoreMatchVacancy": {
+        "properties": {
+          "vacancy_id": {
+            "format": "uuid",
+            "title": "Vacancy Id",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "vacancy_id",
+          "version"
+        ],
+        "title": "CoreMatchVacancy",
+        "type": "object"
+      },
+      "CoreRecompute": {
+        "properties": {
+          "candidate_id": {
+            "format": "uuid",
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "requested_at": {
+            "format": "date-time",
+            "title": "Requested At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "candidate_id",
+          "requested_at"
+        ],
+        "title": "CoreRecompute",
+        "type": "object"
+      },
+      "DeclineReason": {
+        "enum": [
+          "low_salary",
+          "wrong_stack",
+          "wrong_format",
+          "wrong_grade",
+          "not_looking",
+          "other",
+          "wrong_company"
+        ],
+        "title": "DeclineReason",
+        "type": "string"
+      },
+      "Envelope": {
+        "properties": {
+          "message_id": {
+            "format": "uuid",
+            "title": "Message Id",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          },
+          "schema_version": {
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          },
+          "correlation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Correlation Id"
+          },
+          "producer": {
+            "title": "Producer",
+            "type": "string"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "title": "Payload",
+            "type": "object"
+          }
+        },
+        "required": [
+          "type",
+          "producer"
+        ],
+        "title": "Envelope",
+        "type": "object"
+      },
+      "EvidenceChanged": {
+        "properties": {
+          "candidate_id": {
+            "format": "uuid",
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "sources": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Sources",
+            "type": "array"
+          }
+        },
+        "required": [
+          "candidate_id",
+          "sources"
+        ],
+        "title": "EvidenceChanged",
+        "type": "object"
+      },
+      "ExplanationItem": {
+        "properties": {
+          "kind": {
+            "enum": [
+              "plus",
+              "minus",
+              "warn"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "code": {
+            "enum": [
+              "skill_confirmed",
+              "skill_adjacent",
+              "skill_missing",
+              "skill_claimed_only",
+              "fsp_achievement",
+              "salary_fit",
+              "salary_below_min",
+              "grade_fit",
+              "grade_mismatch",
+              "format_fit",
+              "active_search",
+              "team_signal",
+              "semantic_only"
+            ],
+            "title": "Code",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "skill": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Skill"
+          },
+          "evidence_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Evidence Ids",
+            "type": "array"
+          },
+          "weight": {
+            "title": "Weight",
+            "type": "number"
+          }
+        },
+        "required": [
+          "kind",
+          "code",
+          "text",
+          "weight"
+        ],
+        "title": "ExplanationItem",
+        "type": "object"
+      },
+      "FamilyStatusChanged": {
+        "description": "`assessment.family.status_changed` (внутреннее для блока 1).",
+        "properties": {
+          "family_id": {
+            "format": "uuid",
+            "title": "Family Id",
+            "type": "string"
+          },
+          "from": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "From"
+          },
+          "to": {
+            "title": "To",
+            "type": "string"
+          }
+        },
+        "required": [
+          "family_id",
+          "to"
+        ],
+        "title": "FamilyStatusChanged",
+        "type": "object"
+      },
+      "FspAchievement": {
+        "properties": {
+          "competition": {
+            "$ref": "#/components/schemas/FspAchievementCompetition"
+          },
+          "stage": {
+            "title": "Stage",
+            "type": "string"
+          },
+          "place": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Place"
+          },
+          "of": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Of"
+          },
+          "team": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FspAchievementTeam"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "skills": {
+            "items": {
+              "$ref": "#/components/schemas/FspAchievementSkill"
+            },
+            "title": "Skills",
+            "type": "array"
+          }
+        },
+        "required": [
+          "competition",
+          "stage"
+        ],
+        "title": "FspAchievement",
+        "type": "object"
+      },
+      "FspAchievementCompetition": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "discipline": {
+            "title": "Discipline",
+            "type": "string"
+          },
+          "level": {
+            "title": "Level",
+            "type": "string"
+          },
+          "date": {
+            "title": "Date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "discipline",
+          "level",
+          "date"
+        ],
+        "title": "FspAchievementCompetition",
+        "type": "object"
+      },
+      "FspAchievementSkill": {
+        "properties": {
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "strength": {
+            "title": "Strength",
+            "type": "number"
+          }
+        },
+        "required": [
+          "slug",
+          "strength"
+        ],
+        "title": "FspAchievementSkill",
+        "type": "object"
+      },
+      "FspAchievementTeam": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "role"
+        ],
+        "title": "FspAchievementTeam",
+        "type": "object"
+      },
+      "FspCompetition": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "discipline": {
+            "$ref": "#/components/schemas/FspDiscipline"
+          },
+          "level": {
+            "$ref": "#/components/schemas/FspLevel"
+          },
+          "format": {
+            "enum": [
+              "online",
+              "offline"
+            ],
+            "title": "Format",
+            "type": "string"
+          },
+          "region": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Region"
+          },
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "End Date"
+          },
+          "status": {
+            "enum": [
+              "announced",
+              "registration",
+              "ongoing",
+              "finished"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "tracks": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tracks",
+            "type": "array"
+          },
+          "registration_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Registration Url"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "discipline",
+          "level",
+          "format",
+          "start_date",
+          "status"
+        ],
+        "title": "FspCompetition",
+        "type": "object"
+      },
+      "FspCompetitionsUpdated": {
+        "properties": {
+          "competitions": {
+            "items": {
+              "$ref": "#/components/schemas/FspCompetition"
+            },
+            "title": "Competitions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "competitions"
+        ],
+        "title": "FspCompetitionsUpdated",
+        "type": "object"
+      },
+      "FspDiscipline": {
+        "enum": [
+          "algorithmic",
+          "product",
+          "security",
+          "uav",
+          "robotics"
+        ],
+        "title": "FspDiscipline",
+        "type": "string"
+      },
+      "FspImported": {
+        "properties": {
+          "new_achievements": {
+            "items": {
+              "$ref": "#/components/schemas/FspAchievement"
+            },
+            "title": "New Achievements",
+            "type": "array"
+          }
+        },
+        "required": [
+          "new_achievements"
+        ],
+        "title": "FspImported",
+        "type": "object"
+      },
+      "FspLevel": {
+        "enum": [
+          "regional",
+          "interregional",
+          "national",
+          "international"
+        ],
+        "title": "FspLevel",
+        "type": "string"
+      },
+      "FspLinked": {
+        "properties": {
+          "candidate_id": {
+            "format": "uuid",
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "participant_id": {
+            "title": "Participant Id",
+            "type": "string"
+          },
+          "verified": {
+            "title": "Verified",
+            "type": "boolean"
+          },
+          "method": {
+            "enum": [
+              "oauth",
+              "code",
+              "manual"
+            ],
+            "title": "Method",
+            "type": "string"
+          }
+        },
+        "required": [
+          "candidate_id",
+          "participant_id",
+          "verified",
+          "method"
+        ],
+        "title": "FspLinked",
+        "type": "object"
+      },
+      "FspRank": {
+        "properties": {
+          "discipline": {
+            "$ref": "#/components/schemas/FspDiscipline"
+          },
+          "rank": {
+            "$ref": "#/components/schemas/FspRankCode"
+          },
+          "assigned_at": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Assigned At"
+          }
+        },
+        "required": [
+          "discipline",
+          "rank"
+        ],
+        "title": "FspRank",
+        "type": "object"
+      },
+      "FspRankCode": {
+        "enum": [
+          "youth_3",
+          "youth_2",
+          "youth_1",
+          "rank_3",
+          "rank_2",
+          "rank_1",
+          "cms",
+          "ms",
+          "msic"
+        ],
+        "title": "FspRankCode",
+        "type": "string"
+      },
+      "FspResult": {
+        "properties": {
+          "competition_id": {
+            "title": "Competition Id",
+            "type": "string"
+          },
+          "discipline": {
+            "$ref": "#/components/schemas/FspDiscipline"
+          },
+          "stage": {
+            "enum": [
+              "qualifier",
+              "final"
+            ],
+            "title": "Stage",
+            "type": "string"
+          },
+          "team_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Team Id"
+          },
+          "team_role": {
+            "enum": [
+              "captain",
+              "member",
+              "individual"
+            ],
+            "title": "Team Role",
+            "type": "string"
+          },
+          "place": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Place"
+          },
+          "participants_total": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Participants Total"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Score"
+          },
+          "track": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Track"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "competition_id",
+          "discipline",
+          "stage",
+          "team_role",
+          "date"
+        ],
+        "title": "FspResult",
+        "type": "object"
+      },
+      "FspResultsImported": {
+        "properties": {
+          "candidate_id": {
+            "format": "uuid",
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "participant_id": {
+            "title": "Participant Id",
+            "type": "string"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/FspResult"
+            },
+            "title": "Results",
+            "type": "array"
+          },
+          "ranks": {
+            "items": {
+              "$ref": "#/components/schemas/FspRank"
+            },
+            "title": "Ranks",
+            "type": "array"
+          },
+          "teams": {
+            "items": {
+              "$ref": "#/components/schemas/FspTeam"
+            },
+            "title": "Teams",
+            "type": "array"
+          },
+          "new": {
+            "default": false,
+            "title": "New",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "candidate_id",
+          "participant_id"
+        ],
+        "title": "FspResultsImported",
+        "type": "object"
+      },
+      "FspSync": {
+        "properties": {
+          "candidate_id": {
+            "format": "uuid",
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "reason": {
+            "enum": [
+              "linked",
+              "webhook",
+              "manual",
+              "schedule"
+            ],
+            "title": "Reason",
+            "type": "string"
+          },
+          "since": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Since"
+          }
+        },
+        "required": [
+          "candidate_id",
+          "reason"
+        ],
+        "title": "FspSync",
+        "type": "object"
+      },
+      "FspSyncAll": {
+        "properties": {},
+        "title": "FspSyncAll",
+        "type": "object"
+      },
+      "FspTeam": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "competition_id": {
+            "title": "Competition Id",
+            "type": "string"
+          },
+          "members": {
+            "items": {
+              "$ref": "#/components/schemas/FspTeamMember"
+            },
+            "title": "Members",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "competition_id"
+        ],
+        "title": "FspTeam",
+        "type": "object"
+      },
+      "FspTeamMember": {
+        "properties": {
+          "participant_id": {
+            "title": "Participant Id",
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "captain",
+              "member",
+              "individual"
+            ],
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "participant_id",
+          "role"
+        ],
+        "title": "FspTeamMember",
+        "type": "object"
+      },
+      "Grade": {
+        "enum": [
+          "intern",
+          "junior",
+          "junior_plus",
+          "middle",
+          "middle_plus",
+          "senior",
+          "lead"
+        ],
+        "title": "Grade",
+        "type": "string"
+      },
+      "GradeChange": {
+        "properties": {
+          "from": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Grade"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "to": {
+            "$ref": "#/components/schemas/Grade"
+          }
+        },
+        "required": [
+          "to"
+        ],
+        "title": "GradeChange",
+        "type": "object"
+      },
+      "InterviewAnswer": {
+        "properties": {
+          "question_id": {
+            "title": "Question Id",
+            "type": "string"
+          },
+          "question": {
+            "title": "Question",
+            "type": "string"
+          },
+          "rubric": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Rubric",
+            "type": "array"
+          },
+          "snippet": {
+            "title": "Snippet",
+            "type": "string"
+          },
+          "answer": {
+            "title": "Answer",
+            "type": "string"
+          },
+          "seconds": {
+            "minimum": 0,
+            "title": "Seconds",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "question_id",
+          "question",
+          "rubric",
+          "snippet",
+          "answer",
+          "seconds"
+        ],
+        "title": "InterviewAnswer",
+        "type": "object"
+      },
+      "InterviewGrade": {
+        "properties": {
+          "question_id": {
+            "title": "Question Id",
+            "type": "string"
+          },
+          "score": {
+            "maximum": 3,
+            "minimum": 0,
+            "title": "Score",
+            "type": "integer"
+          },
+          "matched_rubric": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Matched Rubric",
+            "type": "array"
+          },
+          "rationale": {
+            "title": "Rationale",
+            "type": "string"
+          }
+        },
+        "required": [
+          "question_id",
+          "score",
+          "rationale"
+        ],
+        "title": "InterviewGrade",
+        "type": "object"
+      },
+      "InterviewQuestion": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "file": {
+            "title": "File",
+            "type": "string"
+          },
+          "lines": {
+            "title": "Lines",
+            "type": "string"
+          },
+          "snippet": {
+            "title": "Snippet",
+            "type": "string"
+          },
+          "question": {
+            "title": "Question",
+            "type": "string"
+          },
+          "rubric": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 5,
+            "minItems": 3,
+            "title": "Rubric",
+            "type": "array"
+          },
+          "difficulty": {
+            "maximum": 5,
+            "minimum": 1,
+            "title": "Difficulty",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "file",
+          "lines",
+          "snippet",
+          "question",
+          "rubric",
+          "difficulty"
+        ],
+        "title": "InterviewQuestion",
+        "type": "object"
+      },
+      "JobProgress": {
+        "properties": {
+          "job_id": {
+            "format": "uuid",
+            "title": "Job Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "resume",
+              "code",
+              "interview",
+              "fsp_sync"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "stage": {
+            "title": "Stage",
+            "type": "string"
+          },
+          "pct": {
+            "maximum": 100,
+            "minimum": 0,
+            "title": "Pct",
+            "type": "integer"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "job_id",
+          "kind",
+          "stage",
+          "pct",
+          "message"
+        ],
+        "title": "JobProgress",
+        "type": "object"
+      },
+      "KitGap": {
+        "properties": {
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "below_required",
+              "claimed_only",
+              "adjacent_only"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "required_level": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TrustLevel"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "current_level": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TrustLevel"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "adjacent_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Adjacent Slug"
+          }
+        },
+        "required": [
+          "slug",
+          "kind"
+        ],
+        "title": "KitGap",
+        "type": "object"
+      },
+      "KitQuestion": {
+        "properties": {
+          "skill": {
+            "title": "Skill",
+            "type": "string"
+          },
+          "purpose": {
+            "enum": [
+              "strength",
+              "gap"
+            ],
+            "title": "Purpose",
+            "type": "string"
+          },
+          "question": {
+            "title": "Question",
+            "type": "string"
+          },
+          "rubric": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "propertyNames": {
+              "enum": [
+                "weak",
+                "good",
+                "strong"
+              ]
+            },
+            "title": "Rubric",
+            "type": "object"
+          },
+          "follow_ups": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 2,
+            "minItems": 1,
+            "title": "Follow Ups",
+            "type": "array"
+          }
+        },
+        "required": [
+          "skill",
+          "purpose",
+          "question",
+          "rubric",
+          "follow_ups"
+        ],
+        "title": "KitQuestion",
+        "type": "object"
+      },
+      "KitSkill": {
+        "properties": {
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "level": {
+            "$ref": "#/components/schemas/TrustLevel"
+          },
+          "sources": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "claimed_only": {
+            "default": false,
+            "title": "Claimed Only",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "slug",
+          "level"
+        ],
+        "title": "KitSkill",
+        "type": "object"
+      },
+      "MatchRationale": {
+        "properties": {
+          "candidate_id": {
+            "format": "uuid",
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "profile_version": {
+            "title": "Profile Version",
+            "type": "integer"
+          },
+          "rationale": {
+            "title": "Rationale",
+            "type": "string"
+          }
+        },
+        "required": [
+          "candidate_id",
+          "profile_version",
+          "rationale"
+        ],
+        "title": "MatchRationale",
+        "type": "object"
+      },
+      "MatchToExplain": {
+        "description": "Без ПДн: только вычисленные факторы (правило приватности для промптов).",
+        "properties": {
+          "candidate_id": {
+            "format": "uuid",
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "profile_version": {
+            "title": "Profile Version",
+            "type": "integer"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          },
+          "explanation": {
+            "items": {
+              "$ref": "#/components/schemas/ExplanationItem"
+            },
+            "title": "Explanation",
+            "type": "array"
+          }
+        },
+        "required": [
+          "candidate_id",
+          "profile_version",
+          "score",
+          "explanation"
+        ],
+        "title": "MatchToExplain",
+        "type": "object"
+      },
+      "MatchesRationaleReady": {
+        "properties": {
+          "vacancy_id": {
+            "format": "uuid",
+            "title": "Vacancy Id",
+            "type": "string"
+          },
+          "candidate_pseudo_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Candidate Pseudo Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "vacancy_id",
+          "candidate_pseudo_ids"
+        ],
+        "title": "MatchesRationaleReady",
+        "type": "object"
+      },
+      "MatchesReady": {
+        "properties": {
+          "vacancy_id": {
+            "format": "uuid",
+            "title": "Vacancy Id",
+            "type": "string"
+          },
+          "count": {
+            "minimum": 0,
+            "title": "Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "vacancy_id",
+          "count"
+        ],
+        "title": "MatchesReady",
+        "type": "object"
+      },
+      "MlCodeAnalyze": {
+        "properties": {
+          "analysis_id": {
+            "format": "uuid",
+            "title": "Analysis Id",
+            "type": "string"
+          },
+          "candidate_id": {
+            "format": "uuid",
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "github_login": {
+            "title": "Github Login",
+            "type": "string"
+          }
+        },
+        "required": [
+          "analysis_id",
+          "candidate_id",
+          "github_login"
+        ],
+        "title": "MlCodeAnalyze",
+        "type": "object"
+      },
+      "MlCodeResult": {
+        "description": "`ml.code.completed` / `ml.code.failed`.",
+        "properties": {
+          "analysis_id": {
+            "format": "uuid",
+            "title": "Analysis Id",
+            "type": "string"
+          },
+          "candidate_id": {
+            "format": "uuid",
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CodeAnalysisResult"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Error"
+          }
+        },
+        "required": [
+          "analysis_id",
+          "candidate_id"
+        ],
+        "title": "MlCodeResult",
+        "type": "object"
+      },
+      "MlInterviewGenerate": {
+        "properties": {
+          "interview_id": {
+            "format": "uuid",
+            "title": "Interview Id",
+            "type": "string"
+          },
+          "candidate_id": {
+            "format": "uuid",
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "github_login": {
+            "title": "Github Login",
+            "type": "string"
+          },
+          "repo_full_name": {
+            "title": "Repo Full Name",
+            "type": "string"
+          },
+          "head_sha": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Head Sha"
+          },
+          "questions": {
+            "default": 3,
+            "maximum": 5,
+            "minimum": 1,
+            "title": "Questions",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "interview_id",
+          "candidate_id",
+          "github_login",
+          "repo_full_name"
+        ],
+        "title": "MlInterviewGenerate",
+        "type": "object"
+      },
+      "MlInterviewGenerated": {
+        "properties": {
+          "interview_id": {
+            "format": "uuid",
+            "title": "Interview Id",
+            "type": "string"
+          },
+          "candidate_id": {
+            "format": "uuid",
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/InterviewQuestion"
+            },
+            "title": "Questions",
+            "type": "array"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Error"
+          }
+        },
+        "required": [
+          "interview_id",
+          "candidate_id"
+        ],
+        "title": "MlInterviewGenerated",
+        "type": "object"
+      },
+      "MlInterviewGrade": {
+        "properties": {
+          "interview_id": {
+            "format": "uuid",
+            "title": "Interview Id",
+            "type": "string"
+          },
+          "candidate_id": {
+            "format": "uuid",
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "answers": {
+            "items": {
+              "$ref": "#/components/schemas/InterviewAnswer"
+            },
+            "title": "Answers",
+            "type": "array"
+          }
+        },
+        "required": [
+          "interview_id",
+          "candidate_id",
+          "answers"
+        ],
+        "title": "MlInterviewGrade",
+        "type": "object"
+      },
+      "MlInterviewGraded": {
+        "properties": {
+          "interview_id": {
+            "format": "uuid",
+            "title": "Interview Id",
+            "type": "string"
+          },
+          "candidate_id": {
+            "format": "uuid",
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "grades": {
+            "items": {
+              "$ref": "#/components/schemas/InterviewGrade"
+            },
+            "title": "Grades",
+            "type": "array"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Total"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Error"
+          }
+        },
+        "required": [
+          "interview_id",
+          "candidate_id"
+        ],
+        "title": "MlInterviewGraded",
+        "type": "object"
+      },
+      "MlInterviewKitGenerate": {
+        "description": "Вход без ПДн (ml.md §10.1).",
+        "properties": {
+          "kit_id": {
+            "format": "uuid",
+            "title": "Kit Id",
+            "type": "string"
+          },
+          "vacancy_id": {
+            "format": "uuid",
+            "title": "Vacancy Id",
+            "type": "string"
+          },
+          "vacancy_version": {
+            "title": "Vacancy Version",
+            "type": "integer"
+          },
+          "candidate_id": {
+            "format": "uuid",
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "profile_version": {
+            "title": "Profile Version",
+            "type": "integer"
+          },
+          "requirements": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Requirements",
+            "type": "array"
+          },
+          "skills": {
+            "items": {
+              "$ref": "#/components/schemas/KitSkill"
+            },
+            "title": "Skills",
+            "type": "array"
+          },
+          "gaps": {
+            "items": {
+              "$ref": "#/components/schemas/KitGap"
+            },
+            "title": "Gaps",
+            "type": "array"
+          },
+          "team_signals": {
+            "items": {
+              "$ref": "#/components/schemas/TeamSignalKind"
+            },
+            "title": "Team Signals",
+            "type": "array"
+          }
+        },
+        "required": [
+          "kit_id",
+          "vacancy_id",
+          "vacancy_version",
+          "candidate_id",
+          "profile_version",
+          "requirements",
+          "skills"
+        ],
+        "title": "MlInterviewKitGenerate",
+        "type": "object"
+      },
+      "MlInterviewKitGenerated": {
+        "properties": {
+          "kit_id": {
+            "format": "uuid",
+            "title": "Kit Id",
+            "type": "string"
+          },
+          "vacancy_id": {
+            "format": "uuid",
+            "title": "Vacancy Id",
+            "type": "string"
+          },
+          "vacancy_version": {
+            "title": "Vacancy Version",
+            "type": "integer"
+          },
+          "candidate_id": {
+            "format": "uuid",
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "profile_version": {
+            "title": "Profile Version",
+            "type": "integer"
+          },
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/KitQuestion"
+            },
+            "title": "Questions",
+            "type": "array"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Error"
+          }
+        },
+        "required": [
+          "kit_id",
+          "vacancy_id",
+          "vacancy_version",
+          "candidate_id",
+          "profile_version"
+        ],
+        "title": "MlInterviewKitGenerated",
+        "type": "object"
+      },
+      "MlMatchesExplain": {
+        "properties": {
+          "vacancy_id": {
+            "format": "uuid",
+            "title": "Vacancy Id",
+            "type": "string"
+          },
+          "vacancy_version": {
+            "title": "Vacancy Version",
+            "type": "integer"
+          },
+          "requirements": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Requirements",
+            "type": "array"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MatchToExplain"
+            },
+            "maxItems": 5,
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "vacancy_id",
+          "vacancy_version",
+          "requirements",
+          "items"
+        ],
+        "title": "MlMatchesExplain",
+        "type": "object"
+      },
+      "MlMatchesExplained": {
+        "properties": {
+          "vacancy_id": {
+            "format": "uuid",
+            "title": "Vacancy Id",
+            "type": "string"
+          },
+          "vacancy_version": {
+            "title": "Vacancy Version",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MatchRationale"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "vacancy_id",
+          "vacancy_version",
+          "items"
+        ],
+        "title": "MlMatchesExplained",
+        "type": "object"
+      },
+      "MlQuestionsGenerate": {
+        "properties": {
+          "skill_slug": {
+            "title": "Skill Slug",
+            "type": "string"
+          },
+          "count": {
+            "default": 10,
+            "maximum": 30,
+            "minimum": 1,
+            "title": "Count",
+            "type": "integer"
+          },
+          "difficulty": {
+            "anyOf": [
+              {
+                "maximum": 5,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Difficulty"
+          }
+        },
+        "required": [
+          "skill_slug"
+        ],
+        "title": "MlQuestionsGenerate",
+        "type": "object"
+      },
+      "MlQuestionsGenerated": {
+        "properties": {
+          "skill_slug": {
+            "title": "Skill Slug",
+            "type": "string"
+          },
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/QuestionDraft"
+            },
+            "title": "Questions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "skill_slug",
+          "questions"
+        ],
+        "title": "MlQuestionsGenerated",
+        "type": "object"
+      },
+      "MlResumeParse": {
+        "properties": {
+          "resume_id": {
+            "format": "uuid",
+            "title": "Resume Id",
+            "type": "string"
+          },
+          "candidate_id": {
+            "format": "uuid",
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "object_key": {
+            "title": "Object Key",
+            "type": "string"
+          },
+          "mime": {
+            "enum": [
+              "application/pdf",
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            ],
+            "title": "Mime",
+            "type": "string"
+          },
+          "sha256": {
+            "title": "Sha256",
+            "type": "string"
+          },
+          "taxonomy_version": {
+            "title": "Taxonomy Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "resume_id",
+          "candidate_id",
+          "object_key",
+          "mime",
+          "sha256",
+          "taxonomy_version"
+        ],
+        "title": "MlResumeParse",
+        "type": "object"
+      },
+      "MlResumeResult": {
+        "description": "`ml.resume.completed` (есть `parsed`) / `ml.resume.failed` (есть `error`).",
+        "properties": {
+          "resume_id": {
+            "format": "uuid",
+            "title": "Resume Id",
+            "type": "string"
+          },
+          "candidate_id": {
+            "format": "uuid",
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "parsed": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ParsedResume"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Error"
+          }
+        },
+        "required": [
+          "resume_id",
+          "candidate_id"
+        ],
+        "title": "MlResumeResult",
+        "type": "object"
+      },
+      "MlSkillsResolve": {
+        "properties": {
+          "request_id": {
+            "format": "uuid",
+            "title": "Request Id",
+            "type": "string"
+          },
+          "mentions": {
+            "items": {
+              "$ref": "#/components/schemas/SkillMention"
+            },
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Mentions",
+            "type": "array"
+          },
+          "taxonomy_version": {
+            "title": "Taxonomy Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "request_id",
+          "mentions",
+          "taxonomy_version"
+        ],
+        "title": "MlSkillsResolve",
+        "type": "object"
+      },
+      "MlSkillsResolved": {
+        "properties": {
+          "request_id": {
+            "format": "uuid",
+            "title": "Request Id",
+            "type": "string"
+          },
+          "taxonomy_version": {
+            "title": "Taxonomy Version",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SkillResolveItem"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "request_id",
+          "taxonomy_version",
+          "items"
+        ],
+        "title": "MlSkillsResolved",
+        "type": "object"
+      },
+      "NotificationNew": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "title"
+        ],
+        "title": "NotificationNew",
+        "type": "object"
+      },
+      "NotifyTelegram": {
+        "properties": {
+          "chat_id": {
+            "title": "Chat Id",
+            "type": "integer"
+          },
+          "template": {
+            "$ref": "#/components/schemas/TgTemplate"
+          },
+          "data": {
+            "additionalProperties": true,
+            "title": "Data",
+            "type": "object"
+          },
+          "buttons": {
+            "items": {
+              "items": {
+                "$ref": "#/components/schemas/TgButton"
+              },
+              "type": "array"
+            },
+            "title": "Buttons",
+            "type": "array"
+          },
+          "edit_of": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Edit Of"
+          }
+        },
+        "required": [
+          "chat_id",
+          "template"
+        ],
+        "title": "NotifyTelegram",
+        "type": "object"
+      },
+      "OfferCreated": {
+        "properties": {
+          "offer_id": {
+            "format": "uuid",
+            "title": "Offer Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "offer_id"
+        ],
+        "title": "OfferCreated",
+        "type": "object"
+      },
+      "OfferEvent": {
+        "description": "Все `offer.*`.\n\nДля `offer.message` заполнен `message_id`, для `offer.declined` — `decline_reason`.\nС schema_version 2 (ADR-022): `vacancy_id` пуст у приглашения без вакансии,\n`initiator` — кто начал (`employer` — приглашение, `candidate` — отклик).",
+        "properties": {
+          "offer_id": {
+            "format": "uuid",
+            "title": "Offer Id",
+            "type": "string"
+          },
+          "candidate_id": {
+            "format": "uuid",
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "company_id": {
+            "format": "uuid",
+            "title": "Company Id",
+            "type": "string"
+          },
+          "vacancy_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Vacancy Id"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OfferStatus"
+          },
+          "prev_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OfferStatus"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "actor": {
+            "default": "system",
+            "enum": [
+              "candidate",
+              "company",
+              "system"
+            ],
+            "title": "Actor",
+            "type": "string"
+          },
+          "message_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Message Id"
+          },
+          "decline_reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeclineReason"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "initiator": {
+            "$ref": "#/components/schemas/OfferInitiator",
+            "default": "employer"
+          }
+        },
+        "required": [
+          "offer_id",
+          "candidate_id",
+          "company_id",
+          "status"
+        ],
+        "title": "OfferEvent",
+        "type": "object"
+      },
+      "OfferInitiator": {
+        "description": "Кто начал взаимодействие (ADR-022): приглашение работодателя или отклик кандидата.",
+        "enum": [
+          "employer",
+          "candidate"
+        ],
+        "title": "OfferInitiator",
+        "type": "string"
+      },
+      "OfferInterestEvent": {
+        "description": "Все `offer.interest.*` (ADR-026): интерес работодателя до приглашения.\n\nСтрока та же, что у оффера (`offer_id`); после `interest_opened → sent` дальше идут обычные\n`offer.*`. Без ПДн: только id, статусы, причина отказа и вилка (числа).",
+        "properties": {
+          "offer_id": {
+            "format": "uuid",
+            "title": "Offer Id",
+            "type": "string"
+          },
+          "candidate_id": {
+            "format": "uuid",
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "company_id": {
+            "format": "uuid",
+            "title": "Company Id",
+            "type": "string"
+          },
+          "vacancy_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Vacancy Id"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OfferStatus"
+          },
+          "prev_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OfferStatus"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "actor": {
+            "default": "system",
+            "enum": [
+              "candidate",
+              "company",
+              "system"
+            ],
+            "title": "Actor",
+            "type": "string"
+          },
+          "decline_reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeclineReason"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "salary_from": {
+            "minimum": 0,
+            "title": "Salary From",
+            "type": "integer"
+          },
+          "salary_to": {
+            "minimum": 0,
+            "title": "Salary To",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "offer_id",
+          "candidate_id",
+          "company_id",
+          "status",
+          "salary_from",
+          "salary_to"
+        ],
+        "title": "OfferInterestEvent",
+        "type": "object"
+      },
+      "OfferMessage": {
+        "properties": {
+          "offer_id": {
+            "format": "uuid",
+            "title": "Offer Id",
+            "type": "string"
+          },
+          "message_id": {
+            "format": "uuid",
+            "title": "Message Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "offer_id",
+          "message_id"
+        ],
+        "title": "OfferMessage",
+        "type": "object"
+      },
+      "OfferStatus": {
+        "enum": [
+          "sent",
+          "viewed",
+          "accepted",
+          "declined",
+          "expired",
+          "withdrawn",
+          "interview",
+          "hired",
+          "not_hired",
+          "interest",
+          "interest_opened"
+        ],
+        "title": "OfferStatus",
+        "type": "string"
+      },
+      "OfferUpdated": {
+        "properties": {
+          "offer_id": {
+            "format": "uuid",
+            "title": "Offer Id",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OfferStatus"
+          },
+          "awaiting_reply_from": {
+            "anyOf": [
+              {
+                "enum": [
+                  "candidate",
+                  "company"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Awaiting Reply From"
+          }
+        },
+        "required": [
+          "offer_id",
+          "status"
+        ],
+        "title": "OfferUpdated",
+        "type": "object"
+      },
+      "ParsedResume": {
+        "properties": {
+          "parser_version": {
+            "title": "Parser Version",
+            "type": "string"
+          },
+          "person": {
+            "$ref": "#/components/schemas/ResumePerson"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Summary"
+          },
+          "experience": {
+            "items": {
+              "$ref": "#/components/schemas/ResumeExperience"
+            },
+            "title": "Experience",
+            "type": "array"
+          },
+          "education": {
+            "items": {
+              "$ref": "#/components/schemas/ResumeEducation"
+            },
+            "title": "Education",
+            "type": "array"
+          },
+          "skills": {
+            "items": {
+              "$ref": "#/components/schemas/ResumeSkill"
+            },
+            "title": "Skills",
+            "type": "array"
+          },
+          "unknown_skills": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Unknown Skills",
+            "type": "array"
+          },
+          "total_experience_months": {
+            "default": 0,
+            "minimum": 0,
+            "title": "Total Experience Months",
+            "type": "integer"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "parser_version"
+        ],
+        "title": "ParsedResume",
+        "type": "object"
+      },
+      "ProfileDiff": {
+        "properties": {
+          "skills_up": {
+            "items": {
+              "$ref": "#/components/schemas/SkillLevelChange"
+            },
+            "title": "Skills Up",
+            "type": "array"
+          },
+          "skills_new": {
+            "items": {
+              "$ref": "#/components/schemas/SkillLevelChange"
+            },
+            "title": "Skills New",
+            "type": "array"
+          },
+          "grade": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GradeChange"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CategoryChange"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "title": "ProfileDiff",
+        "type": "object"
+      },
+      "ProfileUpdated": {
+        "properties": {
+          "profile_version": {
+            "title": "Profile Version",
+            "type": "integer"
+          },
+          "diff": {
+            "$ref": "#/components/schemas/ProfileDiff"
+          }
+        },
+        "required": [
+          "profile_version",
+          "diff"
+        ],
+        "title": "ProfileUpdated",
+        "type": "object"
+      },
+      "QuestionDraft": {
+        "properties": {
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Code"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/QuestionOption"
+            },
+            "minItems": 2,
+            "title": "Options",
+            "type": "array"
+          },
+          "correct_option": {
+            "title": "Correct Option",
+            "type": "string"
+          },
+          "difficulty": {
+            "maximum": 5,
+            "minimum": 1,
+            "title": "Difficulty",
+            "type": "integer"
+          },
+          "explanation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Explanation"
+          }
+        },
+        "required": [
+          "text",
+          "options",
+          "correct_option",
+          "difficulty"
+        ],
+        "title": "QuestionDraft",
+        "type": "object"
+      },
+      "QuestionOption": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "text"
+        ],
+        "title": "QuestionOption",
+        "type": "object"
+      },
+      "RegularTaskPublished": {
+        "description": "`regular_task.published`: рассылка регулярного задания (E25-1). Без ПДн: только id.\n\n`recipients` — кандидаты с действующим грейдом ровно `profession × grade` и согласием\n`profile_publication`. `round` растёт с каждой новой рассылкой; повтор публикации в\nпределах периода события не создаёт.",
+        "properties": {
+          "task_id": {
+            "format": "uuid",
+            "title": "Task Id",
+            "type": "string"
+          },
+          "company_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Company Id"
+          },
+          "profession": {
+            "pattern": "^[a-z][a-z0-9_]{1,31}$",
+            "title": "Profession",
+            "type": "string"
+          },
+          "grade": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TestGrade"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "round": {
+            "default": 1,
+            "minimum": 1,
+            "title": "Round",
+            "type": "integer"
+          },
+          "period_days": {
+            "default": 7,
+            "title": "Period Days",
+            "type": "integer"
+          },
+          "recipients": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Recipients",
+            "type": "array"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Published At"
+          }
+        },
+        "required": [
+          "task_id",
+          "profession"
+        ],
+        "title": "RegularTaskPublished",
+        "type": "object"
+      },
+      "ResumeEducation": {
+        "properties": {
+          "institution": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Institution"
+          },
+          "degree": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Degree"
+          },
+          "field": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Field"
+          },
+          "year_end": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Year End"
+          }
+        },
+        "title": "ResumeEducation",
+        "type": "object"
+      },
+      "ResumeEvent": {
+        "description": "`resume.parsed` / `resume.confirmed`.",
+        "properties": {
+          "resume_id": {
+            "format": "uuid",
+            "title": "Resume Id",
+            "type": "string"
+          },
+          "candidate_id": {
+            "format": "uuid",
+            "title": "Candidate Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "resume_id",
+          "candidate_id"
+        ],
+        "title": "ResumeEvent",
+        "type": "object"
+      },
+      "ResumeExperience": {
+        "properties": {
+          "company": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Company"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Title"
+          },
+          "start": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Start"
+          },
+          "end": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "End"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "skills": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Skills",
+            "type": "array"
+          },
+          "is_commercial": {
+            "default": true,
+            "title": "Is Commercial",
+            "type": "boolean"
+          }
+        },
+        "title": "ResumeExperience",
+        "type": "object"
+      },
+      "ResumePerson": {
+        "description": "ПДн: в логи и аналитику не попадает.",
+        "properties": {
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Full Name"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Email"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Phone"
+          },
+          "telegram": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Telegram"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "City"
+          },
+          "links": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Links",
+            "type": "array"
+          }
+        },
+        "title": "ResumePerson",
+        "type": "object"
+      },
+      "ResumeSkill": {
+        "properties": {
+          "raw": {
+            "title": "Raw",
+            "type": "string"
+          },
+          "slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Slug"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          },
+          "method": {
+            "title": "Method",
+            "type": "string"
+          },
+          "confidence": {
+            "maximum": 1,
+            "minimum": 0,
+            "title": "Confidence",
+            "type": "number"
+          }
+        },
+        "required": [
+          "raw",
+          "quote",
+          "method",
+          "confidence"
+        ],
+        "title": "ResumeSkill",
+        "type": "object"
+      },
+      "ResumeStatus": {
+        "description": "`resume.parsed` / `resume.failed`.",
+        "properties": {
+          "resume_id": {
+            "format": "uuid",
+            "title": "Resume Id",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Reason"
+          }
+        },
+        "required": [
+          "resume_id"
+        ],
+        "title": "ResumeStatus",
+        "type": "object"
+      },
+      "RoleSlug": {
+        "enum": [
+          "backend",
+          "frontend",
+          "fullstack",
+          "mobile",
+          "ml",
+          "data_engineer",
+          "devops",
+          "qa",
+          "security",
+          "gamedev",
+          "embedded",
+          "analyst",
+          "product",
+          "designer"
+        ],
+        "title": "RoleSlug",
+        "type": "string"
+      },
+      "SkillLevelChange": {
+        "properties": {
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "from": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TrustLevel"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "to": {
+            "$ref": "#/components/schemas/TrustLevel"
+          }
+        },
+        "required": [
+          "slug",
+          "to"
+        ],
+        "title": "SkillLevelChange",
+        "type": "object"
+      },
+      "SkillMention": {
+        "properties": {
+          "raw": {
+            "title": "Raw",
+            "type": "string"
+          },
+          "context": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Context"
+          }
+        },
+        "required": [
+          "raw"
+        ],
+        "title": "SkillMention",
+        "type": "object"
+      },
+      "SkillRelationGuess": {
+        "properties": {
+          "type": {
+            "enum": [
+              "same",
+              "narrower",
+              "broader",
+              "related"
+            ],
+            "title": "Type",
+            "type": "string"
+          },
+          "to_slug": {
+            "title": "To Slug",
+            "type": "string"
+          },
+          "confidence": {
+            "maximum": 1,
+            "minimum": 0,
+            "title": "Confidence",
+            "type": "number"
+          }
+        },
+        "required": [
+          "type",
+          "to_slug",
+          "confidence"
+        ],
+        "title": "SkillRelationGuess",
+        "type": "object"
+      },
+      "SkillResolveItem": {
+        "properties": {
+          "raw": {
+            "title": "Raw",
+            "type": "string"
+          },
+          "norm": {
+            "title": "Norm",
+            "type": "string"
+          },
+          "decision": {
+            "enum": [
+              "alias",
+              "fuzzy",
+              "new",
+              "same_pending",
+              "rejected"
+            ],
+            "title": "Decision",
+            "type": "string"
+          },
+          "skill_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Skill Slug"
+          },
+          "kind": {
+            "enum": [
+              "hard",
+              "soft",
+              "domain",
+              "not_skill"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "relation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SkillRelationGuess"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Reason"
+          }
+        },
+        "required": [
+          "raw",
+          "norm",
+          "decision",
+          "kind"
+        ],
+        "title": "SkillResolveItem",
+        "type": "object"
+      },
+      "SkillsProfileUpdated": {
+        "properties": {
+          "candidate_id": {
+            "format": "uuid",
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "profile_version": {
+            "minimum": 1,
+            "title": "Profile Version",
+            "type": "integer"
+          },
+          "diff": {
+            "$ref": "#/components/schemas/ProfileDiff"
+          }
+        },
+        "required": [
+          "candidate_id",
+          "profile_version"
+        ],
+        "title": "SkillsProfileUpdated",
+        "type": "object"
+      },
+      "TaxonomyUpdated": {
+        "properties": {
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          },
+          "changed_skill_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Changed Skill Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "version"
+        ],
+        "title": "TaxonomyUpdated",
+        "type": "object"
+      },
+      "TeamSignalKind": {
+        "enum": [
+          "leadership",
+          "teamwork",
+          "results",
+          "growth"
+        ],
+        "title": "TeamSignalKind",
+        "type": "string"
+      },
+      "TestGrade": {
+        "description": "Грейды v2. Значения совпадают с `enums.Grade`, других грейдов v2 не использует.",
+        "enum": [
+          "junior",
+          "middle",
+          "senior"
+        ],
+        "title": "TestGrade",
+        "type": "string"
+      },
+      "TgButton": {
+        "properties": {
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "callback_data": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Callback Data"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "TgButton",
+        "type": "object"
+      },
+      "TgTemplate": {
+        "enum": [
+          "offer_new",
+          "offer_accepted",
+          "offer_updated",
+          "offer_message",
+          "profile_updated",
+          "resume_progress",
+          "resume_parsed",
+          "code_progress",
+          "fsp_imported",
+          "regular_task_published",
+          "test_result",
+          "uplift",
+          "category_subscription"
+        ],
+        "title": "TgTemplate",
+        "type": "string"
+      },
+      "TrustLevel": {
+        "description": "○○○○ … ●●●●",
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "title": "TrustLevel",
+        "type": "integer"
+      },
+      "UiMatchesReady": {
+        "properties": {
+          "vacancy_id": {
+            "format": "uuid",
+            "title": "Vacancy Id",
+            "type": "string"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "vacancy_id",
+          "count"
+        ],
+        "title": "UiMatchesReady",
+        "type": "object"
+      },
+      "UiMessage": {
+        "properties": {
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          },
+          "event": {
+            "enum": [
+              "job.progress",
+              "resume.parsed",
+              "resume.failed",
+              "fsp.imported",
+              "code.analysis.completed",
+              "profile.updated",
+              "offer.created",
+              "offer.updated",
+              "offer.message",
+              "matches.ready",
+              "matches.rationale_ready",
+              "notification.new"
+            ],
+            "title": "Event",
+            "type": "string"
+          },
+          "data": {
+            "additionalProperties": true,
+            "title": "Data",
+            "type": "object"
+          }
+        },
+        "required": [
+          "user_id",
+          "event",
+          "data"
+        ],
+        "title": "UiMessage",
+        "type": "object"
+      },
+      "VacancyEvent": {
+        "description": "`vacancy.published` / `vacancy.updated` / `vacancy.closed`.",
+        "properties": {
+          "vacancy_id": {
+            "format": "uuid",
+            "title": "Vacancy Id",
+            "type": "string"
+          },
+          "version": {
+            "minimum": 1,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "vacancy_id",
+          "version"
+        ],
+        "title": "VacancyEvent",
+        "type": "object"
+      },
+      "VisibilityChanged": {
+        "description": "`candidate.visibility.changed` (E36-4, ADR-027): кандидат изменил, что видно работодателю.\n\nТолько ключи и булевы значения, без ПДн. `changed` — изменившиеся ключи,\n`visibility` — полный текущий набор.",
+        "properties": {
+          "candidate_id": {
+            "format": "uuid",
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "changed": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "title": "Changed",
+            "type": "object"
+          },
+          "visibility": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "title": "Visibility",
+            "type": "object"
+          }
+        },
+        "required": [
+          "candidate_id",
+          "changed",
+          "visibility"
+        ],
+        "title": "VisibilityChanged",
+        "type": "object"
+      }
+    }
+  }
+}

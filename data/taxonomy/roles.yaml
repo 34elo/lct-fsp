@@ -1,0 +1,59 @@
+# Роли и веса навыков (E2-1): вес — насколько навык типичен для роли, 0..1.
+# Роли — из RoleSlug (packages/contracts). Используется для подсказок, рекомендаций и разреженных запросов.
+roles:
+  - slug: backend
+    profession: true
+    name: Backend-разработчик
+    skills: {backend: 1.0, python: 0.7, java: 0.6, go: 0.5, csharp: 0.4, nodejs: 0.4, php: 0.3, fastapi: 0.5, django: 0.5, spring-boot: 0.5, rest: 0.9, sql: 0.9, postgresql: 0.8, databases: 0.8, redis: 0.5, docker: 0.7, git: 0.8, linux: 0.5, message_queues: 0.5, rabbitmq: 0.3, kafka: 0.3, microservices: 0.5, system_design: 0.6, unit_testing: 0.5, ci_cd: 0.5, oauth: 0.4, algorithms: 0.5, data_structures: 0.5, caching: 0.4, orm: 0.4, concurrency: 0.4, grpc: 0.3, graphql: 0.2, estimation: 0.5, performance_reasoning: 0.6, root_cause_analysis: 0.5, cost_awareness: 0.3, production_support: 0.5, open_source: 0.2, decomposition: 0.7, debugging: 0.8, trade_off_analysis: 0.5, edge_case_thinking: 0.4, requirements_analysis: 0.3, business_metrics: 0.2, prioritization: 0.3, communication: 0.6, teamwork: 0.7, code_review: 0.5, ownership: 0.5, commercial_experience: 0.8, pet_projects: 0.4, team_projects: 0.4, self_learning: 0.5}
+  - slug: frontend
+    profession: true
+    name: Frontend-разработчик
+    skills: {frontend: 1.0, data_structures: 0.4, oop: 0.4, networks: 0.3, javascript: 1.0, typescript: 0.8, html: 0.9, css: 0.9, react: 0.8, vue: 0.5, angular: 0.4, nextjs: 0.4, redux: 0.3, git: 0.7, npm: 0.5, webpack: 0.3, vite: 0.3, responsive_design: 0.6, web_performance: 0.4, accessibility: 0.3, rest: 0.5, sass: 0.3, tailwind: 0.3, unit_testing: 0.3, figma: 0.3, ui_design: 0.2, playwright: 0.2, abstraction: 0.4, performance_reasoning: 0.4, user_research: 0.3, cost_awareness: 0.1, production_support: 0.3, open_source: 0.3, decomposition: 0.7, debugging: 0.8, trade_off_analysis: 0.5, edge_case_thinking: 0.4, requirements_analysis: 0.3, business_metrics: 0.2, prioritization: 0.3, communication: 0.6, teamwork: 0.7, code_review: 0.5, ownership: 0.5, commercial_experience: 0.8, pet_projects: 0.4, team_projects: 0.4, self_learning: 0.5}
+  - slug: fullstack
+    name: Fullstack-разработчик
+    skills: {frontend: 0.8, backend: 0.8, javascript: 0.9, typescript: 0.7, html: 0.7, css: 0.7, react: 0.7, nodejs: 0.6, python: 0.5, sql: 0.7, postgresql: 0.6, rest: 0.8, docker: 0.6, git: 0.8, databases: 0.6, mongodb: 0.3, nextjs: 0.4, ci_cd: 0.4, linux: 0.3, unit_testing: 0.4, oauth: 0.3}
+  - slug: mobile
+    profession: true
+    active: false  # скрыта в опросе (ADR-027 п.1, E36-2), данные остаются
+    name: Мобильный разработчик
+    skills: {mobile: 1.0, android: 0.6, ios: 0.6, kotlin: 0.5, swift: 0.5, flutter: 0.4, dart: 0.3, react-native: 0.3, jetpack-compose: 0.3, swiftui: 0.3, java: 0.3, git: 0.7, rest: 0.7, oop: 0.5, design_patterns: 0.4, unit_testing: 0.4, ci_cd: 0.3, sqlite: 0.3, concurrency: 0.4, ui_design: 0.2, abstraction: 0.4, performance_reasoning: 0.4, user_research: 0.3, production_support: 0.3, open_source: 0.2, decomposition: 0.7, debugging: 0.8, trade_off_analysis: 0.5, edge_case_thinking: 0.4, requirements_analysis: 0.3, business_metrics: 0.2, prioritization: 0.3, communication: 0.6, teamwork: 0.7, code_review: 0.5, ownership: 0.5, commercial_experience: 0.8, pet_projects: 0.4, team_projects: 0.4, self_learning: 0.5}
+  - slug: ml
+    profession: true
+    active: false  # скрыта в опросе (ADR-027 п.1, E36-2), данные остаются
+    name: ML-инженер
+    skills: {ml: 1.0, python: 1.0, deep_learning: 0.7, pytorch: 0.7, tensorflow: 0.4, scikit-learn: 0.7, pandas: 0.8, numpy: 0.8, statistics: 0.7, math: 0.7, nlp: 0.4, computer_vision: 0.4, llm: 0.4, transformers: 0.4, xgboost: 0.5, feature_engineering: 0.5, mlops: 0.4, jupyter: 0.5, sql: 0.6, git: 0.6, docker: 0.5, linux: 0.4, data_analysis: 0.6, matplotlib: 0.4, algorithms: 0.4, recsys: 0.3, reinforcement_learning: 0.2, opencv: 0.3, ab_testing: 0.2, time_series: 0.2, data_driven_thinking: 0.8, estimation: 0.4, risk_assessment: 0.4, domain_knowledge: 0.4, unit_economics: 0.2, competitive_programming: 0.3, open_source: 0.3, public_speaking: 0.2, decomposition: 0.7, debugging: 0.8, trade_off_analysis: 0.5, edge_case_thinking: 0.4, requirements_analysis: 0.3, business_metrics: 0.2, prioritization: 0.3, communication: 0.6, teamwork: 0.7, code_review: 0.5, ownership: 0.5, commercial_experience: 0.8, pet_projects: 0.4, team_projects: 0.4, self_learning: 0.5}
+  - slug: data_engineer
+    name: Дата-инженер
+    skills: {data_engineering: 1.0, sql: 1.0, python: 0.8, etl: 0.8, airflow: 0.6, spark: 0.6, kafka: 0.5, dwh: 0.6, postgresql: 0.5, clickhouse: 0.4, hadoop: 0.3, dbt: 0.4, docker: 0.5, git: 0.6, linux: 0.5, databases: 0.7, query_optimization: 0.5, s3: 0.3, bash: 0.3, cloud: 0.3, ci_cd: 0.3, data_analysis: 0.3, java: 0.2, scala: 0.2}
+  - slug: devops
+    profession: true
+    active: false  # скрыта в опросе (ADR-027 п.1, E36-2), данные остаются
+    name: DevOps-инженер
+    skills: {devops: 1.0, linux: 1.0, docker: 0.9, kubernetes: 0.7, ci_cd: 0.9, git: 0.8, bash: 0.7, python: 0.4, terraform: 0.5, ansible: 0.5, networks: 0.6, monitoring: 0.7, prometheus: 0.5, grafana: 0.5, nginx: 0.5, aws: 0.4, cloud: 0.5, gcp: 0.2, azure: 0.2, yandex_cloud: 0.2, load_balancing: 0.3, postgresql: 0.3, security: 0.3, go: 0.2, redis: 0.2, root_cause_analysis: 0.7, risk_assessment: 0.6, estimation: 0.4, cost_awareness: 0.5, production_support: 0.8, knowledge_sharing: 0.5, open_source: 0.3, decomposition: 0.7, debugging: 0.8, trade_off_analysis: 0.5, edge_case_thinking: 0.4, requirements_analysis: 0.3, business_metrics: 0.2, prioritization: 0.3, communication: 0.6, teamwork: 0.7, code_review: 0.5, ownership: 0.5, commercial_experience: 0.8, pet_projects: 0.4, team_projects: 0.4, self_learning: 0.5}
+  - slug: qa
+    profession: true
+    active: false  # скрыта в опросе (ADR-027 п.1, E36-2), данные остаются
+    name: QA-инженер
+    skills: {qa: 1.0, networks: 0.3, databases: 0.4, oop: 0.3, test_automation: 0.7, bug_tracking: 0.6, api_testing: 0.6, selenium: 0.4, playwright: 0.3, pytest: 0.4, python: 0.4, java: 0.3, sql: 0.5, rest: 0.5, git: 0.5, ci_cd: 0.4, load_testing: 0.3, unit_testing: 0.4, linux: 0.3, docker: 0.3, agile: 0.3, communication: 0.3, attention_to_detail: 0.4, technical_writing: 0.2, edge_case_thinking: 0.9, risk_assessment: 0.6, root_cause_analysis: 0.5, domain_knowledge: 0.4, knowledge_sharing: 0.4, production_support: 0.3, open_source: 0.1, decomposition: 0.7, debugging: 0.8, trade_off_analysis: 0.5, requirements_analysis: 0.3, business_metrics: 0.2, prioritization: 0.3, teamwork: 0.7, code_review: 0.5, ownership: 0.5, commercial_experience: 0.8, pet_projects: 0.4, team_projects: 0.4, self_learning: 0.5}
+  - slug: security
+    name: Специалист по ИБ
+    skills: {security: 1.0, pentest: 0.6, web_security: 0.6, networks: 0.7, linux: 0.7, cryptography: 0.5, reverse_engineering: 0.4, forensics: 0.3, network_security: 0.5, siem: 0.3, python: 0.5, bash: 0.5, c: 0.3, assembly: 0.2, operating_systems: 0.4, oauth: 0.3, docker: 0.3, git: 0.3, problem_solving: 0.3}
+  - slug: gamedev
+    name: Разработчик игр
+    skills: {gamedev: 1.0, unity: 0.6, unreal: 0.4, godot: 0.2, csharp: 0.6, cpp: 0.6, opengl: 0.4, game_physics: 0.4, math: 0.6, algorithms: 0.5, data_structures: 0.5, oop: 0.6, design_patterns: 0.4, modeling_3d: 0.3, git: 0.6, concurrency: 0.3, python: 0.2, lua: 0.2, teamwork: 0.3}
+  - slug: embedded
+    name: Разработчик встраиваемых систем
+    skills: {embedded: 1.0, c: 1.0, cpp: 0.7, stm32: 0.5, arduino: 0.4, electronics: 0.6, protocols: 0.6, fpga: 0.2, verilog: 0.2, operating_systems: 0.5, control_systems: 0.5, robotics: 0.3, ros: 0.3, uav: 0.3, iot: 0.3, signal_processing: 0.3, assembly: 0.3, python: 0.3, linux: 0.4, git: 0.5, math: 0.4, networks: 0.2}
+  - slug: analyst
+    name: Аналитик
+    skills: {analyst: 0.8, data_analysis: 0.8, sql: 0.9, excel: 0.6, statistics: 0.6, data_visualization: 0.6, python: 0.5, pandas: 0.4, sql_analytics: 0.5, ab_testing: 0.4, product_thinking: 0.5, technical_writing: 0.4, communication: 0.5, problem_solving: 0.5, databases: 0.4, etl: 0.2, bug_tracking: 0.2, agile: 0.3}
+  - slug: product
+    name: Продакт-менеджер
+    skills: {product_management: 1.0, product_thinking: 1.0, agile: 0.7, project_management: 0.5, sql_analytics: 0.5, ab_testing: 0.4, ux_design: 0.4, analyst: 0.4, data_analysis: 0.4, sql: 0.3, communication: 0.8, leadership: 0.6, teamwork: 0.7, english: 0.4, problem_solving: 0.5, initiative: 0.4, technical_writing: 0.3, bug_tracking: 0.3, excel: 0.3, stress_resistance: 0.3, time_management: 0.4}
+  - slug: designer
+    name: Дизайнер
+    skills: {ui_design: 1.0, ux_design: 0.9, figma: 0.9, adobe_suite: 0.5, responsive_design: 0.4, accessibility: 0.3, html: 0.2, css: 0.2, communication: 0.5, teamwork: 0.5, product_thinking: 0.3, attention_to_detail: 0.4, modeling_3d: 0.2, english: 0.2}
+  - slug: ai_engineer
+    name: AI Engineer
+    profession: true
+    skills: {llm: 1.0, python: 0.9, rag: 0.8, prompt_engineering: 0.8, vector_databases: 0.6, llm_evaluation: 0.6, llm_serving: 0.5, transformers: 0.5, nlp: 0.5, fastapi: 0.5, docker: 0.5, git: 0.6, rest: 0.5, sql: 0.5, postgresql: 0.3, mlops: 0.4, deep_learning: 0.3, pytorch: 0.3, algorithms: 0.4, data_structures: 0.4, statistics: 0.3, databases: 0.4, ml: 0.5, concurrency: 0.3, decomposition: 0.7, debugging: 0.7, trade_off_analysis: 0.6, data_driven_thinking: 0.7, estimation: 0.4, risk_assessment: 0.4, edge_case_thinking: 0.5, business_metrics: 0.4, ai_product_sense: 0.7, cost_awareness: 0.5, requirements_analysis: 0.4, prioritization: 0.3, communication: 0.6, teamwork: 0.6, ownership: 0.6, adaptability: 0.6, knowledge_sharing: 0.4, commercial_experience: 0.7, pet_projects: 0.6, open_source: 0.3, self_learning: 0.8, team_projects: 0.4}

@@ -1,0 +1,5 @@
+@import "tailwindcss";
+/* Токены и @theme живут в @fsp/ui (packages/ui/src/styles). */
+@import "@fsp/ui/styles.css";
+@source "../../../../packages/ui/src";
+/* Анимации лога сборки и загорания навыков живут в @fsp/ui (styles/index.css). */

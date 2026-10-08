@@ -1,0 +1,58 @@
+# Навыки для теста (E21-1): мышление, бизнес, софт, опыт, AI Engineer + типы навыков.
+# Тип навыка (assessment.md §2): fundamental | hard | thinking | business | soft | experience.
+# Без явного типа: kind soft → soft; group fundamentals → fundamental; group product/analysis/design → business;
+# остальное → hard. Переопределения — в списке `skill_types` ниже.
+skills:
+  # --- Инженерное мышление ---
+  - {slug: decomposition, name: Декомпозиция задач, kind: soft, aliases: [разбиение задач, task decomposition, разбор задачи на части]}
+  - {slug: debugging, name: Отладка и поиск причин, kind: soft, aliases: [отладка, дебаг, поиск багов]}
+  - {slug: estimation, name: Оценка порядков величин, kind: soft, aliases: [оценка нагрузки, прикидка, fermi estimation]}
+  - {slug: trade_off_analysis, name: Анализ компромиссов, kind: soft, aliases: [trade-offs, tradeoffs, компромиссы решений]}
+  - {slug: abstraction, name: Абстрагирование и моделирование, kind: soft, aliases: [моделирование предметной области]}
+  - {slug: risk_assessment, name: Оценка рисков, kind: soft, aliases: [risk assessment, анализ рисков]}
+  - {slug: edge_case_thinking, name: Граничные случаи, kind: soft, aliases: [edge cases, крайние случаи, граничные условия]}
+  - {slug: root_cause_analysis, name: Анализ первопричин, kind: soft, aliases: [rca, root cause, разбор инцидентов, postmortem]}
+  - {slug: performance_reasoning, name: Рассуждение о производительности, kind: soft, aliases: [performance reasoning, профилирование мышление, узкие места]}
+  - {slug: data_driven_thinking, name: Мышление на данных, kind: soft, aliases: [data-driven, решения на данных, data driven thinking]}
+  # --- Бизнес ---
+  - {slug: requirements_analysis, name: Работа с требованиями, kind: domain, group: analysis, aliases: [requirements analysis]}
+  - {slug: business_metrics, name: Бизнес-метрики, kind: domain, group: product, aliases: [business metrics, продуктовые метрики, kpi, okr]}
+  - {slug: cost_awareness, name: Экономика решений, kind: domain, group: product, aliases: [cost awareness, стоимость владения, tco, финансовая грамотность разработчика]}
+  - {slug: prioritization, name: Расстановка приоритетов в продукте, kind: domain, group: product, aliases: [moscow]}
+  - {slug: stakeholder_management, name: Работа со стейкхолдерами, kind: domain, group: product, aliases: [stakeholders, управление ожиданиями]}
+  - {slug: user_research, name: Изучение потребностей пользователей, kind: domain, group: design, aliases: [интервью с пользователями]}
+  - {slug: domain_knowledge, name: Знание предметной области, kind: domain, group: product, aliases: [domain knowledge, экспертиза в домене, предметная экспертиза]}
+  - {slug: unit_economics, name: Юнит-экономика, kind: domain, group: product, aliases: [ltv, cac, маржинальность]}
+  - {slug: ai_product_sense, name: Применение ИИ в продукте, kind: domain, group: product, aliases: [ai product, ai use cases, польза ии для бизнеса]}
+  # --- Софт ---
+  - {slug: code_review, name: Код-ревью и обратная связь, kind: soft, aliases: [давать обратную связь]}
+  - {slug: conflict_resolution, name: Разрешение конфликтов, kind: soft, aliases: [conflict resolution, конструктивный спор]}
+  - {slug: mentoring, name: Менторство коллег, kind: soft, aliases: [менторство]}
+  - {slug: ownership, name: Доведение задач до результата, kind: soft, aliases: [доведение до конца]}
+  - {slug: adaptability, name: Гибкость и адаптивность, kind: soft, aliases: [быстро перестраиваюсь]}
+  - {slug: knowledge_sharing, name: Документирование и передача знаний, kind: soft, aliases: [knowledge sharing, доклады внутри команды]}
+  # --- Опыт ---
+  - {slug: commercial_experience, name: Коммерческий опыт, kind: domain, group: experience, aliases: [commercial experience, опыт в продакшене, стаж в индустрии]}
+  - {slug: open_source, name: Open source, kind: domain, group: experience, aliases: [opensource, open-source, вклад в open source, контрибьютинг]}
+  - {slug: pet_projects, name: Собственные проекты, kind: domain, group: experience, aliases: [pet projects, pet-проекты, пет-проекты, side projects]}
+  - {slug: competitive_programming, name: Соревновательное программирование, kind: domain, group: experience, aliases: []}
+  - {slug: production_support, name: Поддержка продакшена, kind: domain, group: experience, aliases: [production support, дежурства, on-call, oncall, инциденты в проде]}
+  - {slug: team_projects, name: Командные проекты, kind: domain, group: experience, aliases: [team projects, командная разработка]}
+  - {slug: public_speaking, name: Доклады и публикации, kind: domain, group: experience, aliases: [выступления на конференциях, публикации статей, технические статьи]}
+  # --- AI Engineer ---
+  - {slug: rag, name: RAG, kind: hard, group: data_ml, testable: true, aliases: [retrieval-augmented generation, поиск с генерацией]}
+  - {slug: prompt_engineering, name: Проектирование промптов, kind: hard, group: data_ml, aliases: [промпты, prompting, подбор промптов]}
+  - {slug: vector_databases, name: Векторные базы данных, kind: hard, group: data_ml, aliases: [vector db]}
+  - {slug: llm_evaluation, name: Оценка качества LLM, kind: hard, group: data_ml, aliases: [llm evaluation, llm eval, evals, оценка ответов llm, llm as judge]}
+  - {slug: llm_serving, name: Развёртывание LLM, kind: hard, group: data_ml, aliases: [llm serving, vllm, llama.cpp, llama-server, инференс llm, ollama]}
+
+# Тип навыка: переопределения для навыков, чей тип не следует из kind/group.
+skill_types:
+  - type: fundamental
+    skills: [databases, networks, statistics]
+  - type: thinking
+    skills: [problem_solving, system_design, microservices, decomposition, debugging, estimation,
+             trade_off_analysis, abstraction, risk_assessment, edge_case_thinking,
+             root_cause_analysis, performance_reasoning, data_driven_thinking]
+  - type: experience
+    skills: [self_learning]

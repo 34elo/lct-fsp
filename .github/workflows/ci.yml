@@ -1,0 +1,37 @@
+name: ci
+# PR — проверки; push в main — через cd.yml (вызывает этот файл перед деплоем)
+on:
+  pull_request:
+  workflow_call:
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --all-packages --frozen
+      - run: uv run ruff check . && uv run ruff format --check .
+      - run: uv run lint-imports
+      - run: cd services/core && uv run python export_openapi.py > /tmp/openapi.json && diff -q /tmp/openapi.json ../../docs/openapi.json
+      - run: uv run pytest -q
+  families-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --all-packages --frozen
+      - run: make families-check
+      - run: make cards-check
+  web:
+    # pnpm-workspace в корне: apps/web + packages/ui (@fsp/ui), версия pnpm — из packageManager
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -r lint && pnpm -r typecheck && pnpm -r test && pnpm -r build

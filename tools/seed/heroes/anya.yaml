@@ -1,0 +1,61 @@
+# Герой «Аня»: студентка 3 курса, капитан команды, призёр всероссийского финала по продуктовому
+# программированию, резюме почти пустое. В core она НЕ привязана к ФСП: привязка — шаг демо
+# («Войти через ФСП»), поэтому результаты лежат только в данных fsp-mock (участник p-anya).
+# Все люди вымышленные. Резюме-PDF для бота готовится заранее вручную (в репозитории его нет).
+key: anya
+role: candidate
+email: anya@demo.fsp.test
+profile:
+  city: Санкт-Петербург
+  relocation: false
+  salary_min: 70000
+  formats: [remote, hybrid]
+  employment_types: [full, internship]
+  search_status: active
+consents: [pd_processing, profile_publication]
+resume:
+  summary: "Студентка 3 курса, пишу на Python, делала пет-проекты. Коммерческого опыта нет."
+  skills: [python, git, sql]        # только блок навыков: сила 0.25, доверие ●○○○
+  experience: []
+  education:
+    - {institution: "Университет Северной столицы (вымышленный)", degree: bachelor, field: "Прикладная информатика", year_end: 2027}
+github:
+  login: null          # реальный GitHub участника команды подставляется для живого анализа
+fsp:
+  linked_in_core: false
+  participant:
+    id: p-anya
+    last_name: Волкова
+    first_name: Анна
+    middle_name: Сергеевна
+    birth_year: 2004
+    region: Санкт-Петербург
+    email: anya.volkova@example.test
+    phone: "+79001234567"
+    ranks:
+      - {discipline: product, rank: rank_2, days_ago: 120}
+  competitions:
+    - id: c-002
+      title: "Всероссийский финал по продуктовому программированию (вымышленный)"
+      discipline: product
+      level: national
+      format: offline
+      region: Москва
+      tracks: [web]
+      end_days_ago: 150
+      status: finished
+  team:
+    id: t-north-lights
+    name: Северное сияние
+    competition_id: c-002
+    members:
+      - {participant_id: p-anya, role: captain}
+      - {participant_id: p-m01, role: member}
+      - {participant_id: p-m02, role: member}
+  teammates:
+    - {id: p-m01, last_name: Громов, first_name: Илья, birth_year: 2004, region: Санкт-Петербург, email: ilya.gromov@example.test}
+    - {id: p-m02, last_name: Зайцева, first_name: Полина, birth_year: 2005, region: Санкт-Петербург, email: polina.zaytseva@example.test}
+  results:
+    - {competition_id: c-002, discipline: product, stage: final, team_role: captain, team_id: t-north-lights, place: 2, participants_total: 40, score: 87.5, track: web}
+  teammate_results:
+    - {competition_id: c-002, discipline: product, stage: final, team_id: t-north-lights, place: 2, participants_total: 40, score: 87.5, track: web}

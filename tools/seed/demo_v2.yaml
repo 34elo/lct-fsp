@@ -1,0 +1,175 @@
+# Демо-данные v2 (E34-1): герои с историей теста, вымышленные компании, отклики, офферы, регулярные задания.
+# Все люди и компании вымышленные; пароль — demo.password из config.yaml. Детерминировано по SEED плана.
+# Профили героев — в формате tools/seed/heroes/*.yaml (резюме, навыки, согласия).
+# history: попытки теста (days_ago — когда завершена), потом грейд пишет боевой on_finished
+#   (source=test, mode, integrity → needs_confirmation). age: minor|adult; parent_consent — согласие родителя.
+
+heroes:
+  - key: boris
+    role: candidate
+    email: boris@demo.fsp.test
+    profile: {city: Казань, relocation: false, salary_min: 190000, formats: [remote, hybrid], employment_types: [full], search_status: active}
+    consents: [pd_processing, profile_publication]
+    resume:
+      summary: "Backend-разработчик на Python, 4 года коммерческого опыта, Django и PostgreSQL. В соревнованиях ФСП не участвовал."
+      skills: [python, django, postgresql, docker, git, rest, redis, sql]
+      experience:
+        - {company: "Кедр Софт", title: "Backend-разработчик (Python)", start_months_ago: 50, end_months_ago: 20, description: "Веб-сервисы для региональных компаний, Django, PostgreSQL.", skills: [python, django, postgresql, docker]}
+        - {company: "Малахит Системс", title: "Middle Backend-разработчик", start_months_ago: 20, end_months_ago: null, description: "Системы документооборота, REST API, очереди.", skills: [python, django, rest, redis, git]}
+      education: [{institution: "Казанский технический университет (вымышленный)", degree: bachelor, field: "Программная инженерия", year_end: 2021}]
+    history:
+      - {profession: backend, declared: middle, result: failed, theta: -0.35, days_ago: 75, items: 8}
+      - {profession: backend, declared: middle, result: passed, theta: 0.45, days_ago: 40, items: 10}
+
+  - key: vika
+    role: candidate
+    email: vika@demo.fsp.test
+    profile: {city: Москва, relocation: true, salary_min: 120000, formats: [remote], employment_types: [full, internship], search_status: active}
+    consents: [pd_processing, profile_publication]
+    resume:
+      summary: "Начинающий AI-инженер: пет-проекты с RAG и локальными LLM, стажировка в продуктовой команде."
+      skills: [python, pytorch, rag, transformers, git, sql]
+      experience:
+        - {company: "Орбита Данных", title: "Стажёр ML", start_months_ago: 8, end_months_ago: 2, description: "Эксперименты с эмбеддингами для поиска по каталогу.", skills: [python, pytorch, transformers]}
+      education: [{institution: "Московский институт данных (вымышленный)", degree: bachelor, field: "Прикладная математика", year_end: 2026}]
+    history:   # экспресс-тест для жюри: грейд с меткой «экспресс»
+      - {profession: ai_engineer, declared: junior, result: passed, theta: -0.3, days_ago: 3, items: 6, mode: express}
+
+  - key: gleb
+    role: candidate
+    email: gleb@demo.fsp.test
+    profile: {city: Новосибирск, relocation: false, salary_min: 170000, formats: [remote], employment_types: [full], search_status: open}
+    consents: [pd_processing, profile_publication]
+    resume:
+      summary: "Backend на Go и Python. Тест прошёл очень быстро и с подозрительной схожестью ответов."
+      skills: [go, python, postgresql, docker, git, rest]
+      experience:
+        - {company: "Лотос Системс", title: "Backend-разработчик", start_months_ago: 30, end_months_ago: null, description: "Сервисы бронирования.", skills: [go, postgresql, docker, rest]}
+      education: []
+    history:   # integrity ниже порога → грейд «требует подтверждения», доверие ограничено
+      - {profession: backend, declared: middle, result: passed, theta: 0.5, days_ago: 12, items: 10, integrity: 0.5}
+
+  - key: mira
+    role: candidate
+    email: mira@demo.fsp.test
+    age: minor
+    parent_consent: true       # 16 лет, родитель согласен → профиль публикуется
+    profile: {city: Томск, relocation: false, salary_min: 40000, formats: [remote], employment_types: [internship, part], search_status: active}
+    consents: [pd_processing, profile_publication]
+    resume:
+      summary: "Школьница 10 класса, верстаю сайты, участвую в олимпиадах по информатике."
+      skills: [html, css, javascript, git]
+      experience: []
+      education: [{institution: "Лицей информационных технологий (вымышленный)", degree: school, field: "Информатика", year_end: 2028}]
+    history:
+      - {profession: frontend, declared: junior, result: passed, theta: -0.4, days_ago: 9, items: 8}
+
+  - key: timur
+    role: candidate
+    email: timur@demo.fsp.test
+    age: minor
+    parent_consent: false      # 15 лет, согласия родителя нет → профиль не публикуется
+    profile: {city: Воронеж, relocation: false, salary_min: 30000, formats: [remote], employment_types: [internship, part], search_status: open}
+    consents: [pd_processing, profile_publication]
+    resume:
+      summary: "Школьник 9 класса, пишет автотесты для пет-проектов."
+      skills: [python, pytest, git]
+      experience: []
+      education: [{institution: "Школа №12 (вымышленная)", degree: school, field: "Информатика", year_end: 2029}]
+    history:
+      - {profession: backend, declared: junior, result: passed, theta: -0.5, days_ago: 6, items: 8}
+
+# История теста у героев базовых файлов: Аня сначала заявила middle и не прошла, затем junior (source=test)
+extra_history:
+  anya:
+    - {profession: backend, declared: middle, result: failed, theta: -0.7, days_ago: 50, items: 8}
+    - {profession: backend, declared: junior, result: passed, theta: -0.35, days_ago: 45, items: 8}
+
+# Вымышленные компании (верифицированные), у каждой — владелец-HR
+companies:
+  - key: gavan
+    email: hr.gavan@demo.fsp.test
+    name: "Тихая Гавань Софт"
+    inn: "7712345601"
+    site: "https://tihaya-gavan.example.test"
+    about: "Разработка складских и логистических сервисов, 60 человек, команда в Казани и удалённо."
+    responsibility_score: 4.4
+  - key: neiron
+    email: hr.neiron@demo.fsp.test
+    name: "Нейрон Ферма"
+    inn: "7712345602"
+    site: "https://neiron-farm.example.test"
+    about: "Продукты на локальных языковых моделях для малого бизнеса."
+    responsibility_score: 4.1
+  - key: pixel
+    email: hr.pixel@demo.fsp.test
+    name: "Пиксельный Лес"
+    inn: "7712345603"
+    site: "https://pixel-forest.example.test"
+    about: "Студия интерфейсов: веб-приложения и дизайн-системы."
+    responsibility_score: 3.9
+
+vacancies:
+  - key: gavan_backend
+    company: gavan
+    title: "Backend-разработчик (Python), Middle"
+    role: backend
+    grade_min: junior_plus
+    grade_max: middle_plus
+    formats: [remote, hybrid]
+    employment_type: full
+    city: Казань
+    salary_from: 180000
+    salary_to: 260000
+    description: "API складской платформы: Django, PostgreSQL, очереди. Гибрид или удалённо."
+    required: [python, django, postgresql, rest]
+    nice: [docker, redis]
+  - key: neiron_ai
+    company: neiron
+    title: "AI Engineer (Junior)"
+    role: ml  # RoleSlug (контракт вакансий) не знает ai_engineer: иначе GET /vacancies/public падает 500
+    grade_min: junior
+    grade_max: junior_plus
+    formats: [remote]
+    employment_type: full
+    city: null
+    salary_from: 110000
+    salary_to: 160000
+    description: "RAG-сервисы на локальных моделях, оценка качества ответов."
+    required: [python, rag, transformers]
+    nice: [pytorch, sql]
+  - key: pixel_frontend
+    company: pixel
+    title: "Frontend-разработчик, стажёр / Junior"
+    role: frontend
+    grade_min: intern
+    grade_max: junior
+    formats: [remote]
+    employment_type: full
+    city: null
+    salary_from: 60000
+    salary_to: 100000
+    description: "Вёрстка и компоненты на React, наставник в команде."
+    required: [javascript, html, css]
+    nice: [react, git]
+
+# Офферы (вакансия компании → кандидат) и отклики (кандидат → вакансия) в разных статусах.
+# vacancy: ключ из vacancies выше или `olga` (вакансия героя Ольги). days_ago — когда создан.
+# status: sent | viewed | accepted | interview | hired | declined | withdrawn (для отклика: sent | viewed | withdrawn).
+offers:
+  - {n: 1, vacancy: gavan_backend, candidate: boris, status: interview, days_ago: 6, message: "Борис, ваш грейд Middle подтверждён тестом — приглашаем на собеседование."}
+  - {n: 2, vacancy: gavan_backend, candidate: gleb, status: declined, days_ago: 5, decline_reason: low_salary}
+  - {n: 3, vacancy: neiron_ai, candidate: vika, status: accepted, days_ago: 2}
+  - {n: 4, vacancy: olga, candidate: anya, status: sent, days_ago: 0}
+  - {n: 5, vacancy: olga, candidate: dima, status: viewed, days_ago: 1}
+  - {n: 6, vacancy: pixel_frontend, candidate: mira, status: sent, days_ago: 1}
+applications:
+  - {vacancy: olga, candidate: boris, status: viewed, days_ago: 3, message: "Интересна ваша вакансия, стек совпадает с моим опытом."}
+  - {vacancy: gavan_backend, candidate: anya, status: sent, days_ago: 1, message: "Хочу попробовать себя в команде с настоящим продуктом."}
+  - {vacancy: neiron_ai, candidate: gleb, status: withdrawn, days_ago: 4}
+
+# Регулярные задания компании (кодовые семейства банка); answers — кто как ответил (correct | wrong)
+tasks:
+  - {company: gavan, family: py_loop_sum, profession: backend, grade: middle, title: "Задача недели: сумма в цикле", answers: {boris: correct, gleb: wrong}}
+  - {company: gavan, family: sql_left_join, profession: backend, grade: junior, title: "Практика SQL: LEFT JOIN", answers: {anya: correct}}
+  - {company: pixel, family: js_trace, profession: frontend, grade: junior, title: "Разбор кода на JavaScript", answers: {mira: wrong}}

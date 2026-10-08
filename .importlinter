@@ -1,0 +1,10 @@
+[importlinter]
+root_packages =
+    fsp_contracts
+    fsp_platform
+
+[importlinter:contract:contracts-independent]
+name = contracts не зависят от platform
+type = forbidden
+source_modules = fsp_contracts
+forbidden_modules = fsp_platform

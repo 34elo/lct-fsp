@@ -1,0 +1,85 @@
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
+
+import { AccountMenu, AppBar, BrandMark, Moon, Sun, SunMoon, type ShellLinkProps } from "@fsp/ui";
+
+import type { NavItem } from "@/app/routes";
+import { useAuth } from "@/shared/lib/auth";
+import { useTheme, type ThemeMode } from "@/shared/lib/theme";
+import { ROLE_LABEL, activeNav, initials } from "./shell-meta";
+
+const NEXT: Record<ThemeMode, ThemeMode> = { light: "dark", dark: "system", system: "light" };
+const LABEL: Record<ThemeMode, string> = { system: "Тема: системная", light: "Тема: светлая", dark: "Тема: тёмная" };
+const ICON = { light: Sun, dark: Moon, system: SunMoon };
+
+export function ThemeToggle() {
+  const { mode, setMode } = useTheme();
+  const Icon = ICON[mode];
+  return (
+    <button
+      type="button"
+      onClick={() => setMode(NEXT[mode])}
+      aria-label={LABEL[mode]}
+      title={LABEL[mode]}
+      className="grid size-11 place-items-center rounded-lg text-muted hover:bg-tint-50 hover:text-ink sm:size-9"
+    >
+      <Icon className="size-4" aria-hidden />
+    </button>
+  );
+}
+
+const THEME_HINT: Record<ThemeMode, string> = { system: "системная", light: "светлая", dark: "тёмная" };
+
+/** Меню аватара v2 (`.menu`): тема и выход. «Настройки» — только у кандидата (`/me/settings`, E38-7). */
+function UserMenu() {
+  const { me, status, logout } = useAuth();
+  const { mode, setMode } = useTheme();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  if (status !== "authenticated" || !me) return null;
+  const name = me.company?.name ?? me.email ?? "Профиль";
+  return (
+    <AccountMenu
+      letter={initials(me.email ?? name)}
+      label={`Меню аккаунта: ${name}, ${ROLE_LABEL[me.role] ?? me.role}`}
+      items={[
+        ...(me.role === "candidate" ? [{ label: "Настройки", onSelect: () => navigate("/me/settings"), active: pathname === "/me/settings" }] : []),
+        { label: "Тема", hint: THEME_HINT[mode], onSelect: () => setMode(NEXT[mode]) },
+        { label: "Выйти", separatorBefore: true, onSelect: () => void logout() },
+      ]}
+    />
+  );
+}
+
+const link = ({ href, className, current, children }: ShellLinkProps) => (
+  <Link to={href} className={className} aria-current={current ? "page" : undefined}>
+    {children}
+  </Link>
+);
+
+/** Шапка v2 (`.hd`, docs/design/v2): знак ФСП, 4 пункта со счётчиками, справа аватар с меню. */
+export function AppHeader({
+  nav,
+  counts = {},
+  withTabs = true,
+}: {
+  nav: NavItem[];
+  /** Счётчики вкладок по пути (`/employer/offers` → 8). */
+  counts?: Record<string, number | undefined>;
+  withTabs?: boolean;
+}) {
+  const current = activeNav(nav, useLocation().pathname);
+  return (
+    <AppBar
+      brand={
+        <NavLink to="/" aria-label="ФСП Карьера — на главную" className="shrink-0">
+          <BrandMark />
+        </NavLink>
+      }
+      items={withTabs ? nav.map((n) => ({ href: n.to, label: n.label, count: counts[n.to] })) : []}
+      isCurrent={(i) => current?.to === i.href}
+      renderLink={link}
+      navLabel="Разделы"
+      aside={<UserMenu />}
+    />
+  );
+}

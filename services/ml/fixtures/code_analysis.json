@@ -1,0 +1,31 @@
+{
+  "analyzer_version": "fake-1",
+  "radar": {"backend": 0.8, "frontend": 0.2, "devops": 0.5, "data": 0.3, "quality": 0.6, "open_source": 0.4},
+  "languages": [
+    {"lang": "Python", "share": 0.7, "loc_authored": 8400},
+    {"lang": "TypeScript", "share": 0.2, "loc_authored": 2400},
+    {"lang": "Shell", "share": 0.1, "loc_authored": 1200}
+  ],
+  "technologies": [
+    {"skill": "python", "strength": 0.8, "repos": ["demo-candidate/api-service"]},
+    {"skill": "fastapi", "strength": 0.7, "repos": ["demo-candidate/api-service"]},
+    {"skill": "docker", "strength": 0.5, "repos": ["demo-candidate/api-service"]}
+  ],
+  "maturity": {"has_tests": true, "has_ci": true, "has_readme": true, "commits_total": 312},
+  "flags": [],
+  "repos": [
+    {
+      "full_name": "demo-candidate/api-service",
+      "url": "https://github.com/demo-candidate/api-service",
+      "is_fork": false,
+      "stars": 12,
+      "pushed_at": "2026-08-15T10:00:00Z",
+      "deep": true,
+      "own_commit_share": 0.92,
+      "metrics": {"loc": 12000, "test_ratio": 0.31},
+      "flags": [],
+      "contributors": [{"github_login": "demo-candidate", "commits": 287, "share": 0.92}]
+    }
+  ],
+  "summary": "Уверенный Python-бэкенд: FastAPI, тесты и CI в основном репозитории."
+}
