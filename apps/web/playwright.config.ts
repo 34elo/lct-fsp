@@ -15,6 +15,8 @@ export default defineConfig({
   use: {
     baseURL: process.env.E2E_BASE_URL ?? "http://localhost:28080",
     trace: "retain-on-failure",
+    // E2E_CHANNEL=chrome — взять установленный Chrome вместо скачиваемого Chromium (`playwright install`)
+    channel: process.env.E2E_CHANNEL || undefined,
   },
   projects: [
     { name: "desktop", use: { ...devices["Desktop Chrome"] } },
