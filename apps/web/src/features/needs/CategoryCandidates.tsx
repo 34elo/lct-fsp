@@ -12,6 +12,7 @@ import {
   H2,
   Num,
   RankedCandidateCard,
+  Select,
   Skeleton,
 } from "@fsp/ui";
 
@@ -290,19 +291,13 @@ export default function CategoryCandidates() {
       {!first && !failed && items.length > 0 && (
         <div className="flex flex-wrap items-center gap-2" role="group" aria-label={T.filters}>
           {stacks.length > 0 && (
-            <select
+            <Select
               aria-label={T.stack}
               value={filters.skill ?? ""}
-              onChange={(e) => set("skill", e.target.value || null)}
-              className="h-9 rounded-sm border border-hairline bg-card px-2 font-mono text-12 text-ink"
-            >
-              <option value="">{T.stackAny}</option>
-              {stacks.map((n) => (
-                <option key={n} value={n}>
-                  {n}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => set("skill", v || null)}
+              options={[{ value: "", label: T.stackAny }, ...stacks.map((n) => ({ value: n, label: n }))]}
+              className="min-h-9 w-44 py-0.5 font-mono text-12"
+            />
           )}
           <FilterChip pressed={filters.fspOnly} onToggle={() => set("fspOnly", !filters.fspOnly)}>
             {T.fspOnly}
@@ -313,18 +308,13 @@ export default function CategoryCandidates() {
           <FilterChip pressed={filters.confirmedOnly} onToggle={() => set("confirmedOnly", !filters.confirmedOnly)}>
             {T.confirmedOnly}
           </FilterChip>
-          <select
+          <Select
             aria-label={T.sort}
             value={sort}
-            onChange={(e) => setSort(e.target.value as CandidateSort)}
-            className="ml-auto h-9 rounded-sm border border-hairline bg-card px-2 font-mono text-12 text-ink"
-          >
-            {SORTS.map(([k, label]) => (
-              <option key={k} value={k}>
-                {label}
-              </option>
-            ))}
-          </select>
+            onChange={(v) => v && setSort(v as CandidateSort)}
+            options={SORTS.map(([k, label]) => ({ value: k, label }))}
+            className="ml-auto min-h-9 w-52 py-0.5 font-mono text-12"
+          />
         </div>
       )}
 

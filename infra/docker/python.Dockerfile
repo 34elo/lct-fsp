@@ -25,6 +25,13 @@ RUN uv sync --frozen --no-dev --package ${PACKAGE}
 
 FROM python:3.12-slim
 ARG SERVICE_DIR
+# рантайм-библиотеки WeasyPrint (PDF-профиль, E39-20): pango тянет gobject/cairo/harfbuzz;
+# шрифты — кириллица в PDF. Ставятся только в финальный образ.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+      libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz0b libffi8 shared-mime-info \
+      fonts-dejavu-core fonts-liberation \
+ && rm -rf /var/lib/apt/lists/*
 RUN useradd --system --uid 10001 --home-dir /nonexistent --shell /usr/sbin/nologin app
 COPY --from=builder /repo /repo
 ENV PATH=/repo/.venv/bin:$PATH PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1

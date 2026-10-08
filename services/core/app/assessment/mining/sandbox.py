@@ -18,6 +18,7 @@ import ast
 import copy
 import math
 import operator
+import re
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from typing import Any
@@ -95,6 +96,13 @@ def _pow(a: Any, b: Any, *m: Any) -> Any:
     return pow(a, b, *m)
 
 
+def _round(x: Any, *nd: Any) -> Any:
+    """`round(1, -10**8)` считает 10**10**8 — секунды CPU на вызов."""
+    if nd and isinstance(nd[0], int) and abs(nd[0]) > MAX_INT_BITS:
+        raise Limit("round: слишком много знаков")
+    return round(x, *nd)
+
+
 BUILTINS: dict[str, Callable[..., Any]] = {
     "len": len,
     "range": _range,
@@ -116,7 +124,7 @@ BUILTINS: dict[str, Callable[..., Any]] = {
     "dict": dict,
     "any": any,
     "all": all,
-    "round": round,
+    "round": _round,
     "divmod": divmod,
     "ord": ord,
     "chr": chr,
@@ -203,6 +211,19 @@ def _guard_mul(a: Any, b: Any) -> None:
 def _guard_shift(a: Any, b: Any) -> None:
     if isinstance(b, int) and b > MAX_INT_BITS:
         raise Limit("сдвиг слишком большой")
+
+
+_PCT_SPEC = re.compile(r"%(?:\([^)]*\))?[-+ #0]*(\*|\d*)(?:\.(\*|\d*))?")
+
+
+def _guard_format(a: Any) -> None:
+    """`'%999999999d' % 1` строит строку до проверки результата: ширина и точность ≤ MAX_SEQ."""
+    if not isinstance(a, str):
+        return
+    for m in _PCT_SPEC.finditer(a):
+        for n in m.groups():
+            if n == "*" or (n and (len(n) > 6 or int(n) > MAX_SEQ)):
+                raise Limit("ширина формата слишком большая")
 
 
 def _guard_method(obj: Any, attr: str, args: list[Any]) -> None:
@@ -499,6 +520,8 @@ class Interpreter:
             _guard_mul(a, b)
         if isinstance(op, ast.LShift):
             _guard_shift(a, b)
+        if isinstance(op, ast.Mod):
+            _guard_format(a)
         fn = _BIN.get(type(op))
         if fn is None:
             raise Unsupported(type(op).__name__)

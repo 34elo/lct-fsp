@@ -16,7 +16,7 @@ import {
 import type { SkillReqIn, VacancyOut } from "@/api/model";
 import { ErrorNote, fieldClass } from "@/features/auth/ui";
 import { GRADE_LABEL, ROLE_LABEL, SIGNAL_LABEL } from "@/features/profile/text";
-import { Button, cn, Skeleton } from "@fsp/ui";
+import { Button, cn, SalaryRangeInput, Select, Skeleton } from "@fsp/ui";
 
 import { EMPLOYMENT_LABEL, FORMAT_LABEL, LEVEL_WORD, QUALITY_HINT, VACANCY_STATUS_LABEL, vacancyErrorText } from "./text";
 
@@ -266,24 +266,18 @@ export default function VacancyEditor() {
             {touched && titleError && <span className="text-xs font-normal text-error">{titleError}</span>}
           </label>
           <div className="grid gap-3 md:grid-cols-3">
-            <label className="flex flex-col gap-1 text-sm font-semibold">
-              Роль
-              <select value={role} onChange={(e) => setRole(e.target.value)} className={fieldClass}>
-                {Object.entries(ROLE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1 text-sm font-semibold">
-              Грейд от
-              <select value={gradeMin} onChange={(e) => setGradeMin(e.target.value)} className={fieldClass}>
-                {GRADES.map((g) => <option key={g} value={g}>{GRADE_LABEL[g]}</option>)}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1 text-sm font-semibold">
-              Грейд до
-              <select value={gradeMax} onChange={(e) => setGradeMax(e.target.value)} className={fieldClass}>
-                {GRADES.map((g) => <option key={g} value={g}>{GRADE_LABEL[g]}</option>)}
-              </select>
-            </label>
+            <div className="flex flex-col gap-1 text-sm font-semibold">
+              <span>Роль</span>
+              <Select aria-label="Роль" disabled={closed} value={role} onChange={(v) => v && setRole(v)} options={Object.entries(ROLE_LABEL).map(([k, v]) => ({ value: k, label: v }))} className="font-normal" />
+            </div>
+            <div className="flex flex-col gap-1 text-sm font-semibold">
+              <span>Грейд от</span>
+              <Select aria-label="Грейд от" disabled={closed} value={gradeMin} onChange={(v) => v && setGradeMin(v)} options={GRADES.map((g) => ({ value: g, label: GRADE_LABEL[g] ?? g }))} className="font-normal" />
+            </div>
+            <div className="flex flex-col gap-1 text-sm font-semibold">
+              <span>Грейд до</span>
+              <Select aria-label="Грейд до" disabled={closed} value={gradeMax} onChange={(v) => v && setGradeMax(v)} options={GRADES.map((g) => ({ value: g, label: GRADE_LABEL[g] ?? g }))} className="font-normal" />
+            </div>
           </div>
           {touched && gradeError && <p className="text-xs text-error">{gradeError}</p>}
         </fieldset>
@@ -343,17 +337,17 @@ export default function VacancyEditor() {
         <fieldset className="flex flex-col gap-1" disabled={closed}>
           <legend className="font-mono text-[17px] font-semibold">Зарплатная вилка *</legend>
           <p className="text-xs text-muted">В месяц, ₽, до вычета налогов. Без вилки вакансию сохранить нельзя.</p>
-          <div className="flex items-center gap-2">
-            <label className="flex flex-1 flex-col gap-1 text-xs text-muted">
-              от
-              <input inputMode="numeric" value={from} onChange={(e) => setFrom(e.target.value)} aria-invalid={touched && !!salaryError} className={cn(fieldClass, "font-mono text-base text-ink")} />
-            </label>
-            <span aria-hidden className="pt-5 text-muted">–</span>
-            <label className="flex flex-1 flex-col gap-1 text-xs text-muted">
-              до
-              <input inputMode="numeric" value={to} onChange={(e) => setTo(e.target.value)} aria-invalid={touched && !!salaryError} className={cn(fieldClass, "font-mono text-base text-ink")} />
-            </label>
-          </div>
+          <SalaryRangeInput
+            value={{ from: from ? Number(from) : null, to: to ? Number(to) : null }}
+            onChange={(v) => {
+              setFrom(v.from == null ? "" : String(v.from));
+              setTo(v.to == null ? "" : String(v.to));
+            }}
+            fromLabel="от"
+            toLabel="до"
+            disabled={closed}
+            invalid={touched && !!salaryError}
+          />
           {touched && salaryError && <p className="text-xs text-error">{salaryError}</p>}
           {(wide || loaded?.range_too_wide) && !salaryError && wide && (
             <p role="status" className="rounded-lg bg-warning-bg px-3 py-2 text-sm text-warning-fg">

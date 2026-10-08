@@ -23,7 +23,7 @@ export const ROUTES: RouteDef[] = [
   // >>> block1 (public)
   // <<< block1 (public)
   // >>> block2 (public)
-  { path: "/jobs", title: "Вакансии", section: "public", owner: "b2" },
+  { path: "/jobs", title: "Вакансии", section: "public", owner: "b2", nav: true },
   { path: "/jobs/:id", title: "Вакансия", section: "public", owner: "b2" },
   { path: "/terms", title: "Условия", section: "public", owner: "b2" },
   { path: "/privacy", title: "Приватность", section: "public", owner: "b2" },
@@ -132,6 +132,7 @@ export const NAV: Record<"candidate" | "employer" | "admin", NavItem[]> = {
   candidate: [
     { to: "/me", label: "Главная" },
     { to: "/me/assessment", label: "Тест и грейд" },
+    { to: "/jobs", label: "Вакансии" },
     {
       to: "/me/offers",
       label: "Приглашения",

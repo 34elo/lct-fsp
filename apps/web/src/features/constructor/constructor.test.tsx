@@ -104,6 +104,7 @@ describe("K1 конструктор", () => {
     await screen.findByTestId("constructor-form");
     type("constructor-title", "Запросы за период");
     type("constructor-skill", "system_design");
+    fireEvent.keyDown(screen.getByTestId("constructor-skill"), { key: "Enter" });
     type("constructor-stem", "Сервис получает {{rps}} запросов в секунду");
     type("constructor-answer", "rps");
   };

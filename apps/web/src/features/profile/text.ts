@@ -356,4 +356,9 @@ export const SETTINGS = {
   telegramLinked: "привязан",
   telegramLink: "Привязать",
   telegramLinkError: "Не удалось получить ссылку на бота",
+  appearance: "Оформление",
+  appearanceHint: "Пока вы не выбрали, тема совпадает с системной.",
+  themeLabel: "Тема",
+  themeLight: "Светлая",
+  themeDark: "Тёмная",
 } as const;
