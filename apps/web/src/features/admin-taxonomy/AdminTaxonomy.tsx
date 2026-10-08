@@ -25,7 +25,7 @@ export default function AdminTaxonomy() {
             aria-selected={tab === t}
             data-testid={`admin-taxonomy-tab-${t}`}
             onClick={() => setTab(t)}
-            className={cn("min-h-9 rounded-lg border px-3 text-14 font-semibold", tab === t ? "border-tint-200 bg-tint-100 text-brand-deep" : "border-hairline text-muted")}
+            className={cn("min-h-9 rounded-lg border px-3 text-14 font-semibold", tab === t ? "border-tint-200 bg-tint-100 text-brand-deep dark:text-brand-mid" : "border-hairline text-muted")}
           >
             {T.tabs[t]}
           </button>

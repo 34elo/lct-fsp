@@ -12,6 +12,7 @@ import type { OfferForCompany } from "@/api/model";
 import { ErrorNote } from "@/features/auth/ui";
 import { FORMAT_LABEL, percent, rub } from "@/features/employer/text";
 import { GRADE_LABEL, roleLabel } from "@/features/profile/text";
+import { displayPseudonym } from "@/shared/lib/pseudonym";
 import { Conversation, invalidateOffers, Panel, StatusBadge, Timeline } from "./parts";
 import { OfferDialog } from "./OfferDialog";
 import { CONTACTS_REVOKED_TEXT, dateOnly, DECLINE_LABEL, EMP_INT_TEXT as IT, offerErrorText } from "./text";
@@ -45,7 +46,7 @@ export function EmployerOfferDetail() {
             <div className="flex flex-wrap items-center gap-3">
               {o.candidate && <ConstellationAvatar seed={o.candidate.avatar_seed} size={56} />}
               <div className="flex min-w-0 flex-1 flex-col">
-                <h1 className="break-words font-mono text-2xl font-semibold">{o.candidate?.pseudonym ?? "Кандидат удалил анкету"}</h1>
+                <h1 className="break-words font-mono text-2xl font-semibold">{o.candidate ? displayPseudonym(o.candidate.pseudonym, o.candidate.primary_role) : "Кандидат удалил анкету"}</h1>
                 {o.candidate && (
                   <p className="text-[13px] text-muted">
                     {[o.candidate.grade && (GRADE_LABEL[o.candidate.grade] ?? o.candidate.grade), o.candidate.primary_role && roleLabel(o.candidate.primary_role)].filter(Boolean).join(" · ")}

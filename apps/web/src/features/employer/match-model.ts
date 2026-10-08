@@ -3,6 +3,7 @@ import { formatRub, type CandidateCardV2Data } from "@fsp/ui";
 import type { CandidateCard, NeedCategory, SubscriptionOut } from "@/api/model";
 import { claimedVsConfirmed, gradeTitle } from "@/features/needs/need-model";
 import { GRADE_LABEL, ROLE_LABEL } from "@/features/profile/text";
+import { displayPseudonym } from "@/shared/lib/pseudonym";
 import { FORMAT_LABEL, MATCH_TEXT as T, percent } from "./text";
 
 /* Модель экрана «Подбор» (E38-8): категории потребности, карточки лучших совпадений, подписки, лента. */
@@ -38,7 +39,7 @@ export function toMatchCard(card: CandidateCard, profession: string): CandidateC
   const formats = capitalize(card.formats.map((f) => FORMAT_LABEL[f] ?? f).join(" или "));
   const meta = [formats || null, card.city, confirmedSkills > 0 ? T.confirmedCount(confirmedSkills) : null].filter(Boolean).join(" · ");
   return {
-    pseudonym: card.pseudonym,
+    pseudonym: displayPseudonym(card.pseudonym, profession || card.primary_role),
     match: card.match ? percent(card.match.score) : 0,
     grade: grade ? (GRADE_LABEL[grade] ?? grade) : T.noGrade,
     confirmed: cv.confirmed !== null,

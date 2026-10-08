@@ -39,6 +39,7 @@ import { gradeTitle, professionTitle } from "@/features/needs/need-model";
 import { OfferDialog } from "@/features/offers/OfferDialog";
 import { EMP_INT_TEXT as IT, OFFER_STATUS_LABEL } from "@/features/offers/text";
 import { GRADE_LABEL, roleLabel } from "@/features/profile/text";
+import { displayPseudonym } from "@/shared/lib/pseudonym";
 import { dedupeExperience, fspResults, groupSkills, kindOf, skillLevel, yearsLabel } from "./candidate-model";
 import { FORMAT_LABEL, SEARCH_STATUS_LABEL, SOURCE_SHORT } from "./text";
 
@@ -218,7 +219,7 @@ function Body({ c, vacancyId, needId }: { c: CandidateCardFull; vacancyId: strin
         <ConstellationAvatar seed={c.avatar_seed} size={72} />
         <div className="flex min-w-[200px] flex-1 flex-col gap-2">
           <div className="flex flex-wrap items-center gap-2.5">
-            <H1 className="break-words text-[28px]">{c.pseudonym}</H1>
+            <H1 className="break-words text-[28px]">{displayPseudonym(c.pseudonym, c.primary_role)}</H1>
             {gradeLabel && <GradeTag claimed={!confirmedGrade}>{[gradeLabel, role, stack].filter(Boolean).join(" · ")}</GradeTag>}
             {protocol.length > 0 && <StatusTag state="ok">{T.fspVerified}</StatusTag>}
             {c.interested_you && <StatusTag state="confirmed">{IT.interestedYou}</StatusTag>}
@@ -389,7 +390,7 @@ export default function CandidateView() {
           {card && (
             <>
               <span className="text-muted">›</span>
-              <span className="text-muted">{card.pseudonym}</span>
+              <span className="text-muted">{displayPseudonym(card.pseudonym, card.primary_role)}</span>
             </>
           )}
         </nav>
