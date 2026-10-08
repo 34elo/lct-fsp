@@ -43,7 +43,8 @@ new-service:
 
 # Каталог AsyncAPI всех событий и команд из packages/contracts
 asyncapi:
-	uv run python -m fsp_contracts.asyncapi > asyncapi.json
+	mkdir -p docs
+	PYTHONUTF8=1 uv run python -m fsp_contracts.asyncapi > docs/asyncapi.json
 
 # OpenAPI схема REST API
 openapi:
