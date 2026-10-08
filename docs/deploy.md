@@ -236,11 +236,14 @@ mock.fsp.patissons.tech → caddy → :28080/mock.fsp.patissons.tech
 ```
 GitHub (main) ──push──▶ Actions: ci.yml (облачные раннеры) ──▶ cd.yml: deploy (self-hosted раннер на сервере)
 Пользователь ──HTTPS──▶ VPS 2.26.52.44 (Caddy, Let's Encrypt) ──Tailscale──▶ сервер :28080 gateway ──▶ стек fsp
-Сервер: таймеры fsp-backup (03:30) и fsp-healthcheck (5 мин) ──▶ ~/fsp-backups, алерты в Telegram
-VPS: cron fsp-uptime (5 мин) ──▶ внешняя проверка, алерты в Telegram
+Бот платформы ──Tailscale──▶ VPS :28443 (ретранслятор Bot API) ──▶ api.telegram.org   (напрямую с сервера Telegram недоступен)
+Сервер: таймер fsp-backup (03:30) ──▶ ~/fsp-backups;  hostwatch (@patissons_alerts_bot) ──▶ алерты команде
+VPS: hostwatch-watchdog ──▶ алерт, если сервер пропал > 4 мин
 ```
 
-**Один стенд — прод** (`STAND_DIR` на сервере, compose-проект `fsp`): `ENV=prod`, реальная LLM на GPU (общий llama-server хоста `:18090`), Telegram-бот, демо-аккаунты жюри (`DEMO_MODE`, `VITE_JURY_MODE`). Почта не подключена.
+**Один стенд — прод** (`STAND_DIR` на сервере, compose-проект `fsp`): `ENV=prod`, реальная LLM на GPU, Telegram-бот, демо-аккаунты жюри (`DEMO_MODE`, `VITE_JURY_MODE`). Почта не подключена.
+
+**LLM** — общий llama-server хоста (`:18090`, Qwen3-VL-4B, OpenAI-совместимый API, 2 слота на одной GPU). Его же использует другой прод на этой машине: наш `ml-worker-llm` берёт из очереди по одному запросу (`prefetch=1`), лишнюю нагрузку не создаём. Ключ — строка `LLM_API_KEY_LINE` файла `LLM_API_KEY_FILE` (`~/hackathon-server-setup/llm/api-keys.txt`), в GitHub не хранится.
 
 ### Где что лежит
 
@@ -248,7 +251,9 @@ VPS: cron fsp-uptime (5 мин) ──▶ внешняя проверка, ал�
 |---|---|---|
 | Конфигурация (не секреты): домены, режимы, LLM, бэкапы | [`infra/env/prod.env`](../infra/env/prod.env) в репо | PR в `main` |
 | Внутренние секреты: пароли БД, RabbitMQ, MinIO, JWT, ключи шифрования, сервисные токены | `STAND_DIR/.env.server` (600), создаётся один раз [`gen-server-secrets.sh`](../infra/scripts/gen-server-secrets.sh) | никто: не уходят с сервера |
-| Внешние токены | GitHub → Settings → Environments → `prod` | владелец репозитория |
+| Токен бота платформы | GitHub → Settings → Environments → `prod` | владелец репозитория |
+| Ключ LLM | файл ключей llama-server на сервере (строка из `prod.env`) | владелец сервера |
+| Токен бота алертов | `config.toml` hostwatch на сервере (`HOSTWATCH_DIR`) | владелец сервера |
 | Итоговый `.env` | `STAND_DIR/.env`, собирается [`render-env.sh`](../infra/scripts/render-env.sh) при каждом деплое | не править руками |
 
 **Окружение GitHub `prod`:**
@@ -256,11 +261,7 @@ VPS: cron fsp-uptime (5 мин) ──▶ внешняя проверка, ал�
 | Тип | Имя | Что |
 |---|---|---|
 | Secret | `TG_BOT_TOKEN` | токен бота платформы из @BotFather |
-| Secret | `LLM_API_KEY` | ключ llama-server на хосте |
-| Secret | `ALERT_BOT_TOKEN` | токен бота алертов команды |
-| Secret | `ALERT_CHAT_ID` | чат алертов (для группы — с минусом) |
 | Variable | `TG_BOT_USERNAME` | username бота платформы без `@` |
-| Variable | `ALERT_THREAD_ID` | тема в группе для алертов (необязательно) |
 
 **Переменная репозитория:** `STAND_DIR` — каталог стенда на сервере (Settings → Secrets and variables → Actions → Variables).
 
@@ -297,17 +298,17 @@ sh infra/scripts/restore.sh ~/fsp-backups/<каталог> --yes
 
 ### Мониторинг и алерты
 
-- На сервере [`healthcheck.sh`](../infra/scripts/healthcheck.sh) раз в 5 минут (таймер `fsp-healthcheck`): API, сайт, БД, LLM-сервер, контейнеры unhealthy/упавшие. Сообщение только при смене состояния (упало / восстановилось).
-- С VPS [`infra/vps/uptime.sh`](../infra/vps/uptime.sh) раз в 5 минут проверяет стенд снаружи: выключенный ПК, Tailscale, сертификат.
-- Деплои, откаты, сброс демо — сообщения из `deploy.sh`.
-- Таймеры: `systemctl --user list-timers 'fsp-*'`, логи: `journalctl --user -u fsp-healthcheck -n 50`.
+Мониторинг сервера — бот **hostwatch** (`@patissons_alerts_bot`, `~/everything/develop/hostwatch-bot`, своё README): раз в минуту ресурсы, GPU, Docker-контейнеры, HTTP-адреса; тревога после двух неудач подряд, «Поднялось» при починке. Стенд в нём: проект `fsp` в `important_projects` (упавший или unhealthy контейнер — красная тревога), адреса «ФСП: сайт», «ФСП: API» снаружи и локально. Пропажу всей машины ловит `hostwatch-watchdog` на VPS.
+
+Деплои, откаты, сброс демо — сообщения тем же ботом всем его подписчикам ([`notify.sh`](../infra/scripts/notify.sh): токен из `config.toml` hostwatch, чаты из `state.json`, через ретранслятор). Команды бота: `/status`, `/docker`, `/web`, `/logs <контейнер>`.
 
 ### Настройка с нуля
 
 1. Раннер: `sh infra/scripts/install-runner.sh` на сервере (токен: Settings → Actions → Runners → New self-hosted runner).
 2. Переменная репозитория `STAND_DIR`, окружение `prod` с секретами и переменными из таблицы выше.
-3. VPS: DNS и Caddy — [infra/vps/README.md](../infra/vps/README.md).
-4. Влить `dev` в `main` → первый `deploy`; затем Run workflow → `prod-init` с `ПЕРЕСОЗДАТЬ`.
+3. VPS: DNS, Caddy и ретранслятор Telegram — [infra/vps/README.md](../infra/vps/README.md).
+4. hostwatch: проект `fsp` в `important_projects`, адреса стенда в `[web].urls`, `./restart.sh`.
+5. Влить `dev` в `main` → первый `deploy`; затем Run workflow → `prod-init` с `ПЕРЕСОЗДАТЬ`.
 
 ## Основные команды
 

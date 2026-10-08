@@ -13,8 +13,10 @@ A-записи на `2.26.52.44`: `fsp.patissons.tech`, `www.fsp.patissons.tech`
 3. `sudo caddy validate --config /etc/caddy/Caddyfile && sudo systemctl reload caddy`
 4. Проверка: `curl -sI https://dashboard.fsp.patissons.tech/api/v1/healthz` → 200, `curl -sI https://fsp.patissons.tech` → 308 на dashboard.
 
-## Внешняя проверка (алерты, если упал домашний ПК или Tailscale)
+## Ретранслятор Telegram
 
-1. `sudo install -m 755 uptime.sh /usr/local/bin/fsp-uptime.sh`
-2. `/etc/fsp-uptime.env` (права 600): `ALERT_BOT_TOKEN=…`, `ALERT_CHAT_ID=…`, при теме в группе — `ALERT_THREAD_ID=…` (те же значения, что в окружении GitHub `prod`).
-3. `crontab -e`: `*/5 * * * * /usr/local/bin/fsp-uptime.sh`
+С домашнего сервера `api.telegram.org` недоступен. Блок `http://100.66.64.126:28443` в [Caddyfile](Caddyfile) пересылает Bot API в Telegram и слушает только Tailscale-адрес VPS (`100.66.64.126`). Проверка с домашнего сервера: `docker run --rm curlimages/curl -s http://100.66.64.126:28443/` → ответ Telegram (404 на корень — нормально).
+
+## Внешняя проверка
+
+Уже есть: сторож пульса `hostwatch-watchdog` на этом VPS (`/opt/hostwatch`) пишет в `@patissons_alerts_bot`, если домашняя машина пропала больше чем на 4 минуты. Отдельная проверка для стенда не нужна.
