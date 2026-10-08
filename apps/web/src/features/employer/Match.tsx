@@ -1,8 +1,9 @@
 import { PAGE } from "@/shared/lib/page";
-import { useEffect, useState } from "react";
-import { Link, useLocation, useSearchParams } from "react-router-dom";
+import { useEffect, useState, type ReactNode } from "react";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 
 import {
+  Button,
   buttonVariants,
   CandidateCardV2,
   Chips,
@@ -32,6 +33,7 @@ import { useListSubscriptionsSubscriptionsGet } from "@/api/endpoints/subscripti
 import type { ActivityEvent, CandidateCard, NeedCategory, NeedOut } from "@/api/model";
 import { ApiError } from "@/api/mutator";
 import { needChips } from "@/features/needs/NeedCategories";
+import { useAuth } from "@/shared/lib/auth";
 import { displayPseudonym } from "@/shared/lib/pseudonym";
 import {
   catKey,
@@ -40,13 +42,16 @@ import {
   feedTime,
   isToday,
   loadLastNeed,
+  onboardingSkipped,
   pickCategory,
   salaryShort,
   saveLastNeed,
+  setOnboardingSkipped,
   subscriptionTerms,
   subscriptionTitle,
   toMatchCard,
 } from "./match-model";
+import { EmployerOnboarding } from "./Onboarding";
 import { FEED_TEXT, MATCH_TEXT as T } from "./text";
 
 const TOP = 3;
@@ -246,15 +251,27 @@ function FeedText({ e }: { e: ActivityEvent }) {
   );
 }
 
+/** Пустая лента: что здесь появится и что сделать, чтобы она ожила. */
+function FeedEmpty({ hint, action }: { hint: string; action?: ReactNode }) {
+  return (
+    <div className="flex flex-col items-start gap-2" data-testid="match-feed-empty">
+      <p className="text-13 font-semibold">{T.feedEmpty}</p>
+      <p className="text-13 text-muted">{hint}</p>
+      {action}
+    </div>
+  );
+}
+
 /** Лента активности компании (E35-12b): интересы, приглашения, новые по подпискам. */
-function FeedPanel() {
-  const q = useEmployerActivityEmployerActivityGet({ limit: FEED_LIMIT });
+function FeedPanel({ hasCompany }: { hasCompany: boolean }) {
+  const q = useEmployerActivityEmployerActivityGet({ limit: FEED_LIMIT }, { query: { enabled: hasCompany, retry: false } });
   const items = q.data?.status === 200 ? q.data.data.items : [];
   const today = items[0] && isToday(items[0].at);
   return (
     <Panel aria-label={T.feed} data-testid="match-feed">
       <PanelCap title={T.feed} aside={today ? <Lbl>{T.today}</Lbl> : undefined} />
-      {q.isPending && (
+      {!hasCompany && <FeedEmpty hint={T.feedNoCompanyHint} />}
+      {hasCompany && q.isPending && (
         <div className="flex flex-col gap-3" aria-hidden>
           {[0, 1, 2, 3].map((i) => (
             <Skeleton key={i} className="h-3.5" />
@@ -262,7 +279,16 @@ function FeedPanel() {
         </div>
       )}
       {q.isError && <ErrorState title={T.feedFailed} onRetry={() => void q.refetch()} className="p-4" />}
-      {q.isSuccess && items.length === 0 && <p className="text-13 text-muted">{T.feedEmpty}</p>}
+      {q.isSuccess && items.length === 0 && (
+        <FeedEmpty
+          hint={T.feedEmptyHint}
+          action={
+            <Link to="/employer/subscriptions" className={cn(buttonVariants({ variant: "outline" }), "h-9 sm:h-9")}>
+              {T.subscribe}
+            </Link>
+          }
+        />
+      )}
       {items.length > 0 && (
         <FeedList label={T.feed}>
           {items.map((e) => (
@@ -278,8 +304,21 @@ function FeedPanel() {
 
 /** Подписки компании: категория, условия, «только подтверждённые» — строкой, ведут к управлению подписками. */
 function SubscriptionsPanel() {
-  const q = useListSubscriptionsSubscriptionsGet();
+  const q = useListSubscriptionsSubscriptionsGet({ query: { retry: false } });
   const subs = q.data?.status === 200 ? q.data.data : [];
+  if (q.isSuccess && subs.length === 0)
+    return (
+      <Panel aria-label={T.subscriptions} data-testid="match-subscriptions-empty">
+        <PanelCap title={T.subscriptions} />
+        <div className="flex flex-col items-start gap-2">
+          <p className="text-13 font-semibold">{T.subscriptionsEmpty}</p>
+          <p className="text-13 text-muted">{T.subscriptionsEmptyHint}</p>
+          <Link to="/employer/subscriptions" className={cn(buttonVariants({ variant: "outline" }), "h-9 sm:h-9")}>
+            {T.subscribe}
+          </Link>
+        </div>
+      </Panel>
+    );
   if (subs.length === 0) return null;
   return (
     <Panel aria-label={T.subscriptions} data-testid="match-subscriptions">
@@ -336,14 +375,32 @@ function Examples({ onPick, disabled }: { onPick: (text: string) => void; disabl
  */
 export default function MatchPage() {
   const [params] = useSearchParams();
+  const { me } = useAuth();
+  const navigate = useNavigate();
+  // Новая компания (E39-7): онбординг из трёх шагов, пока её нет и его не пропускали.
+  const [wizard, setWizard] = useState(() => !me?.company && !onboardingSkipped());
+  if (wizard)
+    return (
+      <EmployerOnboarding
+        onSkip={() => {
+          setOnboardingSkipped(true);
+          setWizard(false);
+        }}
+        onDone={(needId) => {
+          setOnboardingSkipped(true);
+          setWizard(false);
+          if (needId) navigate(`/employer?need=${needId}`, { replace: true });
+        }}
+      />
+    );
   // Новый запрос или возврат к первому входу — экран с чистого листа (поле, ошибка).
-  return <Match key={params.get("need") ?? ""} />;
+  return <Match key={params.get("need") ?? ""} hasCompany={!!me?.company} companyId={me?.company?.id} onSetup={() => setWizard(true)} />;
 }
 
-function Match() {
+function Match({ hasCompany, companyId, onSetup }: { hasCompany: boolean; companyId?: string; onSetup: () => void }) {
   const [params, setParams] = useSearchParams();
   const location = useLocation();
-  const [last, setLast] = useState(loadLastNeed);
+  const [last, setLast] = useState(() => (hasCompany ? loadLastNeed(companyId) : null));
   const needParam = params.get("need");
   const results = needParam !== null;
   const needId = needParam ?? last?.id ?? null;
@@ -358,7 +415,7 @@ function Match() {
   const [error, setError] = useState<string | null>(null);
   const create = useCreateNeedNeedsPost();
 
-  const catsQ = useNeedCategoriesNeedsNeedIdCategoriesGet(needId ?? "", { query: { enabled: !!needId, retry: false } });
+  const catsQ = useNeedCategoriesNeedsNeedIdCategoriesGet(needId ?? "", { query: { enabled: hasCompany && !!needId, retry: false } });
   const cats = catsQ.data?.status === 200 ? catsQ.data.data.categories : [];
   const lost = catsQ.isError && catsQ.error instanceof ApiError && catsQ.error.status === 404;
   // Запомненный запрос удалён или чужой — забываем его и начинаем с примеров.
@@ -397,10 +454,23 @@ function Match() {
   };
 
   const noNeed = !needId || (lost && !results);
-  const showCats = !noNeed && (catsQ.isPending || (catsQ.isSuccess && cats.length > 0));
+  // Подписки и «Лента» без компании не запрашиваем: у новой компании нечего показывать, а запрос дал бы 404.
+  const noCompanyCenter = (
+    <EmptyState
+      title={T.noCompany}
+      description={T.noCompanyHint}
+      action={
+        <Button onClick={onSetup} data-testid="match-setup">
+          {T.noCompanyAction}
+        </Button>
+      }
+    />
+  );
+  const showCats = hasCompany && !noNeed && (catsQ.isPending || (catsQ.isSuccess && cats.length > 0));
 
   let center;
-  if (noNeed) center = <Examples onPick={pickExample} disabled={create.isPending} />;
+  if (!hasCompany) center = noCompanyCenter;
+  else if (noNeed) center = <Examples onPick={pickExample} disabled={create.isPending} />;
   else if (catsQ.isPending) center = <MatchesSkeleton />;
   else if (lost) center = <EmptyState title={T.nothing} description={T.nothingHint} />;
   else if (catsQ.isError) center = <ErrorState title={T.categoriesLoadFailed} onRetry={() => void catsQ.refetch()} />;
@@ -410,7 +480,9 @@ function Match() {
   return (
     <div className={PAGE.normal}>
       <h1 className="sr-only">{T.title}</h1>
-      <QueryBar value={text} onChange={setText} onSubmit={submit} loading={create.isPending} placeholder={T.placeholder} label={T.queryLabel} submitLabel={T.submit} />
+      {hasCompany && (
+        <QueryBar value={text} onChange={setText} onSubmit={submit} loading={create.isPending} placeholder={T.placeholder} label={T.queryLabel} submitLabel={T.submit} />
+      )}
       {error && (
         <p role="alert" className="rounded-lg bg-error-bg px-3 py-2 text-14 text-error">
           {error}
@@ -440,8 +512,8 @@ function Match() {
           {center}
         </div>
         <div className="flex min-w-0 flex-col gap-4 md:col-span-3">
-          {results && <SubscriptionsPanel />}
-          <FeedPanel />
+          {hasCompany && results && <SubscriptionsPanel />}
+          <FeedPanel hasCompany={hasCompany} />
         </div>
       </div>
     </div>

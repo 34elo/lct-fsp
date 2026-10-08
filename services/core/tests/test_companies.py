@@ -223,3 +223,35 @@ def test_company_contacts_optional(c):
     co = r.json()
     assert co["direction"] == "Manufacturing"
     assert co["contacts"] is None
+
+
+def test_new_employer_without_company_gets_empty_lists(c):
+    """E39-7: без компании списки пусты (200), а не 404; права кандидата и гостя прежние."""
+    h = _user(c, "newco@x.ru")
+    for path in (
+        "/offers",
+        "/offers?initiator=candidate",
+        "/vacancies",
+        "/subscriptions",
+        "/employer/tasks",
+    ):
+        r = c.get(path, headers=h)
+        assert (r.status_code, r.json()) == (200, []), path
+    assert c.get("/employer/activity", headers=h).json() == {"items": []}
+    assert (
+        c.get("/companies/me", headers=h).status_code == 404
+    )  # само «нет компании» фронт берёт из /me
+    # Записи и карточки без компании по-прежнему 404 company_not_found.
+    r = c.post("/subscriptions", json={"profession": "backend"}, headers=h)
+    assert (r.status_code, r.json()["code"]) == (404, "company_not_found")
+    # Права: кандидат и аноним не получают списки работодателя.
+    cand = _user(c, "cand@x.ru", role="candidate")
+    for path in (
+        "/offers",
+        "/vacancies",
+        "/subscriptions",
+        "/employer/tasks",
+        "/employer/activity",
+    ):
+        assert c.get(path, headers=cand).status_code == 403, path
+        assert c.get(path).status_code == 401, path

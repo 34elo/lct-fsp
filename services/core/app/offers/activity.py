@@ -117,13 +117,15 @@ async def build_feed(
 
 
 @router.get(
-    "/employer/activity", response_model=ActivityFeed, responses=problem_responses(401, 403, 404)
+    "/employer/activity", response_model=ActivityFeed, responses=problem_responses(401, 403)
 )
 async def employer_activity(
     limit: int = Query(default=30, ge=1, le=_MAX),
     user: User = Depends(_employer),
     session: AsyncSession = Depends(get_session),
 ) -> Any:
-    """Лента событий компании, новые сверху. Чужие данные в неё не попадают."""
-    company, _ = await companies.require_company(session, user.id)
-    return ActivityFeed(items=await build_feed(session, company.id, limit))
+    """Лента событий компании, новые сверху. Чужих данных нет. Без компании - пусто."""
+    found = await companies.my_company(session, user.id)
+    if found is None:  # новая компания: событий ещё нет (E39-7)
+        return ActivityFeed(items=[])
+    return ActivityFeed(items=await build_feed(session, found[0].id, limit))
