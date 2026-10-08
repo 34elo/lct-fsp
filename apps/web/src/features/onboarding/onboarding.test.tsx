@@ -132,7 +132,6 @@ test("лог сборки растёт по job.progress, затем «вот ч
   expect(edits.education).toBeUndefined(); // не трогали — не отправляем
   expect(await screen.findByText(/навыков: 3/)).toBeInTheDocument(); // Python + Redis + Pydantic (новый); FastAPI убран
   fireEvent.click(await screen.findByRole("button", { name: "Пропустить" }));
-  fireEvent.click(await screen.findByRole("button", { name: "Пропустить" }));
   expect(await screen.findByRole("link", { name: "Смотреть мой профиль" })).toHaveAttribute("href", "/me");
 });
 
@@ -182,9 +181,8 @@ test("шаги можно пропустить до конца", async () => {
   mount();
   fireEvent.click(await screen.findByRole("button", { name: "Пропустить, заполню вручную" }));
   fireEvent.click(await screen.findByRole("button", { name: "Пропустить" }));
-  fireEvent.click(await screen.findByRole("button", { name: "Пропустить" }));
   expect(await screen.findByRole("link", { name: "Смотреть мой профиль" })).toBeInTheDocument();
-  expect(screen.getAllByText(/пропущено/)).toHaveLength(3);
+  expect(screen.getAllByText(/пропущено/)).toHaveLength(2);
   expect(screen.getByTestId("onboarding-to-profile")).toBeInTheDocument();
 });
 
