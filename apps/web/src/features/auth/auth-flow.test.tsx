@@ -29,7 +29,7 @@ function respond(status: number, body?: unknown) {
   return new Response(body === undefined ? null : JSON.stringify(body), { status });
 }
 
-function installFetch(opts: { loginStatus?: number; loginCode?: string; magicStatus?: number } = {}) {
+function installFetch(opts: { loginStatus?: number; loginCode?: string; magicStatus?: number; meFailsOnce?: boolean } = {}) {
   vi.stubGlobal(
     "fetch",
     vi.fn(async (url: string, init?: RequestInit) => {
@@ -58,6 +58,10 @@ function installFetch(opts: { loginStatus?: number; loginCode?: string; magicSta
       }
       if (url.endsWith("/me/consents")) return respond(200, consentList());
       if (url.endsWith("/me")) {
+        if (opts.meFailsOnce && loggedIn) {
+          opts.meFailsOnce = false;
+          return respond(401);
+        }
         return loggedIn
           ? respond(200, { id: "u1", email: "a@b.ru", role: "candidate", consents: consentsGranted ? ["pd_processing"] : [] })
           : respond(401);
@@ -186,4 +190,14 @@ test("аноним на /consents уходит на вход", async () => {
   installFetch();
   mount("/consents");
   expect(await screen.findByRole("heading", { name: "Вход" })).toBeInTheDocument();
+});
+
+test("регистрация (E35-7a): сбой чтения профиля после неё не даёт «Неверная почта или пароль»", async () => {
+  installFetch({ meFailsOnce: true });
+  mount("/register");
+  fireEvent.change(await screen.findByLabelText("Почта"), { target: { value: "new@b.ru" } });
+  fireEvent.change(screen.getByLabelText(/Пароль/), { target: { value: "long-enough-pass" } });
+  fireEvent.click(screen.getByRole("button", { name: "Создать аккаунт" }));
+  expect(await screen.findByRole("heading", { name: "Согласия" })).toBeInTheDocument();
+  expect(screen.queryByText("Неверная почта или пароль")).toBeNull();
 });
