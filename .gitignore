@@ -45,7 +45,6 @@ asyncapi.json
 .env.demo.*
 .env.server
 .env.tmp
-.health-state
 
 apps/web/playwright-report/
 apps/web/test-results/
