@@ -1,8 +1,8 @@
 import { useState } from "react";
 
-import { cn } from "@/shared/lib/cn";
 import { BlocklistTab, DistinctTab, HintsTab, ProvisionalTab } from "./SkillsLists";
 import { MergesTab, QueueTab } from "./SkillsQueue";
+import { cn } from "@fsp/ui";
 import { SK } from "./text";
 
 const TABS = ["queue", "merges", "distinct", "blocklist", "provisional", "hints"] as const;

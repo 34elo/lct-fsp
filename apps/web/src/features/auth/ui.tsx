@@ -1,7 +1,6 @@
-import { Card } from "@fsp/ui";
+import { Card, cn } from "@fsp/ui";
 import type { ReactNode } from "react";
 
-import { cn } from "@/shared/lib/cn";
 
 export const fieldClass =
   "h-11 w-full rounded-lg border border-hairline bg-card px-3 text-ink placeholder:text-muted";

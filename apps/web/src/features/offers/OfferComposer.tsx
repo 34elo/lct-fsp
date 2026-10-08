@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 
+import { Button, cn } from "@fsp/ui";
 import { useCreateOfferOffersPost, useSalaryHintOffersSalaryHintPost } from "@/api/endpoints/offers/offers";
 import { useCandidateCardCandidatesPseudoIdCardGet } from "@/api/endpoints/search/search";
 import { useListVacanciesVacanciesGet } from "@/api/endpoints/vacancies/vacancies";
@@ -9,8 +10,6 @@ import type { SalaryHint } from "@/api/model";
 import { ErrorNote, fieldClass } from "@/features/auth/ui";
 import { FORMAT_LABEL, rub } from "@/features/employer/text";
 import { GRADE_LABEL, roleLabel } from "@/features/profile/text";
-import { cn } from "@/shared/lib/cn";
-import { Button } from "@/shared/ui/button";
 import { invalidateOffers } from "./parts";
 import { ACCEPT_LABEL, offerErrorText } from "./text";
 

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { Button, ErrorState, SectionLabel, Skeleton, SkillChip, formatRubRange } from "@fsp/ui";
+import { Button, cn, ErrorState, formatRubRange, SectionLabel, Skeleton, SkillChip } from "@fsp/ui";
 
 import { useListPublicVacanciesVacanciesPublicGet } from "@/api/endpoints/vacancies/vacancies";
 import { useApplyToVacancyVacanciesVacancyIdApplyPost } from "@/api/endpoints/vacancies/vacancies";
@@ -11,7 +11,6 @@ import { ErrorNote, fieldClass } from "@/features/auth/ui";
 import { FORMAT_LABEL } from "@/features/employer/text";
 import { roleLabel } from "@/features/profile/text";
 import { useAuth } from "@/shared/lib/auth";
-import { cn } from "@/shared/lib/cn";
 import { gradeSpan } from "./Jobs";
 import { applyErrorText, isUnverified, JOBS_TEXT as T } from "./text";
 

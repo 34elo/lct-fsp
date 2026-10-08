@@ -7,12 +7,11 @@ import {
   useSetOfferStatusOffersOfferIdStatusPost,
   useWithdrawOfferOffersOfferIdWithdrawPost,
 } from "@/api/endpoints/offers/offers";
+import { Button, ConstellationAvatar } from "@fsp/ui";
 import type { OfferForCompany } from "@/api/model";
 import { ErrorNote } from "@/features/auth/ui";
 import { FORMAT_LABEL, percent, rub } from "@/features/employer/text";
 import { GRADE_LABEL, roleLabel } from "@/features/profile/text";
-import { ConstellationAvatar } from "@/shared/brand";
-import { Button } from "@/shared/ui/button";
 import { Conversation, invalidateOffers, Panel, StatusBadge, Timeline } from "./parts";
 import { OfferDialog } from "./OfferDialog";
 import { CONTACTS_REVOKED_TEXT, dateOnly, DECLINE_LABEL, EMP_INT_TEXT as IT, offerErrorText } from "./text";

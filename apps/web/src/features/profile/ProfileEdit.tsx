@@ -1,4 +1,4 @@
-import { Badge, Button, Card, ErrorState, Field, FieldInput, Skeleton } from "@fsp/ui";
+import { Badge, Button, Card, cn, ErrorState, Field, FieldInput, Skeleton } from "@fsp/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
@@ -14,7 +14,6 @@ import { RoleSlug } from "@/api/model";
 import { ApiError } from "@/api/mutator";
 import { ErrorNote } from "@/features/auth/ui";
 import { editText as E, roleLabel } from "@/features/profile/text";
-import { cn } from "@/shared/lib/cn";
 
 interface TaxSkill {
   slug: string;
