@@ -1,3 +1,4 @@
+import { PAGE } from "@/shared/lib/page";
 import { Link } from "react-router-dom";
 
 import { Badge, EmptyState, ErrorState, SectionLabel, Skeleton, formatRubRange } from "@fsp/ui";
@@ -14,7 +15,7 @@ export default function Vacancies() {
   const q = useListVacanciesVacanciesGet();
   const list = q.data?.status === 200 ? q.data.data : [];
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-col gap-5 px-4 py-6 md:px-6">
+    <main className={PAGE.normal}>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="grid gap-1">
           <SectionLabel>Работодатель</SectionLabel>

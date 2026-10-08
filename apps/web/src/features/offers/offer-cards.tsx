@@ -1,3 +1,4 @@
+import { PAGE } from "@/shared/lib/page";
 import { Link } from "react-router-dom";
 
 import {
@@ -58,7 +59,7 @@ export function ListHeader({ aside }: { aside?: string }) {
   );
 }
 
-export const LIST_PAGE = "mx-auto flex w-full max-w-[1328px] flex-col gap-4 px-4 py-4 md:px-6 md:py-6";
+export const LIST_PAGE = PAGE.normal;
 
 export function ListSkeleton() {
   return (

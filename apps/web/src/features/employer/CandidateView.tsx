@@ -1,3 +1,4 @@
+import { PAGE } from "@/shared/lib/page";
 import {
   buttonVariants,
   Button,
@@ -373,7 +374,7 @@ export default function CandidateView() {
   const hidden = q.isError && (err?.status === 404 || err?.status === 403);
   return (
     <div className="min-h-[calc(100dvh-4rem)]">
-      <main className="mx-auto flex w-full max-w-[1328px] flex-col gap-4 p-4 md:p-6">
+      <main className={PAGE.normal}>
         <nav aria-label={T.nav} className="flex flex-wrap items-center gap-1.5 text-13">
           <Link to={back} className="font-semibold text-brand-fg hover:underline">
             {T.crumbRoot}

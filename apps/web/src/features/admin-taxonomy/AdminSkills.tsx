@@ -1,3 +1,4 @@
+import { PAGE } from "@/shared/lib/page";
 import { useState } from "react";
 
 import { BlocklistTab, DistinctTab, HintsTab, ProvisionalTab } from "./SkillsLists";
@@ -12,7 +13,7 @@ type Tab = (typeof TABS)[number];
 export default function AdminSkills() {
   const [tab, setTab] = useState<Tab>("queue");
   return (
-    <div data-testid="admin-skills-page" className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-6">
+    <div data-testid="admin-skills-page" className={PAGE.wide}>
       <header className="flex flex-col gap-1">
         <h1 className="text-24 font-bold">{SK.title}</h1>
         <p className="text-14 text-muted">{SK.lead}</p>

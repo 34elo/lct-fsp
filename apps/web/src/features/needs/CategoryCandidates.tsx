@@ -1,3 +1,4 @@
+import { PAGE as PAGE_LAYOUT } from "@/shared/lib/page";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 
@@ -216,7 +217,7 @@ export default function CategoryCandidates() {
 
   if (failed === "invalid") {
     return (
-      <div className="mx-auto w-full max-w-[1328px] px-4 py-6 md:px-6">
+      <div className={PAGE_LAYOUT.normal}>
         <EmptyState
           title={T.invalid}
           action={
@@ -257,7 +258,7 @@ export default function CategoryCandidates() {
   );
 
   return (
-    <div className="mx-auto flex w-full max-w-[1328px] flex-col gap-4 px-4 py-4 md:px-6 md:py-6">
+    <div className={PAGE_LAYOUT.normal}>
       <header className="flex flex-col gap-2">
         <nav aria-label="Навигация">
           <Link to={back} className="text-13 font-semibold text-brand-fg hover:underline">

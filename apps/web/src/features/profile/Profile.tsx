@@ -1,3 +1,4 @@
+import { PAGE } from "@/shared/lib/page";
 import {
   Badge,
   Button,
@@ -52,7 +53,6 @@ import {
 } from "./text";
 import { useEventStream } from "@/shared/lib/useEventStream";
 
-const PAGE = "mx-auto flex w-full max-w-[1328px] flex-col gap-4 px-4 py-4 md:px-6 md:py-6";
 const TABS = ["skills", "fsp", "resume", "graph"] as const;
 type Tab = (typeof TABS)[number];
 const gradeLabel = (g: string) => GRADE[g] ?? GRADE_LABEL[g] ?? g;
@@ -96,7 +96,7 @@ function PdfButton({ name }: { name: string }) {
 
 function Frame({ tab, children, bare }: { tab: Tab; children: ReactNode; bare?: boolean }) {
   return (
-    <div className={PAGE} data-testid="profile-page" data-tab={tab}>
+    <div className={PAGE.normal} data-testid="profile-page" data-tab={tab}>
       <div className="flex flex-col gap-2.5 md:flex-row md:items-center md:justify-between">
         <H1 className="text-[22px] leading-[1.2] md:text-[26px]">{PROFILE.title}</H1>
         {!bare && (

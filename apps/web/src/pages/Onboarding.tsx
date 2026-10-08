@@ -1,3 +1,4 @@
+import { PAGE } from "@/shared/lib/page";
 import { Button, buttonVariants, CircuitLine, SectionLabel, type CircuitStep } from "@fsp/ui";
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
@@ -42,7 +43,7 @@ export default function Onboarding() {
   const step = STEPS[index];
 
   return (
-    <section data-testid="onboarding-root" className="mx-auto flex w-full max-w-3xl flex-col gap-6 py-4">
+    <section data-testid="onboarding-root" className={PAGE.narrow}>
       <header className="flex flex-col gap-1">
         <h1 className="text-24 font-bold">{ONBOARDING.title}</h1>
         <p className="text-14 text-muted">

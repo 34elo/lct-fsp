@@ -1,3 +1,4 @@
+import { PAGE } from "@/shared/lib/page";
 import { useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -232,7 +233,7 @@ export default function Constructor() {
   const lead = role === "fsp_admin" ? T.builder.leadAdmin : role === "employer" ? T.builder.leadEmployer : T.builder.lead;
 
   return (
-    <div data-testid={sel("page")} className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-6">
+    <div data-testid={sel("page")} className={PAGE.wide}>
       <header className="flex flex-col gap-1">
         <h1 className="text-24 font-bold">{T.builder.title}</h1>
         <p className="text-14 text-muted">{lead}</p>

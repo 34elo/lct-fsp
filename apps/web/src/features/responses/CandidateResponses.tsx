@@ -1,3 +1,4 @@
+import { PAGE } from "@/shared/lib/page";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
@@ -72,7 +73,7 @@ export default function CandidateResponses() {
   const [tab, setTab] = useState("all");
   const shown = filterBy(sorted, tab, candTabOf);
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4 md:p-6">
+    <main className={PAGE.normal}>
       <h1 className="font-mono text-24 font-semibold">{T.candTitle}</h1>
       {q.isPending && <Skeleton role="status" aria-label="Загрузка" className="h-48" />}
       {q.isError && <ErrorState title={T.loadError} onRetry={() => void q.refetch()} />}
