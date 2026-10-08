@@ -368,6 +368,7 @@ services:
       CORE_URL: ${CORE_URL:-http://core-api:8000}
       SERVICE_TOKEN_BOT: ${SERVICE_TOKEN_BOT}
       TG_BOT_TOKEN: ${TG_BOT_TOKEN:-}
+      TG_API_BASE: ${TG_API_BASE:-}  # ретранслятор Bot API на VPS (Telegram недоступен с сервера напрямую)
     command: ["python", "-m", "fsp_bot.main"]
     depends_on:
       redis: {condition: service_healthy}

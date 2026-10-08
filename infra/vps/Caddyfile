@@ -29,6 +29,19 @@
 	}
 }
 
+# Ретранслятор Telegram Bot API: с домашнего сервера api.telegram.org недоступен. Бот платформы и уведомления
+# о деплоях ходят сюда (TG_API_BASE в infra/env/prod.env). Слушает только адрес VPS в Tailscale — снаружи закрыт.
+http://100.66.64.126:28443 {
+	bind 100.66.64.126
+	reverse_proxy https://api.telegram.org {
+		header_up Host api.telegram.org
+		# long polling getUpdates держит соединение до таймаута опроса
+		transport http {
+			read_timeout 120s
+		}
+	}
+}
+
 # Корень — на кабинет (лендинг там же, `/`)
 fsp.patissons.tech, www.fsp.patissons.tech {
 	import fsp_security
