@@ -31,6 +31,7 @@ export function MetricTile({
   trend,
   progress,
   hint,
+  info,
   className,
 }: {
   label: string;
@@ -40,12 +41,17 @@ export function MetricTile({
   /** 0–100: полоса под числом («Место»). */
   progress?: number;
   hint?: ReactNode;
+  /** Значок ⓘ рядом с подписью. */
+  info?: ReactNode;
   className?: string;
 }) {
   const d = trend ? sparkPath(trend, 120, 36) : "";
   return (
     <div className={cn("flex min-w-0 flex-col gap-1.5 rounded-xl border border-hairline bg-card p-3", className)}>
-      <Lbl>{label}</Lbl>
+      <span className="flex items-center gap-1">
+        <Lbl>{label}</Lbl>
+        {info}
+      </span>
       <span className="font-mono text-24 leading-[1.1] font-semibold">{value}</span>
       {d && (
         <svg width="100%" height="28" viewBox="0 0 120 36" preserveAspectRatio="none" aria-hidden>

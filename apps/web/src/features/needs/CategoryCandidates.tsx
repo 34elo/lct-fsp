@@ -1,4 +1,5 @@
 import { PAGE as PAGE_LAYOUT } from "@/shared/lib/page";
+import { Gloss } from "@/shared/Gloss";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 
@@ -266,7 +267,9 @@ export default function CategoryCandidates() {
           </Link>
         </nav>
         <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
-          <H1 className="text-[22px] md:text-[26px]">{title}</H1>
+          <H1 className="text-[22px] md:text-[26px]">
+            <Gloss k="category">{title}</Gloss>
+          </H1>
           {!first && !failed && (
             <div className="flex flex-wrap items-center gap-x-6 gap-y-1" data-testid="category-stats">
               {stat(String(total ?? cat?.candidates ?? 0), T.people)}
@@ -360,7 +363,7 @@ export default function CategoryCandidates() {
           {groups.unconfirmed.length > 0 && (
             <section aria-label={T.unconfirmed} className="grid gap-4">
               <div className="mt-1 flex items-center justify-between gap-2">
-                <H2>{T.unconfirmed}</H2>
+                <Gloss k="claimed"><H2>{T.unconfirmed}</H2></Gloss>
                 <Num className="text-12 text-muted">{groups.unconfirmed.length}</Num>
               </div>
               <ol aria-label={`${T.unconfirmed}: ${T.list}`} className="m-0 grid list-none gap-4 p-0">

@@ -1,4 +1,5 @@
 import { PAGE } from "@/shared/lib/page";
+import { Gloss } from "@/shared/Gloss";
 import {
   buttonVariants,
   Button,
@@ -11,6 +12,7 @@ import {
   FspProtocol,
   GradeTag,
   H1,
+  H2,
   Lbl,
   ListRow,
   MatchRingV2,
@@ -259,7 +261,7 @@ function Body({ c, vacancyId, needId }: { c: CandidateCardFull; vacancyId: strin
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <div className="flex min-w-0 flex-col gap-4">
           <Panel aria-label={T.skills}>
-            <PanelCap title={T.skills} aside={<Lbl>{T.skillsHint}</Lbl>} />
+            <PanelCap title={<Gloss k="trust"><H2>{T.skills}</H2></Gloss>} aside={<Lbl>{T.skillsHint}</Lbl>} />
             <Skills list={list} claimed={claimed} />
           </Panel>
           {(protocol.length > 0 || main) && (
@@ -272,7 +274,7 @@ function Body({ c, vacancyId, needId }: { c: CandidateCardFull; vacancyId: strin
               )}
               {main && (
                 <Panel aria-label={T.claimedConfirmed}>
-                  <PanelCap title={T.claimedConfirmed} />
+                  <PanelCap title={<Gloss k="claimed"><H2>{T.claimedConfirmed}</H2></Gloss>} />
                   <ClaimedConfirmed row={main} />
                 </Panel>
               )}

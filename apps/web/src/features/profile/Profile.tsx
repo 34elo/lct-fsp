@@ -1,4 +1,6 @@
 import { PAGE } from "@/shared/lib/page";
+import type { GlossaryKey } from "@/shared/glossary";
+import { Gi, Gloss } from "@/shared/Gloss";
 import {
   Badge,
   Button,
@@ -8,6 +10,7 @@ import {
   FspProtocol,
   GradeTag,
   H1,
+  H2,
   Lbl,
   Num,
   Panel,
@@ -58,10 +61,10 @@ type Tab = (typeof TABS)[number];
 const gradeLabel = (g: string) => GRADE[g] ?? GRADE_LABEL[g] ?? g;
 
 /** Карточка с именем для скринридера и тестов: регион + заголовок. */
-function Section({ title, label, aside, children, className, testid }: { title: string; label?: string; aside?: ReactNode; children: ReactNode; className?: string; testid: string }) {
+function Section({ title, tip, label, aside, children, className, testid }: { title: string; tip?: GlossaryKey; label?: string; aside?: ReactNode; children: ReactNode; className?: string; testid: string }) {
   return (
     <Panel role="region" aria-label={label ?? title} data-testid={testid} className={cn("flex flex-col gap-3", className)}>
-      <PanelCap title={title} aside={aside} className="mb-0" />
+      <PanelCap title={tip ? <Gloss k={tip}><H2>{title}</H2></Gloss> : title} aside={aside} className="mb-0" />
       {children}
     </Panel>
   );
@@ -195,7 +198,9 @@ function StatusCard({ p, standing }: { p: CandidateProfile; standing?: Candidate
   const until = p.active_until ? new Date(p.active_until) : null;
   return (
     <Panel role="region" aria-label={PROFILE.claimedAndConfirmed} data-testid="profile-status-card" className="flex flex-col gap-2.5">
-      <Lbl>{PROFILE.claimedAndConfirmed}</Lbl>
+      <Lbl>
+        <Gloss k="claimed">{PROFILE.claimed}</Gloss> / <Gloss k="confirmed">{PROFILE.confirmed}</Gloss>
+      </Lbl>
       {shown ? (
         <>
           <Chips className="items-center">
@@ -205,6 +210,7 @@ function StatusCard({ p, standing }: { p: CandidateProfile; standing?: Candidate
             <StatusTag state={confirmed ? "confirmed" : "claimed"} data-testid="profile-grade-status">
               {confirmed ? HOME.confirmed(dayMonth(standing?.confirmed_at), standing?.mode === "express") : HOME.notConfirmed}
             </StatusTag>
+            <Gi k="grade" />
           </Chips>
           {!confirmed && p.grade.preliminary && (
             <p className="text-12 text-muted">
@@ -357,6 +363,7 @@ function FspTab({ p, imported }: { p: CandidateProfile; imported: boolean }) {
     <div className="flex flex-col gap-4" data-testid="profile-fsp-tab">
       <Section
         title={PROFILE.fspTitle}
+        tip="fspRelevance"
         label="Достижения ФСП"
         testid="profile-fsp"
         aside={<StatusTag state={linked ? "ok" : "claimed"}>{linked ? PROFILE.fspLinked : PROFILE.fspNotLinked}</StatusTag>}

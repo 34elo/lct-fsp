@@ -1,4 +1,5 @@
 import { PAGE } from "@/shared/lib/page";
+import { Gloss } from "@/shared/Gloss";
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
@@ -127,7 +128,9 @@ export default function CandidateTasks() {
       ) : (
         <>
           <header>
-            <h1 className="font-mono text-24 font-semibold">{T.candTitle}</h1>
+            <h1 className="font-mono text-24 font-semibold">
+              <Gloss k="regularTasks">{T.candTitle}</Gloss>
+            </h1>
             <p className="text-14 text-muted">{T.candLead}</p>
           </header>
           {q.isPending && <Skeleton role="status" aria-label={T.loading} className="h-48" />}

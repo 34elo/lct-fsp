@@ -1,4 +1,5 @@
 import { PAGE } from "@/shared/lib/page";
+import { Gloss } from "@/shared/Gloss";
 import { useState, type ReactNode } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQueries } from "@tanstack/react-query";
@@ -83,7 +84,9 @@ const shell = (children: ReactNode) => <div className={PAGE.normal}>{children}</
 
 const header = (action?: ReactNode) => (
   <div className="flex flex-wrap items-center justify-between gap-3">
-    <H1 className="text-[22px] md:text-[26px]">{T.title}</H1>
+    <H1 className="text-[22px] md:text-[26px]">
+      <Gloss k="shortlist">{T.title}</Gloss>
+    </H1>
     {action}
   </div>
 );
