@@ -1,6 +1,6 @@
 import { Button, Checkbox, ErrorState, Label, Skeleton, cn } from "@fsp/ui";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 
 import { getGetConsentsMeConsentsGetQueryKey, useGetConsentsMeConsentsGet, usePutConsentsMeConsentsPut } from "@/api/endpoints/consents/consents";
 import type { ConsentOut } from "@/api/model";
@@ -10,11 +10,24 @@ import { ErrorNote } from "@/features/auth/ui";
 
 const t = authText.consents;
 
-export function ConsentsForm({ onDone, submitLabel = t.submit }: { onDone: () => void | Promise<void>; submitLabel?: string }) {
+/**
+ * Согласия при входе (E39-6): по умолчанию только обязательные; необязательные выдаются в настройках
+ * и до этого выключены. `requiredOnly={false}` — полный список.
+ */
+export function ConsentsForm({
+  onDone,
+  submitLabel = t.submit,
+  requiredOnly = true,
+}: {
+  onDone: () => void | Promise<void>;
+  submitLabel?: string;
+  requiredOnly?: boolean;
+}) {
   const qc = useQueryClient();
   const list = useGetConsentsMeConsentsGet();
   const save = usePutConsentsMeConsentsPut();
-  const items = list.data?.data as ConsentOut[] | undefined;
+  const all = list.data?.data as ConsentOut[] | undefined;
+  const items = useMemo(() => all && (requiredOnly ? all.filter((c) => c.required) : all), [all, requiredOnly]);
   const [checked, setChecked] = useState<Record<string, boolean>>({});
   const [error, setError] = useState<string | null>(null);
 
