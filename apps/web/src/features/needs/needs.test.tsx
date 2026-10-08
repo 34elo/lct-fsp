@@ -95,6 +95,10 @@ test("кандидаты категории: подтверждённые по �
   const first = await screen.findByRole("article", { name: "Backend #4821" });
   expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Backend · Middle");
   expect(screen.getByTestId("category-stats")).toHaveTextContent("3 человек");
+  // пустые параметры не уходят строкой «null» (бэкенд отвечал 422)
+  const req = calls.find((c) => c.url.includes("/categories/backend/middle/candidates"));
+  expect(req?.url).toContain("need_id=n1");
+  expect(req?.url).not.toContain("null");
   expect(within(first).getByText("подтверждён")).toBeInTheDocument();
   expect(within(first).getByText("сила 74 · ранг 0.88")).toBeInTheDocument();
   // p3 без теста — в группе «Не подтверждены», с меткой и пунктиром
