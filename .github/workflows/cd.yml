@@ -1,0 +1,55 @@
+# CD стенда (docs/deploy.md «CI/CD»): push в main → проверки ci.yml → деплой на сервер стенда.
+# Деплой и действия с демо выполняет self-hosted раннер с меткой fsp-stand (infra/scripts/install-runner.sh).
+name: cd
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      action:
+        description: Что сделать со стендом
+        type: choice
+        options: [deploy, demo-reset, demo-reseed]
+        default: deploy
+
+# Один деплой за раз; новый ждёт, текущий не прерывается
+concurrency:
+  group: stand
+  cancel-in-progress: false
+
+jobs:
+  ci:
+    if: github.event_name == 'push' || inputs.action == 'deploy'
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    needs: ci
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || inputs.action == 'deploy')
+    runs-on: [self-hosted, linux, fsp-stand]
+    environment:
+      name: stand
+      url: https://dashboard.fsp.patissons.tech
+    timeout-minutes: 45
+    steps:
+      # полная история: каталог стенда забирает коммит из этой копии, без своих ключей к GitHub
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: sh infra/scripts/deploy.sh deploy
+        env:
+          STAND_DIR: ${{ vars.STAND_DIR }}
+          SRC_DIR: ${{ github.workspace }}
+          SHA: ${{ github.sha }}
+
+  demo:
+    if: github.event_name == 'workflow_dispatch' && inputs.action != 'deploy'
+    runs-on: [self-hosted, linux, fsp-stand]
+    environment:
+      name: stand
+      url: https://dashboard.fsp.patissons.tech
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - run: sh infra/scripts/deploy.sh ${{ inputs.action }}
+        env:
+          STAND_DIR: ${{ vars.STAND_DIR }}
