@@ -1,6 +1,6 @@
 # CD продового стенда (docs/deploy.md «Прод»): push в main → проверки ci.yml → деплой на сервер.
 # Задачи на сервере выполняет self-hosted раннер с меткой fsp-stand (infra/scripts/install-runner.sh).
-# Внешние токены — секреты окружения GitHub `prod`; внутренние секреты живут только на сервере (.env.server).
+# Токен бота платформы — секрет окружения GitHub `prod`; остальные секреты живут только на сервере.
 name: cd
 on:
   push:
@@ -51,10 +51,6 @@ jobs:
           CONFIRM: ${{ inputs.confirm }}
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
           TG_BOT_USERNAME: ${{ vars.TG_BOT_USERNAME }}
-          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
-          ALERT_BOT_TOKEN: ${{ secrets.ALERT_BOT_TOKEN }}
-          ALERT_CHAT_ID: ${{ secrets.ALERT_CHAT_ID }}
-          ALERT_THREAD_ID: ${{ vars.ALERT_THREAD_ID }}
 
   ops:
     if: github.event_name == 'workflow_dispatch' && contains(fromJSON('["backup","demo-reset","demo-reseed"]'), inputs.action)
