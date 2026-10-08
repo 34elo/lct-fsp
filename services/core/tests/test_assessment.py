@@ -166,7 +166,11 @@ async def test_list_professions(factory):
         await tax.sync(s, data)
     async with session_scope(factory) as s:
         profs = {p.slug: p for p in await tax.list_professions(s)}
-    assert set(profs) == {"backend", "frontend", "mobile", "ml", "devops", "qa", "ai_engineer"}
+    assert set(profs) == {"backend", "frontend", "ai_engineer"}  # активные (ADR-027 п.1, E36-2)
+    async with session_scope(factory) as s:
+        every = {p.slug: p for p in await tax.list_professions(s, include_hidden=True)}
+    assert set(every) == set(profs) | {"mobile", "ml", "devops", "qa"}
+    assert not every["ml"].active and every["ml"].skill_weights  # скрыта, данные на месте
     be = profs["backend"]
     assert be.title and be.skill_weights and all(0 < w <= 1 for w in be.skill_weights.values())
     assert "python" in be.skill_weights
@@ -193,7 +197,9 @@ async def test_professions_endpoint(factory, db_url):
         r = c.get("/taxonomy/professions")
     assert r.status_code == 200
     body = r.json()
-    assert len(body["professions"]) == 7
+    # в опросе только активные профессии, скрытых нет (ADR-027 п.1, E36-2)
+    assert [p["slug"] for p in body["professions"]] == ["ai_engineer", "backend", "frontend"]
+    assert all(p["active"] for p in body["professions"])
     assert body["skill_types"] == [t.value for t in SkillType]
     assert body["grades"] == [
         {"grade": "junior", "cut": -1.0},

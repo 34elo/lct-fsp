@@ -95,11 +95,7 @@ test("профиль: подтверждено и заявлено раздел�
   expect(within(card).getByTestId("profile-grade-status")).toHaveTextContent("не подтверждён");
   expect(within(card).getByText(/Предварительно.*уверенность 40%/)).toBeInTheDocument();
   expect(within(card).getByTestId("profile-published")).toHaveTextContent("профиль опубликован");
-  const why = screen.getByRole("region", { name: "Почему такой грейд" });
-  expect(within(why).getByText("Стаж")).toBeInTheDocument();
-  expect(within(why).getByText("+3")).toBeInTheDocument();
-  expect(within(why).getByText("4,5 → Junior+")).toBeInTheDocument();
-  expect(within(why).getByText("Пройдите тест")).toBeInTheDocument();
+  expect(screen.queryByRole("region", { name: "Почему такой грейд" })).not.toBeInTheDocument();
   const team = screen.getByRole("region", { name: "Командные сигналы" });
   expect(within(team).getByText("Лидерство")).toBeInTheDocument();
   expect(within(team).getByText(/сильное подтверждение/)).toBeInTheDocument();
@@ -131,7 +127,7 @@ test("профиль: вкладки ведут на ФСП, резюме и г�
   expect(screen.getByTestId("profile-add")).toHaveAttribute("href", "/onboarding");
   expect(screen.getByTestId("profile-pdf")).toBeInTheDocument();
   expect(screen.getByTestId("profile-edit-link")).toHaveAttribute("href", "/me/profile/edit");
-  expect(within(screen.getByTestId("profile-strength")).getByRole("link", { name: "добавить: GitHub" })).toHaveAttribute("href", "/onboarding");
+  expect(within(screen.getByTestId("profile-strength")).getByRole("link", { name: "добавить: Тест" })).toHaveAttribute("href", "/me/assessment");
 });
 
 test("профиль: вкладка «ФСП» — достижения, разряд и меню кандидата", async () => {

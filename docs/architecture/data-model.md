@@ -127,6 +127,7 @@ CREATE TABLE candidates (
   public_slug        text UNIQUE,                     -- для публичного профиля и бейджа (по желанию)
   full_name_enc      bytea,                           -- ПДн шифруются Fernet
   contacts_enc       bytea,                           -- {email, phone, telegram}
+  full_name_enc      bytea,                           -- ФИО, Fernet; работодателю только при visibility.full_name (E36-5, миграция b2_14)
   age_group          text,                            -- adult | minor (15–17 лет), E32-5b; дата рождения не хранится
   parent_consent_at  timestamptz,                     -- согласие родителя на ПДн несовершеннолетнего; без него minor не публикуется
   desired_roles      text[],                          -- желаемые роли из ручной формы (E20-4), RoleSlug
@@ -344,7 +345,7 @@ CREATE TABLE skill_mentions (                   -- журнал и кеш реш
 );
 CREATE INDEX ON skill_mentions (norm);
 CREATE TABLE skill_merges (id uuid PRIMARY KEY, from_skill uuid, into_skill uuid, actor text, moved jsonb, created_at timestamptz DEFAULT now(), reverted_at timestamptz);
-CREATE TABLE roles (slug text PRIMARY KEY, name text NOT NULL, is_profession boolean NOT NULL DEFAULT false);  -- профессия теста (E21-1, миграция b1_01); skills.skill_type text: fundamental|hard|thinking|business|soft|experience
+CREATE TABLE roles (slug text PRIMARY KEY, name text NOT NULL, is_profession boolean NOT NULL DEFAULT false, is_active boolean NOT NULL DEFAULT true);  -- профессия теста (E21-1, миграция b1_01); is_active = false — скрыта в опросе, данные остаются (ADR-027 п.1, E36-2, миграция b2_13); skills.skill_type text: fundamental|hard|thinking|business|soft|experience
 CREATE TABLE role_skills (role text REFERENCES roles(slug), skill_id uuid REFERENCES skills(id), weight real, source text NOT NULL DEFAULT 'seed', PRIMARY KEY (role, skill_id));
 CREATE TABLE disciplines (slug text PRIMARY KEY, name text NOT NULL);
 CREATE TABLE discipline_skill_rules (

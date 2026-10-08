@@ -19,3 +19,16 @@ def decrypt_contacts(key: str, blob: bytes | None) -> dict[str, str]:
         return json.loads(Fernet(key.encode()).decrypt(bytes(blob)))
     except (InvalidToken, ValueError):
         return {}
+
+
+def encrypt_text(key: str, value: str) -> bytes:
+    return Fernet(key.encode()).encrypt(value.encode())
+
+
+def decrypt_text(key: str, blob: bytes | None) -> str | None:
+    if not blob:
+        return None
+    try:
+        return Fernet(key.encode()).decrypt(bytes(blob)).decode()
+    except (InvalidToken, ValueError):
+        return None

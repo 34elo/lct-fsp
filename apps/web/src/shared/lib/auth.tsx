@@ -94,8 +94,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const register = useCallback(
-    async (email: string, password: string, role: "candidate" | "employer") =>
-      signIn((await registerAuthRegisterPost({ email, password, role })).data),
+    async (email: string, password: string, role: "candidate" | "employer") => {
+      const auth = (await registerAuthRegisterPost({ email, password, role })).data;
+      try {
+        await signIn(auth);
+      } catch {
+        // Аккаунт уже создан: одно повторное чтение профиля, а не ложная ошибка входа (E35-7a).
+        await signIn(auth);
+      }
+    },
     [signIn],
   );
 

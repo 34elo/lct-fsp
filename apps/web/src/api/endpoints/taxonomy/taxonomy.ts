@@ -177,6 +177,145 @@ export function useGetTaxonomyTaxonomyGet<TData = Awaited<ReturnType<typeof getT
 
 
 
+export type internalSnapshotInternalTaxonomySnapshotGetResponse200 = {
+  data: unknown
+  status: 200
+}
+
+export type internalSnapshotInternalTaxonomySnapshotGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type internalSnapshotInternalTaxonomySnapshotGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type internalSnapshotInternalTaxonomySnapshotGetResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type internalSnapshotInternalTaxonomySnapshotGetResponse503ApplicationProblemJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type internalSnapshotInternalTaxonomySnapshotGetResponse503ApplicationJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type internalSnapshotInternalTaxonomySnapshotGetResponseSuccess = (internalSnapshotInternalTaxonomySnapshotGetResponse200) & {
+  headers: Headers;
+};
+export type internalSnapshotInternalTaxonomySnapshotGetResponseError = (internalSnapshotInternalTaxonomySnapshotGetResponse401ApplicationProblemJson | internalSnapshotInternalTaxonomySnapshotGetResponse401ApplicationJson | internalSnapshotInternalTaxonomySnapshotGetResponse422 | internalSnapshotInternalTaxonomySnapshotGetResponse503ApplicationProblemJson | internalSnapshotInternalTaxonomySnapshotGetResponse503ApplicationJson) & {
+  headers: Headers;
+};
+
+export type internalSnapshotInternalTaxonomySnapshotGetResponse = (internalSnapshotInternalTaxonomySnapshotGetResponseSuccess | internalSnapshotInternalTaxonomySnapshotGetResponseError)
+
+export const getInternalSnapshotInternalTaxonomySnapshotGetUrl = () => {
+
+
+
+
+  return `/internal/taxonomy/snapshot`
+}
+
+/**
+ * @summary Internal Snapshot
+ */
+export const internalSnapshotInternalTaxonomySnapshotGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<internalSnapshotInternalTaxonomySnapshotGetResponse> => {
+
+  return apiFetch<internalSnapshotInternalTaxonomySnapshotGetResponse>(getInternalSnapshotInternalTaxonomySnapshotGetUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getInternalSnapshotInternalTaxonomySnapshotGetQueryKey = () => {
+    return [
+    `/internal/taxonomy/snapshot`
+    ] as const;
+    }
+
+
+export const getInternalSnapshotInternalTaxonomySnapshotGetQueryOptions = <TData = Awaited<ReturnType<typeof internalSnapshotInternalTaxonomySnapshotGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof internalSnapshotInternalTaxonomySnapshotGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getInternalSnapshotInternalTaxonomySnapshotGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof internalSnapshotInternalTaxonomySnapshotGet>>> = ({ signal }) => internalSnapshotInternalTaxonomySnapshotGet({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof internalSnapshotInternalTaxonomySnapshotGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type InternalSnapshotInternalTaxonomySnapshotGetQueryResult = NonNullable<Awaited<ReturnType<typeof internalSnapshotInternalTaxonomySnapshotGet>>>
+export type InternalSnapshotInternalTaxonomySnapshotGetQueryError = ErrorType<ProblemOut | HTTPValidationError>
+
+
+export function useInternalSnapshotInternalTaxonomySnapshotGet<TData = Awaited<ReturnType<typeof internalSnapshotInternalTaxonomySnapshotGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof internalSnapshotInternalTaxonomySnapshotGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof internalSnapshotInternalTaxonomySnapshotGet>>,
+          TError,
+          Awaited<ReturnType<typeof internalSnapshotInternalTaxonomySnapshotGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useInternalSnapshotInternalTaxonomySnapshotGet<TData = Awaited<ReturnType<typeof internalSnapshotInternalTaxonomySnapshotGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof internalSnapshotInternalTaxonomySnapshotGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof internalSnapshotInternalTaxonomySnapshotGet>>,
+          TError,
+          Awaited<ReturnType<typeof internalSnapshotInternalTaxonomySnapshotGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useInternalSnapshotInternalTaxonomySnapshotGet<TData = Awaited<ReturnType<typeof internalSnapshotInternalTaxonomySnapshotGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof internalSnapshotInternalTaxonomySnapshotGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Internal Snapshot
+ */
+
+export function useInternalSnapshotInternalTaxonomySnapshotGet<TData = Awaited<ReturnType<typeof internalSnapshotInternalTaxonomySnapshotGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof internalSnapshotInternalTaxonomySnapshotGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getInternalSnapshotInternalTaxonomySnapshotGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 export type getProfessionsTaxonomyProfessionsGetResponse200 = {
   data: ProfessionsOut
   status: 200

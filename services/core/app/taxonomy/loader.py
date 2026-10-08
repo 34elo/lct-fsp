@@ -8,12 +8,13 @@
     parent:      [{child, parent, weight}]   # иерархия, коэффициент наследования
     distinct:    [[a, b], ...]               # «точно разные»
     blocklist:   [{norm, reason?}]
-    roles:       [{slug, name, profession?, skills: {slug: weight}}]
+    roles:       [{slug, name, profession?, active?, skills: {slug: weight}}]
     skill_types: [{type, skills: [slug, ...]}]  # типы навыков (assessment.md §2), переопределения
 
 Тип навыка без явного указания: kind soft → soft; group fundamentals → fundamental;
 group product/analysis/design → business; остальное → hard. `profession: true` — роль является
-профессией теста; такая профессия обязана иметь навыки всех шести типов.
+профессией теста; такая профессия обязана иметь навыки всех шести типов. `active: false` — профессия
+скрыта в опросе и выдаче (ADR-027 п.1), данные по ней остаются; по умолчанию активна.
 """
 
 from __future__ import annotations
@@ -94,6 +95,7 @@ class RoleIn(_Strict):
     slug: str
     name: str = Field(min_length=1)
     profession: bool = False
+    active: bool = True  # false — скрыта в опросе (ADR-027 п.1)
     skills: dict[str, float] = Field(default_factory=dict)
 
     @field_validator("slug")
