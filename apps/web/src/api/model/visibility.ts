@@ -6,7 +6,10 @@
  */
 
 export interface Visibility {
+  full_name: boolean;
   companies: boolean;
+  fsp: boolean;
+  region: boolean;
   education: boolean;
   repos: boolean;
   public_profile: boolean;

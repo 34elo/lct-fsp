@@ -62,7 +62,10 @@ class Preferences(BaseModel):
 
 
 class Visibility(BaseModel):
+    full_name: bool
     companies: bool
+    fsp: bool
+    region: bool
     education: bool
     repos: bool
     public_profile: bool
@@ -116,7 +119,10 @@ class PreferencesIn(BaseModel):
 class VisibilityIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
+    full_name: bool | None = None
     companies: bool | None = None
+    fsp: bool | None = None
+    region: bool | None = None
     education: bool | None = None
     repos: bool | None = None
     public_profile: bool | None = None
@@ -157,7 +163,7 @@ class StoplistIO(BaseModel):
 
 
 async def profile_out(session: AsyncSession, c: Candidate, settings: Settings) -> CandidateProfile:
-    vis = {**{"teams": True}, **c.visibility}
+    vis = service.visibility_of(c)
     parts = await card.build_owner_parts(session, c, _TRUST)
     contacts = service.contacts_of(c, settings.pii_key)
     return CandidateProfile(

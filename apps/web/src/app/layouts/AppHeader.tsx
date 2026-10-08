@@ -1,4 +1,4 @@
-import { Link, NavLink, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 
 import { AccountMenu, AppBar, BrandMark, Moon, Sun, SunMoon, type ShellLinkProps } from "@fsp/ui";
 
@@ -29,10 +29,12 @@ export function ThemeToggle() {
 
 const THEME_HINT: Record<ThemeMode, string> = { system: "системная", light: "светлая", dark: "тёмная" };
 
-/** Меню аватара v2 (`.menu`): тема и выход. «Настройки» появятся с экраном `/me/settings` (E38-7). */
+/** Меню аватара v2 (`.menu`): тема и выход. «Настройки» — только у кандидата (`/me/settings`, E38-7). */
 function UserMenu() {
   const { me, status, logout } = useAuth();
   const { mode, setMode } = useTheme();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
   if (status !== "authenticated" || !me) return null;
   const name = me.company?.name ?? me.email ?? "Профиль";
   return (
@@ -40,6 +42,7 @@ function UserMenu() {
       letter={initials(me.email ?? name)}
       label={`Меню аккаунта: ${name}, ${ROLE_LABEL[me.role] ?? me.role}`}
       items={[
+        ...(me.role === "candidate" ? [{ label: "Настройки", onSelect: () => navigate("/me/settings"), active: pathname === "/me/settings" }] : []),
         { label: "Тема", hint: THEME_HINT[mode], onSelect: () => setMode(NEXT[mode]) },
         { label: "Выйти", separatorBefore: true, onSelect: () => void logout() },
       ]}

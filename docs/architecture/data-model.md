@@ -137,7 +137,7 @@ CREATE TABLE candidates (
   salary_min         int,                             -- ₽/мес на руки
   formats            text[] NOT NULL DEFAULT '{}',    -- work_format[]
   employment_types   text[] NOT NULL DEFAULT '{}',
-  visibility         jsonb NOT NULL DEFAULT '{"companies":false,"education":false,"repos":false,"teams":true}',
+  visibility         jsonb NOT NULL DEFAULT '{"full_name":false,"companies":true,"fsp":true,"region":true,"education":false,"repos":false,"teams":true,"public_profile":false}',
   stoplist_company_ids uuid[] NOT NULL DEFAULT '{}',
   -- вычисляемое движком доверия (F5):
   profile_version    int NOT NULL DEFAULT 0,

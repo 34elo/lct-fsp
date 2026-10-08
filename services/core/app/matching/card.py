@@ -251,7 +251,7 @@ async def build_card(
             )
         )  # fmt: skip
 
-    show_companies = bool((c.visibility or {}).get("companies"))
+    show_companies = candidates.visibility_of(c)["companies"]
     experience = [
         ExperienceBrief(
             title=e["title"], company=e["company"] if show_companies else None,
