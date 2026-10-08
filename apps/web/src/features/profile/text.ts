@@ -347,3 +347,21 @@ export const privacyText = {
     { key: "region", label: "Регион", hint: "Город в карточке и в выдаче." },
   ],
 } as const;
+
+/** Настройки кандидата `/me/settings` (E38-7, макеты v2_me-settings__*). */
+export const SETTINGS = {
+  title: "Настройки",
+  loading: "Загрузка настроек…",
+  loadError: "Не загрузилось",
+  errorCode: (status: number) => `ошибка ${status}`,
+  empty: "Согласия не даны — профиль скрыт от компаний",
+  emptyAction: "Дать согласие",
+  consents: "Согласия",
+  consentsHint: "Обязательные согласия отозвать нельзя. Остальные применяются сразу.",
+  consentError: "Не удалось сохранить согласие",
+  notifications: "Уведомления",
+  telegram: "Telegram",
+  telegramLinked: "привязан",
+  telegramLink: "Привязать",
+  telegramLinkError: "Не удалось получить ссылку на бота",
+} as const;

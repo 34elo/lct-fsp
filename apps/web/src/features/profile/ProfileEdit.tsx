@@ -13,7 +13,6 @@ import type { CandidateProfile, ProfileIn, StackItem } from "@/api/model";
 import { RoleSlug } from "@/api/model";
 import { ApiError } from "@/api/mutator";
 import { ErrorNote } from "@/features/auth/ui";
-import { PrivacySettings } from "@/features/profile/PrivacySettings";
 import { editText as E, roleLabel } from "@/features/profile/text";
 import { cn } from "@/shared/lib/cn";
 
@@ -326,10 +325,7 @@ export default function ProfileEdit() {
       ) : q.isError || !p ? (
         <ErrorState title={E.loadError} onRetry={() => q.refetch()} />
       ) : (
-        <>
-          <Form p={p} skills={skills} />
-          <PrivacySettings visibility={p.visibility} />
-        </>
+        <Form p={p} skills={skills} />
       )}
     </section>
   );

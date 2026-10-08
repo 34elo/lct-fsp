@@ -95,19 +95,6 @@ test("форма подставляет данные профиля и отпр�
   });
 });
 
-test("приватность: умолчания и переключатель сразу уходит в PATCH visibility", async () => {
-  const bodies = install();
-  mount();
-  expect(await screen.findByTestId("privacy-full_name")).not.toBeChecked();
-  expect(screen.getByTestId("privacy-companies")).toBeChecked();
-  expect(screen.getByTestId("privacy-fsp")).toBeChecked();
-  expect(screen.getByTestId("privacy-region")).toBeChecked();
-  fireEvent.click(screen.getByTestId("privacy-full_name"));
-  await waitFor(() => expect(bodies).toContainEqual({ full_name: true }));
-  fireEvent.click(screen.getByTestId("privacy-region"));
-  await waitFor(() => expect(bodies).toContainEqual({ region: false }));
-});
-
 test("добавление навыка в стек и софт-качества уходит в PATCH полным списком", async () => {
   const bodies = install();
   mount();
