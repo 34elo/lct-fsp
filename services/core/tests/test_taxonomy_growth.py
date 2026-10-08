@@ -1,8 +1,6 @@
 """E16-6: рост связей: NPMI, веса ролей по lift, подсказки ФСП, кластеры, продвижение."""
 
 import math
-import subprocess
-import sys
 import uuid
 from pathlib import Path
 
@@ -19,6 +17,7 @@ from app.taxonomy.models import (
     SkillRelation,
 )
 from app.vacancies.models import Vacancy, VacancySkill
+from core_helpers import upgrade_head
 from fsp_platform.db import make_engine, make_session_factory, session_scope
 from fsp_platform.outbox import OutboxRecord
 from sqlalchemy import func, select
@@ -64,12 +63,7 @@ def test_clusters_min_size():
 @pytest.fixture
 def factory(tmp_path):
     url = f"sqlite+aiosqlite:///{tmp_path / 'g.db'}"
-    subprocess.run(
-        [sys.executable, "-m", "alembic", "-x", f"url={url}", "upgrade", "head"],
-        cwd=CORE,
-        check=True,
-        capture_output=True,
-    )
+    upgrade_head(url)
     return make_session_factory(make_engine(url))
 
 

@@ -1,7 +1,5 @@
 """Командные сигналы L/T/R/G и K_soft: примеры из skills.md §8."""
 
-import subprocess
-import sys
 import uuid
 from datetime import UTC, date, datetime
 from pathlib import Path
@@ -21,6 +19,7 @@ from app.graph.team_signals import (
 from app.graph.trust import TrustConfig
 from app.identity.models import User
 from app.taxonomy.models import Skill
+from core_helpers import upgrade_head
 from fsp_platform.db import make_engine, make_session_factory, session_scope
 
 CORE = Path(__file__).resolve().parents[1]
@@ -165,10 +164,7 @@ def test_strength_label(v, label):
 @pytest.fixture
 def factory(tmp_path):
     url = f"sqlite+aiosqlite:///{tmp_path / 't.db'}"
-    subprocess.run(
-        [sys.executable, "-m", "alembic", "-x", f"url={url}", "upgrade", "head"],
-        cwd=CORE, check=True, capture_output=True,
-    )  # fmt: skip
+    upgrade_head(url)
     return make_session_factory(make_engine(url))
 
 

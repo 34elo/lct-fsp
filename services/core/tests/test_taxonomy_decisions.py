@@ -1,8 +1,6 @@
 """E16-5: применение решений конвейера, слияние и откат, «точно разные», стоп-лист."""
 
 import datetime as dt
-import subprocess
-import sys
 import uuid
 from pathlib import Path
 
@@ -16,6 +14,7 @@ from app.taxonomy.models import (
     SkillRelation,
 )
 from app.vacancies.models import VacancySkill
+from core_helpers import upgrade_head
 from fsp_platform.app import ProblemError
 from fsp_platform.db import make_engine, make_session_factory, session_scope
 from fsp_platform.outbox import OutboxRecord
@@ -28,12 +27,7 @@ TODAY = dt.date(2026, 10, 1)
 @pytest.fixture
 def db_url(tmp_path):
     url = f"sqlite+aiosqlite:///{tmp_path / 'd.db'}"
-    subprocess.run(
-        [sys.executable, "-m", "alembic", "-x", f"url={url}", "upgrade", "head"],
-        cwd=CORE,
-        check=True,
-        capture_output=True,
-    )
+    upgrade_head(url)
     return url
 
 

@@ -3,8 +3,6 @@
 import asyncio
 import io
 import json
-import subprocess
-import sys
 import zipfile
 from pathlib import Path
 
@@ -16,6 +14,7 @@ from app.resumes import service
 from app.resumes.handlers import register
 from app.resumes.models import Resume
 from app.taxonomy.models import Skill
+from core_helpers import upgrade_head
 from fastapi.testclient import TestClient
 from fsp_contracts import new_envelope
 from fsp_contracts.events import MlResumeResult
@@ -47,12 +46,7 @@ class FakeStorage:
 def env(tmp_path):
     db = tmp_path / "b.db"
     url = f"sqlite+aiosqlite:///{db}"
-    subprocess.run(
-        [sys.executable, "-m", "alembic", "-x", f"url={url}", "upgrade", "head"],
-        cwd=CORE,
-        check=True,
-        capture_output=True,
-    )
+    upgrade_head(url)
     app = build_app(
         Settings(database_url=url, ui_bus_enabled=False, service_token_bot="test-bot-token")
     )
