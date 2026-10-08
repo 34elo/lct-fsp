@@ -9,6 +9,9 @@ COPY packages/ui/package.json packages/ui/
 RUN pnpm install --frozen-lockfile --filter fsp-web...
 COPY packages/ui/ packages/ui/
 COPY apps/web/ apps/web/
+# Режим жюри вшивается при сборке (import.meta.env), см. features/landing/jury.ts
+ARG VITE_JURY_MODE=false
+ENV VITE_JURY_MODE=$VITE_JURY_MODE
 RUN pnpm --filter fsp-web exec vite build
 
 FROM caddy:2-alpine

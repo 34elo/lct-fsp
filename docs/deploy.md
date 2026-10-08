@@ -223,7 +223,7 @@ TLS на стенде разработчика не обязателен.
 
 ### На production (через VPS и Tailscale)
 
-Caddy на VPS (2.26.52.44) проксирует трафик через Tailscale на домашний ПК (100.78.22.33:28080) с TLS от Let's Encrypt:
+Конфиг и установка — [infra/vps](../infra/vps/README.md). Caddy на VPS (2.26.52.44) проксирует трафик через Tailscale на домашний ПК (100.78.22.33:28080) с TLS от Let's Encrypt:
 ```
 dashboard.fsp.patissons.tech → caddy → :28080/dashboard.fsp.patissons.tech
 api.fsp.patissons.tech → caddy → :28080/api.fsp.patissons.tech
@@ -231,29 +231,83 @@ s3.fsp.patissons.tech → caddy → :28080/s3.fsp.patissons.tech
 mock.fsp.patissons.tech → caddy → :28080/mock.fsp.patissons.tech
 ```
 
-## CI/CD
+## Прод: инфраструктура и CI/CD
 
-**Как устроено.** Pull request → проверки [`ci.yml`](../.github/workflows/ci.yml) (ruff, import-linter, сверка OpenAPI, pytest, families/cards-check, lint/typecheck/test/build фронта) на облачных раннерах GitHub. Push в `main` → [`cd.yml`](../.github/workflows/cd.yml): те же проверки, затем деплой на сервер стенда self-hosted раннером с меткой `fsp-stand`. Сервер сам забирает задачи из GitHub: SSH наружу не открываем, ключей в GitHub не храним.
+```
+GitHub (main) ──push──▶ Actions: ci.yml (облачные раннеры) ──▶ cd.yml: deploy (self-hosted раннер на сервере)
+Пользователь ──HTTPS──▶ VPS 2.26.52.44 (Caddy, Let's Encrypt) ──Tailscale──▶ сервер :28080 gateway ──▶ стек fsp
+Сервер: таймеры fsp-backup (03:30) и fsp-healthcheck (5 мин) ──▶ ~/fsp-backups, алерты в Telegram
+VPS: cron fsp-uptime (5 мин) ──▶ внешняя проверка, алерты в Telegram
+```
 
-**Что делает деплой** ([`infra/scripts/deploy.sh`](../infra/scripts/deploy.sh)): каталог стенда (`STAND_DIR`) переходит на коммит из `main` → `make up` (сборка образов, миграции — сервис `core-migrate`) → проверка `/api/v1/healthz`, SPA и `/api/v1/taxonomy/professions` до 3 минут → `docker image prune`. При сбое — откат на прежний коммит и повторный `make up`, job красный. Данные стенда (БД, MinIO, снапшот) не трогаются. Деплои идут строго по одному (`concurrency: stand`).
+**Один стенд — прод** (`STAND_DIR` на сервере, compose-проект `fsp`): `ENV=prod`, реальная LLM на GPU (общий llama-server хоста `:18090`), Telegram-бот, демо-аккаунты жюри (`DEMO_MODE`, `VITE_JURY_MODE`). Почта не подключена.
+
+### Где что лежит
+
+| Что | Где | Кто меняет |
+|---|---|---|
+| Конфигурация (не секреты): домены, режимы, LLM, бэкапы | [`infra/env/prod.env`](../infra/env/prod.env) в репо | PR в `main` |
+| Внутренние секреты: пароли БД, RabbitMQ, MinIO, JWT, ключи шифрования, сервисные токены | `STAND_DIR/.env.server` (600), создаётся один раз [`gen-server-secrets.sh`](../infra/scripts/gen-server-secrets.sh) | никто: не уходят с сервера |
+| Внешние токены | GitHub → Settings → Environments → `prod` | владелец репозитория |
+| Итоговый `.env` | `STAND_DIR/.env`, собирается [`render-env.sh`](../infra/scripts/render-env.sh) при каждом деплое | не править руками |
+
+**Окружение GitHub `prod`:**
+
+| Тип | Имя | Что |
+|---|---|---|
+| Secret | `TG_BOT_TOKEN` | токен бота платформы из @BotFather |
+| Secret | `LLM_API_KEY` | ключ llama-server на хосте |
+| Secret | `ALERT_BOT_TOKEN` | токен бота алертов команды |
+| Secret | `ALERT_CHAT_ID` | чат алертов (для группы — с минусом) |
+| Variable | `TG_BOT_USERNAME` | username бота платформы без `@` |
+| Variable | `ALERT_THREAD_ID` | тема в группе для алертов (необязательно) |
+
+**Переменная репозитория:** `STAND_DIR` — каталог стенда на сервере (Settings → Secrets and variables → Actions → Variables).
+
+### Пайплайн
+
+Pull request → [`ci.yml`](../.github/workflows/ci.yml) на облачных раннерах (ruff, import-linter, сверка OpenAPI, pytest, families/cards-check, фронт). Push в `main` → [`cd.yml`](../.github/workflows/cd.yml): те же проверки → деплой ([`deploy.sh`](../infra/scripts/deploy.sh)):
+
+1. каталог стенда переходит на коммит (забирает его из копии раннера, без своих ключей к GitHub);
+2. собирается `.env`; без нужных секретов деплой останавливается с их списком;
+3. бэкап (`pre-<коммит>`);
+4. `make up` — сборка образов, миграции (`core-migrate`), запуск;
+5. проверка API, SPA и справочника до 3 минут;
+6. успех — чистка образов, обновление таймеров, сообщение в чат алертов; сбой — откат кода на прежний коммит и сообщение.
+
+Операции идут строго по одной (`concurrency: stand`). Откат возвращает код, но не миграции: миграция в `main` должна быть совместима с прежним кодом (добавляем, не удаляем и не переименовываем в том же релизе).
 
 **Ручные действия** — Actions → `cd` → Run workflow (ветка `main`):
 
 | Действие | Что делает |
 |---|---|
 | `deploy` | Проверки и деплой текущего `main` |
-| `demo-reset` | Вернуть демо-данные из снапшота (`make demo-reset`, ≤ 1 мин) и прогреть кеши |
-| `demo-reseed` | Заново наполнить демо (`make seed`) и снять новый снапшот |
+| `backup` | Внеочередной бэкап |
+| `demo-reset` | Демо-данные из снапшота (≤ 1 мин) и прогрев — перед показом жюри |
+| `demo-reseed` | Заново наполнить демо (`make seed`) и снять снапшот |
+| `prod-init` | **Один раз**, поле `confirm` = `ПЕРЕСОЗДАТЬ`: бэкап старого стенда → удаление томов → новые внутренние секреты → запуск → демо-данные → снапшот → таймеры |
 
-**Настройка один раз:**
-1. На сервере стенда, под пользователем из группы `docker`: `sh infra/scripts/install-runner.sh`. Скрипт спросит токен регистрации: GitHub → Settings → Actions → Runners → New self-hosted runner (токен живёт час). Раннер ставится службой systemd в `~/actions-runner-fsp`.
-2. GitHub → Settings → Secrets and variables → Actions → Variables: `STAND_DIR` — абсолютный путь к каталогу стенда (клон репозитория, в котором лежат `.env.demo` или `.env`, `infra/snapshots/`).
-3. По желанию: Settings → Environments → `stand` — ручное подтверждение деплоя (Required reviewers).
+### Бэкапы и восстановление
 
-**Ограничения:**
-- Секреты стенда скрипт не создаёт: если в `STAND_DIR` нет `.env`/`.env.demo`, деплой падает — новые случайные пароли не подошли бы к существующим томам БД.
-- Откат возвращает код, но не миграции. Миграция в `main` должна быть совместима с прежним кодом (добавляем колонки и таблицы, не удаляем и не переименовываем в том же релизе).
-- Self-hosted раннер выполняет только `cd.yml` из `main`; проверки PR идут на облачных раннерах. Не вешайте метку `fsp-stand` на задачи, которые запускаются из PR.
+[`backup.sh`](../infra/scripts/backup.sh): `pg_dump` баз `core` и `fsp_connector` (проверяются `pg_restore --list`), архив тома MinIO, коммит стенда → `BACKUP_DIR/<время>-<метка>/`. Ночью в 03:30 (таймер `fsp-backup`), перед каждым деплоем и по кнопке; хранение `BACKUP_KEEP_DAYS` (7 дней). Восстановление (из каталога стенда):
+
+```bash
+sh infra/scripts/restore.sh ~/fsp-backups/<каталог> --yes
+```
+
+### Мониторинг и алерты
+
+- На сервере [`healthcheck.sh`](../infra/scripts/healthcheck.sh) раз в 5 минут (таймер `fsp-healthcheck`): API, сайт, БД, LLM-сервер, контейнеры unhealthy/упавшие. Сообщение только при смене состояния (упало / восстановилось).
+- С VPS [`infra/vps/uptime.sh`](../infra/vps/uptime.sh) раз в 5 минут проверяет стенд снаружи: выключенный ПК, Tailscale, сертификат.
+- Деплои, откаты, сброс демо — сообщения из `deploy.sh`.
+- Таймеры: `systemctl --user list-timers 'fsp-*'`, логи: `journalctl --user -u fsp-healthcheck -n 50`.
+
+### Настройка с нуля
+
+1. Раннер: `sh infra/scripts/install-runner.sh` на сервере (токен: Settings → Actions → Runners → New self-hosted runner).
+2. Переменная репозитория `STAND_DIR`, окружение `prod` с секретами и переменными из таблицы выше.
+3. VPS: DNS и Caddy — [infra/vps/README.md](../infra/vps/README.md).
+4. Влить `dev` в `main` → первый `deploy`; затем Run workflow → `prod-init` с `ПЕРЕСОЗДАТЬ`.
 
 ## Основные команды
 
