@@ -42,6 +42,7 @@ ml-worker ─────► │ ui.user.<user_id> (прогресс задач)
 | `skills.profile.updated` | core | `{candidate_id, profile_version, diff: {skills_up, skills_new, grade, category}}` |
 | `category.disputed` | core | `{dispute_id, candidate_id, claimed_role, claimed_grade}` (комментарий кандидата в событие не попадает) |
 | `assessment.attempt.finished` | core | `{candidate_id, attempt_id, profession, declared_grade, stage, result, grade?, theta, se, integrity, needs_confirmation, low_confidence, finished_at, profile_version, mode, invited_grade?}` (`contracts/assessment.py`, assessment.md §11; `mode`, `invited_grade` — ADR-025, необязательные) |
+| `candidate.visibility.changed` | core | `{candidate_id, changed: {ключ: bool}, visibility: {ключ: bool}}` — E36-4 (ADR-027), только флаги, без ПДн; пишется, если изменился хотя бы один ключ |
 | `candidate.category.changed` | core | `{candidate_id, categories: [{profession, grade}], profile_version}` — полный набор, не дельта |
 | `regular_task.published` | core | `{task_id, company_id, profession, grade, round, period_days, recipients[], published_at}` — рассылка регулярного задания (E25-1); потребитель — бот/уведомления (E9-6) |
 | `assessment.family.status_changed` | core | `{family_id, from, to}` (внутреннее блока 1) |

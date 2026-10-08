@@ -55,8 +55,13 @@ class Vector(sa.types.TypeDecorator):
         return value
 
 
+# Что видно работодателю до принятия приглашения (ADR-027, blocks.md §4.5). Контактов здесь нет:
+# они открываются только принятием приглашения или откликом (`contact_reveals`).
 DEFAULT_VISIBILITY = {
-    "companies": False,
+    "full_name": False,
+    "companies": True,
+    "fsp": True,
+    "region": True,
     "education": False,
     "repos": False,
     "teams": True,

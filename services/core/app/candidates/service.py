@@ -226,9 +226,28 @@ async def _set_stack(session: AsyncSession, cand: Candidate, stack: list[dict]) 
     return changed or res.changed
 
 
+def visibility_of(cand: Candidate) -> dict[str, bool]:
+    """Настройки видимости с умолчаниями для отсутствующих ключей (старые анкеты, ADR-027)."""
+    stored = cand.visibility or {}
+    return {k: bool(stored.get(k, d)) for k, d in DEFAULT_VISIBILITY.items()}
+
+
 async def update_visibility(session: AsyncSession, cand: Candidate, changes: dict) -> Candidate:
-    cand.visibility = {**DEFAULT_VISIBILITY, **cand.visibility, **changes}
+    """Меняет настройки; `candidate.visibility.changed` — только с реально изменившимися ключами."""
+    from fsp_contracts.assessment import VisibilityChanged
+    from fsp_contracts.envelope import new_envelope
+    from fsp_platform.outbox import add_to_outbox
+
+    before = visibility_of(cand)
+    cand.visibility = {**DEFAULT_VISIBILITY, **(cand.visibility or {}), **changes}
     await session.flush()
+    after = visibility_of(cand)
+    changed = {k: v for k, v in after.items() if before[k] != v}
+    if changed:
+        event = VisibilityChanged(candidate_id=cand.user_id, changed=changed, visibility=after)
+        await add_to_outbox(
+            session, new_envelope("candidate.visibility.changed", "core", event), cand.user_id
+        )
     return cand
 
 
