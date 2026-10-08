@@ -4019,7 +4019,7 @@
           "taxonomy"
         ],
         "summary": "Suggest Skills",
-        "description": "Подсказки навыков: синонимы, префикс, опечатки; частые выше, `provisional` помечен (E39-3).",
+        "description": "Подсказки навыков: синонимы, префикс, опечатки; частые выше, `provisional` помечен.",
         "operationId": "suggest_skills_taxonomy_skills_suggest_get",
         "parameters": [
           {
