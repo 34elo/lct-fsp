@@ -1,0 +1,18 @@
+# AGENTS.md — __NAME__
+
+Назначение: TODO (одна строка; смысл сервиса — docs/architecture/services.md).
+
+## Команды
+- `uv run --package fsp-__NAME__ uvicorn app.main:app --reload` — запуск
+- `uv run pytest services/__NAME__ -q` — тесты
+- `uv run ruff check services/__NAME__` — линтер
+
+## Ключевые файлы
+- `app/main.py` — фабрика приложения, `/healthz`
+- `app/config.py` — настройки (из env)
+- `tests/` — тесты
+
+## Правила
+- Общий код только из `packages/platform` и `packages/contracts`.
+- В чужую БД не ходим: события, команды, internal API.
+- Документы: docs/architecture/services.md, messaging.md.

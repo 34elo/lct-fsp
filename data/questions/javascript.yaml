@@ -1,0 +1,121 @@
+# Черновик банка (E2-5): вопросы не проверены вторым человеком. После проверки status: draft -> approved.
+skill: javascript
+status: draft
+source: llm_draft
+questions:
+- id: javascript-01
+  d: 1
+  text: Что вернёт typeof null?
+  options: ['''null''', '''undefined''', '''number''', '''object''']
+  correct: D
+  explanation: 'Историческая особенность языка: typeof null === ''object''.'
+- id: javascript-02
+  d: 1
+  text: Какое ключевое слово объявляет переменную с областью видимости блока, которую можно переприсвоить?
+  options: [def, const, let, var]
+  correct: C
+  explanation: let — блочная область видимости и переприсваивание; const — без переприсваивания; var — функциональная область.
+- id: javascript-03
+  d: 2
+  text: Что выведет код?
+  code: console.log(0.1 + 0.2 === 0.3);
+  options: [undefined, 'false', TypeError, 'true']
+  correct: B
+  explanation: Числа хранятся в двоичной плавающей точке, 0.1 + 0.2 = 0.30000000000000004.
+- id: javascript-04
+  d: 2
+  text: Что вернёт [1, 2, 3].map(x => x * 2)?
+  options: ['Новый массив [2, 4, 6]', Число 12, undefined, 'Изменит исходный массив на [2, 4, 6]']
+  correct: A
+  explanation: map не мутирует исходный массив и возвращает новый.
+- id: javascript-05
+  d: 2
+  text: Чем == отличается от ===?
+  options: ['=== сравнивает с приведением типов, == — строго', === сравнивает только объекты, Ничем, '== сравнивает с приведением типов, === — строго']
+  correct: D
+  explanation: == выполняет преобразование типов (0 == '0' даёт true), === — нет.
+- id: javascript-06
+  d: 3
+  text: Что выведет код?
+  code: "for (var i = 0; i < 3; i++) {\n  setTimeout(() => console.log(i), 0);\n}"
+  options: [2 2 2, undefined ×3, 3 3 3, 0 1 2]
+  correct: C
+  explanation: var имеет функциональную область; колбэки выполняются после цикла, когда i равно 3. С let было бы 0 1 2.
+- id: javascript-07
+  d: 3
+  text: Что выведет код?
+  code: 'console.log(''a'');
+
+    setTimeout(() => console.log(''b''), 0);
+
+    Promise.resolve().then(() => console.log(''c''));
+
+    console.log(''d'');'
+  options: [a b c d, a d c b, a c d b, a d b c]
+  correct: B
+  explanation: Синхронный код (a, d), затем микрозадачи (промисы — c), затем макрозадачи (таймер — b).
+- id: javascript-08
+  d: 3
+  text: Чему равно this внутри стрелочной функции?
+  options: ['this внешней области, где функция определена', Всегда window/globalThis, 'Объекту, у которого вызвана функция', Всегда undefined]
+  correct: A
+  explanation: Стрелочные функции не имеют собственного this и берут его лексически.
+- id: javascript-09
+  d: 3
+  text: Что вернёт выражение [10, 9, 1].sort()?
+  options: ['[10, 9, 1]', '[9, 10, 1]', '[1, 9, 10]', '[1, 10, 9]']
+  correct: D
+  explanation: 'Без компаратора элементы сортируются как строки: ''1'' < ''10'' < ''9''.'
+- id: javascript-10
+  d: 3
+  text: Что такое замыкание?
+  options: [Блок try/finally, 'Функция, вызываемая сразу после объявления', 'Функция вместе с лексическим окружением, в котором она создана', 'Метод, закрытый от внешнего доступа через #']
+  correct: C
+  explanation: Замыкание сохраняет доступ к переменным внешней области даже после её завершения.
+- id: javascript-11
+  d: 4
+  text: Что выведет код?
+  code: 'const o = { a: 1, f() { return () => this.a; } };
+
+    const g = o.f();
+
+    console.log(g());'
+  options: [NaN, '1', TypeError, undefined]
+  correct: B
+  explanation: Стрелка берёт this из f, а f вызвана как метод o, поэтому this === o.
+- id: javascript-12
+  d: 4
+  text: Что выведет код?
+  code: "async function f() {\n  console.log(1);\n  await null;\n  console.log(2);\n}\nf();\nconsole.log(3);"
+  options: [1 3 2, 1 2 3, 3 1 2, 2 1 3]
+  correct: A
+  explanation: await приостанавливает функцию, остаток выполняется как микрозадача после синхронного кода.
+- id: javascript-13
+  d: 4
+  text: Что произойдёт при обращении к переменной let до её объявления в том же блоке?
+  options: [Переменная будет создана глобально, Вернётся undefined, Вернётся null, ReferenceError (временная мёртвая зона)]
+  correct: D
+  explanation: let и const поднимаются, но недоступны до объявления — это temporal dead zone.
+- id: javascript-14
+  d: 5
+  text: Что вернёт Promise.all([Promise.resolve(1), Promise.reject('e'), Promise.resolve(3)])?
+  options: [Массив результатов allSettled, 'Промис, отклонённый после завершения всех трёх', 'Промис, отклонённый значением ''e''', 'Промис, выполненный с [1, ''e'', 3]']
+  correct: C
+  explanation: Promise.all отклоняется сразу при первом отклонении, причиной будет 'e'.
+- id: javascript-15
+  d: 5
+  text: Что выведет код?
+  code: 'function F() {}
+
+    F.prototype.x = 1;
+
+    const a = new F();
+
+    F.prototype = { x: 2 };
+
+    const b = new F();
+
+    console.log(a.x, b.x);'
+  options: [2 1, 1 2, 1 1, 2 2]
+  correct: B
+  explanation: Прототип a зафиксирован при создании (старый объект с x=1); b получает новый прототип с x=2.

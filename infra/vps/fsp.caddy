@@ -1,0 +1,73 @@
+# Caddy на VPS (2.26.52.44): HTTPS (Let's Encrypt) и проксирование через Tailscale на домашний сервер,
+# где gateway стенда слушает :28080 и маршрутизирует по Host (infra/caddy/Caddyfile).
+# На VPS лежит как /etc/caddy/fsp.caddy и подключается строкой `import /etc/caddy/fsp.caddy` в основном Caddyfile.
+# Установка и обновление — infra/vps/README.md. Блоки других проектов — в основном Caddyfile, их не трогаем.
+
+(fsp_security) {
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		X-Frame-Options "DENY"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server
+	}
+	encode zstd gzip
+}
+
+(fsp_upstream) {
+	reverse_proxy 100.78.22.33:28080 {
+		header_up Host {host}
+		header_up X-Forwarded-Proto https
+		# SSE и долгие ответы LLM
+		flush_interval -1
+		transport http {
+			read_timeout 600s
+			write_timeout 600s
+		}
+		health_uri /healthz
+		health_interval 30s
+	}
+}
+
+# Ретранслятор Telegram Bot API: с домашнего сервера api.telegram.org недоступен. Бот платформы и уведомления
+# о деплоях ходят сюда (TG_API_BASE в infra/env/prod.env). Слушает только адрес VPS в Tailscale — снаружи закрыт.
+http://100.66.64.126:28443 {
+	bind 100.66.64.126
+	reverse_proxy https://api.telegram.org {
+		header_up Host api.telegram.org
+		# long polling getUpdates держит соединение до таймаута опроса
+		transport http {
+			read_timeout 120s
+		}
+	}
+}
+
+# Корень — на кабинет (лендинг там же, `/`)
+fsp.patissons.tech {
+	import fsp_security
+	redir https://dashboard.fsp.patissons.tech{uri} permanent
+}
+
+dashboard.fsp.patissons.tech, api.fsp.patissons.tech, mock.fsp.patissons.tech {
+	import fsp_security
+	request_body {
+		max_size 25MB
+	}
+	import fsp_upstream
+	log {
+		output file /var/log/caddy/fsp.log {
+			roll_size 50MiB
+			roll_keep 5
+		}
+	}
+}
+
+# Файлы MinIO (аватары, резюме по подписанным ссылкам): без X-Frame-Options DENY для превью PDF
+s3.fsp.patissons.tech {
+	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	request_body {
+		max_size 25MB
+	}
+	import fsp_upstream
+}

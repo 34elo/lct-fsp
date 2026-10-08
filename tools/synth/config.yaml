@@ -1,0 +1,128 @@
+# Параметры синтетического рынка (evaluation.md §3). Генератор намеренно НЕ читает data/scoring.yaml
+# и не импортирует код подбора: «настоящие» уровни порождает собственная латентная модель.
+# Справочники (роли и их навыки, флаг testable) берём из data/taxonomy — это словарь, а не формулы.
+
+seeds: {dev: 1001, test: 2002}   # разные seed'ы → разные выборки (веса настраиваем на dev, цифры — на test)
+
+counts:
+  candidates: 1000
+  vacancies: 120
+  employers: 40            # симулированные работодатели (по одному на случайную вакансию)
+  competitions: 60         # пул соревнований ФСП
+  test_items_per_skill: 12 # заглушка банка вопросов: банка в data/ пока нет
+
+# Рыночное распределение ролей (нормируется); роли — из data/taxonomy/roles.yaml
+role_share:
+  backend: 0.30
+  frontend: 0.22
+  fullstack: 0.08
+  mobile: 0.06
+  ml: 0.06
+  data_engineer: 0.03
+  devops: 0.05
+  qa: 0.06
+  security: 0.02
+  gamedev: 0.02
+  embedded: 0.02
+  analyst: 0.04
+  product: 0.02
+  designer: 0.02
+
+adjacent_roles:
+  backend: [fullstack, devops, data_engineer]
+  frontend: [fullstack, designer, mobile]
+  fullstack: [backend, frontend]
+  mobile: [frontend, fullstack]
+  ml: [data_engineer, analyst, backend]
+  data_engineer: [backend, ml, analyst]
+  devops: [backend, security]
+  qa: [backend, frontend]
+  security: [devops, embedded]
+  gamedev: [embedded, frontend]
+  embedded: [gamedev, security]
+  analyst: [ml, product]
+  product: [analyst, designer]
+  designer: [frontend, product]
+
+latent:
+  experience_years_gamma: {shape: 1.6, scale: 2.0}  # стаж ~ Gamma, лет
+  embellish_p: 0.25                                  # π ~ Bernoulli
+  skill_a: [0.6, 1.4]       # a_s ~ U — вклад таланта
+  skill_b: [0.4, 0.9]       # b_s ~ U — вклад стажа (на log(1 + лет))
+  skill_presence_pow: 0.5  # P(навык есть) = (типичность в роли)^k
+  skill_intercept: -0.8
+  skill_noise_sd: 0.6
+  extra_skills: [0, 3]      # случайные навыки смежных ролей
+  grade_years: [0.5, 1.2, 2.0, 3.5, 5.0, 8.0]   # пороги «эффективного стажа» intern→…→lead
+  grade_talent_mult: 0.35   # эффективный стаж = лет · exp(k·τ)
+
+resume:
+  include_p: 0.85
+  include_min_t: 0.3
+  embellish_count: [1, 4]
+  embellish_max_t: 0.15
+  experience_inflate_months: [0, 12]
+
+fsp:
+  share: 0.40
+  competitions_per_candidate: [1, 4]
+  noise_sd: 0.12
+  participants: {regional: [20, 60], interregional: [40, 120], national: [60, 200], international: [80, 300]}
+  opponent_strength: {regional: [0.35, 0.18], interregional: [0.45, 0.17], national: [0.55, 0.15], international: [0.62, 0.14]}  # N(mean, sd)
+  level_share: {regional: 0.4, interregional: 0.3, national: 0.22, international: 0.08}
+  captain_base: -1.0        # P(капитан) = sigmoid(base + k·τ)
+  captain_tau: 1.2
+  # Дисциплина → навыки, по которым считается скрытая сила (собственная модель, не правила ФСП из data/fsp)
+  discipline_skills:
+    algorithmic: [algorithms, data_structures, math, cpp, python]
+    product: [backend, frontend, git, product_thinking, teamwork]
+    security: [security, networks, linux, pentest, cryptography]
+    uav: [embedded, control_systems, cpp, computer_vision]
+    robotics: [embedded, control_systems, electronics, cpp]
+
+github:
+  share: 0.50
+  repos: [1, 6]
+  tech_min_t: 0.4
+  tech_p: 0.7
+  fake_repo_p: 0.10
+  fake_kinds: [fork_unchanged, single_commit_import, template, foreign_email]
+
+tests:
+  share: 0.30
+  skills: [1, 3]            # сколько testable-навыков проходит кандидат
+  items: [6, 12]
+  irt_a: [0.8, 2.0]
+  irt_b: [-2.0, 2.0]
+  irt_c: [0.1, 0.25]
+
+grades: [intern, junior, junior_plus, middle, middle_plus, senior, lead]
+salary_by_grade: {intern: 50000, junior: 90000, junior_plus: 130000, middle: 190000, middle_plus: 250000, senior: 330000, lead: 420000}
+salary_noise_sd: 0.15       # логнормальный шум ожиданий
+formats: {office: 0.3, hybrid: 0.35, remote: 0.35}
+
+vacancies:
+  must: [3, 6]
+  nice: [2, 4]
+  grade_span_p: 0.5         # с этой вероятностью вакансия на два соседних грейда
+  fork_low: [0.80, 1.00]    # доля от рыночной ставки грейда
+  fork_high: [1.05, 1.35]
+
+# Порог «настоящего» уровня навыка для обязательного навыка, по грейду вакансии (grade_min)
+required_level:
+  intern: 0.30
+  junior: 0.38
+  junior_plus: 0.45
+  middle: 0.52
+  middle_plus: 0.60
+  senior: 0.67
+  lead: 0.72
+
+employers:
+  pref_features: [captain, fsp, github, tests, remote, cheap]
+  pref_weight: [-0.3, 0.3]
+  utility_rel_weight: 1.0
+  utility_bias: -1.0
+  session_shows: [20, 40]
+  session_actions: [3, 8]
+  view_decay: 0.85          # P(просмотр позиции k) = decay^k (каскад)

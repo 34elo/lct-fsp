@@ -1,0 +1,60 @@
+# Герой «Дима»: Middle Go, 3 года опыта, открыт к предложениям, но не ищет активно.
+# Есть в fsp-mock (участник p-dima), в core к ФСП не привязан.
+key: dima
+role: candidate
+email: dima@demo.fsp.test
+profile:
+  city: Москва
+  relocation: false
+  salary_min: 220000
+  formats: [remote]
+  employment_types: [full]
+  search_status: open
+consents: [pd_processing, profile_publication, code_analysis]
+resume:
+  summary: "Backend-разработчик на Go, 3 года коммерческого опыта, микросервисы и высоконагруженные API."
+  skills: [go, postgresql, docker, rest, git, linux, grpc, redis, microservices, sql]
+  experience:
+    - company: "Лаборатория Ветер"
+      title: "Backend-разработчик (Go)"
+      start_months_ago: 38
+      end_months_ago: 14
+      description: "Сервисы приёма телеметрии, очереди сообщений, PostgreSQL."
+      skills: [go, postgresql, docker, rest, microservices, redis]
+    - company: "Кедр Софт"
+      title: "Middle Backend-разработчик (Go)"
+      start_months_ago: 14
+      end_months_ago: null
+      description: "gRPC-сервисы, оптимизация запросов, CI/CD."
+      skills: [go, grpc, postgresql, docker, linux, git]
+  education:
+    - {institution: "Технический университет (вымышленный)", degree: bachelor, field: "Программная инженерия", year_end: 2022}
+# Искусственные доказательства: синтетический «анализ GitHub» и результат теста (в демо помечены details.demo)
+evidence:
+  - {skill: go, source: github, strength: 0.46, days_ago: 60, fact: "dima/telemetry-gateway"}
+  - {skill: docker, source: github, strength: 0.38, days_ago: 60, fact: "dima/telemetry-gateway"}
+  - {skill: postgresql, source: github, strength: 0.34, days_ago: 90, fact: "dima/pg-queue"}
+  - {skill: sql, source: test, strength: 0.62, days_ago: 40, fact: "test-sql"}
+fsp:
+  linked_in_core: false
+  participant:
+    id: p-dima
+    last_name: Орлов
+    first_name: Дмитрий
+    birth_year: 1999
+    region: Москва
+    email: dima.orlov@example.test
+    phone: "+79005550101"
+    ranks: []
+  competitions:
+    - id: c-001
+      title: "Кубок России по алгоритмическому программированию (вымышленный)"
+      discipline: algorithmic
+      level: national
+      format: online
+      region: null
+      tracks: []
+      end_days_ago: 400
+      status: finished
+  results:
+    - {competition_id: c-001, discipline: algorithmic, stage: final, team_role: individual, place: 14, participants_total: 120, score: 5.0}

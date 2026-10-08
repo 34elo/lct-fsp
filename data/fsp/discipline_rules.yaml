@@ -1,0 +1,48 @@
+# Правила соответствия дисциплин ФСП к IT-навыкам
+# Черновик для согласования с экспертами ФСП (вопрос O7)
+#
+# Структура: дисциплина → {навык: вес}, где вес 0.0…1.0
+# Применение: каждое FspResult → навыки по правилам + навыки трека → evidence(strength=f(вес_правила, уровень, место, этап))
+#
+# Специальный случай: если в данных есть язык решения, вес его увеличивается до 0.9
+# Капитан команды получает автоматически навык leadership
+
+algorithmic:
+  algorithms: 1.0
+  data_structures: 1.0
+  math: 0.7
+  cpp: 0.6
+  python: 0.4
+
+product:
+  teamwork: 0.8
+  product_thinking: 0.6
+  backend: 0.6
+  frontend: 0.5
+  git: 0.6
+  tracks:
+    ml: { ml: 0.8, python: 0.6 }
+    web: { frontend: 0.7, backend: 0.7 }
+    mobile: { mobile: 0.8 }
+
+security:
+  security: 1.0
+  pentest: 0.8
+  networks: 0.7
+  linux: 0.7
+  reverse_engineering: 0.6
+  cryptography: 0.5
+
+uav:
+  embedded: 0.8
+  control_systems: 0.8
+  computer_vision: 0.6
+  cpp: 0.6
+  python: 0.5
+
+robotics:
+  embedded: 0.8
+  control_systems: 0.8
+  ros: 0.7
+  electronics: 0.6
+  cpp: 0.5

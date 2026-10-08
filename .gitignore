@@ -1,0 +1,50 @@
+# секреты
+.env
+**/.env
+!.env.example
+
+# модели, снапшоты, приватные данные
+infra/llm/models/
+infra/snapshots/
+data/gold/private/
+reports/
+!docs/reports/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Node
+node_modules/
+dist/
+.vite/
+tsconfig.tsbuildinfo
+
+# IDE и ОС
+.idea/
+.vscode/
+.DS_Store
+
+# Claude Code: локальные настройки участника
+.claude/settings.local.json
+__pycache__/
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+node_modules/
+dist/
+asyncapi.json
+
+# локальные env-файлы с секретами
+.env.demo
+.env.demo.*
+.env.server
+.env.tmp
+
+apps/web/playwright-report/
+apps/web/test-results/
