@@ -54,6 +54,27 @@ class ResumeSkill(BaseModel):
     confidence: float = Field(ge=0, le=1)
 
 
+class ResumeSoftSkill(BaseModel):
+    """Софт-навык, «заявлено в резюме» (E20-5): без доверия, на категорию и подбор не влияет."""
+
+    name: str
+    quote: str  # дословная цитата из текста
+
+
+class ResumeDeclaredGrade(BaseModel):
+    """Грейд, который кандидат назвал сам (E20-5). Только «заявлено»: категорию даёт тест."""
+
+    grade: Grade
+    quote: str
+
+
+class ResumeDeclaredRole(BaseModel):
+    """Роль, которую кандидат назвал сам (E20-5). Только «заявлено»: категорию даёт тест."""
+
+    role: RoleSlug
+    quote: str
+
+
 class ParsedResume(BaseModel):
     parser_version: str
     person: ResumePerson = Field(default_factory=ResumePerson)
@@ -64,6 +85,10 @@ class ParsedResume(BaseModel):
     unknown_skills: list[str] = Field(default_factory=list)
     total_experience_months: int = Field(default=0, ge=0)
     warnings: list[str] = Field(default_factory=list)
+    # E20-5: заявленное в резюме, каждое поле с цитатой; в расчёты не входит
+    soft_skills: list[ResumeSoftSkill] = Field(default_factory=list)
+    declared_grade: ResumeDeclaredGrade | None = None
+    declared_roles: list[ResumeDeclaredRole] = Field(default_factory=list)
 
 
 # --- Поиск текстом (ml.md §7, api.md §3 SearchFilters/ParsedQuery) ---

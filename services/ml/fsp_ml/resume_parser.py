@@ -20,12 +20,16 @@ from typing import Any
 
 import jinja2
 import structlog
+from fsp_contracts.enums import Grade, RoleSlug
 from fsp_contracts.ml import (
     ParsedResume,
+    ResumeDeclaredGrade,
+    ResumeDeclaredRole,
     ResumeEducation,
     ResumeExperience,
     ResumePerson,
     ResumeSkill,
+    ResumeSoftSkill,
     SkillMention,
 )
 from pydantic import BaseModel, Field, ValidationError
@@ -39,13 +43,14 @@ from fsp_ml.taxonomy import TaxonomyIndex
 
 log = structlog.get_logger()
 
-PROMPT_VERSION = "v1"
+PROMPT_VERSION = "v2"
 PROMPTS_DIR = Path(__file__).resolve().parents[1] / "prompts"
 MAX_TEXT_CHARS = 12_000  # ≈ 4–5 тыс. токенов: влезает в слот llama-server 8k вместе с ответом
 QUOTE_THRESHOLD = 90.0  # rapidfuzz.partial_ratio цитаты к тексту (ml.md §2, шаг 4)
 MENTION_THRESHOLD = 80.0  # навык должен быть упомянут в своей цитате (fuzz.ratio по словам)
 CONFIDENCE = {"alias": 0.95, "fuzzy": 0.85}
 DROP_WARNINGS = ("quote_not_found:", "skill_not_in_quote:")  # навык отброшен
+DECLARED_DROP_WARNINGS = ("soft_dropped:", "grade_dropped:", "role_dropped:")  # E20-5
 
 Progress = Callable[[str, int, str], Awaitable[None]]
 
@@ -75,6 +80,16 @@ class LlmEducation(BaseModel):
     year_end: int | None = Field(default=None, ge=1950, le=2100)
 
 
+class LlmGrade(BaseModel):
+    grade: Grade
+    quote: str = Field(min_length=1, max_length=400)
+
+
+class LlmRole(BaseModel):
+    role: RoleSlug
+    quote: str = Field(min_length=1, max_length=400)
+
+
 class LlmResume(BaseModel):
     full_name: str | None = Field(default=None, max_length=120)
     city: str | None = Field(default=None, max_length=80)
@@ -82,6 +97,10 @@ class LlmResume(BaseModel):
     experience: list[LlmExperience] = Field(default_factory=list, max_length=30)
     education: list[LlmEducation] = Field(default_factory=list, max_length=10)
     skills: list[LlmSkill] = Field(default_factory=list, max_length=80)
+    # E20-5: заявленное; каждое поле с цитатой
+    soft_skills: list[LlmSkill] = Field(default_factory=list, max_length=20)
+    declared_grade: LlmGrade | None = None
+    roles: list[LlmRole] = Field(default_factory=list, max_length=6)
 
 
 @cache
@@ -188,6 +207,86 @@ def _aliases_by_slug(index: TaxonomyIndex | None) -> dict[str, list[str]]:
     return out
 
 
+# --- заявленное в резюме (E20-5) ---
+
+# маркеры в цитате: без них заявленный грейд/роль отбрасывается (модель не «додумывает»)
+_GRADE_MARKERS: dict[Grade, tuple[str, ...]] = {
+    Grade.intern: ("intern", "стажер", "стажир", "практикант"),
+    Grade.junior: ("junior", "джуниор", "джун", "младш"),
+    Grade.junior_plus: ("junior+", "junior plus", "джуниор+", "джун+"),
+    Grade.middle: ("middle", "мидл", "миддл", "средн"),
+    Grade.middle_plus: ("middle+", "middle plus", "мидл+", "миддл+"),
+    Grade.senior: ("senior", "сеньор", "синьор", "старш", "ведущ"),
+    Grade.lead: ("lead", "лид", "руководител", "тимлид", "team lead"),
+}
+_ROLE_MARKERS: dict[RoleSlug, tuple[str, ...]] = {
+    RoleSlug.backend: ("backend", "back-end", "бэкенд", "бекенд", "серверн"),
+    RoleSlug.frontend: ("frontend", "front-end", "фронтенд", "фронт"),
+    RoleSlug.fullstack: ("fullstack", "full-stack", "full stack", "фулстек", "фуллстек"),
+    RoleSlug.mobile: ("mobile", "мобильн", "android", "ios"),
+    RoleSlug.ml: ("machine learning", "data scientist", "ml", "машинн", "нейрос"),
+    RoleSlug.data_engineer: ("data engineer", "инженер данных", "etl", "dwh"),
+    RoleSlug.devops: ("devops", "sre", "девопс", "эксплуатац"),
+    RoleSlug.qa: ("qa", "тестировщик", "тестирован", "quality"),
+    RoleSlug.security: ("security", "безопасност", "pentest", "пентест"),
+    RoleSlug.gamedev: ("gamedev", "game dev", "unity", "unreal", "геймдев", "игр"),
+    RoleSlug.embedded: ("embedded", "встраиваем", "микроконтроллер", "firmware", "прошивк"),
+    RoleSlug.analyst: ("аналитик", "analyst"),
+    RoleSlug.product: ("product", "продакт", "продуктов"),
+    RoleSlug.designer: ("designer", "дизайнер", "ui/ux", "ux"),
+}
+
+
+def _marker_in(markers: tuple[str, ...], quote_norm: str) -> bool:
+    return any(_word_in(m, quote_norm) or (len(m) >= 5 and m in quote_norm) for m in markers)
+
+
+def assemble_declared(
+    text_norm: str, llm_out: LlmResume, warnings: list[str]
+) -> tuple[list[ResumeSoftSkill], ResumeDeclaredGrade | None, list[ResumeDeclaredRole]]:
+    """Софт-навыки, заявленный грейд и роли: оставляем только с цитатой из текста (AGENTS.md п. 4).
+
+    Цитата должна найтись в резюме, а заявленное значение читаться в самой цитате.
+    Отброшенное пишем в `warnings` (`soft_dropped:` / `grade_dropped:` / `role_dropped:`).
+    """
+    soft: list[ResumeSoftSkill] = []
+    seen: set[str] = set()
+    for s in llm_out.soft_skills:
+        name = s.name.strip()
+        if not quote_in_text(s.quote, text_norm) or not mention_in_quote(
+            name, norm_text(s.quote), []
+        ):
+            warnings.append(f"soft_dropped:{name}")
+            continue
+        key = normalize(name)
+        if key not in seen:
+            seen.add(key)
+            soft.append(ResumeSoftSkill(name=name, quote=s.quote.strip()))
+
+    grade: ResumeDeclaredGrade | None = None
+    g = llm_out.declared_grade
+    if g is not None:
+        if quote_in_text(g.quote, text_norm) and _marker_in(
+            _GRADE_MARKERS[g.grade], norm_text(g.quote)
+        ):
+            grade = ResumeDeclaredGrade(grade=g.grade, quote=g.quote.strip())
+        else:
+            warnings.append(f"grade_dropped:{g.grade.value}")
+
+    roles: list[ResumeDeclaredRole] = []
+    seen_roles: set[RoleSlug] = set()
+    for r in llm_out.roles:
+        if not quote_in_text(r.quote, text_norm) or not _marker_in(
+            _ROLE_MARKERS[r.role], norm_text(r.quote)
+        ):
+            warnings.append(f"role_dropped:{r.role.value}")
+            continue
+        if r.role not in seen_roles:
+            seen_roles.add(r.role)
+            roles.append(ResumeDeclaredRole(role=r.role, quote=r.quote.strip()))
+    return soft, grade, roles
+
+
 # --- сборка результата ---
 
 
@@ -277,6 +376,7 @@ def assemble(
         city=llm_out.city,
         links=c.links,
     )
+    soft_skills, declared_grade, declared_roles = assemble_declared(text_norm, llm_out, warnings)
     return ParsedResume(
         parser_version=version,
         person=person,
@@ -287,6 +387,9 @@ def assemble(
         unknown_skills=unknown,
         total_experience_months=resume_rules.total_experience_months(experience, today),
         warnings=warnings,
+        soft_skills=soft_skills,
+        declared_grade=declared_grade,
+        declared_roles=declared_roles,
     )
 
 
@@ -405,6 +508,7 @@ async def parse_resume(
         skills=len(parsed.skills),
         unknown=len(parsed.unknown_skills),
         dropped=sum(w.startswith(DROP_WARNINGS) for w in parsed.warnings),
+        declared_dropped=sum(w.startswith(DECLARED_DROP_WARNINGS) for w in parsed.warnings),
         seconds=round(time.monotonic() - t0, 2),
     )
     await report("done", 100, "Готово")
