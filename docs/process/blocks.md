@@ -262,6 +262,7 @@ class ProfessionInfo(BaseModel):
         str, float
     ]  # slug навыка → вес 0..1 («насколько типичен», как в roles.yaml); не нормирован
     skill_types: dict[str, SkillType] = {}  # заполняет E21-1
+    active: bool = True  # E36-2: false — скрыта в опросе (ADR-027 п.1)
 ```
 
 Сигнатуры заморожены. Все функции асинхронные, первый аргумент — `session: AsyncSession`:
@@ -290,7 +291,7 @@ class ProfessionInfo(BaseModel):
 
 | Функция | Возвращает | Семантика |
 |---|---|---|
-| `list_professions(session)` | `list[ProfessionInfo]` | Профессии и веса навыков. Этап 0 читает существующие роли и веса, E21-1 добавляет типы и `ai_engineer`, не меняя сигнатуру |
+| `list_professions(session, *, include_hidden=False)` | `list[ProfessionInfo]` | Профессии и веса навыков. Этап 0 читает существующие роли и веса, E21-1 добавляет типы и `ai_engineer`, не меняя сигнатуру. E36-2: по умолчанию только активные; `include_hidden=True` — и скрытые (подписи, уже выданные грейды) |
 
 **Что считает Б2 из этих данных** (assessment.md §9): T = `band_position`; множитель честности = 0.8, если `needs_confirmation`; R = exp(−дней с `last_activity_at` / 180), при `None` — 0; F — из `graph/fsp_strength.py` (зона Б2, v2 по результативности — E32-2; множитель релевантности дисциплины профессии — E36-3, ADR-027, считается внутри Б2 по `discipline_rules` и весам профессии из `taxonomy.service.list_professions`, новый стык не нужен); S — из существующих функций `graph.service` (только чтение); C — из `candidates.service`. **Неподтверждённый (заявленный) грейд** (ADR-025): T = 0, множитель 0.5 ко всей силе, метка «не подтверждён»; выдаётся только при выключенном фильтре «только подтверждённые» (по умолчанию включён). `mode = express` — метка «экспресс» в карточке, формула та же.
 
@@ -758,3 +759,4 @@ from app.assessment.router import router as assessment_router
 | 2026-10-06 | С-2-03 | Б2 → Б1 | В `assessment.py` (контракты) заранее добавлен `RegularTaskPublished` (`regular_task.published`: family_id, profession, candidate_ids[]) для обработчика бота E9-6. Б1 в E25-1 публикует событие в этой форме или правит модель (при расхождении — править обработчик в `notifications/handlers.py`) | E9-6 | открыто, согласовать |
 | 2026-10-06 | Т2-a | Т2 → Б2 | `notifications.service.push`: при сбое `ui_publish` обработчик падал с `TypeError` (`log.warning(..., event=...)` конфликтует с позиционным `event` structlog), вместо «сбой не роняет обработчик». Минимально: ключ `ui_event=`. Найдено `test_joint_t2.py` | Т2 | исправлено |
 | 2026-10-07 | С-2-04 | Б2 → Б1 | E35-1: `Stub` и заглушки удалены; `RouteDef.redirect` для старых адресов. В записях Б1: `/me/growth` → `/me/navigator`, `/me/settings` → `/me` (на них ссылаются `Result.tsx` и `profile/text.ts` — при случае заменить ссылки), `/me/badge` и `/auth/fsp/callback` удалены (экранов нет); флаги `nav` — по новому меню. В `profile.test.tsx` обновлена проверка меню. Пункты «Настройки», «Согласия» в меню аватара появятся с экраном E36-4 | E35-1 | готово |
+| 2026-10-08 | С-2-05 | Б2 → оба | E36-2 (с разрешения владельца в зоне Б1): `ProfessionInfo.active` (по умолчанию `true`), `roles.is_active` (миграция `b2_13`, скрыты `ml`, `mobile`, `devops`, `qa`); `taxonomy.list_professions` по умолчанию отдаёт только активные, `include_hidden=True` — все (подписи и старые грейды). Новый тест по скрытой профессии — `422 unknown_profession`, навигатор не предлагает тест по ней. `families-check` падает на пустой ячейке «активная профессия × грейд × тип навыка». Совместимо | E36-2 | готово |

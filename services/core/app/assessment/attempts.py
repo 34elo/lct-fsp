@@ -105,9 +105,11 @@ def _skills_of(prof) -> tuple[dict[str, float], dict[str, str]]:
     return dict(prof.skill_weights), {k: SkillType(v).value for k, v in prof.skill_types.items()}
 
 
-async def _profession(session: AsyncSession, profession: str):
-    profs = {p.slug: p for p in await taxonomy.list_professions(session)}
-    return profs.get(profession)
+async def _profession(session: AsyncSession, profession: str, *, include_hidden: bool = False):
+    """Профессия теста. Новый тест — только по активной (ADR-027 п.1); идущий и по приглашению
+    из него — и по скрытой: начатое по ней доводится до конца."""
+    profs = await taxonomy.list_professions(session, include_hidden=include_hidden)
+    return next((p for p in profs if p.slug == profession), None)
 
 
 async def create_attempt(
@@ -125,7 +127,7 @@ async def create_attempt(
     if mode == "express" and not cfg.express_enabled:
         raise ProblemError(422, "express_disabled", "Экспресс-режим выключен")
     cfg = cfg.for_mode(mode)
-    prof = await _profession(session, profession)
+    prof = await _profession(session, profession, include_hidden=invited_by is not None)
     if prof is None:
         raise ProblemError(
             422,
@@ -263,7 +265,7 @@ async def _conclude(
     theta = (await engine.current_estimate(session, att.id, cfg)).theta
     nxt = sprt.bonus_eligible(grade, decision, n_scored, theta, cfg)
     if nxt is not None:
-        prof = await _profession(session, att.profession)
+        prof = await _profession(session, att.profession, include_hidden=True)
         weights, types = _skills_of(prof) if prof else ({}, {})
         sections = await engine.stage_plan(session, att.candidate_id, weights, types, nxt, cfg)
         if sections:

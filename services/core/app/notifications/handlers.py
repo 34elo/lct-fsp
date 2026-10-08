@@ -374,7 +374,8 @@ def register(
         ev = RegularTaskPublished.model_validate(envelope.payload)
         out: list[UiMessage] = []
         # человеку — название профессии, не slug (публичное API Б1, blocks.md §4.3)
-        titles = {p.slug: p.title for p in await taxonomy.list_professions(session)}
+        profs = await taxonomy.list_professions(session, include_hidden=True)
+        titles = {p.slug: p.title for p in profs}
         title = titles.get(ev.profession, ev.profession)
         for candidate_id in ev.candidate_ids:
             await service.notify(

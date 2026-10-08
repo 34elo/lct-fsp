@@ -344,7 +344,7 @@ CREATE TABLE skill_mentions (                   -- журнал и кеш реш
 );
 CREATE INDEX ON skill_mentions (norm);
 CREATE TABLE skill_merges (id uuid PRIMARY KEY, from_skill uuid, into_skill uuid, actor text, moved jsonb, created_at timestamptz DEFAULT now(), reverted_at timestamptz);
-CREATE TABLE roles (slug text PRIMARY KEY, name text NOT NULL, is_profession boolean NOT NULL DEFAULT false);  -- профессия теста (E21-1, миграция b1_01); skills.skill_type text: fundamental|hard|thinking|business|soft|experience
+CREATE TABLE roles (slug text PRIMARY KEY, name text NOT NULL, is_profession boolean NOT NULL DEFAULT false, is_active boolean NOT NULL DEFAULT true);  -- профессия теста (E21-1, миграция b1_01); is_active = false — скрыта в опросе, данные остаются (ADR-027 п.1, E36-2, миграция b2_13); skills.skill_type text: fundamental|hard|thinking|business|soft|experience
 CREATE TABLE role_skills (role text REFERENCES roles(slug), skill_id uuid REFERENCES skills(id), weight real, source text NOT NULL DEFAULT 'seed', PRIMARY KEY (role, skill_id));
 CREATE TABLE disciplines (slug text PRIMARY KEY, name text NOT NULL);
 CREATE TABLE discipline_skill_rules (

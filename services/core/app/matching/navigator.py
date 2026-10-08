@@ -100,10 +100,12 @@ async def compute(
         }
     if not profession or not nxt:
         return out
-    out["test"] = {"profession": profession, "grade": nxt, "path": assessment_path(profession, nxt)}
-
+    # тест предлагаем только по активной профессии (ADR-027 п.1): скрытой нет в опросе
     info = next((p for p in await taxonomy.list_professions(session) if p.slug == profession), None)
-    if info is None or not info.skill_weights:
+    if info is None:
+        return out
+    out["test"] = {"profession": profession, "grade": nxt, "path": assessment_path(profession, nxt)}
+    if not info.skill_weights:
         return out
     ids = await taxonomy.resolve_slugs(session, list(info.skill_weights))
     owned = await graph.skills_of_candidates(session, [cand.user_id], list(ids.values()))

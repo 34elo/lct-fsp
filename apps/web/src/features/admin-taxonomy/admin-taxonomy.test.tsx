@@ -92,6 +92,13 @@ describe("model", () => {
 });
 
 describe("E13-4a профессии", () => {
+  test("скрытая профессия помечена в списке (E36-2)", async () => {
+    professions = [...professions, { slug: "ml", title: "ML", skill_weights: { python: 1 }, skill_types: {}, active: false }];
+    mount();
+    expect(await screen.findByTestId("admin-prof-hidden-ml")).toHaveTextContent("скрыта в опросе");
+    expect(screen.queryByTestId("admin-prof-hidden-backend")).toBeNull();
+  });
+
   test("список и правка: PATCH с заменой весов", async () => {
     mount();
     expect(await screen.findByTestId("admin-prof-title-backend")).toHaveTextContent("Бэкенд");

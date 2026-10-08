@@ -22989,6 +22989,11 @@
             },
             "type": "object",
             "title": "Skill Types"
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active",
+            "default": true
           }
         },
         "type": "object",
@@ -23023,6 +23028,11 @@
             },
             "type": "object",
             "title": "Skill Types"
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active",
+            "default": true
           },
           "taxonomy_version": {
             "anyOf": [
