@@ -84,6 +84,9 @@ function CategoriesPanel({ cats, selected, onSelect, className }: { cats: NeedCa
           );
         })}
       </ul>
+      <Link to="/employer/subscriptions" className="flex min-h-11 items-center border-t border-hairline px-3 text-13 font-semibold text-brand-fg hover:underline">
+        {T.manageSubscriptions}
+      </Link>
     </Panel>
   );
 }

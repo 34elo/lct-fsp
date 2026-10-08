@@ -189,7 +189,7 @@ describe("Статистика /me/stats (E38-2)", () => {
     // Одна главная кнопка — следующий шаг: есть интерес без ответа.
     const action = await screen.findByTestId("stats-action");
     expect(await within(action).findByText("Ответить на интерес")).toBeInTheDocument();
-    expect(action).toHaveAttribute("href", "/me/interests");
+    expect(action).toHaveAttribute("href", "/me/offers?show=interests");
   });
 
   it("без теста — пустое состояние с одной кнопкой «Пройти тест»", async () => {

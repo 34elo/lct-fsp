@@ -224,6 +224,7 @@ export const MATCH_TEXT = {
     "Data-аналитик, SQL и Python, Middle",
   ],
   subscriptions: "Подписки",
+  manageSubscriptions: "Подписки на категории",
   anyGrade: "любой грейд",
   anyTerms: "любые условия",
   onlyConfirmed: "подтверждён",
