@@ -115,6 +115,7 @@ export function fspResults(list: FspHighlight[]): FspResult[] {
     place: h.place ?? 0,
     total: h.of ?? undefined,
     year: h.year,
+    note: h.note ?? undefined,
   }));
 }
 

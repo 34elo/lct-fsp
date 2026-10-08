@@ -328,6 +328,7 @@ async def rebuild_evidence(
             "team_size": len(members.get(r.team_id or "", [])) or 1,
             "teammates": mates,
             "track": r.track,
+            "discipline": r.discipline or comp.discipline,
             "label": _label(comp.title, r, r.team_role),
         }
         for skill_id, w in weights.items():

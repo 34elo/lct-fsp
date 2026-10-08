@@ -203,6 +203,7 @@ function fspResults(card: CandidateCard): FspResult[] {
       place: h.place!,
       total: h.of ?? undefined,
       year: h.year,
+      note: h.note ?? undefined,
     }));
 }
 

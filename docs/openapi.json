@@ -21135,6 +21135,32 @@
           "year": {
             "type": "integer",
             "title": "Year"
+          },
+          "relevance": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "relevant",
+                  "other"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Relevance"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
           }
         },
         "type": "object",

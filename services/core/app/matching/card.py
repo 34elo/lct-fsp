@@ -212,7 +212,9 @@ async def build_card(
     sids = [s.skill_id for s in owned]
     briefs = await taxonomy.skill_briefs(session, sids)
     names = {sid: (b[0], b[1]) for sid, b in briefs.items()}
-    highlights = (await search._fsp_highlights(session, [c.user_id], trust, day)).get(c.user_id, [])
+    highlights = (
+        await search._fsp_highlights(session, [c.user_id], trust, day, {c.user_id: c.primary_role})
+    ).get(c.user_id, [])
 
     result = None
     interest = None

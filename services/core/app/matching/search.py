@@ -12,7 +12,7 @@ import base64
 import hashlib
 import json
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, date, datetime
 from typing import Any, Literal
 
@@ -26,7 +26,13 @@ from app.assessment import service as assessment
 from app.candidates import service as candidates
 from app.candidates.models import Candidate
 from app.graph import service as graph
-from app.graph.fsp_strength import FspResultIn, FspStrengthConfig, fsp_term
+from app.graph.fsp_strength import (
+    FspResultIn,
+    FspStrengthConfig,
+    discipline_relevance,
+    fsp_term,
+    is_relevant,
+)
 from app.graph.trust import EvidenceView, TrustConfig, effective_strength
 from app.matching.p_accept import PAcceptConfig, hint, mutual, p_accept
 from app.matching.rerank import RerankConfig, mmr, multiplier
@@ -76,6 +82,9 @@ class FspHighlight(BaseModel):
     place: int | None = None
     of: int | None = None
     year: int
+    # релевантность дисциплины профессии кандидата (ADR-027 п. 2): relevant | other; нет — null
+    relevance: Literal["relevant", "other"] | None = None
+    note: str | None = None  # «релевантно профессии» / «соревнование другого направления»
 
 
 class CardMatch(BaseModel):
@@ -196,9 +205,45 @@ def cache_key(catalog_v: str, payload: dict[str, Any], cursor: str | None) -> st
     return f"c:search:{catalog_v}:{sha}:{cursor or '-'}"
 
 
+RELEVANCE_NOTE = {"relevant": "релевантно профессии", "other": "соревнование другого направления"}
+
+
+@dataclass(frozen=True, slots=True)
+class RelevanceCtx:
+    """Правила дисциплин и профили профессий (slug → вес) для множителя релевантности ФСП."""
+
+    rules: dict[str, list[tuple[str, float, str | None]]]
+    profiles: dict[str, dict[str, float]]
+
+    def of(self, profession: str | None, discipline: str | None, track: str | None) -> float | None:
+        profile = self.profiles.get(profession or "")
+        rules = self.rules.get(discipline or "")
+        if not profile or not rules:
+            return None
+        return discipline_relevance(rules, profile, track)
+
+
+async def _relevance_ctx(session: AsyncSession) -> RelevanceCtx:
+    rules = {
+        disc: [(r.slug, r.weight, r.track) for r in rs]
+        for disc, rs in (await taxonomy.discipline_rules(session)).items()
+    }
+    profiles = {
+        p.slug: dict(p.skill_weights)
+        for p in await taxonomy.list_professions(session, include_hidden=True)
+    }
+    return RelevanceCtx(rules, profiles)
+
+
 async def _fsp_highlights(
-    session: AsyncSession, ids: list[uuid.UUID], trust: TrustConfig, today: date
+    session: AsyncSession,
+    ids: list[uuid.UUID],
+    trust: TrustConfig,
+    today: date,
+    roles: dict[uuid.UUID, str | None] | None = None,
 ) -> dict[uuid.UUID, list[FspHighlight]]:
+    """Лучшие результаты ФСП; с `roles` (кандидат → профессия) — пометка релевантности."""
+    ctx = await _relevance_ctx(session) if roles else None
     best: dict[uuid.UUID, dict[uuid.UUID, tuple[float, FspHighlight]]] = {}
     for ev in await graph.evidence_of(session, ids, source="fsp"):
         d = ev.details or {}
@@ -210,9 +255,17 @@ async def _fsp_highlights(
         )
         if s <= 0:
             continue
+        rel = (
+            ctx.of(roles.get(ev.candidate_id), d.get("discipline"), d.get("track"))
+            if ctx is not None and roles is not None
+            else None
+        )
+        flag = is_relevant(rel, trust.fsp)
+        kind = None if flag is None else ("relevant" if flag else "other")
         item = FspHighlight(
             title=label, level=str(d.get("level") or ""), place=d.get("place"),
             of=d.get("participants"), year=ev.observed_at.year,
+            relevance=kind, note=None if kind is None else RELEVANCE_NOTE[kind],
         )  # fmt: skip
         per = best.setdefault(ev.candidate_id, {})  # один факт даёт несколько навыков
         if ev.fact_id not in per or s > per[ev.fact_id][0]:
@@ -299,6 +352,7 @@ async def _fsp_results(
         out.setdefault(ev.candidate_id, {})[ev.fact_id] = FspResultIn(
             place=d.get("place"), total=d.get("participants"), final=bool(d.get("final")),
             observed_at=ev.observed_at, verified=ev.verified,
+            discipline=d.get("discipline"), track=d.get("track"),
         )  # fmt: skip
     return {cid: list(per.values()) for cid, per in out.items()}
 
@@ -317,12 +371,14 @@ async def _attach_strength(
     `primary_role`, иначе по лучшему грейду. Без действующего грейда силы нет.
 
     F — результативность в ФСП (`fsp_term`: победитель/призёр/финалист/участник, убывающая отдача
-    по числу соревнований, без учёта уровня; нет ФСП — 0, без штрафа);
+    по числу соревнований, без учёта уровня) × релевантность дисциплины профессии грейда
+    (ADR-027, E36-3); нет ФСП — 0, без штрафа;
     S — среднее доверие по навыкам запроса, без запроса — `trust_of`; R — свежесть теста
     по `confirmed_at`; C — полнота анкеты."""
     grades = await assessment.get_grades_many(session, [r.cand.user_id for r in rows])
     need = [k for k in must_floor if k] + nice_ids
     fsp_facts = await _fsp_results(session, [r.cand.user_id for r in rows])
+    rel_ctx = await _relevance_ctx(session) if fsp_facts else None
     for r in rows:
         gs = grades.get(r.cand.user_id) or []
         if category is not None:
@@ -334,7 +390,12 @@ async def _attach_strength(
         if g is None:
             continue
         held = {s.skill_id: s for s in r.skills}
-        fsp = fsp_term(fsp_facts.get(r.cand.user_id, ()), day, fsp_cfg)
+        facts = fsp_facts.get(r.cand.user_id, ())
+        if rel_ctx is not None:  # E36-3: × релевантность дисциплины профессии грейда
+            facts = [
+                replace(f, relevance=rel_ctx.of(g.profession, f.discipline, f.track)) for f in facts
+            ]
+        fsp = fsp_term(facts, day, fsp_cfg)
         s_val = (
             sum(min(1.0, held[k].confidence) if k in held else 0.0 for k in need) / len(need)
             if need
@@ -613,7 +674,9 @@ async def search_candidates(
     slug_of = await taxonomy.skill_slugs(session, sids)
     name_of = await taxonomy.skill_names(session, sids)
     names = {sid: (slug_of[sid], name_of.get(sid, slug_of[sid])) for sid in slug_of}
-    highlights = await _fsp_highlights(session, page_ids, trust, day)
+    highlights = await _fsp_highlights(
+        session, page_ids, trust, day, {r.cand.user_id: r.cand.primary_role for r in page}
+    )
     cats = await categories_of(session, page_ids)
     items = [
         _card(
