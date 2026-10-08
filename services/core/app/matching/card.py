@@ -1,7 +1,8 @@
 """`CandidateCardFull` (api.md §3): расширенная анонимная карточка для работодателя.
 
-Нет: user_id, ФИО, контактов, ссылок на репозитории и анализ кода (пока нет модуля),
-образования. Компании в опыте — только при `visibility.companies`. Просмотр — в `profile_views`.
+Нет: user_id, контактов (никогда), ссылок на репозитории и анализ кода (пока нет модуля),
+образования. ФИО — только при `visibility.full_name`. Компании в опыте — только при
+`visibility.companies`. Просмотр — в `profile_views`.
 """
 
 from __future__ import annotations
@@ -116,6 +117,7 @@ class ExperienceBrief(BaseModel):
 
 
 class CandidateCardFull(search.CandidateCard):
+    full_name: str | None = None  # только при visibility.full_name (ADR-027); контактов нет никогда
     skills: list[SkillWithTrust]
     grade_info: GradeInfo
     experience: list[ExperienceBrief]
@@ -138,7 +140,10 @@ def _months(start: str | None, end: str | None, today: date) -> int:
     return max(0, (e[0] - s[0]) * 12 + e[1] - s[1])
 
 
-def _grade_info(c: Candidate) -> GradeInfo:
+FSP_GRADE_SIGNALS = ("fsp_achievement", "fsp_rank")
+
+
+def _grade_info(c: Candidate, *, show_fsp: bool = True) -> GradeInfo:
     nxt = c.grade_next
     return GradeInfo(
         grade=c.grade,
@@ -150,6 +155,7 @@ def _grade_info(c: Candidate) -> GradeInfo:
                         label=GRADE_SIGNAL_LABELS.get(b["signal"], b["signal"]),
                         evidence_ids=list(b.get("evidence_ids") or []))
             for b in c.grade_breakdown or ()
+            if show_fsp or b["signal"] not in FSP_GRADE_SIGNALS
         ],
         next_grade=NextGrade(
             grade=nxt["grade"], points_needed=nxt["points_needed"],
@@ -206,6 +212,7 @@ async def build_card(
     company_id: uuid.UUID | None = None,
     today: date | None = None,
     responsibility_score: float | None = None,
+    pii_key: str | None = None,
 ) -> CandidateCardFull:
     day = today or datetime.now(UTC).date()
     owned = (await graph.all_skills_of(session, [c.user_id]))[c.user_id]
@@ -233,6 +240,8 @@ async def build_card(
     ev_ids = [uuid.UUID(e) for s in owned for e in (s.top_evidence or ())[:TOP_EVIDENCE]]
     evidence = {e.id: e for e in await graph.evidence_by_ids(session, ev_ids)}
     ordered = sorted(owned, key=lambda s: (s.claimed_only, -s.confidence, str(s.skill_id)))
+    vis = candidates.visibility_of(c)
+    show_fsp = vis["fsp"]
     skills = []
     for s in ordered:
         if s.skill_id not in briefs:
@@ -241,7 +250,8 @@ async def build_card(
         skills.append(
             SkillWithTrust(
                 skill=SkillInfo(slug=slug, name=name, group=group),
-                confidence=s.confidence, level=s.level, sources=list(s.sources or ()),
+                confidence=s.confidence, level=s.level,
+                sources=[x for x in s.sources or () if show_fsp or x != "fsp"],
                 claimed_only=s.claimed_only,
                 status="provisional" if status == "provisional" else "active",
                 derived_from=briefs[s.derived_from][0] if s.derived_from in briefs else None,
@@ -249,11 +259,12 @@ async def build_card(
                     _brief(evidence[uuid.UUID(e)], trust, day)
                     for e in (s.top_evidence or ())[:TOP_EVIDENCE]
                     if uuid.UUID(e) in evidence
+                    and (show_fsp or evidence[uuid.UUID(e)].source != "fsp")
                 ],
             )
         )  # fmt: skip
 
-    show_companies = candidates.visibility_of(c)["companies"]
+    show_companies = vis["companies"]
     experience = [
         ExperienceBrief(
             title=e["title"], company=e["company"] if show_companies else None,
@@ -263,8 +274,9 @@ async def build_card(
     ]  # fmt: skip
     return CandidateCardFull(
         **base.model_dump(),
+        full_name=candidates.shown_full_name(c, pii_key) if pii_key else None,
         skills=skills,
-        grade_info=_grade_info(c),
+        grade_info=_grade_info(c, show_fsp=show_fsp),
         experience=experience,
         offers_from_you=(
             await offers.briefs_for(session, company_id, c.user_id) if company_id else []

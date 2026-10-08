@@ -127,6 +127,7 @@ CREATE TABLE candidates (
   public_slug        text UNIQUE,                     -- для публичного профиля и бейджа (по желанию)
   full_name_enc      bytea,                           -- ПДн шифруются Fernet
   contacts_enc       bytea,                           -- {email, phone, telegram}
+  full_name_enc      bytea,                           -- ФИО, Fernet; работодателю только при visibility.full_name (E36-5, миграция b2_14)
   age_group          text,                            -- adult | minor (15–17 лет), E32-5b; дата рождения не хранится
   parent_consent_at  timestamptz,                     -- согласие родителя на ПДн несовершеннолетнего; без него minor не публикуется
   desired_roles      text[],                          -- желаемые роли из ручной формы (E20-4), RoleSlug
