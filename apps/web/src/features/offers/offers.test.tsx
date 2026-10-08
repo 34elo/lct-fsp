@@ -115,7 +115,7 @@ test("E38-13: воронка, таблица предложений, после�
   expect(screen.getByRole("link", { name: "Ответить" })).toHaveAttribute("href", "/employer/offers/4");
   const resp = screen.getByRole("region", { name: "Отклики на вакансии" });
   expect(within(resp).getByText("Backend #5")).toBeInTheDocument();
-  expect(within(resp).getByRole("link", { name: "Все отклики" })).toHaveAttribute("href", "/employer/responses");
+  expect(within(resp).getByRole("link", { name: "Все отклики" })).toHaveAttribute("href", "/employer/offers?show=responses");
 });
 
 test("E38-13: пустой список и ошибка загрузки", async () => {

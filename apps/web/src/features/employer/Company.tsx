@@ -1,6 +1,7 @@
 import { PAGE } from "@/shared/lib/page";
 import { useEffect, useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 
 import { Button, cn } from "@fsp/ui";
 import { getGetMyCompanyCompaniesMeGetQueryKey, useGetMyCompanyCompaniesMeGet, usePatchMyCompanyCompaniesMePatch, useRegisterCompanyCompaniesPost } from "@/api/endpoints/companies/companies";
@@ -96,6 +97,7 @@ export default function Company() {
           </Button>
         </form>
       )}
+      <Link to="/employer/tasks" className="inline-flex min-h-11 items-center self-start text-14 font-semibold text-brand-fg hover:underline">Тестовые задания компании</Link>
     </main>
   );
 }

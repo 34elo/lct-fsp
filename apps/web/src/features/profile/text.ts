@@ -290,6 +290,7 @@ export function plural(n: number, one: string, few: string, many: string): strin
 export const PROFILE = {
   title: "Профиль",
   addEvidence: "Добавить доказательство",
+  tasks: "Регулярные задания",
   tabsLabel: "Разделы профиля",
   tabs: { skills: "Навыки", fsp: "ФСП", resume: "Резюме", graph: "Граф" },
   loading: "Загрузка профиля…",

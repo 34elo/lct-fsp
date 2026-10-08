@@ -28,7 +28,7 @@ describe("routes", () => {
   });
 
   // E35-1: нет пункта меню, ссылки или кнопки без работающего экрана.
-  const items = (nav: NavItem[]) => nav.flatMap((n) => [n, ...(n.tabs ?? [])]);
+  const items = (nav: NavItem[]) => nav;
   const all = Object.values(NAV).flatMap(items);
   const byPath = new Map(ROUTES.map((r) => [r.path, r]));
 
@@ -59,25 +59,29 @@ describe("routes", () => {
     for (const r of ROUTES.filter((x) => x.nav)) expect(inMenu.has(r.path), r.path).toBe(true);
   });
 
-  it("меню: кандидат и работодатель по ux-spec, админ не больше 6 пунктов", () => {
-    expect(NAV.candidate.map((n) => n.label)).toEqual(["Главная", "Тест и грейд", "Вакансии", "Приглашения", "Профиль"]);
-    // «Шорт-лист» добавится вместе с общим экраном (E35-4): без экрана пункта нет.
-    expect(NAV.employer.map((n) => n.label)).toEqual(["Подбор", "Шорт-лист", "Приглашения", "Компания"]);
+  it("меню без подвкладок: кандидат и работодатель по E39-25, админ не больше 6 пунктов", () => {
+    expect(NAV.candidate.map((n) => n.label)).toEqual(["Главная", "Тест", "Приглашения", "Вакансии", "Статистика", "Профиль"]);
+    expect(NAV.employer.map((n) => n.label)).toEqual(["Подбор", "Шорт-лист", "Приглашения", "Вакансии", "Задания", "Компания"]);
+    for (const n of Object.values(NAV).flat()) expect(n, n.label).not.toHaveProperty("tabs");
     expect(NAV.admin.length).toBeLessThanOrEqual(6);
   });
 
   it("подсветка пункта меню по самому длинному префиксу", () => {
     expect(activeNav(NAV.candidate, "/me")?.label).toBe("Главная");
     expect(activeNav(NAV.candidate, "/me/skills/python")?.label).toBe("Главная");
-    expect(activeNav(NAV.candidate, "/me/assessment/attempts/1")?.label).toBe("Тест и грейд");
+    expect(activeNav(NAV.candidate, "/me/assessment/attempts/1")?.label).toBe("Тест");
     expect(activeNav(NAV.candidate, "/me/interests")?.label).toBe("Приглашения");
     expect(activeNav(NAV.candidate, "/me/profile/edit")?.label).toBe("Профиль");
     expect(activeNav(NAV.employer, "/employer/needs/7")?.label).toBe("Подбор");
     expect(activeNav(NAV.employer, "/employer")?.label).toBe("Подбор");
     expect(activeNav(NAV.employer, "/employer/categories/backend/middle")?.label).toBe("Подбор");
     expect(activeNav(NAV.employer, "/employer/responses")?.label).toBe("Приглашения");
-    expect(activeNav(NAV.employer, "/employer/subscriptions")?.label).toBe("Компания");
-    expect(activeNav(NAV.employer, "/employer/vacancies/1/shortlist")?.label).toBe("Компания");
+    expect(activeNav(NAV.employer, "/employer/subscriptions")?.label).toBe("Подбор");
+    expect(activeNav(NAV.employer, "/employer/vacancies/1/shortlist")?.label).toBe("Вакансии");
+    expect(activeNav(NAV.employer, "/employer/families/new")?.label).toBe("Задания");
+    expect(activeNav(NAV.candidate, "/me/tasks")?.label).toBe("Профиль");
+    expect(activeNav(NAV.candidate, "/onboarding")?.label).toBe("Профиль");
+    expect(activeNav(NAV.candidate, "/me/stats")?.label).toBe("Статистика");
     expect(activeNav(NAV.admin, "/federation/moderation")?.label).toBe("Модерация");
   });
 });

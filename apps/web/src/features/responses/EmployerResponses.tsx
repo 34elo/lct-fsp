@@ -1,5 +1,5 @@
 import { PAGE } from "@/shared/lib/page";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -57,7 +57,7 @@ function Row({ o }: { o: OfferForCompany }) {
 }
 
 /** Отклики на вакансии (R1, работодатель): те же приглашения с initiator = candidate. */
-export default function EmployerResponses() {
+export default function EmployerResponses({ filter }: { filter?: ReactNode } = {}) {
   const q = useListOffersOffersGet({ initiator: "candidate" });
   const all = (q.data?.status === 200 ? q.data.data : []) as OfferForCompany[];
   const sorted = [...all].sort((a, b) => b.created_at.localeCompare(a.created_at));
@@ -69,6 +69,7 @@ export default function EmployerResponses() {
         <h1 className="font-mono text-24 font-semibold">{T.empTitle}</h1>
         <p className="max-w-2xl text-14 text-muted">{T.empLead}</p>
       </header>
+      {filter}
       {q.isPending && <Skeleton role="status" aria-label="Загрузка" className="h-48" />}
       {q.isError && <ErrorState title={T.loadError} onRetry={() => void q.refetch()} />}
       {q.isSuccess && all.length === 0 && <EmptyState title={T.empEmpty} description={T.empEmptyHint} />}
