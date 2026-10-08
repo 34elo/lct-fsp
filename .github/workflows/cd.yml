@@ -1,5 +1,6 @@
-# CD стенда (docs/deploy.md «CI/CD»): push в main → проверки ci.yml → деплой на сервер стенда.
-# Деплой и действия с демо выполняет self-hosted раннер с меткой fsp-stand (infra/scripts/install-runner.sh).
+# CD продового стенда (docs/deploy.md «Прод»): push в main → проверки ci.yml → деплой на сервер.
+# Задачи на сервере выполняет self-hosted раннер с меткой fsp-stand (infra/scripts/install-runner.sh).
+# Внешние токены — секреты окружения GitHub `prod`; внутренние секреты живут только на сервере (.env.server).
 name: cd
 on:
   push:
@@ -9,47 +10,59 @@ on:
       action:
         description: Что сделать со стендом
         type: choice
-        options: [deploy, demo-reset, demo-reseed]
+        options: [deploy, backup, demo-reset, demo-reseed, prod-init]
         default: deploy
+      confirm:
+        description: Для prod-init впишите ПЕРЕСОЗДАТЬ (тома БД будут удалены)
+        required: false
+        default: ""
 
-# Один деплой за раз; новый ждёт, текущий не прерывается
+# Одна операция со стендом за раз; новая ждёт, текущая не прерывается
 concurrency:
   group: stand
   cancel-in-progress: false
 
+env:
+  STAND_DIR: ${{ vars.STAND_DIR }}
+
 jobs:
   ci:
-    if: github.event_name == 'push' || inputs.action == 'deploy'
+    if: github.event_name == 'push' || contains(fromJSON('["deploy","prod-init"]'), inputs.action)
     uses: ./.github/workflows/ci.yml
 
   deploy:
     needs: ci
-    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || inputs.action == 'deploy')
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || contains(fromJSON('["deploy","prod-init"]'), inputs.action))
     runs-on: [self-hosted, linux, fsp-stand]
     environment:
-      name: stand
+      name: prod
       url: https://dashboard.fsp.patissons.tech
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       # полная история: каталог стенда забирает коммит из этой копии, без своих ключей к GitHub
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - run: sh infra/scripts/deploy.sh deploy
+      - run: sh infra/scripts/deploy.sh "${{ github.event_name == 'push' && 'deploy' || inputs.action }}"
         env:
-          STAND_DIR: ${{ vars.STAND_DIR }}
           SRC_DIR: ${{ github.workspace }}
           SHA: ${{ github.sha }}
+          MSG: ${{ github.event.head_commit.message }}
+          CONFIRM: ${{ inputs.confirm }}
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TG_BOT_USERNAME: ${{ vars.TG_BOT_USERNAME }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          ALERT_BOT_TOKEN: ${{ secrets.ALERT_BOT_TOKEN }}
+          ALERT_CHAT_ID: ${{ secrets.ALERT_CHAT_ID }}
+          ALERT_THREAD_ID: ${{ vars.ALERT_THREAD_ID }}
 
-  demo:
-    if: github.event_name == 'workflow_dispatch' && inputs.action != 'deploy'
+  ops:
+    if: github.event_name == 'workflow_dispatch' && contains(fromJSON('["backup","demo-reset","demo-reseed"]'), inputs.action)
     runs-on: [self-hosted, linux, fsp-stand]
     environment:
-      name: stand
+      name: prod
       url: https://dashboard.fsp.patissons.tech
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-      - run: sh infra/scripts/deploy.sh ${{ inputs.action }}
-        env:
-          STAND_DIR: ${{ vars.STAND_DIR }}
+      - run: sh infra/scripts/deploy.sh "${{ inputs.action }}"
