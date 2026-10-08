@@ -69,7 +69,7 @@ export default function Dashboard() {
               type="button"
               aria-pressed={days === p}
               onClick={() => setDays(p)}
-              className={`min-h-9 rounded-lg border px-3 text-14 font-semibold ${days === p ? "border-tint-200 bg-tint-100 text-brand-deep" : "border-hairline text-muted"}`}
+              className={`min-h-9 rounded-lg border px-3 text-14 font-semibold ${days === p ? "border-tint-200 bg-tint-100 text-brand-deep dark:text-brand-mid" : "border-hairline text-muted"}`}
             >
               {T.dash.period(p)}
             </button>
@@ -107,7 +107,7 @@ export default function Dashboard() {
             <CardContent className="flex flex-col gap-3">
               <p className="text-14 text-muted">{QT.fspBlockLead}</p>
               <Summary />
-              <Link to="/admin/quality" className="self-start text-14 font-semibold text-brand-deep underline">
+              <Link to="/admin/quality" className="self-start text-14 font-semibold text-brand-deep dark:text-brand-mid underline">
                 {QT.open}
               </Link>
             </CardContent>

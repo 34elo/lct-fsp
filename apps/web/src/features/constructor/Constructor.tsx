@@ -355,7 +355,7 @@ export default function Constructor() {
               <h2 className="text-16 font-semibold">{T.preview.title}</h2>
               <FamilyPreview family={created} />
               {created && role === "employer" && (
-                <Link to="/employer/tasks" className="text-14 font-semibold text-brand-deep underline">
+                <Link to="/employer/tasks" className="text-14 font-semibold text-brand-deep dark:text-brand-mid underline">
                   {T.preview.toTasks}
                 </Link>
               )}

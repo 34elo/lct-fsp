@@ -122,7 +122,7 @@ test("реакции на карточку: шорт-лист и «Не подх
 
 test("карточка кандидата: навыки и доказательства", async () => {
   mount("/employer/candidates/p1?vacancy=v1&source=match");
-  expect(await screen.findByRole("heading", { name: "Candidate #1" })).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { name: "Backend #1" })).toBeInTheDocument();
   expect(await screen.findByText(/Кубок ФСП, финал/)).toBeInTheDocument();
 });
 
@@ -144,7 +144,7 @@ test("карточка кандидата: тёмная, навыки без п�
       </Providers>
     </MemoryRouter>,
   );
-  await screen.findByRole("heading", { name: "Candidate #1" });
+  await screen.findByRole("heading", { name: "Backend #1" });
   expect(container.querySelector('[data-theme-scope="dark"]')).not.toBeNull();
   const tags = [...screen.getByRole("region", { name: "Навыки" }).querySelectorAll("[data-state]")].filter((e) => e.textContent?.startsWith("Python"));
   expect(tags).toHaveLength(1);

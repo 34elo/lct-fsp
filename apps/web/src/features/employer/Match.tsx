@@ -31,6 +31,7 @@ import { useListSubscriptionsSubscriptionsGet } from "@/api/endpoints/subscripti
 import type { ActivityEvent, CandidateCard, NeedCategory, NeedOut } from "@/api/model";
 import { ApiError } from "@/api/mutator";
 import { needChips } from "@/features/needs/NeedCategories";
+import { displayPseudonym } from "@/shared/lib/pseudonym";
 import {
   catKey,
   categoryStats,
@@ -234,7 +235,7 @@ function FeedText({ e }: { e: ActivityEvent }) {
   return (
     <>
       <Link to={e.link} className="font-semibold text-ink hover:underline">
-        {e.candidate.pseudonym}
+        {displayPseudonym(e.candidate.pseudonym, e.candidate.primary_role)}
       </Link>{" "}
       {tail}
     </>
