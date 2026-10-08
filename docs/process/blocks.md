@@ -733,7 +733,7 @@ from app.assessment.router import router as assessment_router
 | | | | | | |
 | 2026-10-06 | З-1-01 | Б1 → общий | Команда `skills.relations.refresh` в `packages/contracts/commands.py` и подключение ночного `taxonomy.growth.refresh` в scheduler/worker | E16-6 | открыта |
 | 2026-10-06 | З-1-02 | Б1 → Б2 | Публичная функция видимости кандидата в `matching.service` (сейчас правило продублировано в `graph/router.py`) | E16-2 | открыта |
-| 2026-10-06 | З-1-03 | Б1 → инфра | Пакеты `libpango-1.0-0`, `libpangoft2-1.0-0`, `fonts-dejavu-core` в `infra/docker/python.Dockerfile` для PDF-профиля | E20-6 | открыта |
+| 2026-10-06 | З-1-03 | Б1 → инфра | Пакеты `libpango-1.0-0`, `libpangoft2-1.0-0`, `fonts-dejavu-core` в `infra/docker/python.Dockerfile` для PDF-профиля | E20-6 | закрыта E39-20 (пакеты в финальном образе core, смоук в CI `pdf-smoke`) |
 | 2026-10-06 | B1-b | Б1 → Б2 | Событие `regular_task.published` (`fsp_contracts/assessment.py`, `recipients[]` — уже отфильтрованы по грейду и `profile_publication`); `last_activity_at` учитывает ответы на регулярные задания; ссылка «Пригласить» в `GET /employer/tasks/{id}/submissions` (`invite_url`) | E25-1 | готово |
 | 2026-10-06 | З-1-04 | Б1 ↔ Б2 | `RegularTaskPublished` совместим с обработчиком E9-6: старые имена `family_id`, `candidate_ids` принимаются как алиасы `task_id`, `recipients`; `company_id`, `grade`, `round`, `period_days`, `published_at` необязательны | E25-1 | закрыта |
 | 2026-10-06 | З-1-05 | Б1 → все | Добавлены ml-контракты `AnswerExplainRequest`/`AnswerExplain` (fsp_contracts/ml.py) и необязательное поле `result.answers` в `AttemptResultOut`; клиент фронта перегенерирован (Node 26) | E24-2 | закрыта |
