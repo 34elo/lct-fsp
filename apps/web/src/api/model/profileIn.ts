@@ -14,6 +14,7 @@ import type { StackItem } from './stackItem';
  */
 export interface ProfileIn {
   contacts?: ContactsIO | null;
+  full_name?: string | null;
   stack?: StackItem[] | null;
   experience_months?: number | null;
   desired_roles?: RoleSlug[] | null;
