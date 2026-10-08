@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
-import { Button, EmptyState, ErrorState, Skeleton, SkillChip, formatRubRange } from "@fsp/ui";
+import { Button, EmptyState, ErrorState, Select, SkeletonCard, SkillChip, formatRubRange } from "@fsp/ui";
 
 import { useListPublicVacanciesVacanciesPublicGet } from "@/api/endpoints/vacancies/vacancies";
 import { RoleSlug, type PublicVacancyOut } from "@/api/model";
@@ -65,15 +65,19 @@ export default function Jobs() {
       </header>
       <div className="grid gap-5 lg:grid-cols-[240px_minmax(0,1fr)]">
         <form role="search" onSubmit={(e) => e.preventDefault()} className="grid content-start gap-3">
-          <label className="flex flex-col gap-1 text-13 font-semibold">
-            {T.role}
-            <select value={role} onChange={(e) => { setRole(e.target.value); setLimit(PAGE); }} className={fieldClass}>
-              <option value="">{T.anyRole}</option>
-              {Object.values(RoleSlug).map((r) => (
-                <option key={r} value={r}>{roleLabel(r)}</option>
-              ))}
-            </select>
-          </label>
+          <div className="flex flex-col gap-1 text-13 font-semibold">
+            <span>{T.role}</span>
+            <Select
+              aria-label={T.role}
+              value={role}
+              onChange={(v) => {
+                setRole(v ?? "");
+                setLimit(PAGE);
+              }}
+              options={[{ value: "", label: T.anyRole }, ...Object.values(RoleSlug).map((r) => ({ value: r, label: roleLabel(r) }))]}
+              className="font-normal"
+            />
+          </div>
           <label className="flex flex-col gap-1 text-13 font-semibold">
             {T.city}
             <input value={city} onChange={(e) => { setCity(e.target.value); setLimit(PAGE); }} className={fieldClass} />
@@ -85,9 +89,9 @@ export default function Jobs() {
         </form>
         <section aria-label={T.title} className="flex flex-col gap-3">
           {query.isPending && (
-            <div role="status" aria-label="Загрузка" className="grid gap-3">
-              <Skeleton className="h-40" />
-              <Skeleton className="h-40" />
+            <div className="grid gap-3">
+              <SkeletonCard />
+              <SkeletonCard />
             </div>
           )}
           {query.isError && <ErrorState title={T.loadError} onRetry={() => void query.refetch()} />}

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { Button, cn } from "@fsp/ui";
+import { Button, cn, SalaryRangeInput, Select } from "@fsp/ui";
 import { useCreateOfferOffersPost, useSalaryHintOffersSalaryHintPost } from "@/api/endpoints/offers/offers";
 import { useCandidateCardCandidatesPseudoIdCardGet } from "@/api/endpoints/search/search";
 import { useListVacanciesVacanciesGet } from "@/api/endpoints/vacancies/vacancies";
@@ -111,30 +111,36 @@ export default function OfferComposer() {
       )}
       <div className="grid gap-4 md:grid-cols-[1fr_320px]">
         <form onSubmit={submit} className="flex flex-col gap-4 rounded-xl border border-hairline bg-card p-4 md:p-5" noValidate>
-          <label className="flex flex-col gap-1 text-sm font-semibold">
-            Вакансия
-            <select value={vacancyId} onChange={(e) => { setVacancyId(e.target.value); setFrom(""); setTo(""); }} className={fieldClass}>
-              <option value="">Выберите вакансию</option>
-              {published.map((v) => (
-                <option key={v.id} value={v.id}>{v.title} · {v.formats.map((f) => FORMAT_LABEL[f] ?? f).join(", ")}</option>
-              ))}
-            </select>
+          <div className="flex flex-col gap-1 text-sm font-semibold">
+            <span>Вакансия</span>
+            <Select
+              aria-label="Вакансия"
+              placeholder="Выберите вакансию"
+              value={vacancyId || null}
+              onChange={(v) => {
+                setVacancyId(v ?? "");
+                setFrom("");
+                setTo("");
+              }}
+              options={published.map((v) => ({ value: v.id, label: `${v.title} · ${v.formats.map((f) => FORMAT_LABEL[f] ?? f).join(", ")}` }))}
+              aria-invalid={(touched && !vacancyId) || undefined}
+              className="font-normal"
+            />
             {touched && !vacancyId && <span className="text-xs font-normal text-error">Выберите опубликованную вакансию.</span>}
             {vq.isSuccess && published.length === 0 && <span className="text-xs font-normal text-muted">Нет опубликованных вакансий.</span>}
-          </label>
+          </div>
           <fieldset className="flex flex-col gap-1">
             <legend className="text-sm font-semibold">Зарплатная вилка в месяц, ₽ *</legend>
-            <div className="flex items-center gap-2">
-              <label className="flex flex-1 flex-col gap-1 text-xs text-muted">
-                от
-                <input inputMode="numeric" value={from} onChange={(e) => setFrom(e.target.value)} aria-invalid={touched && !!rangeError} className={cn(fieldClass, "font-mono text-base text-ink")} />
-              </label>
-              <span aria-hidden className="pt-5 text-muted">–</span>
-              <label className="flex flex-1 flex-col gap-1 text-xs text-muted">
-                до
-                <input inputMode="numeric" value={to} onChange={(e) => setTo(e.target.value)} aria-invalid={touched && !!rangeError} className={cn(fieldClass, "font-mono text-base text-ink")} />
-              </label>
-            </div>
+            <SalaryRangeInput
+              value={{ from: from ? Number(from) : null, to: to ? Number(to) : null }}
+              onChange={(v) => {
+                setFrom(v.from == null ? "" : String(v.from));
+                setTo(v.to == null ? "" : String(v.to));
+              }}
+              fromLabel="от"
+              toLabel="до"
+              invalid={touched && !!rangeError}
+            />
             <p className={cn("text-xs", touched && rangeError ? "text-error" : "text-muted")}>
               {touched && rangeError ? rangeError : "Приглашение без вилки отправить нельзя: кандидат видит её первой."}
             </p>
