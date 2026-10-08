@@ -77,7 +77,7 @@ heroes:
       experience: []
       education: [{institution: "Школа №12 (вымышленная)", degree: school, field: "Информатика", year_end: 2029}]
     history:
-      - {profession: qa, declared: junior, result: passed, theta: -0.5, days_ago: 6, items: 8}
+      - {profession: backend, declared: junior, result: passed, theta: -0.5, days_ago: 6, items: 8}
 
 # История теста у героев базовых файлов: Аня сначала заявила middle и не прошла, затем junior (source=test)
 extra_history:
