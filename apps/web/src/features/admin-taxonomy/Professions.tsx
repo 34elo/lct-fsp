@@ -179,6 +179,7 @@ export function ProfessionsTab() {
                       <p className="font-mono text-13 text-muted break-all">{p.slug}</p>
                     </div>
                     <div className="flex items-center gap-2">
+                      {p.active === false && <Badge variant="muted" data-testid={sel(`hidden-${p.slug}`)}>{T.prof.hidden}</Badge>}
                       <Badge>{T.prof.skillsCount(Object.keys(p.skill_weights).length)}</Badge>
                       <Button type="button" size="sm" variant="outline" data-testid={sel(`edit-${p.slug}`)} onClick={() => { setEditing(p.slug); setNotice(""); }}>
                         {T.prof.edit}

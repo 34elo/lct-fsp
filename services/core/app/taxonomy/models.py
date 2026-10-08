@@ -83,6 +83,8 @@ class Role(Base):
     name: Mapped[str] = mapped_column(Text)
     # профессия теста (assessment.md §2); остальные роли — только для подсказок и поиска
     is_profession: Mapped[bool] = mapped_column(default=False, server_default=sa.false())
+    # профессия видна в опросе и выдаче (ADR-027 п.1); скрытая хранит данные, но не предлагается
+    is_active: Mapped[bool] = mapped_column(default=True, server_default=sa.true())
 
 
 class RoleSkill(Base):

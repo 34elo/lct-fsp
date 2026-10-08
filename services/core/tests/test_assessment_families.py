@@ -7,7 +7,7 @@ from app.assessment import families as registry
 from app.assessment.families import check
 from app.assessment.families.base import BaseFamily, Item, Kind
 from app.assessment.world import World
-from fsp_contracts.assessment import SkillType
+from fsp_contracts.assessment import SkillType, TestGrade
 
 FAMILIES = list(registry.REGISTRY.values())
 
@@ -71,6 +71,59 @@ def test_js_default_sort_is_lexicographic():
     for it in sorts:
         values = [int(v) for v in it.stem.split("[", 1)[1].split("]", 1)[0].split(", ")]
         assert it.key in values
+
+
+def test_active_professions_have_no_empty_cells():
+    """E36-2: 3 активные профессии × 3 грейда × 6 типов навыков — в каждой ячейке есть семейство."""
+    from app.taxonomy.loader import load_taxonomy
+
+    roles = load_taxonomy(check.TAXONOMY).roles
+    active = {r.slug for r in roles if r.profession and r.active}
+    assert active == {"backend", "frontend", "ai_engineer"}
+    assert {r.slug for r in roles if r.profession and not r.active} == {
+        "ml",
+        "mobile",
+        "devops",
+        "qa",
+    }
+    assert check.check_coverage(FAMILIES, check.TAXONOMY, level_window=1) == []
+
+
+def test_coverage_fails_on_empty_cell():
+    """Без старших семейств бизнеса ячейка «× senior × business» пуста — `families-check` падает."""
+    rest = [f for f in FAMILIES if not (f.skill_type == SkillType.business and f.level >= 3)]
+    errs = check.check_coverage(rest, check.TAXONOMY, level_window=1)
+    assert "покрытие: backend × senior × business — нет семейств" in errs
+    assert check.run(rest, 1) != []
+
+
+def test_coverage_cells_respect_level_window():
+    cells = check.coverage(FAMILIES, {"p": {"data_structures": 0.5}}, level_window=1)
+    assert "lru_cache_trace" in cells[("p", TestGrade.senior, SkillType.fundamental)]
+    assert "lru_cache_trace" not in cells[("p", TestGrade.junior, SkillType.fundamental)]
+    assert cells[("p", TestGrade.junior, SkillType.hard)] == []  # нет навыков этого типа
+
+
+def test_js_event_loop_sync_then_micro_then_timers():
+    fam = registry.get("js_event_loop_order")
+    for seed in check.seeds(100):
+        it = check.build(fam, seed)
+        order = [it.options[i] for i in it.key]
+        lines = it.stem.split("\n\n", 1)[1].splitlines()
+        sync = [ln.split('"')[1] for ln in lines if ln.startswith("console.log")]
+        micro = [ln.split('"')[1] for ln in lines if ln.startswith("Promise")]
+        assert order[: len(sync) + len(micro)] == sync + micro
+        for a, b in zip(lines, lines[1:], strict=False):
+            if a.startswith("  console.log") and b.startswith("  Promise"):
+                x, y = a.split('"')[1], b.split('"')[1]
+                assert order.index(y) == order.index(x) + 1  # микрозадача таймера — сразу за ним
+
+
+def test_edge_case_input_key_is_the_only_failing_input():
+    fam = registry.get("edge_case_input")
+    for seed in check.seeds(50):
+        it = check.build(fam, seed)
+        assert check.run_python(it.meta["exec"]) == str(it.key)
 
 
 class _Broken(BaseFamily):
