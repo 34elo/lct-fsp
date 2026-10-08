@@ -15,6 +15,8 @@ export const buttonVariants = cva(
         outline: "border border-brand-fg text-brand-fg hover:bg-tint-50",
         ghost: "text-ink hover:bg-tint-50",
         destructive: "bg-error text-white hover:opacity-90",
+        // Опасное, но не главное действие («Выйти», «Удалить»): красный контур.
+        danger: "border border-err-border bg-card text-error hover:bg-error-bg",
         link: "h-auto px-0 text-brand-fg underline-offset-4 hover:underline",
       },
       // Цель касания не меньше 44 px на телефоне (h-11), на широком экране sm компактнее.
