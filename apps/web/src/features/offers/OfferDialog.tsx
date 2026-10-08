@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { AcceptanceMeter, Button, Dialog, DialogContent, DialogDescription, DialogTitle, Lbl, Num, SegmentedControl, Sheet, SheetContent, SheetDescription, SheetTitle, Skeleton, formatRub, type AcceptanceLevel } from "@fsp/ui";
+import { type AcceptanceLevel, AcceptanceMeter, Button, cn, Dialog, DialogContent, DialogDescription, DialogTitle, formatRub, Lbl, Num, SegmentedControl, Sheet, SheetContent, SheetDescription, SheetTitle, Skeleton } from "@fsp/ui";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -10,7 +10,7 @@ import { ContactMethod, SalaryBasis, type OfferForCompany } from "@/api/model";
 import { ApiError } from "@/api/mutator";
 import { fieldClass } from "@/features/auth/ui";
 import { FORMAT_LABEL } from "@/features/employer/text";
-import { cn } from "@/shared/lib/cn";
+import { displayPseudonym } from "@/shared/lib/pseudonym";
 import { canSendOffer, groupDigits, isWideRange, parseRub, rangeProblem } from "./offer-model";
 import { invalidateOffers } from "./parts";
 import { CONTACT_LABEL, EMP_INT_TEXT as IT, offerErrorText } from "./text";
@@ -400,7 +400,7 @@ function OfferForm({ candidate, vacancyId: initialVacancy, alreadyOffered, onClo
 export function OfferDialog({ open, onOpenChange, candidate, vacancyId = "", alreadyOffered = false, dark = false, mode = "offer", interest, stay = false }: { open: boolean; onOpenChange: (v: boolean) => void; candidate: OfferCandidate; vacancyId?: string; alreadyOffered?: boolean; dark?: boolean; mode?: DialogMode; interest?: OfferForCompany; stay?: boolean }) {
   const desktop = useMedia("(min-width: 1024px)");
   const close = () => onOpenChange(false);
-  const title = mode === "interest" ? IT.titleInterest(candidate.pseudonym) : T.title(candidate.pseudonym);
+  const title = mode === "interest" ? IT.titleInterest(displayPseudonym(candidate.pseudonym)) : T.title(displayPseudonym(candidate.pseudonym));
   const lead = mode === "interest" ? IT.leadInterest : mode === "invite" ? IT.leadInvite : T.lead;
   const theme = dark ? "dark bg-card text-ink" : "";
   const form = <OfferForm candidate={candidate} vacancyId={vacancyId} alreadyOffered={alreadyOffered} onClose={close} mode={mode} interest={interest} stay={stay} />;

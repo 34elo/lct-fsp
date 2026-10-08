@@ -169,3 +169,18 @@ def test_key_never_public(fam):
     item = check.build(fam, 3)
     public = item.public()
     assert "key" not in public and "meta" not in public
+
+
+@pytest.mark.parametrize(
+    ("kind", "key", "answer"),
+    [
+        (Kind.order, [0, 1, 2], [0, "1", 2]),  # смешанные типы: sorted() падал TypeError
+        (Kind.sjt, [0, 1], [[0], [1]]),  # вложенные списки: unhashable в pos[v]
+        (Kind.exact, 3, 10**400),  # огромное целое из JSON: float() падал OverflowError
+        (Kind.estimate, 100.0, 10**400),
+    ],
+)
+def test_malformed_answer_scores_zero_not_crash(kind, key, answer):
+    """E37-1: кривой ответ клиента — балл 0, а не 500 на /answer."""
+    fam = BaseFamily()
+    assert fam.score(Item(kind=kind, stem="?", key=key), answer) == 0.0

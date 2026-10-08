@@ -11,6 +11,7 @@ import { percent } from "@/features/employer/text";
 import { invalidateOffers } from "@/features/offers/parts";
 import { dateOnly } from "@/features/offers/text";
 import { GRADE_LABEL, roleLabel } from "@/features/profile/text";
+import { displayPseudonym } from "@/shared/lib/pseudonym";
 import { countBy, empTabOf, filterBy } from "./response-model";
 import { RESP_TEXT as T } from "./text";
 import { FilterTabs } from "./Tabs";
@@ -27,7 +28,7 @@ function Row({ o }: { o: OfferForCompany }) {
       <Link to={`/employer/offers/${o.id}`} className="flex min-w-0 items-center gap-2.5 hover:underline">
         {c && <ConstellationAvatar seed={c.avatar_seed} size={40} />}
         <span className="grid min-w-0">
-          <span className="break-words font-mono text-14 font-semibold">{c?.pseudonym ?? T.deleted}</span>
+          <span className="break-words font-mono text-14 font-semibold">{c ? displayPseudonym(c.pseudonym, c.primary_role) : T.deleted}</span>
           <span className="text-12 text-muted">{[sub, dateOnly(o.created_at)].filter(Boolean).join(" · ")}</span>
         </span>
       </Link>

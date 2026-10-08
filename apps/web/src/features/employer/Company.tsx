@@ -1,11 +1,10 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
+import { Button, cn } from "@fsp/ui";
 import { getGetMyCompanyCompaniesMeGetQueryKey, useGetMyCompanyCompaniesMeGet, usePatchMyCompanyCompaniesMePatch, useRegisterCompanyCompaniesPost } from "@/api/endpoints/companies/companies";
 import { ApiError } from "@/api/mutator";
 import { ErrorNote, fieldClass } from "@/features/auth/ui";
-import { cn } from "@/shared/lib/cn";
-import { Button } from "@/shared/ui/button";
 import { COMPANY_STATUS_HINT, COMPANY_STATUS_LABEL, vacancyErrorText } from "./text";
 
 /** Компания работодателя: регистрация, правка, статус модерации. */

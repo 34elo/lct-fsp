@@ -7,11 +7,11 @@ import {
   useGetRunPublicRunTokenGet,
   useStartRunRunTokenStartPost,
 } from "@/api/endpoints/live-runs/live-runs";
+import { Button } from "@fsp/ui";
 import { ErrorNote } from "@/features/auth/ui";
 import { SusForm } from "@/features/runs/SusForm";
 import { runError, T } from "@/features/runs/text";
 import { setRunId } from "@/shared/lib/track";
-import { Button } from "@/shared/ui/button";
 
 const POLL_MS = 4000;
 

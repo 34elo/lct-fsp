@@ -16,10 +16,8 @@ import {
 import type { SkillReqIn, VacancyOut } from "@/api/model";
 import { ErrorNote, fieldClass } from "@/features/auth/ui";
 import { GRADE_LABEL, ROLE_LABEL, SIGNAL_LABEL } from "@/features/profile/text";
-import { Skeleton } from "@fsp/ui";
+import { Button, cn, Skeleton } from "@fsp/ui";
 
-import { cn } from "@/shared/lib/cn";
-import { Button } from "@/shared/ui/button";
 import { EMPLOYMENT_LABEL, FORMAT_LABEL, LEVEL_WORD, QUALITY_HINT, VACANCY_STATUS_LABEL, vacancyErrorText } from "./text";
 
 const GRADES = Object.keys(GRADE_LABEL);

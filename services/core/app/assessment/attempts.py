@@ -121,8 +121,10 @@ async def create_attempt(
     *,
     invited_by: uuid.UUID | None = None,
     mode: AttemptMode = "standard",
+    skip_cooldown: bool = False,
 ) -> Attempt:
-    """Новая попытка. `invited_by` — попытка, чей бонусный этап пригласил на этот тест
+    """Новая попытка. `skip_cooldown` — демо-аккаунт в `DEMO_MODE` (E35-8): кулдауны не проверяются.
+    `invited_by` — попытка, чей бонусный этап пригласил на этот тест
     (ADR-025 п.2): такой тест идёт без кулдаунов. `mode = express` — экспресс для жюри (E32-4a)."""
     if mode == "express" and not cfg.express_enabled:
         raise ProblemError(422, "express_disabled", "Экспресс-режим выключен")
@@ -135,7 +137,7 @@ async def create_attempt(
             "Неизвестная профессия",
             errors=[{"field": "profession", "message": profession}],
         )
-    if invited_by is None:
+    if invited_by is None and not skip_cooldown:
         await grading.check_cooldown(
             session, candidate_id, profession, declared_grade, cfg, mode=mode
         )

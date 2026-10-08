@@ -1,0 +1,2 @@
+# Скрипты монтируются в Linux-контейнеры: CRLF на Windows ломает `set -eu`
+*.sh text eol=lf
