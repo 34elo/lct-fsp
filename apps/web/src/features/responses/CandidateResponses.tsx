@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { PAGE } from "@/shared/lib/page";
+import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -65,15 +66,16 @@ function ResponseCard({ o }: { o: OfferForCandidate }) {
 }
 
 /** Мои отклики (R1, кандидат): статусы, отзыв, переход к приглашению. */
-export default function CandidateResponses() {
+export default function CandidateResponses({ filter }: { filter?: ReactNode } = {}) {
   const q = useMyApplicationsCandidatesMeApplicationsGet();
   const all = (q.data?.status === 200 ? q.data.data : []) as OfferForCandidate[];
   const sorted = [...all].sort((a, b) => b.created_at.localeCompare(a.created_at));
   const [tab, setTab] = useState("all");
   const shown = filterBy(sorted, tab, candTabOf);
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4 md:p-6">
+    <main className={PAGE.normal}>
       <h1 className="font-mono text-24 font-semibold">{T.candTitle}</h1>
+      {filter}
       {q.isPending && <Skeleton role="status" aria-label="Загрузка" className="h-48" />}
       {q.isError && <ErrorState title={T.loadError} onRetry={() => void q.refetch()} />}
       {q.isSuccess && all.length === 0 && (

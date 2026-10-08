@@ -1,3 +1,4 @@
+import { PAGE } from "@/shared/lib/page";
 import { Button, EmptyState, ErrorState, H1, Panel, PanelCap, Skeleton, StatusTag, buttonVariants } from "@fsp/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
@@ -13,7 +14,6 @@ import { useTheme } from "@/shared/lib/theme";
 import { PrivacySettings, SettingRow } from "./PrivacySettings";
 import { SETTINGS as S } from "./text";
 
-const PAGE = "mx-auto flex w-full max-w-[1328px] flex-col gap-4 px-4 py-4 md:px-6 md:py-6";
 const copy = authText.consents.types as Record<string, { title: string; hint: string }>;
 
 function SettingsSkeleton() {
@@ -165,7 +165,7 @@ export default function Settings() {
   const cq = useGetConsentsMeConsentsGet({ query: { retry: false } });
 
   const page = (body: ReactNode, title = true) => (
-    <div className={PAGE} data-testid="settings-page">
+    <div className={PAGE.normal} data-testid="settings-page">
       {title && <H1 className="text-[22px] leading-[1.2] md:text-[26px]">{S.title}</H1>}
       {body}
     </div>

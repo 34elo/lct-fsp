@@ -1,3 +1,5 @@
+import { PAGE } from "@/shared/lib/page";
+import { Gloss } from "@/shared/Gloss";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -56,10 +58,12 @@ export default function Dashboard() {
   const max = d ? Math.max(0, ...d.funnel.map((s) => (s.hidden ? 0 : (s.count ?? 0)))) : 0;
 
   return (
-    <div className="flex flex-col gap-5 p-4 md:p-6">
+    <div className={PAGE.wide}>
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-24 font-semibold">{T.dash.title}</h1>
+          <h1 className="text-24 font-semibold">
+            <Gloss k="fspRelevance">{T.dash.title}</Gloss>
+          </h1>
           <p className="max-w-2xl text-14 text-muted">{T.dash.lead}</p>
         </div>
         <div role="group" aria-label={T.dash.daysLabel} className="flex gap-1">

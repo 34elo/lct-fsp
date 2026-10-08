@@ -1,3 +1,6 @@
+import { PAGE } from "@/shared/lib/page";
+import { Gloss } from "@/shared/Gloss";
+import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 
 import { buttonVariants, cn, EmptyState, ErrorState, formatRubRangeShort, GradeTag, H1, Lbl, Num, Panel, Skeleton, StatusBadge, type OfferStatus } from "@fsp/ui";
@@ -8,6 +11,8 @@ import { ApiError } from "@/api/mutator";
 import { GRADE_LABEL } from "@/features/profile/text";
 import { displayPseudonym } from "@/shared/lib/pseudonym";
 import { funnelOf, funnelSpanDays, lastActive, sortOffers } from "./offer-model";
+import EmployerResponses from "@/features/responses/EmployerResponses";
+import { ShowFilter, useShow } from "./ShowFilter";
 import { BOARD_TEXT as T } from "./text";
 
 const COLS = "md:grid-cols-[1.1fr_0.6fr_1.1fr_1fr_1.2fr]";
@@ -136,7 +141,7 @@ function Responses({ items }: { items: OfferForCompany[] }) {
           {grade(o) && <GradeTag>{grade(o)}</GradeTag>}
         </Link>
       ))}
-      <Link to="/employer/responses" className="pt-2 text-14 font-semibold text-brand-fg hover:underline">{T.allResponses}</Link>
+      <Link to="/employer/offers?show=responses" className="pt-2 text-14 font-semibold text-brand-fg hover:underline">{T.allResponses}</Link>
     </Panel>
   );
 }
@@ -158,6 +163,12 @@ function Loading() {
 
 /** Приглашения работодателя `/employer/offers` (E38-13, бриф §6.13): воронка, таблица предложений, последняя переписка, отклики. */
 export function EmployerOffers() {
+  const show = useShow(["offers", "responses"] as const);
+  const filter = <ShowFilter options={T.filter} label={T.filterLabel} />;
+  return show === "responses" ? <EmployerResponses filter={filter} /> : <OffersBoard filter={filter} />;
+}
+
+function OffersBoard({ filter }: { filter: ReactNode }) {
   const q = useListOffersOffersGet();
   const all = q.data?.status === 200 ? (q.data.data as OfferForCompany[]) : [];
   const offers = sortOffers(all.filter((o) => o.initiator !== "candidate"));
@@ -166,8 +177,11 @@ export function EmployerOffers() {
   const code = q.error instanceof ApiError ? T.code(q.error.status) : undefined;
   const empty = q.isSuccess && all.length === 0;
   return (
-    <main className="mx-auto flex w-full max-w-[1328px] flex-col gap-4 px-4 py-4 md:px-6 md:py-6">
-      {q.isPending ? <Skeleton className="h-7 w-56" /> : <H1 className="text-[22px] md:text-[26px]">{T.title}</H1>}
+    <main className={PAGE.normal}>
+      {q.isPending ? <Skeleton className="h-7 w-56" /> : <H1 className="text-[22px] md:text-[26px]">
+          <Gloss k="invitation">{T.title}</Gloss>
+        </H1>}
+      {filter}
       {q.isPending && <Loading />}
       {q.isError && <ErrorState title={T.loadError} code={code} onRetry={() => void q.refetch()} />}
       {empty && (

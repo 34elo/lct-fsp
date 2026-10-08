@@ -1,3 +1,4 @@
+import { PAGE } from "@/shared/lib/page";
 import { Badge, Button, Card, cn, ErrorState, Field, FieldInput, Skeleton } from "@fsp/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
@@ -311,7 +312,7 @@ export default function ProfileEdit() {
   const p = q.data?.status === 200 ? (q.data.data as CandidateProfile) : null;
 
   return (
-    <section className="mx-auto flex w-full max-w-2xl flex-col gap-4" data-testid="profile-edit">
+    <section className={PAGE.narrow} data-testid="profile-edit">
       <header className="flex flex-col gap-1">
         <Link to="/me" className="inline-flex min-h-11 items-center text-14 font-semibold text-brand-fg" data-testid="profile-edit-back">
           {E.back}

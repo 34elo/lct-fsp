@@ -1,3 +1,6 @@
+import { PAGE } from "@/shared/lib/page";
+import type { GlossaryKey } from "@/shared/glossary";
+import { Gi, Gloss } from "@/shared/Gloss";
 import {
   Badge,
   Button,
@@ -7,6 +10,7 @@ import {
   FspProtocol,
   GradeTag,
   H1,
+  H2,
   Lbl,
   Num,
   Panel,
@@ -52,16 +56,15 @@ import {
 } from "./text";
 import { useEventStream } from "@/shared/lib/useEventStream";
 
-const PAGE = "mx-auto flex w-full max-w-[1328px] flex-col gap-4 px-4 py-4 md:px-6 md:py-6";
 const TABS = ["skills", "fsp", "resume", "graph"] as const;
 type Tab = (typeof TABS)[number];
 const gradeLabel = (g: string) => GRADE[g] ?? GRADE_LABEL[g] ?? g;
 
 /** Карточка с именем для скринридера и тестов: регион + заголовок. */
-function Section({ title, label, aside, children, className, testid }: { title: string; label?: string; aside?: ReactNode; children: ReactNode; className?: string; testid: string }) {
+function Section({ title, tip, label, aside, children, className, testid }: { title: string; tip?: GlossaryKey; label?: string; aside?: ReactNode; children: ReactNode; className?: string; testid: string }) {
   return (
     <Panel role="region" aria-label={label ?? title} data-testid={testid} className={cn("flex flex-col gap-3", className)}>
-      <PanelCap title={title} aside={aside} className="mb-0" />
+      <PanelCap title={tip ? <Gloss k={tip}><H2>{title}</H2></Gloss> : title} aside={aside} className="mb-0" />
       {children}
     </Panel>
   );
@@ -96,13 +99,18 @@ function PdfButton({ name }: { name: string }) {
 
 function Frame({ tab, children, bare }: { tab: Tab; children: ReactNode; bare?: boolean }) {
   return (
-    <div className={PAGE} data-testid="profile-page" data-tab={tab}>
+    <div className={PAGE.normal} data-testid="profile-page" data-tab={tab}>
       <div className="flex flex-col gap-2.5 md:flex-row md:items-center md:justify-between">
         <H1 className="text-[22px] leading-[1.2] md:text-[26px]">{PROFILE.title}</H1>
         {!bare && (
-          <Link to="/onboarding" className={cn(buttonVariants({ variant: "outline", size: "md" }), "hidden md:inline-flex")} data-testid="profile-add">
-            {PROFILE.addEvidence}
-          </Link>
+          <div className="hidden items-center gap-2 md:flex">
+            <Link to="/me/tasks" className={buttonVariants({ variant: "ghost", size: "md" })} data-testid="profile-tasks">
+              {PROFILE.tasks}
+            </Link>
+            <Link to="/onboarding" className={buttonVariants({ variant: "outline", size: "md" })} data-testid="profile-add">
+              {PROFILE.addEvidence}
+            </Link>
+          </div>
         )}
       </div>
       {!bare && (
@@ -125,9 +133,14 @@ function Frame({ tab, children, bare }: { tab: Tab; children: ReactNode; bare?: 
         </nav>
       )}
       {!bare && (
-        <Link to="/onboarding" className={cn(buttonVariants({ size: "lg" }), "w-full md:hidden")} data-testid="profile-add-mobile">
-          {PROFILE.addEvidence}
-        </Link>
+        <div className="flex flex-col gap-2 md:hidden">
+          <Link to="/onboarding" className={cn(buttonVariants({ size: "lg" }), "w-full")} data-testid="profile-add-mobile">
+            {PROFILE.addEvidence}
+          </Link>
+          <Link to="/me/tasks" className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full")} data-testid="profile-tasks-mobile">
+            {PROFILE.tasks}
+          </Link>
+        </div>
       )}
       {children}
     </div>
@@ -185,7 +198,9 @@ function StatusCard({ p, standing }: { p: CandidateProfile; standing?: Candidate
   const until = p.active_until ? new Date(p.active_until) : null;
   return (
     <Panel role="region" aria-label={PROFILE.claimedAndConfirmed} data-testid="profile-status-card" className="flex flex-col gap-2.5">
-      <Lbl>{PROFILE.claimedAndConfirmed}</Lbl>
+      <Lbl>
+        <Gloss k="claimed">{PROFILE.claimed}</Gloss> / <Gloss k="confirmed">{PROFILE.confirmed}</Gloss>
+      </Lbl>
       {shown ? (
         <>
           <Chips className="items-center">
@@ -195,6 +210,7 @@ function StatusCard({ p, standing }: { p: CandidateProfile; standing?: Candidate
             <StatusTag state={confirmed ? "confirmed" : "claimed"} data-testid="profile-grade-status">
               {confirmed ? HOME.confirmed(dayMonth(standing?.confirmed_at), standing?.mode === "express") : HOME.notConfirmed}
             </StatusTag>
+            <Gi k="grade" />
           </Chips>
           {!confirmed && p.grade.preliminary && (
             <p className="text-12 text-muted">
@@ -347,6 +363,7 @@ function FspTab({ p, imported }: { p: CandidateProfile; imported: boolean }) {
     <div className="flex flex-col gap-4" data-testid="profile-fsp-tab">
       <Section
         title={PROFILE.fspTitle}
+        tip="fspRelevance"
         label="Достижения ФСП"
         testid="profile-fsp"
         aside={<StatusTag state={linked ? "ok" : "claimed"}>{linked ? PROFILE.fspLinked : PROFILE.fspNotLinked}</StatusTag>}

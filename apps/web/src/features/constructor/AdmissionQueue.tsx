@@ -1,3 +1,4 @@
+import { PAGE } from "@/shared/lib/page";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -206,7 +207,7 @@ export default function AdmissionQueue() {
   const open = items?.find((x) => x.id === openId) ?? null;
 
   return (
-    <div data-testid={sel("page")} className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-6">
+    <div data-testid={sel("page")} className={PAGE.wide}>
       <header className="flex flex-col gap-1">
         <h1 className="text-24 font-bold">{T.queue.title}</h1>
         <p className="text-14 text-muted">{T.queue.lead}</p>

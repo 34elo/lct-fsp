@@ -14,7 +14,7 @@ export interface SkillValue {
   isNew?: boolean;
 }
 
-/** Подсказка навыка от источника (E39-3: `/taxonomy/skills/suggest`; до него — справочник на клиенте). */
+/** Подсказка навыка от источника (`/taxonomy/skills/suggest`; запасной вариант — справочник на клиенте). */
 export interface SkillSuggestion {
   slug: string;
   name: string;
@@ -81,7 +81,7 @@ export function SkillInput({
   );
 }
 
-/** Подсказки из готового списка навыков (пока нет API E39-3): поиск по имени и slug, до `limit` штук. */
+/** Подсказки из готового списка навыков (запасной вариант без сервера): поиск по имени и slug, до `limit` штук. */
 export function localSkillSource(skills: SkillSuggestion[], limit = 20): SkillSource {
   return async (q) => {
     const n = q.trim().toLocaleLowerCase("ru");
@@ -109,11 +109,18 @@ export interface ProfessionOption {
   title: string;
 }
 
-/** Выбор профессии из справочника: поиск по названию, клавиатура как у `Select`. */
+/** Источник подсказок профессий (E39-3: `/taxonomy/professions/suggest`). */
+export type ProfessionSource = (query: string, signal: AbortSignal) => Promise<ProfessionOption[]>;
+
+/**
+ * Выбор профессии из справочника: поиск по названию, клавиатура как у `Select`.
+ * С `suggest` варианты приходят с сервера (все профессии системы), `professions` служит подписями.
+ */
 export function ProfessionInput({
   value,
   onChange,
   professions,
+  suggest,
   placeholder = "Профессия",
   clearable,
   disabled,
@@ -125,6 +132,7 @@ export function ProfessionInput({
   value: string | null;
   onChange: (slug: string | null) => void;
   professions: ProfessionOption[];
+  suggest?: ProfessionSource;
   placeholder?: string;
   clearable?: boolean;
   disabled?: boolean;
@@ -134,12 +142,18 @@ export function ProfessionInput({
   "data-testid"?: string;
 }) {
   const options = useMemo(() => professions.map((p) => ({ value: p.slug, label: p.title })), [professions]);
+  const load = useMemo(
+    () => (suggest ? async (q: string, signal: AbortSignal) => (await suggest(q, signal)).map((p) => ({ value: p.slug, label: p.title })) : undefined),
+    [suggest],
+  );
   return (
     <Combobox
       value={value}
       onChange={(v) => onChange(v)}
       options={options}
-      searchable={options.length >= 8}
+      loadOptions={load}
+      selectedOptions={load ? options : undefined}
+      searchable={load ? true : options.length >= 8}
       clearable={clearable}
       placeholder={placeholder}
       disabled={disabled}

@@ -1,3 +1,4 @@
+import { PAGE } from "@/shared/lib/page";
 import { useEffect, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 
@@ -83,6 +84,9 @@ function CategoriesPanel({ cats, selected, onSelect, className }: { cats: NeedCa
           );
         })}
       </ul>
+      <Link to="/employer/subscriptions" className="flex min-h-11 items-center border-t border-hairline px-3 text-13 font-semibold text-brand-fg hover:underline">
+        {T.manageSubscriptions}
+      </Link>
     </Panel>
   );
 }
@@ -404,7 +408,7 @@ function Match() {
   else center = <Matches key={`${needId}:${catKey(selected)}`} needId={needId} category={selected} results={results} />;
 
   return (
-    <div className="mx-auto flex w-full max-w-[1328px] flex-col gap-4 px-4 py-4 md:px-6 md:py-6">
+    <div className={PAGE.normal}>
       <h1 className="sr-only">{T.title}</h1>
       <QueryBar value={text} onChange={setText} onSubmit={submit} loading={create.isPending} placeholder={T.placeholder} label={T.queryLabel} submitLabel={T.submit} />
       {error && (

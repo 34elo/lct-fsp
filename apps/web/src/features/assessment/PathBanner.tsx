@@ -28,7 +28,7 @@ export function PathBanner() {
       <div
         role="region"
         aria-label={copy.action}
-        className="mx-auto flex max-w-5xl flex-wrap items-center gap-3 rounded-xl border border-brand bg-tint-50 px-4 py-3"
+        className="mx-auto flex max-w-[1328px] flex-wrap items-center gap-3 rounded-xl border border-brand bg-tint-50 px-4 py-3"
         data-testid="path-banner"
         data-step={step.kind}
       >

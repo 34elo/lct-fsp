@@ -1,3 +1,4 @@
+import { PAGE } from "@/shared/lib/page";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
@@ -13,6 +14,7 @@ import {
   Select,
   Skeleton,
   SlidersHorizontal,
+  cn,
 } from "@fsp/ui";
 
 import { useRecordFeedbackRecsFeedbackPost } from "@/api/endpoints/recommendations/recommendations";
@@ -189,7 +191,7 @@ export default function Search() {
   );
 
   return (
-    <div className="grid gap-6 px-4 py-6 md:px-6 lg:px-10 lg:py-8">
+    <div className={cn(PAGE.normal, "gap-6")}>
       <header className={vacancy ? "grid gap-1" : "sr-only"}>
         <h1 className="font-mono text-24 font-semibold">{vacancy ? T.shortlistTitle(vacancy.title) : T.title}</h1>
         <p className="text-14 text-muted">{T.anon}</p>

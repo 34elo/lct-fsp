@@ -1,3 +1,4 @@
+import { PAGE } from "@/shared/lib/page";
 import { Link, useLocation, useParams } from "react-router-dom";
 
 import { buttonVariants, cn, EmptyState, ErrorState, formatRub, GradeBadge, SectionLabel, Skeleton } from "@fsp/ui";
@@ -65,7 +66,7 @@ export default function NeedCategories() {
   const chips = need ? needChips(need) : [];
 
   return (
-    <div className="grid gap-6 px-4 py-6 md:px-6 lg:px-10 lg:py-8">
+    <div className={cn(PAGE.normal, "gap-6")}>
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div className="grid gap-2">
           <SectionLabel>{T.kicker}</SectionLabel>
