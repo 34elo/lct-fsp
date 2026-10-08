@@ -377,7 +377,7 @@ interface CandidateCard {
   primary_role: RoleSlug; grade: Grade; grade_preliminary: boolean;
   primary_stack: string[];
   top_skills: { slug: string; name: string; level: TrustLevel; sources: EvidenceSource[] }[]; // до 8
-  fsp_highlights: { title: string; level: string; place?: number; of?: number; year: number }[]; // до 3
+  fsp_highlights: { title: string; level: string; place?: number; of?: number; year: number; relevance?: "relevant" | "other"; note?: string }[]; // до 3; relevance — к профессии кандидата (E36-3)
   salary_min?: number; formats: WorkFormat[]; city?: string; relocation: boolean;
   search_status: "active" | "open";
   match?: { score: number; explanation: ExplanationItem[] };
