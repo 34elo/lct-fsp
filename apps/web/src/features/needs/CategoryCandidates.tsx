@@ -138,9 +138,9 @@ export default function CategoryCandidates() {
       setFailed(null);
       try {
         const r = await categoryCandidatesCategoriesProfessionGradeCandidatesGet(profession, grade, {
-          need_id: needId,
-          session_id: next ? session.current : null,
-          cursor: next,
+          need_id: needId ?? undefined,
+          session_id: next ? session.current : undefined,
+          cursor: next ?? undefined,
           limit: PAGE,
         });
         if (n !== seq.current || r.status !== 200) return;
