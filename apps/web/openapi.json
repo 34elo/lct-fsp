@@ -4013,6 +4013,185 @@
         }
       }
     },
+    "/taxonomy/skills/suggest": {
+      "get": {
+        "tags": [
+          "taxonomy"
+        ],
+        "summary": "Suggest Skills",
+        "description": "Подсказки навыков: синонимы, префикс, опечатки; частые выше, `provisional` помечен (E39-3).",
+        "operationId": "suggest_skills_taxonomy_skills_suggest_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100,
+              "default": "",
+              "title": "Q"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 10,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "profession",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 32
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Profession"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SkillSuggestion"
+                  },
+                  "title": "Response Suggest Skills Taxonomy Skills Suggest Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Зависимость недоступна",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/taxonomy/professions/suggest": {
+      "get": {
+        "tags": [
+          "taxonomy"
+        ],
+        "summary": "Suggest Professions",
+        "description": "Подсказки профессий: все видимые роли системы, включая добавленные админом (E39-3).",
+        "operationId": "suggest_professions_taxonomy_professions_suggest_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100,
+              "default": "",
+              "title": "Q"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 10,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProfessionSuggestion"
+                  },
+                  "title": "Response Suggest Professions Taxonomy Professions Suggest Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Зависимость недоступна",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/companies": {
       "post": {
         "tags": [
@@ -4889,6 +5068,70 @@
                     "$ref": "#/components/schemas/PublicVacancyOut"
                   },
                   "title": "Response List Public Vacancies Vacancies Public Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/vacancies/public/{vacancy_id}": {
+      "get": {
+        "tags": [
+          "vacancies"
+        ],
+        "summary": "Get Public Vacancy",
+        "description": "Одна опубликованная вакансия для карточки; черновик и закрытая — 404.",
+        "operationId": "get_public_vacancy_vacancies_public__vacancy_id__get",
+        "parameters": [
+          {
+            "name": "vacancy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Vacancy Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicVacancyOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
                 }
               }
             }
@@ -16622,70 +16865,6 @@
           }
         }
       }
-    },
-    "/vacancies/public/{vacancy_id}": {
-      "get": {
-        "tags": [
-          "vacancies"
-        ],
-        "summary": "Get Public Vacancy",
-        "description": "Одна опубликованная вакансия для карточки; черновик и закрытая — 404.",
-        "operationId": "get_public_vacancy_vacancies_public__vacancy_id__get",
-        "parameters": [
-          {
-            "name": "vacancy_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Vacancy Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PublicVacancyOut"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Не найдено (в том числе чужой ресурс)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemOut"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemOut"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Ошибка валидации",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemOut"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemOut"
-                }
-              }
-            }
-          }
-        }
-      }
     }
   },
   "components": {
@@ -24149,6 +24328,30 @@
             },
             "type": "array",
             "title": "Warnings"
+          },
+          "soft_skills": {
+            "items": {
+              "$ref": "#/components/schemas/ResumeSoftSkill"
+            },
+            "type": "array",
+            "title": "Soft Skills"
+          },
+          "declared_grade": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResumeDeclaredGrade"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "declared_roles": {
+            "items": {
+              "$ref": "#/components/schemas/ResumeDeclaredRole"
+            },
+            "type": "array",
+            "title": "Declared Roles"
           }
         },
         "type": "object",
@@ -24800,6 +25003,32 @@
         "type": "object",
         "title": "ProfessionPatch"
       },
+      "ProfessionSuggestion": {
+        "properties": {
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "score": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slug",
+          "title",
+          "score"
+        ],
+        "title": "ProfessionSuggestion",
+        "description": "Подсказка профессии `GET /taxonomy/professions/suggest` (E39-3)."
+      },
       "ProfessionsOut": {
         "properties": {
           "professions": {
@@ -25444,6 +25673,42 @@
         ],
         "title": "ResumeAcceptedOut"
       },
+      "ResumeDeclaredGrade": {
+        "properties": {
+          "grade": {
+            "$ref": "#/components/schemas/Grade"
+          },
+          "quote": {
+            "type": "string",
+            "title": "Quote"
+          }
+        },
+        "type": "object",
+        "required": [
+          "grade",
+          "quote"
+        ],
+        "title": "ResumeDeclaredGrade",
+        "description": "Грейд, который кандидат назвал сам (E20-5). Только «заявлено»: категорию даёт тест."
+      },
+      "ResumeDeclaredRole": {
+        "properties": {
+          "role": {
+            "$ref": "#/components/schemas/RoleSlug"
+          },
+          "quote": {
+            "type": "string",
+            "title": "Quote"
+          }
+        },
+        "type": "object",
+        "required": [
+          "role",
+          "quote"
+        ],
+        "title": "ResumeDeclaredRole",
+        "description": "Роль, которую кандидат назвал сам (E20-5). Только «заявлено»: категорию даёт тест."
+      },
       "ResumeEducation": {
         "properties": {
           "institution": {
@@ -25717,6 +25982,25 @@
           "confidence"
         ],
         "title": "ResumeSkill"
+      },
+      "ResumeSoftSkill": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "quote": {
+            "type": "string",
+            "title": "Quote"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "quote"
+        ],
+        "title": "ResumeSoftSkill",
+        "description": "Софт-навык, «заявлено в резюме» (E20-5): без доверия, на категорию и подбор не влияет."
       },
       "RetiredOut": {
         "properties": {
@@ -27235,6 +27519,59 @@
           "slug"
         ],
         "title": "SkillRequirement"
+      },
+      "SkillSuggestion": {
+        "properties": {
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "group": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group"
+          },
+          "provisional": {
+            "type": "boolean",
+            "title": "Provisional",
+            "default": false
+          },
+          "matched": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matched"
+          },
+          "score": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slug",
+          "name",
+          "score"
+        ],
+        "title": "SkillSuggestion",
+        "description": "Подсказка навыка `GET /taxonomy/skills/suggest` (E39-3)."
       },
       "SkillType": {
         "type": "string",
