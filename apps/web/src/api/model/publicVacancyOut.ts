@@ -7,7 +7,6 @@
 import type { EmploymentType } from './employmentType';
 import type { Grade } from './grade';
 import type { PublicCompany } from './publicCompany';
-import type { RoleSlug } from './roleSlug';
 import type { SalaryBasis } from './salaryBasis';
 import type { SkillReqOut } from './skillReqOut';
 import type { WorkFormat } from './workFormat';
@@ -18,7 +17,7 @@ import type { WorkFormat } from './workFormat';
 export interface PublicVacancyOut {
   id: string;
   title: string;
-  role: RoleSlug;
+  role: string;
   grade_min: Grade;
   grade_max: Grade;
   formats: WorkFormat[];

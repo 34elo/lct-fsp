@@ -21,7 +21,6 @@ import {
   SkillTag,
   StatusTag,
   Tag,
-  ThemeScope,
   type WhyItem,
 } from "@fsp/ui";
 import { useState } from "react";
@@ -315,8 +314,8 @@ function Body({ c, vacancyId, needId }: { c: CandidateCardFull; vacancyId: strin
             <Button variant="outline" className="w-full" onClick={() => setInterestOpen(true)}>
               {T.interest}
             </Button>
-            <OfferDialog open={interestOpen} onOpenChange={setInterestOpen} dark mode="interest" candidate={dialogCandidate} vacancyId={vacancyId ?? ""} />
-            <OfferDialog open={offerOpen} onOpenChange={setOfferOpen} dark candidate={dialogCandidate} vacancyId={vacancyId ?? ""} alreadyOffered={offered} />
+            <OfferDialog open={interestOpen} onOpenChange={setInterestOpen} mode="interest" candidate={dialogCandidate} vacancyId={vacancyId ?? ""} />
+            <OfferDialog open={offerOpen} onOpenChange={setOfferOpen} candidate={dialogCandidate} vacancyId={vacancyId ?? ""} alreadyOffered={offered} />
             {needId && (
               <Button variant="outline" className="w-full" aria-pressed={shortlisted} onClick={toggleShortlist}>
                 {shortlisted ? `✓ ${T.shortlisted}` : T.shortlist}
@@ -373,7 +372,7 @@ export default function CandidateView() {
   const err = q.error instanceof ApiError ? q.error : null;
   const hidden = q.isError && (err?.status === 404 || err?.status === 403);
   return (
-    <ThemeScope dark className="min-h-[calc(100dvh-4rem)]">
+    <div className="min-h-[calc(100dvh-4rem)]">
       <main className="mx-auto flex w-full max-w-[1328px] flex-col gap-4 p-4 md:p-6">
         <nav aria-label={T.nav} className="flex flex-wrap items-center gap-1.5 text-13">
           <Link to={back} className="font-semibold text-brand-fg hover:underline">
@@ -408,6 +407,6 @@ export default function CandidateView() {
         {q.isError && !hidden && <ErrorState title={T.failed} code={err ? `ошибка ${err.status}` : undefined} onRetry={() => void q.refetch()} />}
         {card && <Body c={card} vacancyId={vacancyId} needId={needId} />}
       </main>
-    </ThemeScope>
+    </div>
   );
 }

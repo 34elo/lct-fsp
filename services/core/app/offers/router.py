@@ -13,7 +13,6 @@ from fsp_contracts.enums import (
     EmploymentType,
     Grade,
     OfferStatus,
-    RoleSlug,
     WorkFormat,
 )
 from fsp_contracts.hiring import ContactMethod, OfferInitiator, SalaryBasis
@@ -100,7 +99,7 @@ class StatusIn(BaseModel):
 class VacancyBrief(BaseModel):
     id: uuid.UUID
     title: str
-    role: RoleSlug
+    role: str
     grade_min: Grade
     grade_max: Grade
     formats: list[WorkFormat]

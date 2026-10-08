@@ -110,6 +110,11 @@ def test_sandbox_rejects_unsafe(body):
         ("return list(range(x))", 10**9),
         ("return 1 << x", 10**6),
         ("return 'ab'.zfill(x)", 10**9),
+        ("return ('%' + str(x) + 'd') % 1", 10**9),
+        ("return ('%.' + str(x) + 'f') % 1.5", 10**9),
+        ("return '%*d' % (x, 1)", 10**9),
+        ("return ('%(a)' + str(x) + 'd') % {'a': 1}", 10**9),
+        ("return round(1, -x)", 10**8),
     ],
 )
 def test_sandbox_limits(body, arg):

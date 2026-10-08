@@ -6,10 +6,15 @@
     <script>
       try {
         var t = localStorage.getItem("fsp-theme");
-        if (t === "dark" || (t === "system" && matchMedia("(prefers-color-scheme: dark)").matches))
+        if (t === "dark" || (t !== "light" && matchMedia("(prefers-color-scheme: dark)").matches))
           document.documentElement.classList.add("dark");
       } catch (e) {}
     </script>
+    <meta name="theme-color" content="#402fff" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
     <title>ФСП Карьера</title>
   </head>
   <body>

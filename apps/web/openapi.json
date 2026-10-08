@@ -4712,7 +4712,7 @@
           "vacancies"
         ],
         "summary": "List Public Vacancies",
-        "description": "Опубликованные вакансии без авторизации: название, вилка, компания, навыки.",
+        "description": "Опубликованные вакансии без авторизации: название, вилка, компания, навыки.\n\nФильтры: профессия, грейд (входит в вилку), навыки (все), вилка зарплаты, формат, город.",
         "operationId": "list_public_vacancies_vacancies_public_get",
         "parameters": [
           {
@@ -4722,7 +4722,8 @@
             "schema": {
               "anyOf": [
                 {
-                  "$ref": "#/components/schemas/RoleSlug"
+                  "type": "string",
+                  "maxLength": 100
                 },
                 {
                   "type": "null"
@@ -4763,6 +4764,94 @@
                 }
               ],
               "title": "Q"
+            }
+          },
+          {
+            "name": "grade",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Grade"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Grade"
+            }
+          },
+          {
+            "name": "skills",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "maxItems": 10
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Skills"
+            }
+          },
+          {
+            "name": "salary_min",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 100000000,
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Salary Min"
+            }
+          },
+          {
+            "name": "salary_max",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 100000000,
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Salary Max"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/WorkFormat"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Format"
             }
           },
           {
@@ -16533,6 +16622,70 @@
           }
         }
       }
+    },
+    "/vacancies/public/{vacancy_id}": {
+      "get": {
+        "tags": [
+          "vacancies"
+        ],
+        "summary": "Get Public Vacancy",
+        "description": "Одна опубликованная вакансия для карточки; черновик и закрытая — 404.",
+        "operationId": "get_public_vacancy_vacancies_public__vacancy_id__get",
+        "parameters": [
+          {
+            "name": "vacancy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Vacancy Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicVacancyOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -24900,7 +25053,8 @@
             "title": "Title"
           },
           "role": {
-            "$ref": "#/components/schemas/RoleSlug"
+            "type": "string",
+            "title": "Role"
           },
           "grade_min": {
             "$ref": "#/components/schemas/Grade"
@@ -29508,7 +29662,8 @@
             "title": "Title"
           },
           "role": {
-            "$ref": "#/components/schemas/RoleSlug"
+            "type": "string",
+            "title": "Role"
           },
           "grade_min": {
             "$ref": "#/components/schemas/Grade"
@@ -29548,7 +29703,10 @@
             "title": "Title"
           },
           "role": {
-            "$ref": "#/components/schemas/RoleSlug"
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Role"
           },
           "grade_min": {
             "$ref": "#/components/schemas/Grade"
@@ -29656,7 +29814,8 @@
             "title": "Title"
           },
           "role": {
-            "$ref": "#/components/schemas/RoleSlug"
+            "type": "string",
+            "title": "Role"
           },
           "grade_min": {
             "$ref": "#/components/schemas/Grade"
@@ -29793,12 +29952,15 @@
           "role": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/RoleSlug"
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 1
               },
               {
                 "type": "null"
               }
-            ]
+            ],
+            "title": "Role"
           },
           "grade_min": {
             "anyOf": [

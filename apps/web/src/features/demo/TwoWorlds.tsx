@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { Badge, Card, CardContent, ErrorState, Skeleton } from "@fsp/ui";
+import { Badge, Card, CardContent, ErrorState, NumberInput, Select, Skeleton } from "@fsp/ui";
 
 import { useTwoWorldsAdminDemoTwoWorldsGet } from "@/api/endpoints/admin/admin";
 import { T } from "./text";
@@ -20,30 +20,21 @@ export default function TwoWorlds() {
         <p className="text-14 text-muted">{TW.lead}</p>
       </header>
       <div className="flex flex-wrap items-end gap-3">
-        <label className="flex flex-col gap-1 text-13 text-muted">
-          {TW.family}
-          <select
+        <div className="flex flex-col gap-1 text-13 text-muted">
+          <span>{TW.family}</span>
+          <Select
             data-testid="demo-family"
+            aria-label={TW.family}
             value={family}
-            onChange={(e) => setFamily(e.target.value)}
-            className="min-h-9 rounded-lg border border-hairline bg-surface px-2 text-14 text-ink"
-          >
-            {(d?.choices ?? [family]).map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-13 text-muted">
-          {TW.seed}
-          <input
-            data-testid="demo-seed"
-            type="number"
-            min={0}
-            value={seed}
-            onChange={(e) => setSeed(Math.max(0, Number(e.target.value) || 0))}
-            className="min-h-9 w-28 rounded-lg border border-hairline bg-surface px-2 text-14 text-ink"
+            onChange={(v) => v && setFamily(v)}
+            options={(d?.choices ?? [family]).map((c) => ({ value: c, label: c }))}
+            className="w-72 max-w-full text-ink"
           />
-        </label>
+        </div>
+        <div className="flex flex-col gap-1 text-13 text-muted">
+          <span>{TW.seed}</span>
+          <NumberInput data-testid="demo-seed" aria-label={TW.seed} min={0} value={seed} onChange={(v) => setSeed(Math.max(0, v ?? 0))} className="w-36" />
+        </div>
       </div>
       {q.isLoading && <Skeleton className="h-48" />}
       {(q.isError || (q.data && q.data.status !== 200)) && <ErrorState description={T.loadError} onRetry={() => void q.refetch()} />}

@@ -138,3 +138,15 @@ test("меню аватара кандидата ведёт в «Настрой�
   fireEvent.click(await screen.findByRole("menuitem", { name: "Настройки" }));
   expect(await screen.findByTestId("settings-page")).toBeInTheDocument();
 });
+
+test("оформление: две темы, выбор сохраняется", async () => {
+  install();
+  mount();
+  fireEvent.click(await screen.findByTestId("settings-theme-dark"));
+  expect(screen.getByTestId("settings-theme-dark")).toHaveAttribute("aria-pressed", "true");
+  expect(screen.getByTestId("settings-theme-light")).toHaveAttribute("aria-pressed", "false");
+  expect(localStorage.getItem("fsp-theme")).toBe("dark");
+  expect(document.documentElement.classList.contains("dark")).toBe(true);
+  fireEvent.click(screen.getByTestId("settings-theme-light"));
+  expect(document.documentElement.classList.contains("dark")).toBe(false);
+});

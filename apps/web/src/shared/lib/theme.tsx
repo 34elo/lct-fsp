@@ -1,14 +1,15 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
-export type ThemeMode = "system" | "light" | "dark";
+/** Только светлая и тёмная. Пока выбора нет (первый вход), тема следует системной. */
+export type ThemeMode = "light" | "dark";
 const KEY = "fsp-theme";
 
-function readStored(): ThemeMode {
+function readStored(): ThemeMode | null {
   try {
     const v = localStorage.getItem(KEY);
-    return v === "dark" || v === "system" ? v : "light"; // по умолчанию светлая
+    return v === "dark" || v === "light" ? v : null;
   } catch {
-    return "light";
+    return null;
   }
 }
 
@@ -17,23 +18,27 @@ function systemDark(): boolean {
 }
 
 export function applyTheme(mode: ThemeMode) {
-  const dark = mode === "dark" || (mode === "system" && systemDark());
-  document.documentElement.classList.toggle("dark", dark);
+  document.documentElement.classList.toggle("dark", mode === "dark");
 }
 
 const Ctx = createContext<{ mode: ThemeMode; setMode: (m: ThemeMode) => void } | null>(null);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [mode, setModeState] = useState<ThemeMode>(readStored);
+  const [chosen, setChosen] = useState<ThemeMode | null>(readStored);
+  const [sys, setSys] = useState<ThemeMode>(() => (systemDark() ? "dark" : "light"));
+  const mode = chosen ?? sys;
 
   useEffect(() => {
     applyTheme(mode);
-    if (mode !== "system" || typeof matchMedia !== "function") return;
+  }, [mode]);
+
+  useEffect(() => {
+    if (chosen || typeof matchMedia !== "function") return;
     const mq = matchMedia("(prefers-color-scheme: dark)");
-    const on = () => applyTheme("system");
+    const on = () => setSys(mq.matches ? "dark" : "light");
     mq.addEventListener("change", on);
     return () => mq.removeEventListener("change", on);
-  }, [mode]);
+  }, [chosen]);
 
   const setMode = useCallback((m: ThemeMode) => {
     try {
@@ -41,7 +46,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     } catch {
       /* хранилище недоступно: тема живёт до перезагрузки */
     }
-    setModeState(m);
+    setChosen(m);
   }, []);
 
   const value = useMemo(() => ({ mode, setMode }), [mode, setMode]);

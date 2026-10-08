@@ -10,6 +10,7 @@ import {
   SheetContent,
   SheetTitle,
   SheetTrigger,
+  Select,
   Skeleton,
   SlidersHorizontal,
 } from "@fsp/ui";
@@ -22,7 +23,7 @@ import type { CandidateCard, FilterChip, SearchRequestSort, VacancyOut } from "@
 import { OfferDialog } from "@/features/offers/OfferDialog";
 import { QueryBar } from "./QueryBar";
 import { chipActive, EMPTY_FORM, fromParsed, gradeRange, removeChip, toCardData, toFilters, type SearchForm } from "./search-model";
-import { SearchFiltersPanel, selectClass } from "./SearchFiltersPanel";
+import { SearchFiltersPanel } from "./SearchFiltersPanel";
 import { SEARCH_TEXT as T, SORT_LABEL } from "./text";
 
 /** Стартовые фильтры подборки: роль и грейды вакансии. */
@@ -226,21 +227,16 @@ export default function Search() {
                 <div className="pt-8">{panel}</div>
               </SheetContent>
             </Sheet>
-            <label className="flex items-center gap-2 text-13 text-muted">
+            <div className="flex items-center gap-2 text-13 text-muted">
               <span className="hidden sm:inline">{T.sort}</span>
-              <select
-                className={`${selectClass} w-auto pr-8`}
+              <Select
+                className="w-48 text-ink"
                 value={form.sort ?? "match"}
-                onChange={(e) => set("sort", e.target.value as SearchRequestSort)}
+                onChange={(v) => v && set("sort", v as SearchRequestSort)}
                 aria-label={T.sort}
-              >
-                {Object.entries(SORT_LABEL).map(([k, v]) => (
-                  <option key={k} value={k}>
-                    {v}
-                  </option>
-                ))}
-              </select>
-            </label>
+                options={Object.entries(SORT_LABEL).map(([k, v]) => ({ value: k, label: v }))}
+              />
+            </div>
           </div>
 
           {failed && <ErrorState title={T.failed} onRetry={() => run(null)} />}

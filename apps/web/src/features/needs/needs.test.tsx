@@ -4,6 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 import { App } from "@/app/App";
 import { Providers, makeQueryClient } from "@/app/Providers";
 import { setAccessToken } from "@/shared/lib/token";
+import { pickOption } from "@/test-pick";
 
 const res = (status: number, body?: unknown) => new Response(body === undefined ? null : JSON.stringify(body), { status });
 
@@ -127,7 +128,7 @@ test("кандидаты категории: подтверждённые по �
 test("фильтры категории: стек и «ФСП» дают пустое состояние со сбросом", async () => {
   mount("/employer/categories/backend/middle?need_id=n1");
   await screen.findByRole("article", { name: "Backend #4821" });
-  fireEvent.change(screen.getByRole("combobox", { name: "Стек" }), { target: { value: "Python" } });
+  pickOption(screen.getByRole("combobox", { name: "Стек" }), "Python");
   expect(screen.getAllByRole("article")).toHaveLength(3);
   fireEvent.click(screen.getByRole("button", { name: /ФСП/ }));
   // в шорт-листе остаётся p2; снимаем отметку — и по фильтру никого
