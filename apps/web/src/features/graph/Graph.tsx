@@ -1,4 +1,5 @@
-import { EmptyState, ErrorState, Panel, PanelCap, SkillTag, Skeleton } from "@fsp/ui";
+import { EmptyState, ErrorState, H2, Panel, PanelCap, SkillTag, Skeleton } from "@fsp/ui";
+import { Gloss } from "@/shared/Gloss";
 import { Link, useSearchParams } from "react-router-dom";
 
 import { useMyGraphCandidatesMeGraphGet } from "@/api/endpoints/graph/graph";
@@ -69,7 +70,7 @@ export default function GraphView() {
       </div>
       <Panel aria-label={T.title} className="p-4 md:p-5">
         <PanelCap
-          title={T.title}
+          title={<Gloss k="graph"><H2>{T.title}</H2></Gloss>}
           aside={
             <div className="flex gap-1.5">
               <SkillTag name="факт" />

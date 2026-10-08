@@ -1,5 +1,7 @@
+import { PAGE } from "@/shared/lib/page";
 import { useEffect, useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 
 import { Button, cn } from "@fsp/ui";
 import { getGetMyCompanyCompaniesMeGetQueryKey, useGetMyCompanyCompaniesMeGet, usePatchMyCompanyCompaniesMePatch, useRegisterCompanyCompaniesPost } from "@/api/endpoints/companies/companies";
@@ -51,7 +53,7 @@ export default function Company() {
 
   const status = company?.status ?? "pending";
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4 md:p-6">
+    <main className={PAGE.narrow}>
       <h1 className="font-mono text-2xl font-semibold">Компания</h1>
       {q.isPending && <p role="status" className="text-muted">Загрузка…</p>}
       {q.isError && !missing && <ErrorNote>Не удалось загрузить компанию.</ErrorNote>}
@@ -95,6 +97,7 @@ export default function Company() {
           </Button>
         </form>
       )}
+      <Link to="/employer/tasks" className="inline-flex min-h-11 items-center self-start text-14 font-semibold text-brand-fg hover:underline">Тестовые задания компании</Link>
     </main>
   );
 }

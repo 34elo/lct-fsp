@@ -1,7 +1,8 @@
+import { PAGE } from "@/shared/lib/page";
 import { useId, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import { Button, SectionLabel } from "@fsp/ui";
+import { Button, SectionLabel, cn } from "@fsp/ui";
 
 import { useCreateNeedNeedsPost } from "@/api/endpoints/needs/needs";
 import { ApiError } from "@/api/mutator";
@@ -32,7 +33,7 @@ export default function NeedNew() {
   };
 
   return (
-    <div className="mx-auto grid max-w-[880px] gap-6 px-4 py-6 md:px-6 lg:py-8">
+    <div className={cn(PAGE.narrow, "gap-6")}>
       <header className="grid gap-2">
         <SectionLabel>{T.kicker}</SectionLabel>
         <h1 className="font-mono text-24 font-semibold">{T.title}</h1>

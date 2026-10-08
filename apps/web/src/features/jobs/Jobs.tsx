@@ -25,7 +25,7 @@ import type { ListPublicVacanciesVacanciesPublicGetParams, PublicVacancyOut } fr
 import { fieldClass } from "@/features/auth/ui";
 import { FORMAT_LABEL } from "@/features/employer/text";
 import { GRADE_LABEL, roleLabel } from "@/features/profile/text";
-import { useSkillSource } from "@/shared/lib/skills";
+import { suggestProfessions, useSkillSource } from "@/shared/lib/skills";
 import { JOBS_TEXT as T } from "./text";
 
 const PAGE = 20;
@@ -123,7 +123,7 @@ function FilterFields({ f, set }: { f: Filters; set: (patch: Partial<Filters>) =
     <div className="grid content-start gap-3">
       <div className="flex flex-col gap-1 text-13 font-semibold">
         <span>{T.role}</span>
-        <ProfessionInput value={f.role || null} onChange={(v) => set({ role: v ?? "" })} professions={professions} placeholder={T.anyRole} clearable aria-label={T.role} />
+        <ProfessionInput value={f.role || null} onChange={(v) => set({ role: v ?? "" })} professions={professions} suggest={suggestProfessions} placeholder={T.anyRole} clearable aria-label={T.role} />
       </div>
       <div className="flex flex-col gap-1 text-13 font-semibold">
         <span>{T.grade}</span>

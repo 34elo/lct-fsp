@@ -1,4 +1,5 @@
 import { useMemo, useState, type FormEvent } from "react";
+import { Gloss } from "@/shared/Gloss";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { Badge, Button, Card, CardContent, cn, Combobox, EmptyState, ErrorState, Field, Skeleton, useFieldProps } from "@fsp/ui";
@@ -161,7 +162,9 @@ export function ProfessionsTab() {
   return (
     <div className="flex flex-col gap-4" data-testid={sel("tab")}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-18 font-semibold">{T.prof.listTitle}</h2>
+        <h2 className="text-18 font-semibold">
+          <Gloss k="category">{T.prof.listTitle}</Gloss>
+        </h2>
         <Button type="button" data-testid={sel("create")} onClick={() => { setEditing("new"); setNotice(""); }}>
           {T.prof.create}
         </Button>

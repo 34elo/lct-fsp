@@ -234,6 +234,17 @@ describe("ProfessionInput", () => {
     key("Enter");
     expect(pick).toHaveBeenCalledWith("qa");
   });
+
+  it("с suggest варианты приходят с сервера, выбранная подпись берётся из professions", async () => {
+    const pick = vi.fn();
+    const suggest = vi.fn(async (q: string) => (q ? [{ slug: "ghost", title: "Призрак" }] : []));
+    render(<ProfessionInput value={null} onChange={pick} professions={[{ slug: "backend", title: "Backend" }]} suggest={suggest} />);
+    fireEvent.change(box(), { target: { value: "призр" } });
+    await screen.findByRole("option", { name: "Призрак" });
+    key("Enter");
+    expect(pick).toHaveBeenCalledWith("ghost");
+    expect(suggest).toHaveBeenCalledWith("призр", expect.anything());
+  });
 });
 
 describe("NumberInput и SalaryRangeInput", () => {
