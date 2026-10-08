@@ -1,3 +1,4 @@
+import { PAGE } from "@/shared/lib/page";
 import { useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
@@ -39,7 +40,7 @@ function ApplyBox({ vacancyId }: { vacancyId: string }) {
       <section role="status" className="flex flex-col gap-2 rounded-xl border border-brand-mid bg-tint-50 p-4">
         <h2 className="font-mono text-16 font-semibold">{T.sentTitle}</h2>
         <p className="text-14">{T.sentHint}</p>
-        <Link to="/me/responses" className="text-14 font-semibold text-brand-fg hover:underline">{T.toResponses}</Link>
+        <Link to="/me/offers?show=responses" className="text-14 font-semibold text-brand-fg hover:underline">{T.toResponses}</Link>
       </section>
     );
   }
@@ -105,7 +106,7 @@ export default function JobDetail() {
   const q = useGetPublicVacancyVacanciesPublicVacancyIdGet(id, { query: { retry: false } });
   const v = q.data?.status === 200 ? q.data.data : undefined;
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
+    <div className={PAGE.narrow}>
       <Link to={`/jobs${search}`} className="text-sm font-semibold text-brand-fg hover:underline">← {T.back}</Link>
       {q.isPending && <Skeleton role="status" aria-label="Загрузка" className="h-64" />}
       {q.isError && <ErrorState title={T.notFound} onRetry={() => void q.refetch()} />}

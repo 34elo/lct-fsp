@@ -39,7 +39,7 @@ export const ROUTES: RouteDef[] = [
   // >>> block2 (auth)
   // <<< block2 (auth)
 
-  { path: "/onboarding", title: "Онбординг", screen: "M1", section: "candidate", owner: "b1", nav: true },
+  { path: "/onboarding", title: "Онбординг", screen: "M1", section: "candidate", owner: "b1" },
   { path: "/me", title: "Главная", screen: "v2_me__before, v2_me__after", section: "candidate", owner: "b1", nav: true },
   // Граф переехал во вкладку профиля (E38-6).
   { path: "/me/graph", title: "Граф доказательств", section: "candidate", owner: "b1", redirect: "/me/profile?tab=graph" },
@@ -54,16 +54,17 @@ export const ROUTES: RouteDef[] = [
   { path: "/me/assessment/history", title: "История тестов", section: "candidate", owner: "b1" },
   { path: "/me/assessment/attempts/:id", title: "Прохождение теста", section: "candidate", owner: "b1" },
   { path: "/me/assessment/attempts/:id/result", title: "Результат теста", section: "candidate", owner: "b1" },
-  { path: "/me/tasks", title: "Регулярные задания", section: "candidate", owner: "b1", nav: true },
+  { path: "/me/tasks", title: "Регулярные задания", section: "candidate", owner: "b1" },
   { path: "/me/profile", title: "Мой профиль", screen: "v2_me-profile", section: "candidate", owner: "b1", nav: true },
-  { path: "/me/profile/edit", title: "Редактирование профиля", section: "candidate", owner: "b1", nav: true },
-  // Статистика (E38-2): ссылка с Главной, не в меню.
-  { path: "/me/stats", title: "Статистика", screen: "v2_me-stats", section: "candidate", owner: "b1" },
+  { path: "/me/profile/edit", title: "Редактирование профиля", section: "candidate", owner: "b1" },
+  // Статистика (E38-2): пункт меню (E39-25), ссылка есть и на Главной.
+  { path: "/me/stats", title: "Статистика", screen: "v2_me-stats", section: "candidate", owner: "b1", nav: true },
   // <<< block1 (candidate)
   // >>> block2 (candidate)
-  { path: "/me/responses", title: "Мои отклики", section: "candidate", owner: "b2", nav: true },
+  // Интересы и отклики — фильтр на странице «Приглашения» (E39-25).
+  { path: "/me/responses", title: "Мои отклики", section: "candidate", owner: "b2", redirect: "/me/offers?show=responses" },
   { path: "/me/navigator", title: "Навигатор роста", section: "candidate", owner: "b2" },
-  { path: "/me/interests", title: "Вами интересуются", section: "candidate", owner: "b2", nav: true },
+  { path: "/me/interests", title: "Вами интересуются", section: "candidate", owner: "b2", redirect: "/me/offers?show=interests" },
   // <<< block2 (candidate)
 
   { path: "/employer/search", title: "Поиск", screen: "A, E2", section: "employer", owner: "b2" },
@@ -86,8 +87,10 @@ export const ROUTES: RouteDef[] = [
   { path: "/employer/needs/:id", title: "Рекомендованные категории", section: "employer", owner: "b2" },
   { path: "/employer/categories/:profession/:grade", title: "Кандидаты категории", section: "employer", owner: "b2" },
   { path: "/employer/shortlist", title: "Шорт-лист", screen: "v2_employer-shortlist", section: "employer", owner: "b2", nav: true },
-  { path: "/employer/responses", title: "Отклики на вакансии", section: "employer", owner: "b2", nav: true },
-  { path: "/employer/subscriptions", title: "Подписки на категории", section: "employer", owner: "b2", nav: true },
+  // Отклики — фильтр на странице «Приглашения» (E39-25).
+  { path: "/employer/responses", title: "Отклики на вакансии", section: "employer", owner: "b2", redirect: "/employer/offers?show=responses" },
+  // Подписки — блок «Ваши категории» в Подборе (E39-25), управление открывается из него.
+  { path: "/employer/subscriptions", title: "Подписки на категории", section: "employer", owner: "b2" },
   // <<< block2 (employer)
 
   { path: "/federation", title: "Дашборд ФСП", screen: "F1", section: "admin", owner: "b2", nav: true },
@@ -116,8 +119,6 @@ export const SECTION_ROLE: Partial<Record<Section, Role>> = {
 export interface NavItem {
   to: string;
   label: string;
-  /** Вкладки раздела: строка под шапкой, пока открыт любой из этих путей. */
-  tabs?: NavItem[];
   /** Ещё префиксы путей, на которых пункт меню подсвечен. */
   match?: string[];
 }
@@ -131,52 +132,22 @@ export interface NavItem {
 export const NAV: Record<"candidate" | "employer" | "admin", NavItem[]> = {
   candidate: [
     { to: "/me", label: "Главная" },
-    { to: "/me/assessment", label: "Тест и грейд" },
+    { to: "/me/assessment", label: "Тест" },
+    // «Интересы» и «Отклики» — фильтр внутри страницы (E39-25).
+    { to: "/me/offers", label: "Приглашения", match: ["/me/interests", "/me/responses"] },
     { to: "/jobs", label: "Вакансии" },
-    {
-      to: "/me/offers",
-      label: "Приглашения",
-      tabs: [
-        { to: "/me/interests", label: "Интересы" },
-        { to: "/me/offers", label: "Приглашения" },
-        { to: "/me/responses", label: "Отклики" },
-      ],
-    },
-    {
-      to: "/me/profile",
-      label: "Профиль",
-      tabs: [
-        // Внутри «Профиля» свои вкладки: Навыки · ФСП · Резюме · Граф (E38-6).
-        { to: "/me/profile", label: "Обзор" },
-        { to: "/me/profile/edit", label: "Данные" },
-        { to: "/onboarding", label: "Резюме и ФСП" },
-        { to: "/me/tasks", label: "Задания" },
-      ],
-    },
+    { to: "/me/stats", label: "Статистика" },
+    // Резюме, ФСП, данные и задания — ссылки внутри профиля.
+    { to: "/me/profile", label: "Профиль", match: ["/onboarding", "/me/tasks"] },
   ],
   employer: [
-    // Подбор (E38-8): «Поиск» и «Кого ищете» больше не вкладки — их заменяет строка запроса на /employer.
-    { to: "/employer", label: "Подбор" },
+    // Подбор (E38-8): «Поиск» и «Кого ищете» заменяет строка запроса; подписки — блок «Ваши категории».
+    { to: "/employer", label: "Подбор", match: ["/employer/subscriptions"] },
     { to: "/employer/shortlist", label: "Шорт-лист" },
-    {
-      to: "/employer/offers",
-      label: "Приглашения",
-      tabs: [
-        { to: "/employer/offers", label: "Приглашения" },
-        { to: "/employer/responses", label: "Отклики" },
-      ],
-    },
-    {
-      to: "/employer/company",
-      label: "Компания",
-      tabs: [
-        { to: "/employer/company", label: "Компания" },
-        { to: "/employer/vacancies", label: "Вакансии" },
-        { to: "/employer/tasks", label: "Задания" },
-        { to: "/employer/subscriptions", label: "Подписки" },
-      ],
-      match: ["/employer/families"],
-    },
+    { to: "/employer/offers", label: "Приглашения", match: ["/employer/responses"] },
+    { to: "/employer/vacancies", label: "Вакансии" },
+    { to: "/employer/tasks", label: "Задания", match: ["/employer/families"] },
+    { to: "/employer/company", label: "Компания" },
   ],
   admin: [
     { to: "/federation", label: "Дашборд" },
@@ -189,7 +160,7 @@ export const NAV: Record<"candidate" | "employer" | "admin", NavItem[]> = {
 };
 
 /** Все пути пункта меню: сам пункт, его вкладки и доп. префиксы. */
-const navPaths = (n: NavItem) => [n.to, ...(n.tabs ?? []).map((t) => t.to), ...(n.match ?? [])];
+const navPaths = (n: NavItem) => [n.to, ...(n.match ?? [])];
 
 const covers = (prefix: string, pathname: string) => pathname === prefix || pathname.startsWith(`${prefix}/`);
 

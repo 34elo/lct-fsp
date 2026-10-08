@@ -1,3 +1,4 @@
+import { PAGE } from "@/shared/lib/page";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -156,7 +157,7 @@ function Complaints() {
 export default function Moderation() {
   const [tab, setTab] = useState<Tab>("companies");
   return (
-    <div className="flex flex-col gap-4 p-4 md:p-6">
+    <div className={PAGE.wide}>
       <h1 className="text-24 font-semibold">{T.mod.title}</h1>
       <div role="tablist" className="flex gap-1 border-b border-hairline">
         {(["companies", "complaints"] as Tab[]).map((t) => (

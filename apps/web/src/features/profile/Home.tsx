@@ -1,3 +1,6 @@
+import { PAGE } from "@/shared/lib/page";
+
+import { Gi, Gloss } from "@/shared/Gloss";
 import { buttonVariants, Chips, CircuitLine, cn, ConstellationAvatar, type ConstellationNode, dotsText, ErrorState, formatRub, formatRubRangeShort, GradeTag, H1, H2, Lbl, ListRow, MetricTile, Num, OfferCardV2, Panel, PanelCap, Skeleton, SkillConstellation, SkillTag, StatusTag } from "@fsp/ui";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
@@ -15,7 +18,6 @@ import { constellationNodes, dayMonth, formatsText, nextStep, ratingText, skillS
 import { parseViews, type ViewsStats } from "./stats-model";
 import { FSP_LEVEL_LABEL, HOME, STATS, roleLabel } from "./text";
 
-const PAGE = "mx-auto flex w-full max-w-[1328px] flex-col gap-4 px-4 py-4 md:px-6 md:py-6";
 const PENDING = new Set(["interest", "interest_opened"]);
 const gradeLabel = (g: string) => GRADE[g] ?? g;
 
@@ -110,7 +112,7 @@ function SkillsCard({ p, className }: { p: CandidateProfile; className?: string 
   if (!skills.length) return null;
   return (
     <Panel className={className} data-testid="home-skills" aria-label={HOME.skills}>
-      <PanelCap title={HOME.skills} aside={<Num className="text-12 text-muted">{skills.length}</Num>} />
+      <PanelCap title={<Gloss k="trust"><H2>{HOME.skills}</H2></Gloss>} aside={<Num className="text-12 text-muted">{skills.length}</Num>} />
       {sortSkills(skills)
         .slice(0, 8)
         .map((s) => {
@@ -135,7 +137,7 @@ export function FspCard({ p, className = "hidden lg:block", testId = "home-fsp" 
   if (!items.length) return null;
   return (
     <Panel className={className} data-testid={testId} aria-label={HOME.fsp}>
-      <PanelCap title={HOME.fsp} />
+      <PanelCap title={<Gloss k="fspRelevance"><H2>{HOME.fsp}</H2></Gloss>} />
       <ul className="flex flex-col gap-3">
         {items.slice(0, 3).map((a) => (
           <li key={a.fact_id} className="flex items-start gap-3">
@@ -186,7 +188,7 @@ function ConstellationCard({ nodes }: { nodes: ConstellationNode[] }) {
   return (
     <Panel className="order-3 lg:order-none" data-testid="home-constellation" aria-label={HOME.constellation}>
       <PanelCap
-        title={HOME.constellation}
+        title={<Gloss k="graph"><H2>{HOME.constellation}</H2></Gloss>}
         aside={
           <Chips className="hidden md:flex">
             <SkillTag name={HOME.legend.confirmed} />
@@ -208,7 +210,7 @@ function Interests({ interests }: { interests?: InterestsSummary }) {
   return (
     <section className="order-4 flex flex-col gap-4 lg:order-none" data-testid="home-interests" aria-label={HOME.interests}>
       <div className="flex items-center justify-between gap-3">
-        <H2>{HOME.interests}</H2>
+        <Gloss k="invitation"><H2>{HOME.interests}</H2></Gloss>
         <Num className="text-13">{[interests.companies, range].filter((v) => v != null).join(" · ")}</Num>
       </div>
       {items.slice(0, 3).map((o) => (
@@ -237,9 +239,9 @@ function Tiles({ standing, interests }: { standing?: CandidateStanding; interest
     interests?.salary_from_min != null && interests.salary_to_max != null ? formatRubRangeShort(interests.salary_from_min, interests.salary_to_max) : undefined;
   return (
     <div className="order-2 grid grid-cols-3 gap-2 lg:order-none lg:grid-cols-1 lg:gap-4" data-testid="home-tiles">
-      <MetricTile label={HOME.strength} value={s ? Math.round(s.value * 100) : HOME.none} />
-      <MetricTile label={HOME.place} value={s ? HOME.top(s.top_percent) : HOME.none} progress={s ? 100 - s.top_percent : undefined} />
-      <MetricTile label={HOME.interestsTile} value={interests ? interests.companies : HOME.none} hint={range} />
+      <MetricTile label={HOME.strength} info={<Gi k="strength" />} value={s ? Math.round(s.value * 100) : HOME.none} />
+      <MetricTile label={HOME.place} info={<Gi k="category" />} value={s ? HOME.top(s.top_percent) : HOME.none} progress={s ? 100 - s.top_percent : undefined} />
+      <MetricTile label={HOME.interestsTile} info={<Gi k="interest" />} value={interests ? interests.companies : HOME.none} hint={range} />
     </div>
   );
 }
@@ -328,7 +330,7 @@ export default function Home() {
   const vq = useMyViewsCandidatesMeViewsGet({ query: { retry: false } });
 
   const page = (body: ReactNode, h1 = true) => (
-    <div className={PAGE} data-testid="home-page">
+    <div className={PAGE.normal} data-testid="home-page">
       {h1 && <h1 className="sr-only">{HOME.title}</h1>}
       {body}
     </div>

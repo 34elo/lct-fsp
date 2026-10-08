@@ -151,7 +151,7 @@ test("профиль: вкладка «ФСП» — достижения, раз
   const [top, bottom] = screen.getAllByRole("navigation", { name: "Разделы" });
   expect(within(top).getByRole("link", { name: "Приглашения" })).toHaveAttribute("href", "/me/offers");
   expect(within(top).getByRole("link", { name: "Профиль" })).toHaveAttribute("href", "/me/profile");
-  expect(within(bottom).getByRole("link", { name: "Тест и грейд" })).toHaveAttribute("href", "/me/assessment");
+  expect(within(bottom).getByRole("link", { name: "Тест" })).toHaveAttribute("href", "/me/assessment");
 });
 
 test("профиль: вкладка «Резюме» — город, ожидания, формат, опыт", async () => {

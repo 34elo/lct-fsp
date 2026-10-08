@@ -1,3 +1,4 @@
+import { PAGE } from "@/shared/lib/page";
 import { useState } from "react";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Input, Skeleton } from "@fsp/ui";
 import { useQueryClient } from "@tanstack/react-query";
@@ -87,7 +88,7 @@ export default function Runs() {
   const d = q.data?.status === 200 ? q.data.data : null;
   const forbidden = q.data?.status === 403;
   return (
-    <div className="flex flex-col gap-6 p-4 md:p-6">
+    <div className={PAGE.wide}>
       <header>
         <h1 className="text-24 font-semibold">{R.title}</h1>
         <p className="max-w-2xl text-14 text-muted">{R.lead}</p>

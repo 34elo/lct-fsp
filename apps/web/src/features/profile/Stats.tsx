@@ -1,4 +1,6 @@
-import { ActivityHeatmap, buttonVariants, Chips, cn, ConstellationAvatar, EmptyState, ErrorState, formatRub, formatRubRangeShort, GradeTag, H1, Lbl, MetricTile, Num, Panel, PanelCap, ScatterPlot, Skeleton, SkillTag, StatusTag } from "@fsp/ui";
+import { PAGE } from "@/shared/lib/page";
+import { Gi, Gloss } from "@/shared/Gloss";
+import { ActivityHeatmap, buttonVariants, Chips, cn, ConstellationAvatar, EmptyState, ErrorState, formatRub, formatRubRangeShort, GradeTag, H1, H2, Lbl, MetricTile, Num, Panel, PanelCap, ScatterPlot, Skeleton, SkillTag, StatusTag } from "@fsp/ui";
 import { useMemo, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 
@@ -15,7 +17,6 @@ import { dayMonth, nextStep, sortSkills } from "./home-model";
 import { finishedAttempts, parseViews, scatter, viewsSeries, type ViewsStats } from "./stats-model";
 import { HOME, STATS, roleLabel } from "./text";
 
-const PAGE = "mx-auto flex w-full max-w-[1328px] flex-col gap-4 px-4 py-4 md:px-6 md:py-6";
 const PENDING = new Set(["interest", "interest_opened"]);
 const gradeLabel = (g: string) => GRADE[g] ?? g;
 
@@ -25,9 +26,9 @@ function Tiles({ standing, interests, views }: { standing: CandidateStanding; in
     interests?.salary_from_min != null && interests.salary_to_max != null ? formatRubRangeShort(interests.salary_from_min, interests.salary_to_max) : undefined;
   return (
     <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-4" data-testid="stats-tiles">
-      <MetricTile label={HOME.strength} value={s ? Math.round(s.value * 100) : HOME.none} />
-      <MetricTile label={HOME.place} value={s ? HOME.top(s.top_percent) : HOME.none} progress={s ? 100 - s.top_percent : undefined} />
-      <MetricTile label={HOME.interestsTile} value={interests ? interests.companies : HOME.none} hint={range} />
+      <MetricTile label={HOME.strength} info={<Gi k="strength" />} value={s ? Math.round(s.value * 100) : HOME.none} />
+      <MetricTile label={HOME.place} info={<Gi k="category" />} value={s ? HOME.top(s.top_percent) : HOME.none} progress={s ? 100 - s.top_percent : undefined} />
+      <MetricTile label={HOME.interestsTile} info={<Gi k="interest" />} value={interests ? interests.companies : HOME.none} hint={range} />
       <MetricTile label={STATS.views} value={views ? views.companies : HOME.none} hint={views ? STATS.viewsHint : undefined} />
     </div>
   );
@@ -37,7 +38,7 @@ function PeersCard({ standing, category }: { standing: CandidateStanding; catego
   const { points, you } = scatter(standing.peers ?? [], standing.strength?.value);
   return (
     <Panel data-testid="stats-peers" aria-label={STATS.peers}>
-      <PanelCap title={STATS.peers} aside={<Lbl>{STATS.peersSize(standing.category_size ?? 0)}</Lbl>} />
+      <PanelCap title={<Gloss k="strength"><H2>{STATS.peers}</H2></Gloss>} aside={<Lbl>{STATS.peersSize(standing.category_size ?? 0)}</Lbl>} />
       <ScatterPlot points={points} you={you} youLabel={STATS.you} yLabel={STATS.yLabel} label={STATS.peersLabel(category)} />
     </Panel>
   );
@@ -147,7 +148,7 @@ export default function Stats() {
   const tq = useGetProfessionsTaxonomyProfessionsGet();
 
   const page = (body: ReactNode, action?: ReactNode, title = true) => (
-    <div className={PAGE} data-testid="stats-page">
+    <div className={PAGE.normal} data-testid="stats-page">
       {title && (
         <div className="flex flex-col gap-2.5 md:flex-row md:items-center md:justify-between">
           <H1 className="text-[22px] leading-[1.2] md:text-[26px]">{STATS.title}</H1>

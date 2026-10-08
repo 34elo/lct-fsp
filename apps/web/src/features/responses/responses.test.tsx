@@ -70,8 +70,9 @@ test("вкладки: группировка статусов и счётчик�
 
 test("кандидат: список откликов, фильтр и отзыв", async () => {
   role = "candidate";
-  mount("/me/responses");
+  mount("/me/offers?show=responses");
   expect(await screen.findByText("Север-Софт")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Мои отклики" })).toHaveAttribute("aria-pressed", "true");
   expect(screen.getByRole("link", { name: "Открыть приглашение" })).toHaveAttribute("href", "/me/offers/a2");
   fireEvent.click(screen.getByRole("button", { name: /Ждут ответа \(1\)/ }));
   expect(screen.queryByText("Лесков Лаб")).toBeNull();
@@ -81,7 +82,7 @@ test("кандидат: список откликов, фильтр и отзы�
 
 test("работодатель: отклики, «Пригласить» ставит interview", async () => {
   role = "employer";
-  mount("/employer/responses");
+  mount("/employer/offers?show=responses");
   expect(await screen.findByText("Backend #4821")).toBeInTheDocument();
   expect(screen.getByText("Backend #3077")).toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "Пригласить" }));

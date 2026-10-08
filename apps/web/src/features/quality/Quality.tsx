@@ -1,3 +1,4 @@
+import { PAGE } from "@/shared/lib/page";
 import { Badge, Card, CardContent, CardHeader, CardTitle, Skeleton } from "@fsp/ui";
 
 import { useGetMetricsAdminMetricsGet } from "@/api/endpoints/admin-metrics/admin-metrics";
@@ -116,7 +117,7 @@ function Online() {
 export default function Quality() {
   const unavailable = Object.entries(report.components).filter(([, c]) => !c.ok);
   return (
-    <div className="flex flex-col gap-6 p-4 md:p-6">
+    <div className={PAGE.wide}>
       <header>
         <h1 className="text-24 font-semibold">{T.title}</h1>
         <p className="max-w-2xl text-14 text-muted">{T.lead}</p>

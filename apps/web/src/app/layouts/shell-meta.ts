@@ -2,8 +2,11 @@ import { Building2, LayoutDashboard } from "@fsp/ui";
 
 import { NAV, activeNav, type NavItem } from "@/app/routes";
 
-/** Нижняя панель кандидата — те же четыре пункта, что в шапке (E35-1). */
-export const CANDIDATE_BOTTOM: NavItem[] = NAV.candidate;
+/** Нижняя панель на телефоне — пять пунктов (шестой не помещается в 375 px): у кандидата «Статистика» открывается с Главной (E39-25). */
+export const CANDIDATE_BOTTOM: NavItem[] = NAV.candidate.filter((n) => n.to !== "/me/stats");
+
+/** Нижняя панель работодателя: «Задания» открываются со страницы «Компания» (E39-25). */
+export const EMPLOYER_BOTTOM: NavItem[] = NAV.employer.filter((n) => n.to !== "/employer/tasks");
 
 export const ROLE_LABEL: Record<string, string> = {
   candidate: "Кандидат",
