@@ -17,6 +17,7 @@ from fsp_contracts.assessment import (
     CategoryRef,
     ClaimedVsConfirmed,
     DeclaredGrade,
+    ProfessionInfo,
     TestGrade,
 )
 from fsp_contracts.registry import new_event
@@ -60,6 +61,14 @@ def _dto(row: Grade) -> CandidateGrade:
 
 def _active(now: datetime | None = None):
     return Grade.valid_until > (now or datetime.now(UTC))
+
+
+def thin_professions(professions: Iterable[ProfessionInfo]) -> set[str]:
+    """Слаги профессий с тонким банком семейств — «бета» в опросе (E39-6, families-check)."""
+    from app.assessment.families import REGISTRY
+    from app.assessment.families.check import thin_professions as thin
+
+    return thin(list(REGISTRY.values()), {p.slug: dict(p.skill_weights) for p in professions})
 
 
 async def get_grades(session: AsyncSession, candidate_id: uuid.UUID) -> list[CandidateGrade]:

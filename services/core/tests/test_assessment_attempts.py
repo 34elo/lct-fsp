@@ -235,8 +235,12 @@ async def test_foreign_attempt_is_404(api, factory, taxonomy_loaded):
 async def test_attempt_checks(api, taxonomy_loaded, monkeypatch):
     h = register(api)
     assert _start(api, h, profession="designer").json()["code"] == "unknown_profession"
-    # скрытая профессия (ADR-027 п.1, E36-2): новый тест по ней не начать
-    assert _start(api, h, profession="ml").json()["code"] == "unknown_profession"
+    # все профессии открыты (E39-6): тест по профессии с тонким банком («бета») начинается
+    other = register(api)
+    beta = _start(api, other, profession="mobile")
+    assert beta.status_code == 201, beta.text
+    first = api.get(f"/assessment/attempts/{beta.json()['id']}/next", headers=other)
+    assert first.status_code == 200 and first.json().get("response_id"), first.text
     assert _start(api, h).status_code == 201
     dup = _start(api, h)
     assert dup.status_code == 409 and dup.json()["code"] == "attempt_active"
