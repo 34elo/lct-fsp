@@ -27,7 +27,7 @@ import { Link, useSearchParams } from "react-router-dom";
 
 import { useGetProfileCandidatesMeProfileGet } from "@/api/endpoints/candidates/candidates";
 import { useMyStandingCandidatesMeStandingGet } from "@/api/endpoints/search/search";
-import type { CandidateProfile, CandidateStanding, GradeInfo, SkillWithTrust } from "@/api/model";
+import type { CandidateProfile, CandidateStanding, SkillWithTrust } from "@/api/model";
 import { GRADE } from "@/features/assessment/text";
 import { FspLinkPanel } from "@/features/fsp/FspLinkPanel";
 import GraphView from "@/features/graph/Graph";
@@ -48,7 +48,6 @@ import {
   T,
   TEAM_ROLE_LABEL,
   periodRu,
-  points,
   roleLabel,
 } from "./text";
 import { useEventStream } from "@/shared/lib/useEventStream";
@@ -140,7 +139,7 @@ function Frame({ tab, children, bare }: { tab: Tab; children: ReactNode; bare?: 
 function skillTags(s: SkillWithTrust): string[] {
   if (s.claimed_only) return [s.sources.includes("resume") ? PROFILE.claimedInResume : PROFILE.claimedSelf];
   const testEv = s.top_evidence?.find((e) => e.source === "test");
-  const tags = ["test", "fsp", "github", "task", "resume"].filter((k) => s.sources.includes(k)).map((k) => (k === "test" ? PROFILE.testTag(dayMonth(testEv?.observed_at)) : SOURCE_TAG[k]));
+  const tags = ["test", "fsp", "task", "resume"].filter((k) => s.sources.includes(k)).map((k) => (k === "test" ? PROFILE.testTag(dayMonth(testEv?.observed_at)) : SOURCE_TAG[k]));
   if (!tags.length) tags.push(s.derived_from ? PROFILE.derived : PROFILE.claimedSelf);
   return tags;
 }
@@ -233,7 +232,6 @@ function Strength({ p }: { p: CandidateProfile }) {
   const done: Record<string, boolean> = {
     resume: sources.has("resume") || (p.experience ?? []).length > 0,
     fsp: (p.fsp?.achievements.length ?? 0) + (p.fsp?.ranks.length ?? 0) > 0 || sources.has("fsp"),
-    github: sources.has("github"),
     test: sources.has("test"),
   };
   if (STRENGTH_ITEMS.every((i) => done[i.key])) return null;
@@ -257,53 +255,6 @@ function Strength({ p }: { p: CandidateProfile }) {
           </li>
         ))}
       </ul>
-    </Section>
-  );
-}
-
-function GradeWhy({ g }: { g: GradeInfo }) {
-  if (!g.breakdown.length && g.grade == null) return null;
-  const max = Math.max(1, ...g.breakdown.map((b) => Math.abs(b.points)));
-  return (
-    <Section title="Почему такой грейд" testid="profile-grade-why">
-      <p className="text-13 text-muted">Баллы за подтверждённые факты. Чем больше проверяемого, тем точнее грейд.</p>
-      <ul className="flex flex-col">
-        {g.breakdown.map((b) => (
-          <li key={b.signal} className="grid min-h-9 grid-cols-[minmax(0,1fr)_72px_52px] items-center gap-3">
-            <span className="text-14">{b.label}</span>
-            <span aria-hidden className="h-2 overflow-hidden rounded-sm bg-tint-100">
-              <i className="block h-full bg-brand" style={{ width: `${Math.max(0, (b.points / max) * 100)}%` }} />
-            </span>
-            <b className="text-right font-mono text-14">{points(b.points)}</b>
-          </li>
-        ))}
-      </ul>
-      {g.score != null && g.grade && (
-        <p className="mt-1 flex items-baseline justify-between border-t border-hairline pt-3">
-          <span className="font-semibold">Итого</span>
-          <span className="font-mono text-18 font-bold">
-            {String(Math.round(g.score * 10) / 10).replace(".", ",")} → {GRADE_LABEL[g.grade] ?? g.grade}
-          </span>
-        </p>
-      )}
-      {g.next_grade && (
-        <div className="rounded-lg border border-tint-100 bg-tint-50 p-3 text-14">
-          <p>
-            До уровня <b>{GRADE_LABEL[g.next_grade.grade] ?? g.next_grade.grade}</b> не хватает{" "}
-            <b className="font-mono">{String(g.next_grade.points_needed).replace(".", ",")}</b> балла
-          </p>
-          {g.next_grade.hints.length > 0 && (
-            <ul className="mt-1 list-disc pl-5 text-muted">
-              {g.next_grade.hints.map((h) => (
-                <li key={h}>{h}</li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
-      <Link to="/me/assessment" className="inline-flex min-h-11 items-center self-start font-semibold text-brand-fg">
-        Пройти тест и уточнить грейд
-      </Link>
     </Section>
   );
 }
@@ -364,7 +315,6 @@ function SkillsTab({ p, standing }: { p: CandidateProfile; standing?: CandidateS
       <div className="order-2 flex flex-col gap-4 lg:order-none lg:col-span-8">
         <SkillsCard title={PROFILE.confirmed} items={confirmed} testid="profile-skills-confirmed" />
         <SkillsCard title={PROFILE.claimed} items={claimed} testid="profile-skills-claimed" />
-        <GradeWhy g={p.grade} />
         <Claimed p={p} />
         <TeamSignals p={p} />
       </div>

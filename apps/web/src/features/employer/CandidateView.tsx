@@ -224,6 +224,7 @@ function Body({ c, vacancyId, needId }: { c: CandidateCardFull; vacancyId: strin
             {c.interested_you && <StatusTag state="confirmed">{IT.interestedYou}</StatusTag>}
           </div>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-13 text-muted">
+            {c.full_name && <span className="text-ink">{c.full_name}</span>}
             {c.salary_min && (
               <span>
                 {T.expectations} <Num className="text-ink">от {formatRub(c.salary_min)}</Num>

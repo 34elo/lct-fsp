@@ -217,6 +217,7 @@ async def search_candidates(
 )
 async def candidate_card(
     pseudo_id: str,
+    request: Request,
     vacancy_id: uuid.UUID | None = None,
     source: Literal["search", "match", "similar", "direct"] = "direct",
     user: User = Depends(_employer),
@@ -236,6 +237,7 @@ async def candidate_card(
         trust=_TRUST,
         company_id=company.id,
         responsibility_score=company.responsibility_score,
+        pii_key=request.app.state.settings.pii_key,
     )
     await views.record(
         session, candidate_id=cand.user_id, company_id=company.id, viewer_user_id=user.id,

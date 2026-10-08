@@ -73,14 +73,14 @@ async def _validated_weights(
 
 
 async def _info(session: AsyncSession, slug: str) -> ProfessionInfo:
-    for p in await service.list_professions(session):
+    for p in await service.list_professions(session, include_hidden=True):
         if p.slug == slug:
             return p
     raise ProblemError(404, "not_found", "Профессия не найдена")
 
 
 async def list_professions(session: AsyncSession) -> list[ProfessionInfo]:
-    return await service.list_professions(session)
+    return await service.list_professions(session, include_hidden=True)  # админ видит и скрытые
 
 
 async def get_profession(session: AsyncSession, slug: str) -> ProfessionInfo:

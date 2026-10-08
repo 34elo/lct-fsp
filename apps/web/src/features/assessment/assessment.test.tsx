@@ -279,6 +279,33 @@ describe("тест (S2)", () => {
     expect((answers[0]!.body as { answer: unknown }).answer).toBeNull();
   });
 
+  it("«Не знаю» (E35-7a): после пустого ответа показано следующее задание, а не то же", async () => {
+    const answers: { body: unknown }[] = [];
+    mount(
+      "/me/assessment/attempts/a1",
+      attemptRoutes(
+        [
+          { done: false, response_id: "r1", seq: 1, kind: "choice", stem: "Первое?", options: ["A"], time_limit_s: 60 },
+          { done: false, response_id: "r2", seq: 2, kind: "choice", stem: "Второе?", options: ["B"], time_limit_s: 60 },
+        ],
+        answers,
+      ),
+    );
+    expect(await screen.findByRole("heading", { name: "Первое?" })).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("assessment-skip"));
+    expect(await screen.findByRole("heading", { name: "Второе?" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Первое?" })).toBeNull();
+  });
+
+  it("choice (E35-7a): варианты — радиокнопки с подписями, группа подписана условием", async () => {
+    mount("/me/assessment/attempts/a1", attemptRoutes([{ done: false, response_id: "c", seq: 1, kind: "choice", stem: "Что?", options: ["Альфа", "Бета"], time_limit_s: 60 }]));
+    expect(await screen.findByRole("radiogroup", { name: "Что?" })).toBeInTheDocument();
+    const radio = screen.getByRole("radio", { name: "Бета" });
+    fireEvent.click(radio);
+    expect(radio).toBeChecked();
+    expect(screen.getByRole("radio", { name: "Альфа" })).not.toBeChecked();
+  });
+
   it("chain: шаги по одному, ответ — список, назад нельзя", async () => {
     const answers: { body: unknown }[] = [];
     const chain = {

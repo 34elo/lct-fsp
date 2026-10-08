@@ -4,6 +4,7 @@
  * core
  * OpenAPI spec version: 0.1.0
  */
+import type { FspHighlightRelevance } from './fspHighlightRelevance';
 
 export interface FspHighlight {
   title: string;
@@ -11,4 +12,6 @@ export interface FspHighlight {
   place?: number | null;
   of?: number | null;
   year: number;
+  relevance?: FspHighlightRelevance;
+  note?: string | null;
 }

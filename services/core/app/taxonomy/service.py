@@ -102,6 +102,7 @@ async def build_snapshot(session: AsyncSession) -> dict[str, Any]:
                 "slug": role.slug,
                 "name": role.name,
                 "profession": role.is_profession,
+                "active": role.is_active,
                 "skills": dict(sorted(ws.items())),
             }
         )
@@ -249,9 +250,12 @@ async def sync(session: AsyncSession, data: TaxonomyData) -> SyncResult:
     roles = {r.slug: r for r in await session.scalars(select(Role))}
     for r in data.roles:
         if r.slug in roles:
-            roles[r.slug].name, roles[r.slug].is_profession = r.name, r.profession
+            row = roles[r.slug]
+            row.name, row.is_profession, row.is_active = r.name, r.profession, r.active
         else:
-            session.add(Role(slug=r.slug, name=r.name, is_profession=r.profession))
+            session.add(
+                Role(slug=r.slug, name=r.name, is_profession=r.profession, is_active=r.active)
+            )
     await session.flush()
     have_rs = {(x.role, x.skill_id): x for x in await session.scalars(select(RoleSkill))}
     want_rs = {(r.slug, ids[s]): w for r in data.roles for s, w in r.skills.items()}
@@ -516,11 +520,18 @@ async def alias_index(session: AsyncSession) -> AliasIndex:
     )
 
 
-async def list_professions(session: AsyncSession) -> list[ProfessionInfo]:
-    """Профессии теста (`roles.is_profession`), веса и типы навыков (blocks.md §4.3)."""
-    roles = list(
-        await session.scalars(select(Role).where(Role.is_profession.is_(True)).order_by(Role.slug))
-    )
+async def list_professions(
+    session: AsyncSession, *, include_hidden: bool = False
+) -> list[ProfessionInfo]:
+    """Профессии теста (`roles.is_profession`), веса и типы навыков (blocks.md §4.3).
+
+    По умолчанию — только активные (ADR-027 п.1: опрос, выдача, новые тесты). `include_hidden` —
+    и скрытые: подписи и уже накопленные данные (грейды, попытки) по ним не пропадают.
+    """
+    q = select(Role).where(Role.is_profession.is_(True))
+    if not include_hidden:
+        q = q.where(Role.is_active.is_(True))
+    roles = list(await session.scalars(q.order_by(Role.slug)))
     skills = {s.id: s for s in await session.scalars(select(Skill).where(Skill.status.in_(_LIVE)))}
     weights: dict[str, dict[str, float]] = {}
     for rs in await session.scalars(select(RoleSkill)):
@@ -534,7 +545,11 @@ async def list_professions(session: AsyncSession) -> list[ProfessionInfo]:
             for s in skills.values()
             if s.slug in ws and s.skill_type is not None
         }
-        out.append(ProfessionInfo(slug=r.slug, title=r.name, skill_weights=ws, skill_types=types))
+        out.append(
+            ProfessionInfo(
+                slug=r.slug, title=r.name, skill_weights=ws, skill_types=types, active=r.is_active
+            )
+        )
     return out
 
 

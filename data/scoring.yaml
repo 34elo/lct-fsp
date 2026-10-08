@@ -87,6 +87,10 @@ evidence_sources:
       decay_floor: 0.6          # давность — мягкий множитель в [0.6, 1]
       decay_half_life_years: 3
       unverified: 0.5
+      # релевантность дисциплины профессии (ADR-027 п. 2, E36-3): множитель floor + (1 − floor)·rel,
+      # rel — доля веса навыков дисциплины (discipline_rules), входящих в профиль профессии
+      relevance_floor: 0.4      # нерелевантная дисциплина весит меньше, но не ноль
+      relevant_threshold: 0.5   # rel ≥ порога — «релевантно», иначе «другое направление»
 
   codeforces:
     decay_half_life_years: 2
