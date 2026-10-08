@@ -42,6 +42,7 @@ x-env-core: &env-core
   TG_BOT_TOKEN: ${TG_BOT_TOKEN:-}
   TG_BOT_USERNAME: ${TG_BOT_USERNAME:-}
   EMAIL_VERIFICATION_REQUIRED: ${EMAIL_VERIFICATION_REQUIRED:-false}
+  DEMO_MODE: ${DEMO_MODE:-false}  # демо-аккаунты жюри: обход кулдауна героев, демо-ручки ФСП
   SMTP_HOST: ${SMTP_HOST:-}
   SMTP_PORT: ${SMTP_PORT:-1025}
   SMTP_USER: ${SMTP_USER:-}
@@ -189,6 +190,8 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+      args:
+        VITE_JURY_MODE: ${VITE_JURY_MODE:-false}  # кнопки входа жюри и панель «что попробовать»
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
       interval: 10s
