@@ -4,10 +4,13 @@
  * core
  * OpenAPI spec version: 0.1.0
  */
+import type { ResumeDeclaredGrade } from './resumeDeclaredGrade';
+import type { ResumeDeclaredRole } from './resumeDeclaredRole';
 import type { ResumeEducation } from './resumeEducation';
 import type { ResumeExperience } from './resumeExperience';
 import type { ResumePerson } from './resumePerson';
 import type { ResumeSkill } from './resumeSkill';
+import type { ResumeSoftSkill } from './resumeSoftSkill';
 
 export interface ParsedResume {
   parser_version: string;
@@ -20,4 +23,7 @@ export interface ParsedResume {
   /** @minimum 0 */
   total_experience_months?: number;
   warnings?: string[];
+  soft_skills?: ResumeSoftSkill[];
+  declared_grade?: ResumeDeclaredGrade | null;
+  declared_roles?: ResumeDeclaredRole[];
 }

@@ -22,7 +22,11 @@ import type {
 import type {
   HTTPValidationError,
   ProblemOut,
-  ProfessionsOut
+  ProfessionSuggestion,
+  ProfessionsOut,
+  SkillSuggestion,
+  SuggestProfessionsTaxonomyProfessionsSuggestGetParams,
+  SuggestSkillsTaxonomySkillsSuggestGetParams
 } from '../../model';
 
 import { apiFetch } from '../../mutator';
@@ -430,6 +434,290 @@ export function useGetProfessionsTaxonomyProfessionsGet<TData = Awaited<ReturnTy
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetProfessionsTaxonomyProfessionsGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type suggestSkillsTaxonomySkillsSuggestGetResponse200 = {
+  data: SkillSuggestion[]
+  status: 200
+}
+
+export type suggestSkillsTaxonomySkillsSuggestGetResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type suggestSkillsTaxonomySkillsSuggestGetResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type suggestSkillsTaxonomySkillsSuggestGetResponse503ApplicationProblemJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type suggestSkillsTaxonomySkillsSuggestGetResponse503ApplicationJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type suggestSkillsTaxonomySkillsSuggestGetResponseSuccess = (suggestSkillsTaxonomySkillsSuggestGetResponse200) & {
+  headers: Headers;
+};
+export type suggestSkillsTaxonomySkillsSuggestGetResponseError = (suggestSkillsTaxonomySkillsSuggestGetResponse422ApplicationProblemJson | suggestSkillsTaxonomySkillsSuggestGetResponse422ApplicationJson | suggestSkillsTaxonomySkillsSuggestGetResponse503ApplicationProblemJson | suggestSkillsTaxonomySkillsSuggestGetResponse503ApplicationJson) & {
+  headers: Headers;
+};
+
+export type suggestSkillsTaxonomySkillsSuggestGetResponse = (suggestSkillsTaxonomySkillsSuggestGetResponseSuccess | suggestSkillsTaxonomySkillsSuggestGetResponseError)
+
+export const getSuggestSkillsTaxonomySkillsSuggestGetUrl = (params?: SuggestSkillsTaxonomySkillsSuggestGetParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/taxonomy/skills/suggest?${stringifiedParams}` : `/taxonomy/skills/suggest`
+}
+
+/**
+ * Подсказки навыков: синонимы, префикс, опечатки; частые выше, `provisional` помечен (E39-3).
+ * @summary Suggest Skills
+ */
+export const suggestSkillsTaxonomySkillsSuggestGet = async (params?: SuggestSkillsTaxonomySkillsSuggestGetParams, options?: Parameters<typeof apiFetch>[1]): Promise<suggestSkillsTaxonomySkillsSuggestGetResponse> => {
+
+  return apiFetch<suggestSkillsTaxonomySkillsSuggestGetResponse>(getSuggestSkillsTaxonomySkillsSuggestGetUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getSuggestSkillsTaxonomySkillsSuggestGetQueryKey = (params?: SuggestSkillsTaxonomySkillsSuggestGetParams,) => {
+    return [
+    `/taxonomy/skills/suggest`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getSuggestSkillsTaxonomySkillsSuggestGetQueryOptions = <TData = Awaited<ReturnType<typeof suggestSkillsTaxonomySkillsSuggestGet>>, TError = ErrorType<ProblemOut>>(params?: SuggestSkillsTaxonomySkillsSuggestGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof suggestSkillsTaxonomySkillsSuggestGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuggestSkillsTaxonomySkillsSuggestGetQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof suggestSkillsTaxonomySkillsSuggestGet>>> = ({ signal }) => suggestSkillsTaxonomySkillsSuggestGet(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof suggestSkillsTaxonomySkillsSuggestGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuggestSkillsTaxonomySkillsSuggestGetQueryResult = NonNullable<Awaited<ReturnType<typeof suggestSkillsTaxonomySkillsSuggestGet>>>
+export type SuggestSkillsTaxonomySkillsSuggestGetQueryError = ErrorType<ProblemOut>
+
+
+export function useSuggestSkillsTaxonomySkillsSuggestGet<TData = Awaited<ReturnType<typeof suggestSkillsTaxonomySkillsSuggestGet>>, TError = ErrorType<ProblemOut>>(
+ params: undefined |  SuggestSkillsTaxonomySkillsSuggestGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof suggestSkillsTaxonomySkillsSuggestGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof suggestSkillsTaxonomySkillsSuggestGet>>,
+          TError,
+          Awaited<ReturnType<typeof suggestSkillsTaxonomySkillsSuggestGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuggestSkillsTaxonomySkillsSuggestGet<TData = Awaited<ReturnType<typeof suggestSkillsTaxonomySkillsSuggestGet>>, TError = ErrorType<ProblemOut>>(
+ params?: SuggestSkillsTaxonomySkillsSuggestGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof suggestSkillsTaxonomySkillsSuggestGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof suggestSkillsTaxonomySkillsSuggestGet>>,
+          TError,
+          Awaited<ReturnType<typeof suggestSkillsTaxonomySkillsSuggestGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuggestSkillsTaxonomySkillsSuggestGet<TData = Awaited<ReturnType<typeof suggestSkillsTaxonomySkillsSuggestGet>>, TError = ErrorType<ProblemOut>>(
+ params?: SuggestSkillsTaxonomySkillsSuggestGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof suggestSkillsTaxonomySkillsSuggestGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Suggest Skills
+ */
+
+export function useSuggestSkillsTaxonomySkillsSuggestGet<TData = Awaited<ReturnType<typeof suggestSkillsTaxonomySkillsSuggestGet>>, TError = ErrorType<ProblemOut>>(
+ params?: SuggestSkillsTaxonomySkillsSuggestGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof suggestSkillsTaxonomySkillsSuggestGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuggestSkillsTaxonomySkillsSuggestGetQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type suggestProfessionsTaxonomyProfessionsSuggestGetResponse200 = {
+  data: ProfessionSuggestion[]
+  status: 200
+}
+
+export type suggestProfessionsTaxonomyProfessionsSuggestGetResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type suggestProfessionsTaxonomyProfessionsSuggestGetResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type suggestProfessionsTaxonomyProfessionsSuggestGetResponse503ApplicationProblemJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type suggestProfessionsTaxonomyProfessionsSuggestGetResponse503ApplicationJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type suggestProfessionsTaxonomyProfessionsSuggestGetResponseSuccess = (suggestProfessionsTaxonomyProfessionsSuggestGetResponse200) & {
+  headers: Headers;
+};
+export type suggestProfessionsTaxonomyProfessionsSuggestGetResponseError = (suggestProfessionsTaxonomyProfessionsSuggestGetResponse422ApplicationProblemJson | suggestProfessionsTaxonomyProfessionsSuggestGetResponse422ApplicationJson | suggestProfessionsTaxonomyProfessionsSuggestGetResponse503ApplicationProblemJson | suggestProfessionsTaxonomyProfessionsSuggestGetResponse503ApplicationJson) & {
+  headers: Headers;
+};
+
+export type suggestProfessionsTaxonomyProfessionsSuggestGetResponse = (suggestProfessionsTaxonomyProfessionsSuggestGetResponseSuccess | suggestProfessionsTaxonomyProfessionsSuggestGetResponseError)
+
+export const getSuggestProfessionsTaxonomyProfessionsSuggestGetUrl = (params?: SuggestProfessionsTaxonomyProfessionsSuggestGetParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/taxonomy/professions/suggest?${stringifiedParams}` : `/taxonomy/professions/suggest`
+}
+
+/**
+ * Подсказки профессий: все видимые роли системы, включая добавленные админом (E39-3).
+ * @summary Suggest Professions
+ */
+export const suggestProfessionsTaxonomyProfessionsSuggestGet = async (params?: SuggestProfessionsTaxonomyProfessionsSuggestGetParams, options?: Parameters<typeof apiFetch>[1]): Promise<suggestProfessionsTaxonomyProfessionsSuggestGetResponse> => {
+
+  return apiFetch<suggestProfessionsTaxonomyProfessionsSuggestGetResponse>(getSuggestProfessionsTaxonomyProfessionsSuggestGetUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getSuggestProfessionsTaxonomyProfessionsSuggestGetQueryKey = (params?: SuggestProfessionsTaxonomyProfessionsSuggestGetParams,) => {
+    return [
+    `/taxonomy/professions/suggest`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getSuggestProfessionsTaxonomyProfessionsSuggestGetQueryOptions = <TData = Awaited<ReturnType<typeof suggestProfessionsTaxonomyProfessionsSuggestGet>>, TError = ErrorType<ProblemOut>>(params?: SuggestProfessionsTaxonomyProfessionsSuggestGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof suggestProfessionsTaxonomyProfessionsSuggestGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuggestProfessionsTaxonomyProfessionsSuggestGetQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof suggestProfessionsTaxonomyProfessionsSuggestGet>>> = ({ signal }) => suggestProfessionsTaxonomyProfessionsSuggestGet(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof suggestProfessionsTaxonomyProfessionsSuggestGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuggestProfessionsTaxonomyProfessionsSuggestGetQueryResult = NonNullable<Awaited<ReturnType<typeof suggestProfessionsTaxonomyProfessionsSuggestGet>>>
+export type SuggestProfessionsTaxonomyProfessionsSuggestGetQueryError = ErrorType<ProblemOut>
+
+
+export function useSuggestProfessionsTaxonomyProfessionsSuggestGet<TData = Awaited<ReturnType<typeof suggestProfessionsTaxonomyProfessionsSuggestGet>>, TError = ErrorType<ProblemOut>>(
+ params: undefined |  SuggestProfessionsTaxonomyProfessionsSuggestGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof suggestProfessionsTaxonomyProfessionsSuggestGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof suggestProfessionsTaxonomyProfessionsSuggestGet>>,
+          TError,
+          Awaited<ReturnType<typeof suggestProfessionsTaxonomyProfessionsSuggestGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuggestProfessionsTaxonomyProfessionsSuggestGet<TData = Awaited<ReturnType<typeof suggestProfessionsTaxonomyProfessionsSuggestGet>>, TError = ErrorType<ProblemOut>>(
+ params?: SuggestProfessionsTaxonomyProfessionsSuggestGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof suggestProfessionsTaxonomyProfessionsSuggestGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof suggestProfessionsTaxonomyProfessionsSuggestGet>>,
+          TError,
+          Awaited<ReturnType<typeof suggestProfessionsTaxonomyProfessionsSuggestGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuggestProfessionsTaxonomyProfessionsSuggestGet<TData = Awaited<ReturnType<typeof suggestProfessionsTaxonomyProfessionsSuggestGet>>, TError = ErrorType<ProblemOut>>(
+ params?: SuggestProfessionsTaxonomyProfessionsSuggestGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof suggestProfessionsTaxonomyProfessionsSuggestGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Suggest Professions
+ */
+
+export function useSuggestProfessionsTaxonomyProfessionsSuggestGet<TData = Awaited<ReturnType<typeof suggestProfessionsTaxonomyProfessionsSuggestGet>>, TError = ErrorType<ProblemOut>>(
+ params?: SuggestProfessionsTaxonomyProfessionsSuggestGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof suggestProfessionsTaxonomyProfessionsSuggestGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuggestProfessionsTaxonomyProfessionsSuggestGetQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
