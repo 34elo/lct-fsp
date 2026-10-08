@@ -1,4 +1,5 @@
 import { PAGE } from "@/shared/lib/page";
+import { Gloss } from "@/shared/Gloss";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 
@@ -177,7 +178,9 @@ function OffersBoard({ filter }: { filter: ReactNode }) {
   const empty = q.isSuccess && all.length === 0;
   return (
     <main className={PAGE.normal}>
-      {q.isPending ? <Skeleton className="h-7 w-56" /> : <H1 className="text-[22px] md:text-[26px]">{T.title}</H1>}
+      {q.isPending ? <Skeleton className="h-7 w-56" /> : <H1 className="text-[22px] md:text-[26px]">
+          <Gloss k="invitation">{T.title}</Gloss>
+        </H1>}
       {filter}
       {q.isPending && <Loading />}
       {q.isError && <ErrorState title={T.loadError} code={code} onRetry={() => void q.refetch()} />}
