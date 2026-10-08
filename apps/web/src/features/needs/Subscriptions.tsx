@@ -1,8 +1,9 @@
+import { PAGE } from "@/shared/lib/page";
 import { useMemo, useState, type FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { Button, Combobox, EmptyState, ErrorState, NumberInput, SectionLabel, Select, Skeleton, formatRub } from "@fsp/ui";
+import { Button, Combobox, EmptyState, cn, ErrorState, NumberInput, SectionLabel, Select, Skeleton, formatRub } from "@fsp/ui";
 
 import {
   getListSubscriptionsSubscriptionsGetQueryKey,
@@ -92,7 +93,7 @@ export default function Subscriptions() {
   const chip = "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-hairline bg-card px-3 text-14 has-[:checked]:border-brand has-[:checked]:bg-tint-50";
 
   return (
-    <main className="mx-auto grid w-full max-w-5xl gap-6 p-4 md:p-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+    <main className={cn(PAGE.normal, "lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]")}>
       <header className="grid gap-1 lg:col-span-2">
         <h1 className="font-mono text-24 font-semibold">{T.title}</h1>
         <p className="text-14 text-muted">{T.lead}</p>

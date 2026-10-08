@@ -1,3 +1,4 @@
+import { PAGE } from "@/shared/lib/page";
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
@@ -120,7 +121,7 @@ export default function CandidateTasks() {
   const taskId = params.get("task");
   const shown = all.filter((t) => inTab(t, tab));
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4 md:p-6" data-testid="tasks-page">
+    <main className={PAGE.normal} data-testid="tasks-page">
       {taskId ? (
         <Detail id={taskId} onBack={() => setParams({})} />
       ) : (

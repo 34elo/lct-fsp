@@ -1,13 +1,14 @@
-import { cn, ErrorState } from "@fsp/ui";
+import { ErrorState } from "@fsp/ui";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 
 import { ApiError } from "@/api/mutator";
+import { PAGE } from "@/shared/lib/page";
 import { errorView, T } from "./text";
 
 /** Общая колонка страниц теста. */
 export function Page({ children, wide }: { children: ReactNode; wide?: boolean }) {
-  return <div className={cn("mx-auto flex w-full flex-col gap-4", wide ? "max-w-5xl" : "max-w-3xl")}>{children}</div>;
+  return <div className={wide ? PAGE.normal : PAGE.narrow}>{children}</div>;
 }
 
 /** Ошибка действия (кулдаун, email, согласия…) строкой с действием. */

@@ -1,3 +1,4 @@
+import { PAGE } from "@/shared/lib/page";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -24,7 +25,7 @@ export default function NewProfession() {
   const c = clusters[Math.min(i, clusters.length - 1)];
   const count = profs.data?.status === 200 ? profs.data.data.length : null;
   return (
-    <div data-testid="demo-new-profession" className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-6">
+    <div data-testid="demo-new-profession" className={PAGE.wide}>
       <header className="flex flex-col gap-1">
         <h1 className="text-24 font-bold">{N.title}</h1>
         <p className="text-14 text-muted">{N.lead}</p>

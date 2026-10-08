@@ -1,3 +1,4 @@
+import { PAGE } from "@/shared/lib/page";
 import { Link, useParams } from "react-router-dom";
 
 import { useSkillEvidenceCandidatesMeSkillsSkillIdEvidenceGet } from "@/api/endpoints/candidates/candidates";
@@ -34,7 +35,7 @@ export default function SkillEvidence() {
     );
   }
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
+    <div className={PAGE.narrow}>
       <Link to="/me/profile" className="inline-flex min-h-11 items-center font-semibold text-brand-fg">
         ← Профиль
       </Link>

@@ -1,3 +1,4 @@
+import { PAGE } from "@/shared/lib/page";
 import { Badge, Card, CardContent, ErrorState, Skeleton } from "@fsp/ui";
 
 import { useLlmExamAdminDemoLlmExamGet } from "@/api/endpoints/admin/admin";
@@ -13,7 +14,7 @@ export default function LlmExam() {
   const q = useLlmExamAdminDemoLlmExamGet({ query: { retry: false } });
   const d = q.data?.status === 200 ? q.data.data : null;
   return (
-    <div data-testid="demo-llm-exam" className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-6">
+    <div data-testid="demo-llm-exam" className={PAGE.wide}>
       <header className="flex flex-col gap-1">
         <h1 className="text-24 font-bold">{L.title}</h1>
         <p className="text-14 text-muted">{L.lead}</p>

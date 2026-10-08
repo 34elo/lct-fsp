@@ -73,3 +73,30 @@ test("вкладок нет у раздела без вкладок", async () =
   );
   expect(screen.queryByRole("navigation", { name: "Вкладки раздела" })).toBeNull();
 });
+
+test("Page: три ширины сетки и общий ритм полей (E39-4)", async () => {
+  const { Page } = await import("./PageContainer");
+  const { PAGE } = await import("@/shared/lib/page");
+  render(
+    <>
+      <Page width="narrow" data-testid="p-narrow">a</Page>
+      <Page data-testid="p-normal">b</Page>
+      <Page width="wide" data-testid="p-wide">c</Page>
+    </>,
+  );
+  expect(screen.getByTestId("p-narrow").className).toContain("max-w-3xl");
+  expect(screen.getByTestId("p-normal").className).toContain("max-w-[1328px]");
+  expect(screen.getByTestId("p-wide").className).not.toContain("max-w-");
+  for (const w of Object.values(PAGE)) expect(w).toContain("px-4 py-4 md:px-6 md:py-6");
+});
+
+test("вкладки раздела лежат внутри содержимого страницы, а не отдельной полосой на всю ширину", async () => {
+  const { SectionTabs } = await import("./SectionTabs");
+  render(
+    <MemoryRouter initialEntries={["/me/offers"]}>
+      <SectionTabs nav={NAV.candidate} />
+    </MemoryRouter>,
+  );
+  const tabs = screen.getByRole("navigation", { name: "Вкладки раздела" });
+  expect(tabs.parentElement?.parentElement?.className).toContain("max-w-[1328px]");
+});

@@ -1,3 +1,4 @@
+import { PAGE } from "@/shared/lib/page";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
@@ -63,7 +64,7 @@ export default function EmployerResponses() {
   const [tab, setTab] = useState("all");
   const shown = filterBy(sorted, tab, empTabOf);
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-col gap-4 p-4 md:p-6">
+    <main className={PAGE.normal}>
       <header className="flex flex-col gap-1">
         <h1 className="font-mono text-24 font-semibold">{T.empTitle}</h1>
         <p className="max-w-2xl text-14 text-muted">{T.empLead}</p>

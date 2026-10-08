@@ -1,3 +1,4 @@
+import { PAGE } from "@/shared/lib/page";
 import { useState } from "react";
 
 import { Badge, Card, CardContent, ErrorState, NumberInput, Select, Skeleton } from "@fsp/ui";
@@ -14,7 +15,7 @@ export default function TwoWorlds() {
   const q = useTwoWorldsAdminDemoTwoWorldsGet({ family, seed }, { query: { retry: false } });
   const d = q.data?.status === 200 ? q.data.data : null;
   return (
-    <div data-testid="demo-two-worlds" className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-6">
+    <div data-testid="demo-two-worlds" className={PAGE.wide}>
       <header className="flex flex-col gap-1">
         <h1 className="text-24 font-bold">{TW.title}</h1>
         <p className="text-14 text-muted">{TW.lead}</p>

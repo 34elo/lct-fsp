@@ -1,3 +1,4 @@
+import { PAGE } from "@/shared/lib/page";
 import { useEffect, useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -51,7 +52,7 @@ export default function Company() {
 
   const status = company?.status ?? "pending";
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4 md:p-6">
+    <main className={PAGE.narrow}>
       <h1 className="font-mono text-2xl font-semibold">Компания</h1>
       {q.isPending && <p role="status" className="text-muted">Загрузка…</p>}
       {q.isError && !missing && <ErrorNote>Не удалось загрузить компанию.</ErrorNote>}
