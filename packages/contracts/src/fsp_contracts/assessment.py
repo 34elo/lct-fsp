@@ -164,6 +164,18 @@ class CategoryChanged(BaseModel):
     profile_version: int
 
 
+class VisibilityChanged(BaseModel):
+    """`candidate.visibility.changed` (E36-4, ADR-027): кандидат изменил, что видно работодателю.
+
+    Только ключи и булевы значения, без ПДн. `changed` — изменившиеся ключи,
+    `visibility` — полный текущий набор.
+    """
+
+    candidate_id: UUID
+    changed: dict[str, bool]
+    visibility: dict[str, bool]
+
+
 class FamilyStatusChanged(BaseModel):
     """`assessment.family.status_changed` (внутреннее для блока 1)."""
 
@@ -209,6 +221,7 @@ class RegularTaskPublished(BaseModel):
 ASSESSMENT_EVENTS: dict[str, type[BaseModel]] = {
     "assessment.attempt.finished": AttemptFinished,
     "candidate.category.changed": CategoryChanged,
+    "candidate.visibility.changed": VisibilityChanged,
     "assessment.family.status_changed": FamilyStatusChanged,
     "regular_task.published": RegularTaskPublished,
 }
@@ -233,4 +246,5 @@ __all__ = [
     "StandingPeer",
     "StandingStrength",
     "TestGrade",
+    "VisibilityChanged",
 ]

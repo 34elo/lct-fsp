@@ -46,6 +46,17 @@ def test_category_changed_via_registry():
     assert EVENT_PRODUCERS["candidate.category.changed"] == "core"
 
 
+def test_visibility_changed_via_registry():
+    from fsp_contracts.assessment import VisibilityChanged
+
+    payload = VisibilityChanged(
+        candidate_id=uuid4(), changed={"full_name": True}, visibility={"full_name": True}
+    )
+    env = new_event("candidate.visibility.changed", "core", payload)
+    assert parse_payload(type(env).model_validate_json(env.model_dump_json())) == payload
+    assert EVENT_PRODUCERS["candidate.visibility.changed"] == "core"
+
+
 def test_attempt_finished_and_family_alias():
     now = datetime.now(UTC)
     ev = AttemptFinished(

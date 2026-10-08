@@ -394,6 +394,8 @@ def _views(c):
 def test_card_full_is_anonymous_and_logs_view(c, market):
     uid = _cand(c, 40, [("python", 0.8, 3, ["github"]), ("fastapi", 0.3, 1, ["resume"])])
     with sqlite3.connect(c.db) as con:
+        con.execute("update candidates set visibility=? where user_id=?",
+                    (json.dumps({"companies": False}), uid))  # fmt: skip
         con.execute("update users set id=id where 0")  # no-op: user row не нужен для карточки
         con.execute(
             "insert into experience (id, candidate_id, company, title, start_date, end_date,"
@@ -431,6 +433,29 @@ def test_card_shows_company_only_when_allowed(c, market):
             (uuid.uuid4().hex, uid, "Открытая Компания", "Dev", "2023-01-01"),
         )
     assert _card(c, market, "pid0041").json()["experience"][0]["company"] == "Открытая Компания"
+
+
+def test_card_applies_candidate_privacy_settings(c, market):
+    """E36-4: умолчания (компании, регион видны) и переключатели region/companies/fsp."""
+    uid = _cand(c, 42, [("python", 0.8, 3, ["github"])], city="Казань")
+    with sqlite3.connect(c.db) as con:
+        con.execute(
+            "insert into experience (id, candidate_id, company, title, start_date, skill_ids,"
+            " is_commercial, source) values (?,?,?,?,?,'[]',1,'resume')",
+            (uuid.uuid4().hex, uid, "Открытая Компания", "Dev", "2023-01-01"),
+        )
+    full = _card(c, market, "pid0042").json()  # анкета с пустой visibility = умолчания
+    assert full["city"] == "Казань" and full["experience"][0]["company"] == "Открытая Компания"
+    assert "full_name" not in full and "contacts" not in json.dumps(full)
+    with sqlite3.connect(c.db) as con:
+        hide = json.dumps({"region": False, "companies": False, "fsp": False})
+        con.execute("update candidates set visibility=? where user_id=?", (hide, uid))
+    hidden = _card(c, market, "pid0042").json()
+    assert hidden["city"] is None and hidden["experience"][0]["company"] is None
+    assert hidden["fsp_highlights"] == []
+    assert _search(c, market).json()["items"] and all(
+        i["city"] is None for i in _search(c, market).json()["items"] if i["pseudo_id"] == "pid0042"
+    )
 
 
 def test_card_hidden_and_foreign_resources_404(c, market):

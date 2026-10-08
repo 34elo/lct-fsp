@@ -234,6 +234,7 @@ def _card(
     strength_view: StrengthView | None = None,
     interested_you: bool = False,
 ) -> CandidateCard:
+    vis = candidates.visibility_of(c)  # ADR-027: что кандидат открыл работодателю
     ordered = sorted(skills, key=lambda s: (s.claimed_only, -s.confidence, str(s.skill_id)))
     top = [
         SkillBrief(slug=names[s.skill_id][0], name=names[s.skill_id][1], level=s.level,
@@ -250,10 +251,10 @@ def _card(
         grade_preliminary=c.grade_confidence is None or c.grade_confidence < 0.5,
         primary_stack=list(c.primary_stack or ()),
         top_skills=top,
-        fsp_highlights=highlights,
+        fsp_highlights=highlights if vis["fsp"] else [],
         salary_min=c.salary_min,
         formats=list(c.formats or ()),
-        city=c.city,
+        city=c.city if vis["region"] else None,
         relocation=c.relocation,
         search_status=candidates.effective_status(c),
         match=CardMatch(score=result.score, explanation=result.explanation, interest=interest)
