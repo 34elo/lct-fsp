@@ -10,6 +10,8 @@ import contextlib
 
 import structlog
 from aiogram import Bot, Dispatcher
+from aiogram.client.session.aiohttp import AiohttpSession
+from aiogram.client.telegram import TelegramAPIServer
 from aiogram.fsm.storage.redis import DefaultKeyBuilder, RedisStorage
 from fsp_platform.logging import configure_logging
 from fsp_platform.messaging import QUEUES, Consumer, declare_topology, make_broker
@@ -30,12 +32,20 @@ def build_consumer(sender: Sender) -> Consumer:
     return consumer
 
 
+def make_bot(settings: Settings) -> Bot:
+    """Bot с адресом Bot API из настроек: ретранслятор на VPS или api.telegram.org по умолчанию."""
+    if not settings.tg_api_base:
+        return Bot(settings.tg_bot_token)
+    api = TelegramAPIServer.from_base(settings.tg_api_base.rstrip("/"))
+    return Bot(settings.tg_bot_token, session=AiohttpSession(api=api))
+
+
 async def main() -> None:
     settings = Settings()
     configure_logging(settings.service_name, settings.log_level)
     if not settings.tg_bot_token:
         raise SystemExit("TG_BOT_TOKEN не задан")
-    bot = Bot(settings.tg_bot_token)
+    bot = make_bot(settings)
     redis = Redis.from_url(settings.redis_url)
     storage = RedisStorage(
         redis,
