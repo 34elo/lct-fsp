@@ -231,6 +231,30 @@ s3.fsp.patissons.tech → caddy → :28080/s3.fsp.patissons.tech
 mock.fsp.patissons.tech → caddy → :28080/mock.fsp.patissons.tech
 ```
 
+## CI/CD
+
+**Как устроено.** Pull request → проверки [`ci.yml`](../.github/workflows/ci.yml) (ruff, import-linter, сверка OpenAPI, pytest, families/cards-check, lint/typecheck/test/build фронта) на облачных раннерах GitHub. Push в `main` → [`cd.yml`](../.github/workflows/cd.yml): те же проверки, затем деплой на сервер стенда self-hosted раннером с меткой `fsp-stand`. Сервер сам забирает задачи из GitHub: SSH наружу не открываем, ключей в GitHub не храним.
+
+**Что делает деплой** ([`infra/scripts/deploy.sh`](../infra/scripts/deploy.sh)): каталог стенда (`STAND_DIR`) переходит на коммит из `main` → `make up` (сборка образов, миграции — сервис `core-migrate`) → проверка `/api/v1/healthz`, SPA и `/api/v1/taxonomy/professions` до 3 минут → `docker image prune`. При сбое — откат на прежний коммит и повторный `make up`, job красный. Данные стенда (БД, MinIO, снапшот) не трогаются. Деплои идут строго по одному (`concurrency: stand`).
+
+**Ручные действия** — Actions → `cd` → Run workflow (ветка `main`):
+
+| Действие | Что делает |
+|---|---|
+| `deploy` | Проверки и деплой текущего `main` |
+| `demo-reset` | Вернуть демо-данные из снапшота (`make demo-reset`, ≤ 1 мин) и прогреть кеши |
+| `demo-reseed` | Заново наполнить демо (`make seed`) и снять новый снапшот |
+
+**Настройка один раз:**
+1. На сервере стенда, под пользователем из группы `docker`: `sh infra/scripts/install-runner.sh`. Скрипт спросит токен регистрации: GitHub → Settings → Actions → Runners → New self-hosted runner (токен живёт час). Раннер ставится службой systemd в `~/actions-runner-fsp`.
+2. GitHub → Settings → Secrets and variables → Actions → Variables: `STAND_DIR` — абсолютный путь к каталогу стенда (клон репозитория, в котором лежат `.env.demo` или `.env`, `infra/snapshots/`).
+3. По желанию: Settings → Environments → `stand` — ручное подтверждение деплоя (Required reviewers).
+
+**Ограничения:**
+- Секреты стенда скрипт не создаёт: если в `STAND_DIR` нет `.env`/`.env.demo`, деплой падает — новые случайные пароли не подошли бы к существующим томам БД.
+- Откат возвращает код, но не миграции. Миграция в `main` должна быть совместима с прежним кодом (добавляем колонки и таблицы, не удаляем и не переименовываем в том же релизе).
+- Self-hosted раннер выполняет только `cd.yml` из `main`; проверки PR идут на облачных раннерах. Не вешайте метку `fsp-stand` на задачи, которые запускаются из PR.
+
 ## Основные команды
 
 ```bash
