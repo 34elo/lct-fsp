@@ -18,6 +18,7 @@ import { loginAs } from "./fixtures";
 
 const NEED_TEXT = "бэкенд на Python, высоконагруженный API, удалёнка, до 220 000 ₽";
 const VACANCY_TITLE = "Backend-разработчик (Python) в команду API"; // tools/seed/heroes/olga.yaml
+const VACANCY_OPTION = `${VACANCY_TITLE} · Удалённо`;
 const NEW_USER_PASSWORD = "e2e-pass-1234";
 
 test.setTimeout(240_000);
@@ -106,8 +107,12 @@ test("joint: регистрация → опрос и тест → катего�
     // Статистика (E38-2): ссылка с Главной → /me/stats, сила, место и «Где ты среди своих».
     await page.getByTestId("home-stats").click();
     await expect(page).toHaveURL(/\/me\/stats$/);
-    await expect(page.getByTestId("stats-main")).toBeVisible();
-    await expect(page.getByTestId("stats-peers")).toBeVisible();
+    // «Не знаю» не подтверждает грейд, места ещё нет: честное пустое состояние с одной кнопкой «Пройти тест».
+    // Если грейд подтверждён (бэкенд изменился) — основной блок со «Где ты среди своих».
+    const statsMain = page.getByTestId("stats-main");
+    const statsEmpty = page.getByTestId("stats-empty-action");
+    await expect(statsMain.or(statsEmpty)).toBeVisible();
+    if (await statsMain.isVisible()) await expect(page.getByTestId("stats-peers")).toBeVisible();
     await shot(page, info, ++n, "stats");
     await page.goBack();
     await expect(page).toHaveURL(/\/me$/);
@@ -131,31 +136,35 @@ test("joint: регистрация → опрос и тест → катего�
   });
 
   // --- 4. приглашение (оффер с вилкой) ---------------------------------------------------------
-  await test.step("работодатель: приглашение кандидату", async () => {
-    const categoryUrl = olga.url();
+  await test.step("работодатель: интерес с вилкой кандидату", async () => {
+    // Интерес — первый шаг: диалог с обязательной вилкой (после открытия интереса — приглашение, контакты после принятия).
     const invites = olga.getByRole("button", { name: "Интерес" });
     const total = Math.min(await invites.count(), 5);
-    expect(total, "в категории нет кандидатов для приглашения").toBeGreaterThan(0);
-    for (let i = 0; i < total; i++) {
+    expect(total, "в категории нет кандидатов для интереса").toBeGreaterThan(0);
+    const dialog = olga.getByRole("dialog");
+    let sent = false;
+    for (let i = 0; i < total && !sent; i++) {
       await invites.nth(i).click();
-      await expect(olga.getByRole("heading", { name: /Оффер кандидату/ })).toBeVisible();
-      // повторный прогон: кандидат мог получить оффер раньше, пробуем следующего
-      if (await olga.getByText("Этому кандидату уже отправлялись офферы").isVisible()) {
-        await olga.goto(categoryUrl);
-        await expect(olga.getByRole("list", { name: "Кандидаты категории" })).toBeVisible();
+      await expect(dialog.getByRole("heading", { name: /^Интерес · / })).toBeVisible();
+      await dialog.getByRole("combobox", { name: "Вакансия" }).selectOption({ label: VACANCY_OPTION });
+      await dialog.getByRole("textbox", { name: "от", exact: true }).fill("150000");
+      await dialog.getByRole("textbox", { name: "до", exact: true }).fill("220000");
+      await dialog.getByRole("textbox", { name: /^Сообщение/ }).fill("Здравствуйте! Ваш профиль подходит под нашу вакансию: вилка указана сразу.");
+      if (i === 0) await shot(olga, info, ++n, "employer-interest-form");
+      await dialog.getByRole("button", { name: "Отправить", exact: true }).click();
+      // успех: «Интерес отправлен» или переход в «Мои офферы»; повторный прогон: сервер откажет (уже есть интерес / лимит) — берём следующего
+      const ok = olga.getByText("Интерес отправлен").or(olga.getByRole("heading", { name: /Офферы|Интересы|Приглашения/ }));
+      const fail = dialog.getByRole("alert");
+      await expect(ok.or(fail).first()).toBeVisible({ timeout: 20_000 });
+      if (await fail.isVisible()) {
+        await olga.keyboard.press("Escape");
+        await expect(dialog).toBeHidden();
         continue;
       }
-      break;
+      sent = true;
     }
-    const select = olga.locator("select").first();
-    await expect.poll(() => select.locator("option").count(), { message: "нет опубликованных вакансий" }).toBeGreaterThan(1);
-    await select.selectOption({ index: 1 });
-    await expect(olga.locator('fieldset input[inputmode="numeric"]').first()).not.toHaveValue("");
-    await olga.getByLabel("Сообщение кандидату").fill("Здравствуйте! Ваш профиль подходит под нашу вакансию: вилка указана сразу.");
-    await shot(olga, info, ++n, "employer-offer-form");
-    await olga.getByRole("button", { name: "Отправить оффер" }).click();
-    await expect(olga).toHaveURL(/\/employer\/offers\/[^/]+$/, { timeout: 20_000 });
-    await shot(olga, info, ++n, "employer-offer-sent");
+    expect(sent, "ни одному из первых кандидатов интерес отправить не удалось").toBeTruthy();
+    await shot(olga, info, ++n, "employer-interest-sent");
   });
 
   // --- 5. отклик кандидата на вакансию ---------------------------------------------------------
@@ -164,6 +173,8 @@ test("joint: регистрация → опрос и тест → катего�
     await loginAs(anya, "anya");
     await anya.goto("/jobs");
     await expect(anya.getByRole("heading", { name: "Вакансии с открытой вилкой" })).toBeVisible();
+    // В списке десятки вакансий (выдача постраничная): ищем нужную по названию.
+    await anya.getByRole("textbox", { name: "Поиск по названию" }).fill("в команду API");
     const card = anya.locator("article, li").filter({ hasText: VACANCY_TITLE }).first();
     await expect(card).toBeVisible({ timeout: 20_000 });
     await shot(anya, info, ++n, "jobs");
