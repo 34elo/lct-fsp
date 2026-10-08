@@ -14,6 +14,10 @@
 По банку: каждый тип навыка покрыт ≥ 2 семействами, каждый `kind` (кроме `open`) — хотя бы одним,
 навык семейства есть в `data/taxonomy` и его тип совпадает, есть якорные семейства.
 
+Покрытие (E36-2, ADR-027 п.1): у каждой активной профессии справочника для каждого грейда и типа
+навыка есть семейство — навык из весов профессии, уровень в окне грейда (`selection.level_ok`).
+Пустая ячейка «профессия × грейд × тип навыка» — провал.
+
 Исполняется только код, который сгенерировали сами семейства. Код кандидатов не исполняется.
 """
 
@@ -33,10 +37,12 @@ from collections.abc import Iterable, Sequence
 from pathlib import Path
 from random import Random
 
-from fsp_contracts.assessment import SkillType
+from fsp_contracts.assessment import SkillType, TestGrade
 
+from app.assessment.config import load_config
 from app.assessment.families import REGISTRY
 from app.assessment.families.base import SCORERS, Family, Item, Kind, score_exact
+from app.assessment.selection import GRADE_LEVEL
 from app.assessment.world import World
 
 ROOT = Path(__file__).resolve().parents[5]
@@ -194,6 +200,44 @@ def check_bank(families: Sequence[Family], taxonomy_dir: Path | None) -> list[st
     return errs
 
 
+def coverage(
+    families: Sequence[Family], professions: dict[str, dict[str, float]], level_window: int
+) -> dict[tuple[str, TestGrade, SkillType], list[str]]:
+    """Ячейка «профессия × грейд × тип навыка» → слаги семейств, которые в неё попадают."""
+    out: dict[tuple[str, TestGrade, SkillType], list[str]] = {}
+    for prof, weights in professions.items():
+        for g in TestGrade:
+            for t in SkillType:
+                out[(prof, g, t)] = [
+                    f.slug
+                    for f in families
+                    if SkillType(f.skill_type) == t
+                    and weights.get(f.skill, 0) > 0
+                    and abs(f.level - GRADE_LEVEL[g]) <= level_window
+                ]
+    return out
+
+
+def check_coverage(
+    families: Sequence[Family], taxonomy_dir: Path, level_window: int | None = None
+) -> list[str]:
+    """Пустые ячейки покрытия у активных профессий справочника (ADR-027 п.1)."""
+    from app.taxonomy.loader import load_taxonomy
+
+    if level_window is None:
+        level_window = load_config().level_window
+    professions = {
+        r.slug: r.skills for r in load_taxonomy(taxonomy_dir).roles if r.profession and r.active
+    }
+    if not professions:
+        return ["нет активных профессий в справочнике"]
+    return [
+        f"покрытие: {p} × {g.value} × {t.value} — нет семейств"
+        for (p, g, t), slugs in coverage(families, professions, level_window).items()
+        if not slugs
+    ]
+
+
 def digest(families: Sequence[Family], seed_list: Sequence[int]) -> str:
     h = hashlib.sha256()
     for fam in sorted(families, key=lambda f: f.slug):
@@ -219,6 +263,8 @@ def check_hashseed(n: int) -> list[str]:
 def run(families: Sequence[Family], n: int, taxonomy_dir: Path | None = TAXONOMY) -> list[str]:
     seed_list = seeds(n)
     errs = check_bank(families, taxonomy_dir)
+    if taxonomy_dir is not None:
+        errs += check_coverage(families, taxonomy_dir)
     for fam in families:
         errs += check_family(fam, seed_list)
     return errs

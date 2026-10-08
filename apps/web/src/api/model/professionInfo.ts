@@ -13,4 +13,5 @@ export interface ProfessionInfo {
   title: string;
   skill_weights: ProfessionInfoSkillWeights;
   skill_types?: ProfessionInfoSkillTypes;
+  active?: boolean;
 }

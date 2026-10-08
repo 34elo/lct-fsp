@@ -461,7 +461,8 @@ class TgCategoryOut(BaseModel):
 async def tg_category(tg_user_id: int, session: AsyncSession = Depends(get_session)):
     """Подтверждённые категории (грейды теста) и «заявлено vs подтверждено»; публичное API Б1."""
     user = await _candidate_by_tg(session, tg_user_id)
-    titles = {p.slug: p.title for p in await taxonomy.list_professions(session)}
+    profs = await taxonomy.list_professions(session, include_hidden=True)  # грейды остаются
+    titles = {p.slug: p.title for p in profs}
     grades = await assessment.get_grades(session, user.id)
     claims = await assessment.claimed_vs_confirmed(session, user.id)
     return TgCategoryOut(
