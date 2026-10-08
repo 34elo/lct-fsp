@@ -14,6 +14,13 @@ jobs:
       - run: uv run lint-imports
       - run: cd services/core && uv run python export_openapi.py > /tmp/openapi.json && diff -q /tmp/openapi.json ../../docs/openapi.json
       - run: uv run pytest -q
+  pdf-smoke:
+    # E39-20: образ core с системными библиотеками WeasyPrint отдаёт PDF-профиль
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -f infra/docker/python.Dockerfile --build-arg PACKAGE=fsp-core --build-arg SERVICE_DIR=services/core -t fsp-core:ci .
+      - run: docker run --rm -v "$PWD/infra/docker/pdf_smoke.py:/smoke.py:ro" --entrypoint python fsp-core:ci /smoke.py
   families-check:
     runs-on: ubuntu-latest
     steps:

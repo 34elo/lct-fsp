@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { type AcceptanceLevel, AcceptanceMeter, Button, cn, Dialog, DialogContent, DialogDescription, DialogTitle, formatRub, Lbl, Num, SegmentedControl, Sheet, SheetContent, SheetDescription, SheetTitle, Skeleton } from "@fsp/ui";
+import { type AcceptanceLevel, AcceptanceMeter, Button, cn, Dialog, DialogContent, DialogDescription, DialogTitle, formatRub, Lbl, Num, SalaryRangeInput, SegmentedControl, Select, Sheet, SheetContent, SheetDescription, SheetTitle, Skeleton } from "@fsp/ui";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -11,7 +11,7 @@ import { ApiError } from "@/api/mutator";
 import { fieldClass } from "@/features/auth/ui";
 import { FORMAT_LABEL } from "@/features/employer/text";
 import { displayPseudonym } from "@/shared/lib/pseudonym";
-import { canSendOffer, groupDigits, isWideRange, parseRub, rangeProblem } from "./offer-model";
+import { canSendOffer, isWideRange, parseRub, rangeProblem } from "./offer-model";
 import { invalidateOffers } from "./parts";
 import { CONTACT_LABEL, EMP_INT_TEXT as IT, offerErrorText } from "./text";
 
@@ -226,26 +226,20 @@ function OfferForm({ candidate, vacancyId: initialVacancy, alreadyOffered, onClo
         </p>
       )}
       {!invite && (
-        <label className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1">
           <Lbl>{T.vacancy}</Lbl>
-          <select
+          <Select
+            aria-label={T.vacancy}
             value={vacancyId}
-            onChange={(e) => {
-              setVacancyId(e.target.value);
+            onChange={(v) => {
+              setVacancyId(v ?? "");
               setFrom("");
               setTo("");
             }}
-            className={fieldClass}
-          >
-            <option value="">{T.noVacancy}</option>
-            {published.map((v) => (
-              <option key={v.id} value={v.id}>
-                {v.title} · {v.formats.map((f) => FORMAT_LABEL[f] ?? f).join(", ")}
-              </option>
-            ))}
-          </select>
+            options={[{ value: "", label: T.noVacancy }, ...published.map((v) => ({ value: v.id, label: `${v.title} · ${v.formats.map((f) => FORMAT_LABEL[f] ?? f).join(", ")}` }))]}
+          />
           {vq.isSuccess && published.length === 0 && <span className="text-xs text-muted">{T.noPublished}</span>}
-        </label>
+        </div>
       )}
       {!vacancyId && !isInterest && (
         <>
@@ -258,35 +252,31 @@ function OfferForm({ candidate, vacancyId: initialVacancy, alreadyOffered, onClo
             <Lbl>{T.invDescription}</Lbl>
             <textarea value={description} onChange={(e) => setDescription(e.target.value)} maxLength={4000} rows={3} className={cn(fieldClass, "h-auto py-2")} />
           </label>
-          <label className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1">
             <Lbl>{T.invContact}</Lbl>
-            <select value={contactMethod} onChange={(e) => setContactMethod(e.target.value as ContactMethod)} className={fieldClass}>
-              {Object.values(ContactMethod).map((m) => (
-                <option key={m} value={m}>
-                  {CONTACT_LABEL[m] ?? m}
-                </option>
-              ))}
-            </select>
-          </label>
+            <Select
+              aria-label={T.invContact}
+              value={contactMethod}
+              onChange={(v) => v && setContactMethod(v as ContactMethod)}
+              options={Object.values(ContactMethod).map((m) => ({ value: m, label: CONTACT_LABEL[m] ?? m }))}
+            />
+          </div>
         </>
       )}
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-1">
           <Lbl>{T.range} *</Lbl>
         </legend>
-        <div className="flex items-center gap-2">
-          <label className="flex flex-1 flex-col gap-1 text-xs text-muted">
-            {T.from}
-            <input inputMode="numeric" value={groupDigits(from)} onChange={(e) => setFrom(e.target.value.replace(/\D/g, ""))} aria-invalid={inputBad} className={cn(fieldClass, "font-mono text-base text-ink", inputBad && "border-error")} />
-          </label>
-          <span aria-hidden className="pt-5 text-muted">
-            –
-          </span>
-          <label className="flex flex-1 flex-col gap-1 text-xs text-muted">
-            {T.to}
-            <input inputMode="numeric" value={groupDigits(to)} onChange={(e) => setTo(e.target.value.replace(/\D/g, ""))} aria-invalid={inputBad} className={cn(fieldClass, "font-mono text-base text-ink", inputBad && "border-error")} />
-          </label>
-        </div>
+        <SalaryRangeInput
+          value={{ from: from ? Number(from) : null, to: to ? Number(to) : null }}
+          onChange={(v) => {
+            setFrom(v.from == null ? "" : String(v.from));
+            setTo(v.to == null ? "" : String(v.to));
+          }}
+          fromLabel={T.from}
+          toLabel={T.to}
+          invalid={inputBad}
+        />
         <SegmentedControl
           className="self-start"
           label={T.basisLabel}
@@ -311,18 +301,16 @@ function OfferForm({ candidate, vacancyId: initialVacancy, alreadyOffered, onClo
         <textarea value={message} onChange={(e) => setMessage(e.target.value)} maxLength={maxMessage} rows={isInterest ? 3 : 5} placeholder={T.placeholder} className={cn(fieldClass, "h-auto py-2")} />
       </label>
       {!isInterest && (
-        <label className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1">
           <Lbl>{T.task}</Lbl>
-          <select value={familyId} onChange={(e) => setFamilyId(e.target.value)} className={fieldClass}>
-            <option value="">{T.noTask}</option>
-            {tasks.map((t) => (
-              <option key={t.family_id} value={t.family_id}>
-                {t.title}
-              </option>
-            ))}
-          </select>
+          <Select
+            aria-label={T.task}
+            value={familyId}
+            onChange={(v) => setFamilyId(v ?? "")}
+            options={[{ value: "", label: T.noTask }, ...tasks.map((t) => ({ value: t.family_id, label: t.title }))]}
+          />
           {tq.isError && <span className="text-xs text-muted">{T.tasksFail}</span>}
-        </label>
+        </div>
       )}
 
       <section
@@ -395,19 +383,17 @@ function OfferForm({ candidate, vacancyId: initialVacancy, alreadyOffered, onClo
  * Экран C (v2, E38-11): интерес или приглашение в модалке (≥ 1024 px — Dialog, на телефоне — полноэкранный Sheet).
  * Форма монтируется только при открытии: ключ идемпотентности и черновик свежие на каждое открытие.
  * `stay` — после отправки остаться на месте (экран категории): подтверждение в модалке вместо перехода к приглашению.
- * `dark` — хозяин экрана тёмный (карточка кандидата): портал живёт вне его, тему задаём явно.
  */
-export function OfferDialog({ open, onOpenChange, candidate, vacancyId = "", alreadyOffered = false, dark = false, mode = "offer", interest, stay = false }: { open: boolean; onOpenChange: (v: boolean) => void; candidate: OfferCandidate; vacancyId?: string; alreadyOffered?: boolean; dark?: boolean; mode?: DialogMode; interest?: OfferForCompany; stay?: boolean }) {
+export function OfferDialog({ open, onOpenChange, candidate, vacancyId = "", alreadyOffered = false, mode = "offer", interest, stay = false }: { open: boolean; onOpenChange: (v: boolean) => void; candidate: OfferCandidate; vacancyId?: string; alreadyOffered?: boolean; mode?: DialogMode; interest?: OfferForCompany; stay?: boolean }) {
   const desktop = useMedia("(min-width: 1024px)");
   const close = () => onOpenChange(false);
   const title = mode === "interest" ? IT.titleInterest(displayPseudonym(candidate.pseudonym)) : T.title(displayPseudonym(candidate.pseudonym));
   const lead = mode === "interest" ? IT.leadInterest : mode === "invite" ? IT.leadInvite : T.lead;
-  const theme = dark ? "dark bg-card text-ink" : "";
   const form = <OfferForm candidate={candidate} vacancyId={vacancyId} alreadyOffered={alreadyOffered} onClose={close} mode={mode} interest={interest} stay={stay} />;
   if (desktop) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className={cn("max-h-[90dvh] max-w-[560px] overflow-y-auto", theme)}>
+        <DialogContent className={cn("max-h-[90dvh] max-w-[560px] overflow-y-auto")}>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{lead}</DialogDescription>
           {form}
@@ -417,7 +403,7 @@ export function OfferDialog({ open, onOpenChange, candidate, vacancyId = "", alr
   }
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className={cn("top-0 h-dvh max-h-none rounded-none border-t-0", theme)}>
+      <SheetContent className={cn("top-0 h-dvh max-h-none rounded-none border-t-0")}>
         <SheetTitle>{title}</SheetTitle>
         <SheetDescription>{lead}</SheetDescription>
         {form}

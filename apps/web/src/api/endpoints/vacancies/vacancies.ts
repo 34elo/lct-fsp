@@ -364,6 +364,14 @@ export const getListPublicVacanciesVacanciesPublicGetUrl = (params?: ListPublicV
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    const explodeParameters = ["skills"];
+
+    if (Array.isArray(value) && explodeParameters.includes(key)) {
+      value.forEach((v) => {
+        normalizedParams.append(key, v === null ? 'null' : String(v));
+      });
+      return;
+    }
 
     if (value !== undefined) {
       normalizedParams.append(key, value === null ? 'null' : String(value))
@@ -377,6 +385,8 @@ export const getListPublicVacanciesVacanciesPublicGetUrl = (params?: ListPublicV
 
 /**
  * Опубликованные вакансии без авторизации: название, вилка, компания, навыки.
+ *
+ * Фильтры: профессия, грейд (входит в вилку вакансии), навыки (все), вилка зарплаты, формат, город.
  * @summary List Public Vacancies
  */
 export const listPublicVacanciesVacanciesPublicGet = async (params?: ListPublicVacanciesVacanciesPublicGetParams, options?: Parameters<typeof apiFetch>[1]): Promise<listPublicVacanciesVacanciesPublicGetResponse> => {
@@ -1283,3 +1293,138 @@ export const useCloseVacancyVacanciesVacancyIdClosePost = <TError = ErrorType<Pr
       > => {
       return useMutation(getCloseVacancyVacanciesVacancyIdClosePostMutationOptions(options), queryClient);
     }
+    export type getPublicVacancyVacanciesPublicVacancyIdGetResponse200 = {
+  data: PublicVacancyOut
+  status: 200
+}
+
+export type getPublicVacancyVacanciesPublicVacancyIdGetResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type getPublicVacancyVacanciesPublicVacancyIdGetResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type getPublicVacancyVacanciesPublicVacancyIdGetResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type getPublicVacancyVacanciesPublicVacancyIdGetResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type getPublicVacancyVacanciesPublicVacancyIdGetResponseSuccess = (getPublicVacancyVacanciesPublicVacancyIdGetResponse200) & {
+  headers: Headers;
+};
+export type getPublicVacancyVacanciesPublicVacancyIdGetResponseError = (getPublicVacancyVacanciesPublicVacancyIdGetResponse404ApplicationProblemJson | getPublicVacancyVacanciesPublicVacancyIdGetResponse404ApplicationJson | getPublicVacancyVacanciesPublicVacancyIdGetResponse422ApplicationProblemJson | getPublicVacancyVacanciesPublicVacancyIdGetResponse422ApplicationJson) & {
+  headers: Headers;
+};
+
+export type getPublicVacancyVacanciesPublicVacancyIdGetResponse = (getPublicVacancyVacanciesPublicVacancyIdGetResponseSuccess | getPublicVacancyVacanciesPublicVacancyIdGetResponseError)
+
+export const getGetPublicVacancyVacanciesPublicVacancyIdGetUrl = (vacancyId: string,) => {
+
+
+
+
+  return `/vacancies/public/${vacancyId}`
+}
+
+/**
+ * Одна опубликованная вакансия для карточки; черновик и закрытая — 404.
+ * @summary Get Public Vacancy
+ */
+export const getPublicVacancyVacanciesPublicVacancyIdGet = async (vacancyId: string, options?: Parameters<typeof apiFetch>[1]): Promise<getPublicVacancyVacanciesPublicVacancyIdGetResponse> => {
+
+  return apiFetch<getPublicVacancyVacanciesPublicVacancyIdGetResponse>(getGetPublicVacancyVacanciesPublicVacancyIdGetUrl(vacancyId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPublicVacancyVacanciesPublicVacancyIdGetQueryKey = (vacancyId: string,) => {
+    return [
+    `/vacancies/public/${vacancyId}`
+    ] as const;
+    }
+
+
+export const getGetPublicVacancyVacanciesPublicVacancyIdGetQueryOptions = <TData = Awaited<ReturnType<typeof getPublicVacancyVacanciesPublicVacancyIdGet>>, TError = ErrorType<ProblemOut>>(vacancyId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicVacancyVacanciesPublicVacancyIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPublicVacancyVacanciesPublicVacancyIdGetQueryKey(vacancyId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPublicVacancyVacanciesPublicVacancyIdGet>>> = ({ signal }) => getPublicVacancyVacanciesPublicVacancyIdGet(vacancyId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: vacancyId !== null && vacancyId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPublicVacancyVacanciesPublicVacancyIdGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetPublicVacancyVacanciesPublicVacancyIdGetQueryResult = NonNullable<Awaited<ReturnType<typeof getPublicVacancyVacanciesPublicVacancyIdGet>>>
+export type GetPublicVacancyVacanciesPublicVacancyIdGetQueryError = ErrorType<ProblemOut>
+
+
+export function useGetPublicVacancyVacanciesPublicVacancyIdGet<TData = Awaited<ReturnType<typeof getPublicVacancyVacanciesPublicVacancyIdGet>>, TError = ErrorType<ProblemOut>>(
+ vacancyId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicVacancyVacanciesPublicVacancyIdGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPublicVacancyVacanciesPublicVacancyIdGet>>,
+          TError,
+          Awaited<ReturnType<typeof getPublicVacancyVacanciesPublicVacancyIdGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPublicVacancyVacanciesPublicVacancyIdGet<TData = Awaited<ReturnType<typeof getPublicVacancyVacanciesPublicVacancyIdGet>>, TError = ErrorType<ProblemOut>>(
+ vacancyId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicVacancyVacanciesPublicVacancyIdGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPublicVacancyVacanciesPublicVacancyIdGet>>,
+          TError,
+          Awaited<ReturnType<typeof getPublicVacancyVacanciesPublicVacancyIdGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPublicVacancyVacanciesPublicVacancyIdGet<TData = Awaited<ReturnType<typeof getPublicVacancyVacanciesPublicVacancyIdGet>>, TError = ErrorType<ProblemOut>>(
+ vacancyId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicVacancyVacanciesPublicVacancyIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Public Vacancy
+ */
+
+export function useGetPublicVacancyVacanciesPublicVacancyIdGet<TData = Awaited<ReturnType<typeof getPublicVacancyVacanciesPublicVacancyIdGet>>, TError = ErrorType<ProblemOut>>(
+ vacancyId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicVacancyVacanciesPublicVacancyIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetPublicVacancyVacanciesPublicVacancyIdGetQueryOptions(vacancyId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+

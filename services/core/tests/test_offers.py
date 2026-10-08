@@ -805,6 +805,48 @@ def test_public_vacancies_list(world):
     assert c.get("/vacancies/public", params={"q": "back"}).json() != []
 
 
+def test_public_vacancies_unknown_role_does_not_500(world):
+    """E39-17: роль вне `RoleSlug` (профессия справочника) не роняет список и карточку."""
+    c, e, vid, ch, pid, uid = world
+    _db(
+        c,
+        "insert into roles (slug, name, is_profession, is_active)"
+        " values ('ai_engineer','AI Engineer',1,1)",
+    )
+    _db(c, "update vacancies set role='ai_engineer' where id=?", vid.replace("-", ""))
+    r = c.get("/vacancies/public")
+    assert r.status_code == 200 and r.json()[0]["role"] == "ai_engineer"
+    assert c.get("/vacancies/public", params={"role": "ai_engineer"}).json() != []
+    assert c.get(f"/vacancies/public/{vid}").status_code == 200
+    assert c.get("/vacancies", headers=e).status_code == 200
+    # новая вакансия: профессия справочника допустима, выдуманная нет
+    body = {"title": "AI", "role": "ai_engineer", "grade_min": "junior", "grade_max": "middle",
+            "formats": ["remote"], "employment_type": "full", "salary_from": 100000,
+            "salary_to": 150000}  # fmt: skip
+    assert c.post("/vacancies", json=body, headers=e).status_code == 201
+    assert c.post("/vacancies", json=body | {"role": "wizard"}, headers=e).status_code == 422
+
+
+def test_public_vacancies_filters_and_card(world):
+    c, e, vid, ch, pid, uid = world  # Backend, middle–senior, remote, 200–300k, python
+    p = "/vacancies/public"
+    assert c.get(p, params={"grade": "senior"}).json() != []
+    assert c.get(p, params={"grade": "junior"}).json() == []
+    assert c.get(p, params={"format": "office"}).json() == []
+    assert c.get(p, params={"format": "remote"}).json() != []
+    assert c.get(p, params={"salary_min": 400000}).json() == []
+    assert c.get(p, params={"salary_max": 100000}).json() == []
+    assert c.get(p, params={"salary_min": 250000, "salary_max": 260000}).json() != []
+    assert c.get(p, params={"skills": ["python"]}).json() != []
+    assert c.get(p, params={"skills": ["python", "fastapi"]}).json() == []
+    assert c.get(p, params={"grade": "wizard"}).status_code == 422
+    card = c.get(f"{p}/{vid}")
+    assert card.status_code == 200 and card.json()["company"]["name"] == "Acme Labs"
+    draft = _vacancy(c, e, publish=False)
+    assert c.get(f"{p}/{draft}").status_code == 404
+    assert c.get(f"{p}/{uuid.uuid4()}").status_code == 404
+
+
 def test_apply_flow_and_statuses_visible_to_both(world):
     c, e, vid, ch, pid, uid = world
     r = c.post(f"/vacancies/{vid}/apply", json={"message": "Беру!"}, headers=ch)

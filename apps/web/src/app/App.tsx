@@ -1,6 +1,7 @@
 import { lazy, Suspense, type ComponentType } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 
+import { DocumentTitle } from "@/app/DocumentTitle";
 import { RequireRole } from "@/app/RequireRole";
 import { ROUTES, SECTION_ROLE } from "@/app/routes";
 import Consents from "@/pages/Consents";
@@ -159,6 +160,7 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
 export function App() {
   return (
     <Suspense fallback={<p role="status" className="p-6 text-muted">Загрузка…</p>}>
+      <DocumentTitle />
       <Routes>
         <Route element={<PublicLayout />}>
           <Route path="/login" element={<Login />} />

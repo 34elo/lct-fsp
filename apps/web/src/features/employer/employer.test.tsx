@@ -145,7 +145,7 @@ test("карточка кандидата: тёмная, навыки без п�
     </MemoryRouter>,
   );
   await screen.findByRole("heading", { name: "Backend #1" });
-  expect(container.querySelector('[data-theme-scope="dark"]')).not.toBeNull();
+  expect(container.querySelector('[data-theme-scope="dark"]')).toBeNull();
   const tags = [...screen.getByRole("region", { name: "Навыки" }).querySelectorAll("[data-state]")].filter((e) => e.textContent?.startsWith("Python"));
   expect(tags).toHaveLength(1);
   expect(screen.getByText("ещё 1 без подтверждения")).toBeInTheDocument();

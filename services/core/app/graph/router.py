@@ -73,6 +73,7 @@ async def candidate_graph(
         cand is None
         or cand.search_status == "dnd"
         or cand.primary_role is None
+        or not candidates.is_publishable(cand)  # 15–17 лет без согласия родителя (E32-5b)
         or str(company.id) in (cand.stoplist_company_ids or ())
     ):
         raise ProblemError(404, "candidate_not_found", "Кандидат не найден")
