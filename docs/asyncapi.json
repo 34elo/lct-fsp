@@ -655,6 +655,24 @@
         }
       }
     },
+    "candidate_visibility_changed": {
+      "address": "candidate.visibility.changed",
+      "messages": {
+        "candidate_visibility_changed__candidate_visibility_changed": {
+          "$ref": "#/components/messages/candidate_visibility_changed__candidate_visibility_changed"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
     "assessment_family_status_changed": {
       "address": "assessment.family.status_changed",
       "messages": {
@@ -678,6 +696,96 @@
       "messages": {
         "regular_task_published__regular_task_published": {
           "$ref": "#/components/messages/regular_task_published__regular_task_published"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "offer_interest_sent": {
+      "address": "offer.interest.sent",
+      "messages": {
+        "offer_interest_sent__offer_interest_sent": {
+          "$ref": "#/components/messages/offer_interest_sent__offer_interest_sent"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "offer_interest_opened": {
+      "address": "offer.interest.opened",
+      "messages": {
+        "offer_interest_opened__offer_interest_opened": {
+          "$ref": "#/components/messages/offer_interest_opened__offer_interest_opened"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "offer_interest_declined": {
+      "address": "offer.interest.declined",
+      "messages": {
+        "offer_interest_declined__offer_interest_declined": {
+          "$ref": "#/components/messages/offer_interest_declined__offer_interest_declined"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "offer_interest_expired": {
+      "address": "offer.interest.expired",
+      "messages": {
+        "offer_interest_expired__offer_interest_expired": {
+          "$ref": "#/components/messages/offer_interest_expired__offer_interest_expired"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "offer_interest_withdrawn": {
+      "address": "offer.interest.withdrawn",
+      "messages": {
+        "offer_interest_withdrawn__offer_interest_withdrawn": {
+          "$ref": "#/components/messages/offer_interest_withdrawn__offer_interest_withdrawn"
         }
       },
       "bindings": {
@@ -1344,6 +1452,17 @@
         }
       ]
     },
+    "send_candidate_visibility_changed__candidate_visibility_changed": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/candidate_visibility_changed"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/candidate_visibility_changed/messages/candidate_visibility_changed__candidate_visibility_changed"
+        }
+      ]
+    },
     "send_assessment_family_status_changed__assessment_family_status_changed": {
       "action": "send",
       "channel": {
@@ -1363,6 +1482,61 @@
       "messages": [
         {
           "$ref": "#/channels/regular_task_published/messages/regular_task_published__regular_task_published"
+        }
+      ]
+    },
+    "send_offer_interest_sent__offer_interest_sent": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/offer_interest_sent"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/offer_interest_sent/messages/offer_interest_sent__offer_interest_sent"
+        }
+      ]
+    },
+    "send_offer_interest_opened__offer_interest_opened": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/offer_interest_opened"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/offer_interest_opened/messages/offer_interest_opened__offer_interest_opened"
+        }
+      ]
+    },
+    "send_offer_interest_declined__offer_interest_declined": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/offer_interest_declined"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/offer_interest_declined/messages/offer_interest_declined__offer_interest_declined"
+        }
+      ]
+    },
+    "send_offer_interest_expired__offer_interest_expired": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/offer_interest_expired"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/offer_interest_expired/messages/offer_interest_expired__offer_interest_expired"
+        }
+      ]
+    },
+    "send_offer_interest_withdrawn__offer_interest_withdrawn": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/offer_interest_withdrawn"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/offer_interest_withdrawn/messages/offer_interest_withdrawn__offer_interest_withdrawn"
         }
       ]
     },
@@ -2445,6 +2619,29 @@
           ]
         }
       },
+      "candidate_visibility_changed__candidate_visibility_changed": {
+        "name": "candidate.visibility.changed",
+        "title": "candidate.visibility.changed",
+        "summary": "Событие от core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "candidate.visibility.changed"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/VisibilityChanged"
+                }
+              }
+            }
+          ]
+        }
+      },
       "assessment_family_status_changed__assessment_family_status_changed": {
         "name": "assessment.family.status_changed",
         "title": "assessment.family.status_changed",
@@ -2485,6 +2682,121 @@
                 },
                 "payload": {
                   "$ref": "#/components/schemas/RegularTaskPublished"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "offer_interest_sent__offer_interest_sent": {
+        "name": "offer.interest.sent",
+        "title": "offer.interest.sent",
+        "summary": "Событие от core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "offer.interest.sent"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/OfferInterestEvent"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "offer_interest_opened__offer_interest_opened": {
+        "name": "offer.interest.opened",
+        "title": "offer.interest.opened",
+        "summary": "Событие от core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "offer.interest.opened"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/OfferInterestEvent"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "offer_interest_declined__offer_interest_declined": {
+        "name": "offer.interest.declined",
+        "title": "offer.interest.declined",
+        "summary": "Событие от core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "offer.interest.declined"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/OfferInterestEvent"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "offer_interest_expired__offer_interest_expired": {
+        "name": "offer.interest.expired",
+        "title": "offer.interest.expired",
+        "summary": "Событие от core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "offer.interest.expired"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/OfferInterestEvent"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "offer_interest_withdrawn__offer_interest_withdrawn": {
+        "name": "offer.interest.withdrawn",
+        "title": "offer.interest.withdrawn",
+        "summary": "Событие от core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "offer.interest.withdrawn"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/OfferInterestEvent"
                 }
               }
             }
@@ -3856,7 +4168,8 @@
           "wrong_format",
           "wrong_grade",
           "not_looking",
-          "other"
+          "other",
+          "wrong_company"
         ],
         "title": "DeclineReason",
         "type": "string"
@@ -5880,6 +6193,94 @@
         "title": "OfferInitiator",
         "type": "string"
       },
+      "OfferInterestEvent": {
+        "description": "Все `offer.interest.*` (ADR-026): интерес работодателя до приглашения.\n\nСтрока та же, что у оффера (`offer_id`); после `interest_opened → sent` дальше идут обычные\n`offer.*`. Без ПДн: только id, статусы, причина отказа и вилка (числа).",
+        "properties": {
+          "offer_id": {
+            "format": "uuid",
+            "title": "Offer Id",
+            "type": "string"
+          },
+          "candidate_id": {
+            "format": "uuid",
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "company_id": {
+            "format": "uuid",
+            "title": "Company Id",
+            "type": "string"
+          },
+          "vacancy_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Vacancy Id"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OfferStatus"
+          },
+          "prev_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OfferStatus"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "actor": {
+            "default": "system",
+            "enum": [
+              "candidate",
+              "company",
+              "system"
+            ],
+            "title": "Actor",
+            "type": "string"
+          },
+          "decline_reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeclineReason"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "salary_from": {
+            "minimum": 0,
+            "title": "Salary From",
+            "type": "integer"
+          },
+          "salary_to": {
+            "minimum": 0,
+            "title": "Salary To",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "offer_id",
+          "candidate_id",
+          "company_id",
+          "status",
+          "salary_from",
+          "salary_to"
+        ],
+        "title": "OfferInterestEvent",
+        "type": "object"
+      },
       "OfferMessage": {
         "properties": {
           "offer_id": {
@@ -5910,7 +6311,9 @@
           "withdrawn",
           "interview",
           "hired",
-          "not_hired"
+          "not_hired",
+          "interest",
+          "interest_opened"
         ],
         "title": "OfferStatus",
         "type": "string"
@@ -6820,7 +7223,8 @@
           "fsp_imported",
           "regular_task_published",
           "test_result",
-          "uplift"
+          "uplift",
+          "category_subscription"
         ],
         "title": "TgTemplate",
         "type": "string"
@@ -6914,6 +7318,37 @@
           "version"
         ],
         "title": "VacancyEvent",
+        "type": "object"
+      },
+      "VisibilityChanged": {
+        "description": "`candidate.visibility.changed` (E36-4, ADR-027): кандидат изменил, что видно работодателю.\n\nТолько ключи и булевы значения, без ПДн. `changed` — изменившиеся ключи,\n`visibility` — полный текущий набор.",
+        "properties": {
+          "candidate_id": {
+            "format": "uuid",
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "changed": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "title": "Changed",
+            "type": "object"
+          },
+          "visibility": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "title": "Visibility",
+            "type": "object"
+          }
+        },
+        "required": [
+          "candidate_id",
+          "changed",
+          "visibility"
+        ],
+        "title": "VisibilityChanged",
         "type": "object"
       }
     }

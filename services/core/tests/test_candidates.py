@@ -1,3 +1,4 @@
+import json
 import subprocess
 import sys
 import uuid
@@ -59,8 +60,11 @@ def test_profile_lazy_create_stable(c):
     p2 = c.get("/candidates/me/profile", headers=h).json()
     assert p1["pseudonym"] == p2["pseudonym"] and p1["pseudonym"].startswith("Candidate #")
     assert p1["search_status"] == "open" and p1["preferences"]["formats"] == []
-    assert p1["visibility"] == {
-        "companies": False,
+    assert p1["visibility"] == {  # ADR-027: ФИО скрыто, опыт/компании/ФСП/регион видны
+        "full_name": False,
+        "companies": True,
+        "fsp": True,
+        "region": True,
         "education": False,
         "repos": False,
         "public_profile": False,
@@ -132,6 +136,57 @@ def test_visibility_and_public_consent(c):
     )
     j = c.patch("/candidates/me/visibility", json={"public_profile": True}, headers=h).json()
     assert j["visibility"]["public_profile"] is True and j["visibility"]["companies"] is True
+
+
+def _events(c, type_):
+    import sqlite3
+
+    c.db_path = Path(c.app_.state.settings.database_url.split("///")[1])
+    with sqlite3.connect(c.db_path) as con:
+        rows = con.execute("select payload from outbox where type=? order by id", (type_,))
+        out = [json.loads(r[0]) for r in rows]
+    return [d.get("payload", d) for d in out]
+
+
+def test_visibility_privacy_switches_saved_and_evented(c):
+    """E36-4: ФИО/ФСП/регион/компании сохраняются, событие только об изменившемся."""
+    h = _user(c, "a@x.io")
+    j = c.patch(
+        "/candidates/me/visibility", json={"full_name": True, "region": False}, headers=h
+    ).json()
+    assert j["visibility"]["full_name"] is True and j["visibility"]["region"] is False
+    assert j["visibility"]["fsp"] is True and j["visibility"]["companies"] is True
+    # повтор тех же значений события не создаёт
+    c.patch("/candidates/me/visibility", json={"full_name": True}, headers=h)
+    j = c.patch("/candidates/me/visibility", json={"fsp": False, "companies": False}, headers=h)
+    assert j.json()["visibility"]["full_name"] is True  # прошлые значения сохранились
+    p = c.get("/candidates/me/profile", headers=h).json()["visibility"]
+    assert (p["full_name"], p["region"], p["fsp"], p["companies"]) == (True, False, False, False)
+    evs = _events(c, "candidate.visibility.changed")
+    assert [e["changed"] for e in evs] == [
+        {"full_name": True, "region": False},
+        {"companies": False, "fsp": False},
+    ]
+    assert all("contacts" not in e["visibility"] for e in evs)
+
+
+def test_visibility_rejects_unknown_keys_and_other_roles(c):
+    h = _user(c, "a@x.io")
+    assert (
+        c.patch("/candidates/me/visibility", json={"contacts": True}, headers=h).status_code == 422
+    )
+    e = _user(c, "e@x.io", role="employer")
+    assert c.patch("/candidates/me/visibility", json={"fsp": False}, headers=e).status_code == 403
+    assert c.patch("/candidates/me/visibility", json={"fsp": False}).status_code == 401
+
+
+def test_visibility_missing_keys_use_defaults(c):
+    class _C:
+        visibility = {"companies": False}
+
+    v = service.visibility_of(_C())
+    assert v["companies"] is False and v["region"] is True and v["fsp"] is True
+    assert v["full_name"] is False and v["education"] is False
 
 
 def test_stoplist_idempotent_and_isolated(c):

@@ -29963,9 +29963,21 @@
       },
       "Visibility": {
         "properties": {
+          "full_name": {
+            "type": "boolean",
+            "title": "Full Name"
+          },
           "companies": {
             "type": "boolean",
             "title": "Companies"
+          },
+          "fsp": {
+            "type": "boolean",
+            "title": "Fsp"
+          },
+          "region": {
+            "type": "boolean",
+            "title": "Region"
           },
           "education": {
             "type": "boolean",
@@ -29986,7 +29998,10 @@
         },
         "type": "object",
         "required": [
+          "full_name",
           "companies",
+          "fsp",
+          "region",
           "education",
           "repos",
           "public_profile",
@@ -29996,6 +30011,17 @@
       },
       "VisibilityIn": {
         "properties": {
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name"
+          },
           "companies": {
             "anyOf": [
               {
@@ -30006,6 +30032,28 @@
               }
             ],
             "title": "Companies"
+          },
+          "fsp": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fsp"
+          },
+          "region": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region"
           },
           "education": {
             "anyOf": [
