@@ -36,7 +36,7 @@ export default function Register() {
     try {
       await register(String(f.get("email")).trim(), String(f.get("password")), role);
     } catch (err) {
-      setError(authErrorText(err, t.fallbackError));
+      setError(authErrorText(err, t.fallbackError, { credentials: false }));
       setBusy(false);
     }
   }

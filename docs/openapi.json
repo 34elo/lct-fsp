@@ -17718,6 +17718,17 @@
             "title": "Interested You",
             "default": false
           },
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name"
+          },
           "skills": {
             "items": {
               "$ref": "#/components/schemas/SkillWithTrust"
@@ -17853,6 +17864,17 @@
                 "type": "null"
               }
             ]
+          },
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name"
           },
           "desired_roles": {
             "items": {
@@ -21135,6 +21157,32 @@
           "year": {
             "type": "integer",
             "title": "Year"
+          },
+          "relevance": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "relevant",
+                  "other"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Relevance"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
           }
         },
         "type": "object",
@@ -24500,6 +24548,11 @@
             },
             "type": "object",
             "title": "Skill Types"
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active",
+            "default": true
           }
         },
         "type": "object",
@@ -24534,6 +24587,11 @@
             },
             "type": "object",
             "title": "Skill Types"
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active",
+            "default": true
           },
           "taxonomy_version": {
             "anyOf": [
@@ -24632,6 +24690,18 @@
                 "type": "null"
               }
             ]
+          },
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name"
           },
           "stack": {
             "anyOf": [

@@ -111,6 +111,8 @@ class Candidate(Base):
     claimed_soft: Mapped[list[str] | None] = mapped_column(TextArray, default=None)
     # ручная форма (E20-4): контакты шифруются Fernet (security.md §3), желаемые роли — slug
     contacts_enc: Mapped[bytes | None] = mapped_column(sa.LargeBinary, default=None)
+    # ФИО (E36-5): шифруется как контакты; работодателю — только при `visibility.full_name`
+    full_name_enc: Mapped[bytes | None] = mapped_column(sa.LargeBinary, default=None)
     desired_roles: Mapped[list[str] | None] = mapped_column(TextArray, default=None)
     # возраст (E32-5b): только группа, дата рождения не собирается; `minor` = 15–17 лет
     age_group: Mapped[str | None] = mapped_column(Text, default=None)  # adult | minor

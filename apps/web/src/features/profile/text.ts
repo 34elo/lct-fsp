@@ -30,9 +30,7 @@ export const ROLE_LABEL: Record<string, string> = {
 export const SOURCE_LABEL: Record<string, string> = {
   self: "Заявлено кандидатом",
   resume: "Резюме",
-  github: "GitHub",
   test: "Тест",
-  ai_interview: "ИИ-интервью",
   fsp: "ФСП",
   codeforces: "Codeforces",
 };
@@ -62,11 +60,6 @@ export function dots(level: number): 0 | 1 | 2 | 3 | 4 {
 
 export function roleLabel(role: string): string {
   return ROLE_LABEL[role] ?? role;
-}
-
-export function points(n: number): string {
-  const v = Math.round(n * 10) / 10;
-  return `${v > 0 ? "+" : ""}${v}`.replace(".", ",");
 }
 
 export function dateRu(iso: string): string {
@@ -116,8 +109,8 @@ export const T = {
   loading: "Загрузка профиля…",
   loadError: "Не удалось загрузить профиль",
   loadErrorHint: "Проверьте соединение и повторите.",
-  seenAs: "Так вас видят компании, пока вы не примете оффер",
-  noGrade: "Категория и грейд появятся, когда в профиле будут навыки: загрузите резюме или подключите ФСП.",
+  seenAs: "Так вас видят компании, пока вы не примете приглашение",
+  noGrade: "Категория и грейд появятся после опроса и теста.",
   preliminary: "Предварительно: пока мало подтверждённых фактов",
   strengthTitle: "Что усилит профиль",
   strengthHint: "Чем больше проверяемого, тем выше доверие к навыкам и точнее грейд.",
@@ -129,8 +122,8 @@ export const T = {
   pdfError: "Не удалось скачать PDF. Попробуйте ещё раз.",
   graph: "Граф доказательств",
   claimedTitle: "Заявлено и подтверждено",
-  claimedHint: "Что вы указали в опросе или резюме и что подтвердил тест.",
-  skillsEmpty: "Пока нет навыков. Загрузите резюме или подключите ФСП, и они появятся здесь.",
+  claimedHint: "Что вы указали в опросе и что подтвердил тест.",
+  skillsEmpty: "Пока нет навыков. Пройдите опрос и тест или подключите ФСП, и они появятся здесь.",
   skillsHint: "Нажмите на навык, чтобы увидеть, чем он подтверждён. Пунктир: заявлено или выведено, без доказательств сила не растёт.",
   fspEmpty: "Результатов ФСП пока нет. Привяжите профиль ФСП: соревнования и разряды появятся здесь и усилят грейд.",
   fspImported: "Данные ФСП загружены, навыки и грейд обновлены.",
@@ -139,7 +132,6 @@ export const T = {
 export const STRENGTH_ITEMS = [
   { key: "resume", label: "Резюме", hint: "навыки с цитатами из текста", to: "/onboarding" },
   { key: "fsp", label: "ФСП", hint: "результаты и разряды соревнований", to: "/me/settings" },
-  { key: "github", label: "GitHub", hint: "код станет доказательством", to: "/onboarding" },
   { key: "test", label: "Тест", hint: "подтверждает грейд", to: "/me/assessment" },
 ] as const;
 
@@ -176,7 +168,7 @@ export const editText = {
   back: "К профилю",
   loadError: "Не удалось загрузить профиль",
   contactsTitle: "Контакты",
-  contactsHint: "Видны только вам. Работодатель получит их после того, как вы примете оффер.",
+  contactsHint: "Видны только вам. Работодатель получит их после того, как вы примете приглашение.",
   email: "Почта",
   phone: "Телефон",
   telegram: "Telegram",
@@ -251,7 +243,7 @@ export const HOME = {
 } as const;
 
 /** Источник подтверждения навыка — метка в строке «Навыки» на Главной. */
-export const SOURCE_TAG: Record<string, string> = { test: "тест", fsp: "ФСП", github: "GitHub", resume: "резюме", task: "задание" };
+export const SOURCE_TAG: Record<string, string> = { test: "тест", fsp: "ФСП", resume: "резюме", task: "задание" };
 
 /** Формат работы в карточке профиля: «Удалёнка или гибрид». */
 export const FORMAT_WORD: Record<string, string> = { remote: "удалёнка", hybrid: "гибрид", office: "офис" };

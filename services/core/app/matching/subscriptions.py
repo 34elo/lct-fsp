@@ -187,7 +187,7 @@ async def flush_due(
     if only is not None:
         stmt = stmt.where(Sub.id.in_(only))
     interval = timedelta(minutes=cfg.subscription_digest_minutes)
-    profs = {p.slug: p.title for p in await taxonomy.list_professions(session)}
+    profs = {p.slug: p.title for p in await taxonomy.list_professions(session, include_hidden=True)}
     out: list[UiMessage] = []
     for sub in list(await session.scalars(stmt.order_by(Sub.id))):
         last = _aware(sub.last_digest_at)

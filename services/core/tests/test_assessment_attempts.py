@@ -166,6 +166,24 @@ async def test_repeat_answer_is_idempotent(api, factory, taxonomy_loaded):
     assert nxt["response_id"] != item["response_id"] and nxt["seq"] == 2
 
 
+async def test_empty_answer_moves_to_new_item(api, factory, taxonomy_loaded):
+    """E35-7a: «Не знаю» (answer=null) не оставляет то же задание: следующее — другое."""
+    h = register(api)
+    aid = _start(api, h).json()["id"]
+    url = f"/assessment/attempts/{aid}/answers"
+    ids, stems = set(), []
+    for _ in range(3):
+        item = api.get(f"/assessment/attempts/{aid}/next", headers=h).json()
+        if item["done"]:
+            break
+        assert item["response_id"] not in ids
+        ids.add(item["response_id"])
+        stems.append(item["stem"])
+        r = api.post(url, json={"response_id": item["response_id"], "answer": None}, headers=h)
+        assert r.status_code == 200 and r.json()["accepted"]
+    assert len(ids) >= 2
+
+
 async def test_foreign_attempt_is_404(api, factory, taxonomy_loaded):
     owner = register(api)
     aid = _start(api, owner).json()["id"]
@@ -193,6 +211,8 @@ async def test_foreign_attempt_is_404(api, factory, taxonomy_loaded):
 async def test_attempt_checks(api, taxonomy_loaded, monkeypatch):
     h = register(api)
     assert _start(api, h, profession="designer").json()["code"] == "unknown_profession"
+    # скрытая профессия (ADR-027 п.1, E36-2): новый тест по ней не начать
+    assert _start(api, h, profession="ml").json()["code"] == "unknown_profession"
     assert _start(api, h).status_code == 201
     dup = _start(api, h)
     assert dup.status_code == 409 and dup.json()["code"] == "attempt_active"

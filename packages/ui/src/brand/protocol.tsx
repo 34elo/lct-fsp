@@ -85,6 +85,8 @@ export interface FspResult {
   total?: number;
   role?: string;
   year: number;
+  /** Релевантность профессии кандидата: «релевантно профессии» / «соревнование другого направления». */
+  note?: string;
 }
 
 function Medal({ place }: { place: number }) {
@@ -125,6 +127,7 @@ export function FspProtocol({ results, className }: { results: FspResult[]; clas
             <span className="text-14">
               {head} · <b className="font-mono font-semibold">{place}</b>
               {r.role ? ` · ${r.role}` : ""} · {r.year}
+              {r.note && <span className="text-muted"> · {r.note}</span>}
             </span>
           </li>
         );

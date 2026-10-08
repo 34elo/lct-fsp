@@ -1,10 +1,11 @@
 import { ApiError } from "@/api/mutator";
 
 /** Русский текст по машинному `code` Problem Details (api.md, коды `/auth/*`). */
-export function authErrorText(err: unknown, fallback: string): string {
+export function authErrorText(err: unknown, fallback: string, opts: { credentials?: boolean } = {}): string {
   if (!(err instanceof ApiError)) return fallback;
   switch (err.code) {
     case "invalid_credentials":
+      if (opts.credentials === false) return fallback;
       return "Неверная почта или пароль";
     case "email_taken":
       return "Эта почта уже зарегистрирована. Попробуйте войти";
@@ -14,7 +15,8 @@ export function authErrorText(err: unknown, fallback: string): string {
       return "Ссылка недействительна или уже использована";
   }
   if (err.status === 429) return "Слишком много попыток. Подождите минуту";
-  if (err.status === 401) return "Неверная почта или пароль";
+  // 401 без кода на регистрации (например, из /me после неё) — не «неверный пароль» (E35-7a).
+  if (err.status === 401 && opts.credentials !== false) return "Неверная почта или пароль";
   return fallback;
 }
 

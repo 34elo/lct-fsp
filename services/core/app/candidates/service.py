@@ -106,6 +106,16 @@ def contacts_of(cand: Candidate, key: str) -> dict[str, str]:
     return pii.decrypt_contacts(key, cand.contacts_enc)
 
 
+def full_name_of(cand: Candidate, key: str) -> str | None:
+    """ФИО владельца (расшифровано). Работодателю — только через `shown_full_name`."""
+    return pii.decrypt_text(key, cand.full_name_enc)
+
+
+def shown_full_name(cand: Candidate, key: str) -> str | None:
+    """ФИО для карточки работодателя: только если кандидат открыл его (`visibility.full_name`)."""
+    return full_name_of(cand, key) if visibility_of(cand)["full_name"] else None
+
+
 async def update_profile(
     session: AsyncSession, cand: Candidate, changes: dict, *, pii_key: str
 ) -> Candidate:
@@ -119,6 +129,9 @@ async def update_profile(
     if "contacts" in changes:
         contacts = {k: v for k, v in (changes["contacts"] or {}).items() if v}
         cand.contacts_enc = pii.encrypt_contacts(pii_key, contacts) if contacts else None
+    if "full_name" in changes:
+        name = " ".join(str(changes["full_name"] or "").split())
+        cand.full_name_enc = pii.encrypt_text(pii_key, name) if name else None
     if "desired_roles" in changes:
         cand.desired_roles = list(dict.fromkeys(str(r) for r in changes["desired_roles"] or []))
     if "experience_months" in changes:
@@ -488,7 +501,8 @@ async def erase(session: AsyncSession, storage, user) -> Candidate:
         "city", "salary_min", "active_until", "primary_role", "roles", "primary_stack", "grade",
         "grade_score", "grade_confidence", "grade_breakdown", "grade_next", "experience_months",
         "profile_text", "profile_text_sha", "embedding", "embedding_model", "team_signals",
-        "claimed_soft", "contacts_enc", "desired_roles", "age_group", "parent_consent_at",
+        "claimed_soft", "contacts_enc", "full_name_enc", "desired_roles", "age_group",
+        "parent_consent_at",
         "recompute_requested_at", "recomputed_at",
     ):  # fmt: skip
         setattr(cand, col, None)

@@ -198,4 +198,119 @@ class PyFindBug(BaseFamily):
         )
 
 
-FAMILIES = [JsTrace(), StackQueueTrace(), PyFindBug()]
+class LruCacheTrace(BaseFamily):
+    """LRU-кеш заданной ёмкости и поток запросов: сколько промахов. Ответ — число (E36-2)."""
+
+    slug = "lru_cache_trace"
+    kind = Kind.exact
+    skill = "data_structures"
+    skill_type = SkillType.fundamental
+    level = 4
+    knob_bounds = {"n_ops": (8, 12), "capacity": (2, 3)}
+
+    def generate(self, rng: Random, world: World) -> Item:
+        cap = rng.randint(2, 3)
+        n_ops = rng.randint(8, 12)
+        keys = [rng.randint(1, cap + 2) for _ in range(n_ops)]
+        cache: list[int] = []  # от давнего к свежему
+        misses = 0
+        for k in keys:
+            if k in cache:
+                cache.remove(k)
+            else:
+                misses += 1
+                if len(cache) == cap:
+                    cache.pop(0)
+            cache.append(k)
+        code = "\n".join(
+            [
+                "from collections import OrderedDict",
+                "cache = OrderedDict()",
+                f"CAPACITY = {cap}",
+                "misses = 0",
+                f"for key in {keys}:",
+                "    if key in cache:",
+                "        cache.move_to_end(key)",
+                "    else:",
+                "        misses += 1",
+                "        cache[key] = True",
+                "        if len(cache) > CAPACITY:",
+                "            cache.popitem(last=False)",
+                "print(misses)",
+            ]
+        )
+        return Item(
+            kind=self.kind,
+            stem=(
+                f"Сервис {world.services[1]} кеширует {world.entities[0]} по id в LRU-кеше: "
+                "при переполнении вытесняется запись, к которой дольше всего не обращались. "
+                f"Что выведет код?\n\n{code}"
+            ),
+            key=misses,
+            time_limit_s=180,
+            meta={"exec": code, "knobs": {"n_ops": n_ops, "capacity": cap}},
+        )
+
+
+class JsEventLoopOrder(BaseFamily):
+    """Порядок вывода JS: синхронный код → микрозадачи → макрозадачи (E36-2).
+
+    Ответ — порядок меток. Колбэк `setTimeout` может сам ставить микрозадачу: она выполняется
+    сразу после него, до следующего таймера. Ключ считает симуляция очередей.
+    """
+
+    slug = "js_event_loop_order"
+    kind = Kind.order
+    skill = "javascript"
+    skill_type = SkillType.hard
+    level = 4
+    knob_bounds = {"n_logs": (4, 9)}
+
+    def generate(self, rng: Random, world: World) -> Item:
+        kinds = ["sync", "micro", "macro"]
+        kinds += [
+            rng.choice(["sync", "micro", "macro", "macro_micro"]) for _ in range(rng.randint(1, 3))
+        ]
+        rng.shuffle(kinds)
+        labels = iter("ABCDEFGHIJ")
+        lines: list[str] = []
+        sync: list[str] = []
+        micro: list[str] = []
+        macro: list[list[str]] = []  # метки колбэка таймера: сам и его микрозадача
+        for k in kinds:
+            a = next(labels)
+            if k == "sync":
+                lines.append(f'console.log("{a}");')
+                sync.append(a)
+            elif k == "micro":
+                lines.append(f'Promise.resolve().then(() => console.log("{a}"));')
+                micro.append(a)
+            elif k == "macro":
+                lines.append(f'setTimeout(() => console.log("{a}"), 0);')
+                macro.append([a])
+            else:
+                b = next(labels)
+                lines += [
+                    "setTimeout(() => {",
+                    f'  console.log("{a}");',
+                    f'  Promise.resolve().then(() => console.log("{b}"));',
+                    "}, 0);",
+                ]
+                macro.append([a, b])
+        order = sync + micro + [x for cb in macro for x in cb]
+        shown = rng.sample(order, k=len(order))
+        return Item(
+            kind=self.kind,
+            stem=(
+                f"Фрагмент из фронтенда сервиса {world.services[2]}. "
+                "Расставьте метки в порядке, в котором они появятся в консоли.\n\n"
+                + "\n".join(lines)
+            ),
+            options=shown,
+            key=[shown.index(x) for x in order],
+            time_limit_s=180,
+            meta={"knobs": {"n_logs": len(order)}},
+        )
+
+
+FAMILIES = [JsTrace(), StackQueueTrace(), PyFindBug(), LruCacheTrace(), JsEventLoopOrder()]

@@ -36,6 +36,7 @@ export interface CandidateCardFull {
   strength?: StrengthView | null;
   is_shortlisted?: boolean;
   interested_you?: boolean;
+  full_name?: string | null;
   skills: SkillWithTrust[];
   grade_info: GradeInfo;
   experience: ExperienceBrief[];

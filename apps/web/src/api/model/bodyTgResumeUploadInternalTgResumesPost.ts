@@ -6,6 +6,6 @@
  */
 
 export interface BodyTgResumeUploadInternalTgResumesPost {
-  file: Blob;
+  file: Blob | File;
   tg_user_id: number;
 }

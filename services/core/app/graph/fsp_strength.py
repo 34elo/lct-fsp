@@ -45,6 +45,9 @@ class FspStrengthConfig:
     f_decay_floor: float = 0.6  # давность — мягкий множитель: старый результат не ниже 0.6
     f_decay_half_life_years: float = 3.0
     f_unverified: float = 0.5
+    # релевантность дисциплины профессии (ADR-027 п. 2): множитель floor + (1 − floor)·rel
+    f_relevance_floor: float = 0.4  # нерелевантная дисциплина весит меньше, но не ноль
+    f_relevant_threshold: float = 0.5  # rel ≥ порога — «релевантно», иначе «другое направление»
 
     @classmethod
     def from_dict(cls, data: Mapping | None) -> FspStrengthConfig:
@@ -64,6 +67,8 @@ class FspStrengthConfig:
                 f.get("decay_half_life_years", base.f_decay_half_life_years)
             ),
             f_unverified=float(f.get("unverified", base.f_unverified)),
+            f_relevance_floor=float(f.get("relevance_floor", base.f_relevance_floor)),
+            f_relevant_threshold=float(f.get("relevant_threshold", base.f_relevant_threshold)),
             max_strength=float(src.get("max_strength", base.max_strength)),
             level_k={k: float(v) for k, v in src.get("level_coefficients", base.level_k).items()},
             prize=float(res.get("1_to_3", base.prize)),
@@ -122,6 +127,39 @@ class FspResultIn:
     final: bool
     observed_at: date
     verified: bool = True
+    discipline: str | None = None  # дисциплина и трек — для релевантности профессии
+    track: str | None = None
+    relevance: float | None = None  # доля дисциплины в профиле профессии; None — неизвестна
+
+
+def discipline_relevance(
+    rules: Iterable[tuple[str, float, str | None]],
+    profile: Mapping[str, float],
+    track: str | None = None,
+) -> float | None:
+    """Релевантность дисциплины профессии ∈ [0, 1]: доля веса навыков дисциплины
+    (`discipline_rules`, правила без трека и трека результата), входящих в профиль профессии
+    с весом > 0. Правил нет — None (множитель не применяется)."""
+    w: dict[str, float] = {}
+    for slug, weight, rule_track in rules:
+        if rule_track in (None, track):
+            w[slug] = max(w.get(slug, 0.0), weight)
+    total = sum(w.values())
+    if total <= 0:
+        return None
+    return round(sum(v for k, v in w.items() if profile.get(k, 0.0) > 0) / total, 6)
+
+
+def relevance_multiplier(relevance: float | None, cfg: FspStrengthConfig) -> float:
+    """floor + (1 − floor)·rel; релевантность неизвестна — 1 (как до E36-3)."""
+    if relevance is None:
+        return 1.0
+    rel = max(0.0, min(1.0, relevance))
+    return cfg.f_relevance_floor + (1 - cfg.f_relevance_floor) * rel
+
+
+def is_relevant(relevance: float | None, cfg: FspStrengthConfig) -> bool | None:
+    return None if relevance is None else relevance >= cfg.f_relevant_threshold
 
 
 def result_tier(r: FspResultIn, cfg: FspStrengthConfig) -> str:
@@ -139,15 +177,19 @@ def result_tier(r: FspResultIn, cfg: FspStrengthConfig) -> str:
 
 def fsp_term(results: Iterable[FspResultIn], today: date, cfg: FspStrengthConfig) -> float:
     """F ∈ [0, max_strength]: лучший результат полностью, каждый следующий — с коэффициентом
-    `diminish^i` (убывающая отдача). Давность — мягкий множитель в [floor, 1]. Нет результатов — 0,
-    без штрафа."""
+    `diminish^i` (убывающая отдача). Давность — мягкий множитель в [floor, 1], релевантность
+    дисциплины профессии — множитель в [relevance_floor, 1]. Нет результатов — 0, без штрафа."""
     vals: list[float] = []
     for r in results:
         age = max(0.0, (today - r.observed_at).days / 365.25)
         decay = cfg.f_decay_floor + (1 - cfg.f_decay_floor) * 0.5 ** (
             age / cfg.f_decay_half_life_years
         )
-        v = cfg.f_tier.get(result_tier(r, cfg), 0.0) * decay
+        v = (
+            cfg.f_tier.get(result_tier(r, cfg), 0.0)
+            * decay
+            * relevance_multiplier(r.relevance, cfg)
+        )
         vals.append(v if r.verified else v * cfg.f_unverified)
     total = sum(v * cfg.f_diminish**i for i, v in enumerate(sorted(vals, reverse=True)))
     return round(min(cfg.max_strength, total), 6)

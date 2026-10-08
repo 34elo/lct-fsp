@@ -15,7 +15,7 @@ export default function SkillEvidence() {
     const notFound = q.error instanceof ApiError && q.error.status === 404;
     body = <ErrorNote>{notFound ? "Такого навыка нет в вашем профиле." : "Не удалось загрузить доказательства."}</ErrorNote>;
   } else if (q.data.data.length === 0) {
-    body = <p className="text-sm text-muted">Доказательств пока нет: навык заявлен или выведен. Подтвердите его тестом, кодом на GitHub или результатом ФСП.</p>;
+    body = <p className="text-sm text-muted">Доказательств пока нет: навык заявлен или выведен. Подтвердите его тестом или результатом ФСП.</p>;
   } else {
     body = (
       <ul className="flex flex-col">

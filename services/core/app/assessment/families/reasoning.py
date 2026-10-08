@@ -161,4 +161,124 @@ class LlmCostEstimate(BaseFamily):
         )
 
 
-FAMILIES = [ServiceGraphRootCause(), UnitEconomics(), FunnelRevenue(), LlmCostEstimate()]
+class CohortRevenue(BaseFamily):
+    """Выручка месяца по когортам с удержанием (E36-2). Ответ — число (₽).
+
+    Когорты трёх месяцев, удержание — доля от исходного размера когорты; платят только активные.
+    """
+
+    slug = "cohort_revenue"
+    kind = Kind.exact
+    skill = "business_metrics"
+    skill_type = SkillType.business
+    level = 4
+
+    def generate(self, rng: Random, world: World) -> Item:
+        sizes = [100 * rng.randint(5, 40) for _ in range(3)]  # кратны 100 → целые пользователи
+        r2 = rng.choice([40, 50, 60, 70])
+        r3 = r2 - rng.choice([10, 20, 30])
+        arpu = rng.choice([200, 300, 450, 500, 990])
+        active = [sizes[0] * r3 // 100, sizes[1] * r2 // 100, sizes[2]]
+        code = (
+            f"sizes = {sizes}  # новые пользователи: месяц 1, 2, 3\n"
+            f"retention = [1.0, {r2 / 100}, {r3 / 100}]  # доля когорты на 1-й, 2-й, 3-й месяц\n"
+            f"arpu = {arpu}\n"
+            "active = sum(round(sizes[m] * retention[2 - m]) for m in range(3))\n"
+            "print(active * arpu)"
+        )
+        return Item(
+            kind=self.kind,
+            stem=(
+                f"{world.company}, сервис {world.services[0]}: новые пользователи по месяцам — "
+                f"{sizes[0]}, {sizes[1]}, {sizes[2]}. Во второй месяц жизни остаётся {r2} % "
+                f"когорты, в третий — {r3} % (от исходного размера). Активный пользователь "
+                f"приносит {_rub(arpu)} в месяц. Какова выручка третьего месяца (₽)?"
+            ),
+            key=sum(active) * arpu,
+            time_limit_s=210,
+            meta={"exec": code},
+        )
+
+
+# Граничные случаи: (функция с {e}, вызов, верные входы, вход, на котором функция падает)
+_EDGE: list[tuple[str, str, list[str], list[str]]] = [
+    (
+        "def avg_{e}(values):\n    return sum(values) / len(values)",
+        "avg_{e}",
+        ["[3, 5, 7]", "[0]", "[-2, 2]", "[1.5, 2.5]"],
+        ["[]"],
+    ),
+    (
+        "def first_word_{e}(text):\n    return text.split()[0]",
+        "first_word_{e}",
+        ["'hello world'", "'  padded  '", "'one'", "'a b c'"],
+        ["'   '", "''"],
+    ),
+    (
+        "def last_{e}(items, k):\n    return items[len(items) - k]",
+        "last_{e}",
+        ["[1, 2, 3], 1", "[1, 2, 3], 3", "[5], 1", "[4, 8], 2"],
+        ["[1, 2, 3], 0"],
+    ),
+    (
+        "def per_item_{e}(total, count):\n    return total // count",
+        "per_item_{e}",
+        ["10, 3", "0, 5", "-9, 2", "7, 7"],
+        ["5, 0"],
+    ),
+]
+
+
+class EdgeCaseInput(BaseFamily):
+    """На каком входе функция упадёт: ровно один вариант — граничный случай (E36-2).
+
+    Ответ — индекс варианта. `meta["exec"]` вызывает функцию на всех вариантах и печатает
+    индекс единственного упавшего — так `families-check` доказывает однозначность ключа.
+    """
+
+    slug = "edge_case_input"
+    kind = Kind.choice
+    skill = "edge_case_thinking"
+    skill_type = SkillType.thinking
+    level = 2
+
+    def generate(self, rng: Random, world: World) -> Item:
+        src, call, good, bad = rng.choice(_EDGE)
+        e = world.entities[1]
+        fn = src.format(e=e)
+        name = call.format(e=e)
+        opts = [*rng.sample(good, k=3), rng.choice(bad)]
+        rng.shuffle(opts)
+        cases = ", ".join(f"({o},)" for o in opts)  # «[1, 2], 0,» и «[3],» — кортежи аргументов
+        code = (
+            f"{fn}\n"
+            f"cases = [{cases}]\n"
+            "failed = []\n"
+            "for i, args in enumerate(cases):\n"
+            "    try:\n"
+            f"        {name}(*args)\n"
+            "    except Exception:\n"
+            "        failed.append(i)\n"
+            "print(failed[0] if len(failed) == 1 else -1)"
+        )
+        return Item(
+            kind=self.kind,
+            stem=(
+                f"Функция из сервиса {world.services[3]}. На каком входе она упадёт "
+                f"с исключением?\n\n{fn}"
+            ),
+            options=[f"{name}({o})" for o in opts],
+            key=next(i for i, o in enumerate(opts) if o in bad),
+            time_limit_s=120,
+            meta={"exec": code},
+        )
+
+
+FAMILIES = [
+    ServiceGraphRootCause(),
+    UnitEconomics(),
+    FunnelRevenue(),
+    LlmCostEstimate(),
+    CohortRevenue(),
+    EdgeCaseInput(),
+]
