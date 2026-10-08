@@ -218,8 +218,10 @@ async def create(
 
 
 async def list_owned(session: AsyncSession, user: User, status: str | None = None) -> list[Vacancy]:
-    company, _ = await companies.require_company(session, user.id)
-    q = select(Vacancy).where(Vacancy.company_id == company.id)
+    found = await companies.my_company(session, user.id)
+    if found is None:  # новая компания: вакансий ещё нет (E39-7)
+        return []
+    q = select(Vacancy).where(Vacancy.company_id == found[0].id)
     if status is not None:
         q = q.where(Vacancy.status == status)
     return list((await session.scalars(q.order_by(Vacancy.created_at.desc(), Vacancy.id))).all())
