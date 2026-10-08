@@ -223,7 +223,7 @@ export default function AdmissionQueue() {
               setStatus(s);
               setOpenId(null);
             }}
-            className={cn("min-h-9 rounded-lg border px-3 text-14 font-semibold", status === s ? "border-tint-200 bg-tint-100 text-brand-deep" : "border-hairline text-muted")}
+            className={cn("min-h-9 rounded-lg border px-3 text-14 font-semibold", status === s ? "border-tint-200 bg-tint-100 text-brand-deep dark:text-brand-mid" : "border-hairline text-muted")}
           >
             {T.queue.tabs[s]}
           </button>
