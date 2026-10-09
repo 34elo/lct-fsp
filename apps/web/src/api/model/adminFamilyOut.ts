@@ -4,9 +4,12 @@
  * core
  * OpenAPI spec version: 0.1.0
  */
+import type { AdminFamilyOutGrade } from './adminFamilyOutGrade';
 import type { AdminFamilyOutLogItem } from './adminFamilyOutLogItem';
 import type { AdminFamilyOutSpec } from './adminFamilyOutSpec';
 import type { AdminFamilyOutStatus } from './adminFamilyOutStatus';
+import type { FamilyExampleOut } from './familyExampleOut';
+import type { FamilyProfessionOut } from './familyProfessionOut';
 import type { FamilyStatsOut } from './familyStatsOut';
 
 export interface AdminFamilyOut {
@@ -28,4 +31,8 @@ export interface AdminFamilyOut {
   updated_at?: string | null;
   company_id?: string | null;
   spec?: AdminFamilyOutSpec;
+  skill?: string | null;
+  grade?: AdminFamilyOutGrade;
+  professions?: FamilyProfessionOut[];
+  example?: FamilyExampleOut | null;
 }

@@ -1,11 +1,14 @@
-"""`GET /admin/dashboard` — дашборд ФСП (E18-3). Только роль `fsp_admin`, только агрегаты."""
+"""`GET /admin/dashboard` — воронка ФСП (E18-3), `GET /admin/summary` — «Что требует вас» (E39-29).
+
+Только роль `fsp_admin`, только агрегаты.
+"""
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.analytics import dashboard
+from app.analytics import admin_summary, dashboard
 from app.deps import get_session
 from app.identity.deps import require_roles
 from app.openapi_errors import problem_responses
@@ -25,3 +28,16 @@ async def get_dashboard(
     """Воронка регистрация → тест → категория → приглашение → ответ, доля с ФСП,
     конверсия навигатор → соревнование. Ячейки меньше 5 человек скрыты."""
     return await dashboard.build(session, days)
+
+
+@router.get(
+    "/summary", response_model=admin_summary.AdminSummaryOut, responses=problem_responses(401, 403)
+)
+async def get_summary(
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+    _user=Depends(_admin),
+) -> admin_summary.AdminSummaryOut:
+    """Счётчики очередей, где нужно решение админа: заявки ФСП, допуск заданий, слияния навыков,
+    компании на проверке, открытые жалобы. Источник недоступен — `count: null`."""
+    return await admin_summary.build(session, request)
