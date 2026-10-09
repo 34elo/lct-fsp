@@ -17572,6 +17572,58 @@
         }
       }
     },
+    "/admin/summary": {
+      "get": {
+        "tags": [
+          "admin-dashboard"
+        ],
+        "summary": "Get Summary",
+        "description": "Счётчики очередей, где нужно решение админа: заявки ФСП, допуск заданий, слияния навыков,\nкомпании на проверке, открытые жалобы. Источник недоступен — `count: null`.",
+        "operationId": "get_summary_admin_summary_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSummaryOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/admin/metrics": {
       "get": {
         "tags": [
@@ -19797,6 +19849,44 @@
               }
             ],
             "title": "Spec"
+          },
+          "skill": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Skill"
+          },
+          "grade": {
+            "type": "string",
+            "enum": [
+              "junior",
+              "middle",
+              "senior"
+            ],
+            "title": "Grade",
+            "default": "middle"
+          },
+          "professions": {
+            "items": {
+              "$ref": "#/components/schemas/FamilyProfessionOut"
+            },
+            "type": "array",
+            "title": "Professions"
+          },
+          "example": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FamilyExampleOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -19965,6 +20055,27 @@
           "support_vacancies"
         ],
         "title": "AdminSkillBrief"
+      },
+      "AdminSummaryOut": {
+        "properties": {
+          "queues": {
+            "items": {
+              "$ref": "#/components/schemas/QueueCount"
+            },
+            "type": "array",
+            "title": "Queues"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "queues",
+          "total"
+        ],
+        "title": "AdminSummaryOut"
       },
       "AnswerOut": {
         "properties": {
@@ -23924,6 +24035,44 @@
         ],
         "title": "ExplanationItem"
       },
+      "FamilyExampleOut": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "stem": {
+            "type": "string",
+            "title": "Stem"
+          },
+          "options": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Options"
+          },
+          "answer": {
+            "type": "string",
+            "title": "Answer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "stem",
+          "answer"
+        ],
+        "title": "FamilyExampleOut",
+        "description": "Сгенерированный вариант задания и ответ решателя (ключ) — для карточки допуска."
+      },
       "FamilyOut": {
         "properties": {
           "id": {
@@ -24043,6 +24192,24 @@
           "author_form"
         ],
         "title": "FamilyOut"
+      },
+      "FamilyProfessionOut": {
+        "properties": {
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slug",
+          "title"
+        ],
+        "title": "FamilyProfessionOut"
       },
       "FamilySpec": {
         "properties": {
@@ -28870,6 +29037,37 @@
         ],
         "title": "PublicVacancyOut",
         "description": "Вакансия для кандидата: без служебных полей (`version`, `created_at`)."
+      },
+      "QueueCount": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "enum": [
+              "fsp_requests",
+              "families",
+              "skills",
+              "companies",
+              "complaints"
+            ],
+            "title": "Id"
+          },
+          "count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "title": "QueueCount"
       },
       "QueueItem": {
         "properties": {

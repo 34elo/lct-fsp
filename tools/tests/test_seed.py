@@ -404,3 +404,38 @@ async def test_fsp_registry_demo_heroes_and_jury(plan, tmp_path):
         )
         assert await s.scalar(select(func.count()).select_from(FspLink)) == 0  # «не привязан»
     await engine.dispose()
+
+
+def test_families_demo_covers_every_cell():
+    """E39-31: по заданию на каждую ячейку «профессия × грейд», каждое собирается и имеет ответ."""
+    from app.assessment import admission
+    from app.assessment.families.spec import FamilySpec, SpecFamily
+
+    from tools.seed.families import GRADES, PROFESSIONS, plan
+
+    items = plan()
+    assert {(i["profession"], i["grade"]) for i in items} == {
+        (p, g) for p in PROFESSIONS for g in GRADES
+    }
+    assert len({i["slug"] for i in items}) == len(items)
+    for p in PROFESSIONS:  # в пилоте у каждой профессии есть карточка
+        assert any(i["profession"] == p and i["status"] == "pilot" for i in items)
+    assert {i["status"] for i in items} == {"draft", "pilot", "quarantine"}
+    for i in items:
+        fam = SpecFamily(FamilySpec.model_validate(i["form"]), slug=i["slug"], skill_type="hard")
+        ex = admission.example_of(fam, i["slug"])
+        assert ex is not None and ex["answer"], i["slug"]
+
+
+async def test_seed_families_idempotent(factory):
+    from app.assessment.models import FamilyRow
+    from fsp_platform.db import session_scope
+    from sqlalchemy import func, select
+
+    from tools.seed.families import plan, seed_families
+
+    assert await seed_families(factory) == {"families": 21}
+    assert await seed_families(factory) == {"families": 0}
+    async with session_scope(factory) as s:
+        n = await s.scalar(select(func.count()).select_from(FamilyRow))
+    assert n == len(plan())

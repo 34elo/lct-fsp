@@ -20,6 +20,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AdminSummaryOut,
   DashboardOut,
   GetDashboardAdminDashboardGetParams,
   ProblemOut
@@ -190,6 +191,142 @@ export function useGetDashboardAdminDashboardGet<TData = Awaited<ReturnType<type
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetDashboardAdminDashboardGetQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type getSummaryAdminSummaryGetResponse200 = {
+  data: AdminSummaryOut
+  status: 200
+}
+
+export type getSummaryAdminSummaryGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type getSummaryAdminSummaryGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type getSummaryAdminSummaryGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type getSummaryAdminSummaryGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type getSummaryAdminSummaryGetResponseSuccess = (getSummaryAdminSummaryGetResponse200) & {
+  headers: Headers;
+};
+export type getSummaryAdminSummaryGetResponseError = (getSummaryAdminSummaryGetResponse401ApplicationProblemJson | getSummaryAdminSummaryGetResponse401ApplicationJson | getSummaryAdminSummaryGetResponse403ApplicationProblemJson | getSummaryAdminSummaryGetResponse403ApplicationJson) & {
+  headers: Headers;
+};
+
+export type getSummaryAdminSummaryGetResponse = (getSummaryAdminSummaryGetResponseSuccess | getSummaryAdminSummaryGetResponseError)
+
+export const getGetSummaryAdminSummaryGetUrl = () => {
+
+
+
+
+  return `/admin/summary`
+}
+
+/**
+ * Счётчики очередей, где нужно решение админа: заявки ФСП, допуск заданий, слияния навыков,
+ * компании на проверке, открытые жалобы. Источник недоступен — `count: null`.
+ * @summary Get Summary
+ */
+export const getSummaryAdminSummaryGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getSummaryAdminSummaryGetResponse> => {
+
+  return apiFetch<getSummaryAdminSummaryGetResponse>(getGetSummaryAdminSummaryGetUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSummaryAdminSummaryGetQueryKey = () => {
+    return [
+    `/admin/summary`
+    ] as const;
+    }
+
+
+export const getGetSummaryAdminSummaryGetQueryOptions = <TData = Awaited<ReturnType<typeof getSummaryAdminSummaryGet>>, TError = ErrorType<ProblemOut>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSummaryAdminSummaryGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSummaryAdminSummaryGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSummaryAdminSummaryGet>>> = ({ signal }) => getSummaryAdminSummaryGet({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSummaryAdminSummaryGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetSummaryAdminSummaryGetQueryResult = NonNullable<Awaited<ReturnType<typeof getSummaryAdminSummaryGet>>>
+export type GetSummaryAdminSummaryGetQueryError = ErrorType<ProblemOut>
+
+
+export function useGetSummaryAdminSummaryGet<TData = Awaited<ReturnType<typeof getSummaryAdminSummaryGet>>, TError = ErrorType<ProblemOut>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSummaryAdminSummaryGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSummaryAdminSummaryGet>>,
+          TError,
+          Awaited<ReturnType<typeof getSummaryAdminSummaryGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSummaryAdminSummaryGet<TData = Awaited<ReturnType<typeof getSummaryAdminSummaryGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSummaryAdminSummaryGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSummaryAdminSummaryGet>>,
+          TError,
+          Awaited<ReturnType<typeof getSummaryAdminSummaryGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSummaryAdminSummaryGet<TData = Awaited<ReturnType<typeof getSummaryAdminSummaryGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSummaryAdminSummaryGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Summary
+ */
+
+export function useGetSummaryAdminSummaryGet<TData = Awaited<ReturnType<typeof getSummaryAdminSummaryGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSummaryAdminSummaryGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetSummaryAdminSummaryGetQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
