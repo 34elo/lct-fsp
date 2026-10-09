@@ -17549,7 +17549,7 @@
           "admin-dashboard"
         ],
         "summary": "Get Dashboard",
-        "description": "Воронка регистрация → тест → категория → приглашение → ответ, доля с ФСП,\nконверсия навигатор → соревнование. Ячейки меньше 5 человек скрыты.",
+        "description": "Воронка регистрация → тест → категория → приглашение → ответ, доля с ФСП,\nконверсия навигатор → соревнование. Ячейки меньше 5 человек скрыты. Без демо-аккаунтов.",
         "operationId": "get_dashboard_admin_dashboard_get",
         "parameters": [
           {
@@ -17563,6 +17563,18 @@
               "default": 30,
               "title": "Days"
             }
+          },
+          {
+            "name": "include_demo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "считать и демо-аккаунты (показ жюри)",
+              "default": false,
+              "title": "Include Demo"
+            },
+            "description": "считать и демо-аккаунты (показ жюри)"
           }
         ],
         "responses": {
@@ -17682,7 +17694,7 @@
           "admin-metrics"
         ],
         "summary": "Get Metrics",
-        "description": "Воронки кандидата и работодателя, приглашения (время до первого, доля принятых,\nответ за 72 ч, причины отказов), отклики. Ячейки меньше 5 скрыты.",
+        "description": "Воронки кандидата и работодателя, приглашения (время до первого, доля принятых,\nответ за 72 ч, причины отказов), отклики. Ячейки меньше 5 скрыты. Без демо-аккаунтов.",
         "operationId": "get_metrics_admin_metrics_get",
         "parameters": [
           {
@@ -17696,6 +17708,18 @@
               "default": 30,
               "title": "Days"
             }
+          },
+          {
+            "name": "include_demo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "считать и демо-аккаунты (показ жюри)",
+              "default": false,
+              "title": "Include Demo"
+            },
+            "description": "считать и демо-аккаунты (показ жюри)"
           }
         ],
         "responses": {
@@ -18644,6 +18668,78 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PublicStatsOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/jury": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Jury Enter",
+        "description": "Вход жюри без пароля: своя пара «кандидат + работодатель» (демо, `is_demo`).\n\nТот же `pair` — та же песочница; без него или с чужим форматом — новая. Вне `DEMO_MODE` — 404.",
+        "operationId": "jury_enter_auth_jury_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JuryIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JuryAuthOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Слишком много запросов",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -22003,6 +22099,11 @@
               }
             ],
             "title": "Description"
+          },
+          "demo": {
+            "type": "boolean",
+            "title": "Demo",
+            "default": false
           }
         },
         "type": "object",
@@ -25856,6 +25957,57 @@
         ],
         "title": "InvitePreview"
       },
+      "JuryAuthOut": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserOut"
+          },
+          "pair": {
+            "type": "string",
+            "title": "Pair"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "user",
+          "pair"
+        ],
+        "title": "JuryAuthOut"
+      },
+      "JuryIn": {
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "candidate",
+              "employer"
+            ],
+            "title": "Role"
+          },
+          "pair": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 32
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pair"
+          }
+        },
+        "type": "object",
+        "required": [
+          "role"
+        ],
+        "title": "JuryIn"
+      },
       "KeyApproveIn": {
         "properties": {
           "source": {
@@ -28994,6 +29146,11 @@
               }
             ],
             "title": "Responsibility Score"
+          },
+          "demo": {
+            "type": "boolean",
+            "title": "Demo",
+            "default": false
           }
         },
         "type": "object",

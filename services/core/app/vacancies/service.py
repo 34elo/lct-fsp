@@ -231,7 +231,10 @@ async def create(
     await require_known_role(session, fields["role"])
     check_consistency(fields)
     resolved = await _resolve_skills(session, skills)
-    v = Vacancy(**fields, company_id=company.id, created_by=user.id, status="draft", version=1)
+    v = Vacancy(
+        **fields, company_id=company.id, created_by=user.id, status="draft", version=1,
+        is_demo=bool(company.is_demo),
+    )  # fmt: skip
     session.add(v)
     await session.flush()
     for vs in resolved:

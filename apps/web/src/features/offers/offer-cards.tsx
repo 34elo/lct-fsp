@@ -38,7 +38,7 @@ export function responseNote(r: CompanyReliability | null | undefined): string |
 /** Приглашение или интерес → данные карточки v2: вилка, срок, задание, «почему ты» (до трёх строк). */
 export function offerCardData(o: CandidateOffer, withDeadline = true): OfferCardV2Data {
   return {
-    company: o.company.name,
+    company: o.company.demo ? `${o.company.name} · ${T.demo}` : o.company.name,
     rating: ratingText(o.company.responsibility_score),
     verified: o.company.verified,
     responseNote: responseNote(o.company.reliability),

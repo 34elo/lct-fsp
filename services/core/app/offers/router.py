@@ -206,6 +206,7 @@ class CompanyBrief(BaseModel):
     verified: bool
     reliability: why.CompanyReliability | None = None  # E33-2: доля ответов, срок ответа
     description: str | None = None  # E39-24: «О компании», Markdown
+    demo: bool = False  # E40-1: демо-компания витрины; реальный кандидат видит пометку «демо»
 
 
 class Contacts(BaseModel):
@@ -368,6 +369,7 @@ async def for_candidate(session: AsyncSession, o: Offer) -> OfferForCandidate:
         verified=companies.badge_visible(c),
         reliability=await why.company_reliability(session, c.id, c.responsibility_score),
         description=c.description,
+        demo=bool(c.is_demo) and not await identity.is_demo_user(session, o.candidate_id),
     )  # fmt: skip
     cand = await candidates.get(session, o.candidate_id) if o.candidate_id else None
     reasons = (
