@@ -3,11 +3,21 @@
 sync:
 	uv sync --all-packages
 
-lint:
+lint: docs-links
 	uv run ruff check .
 	uv run ruff format --check .
 	uv run lint-imports
 	pnpm -r lint && pnpm -r typecheck
+
+# Относительные ссылки и якоря в Markdown (E39-37), без сети; docs/archive не проверяется
+.PHONY: docs-links deadcode
+docs-links:
+	PYTHONUTF8=1 uv run python tools/check_links.py
+
+# Мёртвый код (E39-37): knip по фронту (белый список — knip.json), vulture по Python (уверенность ≥ 80 %)
+deadcode:
+	npx -y knip@5
+	uvx vulture services packages/platform packages/contracts tools --min-confidence 80 --exclude "*/tests/*,*/test_*,*/.venv/*,*/node_modules/*,*/service-template/*"
 
 fmt:
 	uv run ruff check --fix .
