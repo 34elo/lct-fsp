@@ -6,7 +6,7 @@
 
 **ФСП Карьера** — платформа найма в ИТ с обратной механикой для кейса Федерации спортивного программирования. Кандидат проходит опрос и тест (у каждого свой «мир», общая шкала, Rasch + SPRT) и получает категорию «профессия × грейд»; доказательства и результаты ФСП дают доверие ○○○○…●●●● и место внутри категории. Работодатель описывает потребность, видит категории и кандидатов с объяснением и сам выходит на контакт: интерес → приглашение с обязательной вилкой (сайт и Telegram). Хакатон, 4–5 человек, домашний сервер с одной GPU; обязательный путь работает без GPU и LLM.
 
-> ⚠️ **ТЗ (2026) изменило задачу:** категория определяется опросом и **тестом**, а не резюме. Концепция v2 (рабочая) — [docs/solution.md](docs/solution.md), выжимка ТЗ — [docs/case.md](docs/case.md). Документы в `docs/architecture/` описывают текущую реализацию и обновляются по мере задач E20–E27.
+> Категория определяется опросом и **тестом**, а не резюме. Решение — [docs/solution.md](docs/solution.md), выжимка ТЗ — [docs/case.md](docs/case.md). **Карта всех документов — [docs/README.md](docs/README.md)** (по строке на документ); устаревшее — в `docs/archive/`, его не правим.
 
 > 🔀 **Работа идёт двумя параллельными блоками** (ветки `block1` и `block2`, этап 0 — `stage0`). Кто чем владеет, что лежит на стыке, как править общие файлы и сливать ветки — [docs/process/blocks.md](docs/process/blocks.md). Правило: свою зону правишь, чужую только вызываешь через `service.py` или контракт.
 
@@ -49,7 +49,7 @@ docs/                     документация (карта — docs/README.m
 | ФСП | [fsp.md](docs/architecture/fsp.md) |
 | Бот | [telegram.md](docs/architecture/telegram.md) |
 | Фронт | [frontend.md](docs/architecture/frontend.md), **вид экранов — [design/v2/README.md](docs/design/v2/README.md)** (макет экрана → маршрут → задача E38), смысл и данные экранов — [design/claude-design/brief.md](docs/design/claude-design/brief.md), UX-правила — [ux/ux-spec.md](docs/ux/ux-spec.md), компоненты — `packages/ui` |
-| Редизайн, вид экранов, `packages/ui` | **v2:** [docs/design/v2/README.md](docs/design/v2/README.md) (эталон вида, задачи E38); старый пакет — [docs/design/pack/](docs/design/pack/) |
+| Редизайн, вид экранов, `packages/ui` | **v2:** [docs/design/v2/README.md](docs/design/v2/README.md) (эталон вида, задачи E38); лендинг — [docs/design/v3/landing](docs/design/v3/landing/README.md) |
 | Метрики, события аналитики | [metrics.md](docs/architecture/metrics.md) (v2 — §9) |
 | Эталоны, синтетика, seed, eval | [evaluation.md](docs/architecture/evaluation.md) |
 | Инфраструктура | [deployment.md](docs/architecture/deployment.md), [security.md](docs/architecture/security.md) |
@@ -102,7 +102,7 @@ docs/                     документация (карта — docs/README.m
 
 ## Команды
 
-Основные: `make sync`, `make lint`, `make test`, `make e2e`, `make up` / `make up-lite`, `make seed`, `make demo-reset`, `make families-check`, `make eval`, `make eval-assessment`, `make metrics`, `make load`, `make openapi`, `make api-gen`, `make submission-pdf`. Полный список — `Makefile`, пояснения — [docs/deploy.md](docs/deploy.md).
+Основные: `make sync`, `make lint` (с `make docs-links`), `make deadcode`, `make test`, `make e2e`, `make up` / `make up-lite`, `make seed`, `make demo-reset`, `make families-check`, `make eval`, `make eval-assessment`, `make metrics`, `make load`, `make openapi`, `make api-gen`, `make submission-pdf`. Полный список — `Makefile`, пояснения — [docs/deploy.md](docs/deploy.md).
 Вывод сокращай: `pytest -q`, `docker compose logs --tail 50 <svc>`.
 
 ## Ловушки
