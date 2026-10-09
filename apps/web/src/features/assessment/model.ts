@@ -82,7 +82,13 @@ export function parseListing(stem: string): { prose: string; lines: CodeLine[] }
 }
 
 /** Код в условии `exact`: блок после пустой строки показываем моноширинным. */
+/** В условии есть GFM-таблица (строка-разделитель `| --- |`): такое условие показываем Markdown-ом целиком. */
+export function hasTable(stem: string): boolean {
+  return /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/m.test(stem);
+}
+
 export function splitStem(stem: string): { prose: string; code: string | null } {
+  if (hasTable(stem)) return { prose: stem, code: null };
   const at = stem.indexOf("\n\n");
   if (at < 0) return { prose: stem, code: null };
   return { prose: stem.slice(0, at).trim(), code: stem.slice(at + 2).trim() || null };

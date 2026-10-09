@@ -193,3 +193,16 @@ def test_malformed_answer_scores_zero_not_crash(kind, key, answer):
     """E37-1: кривой ответ клиента — балл 0, а не 500 на /answer."""
     fam = BaseFamily()
     assert fam.score(Item(kind=kind, stem="?", key=key), answer) == 0.0
+
+
+def test_world_task_tables_are_gfm():
+    """E39-9: таблицы в условиях — Markdown (GFM): заголовок, разделитель, строки одной ширины."""
+    fam = registry.REGISTRY["sql_join_filter"]
+    for seed in range(20):
+        stem = fam.generate(Random(seed), World.from_seed(seed)).stem
+        tables = [b.splitlines() for b in stem.split("\n\n") if b.startswith("| ")]
+        assert tables, stem
+        for rows in tables:
+            assert set(rows[1].replace("|", "").replace(" ", "")) == {"-"}
+            assert len({r.count("|") for r in rows}) == 1
+        assert "```sql\n" in stem
