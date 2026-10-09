@@ -49,11 +49,22 @@ checkout_sha() {
   git checkout --quiet --detach "$SHA"
 }
 
+# Шаг наполнения: при сбое печатаем хвост вывода и шлём его в алерт (E42-3); сид идемпотентен — повтор безопасен
+run_step() {
+  name="$1"; shift
+  LOG="reports/seed/step-$name.log"
+  if "$@" >"$LOG" 2>&1; then tail -n 5 "$LOG"; return 0; fi
+  echo "deploy: шаг «$name» упал, хвост вывода:" >&2
+  tail -n 30 "$LOG" >&2
+  notify "🔴 Шаг «$name» упал: $(tail -n 8 "$LOG" | cut -c1-300)"
+  return 1
+}
+
 seed_demo() {
   uv sync --all-packages --quiet
   mkdir -p reports/seed
-  make seed
-  make demo-snapshot
+  run_step seed make seed
+  run_step demo-snapshot make demo-snapshot
 }
 
 case "$ACTION" in
