@@ -93,7 +93,7 @@ SPLIT ?= dev
 synth:
 	uv run python tools/synth/synth.py --split $(SPLIT) --out reports/synth/$(SPLIT)
 
-# Стенд оценки (evaluation.md §5): подбор против BM25 на синтетическом рынке → reports/eval/eval.{md,json}
+# Стенд оценки (evaluation.md §5): подбор против BM25 на синтетическом рынке и полнота разбора резюме hh.ru (E39-19) → reports/eval/eval.{md,json}
 eval:
 	uv run python tools/eval/run.py --split $(SPLIT) --out reports/eval
 
