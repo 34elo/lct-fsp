@@ -5,7 +5,7 @@ import { App } from "@/app/App";
 import { Providers, makeQueryClient } from "@/app/Providers";
 import type { NavigatorOut } from "@/api/model";
 import { setAccessToken } from "@/shared/lib/token";
-import { pathSteps } from "./NavigatorPath";
+import { roadmapSteps } from "./NavigatorPath";
 
 const res = (status: number, body?: unknown) => new Response(body === undefined ? null : JSON.stringify(body), { status });
 
@@ -58,26 +58,30 @@ function mount(navBody: unknown, navStatus = 200, upBody: unknown = uplift) {
 }
 
 describe("навигатор роста", () => {
-  it("pathSteps: текущий грейд, пробелы, цель", () => {
-    const steps = pathSteps(nav);
+  it("roadmapSteps: текущий грейд, навыки, тест, цель", () => {
+    const steps = roadmapSteps(nav);
     expect(steps.map((s) => [s.id, s.state])).toEqual([
       ["current", "done"],
       ["gap-docker", "current"],
       ["gap-redis", "future"],
+      ["test", "future"],
       ["next", "future"],
     ]);
-    expect(steps[0].label).toContain("Junior+");
-    expect(steps[3].label).toContain("Middle");
+    expect(steps[0].title).toContain("Junior+");
+    expect(steps[1].uplift).toBe("+64% вакансий");
+    expect(steps[1].actions?.map((a) => a.href)).toContain("https://fsp.example/reg");
+    expect(steps[4].title).toContain("Middle");
   });
 
   it("рисует путь, соревнования и uplift-карточку с переходом на тест", async () => {
     mount(nav);
     expect(await screen.findByRole("heading", { name: "Навигатор роста" })).toBeInTheDocument();
-    const path = await screen.findByLabelText("Этапы");
+    const path = await screen.findByRole("region", { name: "Роадмап роста" });
     expect(within(path).getByText(/Redis/)).toBeInTheDocument();
     expect(screen.getByText("Кубок ФСП", { selector: "b" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Записаться" })).toHaveAttribute("href", "https://fsp.example/reg");
-    expect(screen.getByRole("link", { name: "Пройти тест" })).toHaveAttribute("href", "/me/assessment?profession=backend&grade=middle");
+    expect(within(path).getByRole("link", { name: /Соревнование ФСП: Кубок ФСП/ })).toHaveAttribute("href", "https://fsp.example/reg");
+    expect(within(path).getByRole("link", { name: "Пройти тест" })).toHaveAttribute("href", "/me/assessment?profession=backend&grade=middle");
     await waitFor(() => expect(screen.getByText("+64%")).toBeInTheDocument());
     expect(screen.getByText(/Вместе с Docker \+ Redis: \+86% вакансий/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Пройти тест" })).toBeInTheDocument();

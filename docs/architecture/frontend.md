@@ -18,7 +18,7 @@
 | `/me/skills/:slug` | C | Доказательства навыка |
 | `/me/offers`, `/me/offers/:id` | C | Офферы и переписка (M2) |
 | `/me/growth` | C | Переадресация на `/me/navigator` (своего экрана нет, E35-1) |
-| `/me/navigator` | C | Навигатор роста (Б2, E12-3): `NavigatorPath`, uplift-карточки, соревнования ФСП; «Пройти тест» ведёт на `/me/assessment?profession=&grade=` |
+| `/me/navigator` | C | Навигатор роста (Б2, E12-3): `NavigatorPath` (E39-11: горизонтальный `Roadmap` из `@fsp/ui` — текущий грейд → навыки с uplift, заданием и соревнованием ФСП → тест → цель; на 375 px листается пальцем), uplift-карточки, соревнования ФСП; «Пройти тест» ведёт на `/me/assessment?profession=&grade=` |
 | `/jobs`, `/jobs/:id` | — | Публичные вакансии (Б2, E20-7b, J1): строка поиска сверху, фильтры сбоку (профессия, грейд, навыки, вилка, формат, город; на 375 px — шторка), состояние в URL; «Назад к списку» возвращает на тот же поиск; вилка на карточке; отклик с сообщением после входа (состояния: не вошёл, не кандидат, `email_not_verified`, отправлено, `already_applied`). Деталь — `GET /vacancies/public/{id}`. Пункт меню «Вакансии» у кандидата |
 | `/me/responses` | C | Переадресация на `/me/offers?show=responses` (E39-25). Мои отклики (R1): фильтр по статусам, отзыв из `sent/viewed`, переход к приглашению |
 | `/me/interests` | C | «Вами интересуются» (E33-7, ADR-026): агрегат `GET /candidates/me/interests`, карточки без контактов с «почему вы» и рейтингом ответственности, «открыть» / «не интересно» с причиной; плашка со счётчиком на `/me/offers` |
@@ -64,6 +64,7 @@ packages/ui/              # @fsp/ui — дизайн-система, без сб
 │   ├── v3/               # свои контролы (E39-1): Select/Combobox/MultiSelect, SkillInput, ProfessionInput, NumberInput,
 │   │                     #   SalaryRangeInput, InfoTip/Term, Markdown/MarkdownEditor (react-markdown + remark-gfm),
 │   │                     #   ScrollTabs, Avatar, скелетоны-пресеты (SkeletonLine/Card/Table/Chart/Profile)
+│   │                     #   Roadmap (E39-11: горизонтальный роадмап роста, этапы слева направо, прокрутка пальцем)
 │   ├── lib/cn.ts
 │   └── index.ts
 ├── playground/           # витрина: Токены / Базовые / Фирменные / v2 (доска v2_components) / Контролы (#v3, светлая и тёмная рядом), порт 28174

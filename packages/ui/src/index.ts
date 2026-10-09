@@ -56,3 +56,4 @@ export * from "./v3/combobox";
 export * from "./v3/inputs";
 export * from "./v3/content";
 export * from "./v3/skeletons";
+export * from "./v3/roadmap";
