@@ -1,23 +1,25 @@
 import { PAGE } from "@/shared/lib/page";
 
 import { Gi, Gloss } from "@/shared/Gloss";
-import { buttonVariants, Chips, CircuitLine, cn, ConstellationAvatar, type ConstellationNode, dotsText, ErrorState, formatRub, formatRubRangeShort, GradeTag, H1, H2, Lbl, ListRow, MetricTile, Num, OfferCardV2, Panel, PanelCap, Skeleton, SkillConstellation, SkillTag, StatusTag } from "@fsp/ui";
+import { buttonVariants, Chips, CircuitLine, cn, ConstellationAvatar, type ConstellationNode, dotsText, ErrorState, formatRub, formatRubRangeShort, GradeTag, H1, H2, Lbl, ListRow, MetricTile, Num, Panel, PanelCap, Skeleton, SkillConstellation, SkillTag, StatusTag } from "@fsp/ui";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 
 import { useHistoryAssessmentHistoryGet } from "@/api/endpoints/assessment/assessment";
 import { useGetProfileCandidatesMeProfileGet, useMyViewsCandidatesMeViewsGet } from "@/api/endpoints/candidates/candidates";
-import { useMyInterestsCandidatesMeInterestsGet } from "@/api/endpoints/offers/offers";
+import { useMyInterestsCandidatesMeInterestsGet, useMyOffersCandidatesMeOffersGet } from "@/api/endpoints/offers/offers";
 import { useMyNavigatorCandidatesMeNavigatorGet, useMyStandingCandidatesMeStandingGet } from "@/api/endpoints/search/search";
 import { useGetProfessionsTaxonomyProfessionsGet } from "@/api/endpoints/taxonomy/taxonomy";
 import type { CandidateProfile, CandidateStanding, HistoryOut, InterestsSummary, NavigatorOut, OfferForCandidate } from "@/api/model";
 import { isFuture, pathStep, type PathStep } from "@/features/assessment/model";
 import { GRADE } from "@/features/assessment/text";
+import { StatusBadge } from "@/features/offers/parts";
 import { displayPseudonym } from "@/shared/lib/pseudonym";
-import { constellationNodes, dayMonth, formatsText, nextStep, ratingText, skillSource, sortSkills } from "./home-model";
+import { constellationNodes, dayMonth, formatsText, latestInvites, nextStep, skillSource, sortSkills } from "./home-model";
 import { parseViews, type ViewsStats } from "./stats-model";
 import { FSP_LEVEL_LABEL, HOME, STATS, roleLabel } from "./text";
 
+const SKILLS_LIMIT = 8;
 const PENDING = new Set(["interest", "interest_opened"]);
 const gradeLabel = (g: string) => GRADE[g] ?? g;
 
@@ -114,7 +116,7 @@ function SkillsCard({ p, className }: { p: CandidateProfile; className?: string 
     <Panel className={className} data-testid="home-skills" aria-label={HOME.skills}>
       <PanelCap title={<Gloss k="trust"><H2>{HOME.skills}</H2></Gloss>} aside={<Num className="text-12 text-muted">{skills.length}</Num>} />
       {sortSkills(skills)
-        .slice(0, 8)
+        .slice(0, SKILLS_LIMIT)
         .map((s) => {
           const src = skillSource(s);
           return (
@@ -127,6 +129,11 @@ function SkillsCard({ p, className }: { p: CandidateProfile; className?: string 
             </ListRow>
           );
         })}
+      {skills.length > SKILLS_LIMIT && (
+        <Link to="/me/profile" className="mt-2 inline-block text-14 font-semibold text-brand-fg hover:underline" data-testid="home-skills-all">
+          {HOME.allSkills}
+        </Link>
+      )}
     </Panel>
   );
 }
@@ -202,34 +209,33 @@ function ConstellationCard({ nodes }: { nodes: ConstellationNode[] }) {
   );
 }
 
-function Interests({ interests }: { interests?: InterestsSummary }) {
-  const items = interests?.items ?? [];
-  if (!interests || !items.length) return null;
+function Interests({ interests, offers }: { interests?: InterestsSummary; offers: OfferForCandidate[] }) {
+  const items = latestInvites(interests?.items ?? [], offers);
+  if (!items.length) return null;
   const range =
-    interests.salary_from_min != null && interests.salary_to_max != null ? formatRubRangeShort(interests.salary_from_min, interests.salary_to_max) : null;
+    interests?.salary_from_min != null && interests.salary_to_max != null ? formatRubRangeShort(interests.salary_from_min, interests.salary_to_max) : null;
+  const aside = [interests && interests.companies > 0 ? interests.companies : null, range].filter((v) => v != null).join(" · ");
   return (
-    <section className="order-4 flex flex-col gap-4 lg:order-none" data-testid="home-interests" aria-label={HOME.interests}>
-      <div className="flex items-center justify-between gap-3">
-        <Gloss k="invitation"><H2>{HOME.interests}</H2></Gloss>
-        <Num className="text-13">{[interests.companies, range].filter((v) => v != null).join(" · ")}</Num>
-      </div>
-      {items.slice(0, 3).map((o) => (
-        <InterestCard key={o.id} o={o} />
-      ))}
-    </section>
-  );
-}
-
-function InterestCard({ o }: { o: OfferForCandidate }) {
-  return (
-    <OfferCardV2
-      o={{
-        company: o.company.name,
-        rating: ratingText(o.company.responsibility_score),
-        salary: formatRubRangeShort(o.salary_from, o.salary_to),
-        reasons: (o.why_you?.factors ?? []).slice(0, 3).map((f) => f.text),
-      }}
-    />
+    <Panel className="order-4 lg:order-none" data-testid="home-interests" aria-label={HOME.interests}>
+      <PanelCap title={<Gloss k="invitation"><H2>{HOME.interests}</H2></Gloss>} aside={aside ? <Num className="text-13">{aside}</Num> : undefined} />
+      <ul className="m-0 flex list-none flex-col p-0">
+        {items.map((o) => (
+          <li key={o.id} data-testid="home-invite">
+            <Link
+              to={o.status === "interest" || o.status === "interest_opened" ? "/me/offers?show=interests" : `/me/offers/${o.id}`}
+              className="flex min-h-11 flex-wrap items-center gap-x-3 gap-y-1 border-b border-hairline py-3 last:border-b-0 hover:text-brand-fg"
+            >
+              <span className="min-w-0 flex-1 truncate font-medium">{o.company.name}</span>
+              <StatusBadge status={o.status} />
+              <Num className="text-13 text-muted">{formatRubRangeShort(o.salary_from, o.salary_to)}</Num>
+            </Link>
+          </li>
+        ))}
+      </ul>
+      <Link to="/me/offers" className="self-start text-14 font-semibold text-brand-fg hover:underline" data-testid="home-invites-all">
+        {HOME.allInvites}
+      </Link>
+    </Panel>
   );
 }
 
@@ -270,6 +276,7 @@ function After(props: {
   standing?: CandidateStanding;
   interests?: InterestsSummary;
   navigator?: NavigatorOut;
+  offers: OfferForCandidate[];
   history?: HistoryOut;
   views?: ViewsStats;
   profTitle: (s: string) => string;
@@ -286,7 +293,7 @@ function After(props: {
       <div className="contents lg:col-span-6 lg:flex lg:flex-col lg:gap-4">
         <NextStepCard {...props} />
         <ConstellationCard nodes={nodes} />
-        <Interests interests={props.interests} />
+        <Interests interests={props.interests} offers={props.offers} />
       </div>
       <div className="contents lg:col-span-3 lg:flex lg:flex-col lg:gap-4">
         <Tiles standing={props.standing} interests={props.interests} profTitle={props.profTitle} />
@@ -330,6 +337,7 @@ export default function Home() {
   const hq = useHistoryAssessmentHistoryGet({ query: { refetchOnMount: "always", retry: false } });
   const sq = useMyStandingCandidatesMeStandingGet({ query: { refetchOnMount: "always", retry: false } });
   const iq = useMyInterestsCandidatesMeInterestsGet({ query: { retry: false } });
+  const oq = useMyOffersCandidatesMeOffersGet(undefined, { query: { retry: false } });
   const nq = useMyNavigatorCandidatesMeNavigatorGet({ query: { retry: false } });
   const tq = useGetProfessionsTaxonomyProfessionsGet();
   const vq = useMyViewsCandidatesMeViewsGet({ query: { retry: false } });
@@ -355,6 +363,7 @@ export default function Home() {
   const history = raw && Array.isArray(raw.surveys) && Array.isArray(raw.attempts) ? raw : undefined;
   const standing = sq.data?.status === 200 ? sq.data.data : undefined;
   const interests = iq.data?.status === 200 ? iq.data.data : undefined;
+  const offers = oq.data?.status === 200 ? (oq.data.data as unknown as OfferForCandidate[]) : [];
   const navigator = nq.data?.status === 200 ? nq.data.data : undefined;
   const views = vq.data?.status === 200 ? parseViews(vq.data.data) : undefined;
   const professions = tq.data?.status === 200 ? tq.data.data.professions : [];
@@ -366,5 +375,5 @@ export default function Home() {
     const nodes = constellationNodes(p.skills ?? [], { stack: survey?.stack ?? [], claimedOnly: true });
     return page(<Before p={p} step={step} nodes={nodes} />, false);
   }
-  return page(<After p={p} standing={standing} interests={interests} navigator={navigator} history={history} views={views} profTitle={profTitle} />);
+  return page(<After p={p} standing={standing} interests={interests} navigator={navigator} offers={offers} history={history} views={views} profTitle={profTitle} />);
 }
