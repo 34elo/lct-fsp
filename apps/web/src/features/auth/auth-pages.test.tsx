@@ -49,13 +49,13 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllGlobals());
 
-test("согласия: список типов берётся из API, неизвестный тип не ломает экран", async () => {
-  install(() => json(200, [consent("pd_processing", true), consent("profile_publication"), consent("brand_new_type")]));
+test("согласия: из API только обязательные (E39-6), неизвестный тип не ломает экран", async () => {
+  install(() => json(200, [consent("pd_processing", true), consent("profile_publication"), consent("brand_new_type", true)]));
   mount("/consents");
   expect(await screen.findByTestId("consents-item-pd_processing")).toHaveTextContent("обязательно");
-  expect(screen.getByTestId("consents-item-profile_publication")).toHaveTextContent("по желанию");
+  expect(screen.queryByTestId("consents-item-profile_publication")).toBeNull(); // необязательное — в настройках
   expect(screen.getByTestId("consents-item-brand_new_type")).toHaveTextContent("brand_new_type");
-  expect(screen.getAllByRole("checkbox")).toHaveLength(3);
+  expect(screen.getAllByRole("checkbox")).toHaveLength(2);
   expect(screen.getByTestId("consents-submit")).toBeDisabled();
 });
 

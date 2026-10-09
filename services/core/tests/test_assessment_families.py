@@ -73,28 +73,37 @@ def test_js_default_sort_is_lexicographic():
         assert it.key in values
 
 
-def test_active_professions_have_no_empty_cells():
-    """E36-2: 3 активные профессии × 3 грейда × 6 типов навыков — в каждой ячейке есть семейство."""
+def test_all_professions_open_core_has_full_bank():
+    """E39-6: все профессии справочника открыты; у Backend, Frontend, AI Engineer пустых ячеек нет,
+    у остальных тонкий банк — они «бета»."""
     from app.taxonomy.loader import load_taxonomy
 
     roles = load_taxonomy(check.TAXONOMY).roles
-    active = {r.slug for r in roles if r.profession and r.active}
-    assert active == {"backend", "frontend", "ai_engineer"}
-    assert {r.slug for r in roles if r.profession and not r.active} == {
-        "ml",
-        "mobile",
-        "devops",
-        "qa",
+    profs = {r.slug: r.skills for r in roles if r.profession}
+    assert all(r.active for r in roles if r.profession)
+    assert set(profs) >= {"backend", "frontend", "ai_engineer", "ml", "mobile", "devops", "qa"}
+    beta = check.thin_professions(FAMILIES, profs, level_window=1)
+    assert not beta & {"backend", "frontend", "ai_engineer"}
+    assert beta == {
+        p
+        for p in profs
+        if any(f"{p} ×" in w for w in check.check_coverage(FAMILIES, check.TAXONOMY, 1))
     }
-    assert check.check_coverage(FAMILIES, check.TAXONOMY, level_window=1) == []
 
 
-def test_coverage_fails_on_empty_cell():
-    """Без старших семейств бизнеса ячейка «× senior × business» пуста — `families-check` падает."""
+def test_coverage_gap_warns_not_fails():
+    """Нет старших семейств бизнеса: ячейка «× senior × business» пуста — предупреждение."""
     rest = [f for f in FAMILIES if not (f.skill_type == SkillType.business and f.level >= 3)]
-    errs = check.check_coverage(rest, check.TAXONOMY, level_window=1)
-    assert "покрытие: backend × senior × business — нет семейств" in errs
-    assert check.run(rest, 1) != []
+    warns = check.check_coverage(rest, check.TAXONOMY, level_window=1)
+    assert "тонкий банк (бета): backend × senior × business — нет семейств" in warns
+    assert "backend" in check.thin_professions(rest, {"backend": _backend()}, level_window=1)
+    assert not [e for e in check.run(rest, 1) if "тонкий банк" in e or "покрытие" in e]
+
+
+def _backend() -> dict[str, float]:
+    from app.taxonomy.loader import load_taxonomy
+
+    return next(r.skills for r in load_taxonomy(check.TAXONOMY).roles if r.slug == "backend")
 
 
 def test_coverage_cells_respect_level_window():
@@ -184,3 +193,16 @@ def test_malformed_answer_scores_zero_not_crash(kind, key, answer):
     """E37-1: кривой ответ клиента — балл 0, а не 500 на /answer."""
     fam = BaseFamily()
     assert fam.score(Item(kind=kind, stem="?", key=key), answer) == 0.0
+
+
+def test_world_task_tables_are_gfm():
+    """E39-9: таблицы в условиях — Markdown (GFM): заголовок, разделитель, строки одной ширины."""
+    fam = registry.REGISTRY["sql_join_filter"]
+    for seed in range(20):
+        stem = fam.generate(Random(seed), World.from_seed(seed)).stem
+        tables = [b.splitlines() for b in stem.split("\n\n") if b.startswith("| ")]
+        assert tables, stem
+        for rows in tables:
+            assert set(rows[1].replace("|", "").replace(" ", "")) == {"-"}
+            assert len({r.count("|") for r in rows}) == 1
+        assert "```sql\n" in stem

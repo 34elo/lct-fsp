@@ -252,6 +252,33 @@ def password_matches(user: User, password: str) -> bool:
     return True
 
 
+async def change_password(
+    session: AsyncSession, user: User, current: str, new: str, keep_raw: str | None
+) -> None:
+    """Смена пароля (E39-8): сверка текущего, новый хеш, чужие сессии закрываются.
+
+    Сессия с refresh-токеном `keep_raw` (текущая вкладка) остаётся. Нет пароля
+    (вход через Telegram) или неверный текущий — 403 `wrong_password`.
+    """
+    if not password_matches(user, current):
+        raise ProblemError(403, "wrong_password", "Неверный текущий пароль")
+    user.password_hash = _hasher.hash(new)
+    keep_family = None
+    if keep_raw:
+        keep_family = await session.scalar(
+            select(RefreshToken.family_id).where(RefreshToken.token_hash == hash_token(keep_raw))
+        )
+    stmt = (
+        update(RefreshToken)
+        .where(RefreshToken.user_id == user.id, RefreshToken.revoked_at.is_(None))
+        .values(revoked_at=datetime.now(UTC))
+    )
+    if keep_family is not None:
+        stmt = stmt.where(RefreshToken.family_id != keep_family)
+    await session.execute(stmt)
+    await session.flush()
+
+
 async def erase_user(session: AsyncSession, user: User) -> None:
     """Удаление профиля (F13): обезличить учётную запись, закрыть сессии и коды."""
     await session.execute(delete(RefreshToken).where(RefreshToken.user_id == user.id))

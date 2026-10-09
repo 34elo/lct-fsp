@@ -57,7 +57,7 @@ test("устаревшее значение «system» в хранилище и�
 
 test("заголовок вкладки по экрану", () => {
   render(null);
-  expect(titleFor("/me/settings")).toBe("Настройки · ФСП Карьера");
+  expect(titleFor("/settings")).toBe("Настройки · ФСП Карьера");
   expect(titleFor("/jobs/42")).toBe("Вакансия · ФСП Карьера");
   expect(titleFor("/")).toBe("ФСП Карьера");
   expect(titleFor("/nope")).toBe("ФСП Карьера");

@@ -17,6 +17,7 @@ import structlog
 from fsp_contracts.ml import AnswerExplain, AnswerExplainRequest
 from fsp_platform.app import ProblemError
 from pydantic import ValidationError
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.assessment import attempts
@@ -245,6 +246,101 @@ async def explain_response(
             else (self_reason == reason.code or (self_reason, reason.code) in _EQUIV)
         ),
     }
+
+
+def _fmt(item: Item, value: Any) -> str | None:
+    """Ответ или ключ человеческим текстом; `None` — ответа нет."""
+    if value is None or value == [] or (isinstance(value, str) and not value.strip()):
+        return None
+    opts = item.options or []
+
+    def opt(i: Any) -> str | None:
+        ok = isinstance(i, int) and not isinstance(i, bool) and 0 <= i < len(opts)
+        return opts[i] if ok else None
+
+    k = item.kind
+    if k == Kind.choice:
+        return opt(value) or str(value)
+    if k in (Kind.order, Kind.sjt) and isinstance(value, list):
+        return " → ".join(opt(i) or str(i) for i in value)
+    if k == Kind.find_bug and isinstance(value, list):
+        return ", ".join(str(i) for i in sorted(x for x in value if isinstance(x, int)))
+    if isinstance(value, float) and value.is_integer():
+        return str(int(value))
+    return str(value)[:500]
+
+
+def _review_part(item: Item, answer: Any, score: float | None, rt_ms: int | None) -> dict[str, Any]:
+    reason = classify(item, answer, score, rt_ms)
+    return {
+        "kind": item.kind.value,
+        "stem": item.stem,
+        "options": item.options,
+        "yours": _fmt(item, answer),
+        "correct": _fmt(item, item.key),
+        "reason": {"code": reason.code, "label": REASONS[reason.code], "detail": reason.detail},
+    }
+
+
+async def review_attempt(
+    session: AsyncSession, candidate_id: Any, attempt_id: Any
+) -> dict[str, Any]:
+    """Разбор завершённой попытки (E39-10): условие, ответы, причина по каждому заданию.
+
+    Ключи отдаём только после завершения: у идущей попытки — 409, чужая — 404.
+    """
+    att = await attempts._own_attempt(session, candidate_id, attempt_id)
+    if att.status == "active":
+        raise ProblemError(409, "attempt_active", "Разбор доступен после завершения попытки")
+    rows = (
+        await session.execute(
+            select(Response)
+            .where(
+                Response.attempt_id == att.id,
+                Response.answered_at.is_not(None),
+                Response.is_pilot.is_(False),
+            )
+            .order_by(Response.seq)
+        )
+    ).scalars()
+    out: list[dict[str, Any]] = []
+    for resp in rows:
+        fam = await attempts._family(session, resp.family_id)
+        item = attempts.build_item(fam, resp.seed, att.plan.get("domain"))
+        part = _review_part(item, resp.answer, resp.score, resp.rt_ms)
+        reason = classify(item, resp.answer, resp.score, resp.rt_ms)
+        mis = misconception_for(fam.skill, resp.seed, reason)
+        steps = None
+        if item.kind == Kind.chain:
+            got = resp.answer if isinstance(resp.answer, list) else []
+            steps = [
+                _review_part(
+                    st,
+                    got[i] if i < len(got) else None,
+                    SCORERS[st.kind](st.key, got[i] if i < len(got) else None),
+                    resp.rt_ms,
+                )
+                for i, st in enumerate(item.steps)
+            ]
+            part["yours"] = part["correct"] = None
+        out.append(
+            {
+                **part,
+                "response_id": resp.id,
+                "seq": resp.seq,
+                "skill": fam.skill,
+                "skill_type": fam.skill_type.value,
+                "score": resp.score or 0.0,
+                "rt_ms": resp.rt_ms,
+                "time_limit_s": item.time_limit_s,
+                "why": (
+                    "Ответ верный." if reason.code == "correct" else template_text(reason, mis)
+                ),
+                "misconception": mis,
+                "steps": steps,
+            }
+        )
+    return {"attempt_id": att.id, "profession": att.profession, "items": out}
 
 
 # самооценка кандидата совпадает с причиной по правилам

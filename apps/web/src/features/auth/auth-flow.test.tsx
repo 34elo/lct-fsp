@@ -105,6 +105,9 @@ test("вход без согласия ведёт на экран согласи
   expect(await screen.findByRole("heading", { name: "Согласия" })).toBeInTheDocument();
   const submit = await screen.findByRole("button", { name: "Продолжить" });
   expect(submit).toBeDisabled();
+  // только обязательные (E39-6): необязательные — в настройках, выключены
+  expect(screen.getAllByRole("checkbox")).toHaveLength(1);
+  expect(screen.queryByTestId("consents-item-fsp_data")).toBeNull();
 
   fireEvent.click(screen.getByRole("checkbox", { name: /Обработка персональных данных/ }));
   expect(submit).toBeEnabled();
@@ -112,9 +115,7 @@ test("вход без согласия ведёт на экран согласи
 
   expect(await screen.findByRole("heading", { name: "Главная" })).toBeInTheDocument();
   const put = calls.find((c) => c.method === "PUT");
-  expect(put?.body).toMatchObject({
-    consents: expect.arrayContaining([{ type: "pd_processing", granted: true, version: "2025-09-01" }]),
-  });
+  expect(put?.body).toEqual({ consents: [{ type: "pd_processing", granted: true, version: "2025-09-01" }] });
 });
 
 test("неверный пароль показывает ошибку и остаётся на форме", async () => {
@@ -133,25 +134,33 @@ test("регистрация отправляет выбранную роль, �
   fireEvent.click(await screen.findByLabelText(/Я ищу людей/));
   fireEvent.change(screen.getByLabelText("Почта"), { target: { value: "hr@company.ru" } });
   fireEvent.change(screen.getByLabelText(/Пароль/), { target: { value: "long-enough-pass" } });
+  fireEvent.click(screen.getByRole("checkbox", { name: /обработку персональных данных/ }));
   fireEvent.click(screen.getByRole("button", { name: "Создать аккаунт" }));
   await waitFor(() => expect(calls.find((c) => c.url.endsWith("/auth/register"))?.body).toEqual({
     email: "hr@company.ru",
     password: "long-enough-pass",
     role: "employer",
   }));
-  expect(await screen.findByRole("heading", { name: "Согласия" })).toBeInTheDocument();
+  await waitFor(() => expect(calls.some((c) => c.url.endsWith("/me/consents") && c.method === "PUT")).toBe(true));
+  expect(screen.queryByRole("heading", { name: "Согласия" })).toBeNull();
 });
 
-test("новый кандидат: регистрация → согласия → опрос (E35-2a)", async () => {
+test("новый кандидат (E39-6): согласие в форме регистрации → сразу шаг 1 потока до теста", async () => {
   installFetch();
   mount("/register");
   fireEvent.change(await screen.findByLabelText("Почта"), { target: { value: "new@b.ru" } });
   fireEvent.change(screen.getByLabelText(/Пароль/), { target: { value: "long-enough-pass" } });
   fireEvent.click(screen.getByRole("button", { name: "Создать аккаунт" }));
-  expect(await screen.findByRole("heading", { name: "Согласия" })).toBeInTheDocument();
-  fireEvent.click(await screen.findByRole("checkbox", { name: /Обработка персональных данных/ }));
-  fireEvent.click(screen.getByRole("button", { name: "Продолжить" }));
-  expect(await screen.findByRole("heading", { name: "Опрос" })).toBeInTheDocument();
+  // без обязательного согласия аккаунт не создаётся
+  expect(await screen.findByTestId("auth-need-consent")).toBeInTheDocument();
+  expect(calls.some((c) => c.url.endsWith("/auth/register"))).toBe(false);
+  fireEvent.click(screen.getByRole("checkbox", { name: /обработку персональных данных/ }));
+  fireEvent.click(screen.getByRole("button", { name: "Создать аккаунт" }));
+  expect(await screen.findByRole("heading", { name: "Направление и навыки" })).toBeInTheDocument();
+  expect(screen.queryByRole("heading", { name: "Согласия" })).toBeNull();
+  // выдано только обязательное согласие, необязательные остаются выключенными
+  const put = calls.find((c) => c.url.endsWith("/me/consents") && c.method === "PUT")!;
+  expect(put.body).toEqual({ consents: [{ type: "pd_processing", granted: true }] });
 });
 
 test("регистрация: email_taken", async () => {
@@ -159,6 +168,7 @@ test("регистрация: email_taken", async () => {
   mount("/register");
   fireEvent.change(await screen.findByLabelText("Почта"), { target: { value: "a@b.ru" } });
   fireEvent.change(screen.getByLabelText(/Пароль/), { target: { value: "long-enough-pass" } });
+  fireEvent.click(screen.getByRole("checkbox", { name: /обработку персональных данных/ }));
   fireEvent.click(screen.getByRole("button", { name: "Создать аккаунт" }));
   expect(await screen.findByRole("alert")).toHaveTextContent("уже зарегистрирована");
 });
@@ -197,7 +207,8 @@ test("регистрация (E35-7a): сбой чтения профиля по
   mount("/register");
   fireEvent.change(await screen.findByLabelText("Почта"), { target: { value: "new@b.ru" } });
   fireEvent.change(screen.getByLabelText(/Пароль/), { target: { value: "long-enough-pass" } });
+  fireEvent.click(screen.getByRole("checkbox", { name: /обработку персональных данных/ }));
   fireEvent.click(screen.getByRole("button", { name: "Создать аккаунт" }));
-  expect(await screen.findByRole("heading", { name: "Согласия" })).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { name: "Направление и навыки" })).toBeInTheDocument();
   expect(screen.queryByText("Неверная почта или пароль")).toBeNull();
 });

@@ -11,6 +11,7 @@ import { useListOffersOffersGet } from "@/api/endpoints/offers/offers";
 import { candidateCardCandidatesPseudoIdCardGet, getCandidateCardCandidatesPseudoIdCardGetQueryKey } from "@/api/endpoints/search/search";
 import type { CandidateCard, OfferForCompany } from "@/api/model";
 import { ApiError } from "@/api/mutator";
+import { useAuth } from "@/shared/lib/auth";
 import { OfferDialog, type DialogMode, type OfferCandidate } from "@/features/offers/OfferDialog";
 import { loadLastNeed, toMatchCard } from "./match-model";
 import { interestLabel, interestState, latestOfferByCandidate, nextToInvite } from "./shortlist-model";
@@ -97,7 +98,8 @@ const header = (action?: ReactNode) => (
  */
 export default function ShortlistPage() {
   const [params] = useSearchParams();
-  const needId = params.get("need") ?? loadLastNeed()?.id ?? null;
+  const { me } = useAuth();
+  const needId = params.get("need") ?? loadLastNeed(me?.company?.id)?.id ?? null;
   const [target, setTarget] = useState<Target | null>(null);
 
   const cats = useNeedCategoriesNeedsNeedIdCategoriesGet(needId ?? "", { query: { enabled: !!needId, retry: false } });

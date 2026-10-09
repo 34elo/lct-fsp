@@ -12,6 +12,7 @@ const professions = {
   professions: [
     { slug: "backend", title: "Backend-разработчик", skill_weights: {}, skill_types: {} },
     { slug: "frontend", title: "Frontend-разработчик", skill_weights: {}, skill_types: {} },
+    { slug: "mobile", title: "Мобильный разработчик", skill_weights: {}, skill_types: {}, beta: true },
   ],
   skill_types: [],
   grades: [],
@@ -93,8 +94,8 @@ function mount(path: string, handler: Handler) {
 
 const tid = (id: string) => screen.findByTestId(id);
 
-describe("опрос (S1)", () => {
-  it("предзаполняет, сохраняет опрос и начинает тест", async () => {
+describe("поток до теста (S1, E39-6)", () => {
+  it("предзаполняет шаги 1–2, сохраняет и начинает тест", async () => {
     const calls = mount("/me/assessment", (url, init) => {
       if (url.endsWith("/assessment/survey") && (init?.method ?? "GET") === "GET") return res(200, survey);
       if (url.endsWith("/assessment/survey")) return res(200, { ...survey, id: "s1", prefilled: false });
@@ -105,11 +106,16 @@ describe("опрос (S1)", () => {
     });
     expect(await tid("assessment-prefilled")).toBeInTheDocument();
     expect(screen.queryByTestId("assessment-industry")).toBeNull(); // ADR-025 п.4: отрасль не спрашиваем
+    expect(screen.getByTestId("flow-step-1")).toHaveAttribute("aria-current", "step");
+    expect(screen.getByRole("heading", { name: "Направление и навыки" })).toBeInTheDocument();
     expect(screen.getByTestId("assessment-profession-backend")).toBeChecked();
-    expect(screen.getByTestId("assessment-grade-middle")).toBeChecked();
     fireEvent.change(screen.getByTestId("assessment-stack-input"), { target: { value: "Redis" } });
     fireEvent.keyDown(screen.getByTestId("assessment-stack-input"), { key: "Enter" });
     expect(within(screen.getByTestId("assessment-stack")).getByText(/redis/)).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("assessment-next"));
+    expect(await tid("assessment-step-2")).toBeInTheDocument();
+    expect(screen.getByTestId("flow-step-2")).toHaveAttribute("aria-current", "step");
+    expect(screen.getByTestId("assessment-grade-middle")).toBeChecked();
     fireEvent.click(screen.getByTestId("assessment-start"));
     expect(await tid("assessment-item")).toBeInTheDocument();
     const put = calls.find((c) => c.method === "PUT")!;
@@ -126,6 +132,7 @@ describe("опрос (S1)", () => {
       if (url.includes("/attempts/a1/next")) return res(200, { done: false, response_id: "r1", seq: 1, kind: "exact", stem: "Что выведет?", time_limit_s: 120 });
       if (url.endsWith("/attempts/a1")) return res(200, { ...attemptBase, mode: "express", target: 6 });
     });
+    fireEvent.click(await tid("assessment-next"));
     expect(await tid("assessment-express-toggle")).toBeChecked();
     fireEvent.click(screen.getByTestId("assessment-start"));
     expect(await tid("assessment-range")).toHaveTextContent("от 6 до 8");
@@ -138,8 +145,8 @@ describe("опрос (S1)", () => {
 
   it("без грейда тест не начинается, перевёрнутая вилка блокирует сохранение", async () => {
     const calls = mount("/me/assessment", (url) => (url.endsWith("/assessment/survey") ? res(200, { ...survey, declared_grade: null }) : undefined));
-    await tid("assessment-survey");
-    fireEvent.click(screen.getByTestId("assessment-start"));
+    fireEvent.click(await tid("assessment-next"));
+    fireEvent.click(await tid("assessment-start"));
     expect(await tid("assessment-need-grade")).toBeInTheDocument();
     expect(calls.some((c) => c.method === "PUT")).toBe(false);
     fireEvent.change(screen.getByTestId("assessment-salary-from"), { target: { value: "300000" } });
@@ -156,8 +163,8 @@ describe("опрос (S1)", () => {
           ? res(409, { code: "cooldown", detail: "2026-11-04T10:00:00+00:00 смена грейда не чаще раза в 90 дней" })
           : res(403, { code: "email_not_verified" });
     });
-    await tid("assessment-survey");
-    fireEvent.click(screen.getByTestId("assessment-start"));
+    fireEvent.click(await tid("assessment-next"));
+    fireEvent.click(await tid("assessment-start"));
     const err = await tid("assessment-start-error");
     expect(err).toHaveTextContent("04.11.2026");
     expect(err).toHaveAttribute("data-code", "cooldown");
@@ -168,7 +175,7 @@ describe("опрос (S1)", () => {
   });
 });
 
-describe("опрос (S1) · состояния макета v2", () => {
+describe("поток до теста (S1) · состояния", () => {
   const surveyGet = (url: string, init?: RequestInit) => (url.endsWith("/assessment/survey") && (init?.method ?? "GET") === "GET" ? res(200, survey) : undefined);
 
   it("кулдаун: плашка с датой, грейд в контуре, старт предлагает грейд ниже", async () => {
@@ -179,6 +186,7 @@ describe("опрос (S1) · состояния макета v2", () => {
       if (url.endsWith("/assessment/attempts") && init?.method === "POST") return res(201, { ...attemptBase, declared_grade: "junior" });
       return surveyGet(url, init);
     });
+    fireEvent.click(await tid("assessment-next"));
     expect(await tid("assessment-cooldown")).toHaveTextContent("Следующая попытка Middle");
     expect(screen.getByTestId("assessment-cooldown-date")).toHaveTextContent("14.10.2999");
     expect(screen.getByTestId("assessment-start")).toHaveTextContent("Пройти Junior сейчас");
@@ -198,11 +206,42 @@ describe("опрос (S1) · состояния макета v2", () => {
     expect(screen.getByText(/доступно с 14\.10\.2999/)).toBeInTheDocument();
   });
 
-  it("пусто: направление не выбрано, кнопка открывает форму", async () => {
+  it("пусто: без направления дальше не пройти; все профессии выбираются, «бета» помечена", async () => {
     mount("/me/assessment", (url) => (url.endsWith("/assessment/survey") ? res(200, { ...survey, profession: null, declared_grade: null }) : undefined));
-    expect(await tid("assessment-empty")).toHaveTextContent("Направление не выбрано");
-    fireEvent.click(screen.getByTestId("assessment-pick"));
-    expect(await tid("assessment-survey")).toBeInTheDocument();
+    fireEvent.click(await tid("assessment-next"));
+    expect(await tid("assessment-need-profession")).toBeInTheDocument();
+    expect(screen.queryByTestId("assessment-step-2")).toBeNull();
+    expect(screen.getByTestId("assessment-beta-mobile")).toHaveTextContent("бета");
+    expect(screen.queryByTestId("assessment-beta-backend")).toBeNull();
+    for (const p of professions.professions) {
+      fireEvent.click(screen.getByTestId(`assessment-profession-${p.slug}`));
+      expect(screen.getByTestId(`assessment-profession-${p.slug}`)).toBeChecked();
+    }
+    fireEvent.click(screen.getByTestId("assessment-next"));
+    expect(await tid("assessment-step-2")).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("assessment-back"));
+    expect(await tid("assessment-step-1")).toBeInTheDocument();
+    expect(screen.getByTestId("assessment-profession-mobile")).toBeChecked();
+  });
+
+  it("из профиля (?step=1): направление и навыки сохраняются без теста", async () => {
+    const calls = mount("/me/assessment?step=1", (url, init) => {
+      if (url.endsWith("/assessment/survey") && (init?.method ?? "GET") === "GET") return res(200, { ...survey, id: "s1", prefilled: false });
+      if (url.endsWith("/assessment/survey")) return res(200, { ...survey, id: "s2", prefilled: false });
+      if (url.endsWith("/assessment/history")) return res(200, { surveys: [], attempts: [], cooldowns: [] });
+    });
+    fireEvent.click(await tid("assessment-profession-frontend"));
+    fireEvent.click(screen.getByTestId("assessment-save-step"));
+    expect(await tid("assessment-saved")).toBeInTheDocument();
+    expect(screen.getByTestId("assessment-later")).toHaveAttribute("href", "/me/profile");
+    expect(calls.find((c) => c.method === "PUT")!.body).toMatchObject({ profession: "frontend", declared_grade: "middle" });
+    expect(calls.some((c) => c.url.endsWith("/assessment/attempts"))).toBe(false);
+  });
+
+  it("сохранённое направление: сразу шаг 2", async () => {
+    mount("/me/assessment", (url) => (url.endsWith("/assessment/survey") ? res(200, { ...survey, id: "s1", prefilled: false }) : undefined));
+    expect(await tid("assessment-step-2")).toBeInTheDocument();
+    expect(screen.getByTestId("flow-step-1")).toHaveAttribute("data-state", "done");
   });
 
   it("загрузка: скелетон; ошибка: «Повторить»", async () => {
@@ -620,17 +659,17 @@ describe("баннер пути кандидата (E35-2a)", () => {
   const history = (surveys: unknown[], attempts: unknown[]) => (url: string) =>
     url.endsWith("/assessment/history") ? res(200, { surveys, attempts, cooldowns: [], retries: [] }) : undefined;
 
-  it("без опроса на экране кандидата — одна кнопка в опрос", async () => {
+  it("без направления на экране кандидата — одна кнопка в поток до теста", async () => {
     mount("/me/offers", history([], []));
     const banner = await screen.findByTestId("path-banner");
     expect(banner).toHaveAttribute("data-step", "survey");
     const links = within(banner).getAllByRole("link");
     expect(links).toHaveLength(1);
     expect(links[0]).toHaveAttribute("href", "/me/assessment");
-    expect(links[0]).toHaveTextContent("Пройти опрос");
+    expect(links[0]).toHaveTextContent("Выбрать направление");
   });
 
-  it("опрос есть, теста нет — «Пройти тест»; идёт попытка — «Продолжить тест»", async () => {
+  it("направление есть, теста нет — «Пройти тест»; идёт попытка — «Продолжить тест»", async () => {
     mount("/me/offers", history([{ id: "s1" }], []));
     expect(await screen.findByTestId("path-banner-action")).toHaveTextContent("Пройти тест");
     cleanup();
@@ -638,7 +677,7 @@ describe("баннер пути кандидата (E35-2a)", () => {
     expect(await screen.findByTestId("path-banner-action")).toHaveAttribute("href", "/me/assessment/attempts/a1");
   });
 
-  it("после теста баннера нет; на экране опроса — тоже", async () => {
+  it("после теста баннера нет; на экране потока до теста — тоже", async () => {
     const calls = mount("/me/offers", history([{ id: "s1" }], [finished]));
     await waitFor(() => expect(calls.some((c) => c.url.endsWith("/assessment/history"))).toBe(true));
     await waitFor(() => expect(screen.queryByTestId("path-banner")).not.toBeInTheDocument());
@@ -650,12 +689,13 @@ describe("баннер пути кандидата (E35-2a)", () => {
 });
 
 describe("путь: тест сейчас или позже, результат → Главная (E35-2a)", () => {
-  it("«Сохранить опрос» предлагает пройти тест позже и ведёт на Главную", async () => {
+  it("«Сохранить, тест позже» предлагает пройти тест позже и ведёт на Главную", async () => {
     mount("/me/assessment", (url, init) => {
       if (url.endsWith("/assessment/survey") && (init?.method ?? "GET") === "GET") return res(200, survey);
       if (url.endsWith("/assessment/survey")) return res(200, { ...survey, id: "s1", prefilled: false });
       if (url.endsWith("/assessment/history")) return res(200, { surveys: [], attempts: [], cooldowns: [] });
     });
+    fireEvent.click(await tid("assessment-next"));
     fireEvent.click(await tid("assessment-save"));
     expect(await tid("assessment-saved")).toHaveTextContent("позже");
     expect(screen.getByTestId("assessment-later")).toHaveAttribute("href", "/me");
@@ -669,5 +709,70 @@ describe("путь: тест сейчас или позже, результат 
     const home = await tid("assessment-to-profile");
     expect(home).toHaveAttribute("href", "/me");
     expect(home).toHaveTextContent("На главную");
+  });
+});
+
+describe("разбор теста (E39-10)", () => {
+  const part = { kind: "exact", stem: "Сколько будет 2+2?", options: null, reason: { code: "calc_error", label: "Ошибка в вычислении", detail: null } };
+  const review = {
+    attempt_id: "a1",
+    profession: "backend",
+    items: [
+      { ...part, response_id: "r1", seq: 1, skill: "python", skill_type: "hard", score: 1, time_limit_s: 60, why: "Ответ верный.", yours: "4", correct: "4", reason: { code: "correct", label: "Ответ верный", detail: null } },
+      { ...part, response_id: "r2", seq: 2, skill: "system_design", skill_type: "thinking", score: 0, time_limit_s: 60, why: "Пройдите по шагам.", yours: "5", correct: "4" },
+    ],
+  };
+  const handler = (url: string) => {
+    if (url.endsWith("/attempts/a1/review")) return res(200, review);
+  };
+
+  it("группы по типам, ответы, «что подтянуть»; объяснения скрываются и запоминаются", async () => {
+    localStorage.clear();
+    mount("/me/assessment/attempts/a1/review", handler);
+    expect(await tid("assessment-review-group-hard")).toBeInTheDocument();
+    expect(screen.getByTestId("assessment-review-group-thinking")).toBeInTheDocument();
+    expect(screen.getByTestId("assessment-review-item-2-yours")).toHaveTextContent("5");
+    expect(screen.getByTestId("assessment-review-item-2-correct")).toHaveTextContent("4");
+    expect(screen.getByTestId("assessment-review-item-2")).toHaveAttribute("data-verdict", "bad");
+    expect(screen.getByTestId("assessment-review-weak-system_design")).toBeInTheDocument();
+    expect(screen.queryByTestId("assessment-review-weak-python")).toBeNull();
+    expect(screen.getByTestId("assessment-review-to-growth")).toHaveAttribute("href", "/me/navigator");
+
+    // сворачивание у одного задания
+    fireEvent.click(screen.getByTestId("assessment-review-item-2-toggle"));
+    expect(screen.queryByText("Пройдите по шагам.")).toBeNull();
+    expect(screen.getByTestId("assessment-review-item-1-why")).toBeInTheDocument();
+
+    // общий переключатель скрывает объяснения и помнится
+    fireEvent.click(screen.getByTestId("assessment-review-hide-switch"));
+    expect(screen.queryByTestId("assessment-review-item-1-why")).toBeNull();
+    expect(localStorage.getItem("fsp.assessment.review.hideExplain")).toBe("1");
+    cleanup();
+    mount("/me/assessment/attempts/a1/review", handler);
+    await tid("assessment-review-group-hard");
+    expect(screen.getByTestId("assessment-review-hide-switch")).toHaveAttribute("aria-checked", "true");
+    expect(screen.queryByTestId("assessment-review-item-1-why")).toBeNull();
+    localStorage.clear();
+  });
+
+  it("идущая попытка (409) — «тест ещё идёт», чужая (404) — не найдено", async () => {
+    mount("/me/assessment/attempts/a1/review", (url) => (url.endsWith("/review") ? res(409, { code: "attempt_active", title: "x" }) : undefined));
+    expect(await tid("assessment-review-active")).toBeInTheDocument();
+    cleanup();
+    mount("/me/assessment/attempts/zz/review", () => undefined);
+    expect(await tid("assessment-error")).toBeInTheDocument();
+  });
+
+  it("из результата и истории есть ссылка на разбор", async () => {
+    mount("/me/assessment/attempts/a1/result", (url) => {
+      if (url.endsWith("/attempts/a1")) return res(200, finished);
+      if (url.endsWith("/assessment/history")) return res(200, { surveys: [], attempts: [finished], cooldowns: [], retries: [] });
+    });
+    expect(await tid("assessment-to-review")).toHaveAttribute("href", "/me/assessment/attempts/a1/review");
+    cleanup();
+    mount("/me/assessment/history", (url) => {
+      if (url.endsWith("/assessment/history")) return res(200, { surveys: [], attempts: [finished], cooldowns: [], retries: [] });
+    });
+    expect(await tid("assessment-attempt-review-a1")).toHaveAttribute("href", "/me/assessment/attempts/a1/review");
   });
 });

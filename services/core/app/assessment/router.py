@@ -273,6 +273,48 @@ async def explain_answer(
     )
 
 
+class ReviewPartOut(BaseModel):
+    kind: str
+    stem: str
+    options: list[str] | None = None
+    yours: str | None = None  # ответ кандидата текстом; `None` — ответа нет
+    correct: str | None = None
+    reason: ExplainReasonOut
+
+
+class ReviewItemOut(ReviewPartOut):
+    response_id: uuid.UUID
+    seq: int
+    skill: str
+    skill_type: str
+    score: float
+    rt_ms: int | None = None
+    time_limit_s: int
+    why: str  # причина по правилам, без LLM
+    misconception: ExplainMisconceptionOut | None = None
+    steps: list[ReviewPartOut] | None = None  # шаги `chain`
+
+
+class ReviewOut(BaseModel):
+    attempt_id: uuid.UUID
+    profession: str
+    items: list[ReviewItemOut]
+
+
+@router.get(
+    "/assessment/attempts/{attempt_id}/review",
+    response_model=ReviewOut,
+    responses=problem_responses(401, 403, 404, 409),
+)
+async def review_attempt(
+    attempt_id: uuid.UUID,
+    user: User = Depends(_candidate),
+    session: AsyncSession = Depends(get_session),
+):
+    """Разбор теста: условие, ваш и верный ответ, причина. Только завершённая своя попытка."""
+    return await explain.review_attempt(session, user.id, attempt_id)
+
+
 # --- опрос и история (E22-7) ------------------------------------------------------------------
 
 

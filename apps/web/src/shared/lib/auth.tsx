@@ -9,7 +9,8 @@ import {
   meMeGet,
   registerAuthRegisterPost,
 } from "@/api/endpoints/auth/auth";
-import type { AuthOut, MeOut } from "@/api/model";
+import { putConsentsMeConsentsPut } from "@/api/endpoints/consents/consents";
+import type { AuthOut, ConsentType, MeOut } from "@/api/model";
 import { setAccessToken } from "@/shared/lib/token";
 
 export type Role = "candidate" | "employer" | "fsp_admin";
@@ -24,7 +25,8 @@ interface AuthApi {
   me: MeOut | null;
   role: Role | null;
   login(email: string, password: string): Promise<void>;
-  register(email: string, password: string, role: "candidate" | "employer"): Promise<void>;
+  /** `consents` — обязательные согласия, отмеченные в форме регистрации (E39-6): выдаются сразу. */
+  register(email: string, password: string, role: "candidate" | "employer", consents?: ConsentType[]): Promise<void>;
   /** Вход по одноразовому токену из ссылки бота. */
   loginWithMagic(token: string): Promise<void>;
   /** Перечитать `/me` (например, после выдачи согласий). */
@@ -94,8 +96,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const register = useCallback(
-    async (email: string, password: string, role: "candidate" | "employer") => {
+    async (email: string, password: string, role: "candidate" | "employer", consents: ConsentType[] = []) => {
       const auth = (await registerAuthRegisterPost({ email, password, role })).data;
+      if (consents.length) {
+        setAccessToken((auth as AuthOut).access_token);
+        try {
+          await putConsentsMeConsentsPut({ consents: consents.map((type) => ({ type, granted: true })) });
+        } catch {
+          // Не выдали — после входа `postAuthPath` поведёт на экран согласий.
+        }
+      }
       try {
         await signIn(auth);
       } catch {
