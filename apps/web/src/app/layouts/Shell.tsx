@@ -52,7 +52,7 @@ export function Shell({ nav, variant, banner }: { nav: NavItem[]; variant: "top"
     <div className={cn("min-h-dvh overflow-x-clip bg-page text-ink", variant === "side" && "md:grid md:grid-cols-[220px_1fr]")}>
       {variant === "side" && <AdminSidebar nav={nav} />}
       <div className="flex min-h-dvh min-w-0 flex-col">
-        <AppHeader nav={nav} counts={counts} withTabs={variant === "top"} />
+        <AppHeader nav={nav} counts={counts} withTabs={variant === "top"} brandFromMd={variant === "top"} />
         {variant === "side" && <AdminMobileNav nav={nav} />}
         {/* Поля задают сами страницы (p-4 md:p-6), поэтому контейнер без своих полей. */}
         <PageContainer className={cn("flex-1 px-0 md:px-0 lg:px-0", bottom && "pb-20 md:pb-0")} as="main">
