@@ -14,6 +14,7 @@ from datetime import UTC, datetime
 from fsp_contracts.assessment import (
     CandidateStanding,
     CategoryRef,
+    StandingCategoryStats,
     StandingGap,
     StandingLeader,
     StandingPart,
@@ -30,8 +31,19 @@ from app.graph.fsp_strength import FspStrengthConfig
 from app.matching import navigator
 from app.matching.search import Row, _attach_strength, trust_of
 from app.matching.strength import StrengthConfig, explain
+from app.offers import service as offers
+from app.vacancies import service as vacancies
 
 PEERS_MAX = 200  # точек на графике; свою всегда оставляем
+
+
+def median(values: list[int]) -> int | None:
+    """Медиана целых (для чётного числа — округлённое среднее двух средних); пусто → None."""
+    if not values:
+        return None
+    v = sorted(values)
+    n = len(v)
+    return v[n // 2] if n % 2 else round((v[n // 2 - 1] + v[n // 2]) / 2)
 
 
 def place(values: list[float], mine: float) -> tuple[int, int]:
@@ -105,8 +117,25 @@ async def compute(
         (r for r in scored if r is not mine and r.strength is not None),
         key=lambda r: str(r.cand.user_id),
     )[: PEERS_MAX - 1]
-    peers = [StandingPeer(strength=r.strength.value, salary_min=r.cand.salary_min)
+    grades_of = await assessment.get_grades_many(session, member_ids)
+
+    def theta_of(uid) -> float | None:
+        g = next((x for x in grades_of.get(uid, []) if x.profession == cur.profession), None)
+        return g.theta if g else None
+
+    peers = [StandingPeer(strength=r.strength.value, salary_min=r.cand.salary_min,
+                          theta=theta_of(r.cand.user_id))
              for r in [mine, *others] if r.strength is not None]  # fmt: skip
+    salaries = await offers.category_interest_salaries(session, member_ids)
+    stats = StandingCategoryStats(
+        candidates=len(scored),
+        interests=len(salaries),
+        interest_salary_from_median=median([a for a, _ in salaries]),
+        interest_salary_to_median=median([b for _, b in salaries]),
+        companies_searching=await vacancies.companies_searching(
+            session, cur.profession, str(cur.grade)
+        ),
+    )
     return CandidateStanding(
         profession=cur.profession, grade=cur.grade, mode=cur.mode,
         confirmed_at=cur.confirmed_at,
@@ -117,5 +146,5 @@ async def compute(
             parts=[StandingPart(**p.model_dump()) for p in explain(mine.strength, cfg)],
         ),
         leader=StandingLeader(grade=cur.grade),
-        category_size=len(scored), peers=peers,
+        category_size=len(scored), peers=peers, category_stats=stats,
     )  # fmt: skip

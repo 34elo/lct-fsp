@@ -18554,6 +18554,16 @@
             },
             "type": "array",
             "title": "Peers"
+          },
+          "category_stats": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StandingCategoryStats"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -28221,6 +28231,50 @@
         ],
         "title": "StackItem"
       },
+      "StandingCategoryStats": {
+        "properties": {
+          "candidates": {
+            "type": "integer",
+            "title": "Candidates",
+            "default": 0
+          },
+          "interests": {
+            "type": "integer",
+            "title": "Interests",
+            "default": 0
+          },
+          "interest_salary_from_median": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interest Salary From Median"
+          },
+          "interest_salary_to_median": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interest Salary To Median"
+          },
+          "companies_searching": {
+            "type": "integer",
+            "title": "Companies Searching",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "StandingCategoryStats",
+        "description": "Общие числа категории «профессия × грейд» для «Статистики» (E39-16). Без идентификаторов."
+      },
       "StandingGap": {
         "properties": {
           "top_percent": {
@@ -28311,6 +28365,17 @@
               }
             ],
             "title": "Salary Min"
+          },
+          "theta": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Theta"
           }
         },
         "type": "object",

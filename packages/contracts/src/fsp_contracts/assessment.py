@@ -85,6 +85,17 @@ class StandingPeer(BaseModel):
 
     strength: float = Field(ge=0, le=1)
     salary_min: int | None = None
+    theta: float | None = None  # уровень в тесте θ (E39-16); ось X графика
+
+
+class StandingCategoryStats(BaseModel):
+    """Общие числа категории «профессия × грейд» для «Статистики» (E39-16). Без идентификаторов."""
+
+    candidates: int = 0  # кандидатов с действующим грейдом категории
+    interests: int = 0  # интересов и приглашений компаний кандидатам категории
+    interest_salary_from_median: int | None = None  # медиана нижней границы вилок, ₽/мес
+    interest_salary_to_median: int | None = None  # медиана верхней границы вилок, ₽/мес
+    companies_searching: int = 0  # компаний с опубликованной вакансией на эту категорию
 
 
 class CandidateStanding(BaseModel):
@@ -98,6 +109,7 @@ class CandidateStanding(BaseModel):
     leader: StandingLeader | None = None
     category_size: int = 0
     peers: list[StandingPeer] = Field(default_factory=list)  # включая самого кандидата
+    category_stats: StandingCategoryStats | None = None  # E39-16
 
 
 class CandidateGrade(BaseModel):
@@ -284,6 +296,7 @@ __all__ = [
     "SkillSuggestion",
     "SkillType",
     "StandingPart",
+    "StandingCategoryStats",
     "StandingPeer",
     "StandingStrength",
     "TestGrade",
