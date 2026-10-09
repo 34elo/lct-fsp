@@ -8,12 +8,17 @@ from app.analytics.models import AnalyticsEventRow, LiveRun  # noqa: F401
 # >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
 from app.assessment.models import Grade, RegularTask, TaskSubmission  # noqa: F401
 from app.candidates.models import Candidate, CategoryDispute  # noqa: F401
-from app.companies.models import Company, CompanyMember  # noqa: F401
+from app.companies.models import Company, CompanyInvite, CompanyMember  # noqa: F401
 from app.consents.models import Consent  # noqa: F401
 from app.credentials.models import IssuedCredential  # noqa: F401
 from app.graph import fsp_models as _fsp  # noqa: F401
 from app.graph.models import CandidateSkill, Evidence  # noqa: F401
-from app.identity.models import EmailVerification, RefreshToken, User  # noqa: F401
+from app.identity.models import (  # noqa: F401
+    EmailVerification,
+    RefreshToken,
+    User,
+    UserProfile,
+)
 from app.matching.models import (  # noqa: F401
     CategorySubscription,
     CategorySubscriptionHit,

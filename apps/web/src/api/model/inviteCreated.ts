@@ -5,6 +5,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface TgMessageOut {
+export interface InviteCreated {
   id: string;
+  email: string;
+  created_at: string;
+  expires_at: string;
+  url: string;
 }

@@ -88,7 +88,9 @@ export function offerErrorText(err: unknown, fallback = "Не удалось в�
     case "invalid_transition":
       return "Это действие уже недоступно: статус приглашения изменился.";
     case "offer_closed":
-      return "Переписка по этому приглашению закрыта.";
+      return "Приглашение закрыто.";
+    case "message_limit":
+      return "В приглашении по одному сообщению от каждой стороны.";
     case "empty_message":
       return "Сообщение не может быть пустым.";
     case "contacts_not_revealed":
@@ -133,9 +135,9 @@ export const BOARD_TEXT = {
   contactsOpen: "контакты открыты",
   from: (n: number) => `от ${n.toLocaleString("ru-RU").replace(/\s/g, " ")} ₽`,
   deleted: "Кандидат удалил анкету",
-  latestTitle: "Последнее сообщение",
-  noMessages: "Сообщений пока нет.",
-  reply: "Ответить",
+  latestTitle: "Ответ кандидата",
+  noMessages: "Кандидат пока не ответил.",
+  reply: "Открыть",
   responsesTitle: "Отклики на вакансии",
   allResponses: "Все отклики",
   loadError: "Не загрузилось",
@@ -166,20 +168,32 @@ export const CAND_TEXT = {
   salaryLabel: "Вилка в месяц",
   fromCompany: "Сообщение компании",
   description: "О приглашении",
+  // E39-24: подпись HR и описание компании (Markdown)
+  sentBy: "Приглашение отправил(а)",
+  aboutCompany: "О компании",
   contactVia: (m: string) => `Связь: ${m}`,
   why: "Почему вы подходите",
   accept: "Принять",
   decline: "Не подходит",
-  ask: "Задать вопрос",
+  replyLabel: "Ваш ответ компании",
+  replyOptional: "по желанию",
+  replyHint: "Одно короткое сообщение уйдёт вместе с вашим решением. Переписки в приглашении нет: после принятия вы увидите контакты друг друга.",
+  replyPlaceholder: "Например: интересно, готов обсудить в четверг.",
+  yourReply: "Ваш ответ",
+  conditions: "Условия",
+  task: (title: string, minutes: number, deadline: string) => `Задание: ${title} · ${minutes} мин · до ${deadline}`,
+  taskAnswered: "Задание выполнено",
+  companyContacts: "Контакты компании",
+  companyContactsHint: "Компания тоже видит ваши контакты. Можно написать первым.",
   sheetTitle: "Почему не подходит?",
   sheetHint: "Один тап. Компания увидит причину без имени и контактов.",
   cancel: "Отмена",
   accepted: "Приглашение принят",
-  acceptedHint: "Компания получила ваши контакты и свяжется с вами. Пока можно общаться здесь.",
+  acceptedHint: "Компания получила ваши контакты и свяжется с вами. Контакты компании — рядом.",
   next: "Что дальше",
   revoke: "Отозвать доступ к контактам",
   revokeTitle: "Отозвать доступ к контактам?",
-  revokeHint: "Компания перестанет видеть ваши контакты. Переписка здесь останется, принятое приглашение не отменяется.",
+  revokeHint: "Компания перестанет видеть ваши контакты. Принятое приглашение не отменяется.",
   revokeConfirm: "Отозвать",
   revoked: (d: string) => `Вы отозвали доступ к контактам ${d}. Компания их больше не видит.`,
   yourDecline: (r: string) => `Ваш отказ: ${r}`,
@@ -189,7 +203,7 @@ export const CAND_TEXT = {
 };
 
 /** Тексты «Вами интересуются» (кандидат) и интереса/приглашения (работодатель), ADR-026. */
-export const CONTACTS_REVOKED_TEXT = "Кандидат отозвал доступ к контактам. Связаться можно через переписку здесь.";
+export const CONTACTS_REVOKED_TEXT = "Кандидат отозвал доступ к контактам. Связаться можно, только если они остались у вас с приглашения.";
 
 export const INT_TEXT = {
   title: "Вами интересуются",

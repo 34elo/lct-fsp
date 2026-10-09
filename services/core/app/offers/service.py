@@ -835,6 +835,15 @@ async def add_message(
         raise ProblemError(409, "offer_closed", "Переписка по этому офферу закрыта")
     if _is_expired(offer, now):
         raise ProblemError(409, "offer_expired", "Срок действия оффера истёк")
+    # E39-26: вместо чата — по одному сообщению от стороны. Сообщение компании — сопроводительное
+    # к приглашению (`offer.message`), ответ кандидата — одно, вместе с «Принять».
+    already = await session.scalar(
+        select(OfferMessage.id).where(
+            OfferMessage.offer_id == offer.id, OfferMessage.author_side == side
+        )
+    )
+    if already is not None or (side == "company" and offer.message):
+        raise ProblemError(409, "message_limit", "В приглашении одно сообщение от каждой стороны")
     msg = OfferMessage(
         id=uuid.uuid4(), offer_id=offer.id, author_side=side, author_user_id=user_id,
         text=text, channel=channel, created_at=now,

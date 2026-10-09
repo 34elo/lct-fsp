@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import Settings
 from app.identity.mailer import Mailer
 from app.identity.models import EmailVerification, RefreshToken, User, utcnow
+from app.identity.profile import signature as staff_signature  # noqa: F401  (E39-24)
 
 REFRESH_TTL = timedelta(days=30)
 ACCESS_TTL = timedelta(minutes=15)
