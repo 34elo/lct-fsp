@@ -346,6 +346,8 @@ export * from './skillSuggestion';
 export * from './skillType';
 export * from './skillWithTrust';
 export * from './stackItem';
+export * from './standingGap';
+export * from './standingLeader';
 export * from './standingPart';
 export * from './standingPeer';
 export * from './standingStrength';
