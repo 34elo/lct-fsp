@@ -97,6 +97,16 @@ async def track_employer(
     await record(session, [ev])
 
 
+async def demo_actors(session: AsyncSession, salt: str) -> set[str]:
+    """Псевдонимы демо-пользователей и демо-компаний (E40-1): их события не идут в дашборд
+    ФСП и метрики. Кандидат и пользователь — один id, работодатель пишется по компании."""
+    from app.companies.service import demo_company_ids
+    from app.identity.service import demo_user_ids
+
+    ids = [*await session.scalars(demo_user_ids()), *await session.scalars(demo_company_ids())]
+    return {pseudonym(salt, i) for i in ids}
+
+
 async def delete_by_actor(session: AsyncSession, actor: str) -> int:
     """Удаление профиля → удаление сырых событий по псевдониму (metrics.md §7)."""
     res = await session.execute(delete(AnalyticsEventRow).where(AnalyticsEventRow.actor == actor))

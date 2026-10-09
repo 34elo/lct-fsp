@@ -37,6 +37,7 @@ from app.companies.router import router as companies_router
 from app.config import Settings
 from app.consents.router import router as consents_router
 from app.credentials.router import router as credentials_router
+from app.demo.router import router as jury_router
 from app.events_stream import UiHub
 from app.events_stream import router as events_router
 from app.fsp.registry_router import admin_router as fsp_registry_admin_router
@@ -136,6 +137,7 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(subscriptions_router)
     app.include_router(views_router)
     app.include_router(public_stats_router)
+    app.include_router(jury_router)  # вход жюри в песочницу (E40-1)
     app.include_router(credentials_router)
     app.include_router(profile_router)
     app.include_router(company_invites_router)
