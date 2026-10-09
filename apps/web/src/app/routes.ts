@@ -112,6 +112,8 @@ export const ROUTES: RouteDef[] = [
   { path: "/admin/demo/new-profession", title: "Новая профессия", section: "admin", owner: "b1" },
   // <<< block1 (admin)
   // >>> block2 (admin)
+  // Реестр ФСП (E39-28): вход с Дашборда, в меню подсвечен «Дашборд» (/federation — префикс).
+  { path: "/federation/registry", title: "Реестр ФСП", section: "admin", owner: "b2" },
   // <<< block2 (admin)
 ];
 
