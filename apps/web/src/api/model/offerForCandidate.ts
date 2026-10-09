@@ -6,6 +6,7 @@
  */
 import type { CompanyBrief } from './companyBrief';
 import type { ContactMethod } from './contactMethod';
+import type { ContactsOutput } from './contactsOutput';
 import type { Decline } from './decline';
 import type { MatchSnapshot } from './matchSnapshot';
 import type { OfferInitiator } from './offerInitiator';
@@ -43,4 +44,5 @@ export interface OfferForCandidate {
   company: CompanyBrief;
   why_you?: WhyYou | null;
   task?: TaskBrief | null;
+  company_contacts?: ContactsOutput | null;
 }

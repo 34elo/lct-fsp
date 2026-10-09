@@ -144,10 +144,6 @@ class CoreClient:
         body = {"tg_user_id": tg_user_id, "reason": reason}
         return await self.request("POST", f"/internal/tg/offers/{offer_id}/decline", json=body)
 
-    async def offer_message(self, tg_user_id: int, offer_id: str, text: str) -> dict:
-        body = {"tg_user_id": tg_user_id, "text": text}
-        return await self.request("POST", f"/internal/tg/offers/{offer_id}/messages", json=body)
-
     # --- тест и регулярные задания: API блока 1 от имени кандидата (E25-3) ----------------
 
     async def _user_token(self, tg_user_id: int) -> str:
