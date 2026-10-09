@@ -233,14 +233,19 @@ function InterestCard({ o }: { o: OfferForCandidate }) {
   );
 }
 
-function Tiles({ standing, interests }: { standing?: CandidateStanding; interests?: InterestsSummary }) {
+function Tiles({ standing, interests, profTitle }: { standing?: CandidateStanding; interests?: InterestsSummary; profTitle: (s: string) => string }) {
   const s = standing?.strength;
   const range =
     interests?.salary_from_min != null && interests.salary_to_max != null ? formatRubRangeShort(interests.salary_from_min, interests.salary_to_max) : undefined;
   return (
-    <div className="order-2 grid grid-cols-3 gap-2 lg:order-none lg:grid-cols-1 lg:gap-4" data-testid="home-tiles">
-      <MetricTile label={HOME.strength} info={<Gi k="strength" />} value={s ? Math.round(s.value * 100) : HOME.none} />
-      <MetricTile label={HOME.place} info={<Gi k="category" />} value={s ? HOME.top(s.top_percent) : HOME.none} progress={s ? 100 - s.top_percent : undefined} />
+    <div className="order-2 grid grid-cols-2 gap-2 lg:order-none lg:grid-cols-1 lg:gap-4" data-testid="home-tiles">
+      <MetricTile
+        label={HOME.place}
+        info={<Gi k="strength" />}
+        value={s ? HOME.topCap(s.top_percent) : HOME.none}
+        hint={s && standing?.profession && standing.grade ? `${profTitle(standing.profession)} ${GRADE[standing.grade] ?? standing.grade}` : undefined}
+        progress={s ? 100 - s.top_percent : undefined}
+      />
       <MetricTile label={HOME.interestsTile} info={<Gi k="interest" />} value={interests ? interests.companies : HOME.none} hint={range} />
     </div>
   );
@@ -284,7 +289,7 @@ function After(props: {
         <Interests interests={props.interests} />
       </div>
       <div className="contents lg:col-span-3 lg:flex lg:flex-col lg:gap-4">
-        <Tiles standing={props.standing} interests={props.interests} />
+        <Tiles standing={props.standing} interests={props.interests} profTitle={props.profTitle} />
         <StatsLink views={props.views} />
       </div>
     </div>

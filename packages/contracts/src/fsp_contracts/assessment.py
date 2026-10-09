@@ -55,12 +55,28 @@ class StandingPart(BaseModel):
     weight: float = Field(ge=0)
 
 
+class StandingGap(BaseModel):
+    """Разрыв до следующей «десятки» (топ-30 → топ-20): на сколько п.п. относительной силы."""
+
+    top_percent: int = Field(ge=1, le=90)  # целевая граница: 10, 20, …
+    gap_relative: float = Field(ge=0)  # п.п. «от лидера», которых не хватает до границы
+
+
+class StandingLeader(BaseModel):
+    """Лидер категории — анонимно: только грейд и 100 % (никаких идентификаторов)."""
+
+    grade: TestGrade
+    relative: float = 100.0
+
+
 class StandingStrength(BaseModel):
     """Сила профиля и место среди кандидатов той же категории (ранг 1 — сильнейший)."""
 
     value: float = Field(ge=0, le=1)
     rank: int = Field(ge=1)
     top_percent: int = Field(ge=1, le=100)  # «топ-30 %»: ceil(rank / category_size · 100)
+    relative: float = Field(default=100.0, ge=0, le=100)  # сила / сила лидера категории, % (E39-12)
+    gap_to_next_ten: StandingGap | None = None  # до ближайшей «десятки» выше; у топ-10 % нет
     parts: list[StandingPart] = Field(default_factory=list)
 
 
@@ -79,6 +95,7 @@ class CandidateStanding(BaseModel):
     mode: AttemptMode | None = None
     confirmed_at: datetime | None = None
     strength: StandingStrength | None = None
+    leader: StandingLeader | None = None
     category_size: int = 0
     peers: list[StandingPeer] = Field(default_factory=list)  # включая самого кандидата
 
