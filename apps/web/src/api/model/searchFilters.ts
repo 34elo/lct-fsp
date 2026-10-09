@@ -27,4 +27,7 @@ export interface SearchFilters {
   fsp_disciplines?: string[] | null;
   active_only?: boolean | null;
   semantic_text?: string | null;
+  professions?: string[] | null;
+  only_confirmed?: boolean | null;
+  salary_min?: number | null;
 }

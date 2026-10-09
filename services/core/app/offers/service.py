@@ -519,6 +519,20 @@ async def interests_for(
     return list(await session.scalars(q.order_by(Offer.created_at.desc())))
 
 
+async def category_interest_salaries(
+    session: AsyncSession, candidate_ids: list[uuid.UUID]
+) -> list[tuple[int, int]]:
+    """Вилки `(от, до)` интересов и приглашений кандидатам из списка (E39-16)."""
+    if not candidate_ids:
+        return []
+    rows = await session.execute(
+        select(Offer.salary_from, Offer.salary_to).where(
+            Offer.candidate_id.in_(candidate_ids), Offer.interest_at.is_not(None)
+        )
+    )
+    return [(a, b) for a, b in rows]
+
+
 async def open_interest(session: AsyncSession, offer: Offer, now: datetime | None = None) -> Offer:
     """Кандидат открыл интерес: `interest → interest_opened`. Повтор — без изменений."""
     _require_interest(offer)

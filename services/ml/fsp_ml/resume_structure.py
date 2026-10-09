@@ -10,14 +10,18 @@ import re
 
 from fsp_ml import resume_ner
 
+# hh.ru (E39-19): «Опыт работы — 5 лет 3 месяца» — длительность в заголовке
+_DURATION_TAIL = r"(?:\s*[—–-]?\s*\d+\s+(?:год|года|лет|месяц\w*)(?:\s+\d+\s+месяц\w*)?)?"
 _HEADERS = {
-    "experience": r"опыт(?:\s+работы)?|места\s+работы|карьера|work\s+experience|experience"
-    r"|employment",
+    "experience": rf"(?:опыт(?:\s+работы)?|места\s+работы){_DURATION_TAIL}|карьера"
+    r"|work\s+experience|experience|employment",
     "education": r"образование|education",
     "skills": r"(?:ключевые\s+|технические\s+)?навыки|стек|технологии|skills|tech\s+stack",
     "about": r"о\s+себе|обо\s+мне|summary|about(?:\s+me)?|цель|профиль",
     "other": r"контакты|контактная\s+информация|курсы|сертификаты|проекты|достижения|языки"
-    r"|дополнительно|рекомендации|публикации|contacts|courses|certificates|projects|languages",
+    r"|дополнительно|рекомендации|публикации|contacts|courses|certificates|projects|languages"
+    r"|желаемая\s+должность(?:\s+и\s+зарплата)?|знание\s+языков|повышение\s+квалификации.*"
+    r"|тесты,\s+экзамены.*|дополнительная\s+информация|резюме\s+обновлено.*",
 }
 _HEADER_RES = {k: re.compile(rf"^\s*(?:{v})\s*:?\s*$", re.I) for k, v in _HEADERS.items()}
 
@@ -128,12 +132,85 @@ def _company_by_ner(header: str, skip: set[str]) -> str | None:
     return None
 
 
+# --- hh.ru (E39-19): слева «Август 2021 — настоящее время» и «5 лет 2 месяца», справа компания,
+# «город, сайт», должность, «Обязанности: …». PDF склеивает левую и правую колонки в одну строку,
+# DOCX даёт таблицу — оба варианта приходят строками подряд. ---
+
+_DURATION = r"\d+\s+(?:год|года|лет|месяц\w*)(?:\s+\d+\s+месяц\w*)?"
+_DURATION_LINE = re.compile(rf"^\s*{_DURATION}\s*(?:\||\s{{2,}}|$)\s*", re.I)
+_PERIOD_LINE = re.compile(rf"^\s*({_DATE})\s*[—–−-]\s*({_DATE}|{_NOW})(?![\w])\s*(?:\|\s*)?", re.I)
+_DOMAIN = re.compile(r"\b[\w-]+\.[a-z]{2,}\b", re.I)
+_LABEL = re.compile(r"^(?:обязанности|достижения|описание|задачи)\s*:\s*", re.I)
+
+
+def is_hh_experience(lines: list[str]) -> bool:
+    """Раскладка hh.ru: строка начинается с периода, а следующая — с длительности («5 лет»)."""
+    rows = [ln for ln in lines if ln.strip()]
+    return any(
+        _PERIOD_LINE.match(a) and _DURATION_LINE.match(b)
+        for a, b in zip(rows, rows[1:], strict=False)
+    )
+
+
+def _looks_location(rest: list[str]) -> bool:
+    """Первая строка после компании — «город[, сайт]», а не должность."""
+    line = rest[0]
+    if TITLE_WORDS.search(line) or len(line) > 70:
+        return False
+    if "," in line and _DOMAIN.search(line):
+        return True
+    if len(line.split()) > 3 or len(rest) < 2:
+        return False
+    # город без сайта: дальше должность — со словом-должностью или перед «Обязанности: …»
+    return bool(TITLE_WORDS.search(rest[1])) or (len(rest) > 2 and bool(_LABEL.match(rest[2])))
+
+
+def parse_experience_hh(lines: list[str]) -> list[dict]:
+    """Записи опыта выгрузки hh.ru: период в начале строки открывает запись."""
+    records: list[tuple[str, str, list[str]]] = []
+    for raw in lines:
+        line = raw.strip()
+        if not line:
+            continue
+        if m := _PERIOD_LINE.match(line):
+            records.append((m.group(1), m.group(2), []))
+            line = line[m.end() :].strip()
+        elif not records:
+            continue
+        if m := _DURATION_LINE.match(line):
+            line = line[m.end() :].strip()
+        if line:
+            records[-1][2].append(line)
+
+    out: list[dict] = []
+    for start, end, rest in records:
+        rest = list(rest)
+        company = rest.pop(0) if rest else None
+        if rest and _looks_location(rest):
+            rest.pop(0)
+        title = rest.pop(0) if rest and len(rest[0]) <= 120 else None
+        desc = _LABEL.sub("", " ".join(rest)).strip()
+        out.append(
+            {
+                "company": company[:200] if company else None,
+                "title": title[:200] if title else None,
+                "start": start,
+                "end": end,
+                "description": desc[:2000] or None,
+                "is_commercial": not _NON_COMMERCIAL.search(f"{company or ''} {title or ''}"),
+            }
+        )
+    return out
+
+
 def parse_experience(lines: list[str], skill_names: set[str]) -> list[dict]:
     """Записи опыта: абзац с периодом; шапка — строка с периодом или строка перед ним.
 
     `skill_names` — имена навыков из словаря в нижнем регистре (чтобы NER не принял «Redis»
     за организацию). Возвращает dict-и в форме `LlmExperience`, без навыков.
     """
+    if is_hh_experience(lines):
+        return parse_experience_hh(lines)
     # абзацы по пустым строкам
     paras: list[list[str]] = [[]]
     for line in lines:
@@ -198,7 +275,56 @@ _DEGREES = [
 _YEARS = re.compile(r"(?<!\d)((?:19[5-9]|20\d)\d)(?!\d)")
 
 
+_YEAR_LINE = re.compile(r"^\s*((?:19[5-9]|20\d)\d)\s*$")
+_HH_LEVELS = [
+    (re.compile(r"^\s*неоконченное\s+высшее(?:\s+образование)?\s*$", re.I), "неоконченное высшее"),
+    (re.compile(r"^\s*высшее(?:\s+образование)?\s*$", re.I), "высшее"),
+    (re.compile(r"^\s*бакалавр\s*$", re.I), "бакалавр"),
+    (re.compile(r"^\s*магистр\s*$", re.I), "магистр"),
+    (re.compile(r"^\s*(?:кандидат|доктор)\s+наук\s*$", re.I), "аспирантура"),
+    (re.compile(r"^\s*среднее\s+(?:специальное|профессиональное)(?:\s+образование)?\s*$", re.I),
+     "СПО"),
+]  # fmt: skip
+
+
+def parse_education_hh(lines: list[str]) -> list[dict]:
+    """hh.ru: уровень, год строкой, «Вуз, город», факультет, специальность."""
+    out: list[dict] = []
+    level: str | None = None
+    cur: dict | None = None
+    extra: list[str] = []
+
+    def close() -> None:
+        if cur is not None and extra:
+            cur["field"] = extra[-1][:200]
+
+    for raw in lines:
+        line = raw.strip()
+        if not line:
+            continue
+        if lv := next((name for rx, name in _HH_LEVELS if rx.match(line)), None):
+            close()
+            cur, extra, level = None, [], lv
+        elif m := _YEAR_LINE.match(line):
+            close()
+            cur = {"institution": None, "degree": level, "field": None, "year_end": int(m.group(1))}
+            extra = []
+            out.append(cur)
+        elif cur is not None:
+            if cur["institution"] is None:
+                cur["institution"] = line.split(",")[0].strip()[:300]
+            else:
+                extra.append(line)
+    close()
+    return [e for e in out if e["institution"]][:10]
+
+
 def parse_education(lines: list[str]) -> list[dict]:
+    rows = [ln for ln in lines if ln.strip()]
+    if any(
+        _YEAR_LINE.match(a) and _INSTITUTION.search(b) for a, b in zip(rows, rows[1:], strict=False)
+    ):
+        return parse_education_hh(lines)
     out: list[dict] = []
     for raw in lines:
         line = raw.strip()
@@ -237,7 +363,7 @@ def parse_education(lines: list[str]) -> list[dict]:
 # --- город и «о себе» ---
 
 _CITY = re.compile(
-    r"(?im)^\s*(?:город(?:\s+проживания)?|проживаю|city|location|локация)\s*[:\-]\s*"
+    r"(?im)^\s*(?:город(?:\s+проживания)?|проживает|проживаю|city|location|локация)\s*[:\-]\s*"
     r"([А-ЯЁA-Z][\w .\-]{1,40}?)\s*(?:[,;(]|$)"
 )
 _CITY_G = re.compile(r"(?:^|[\s,])г\.\s*([А-ЯЁ][а-яё]+(?:-[А-ЯЁ]?[а-яё]+)*(?:\s[А-ЯЁ][а-яё]+)?)")

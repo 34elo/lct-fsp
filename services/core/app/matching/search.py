@@ -184,6 +184,43 @@ def relevance_of(
     return round(got / total, 6)
 
 
+def extra_ok(
+    cand: Any,
+    held: dict[uuid.UUID, Any],
+    fsp_disc: set[str],
+    grades: list[Any],
+    f: SearchFilters,
+    nice_ids: list[uuid.UUID],
+    *,
+    has_musts: bool,
+    profession: str | None = None,
+) -> bool:
+    """Фильтры поверх пула анкет (E39-21) — одни для выдачи и для счётчиков категорий.
+
+    `salary_min` — ожидания кандидата не ниже (не указаны — проходит); `fsp_only` — есть ФСП;
+    `min_trust` без обязательных навыков — хотя бы один навык запроса (без навыков — любой)
+    с доверием не ниже; `professions` — действующий грейд одной из профессий (в категории —
+    её профессии); `only_confirmed` — такой грейд без «нужно подтвердить» и низкой уверенности.
+    """
+    if f.salary_min is not None and cand.salary_min is not None and cand.salary_min < f.salary_min:
+        return False
+    if f.fsp_only and not (fsp_disc or any("fsp" in (s.sources or ()) for s in held.values())):
+        return False
+    if f.min_trust is not None and not has_musts:
+        floor = int(f.min_trust)
+        mine = [held[i] for i in nice_ids if i in held] if nice_ids else list(held.values())
+        if not any(s.level >= floor for s in mine):
+            return False
+    if f.professions or f.only_confirmed:
+        profs = {profession} if profession else set(f.professions or ())
+        gs = [g for g in grades if not profs or g.profession in profs]
+        if f.only_confirmed:
+            gs = [g for g in gs if not (g.needs_confirmation or g.low_confidence)]
+        if not gs:
+            return False
+    return True
+
+
 def encode_cursor(sort: Sort, key: float, pseudo_id: str) -> str:
     raw = json.dumps([sort, round(key, 6), pseudo_id], separators=(",", ":"))
     return base64.urlsafe_b64encode(raw.encode()).decode().rstrip("=")
@@ -600,6 +637,10 @@ async def search_candidates(
     }  # None — неизвестный навык: не найдёт никого
     nice_ids = [by_slug[s] for s in f.skills_nice or () if s in by_slug]
     disc = await graph.fsp_disciplines_of(session, ids) if f.fsp_only or f.fsp_disciplines else {}
+    cand_grades = (
+        await assessment.get_grades_many(session, ids) if f.professions or f.only_confirmed else {}
+    )
+    prof_of_cat = category.profession if category is not None else None
 
     rows: list[Row] = []
     for c in pool:
@@ -611,9 +652,10 @@ async def search_candidates(
             continue
         if f.fsp_disciplines and not set(f.fsp_disciplines) & disc.get(c.user_id, set()):
             continue
-        if f.fsp_only and not (
-            disc.get(c.user_id) or any("fsp" in s.sources for s in held.values())
-        ):
+        if not extra_ok(
+            c, held, disc.get(c.user_id, set()), cand_grades.get(c.user_id, []), f, nice_ids,
+            has_musts=bool(musts), profession=prof_of_cat,
+        ):  # fmt: skip
             continue
         rows.append(
             Row(c, trust_of(owned[c.user_id]),

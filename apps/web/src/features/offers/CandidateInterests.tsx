@@ -70,7 +70,7 @@ export function CandidateInterests({ filter }: { filter?: ReactNode } = {}) {
       : undefined;
   return (
     <main className={LIST_PAGE}>
-      <ListHeader aside={aside} />
+      <ListHeader aside={aside} tip={T.tip} />
       {filter}
       {q.isPending && <ListSkeleton />}
       {q.isError && <ListError error={q.error} onRetry={() => void q.refetch()} />}

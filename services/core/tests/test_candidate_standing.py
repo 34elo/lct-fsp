@@ -2,11 +2,12 @@
 """Сила профиля и место в категории кандидата (E35-12a): формула места, права, приватность."""
 
 import pytest
-from app.matching.standing import gap_to_next_ten, place, relative_strength
+from app.matching.standing import gap_to_next_ten, median, place, relative_strength
 from test_offers import (  # noqa: F401  (фикстуры и помощники)
     _candidate,
     _db,
     _employer,
+    _vacancy,
     c,
     template_db,
 )
@@ -29,6 +30,14 @@ def test_relative_strength_and_gap():
     assert g is not None and g.top_percent == 40 and g.gap_relative == 11.1
     assert gap_to_next_ten(vals, 0.9, 10) is None  # топ-10 % — выше некуда
     assert gap_to_next_ten(vals, 0.8, 20).top_percent == 10
+
+
+def test_median():
+    assert median([]) is None
+    assert median([5]) == 5
+    assert median([1, 9, 3]) == 3
+    assert median([100, 200]) == 150
+    assert median([100, 201]) == 150  # округление
 
 
 def _set_band(c, uid, band):
@@ -87,4 +96,27 @@ def test_other_category_not_counted_and_no_leaks(world):
     text = str(b)
     for secret in ("pid000", "a@x.ru", "b@x.ru", str(ua), str(ub)):
         assert secret not in text
-    assert set(b["peers"][0]) == {"strength", "salary_min"}
+    assert set(b["peers"][0]) == {"strength", "salary_min", "theta"}
+
+
+def test_category_stats_and_theta(world):
+    c, (ha, hb, hc), (ua, ub, uc) = world
+    st = c.get("/candidates/me/standing", headers=hb).json()["category_stats"]
+    assert st == {
+        "candidates": 3, "interests": 0, "interest_salary_from_median": None,
+        "interest_salary_to_median": None, "companies_searching": 0,
+    }  # fmt: skip
+    e = _employer(c, "e@x.ru")
+    _vacancy(c, e)  # backend, middle..senior, опубликована
+    pid = _db(c, "select pseudo_id from candidates where user_id=?", ua)[0][0]
+    assert c.post("/interests", headers=e, json={
+        "candidate_pseudo_id": pid, "salary_from": 200000, "salary_to": 260000,
+        "message": "Интересно",
+    }).status_code == 201  # fmt: skip
+    b = c.get("/candidates/me/standing", headers=hb).json()
+    assert b["category_stats"]["interests"] == 1
+    assert b["category_stats"]["interest_salary_from_median"] == 200000
+    assert b["category_stats"]["interest_salary_to_median"] == 260000
+    assert b["category_stats"]["companies_searching"] == 1
+    assert all(isinstance(p["theta"], float) for p in b["peers"])
+    assert str(ua) not in str(b) and pid not in str(b)
