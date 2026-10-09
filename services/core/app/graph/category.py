@@ -108,6 +108,9 @@ def compute_category(
     cfg: CategoryConfig,
 ) -> Category:
     # fullstack не считается по своим весам: это метка backend + frontend по правилу ниже
+    """Роли с баллами, мульти-метки, `primary_stack` и объяснение — сигнал силы профиля, не
+    категория теста (ml.md §4).
+    """
     scores = {
         r: round(role_score(w, skills, cfg.top_k), 4) for r, w in roles.items() if r != FULLSTACK
     }

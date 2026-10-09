@@ -3,7 +3,7 @@
 Владелец — блок 2 (`docs/process/blocks.md` §3.2). Блок 1 только использует; нужен новый общий компонент — заявка (§9).
 
 ## Назначение
-Токены, `@theme` для Tailwind 4, базовые и фирменные компоненты. Пакет **без сборки**: `apps/web` импортирует исходники (`exports` в `package.json`). Эталон вида — `docs/design/v2` (v2, E38), прежний — `docs/design/pack` (ADR-050).
+Токены, `@theme` для Tailwind 4, базовые и фирменные компоненты. Пакет **без сборки**: `apps/web` импортирует исходники (`exports` в `package.json`). Эталон вида — `docs/design/v2` (v2, E38), прежний — `docs/archive/design-pack` (ADR-050).
 
 ## Команды (из корня репозитория)
 - `pnpm install` — один lock на workspace (`apps/web`, `packages/ui`).
@@ -18,12 +18,12 @@
 - `src/v2/` — компоненты макетов v2 (`docs/design/v2`, E38-0): `primitives.tsx`, `charts.tsx`, `cards.tsx`, `assessment.tsx`, `shell.tsx`; тесты — `v2.test.tsx`; доска в playground — `#v2` (`playground/V2Board.tsx`).
 - `src/v3/` — свои контролы (E39-1): `combobox.tsx` (Select/Combobox/MultiSelect), `inputs.tsx` (SkillInput, ProfessionInput, NumberInput, SalaryRangeInput), `content.tsx` (InfoTip, Markdown, MarkdownEditor, ScrollTabs, Avatar), `skeletons.tsx`, `roadmap.tsx`, `graph.tsx` + `graph-model.ts` (EvidenceGraph, E39-14); тесты — `v3.test.tsx`; доска — `#v3` (`playground/V3Board.tsx`).
 - `scripts/design-shots.mjs` — `make design-shots` / `pnpm --filter @fsp/ui design-shots [--only <подстрока>]`: PNG макетов v2 в `docs/design/v2/png/`.
-- `playground/data.ts` — демо-данные из `docs/design/pack/docs/DATA.md` (только playground и тесты).
+- `playground/data.ts` — демо-данные из `docs/archive/design-pack/docs/DATA.md` (только playground и тесты).
 
 ## Правила
 - Только относительные импорты внутри пакета (алиаса `@/` здесь нет).
-- Цвета, шрифты, радиусы — только из токенов; бренд не меняем (`docs/design/pack/AGENTS.md`).
+- Цвета, шрифты, радиусы — только из токенов; бренд не меняем (`docs/archive/design-pack/AGENTS.md`).
 - Подключение в приложении: `@import "@fsp/ui/styles.css"` + `@source` на `packages/ui/src` в `apps/web/src/styles/tailwind.css`.
 
 ## Документы
-- `docs/architecture/frontend.md` §2, §5; `docs/process/backlog.md` §E19; `docs/design/pack/`.
+- `docs/architecture/frontend.md` §2, §5; `docs/process/backlog.md` §E19; `docs/archive/design-pack/`.

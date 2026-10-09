@@ -25,7 +25,7 @@
 
 ## 2. Функциональная и компонентная архитектура
 
-Модульный монолит на FastAPI плюс спутники: ML, коннектор ФСП и Telegram-бот. Подробно — [system.md](architecture/system.md), [overview.md](architecture/overview.md), [services.md](architecture/services.md).
+Модульный монолит на FastAPI плюс спутники: ML, коннектор ФСП и Telegram-бот. Подробно — [system.md](architecture/system.md), [services.md](architecture/services.md).
 
 | Компонент | Назначение |
 |---|---|

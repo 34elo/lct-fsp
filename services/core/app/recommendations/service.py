@@ -71,11 +71,6 @@ async def record_feedback(
     return feedback
 
 
-async def get_impression_by_id(session: AsyncSession, impression_id: int) -> Impression | None:
-    """Получить impression по ID."""
-    return await session.get(Impression, impression_id)
-
-
 async def find_last_impression(
     session: AsyncSession, company_id: UUID, session_id: str, candidate_id: UUID
 ) -> Impression | None:
@@ -90,24 +85,6 @@ async def find_last_impression(
         .order_by(Impression.id.desc())
         .limit(1)
     )
-
-
-async def get_session_impressions(session: AsyncSession, session_id: str) -> list[Impression]:
-    """Получить все impressions для сессии."""
-    result = await session.execute(
-        select(Impression).where(Impression.session_id == session_id).order_by(Impression.position)
-    )
-    return result.scalars().all()
-
-
-async def get_session_feedback(session: AsyncSession, session_id: str) -> list[RecFeedback]:
-    """Получить все feedback для сессии."""
-    result = await session.execute(
-        select(RecFeedback)
-        .where(RecFeedback.session_id == session_id)
-        .order_by(RecFeedback.created_at)
-    )
-    return result.scalars().all()
 
 
 async def shown_without_action(

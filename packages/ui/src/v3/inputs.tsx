@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState, type InputHTMLAttributes } from "react";
 
 import { cn } from "../lib/cn";
 import { Slider, useFieldProps } from "../primitives/form";
-import { Combobox, ValueChip, type ComboOption } from "./combobox";
+import { Combobox, type ComboOption } from "./combobox";
 
 /* ---------- SkillInput ---------- */
 
@@ -89,17 +89,6 @@ export function localSkillSource(skills: SkillSuggestion[], limit = 20): SkillSo
     // Сначала — начинающиеся с запроса.
     return [...hits].sort((a, b) => Number(!a.name.toLocaleLowerCase("ru").startsWith(n)) - Number(!b.name.toLocaleLowerCase("ru").startsWith(n))).slice(0, limit);
   };
-}
-
-/** Только для чтения: чипсы навыков в том же виде, что и в поле. */
-export function SkillChipsView({ value, className }: { value: SkillValue[]; className?: string }) {
-  return (
-    <span className={cn("flex flex-wrap gap-1.5", className)}>
-      {value.map((v) => (
-        <ValueChip key={v.value} option={v} />
-      ))}
-    </span>
-  );
 }
 
 /* ---------- ProfessionInput ---------- */
