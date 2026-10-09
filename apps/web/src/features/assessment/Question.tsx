@@ -1,13 +1,29 @@
-import { CodeLines, Input, Lbl, OptionRow } from "@fsp/ui";
+import { CodeLines, Input, Lbl, Markdown, OptionRow } from "@fsp/ui";
 import { useState } from "react";
 
-import { move, moveTo, parseListing, splitStem, toggleLine, type AnswerValue, type TestItem } from "./model";
+import { hasTable, move, moveTo, parseListing, splitStem, toggleLine, type AnswerValue, type TestItem } from "./model";
 import { T } from "./text";
 
-/** Условие задания `.h2` крупнее обычного заголовка: это главный текст экрана. */
-const Stem = ({ children }: { children: string }) => (
-  <h2 className="m-0 font-mono text-16 leading-[1.35] font-semibold whitespace-pre-line md:text-[22px] md:leading-[1.3]">{children}</h2>
-);
+/**
+ * Условие задания: обычный вес, размер по длине (длинное — мельче). Если в условии есть таблица,
+ * весь текст идёт через Markdown (GFM, без исполнения HTML); таблица прокручивается внутри себя.
+ */
+const Stem = ({ children }: { children: string }) => {
+  const n = children.length;
+  const size = n <= 140 ? "text-16 leading-[1.4] md:text-20" : n <= 320 ? "text-16 leading-[1.45]" : "text-14 leading-[1.5] md:text-16";
+  if (hasTable(children)) {
+    return (
+      <Markdown className={`${size} font-normal`} data-testid="assessment-stem">
+        {children}
+      </Markdown>
+    );
+  }
+  return (
+    <h2 className={`m-0 font-mono font-normal whitespace-pre-line ${size}`} data-testid="assessment-stem">
+      {children}
+    </h2>
+  );
+};
 
 const Code = ({ children }: { children: string }) => <CodeLines lines={children.split("\n")} label="Код задания" />;
 
