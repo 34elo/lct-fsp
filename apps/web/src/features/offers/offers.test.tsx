@@ -260,3 +260,27 @@ test("E38-14: пустой список и ошибка загрузки при�
   expect(await screen.findByText("ошибка 503", {}, { timeout: 6000 })).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Повторить" })).toBeInTheDocument();
 });
+
+test("E39-24: приглашение подписано HR (имя, должность, аватар), «О компании» в Markdown", async () => {
+  stubCandidate([
+    candOffer("o1", "sent", {
+      initiator: "employer",
+      sender: { full_name: "Мария Рекрутова", position: "HR-партнёр", avatar_url: "/users/u9/avatar?v=abc" },
+      company: { id: "c1", name: "Северный код", responsibility_score: 4.6, verified: true, description: "Делаем **платформы**" },
+    }),
+  ]);
+  mount("/me/offers/o1");
+  const sender = await screen.findByTestId("offer-sender");
+  expect(within(sender).getByText("Мария Рекрутова")).toBeInTheDocument();
+  expect(within(sender).getByText("HR-партнёр · Северный код")).toBeInTheDocument();
+  expect(sender.querySelector("img")?.getAttribute("src") ?? "").toMatch(/\/users\/u9\/avatar\?v=abc$/);
+  const about = screen.getByTestId("offer-company-about");
+  expect(within(about).getByText("платформы").tagName).toBe("STRONG");
+});
+
+test("E39-24: без подписи блока отправителя нет", async () => {
+  stubCandidate([candOffer("o1", "sent", { initiator: "employer", sender: null })]);
+  mount("/me/offers/o1");
+  expect(await screen.findByText("Северный код", { exact: false })).toBeInTheDocument();
+  expect(screen.queryByTestId("offer-sender")).toBeNull();
+});
