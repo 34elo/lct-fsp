@@ -71,7 +71,7 @@ for (const w of WIDTHS) {
   if (res[0]) await shot(p, "me-result", "v2_me-assessment-result__confirmed", res[0], w);
   if (res[1]) await shot(p, "me-result2", "v2_me-assessment-result__not-confirmed", res[1], w);
   await shot(p, "me-profile", "v2_me-profile__main", "/me/profile", w);
-  await shot(p, "me-settings", "v2_me-settings__main", "/me/settings", w);
+  await shot(p, "me-settings", "v2_me-settings__main", "/settings", w);
   await shot(p, "me-offers", "v2_me-offers__main", "/me/offers", w);
 
   p = await session("dima@demo.fsp.test", w);

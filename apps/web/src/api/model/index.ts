@@ -249,6 +249,7 @@ export * from './parsedQuery';
 export * from './parsedResume';
 export * from './parsedResumeEdits';
 export * from './parseRequest';
+export * from './passwordChangeIn';
 export * from './planExampleOut';
 export * from './planExampleOutSteps';
 export * from './planPreviewIn';

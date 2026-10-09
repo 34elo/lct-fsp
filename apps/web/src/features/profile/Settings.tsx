@@ -1,36 +1,27 @@
 import { PAGE } from "@/shared/lib/page";
-import { Button, EmptyState, ErrorState, H1, Panel, PanelCap, Skeleton, StatusTag, buttonVariants } from "@fsp/ui";
+import { Avatar, Button, EmptyState, ErrorState, Field, FieldInput, H1, Panel, PanelCap, ScrollTabs, Skeleton, StatusTag, Tabs, TabsContent, TabsTrigger, Textarea, buttonVariants } from "@fsp/ui";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState, type ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { useState, type FormEvent, type ReactNode } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 
-import { useGetProfileCandidatesMeProfileGet } from "@/api/endpoints/candidates/candidates";
+import { usePasswordChangeAuthPasswordChangePost } from "@/api/endpoints/auth/auth";
+import {
+  getGetProfileCandidatesMeProfileGetQueryKey,
+  useGetProfileCandidatesMeProfileGet,
+  usePatchProfileCandidatesMeProfilePatch,
+} from "@/api/endpoints/candidates/candidates";
+import { getGetMyCompanyCompaniesMeGetQueryKey, useGetMyCompanyCompaniesMeGet, usePatchMyCompanyCompaniesMePatch } from "@/api/endpoints/companies/companies";
+import { ApiError } from "@/api/mutator";
 import { getGetConsentsMeConsentsGetQueryKey, useGetConsentsMeConsentsGet, usePutConsentsMeConsentsPut } from "@/api/endpoints/consents/consents";
 import { useMyLinkMeTelegramLinkPost } from "@/api/endpoints/telegram/telegram";
 import type { ConsentOut } from "@/api/model";
 import { authText } from "@/features/auth/text";
-import { useAuth } from "@/shared/lib/auth";
+import { useAuth, type Role } from "@/shared/lib/auth";
 import { useTheme } from "@/shared/lib/theme";
 import { PrivacySettings, SettingRow } from "./PrivacySettings";
 import { SETTINGS as S } from "./text";
 
 const copy = authText.consents.types as Record<string, { title: string; hint: string }>;
-
-function SettingsSkeleton() {
-  return (
-    <div className="flex flex-col gap-3" data-testid="settings-loading">
-      <p role="status" className="sr-only">
-        {S.loading}
-      </p>
-      <Skeleton className="h-7 w-[220px]" />
-      <div className="grid gap-4 lg:grid-cols-3">
-        {[0, 1, 2].map((i) => (
-          <Skeleton key={i} className="h-36" />
-        ))}
-      </div>
-    </div>
-  );
-}
 
 /** Выдача и отзыв одного согласия: `PUT /me/consents` с текущей версией текста. */
 function useConsentToggle(onError: (msg: string) => void) {
@@ -156,60 +147,359 @@ function AppearanceCard() {
   );
 }
 
-/**
- * Настройки кандидата `/me/settings` (E38-7, макеты v2_me-settings__*, бриф §6.8): «Что видят компании»,
- * согласия и уведомления. Переключатели применяются сразу. Нет `pd_processing` — пустое состояние.
- */
-export default function Settings() {
-  const pq = useGetProfileCandidatesMeProfileGet({ query: { retry: false } });
-  const cq = useGetConsentsMeConsentsGet({ query: { retry: false } });
+const PROFILE = S.profile;
 
-  const page = (body: ReactNode, title = true) => (
-    <div className={PAGE.normal} data-testid="settings-page">
-      {title && <H1 className="text-[22px] leading-[1.2] md:text-[26px]">{S.title}</H1>}
-      {body}
+/** Строка «аватар + почта + роль». Загрузки фото нет (нет API), поэтому только инициалы. */
+function AccountHead({ name }: { name?: string | null }) {
+  const { me } = useAuth();
+  return (
+    <div className="flex items-center gap-3">
+      <Avatar name={name || me?.email} size={56} />
+      <div className="flex min-w-0 flex-col">
+        <span className="truncate font-medium" data-testid="settings-account-email">
+          {me?.email ?? PROFILE.account}
+        </span>
+        <span className="text-13 text-muted">{PROFILE.roles[me?.role ?? ""] ?? me?.role}</span>
+      </div>
     </div>
   );
+}
 
-  if (pq.isPending || cq.isPending) return page(<SettingsSkeleton />, false);
-  const items = cq.data?.status === 200 ? (cq.data.data as ConsentOut[]) : null;
-  const noConsent = pq.data?.status === 403 || (items !== null && !items.find((c) => c.type === "pd_processing")?.granted);
-  if (items && noConsent)
-    return page(
-      <EmptyState
-        className="min-h-[200px]"
-        title={S.empty}
-        action={
-          <Link to="/consents" className={buttonVariants({ size: "lg" })} data-testid="settings-empty-action">
-            {S.emptyAction}
-          </Link>
-        }
-      />,
-    );
-  if (!items || pq.data?.status !== 200) {
-    const status = (pq.error ?? cq.error)?.status;
-    return page(
-      <div className="w-full max-w-2xl" data-testid="settings-error-state">
-        <ErrorState
-          title={S.loadError}
-          code={status ? S.errorCode(status) : undefined}
-          onRetry={() => {
-            void pq.refetch();
-            void cq.refetch();
-          }}
-        />
-      </div>,
-    );
+const SaveRow = ({ pending, saved, error, disabled }: { pending: boolean; saved: boolean; error: boolean; disabled?: boolean }) => (
+  <div className="flex flex-wrap items-center gap-3">
+    <Button type="submit" loading={pending} disabled={disabled}>
+      {PROFILE.save}
+    </Button>
+    {saved && (
+      <span role="status" className="text-13 text-muted" data-testid="settings-saved">
+        {PROFILE.saved}
+      </span>
+    )}
+    {error && (
+      <span role="alert" className="text-13 text-error" data-testid="settings-save-error">
+        {PROFILE.saveError}
+      </span>
+    )}
+  </div>
+);
+
+type SaveState = "idle" | "saved" | "error";
+
+/** ФИО кандидата: `PATCH /candidates/me/profile {full_name}`; пустое значение очищает. */
+function CandidateProfileCard({ fullName }: { fullName: string }) {
+  const qc = useQueryClient();
+  const patch = usePatchProfileCandidatesMeProfilePatch();
+  const [value, setValue] = useState(fullName);
+  const [state, setState] = useState<SaveState>("idle");
+  const trimmed = value.trim();
+  const invalid = trimmed.length > 120 ? PROFILE.nameTooLong : trimmed.length === 1 ? PROFILE.nameTooShort : undefined;
+
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    if (invalid) return;
+    setState("idle");
+    try {
+      const res = await patch.mutateAsync({ data: { full_name: trimmed || null } });
+      if (res.status !== 200) throw new Error("profile");
+      await qc.invalidateQueries({ queryKey: getGetProfileCandidatesMeProfileGetQueryKey() });
+      setState("saved");
+    } catch {
+      setState("error");
+    }
   }
 
-  return page(
-    <div className="flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:items-start" data-testid="settings-main">
+  return (
+    <form onSubmit={(e) => void submit(e)} className="flex flex-col gap-4" data-testid="settings-profile-form">
+      <AccountHead name={trimmed} />
+      <Field label={PROFILE.fullName} hint={PROFILE.fullNameHint} error={invalid}>
+        <FieldInput
+          value={value}
+          maxLength={130}
+          autoComplete="name"
+          onChange={(e) => {
+            setValue(e.target.value);
+            setState("idle");
+          }}
+          data-testid="settings-full-name"
+        />
+      </Field>
+      <SaveRow pending={patch.isPending} saved={state === "saved"} error={state === "error"} disabled={!!invalid} />
+    </form>
+  );
+}
+
+/** Название и описание компании: правит администратор компании (`PATCH /companies/me`). */
+function EmployerProfileCard() {
+  const qc = useQueryClient();
+  const { me, reloadMe } = useAuth();
+  const company = me?.company;
+  const q = useGetMyCompanyCompaniesMeGet({ query: { retry: false, enabled: !!company } });
+  const patch = usePatchMyCompanyCompaniesMePatch();
+  const data = q.data?.status === 200 ? q.data.data : null;
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [state, setState] = useState<SaveState>("idle");
+  const [loaded, setLoaded] = useState(false);
+  if (data && !loaded) {
+    setLoaded(true);
+    setName(data.name);
+    setDescription(data.description ?? "");
+  }
+  const canEdit = company?.role === "admin";
+  const invalid = name.trim().length < 2;
+
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    if (invalid) return;
+    setState("idle");
+    try {
+      const res = await patch.mutateAsync({ data: { name: name.trim(), description: description.trim() || null } });
+      if (res.status !== 200) throw new Error("company");
+      await qc.invalidateQueries({ queryKey: getGetMyCompanyCompaniesMeGetQueryKey() });
+      await reloadMe();
+      setState("saved");
+    } catch {
+      setState("error");
+    }
+  }
+
+  return (
+    <form onSubmit={(e) => void submit(e)} className="flex flex-col gap-4" data-testid="settings-profile-form">
+      <AccountHead name={company?.name} />
+      {!company ? (
+        <p className="text-14 text-muted" data-testid="settings-company-none">
+          {PROFILE.companyNone}
+        </p>
+      ) : q.isPending ? (
+        <Skeleton className="h-24" />
+      ) : (
+        <>
+          <Field label={PROFILE.company} error={canEdit && invalid ? "Укажите название компании." : undefined}>
+            <FieldInput
+              value={name}
+              disabled={!canEdit}
+              maxLength={200}
+              onChange={(e) => {
+                setName(e.target.value);
+                setState("idle");
+              }}
+              data-testid="settings-company-name"
+            />
+          </Field>
+          <Field label={PROFILE.companyDescription} hint={canEdit ? undefined : PROFILE.companyReadonly}>
+            <Textarea
+              value={description}
+              disabled={!canEdit}
+              maxLength={2000}
+              onChange={(e) => {
+                setDescription(e.target.value);
+                setState("idle");
+              }}
+              data-testid="settings-company-description"
+            />
+          </Field>
+          {canEdit && <SaveRow pending={patch.isPending} saved={state === "saved"} error={state === "error"} disabled={invalid} />}
+          <Link to="/employer/company" className="text-14 font-medium text-brand-fg underline-offset-2 hover:underline">
+            {PROFILE.companyMore}
+          </Link>
+        </>
+      )}
+    </form>
+  );
+}
+
+function ConsentEmpty() {
+  return (
+    <EmptyState
+      className="min-h-[200px]"
+      title={S.empty}
+      action={
+        <Link to="/consents" className={buttonVariants({ size: "lg" })} data-testid="settings-empty-action">
+          {S.emptyAction}
+        </Link>
+      }
+    />
+  );
+}
+
+function LoadError({ onRetry, status }: { onRetry: () => void; status?: number }) {
+  return (
+    <div className="w-full max-w-2xl" data-testid="settings-error-state">
+      <ErrorState title={S.loadError} code={status ? S.errorCode(status) : undefined} onRetry={onRetry} />
+    </div>
+  );
+}
+
+/** Профиль: кандидат правит ФИО, работодатель — компанию, админ видит аккаунт. */
+function ProfileTab({ role }: { role: Role }) {
+  const pq = useGetProfileCandidatesMeProfileGet({ query: { retry: false, enabled: role === "candidate" } });
+  let body: ReactNode;
+  if (role === "employer") body = <EmployerProfileCard />;
+  else if (role !== "candidate") body = <AccountHead />;
+  else if (pq.isPending) body = <Skeleton className="h-40" />;
+  else if (pq.data?.status === 403) body = <ConsentEmpty />;
+  else if (pq.data?.status !== 200) body = <LoadError onRetry={() => void pq.refetch()} status={pq.error?.status} />;
+  else body = <CandidateProfileCard fullName={pq.data.data.full_name ?? ""} />;
+  return (
+    <Panel data-testid="settings-profile" aria-label={PROFILE.title} className="max-w-2xl">
+      <PanelCap title={PROFILE.title} />
+      {body}
+    </Panel>
+  );
+}
+
+/** Приватность кандидата: профиль нужен для текущих значений переключателей. */
+function PrivacyTab() {
+  const pq = useGetProfileCandidatesMeProfileGet({ query: { retry: false } });
+  if (pq.isPending) return <Skeleton className="h-64 max-w-2xl" />;
+  if (pq.data?.status === 403) return <ConsentEmpty />;
+  if (pq.data?.status !== 200) return <LoadError onRetry={() => void pq.refetch()} status={pq.error?.status} />;
+  return (
+    <div className="max-w-2xl">
       <PrivacySettings visibility={pq.data.data.visibility} />
-      <div className="flex flex-col gap-4">
-        <AppearanceCard />
-        <ConsentsCard items={items.filter((c) => c.type !== "telegram_notifications")} />
-        <NotificationsCard consent={items.find((c) => c.type === "telegram_notifications")} />
-      </div>
-    </div>,
+    </div>
+  );
+}
+
+/** Вкладки со списком согласий: общий запрос, пустое состояние и ошибка. */
+function ConsentsTab({ role, view }: { role: Role; view: "notifications" | "consents" }) {
+  const cq = useGetConsentsMeConsentsGet({ query: { retry: false } });
+  if (cq.isPending) return <Skeleton className="h-48 max-w-2xl" />;
+  const items = cq.data?.status === 200 ? (cq.data.data as ConsentOut[]) : null;
+  if (!items) return <LoadError onRetry={() => void cq.refetch()} status={cq.error?.status} />;
+  if (role === "candidate" && !items.find((c) => c.type === "pd_processing")?.granted) return <ConsentEmpty />;
+  const telegram = items.find((c) => c.type === "telegram_notifications");
+  // Работодателю нужны согласие на ПДн и Telegram: остальные типы относятся к анкете кандидата.
+  const rest = items.filter((c) => c.type !== "telegram_notifications" && (role === "candidate" || c.type === "pd_processing"));
+  return <div className="max-w-2xl">{view === "notifications" ? <NotificationsCard consent={telegram} /> : <ConsentsCard items={rest} />}</div>;
+}
+
+/** Смена пароля: `POST /auth/password/change`. Без пароля (вход через Telegram) — пояснение вместо формы. */
+function SecurityTab() {
+  const { me } = useAuth();
+  const change = usePasswordChangeAuthPasswordChangePost();
+  const [cur, setCur] = useState("");
+  const [next, setNext] = useState("");
+  const [again, setAgain] = useState("");
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const T = S.security;
+
+  if (!me?.email)
+    return (
+      <Panel className="max-w-2xl" data-testid="settings-security">
+        <PanelCap title={T.title} />
+        <p className="text-14 text-muted">{T.noPassword}</p>
+      </Panel>
+    );
+
+  const errors = {
+    next: next && next.length < 8 ? T.min : next && next === cur ? T.same : undefined,
+    again: again && again !== next ? T.mismatch : undefined,
+  };
+  const ready = cur !== "" && next.length >= 8 && again === next && next !== cur;
+
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    if (!ready) return;
+    setMsg(null);
+    try {
+      await change.mutateAsync({ data: { current_password: cur, new_password: next } });
+      setCur("");
+      setNext("");
+      setAgain("");
+      setMsg({ ok: true, text: T.done });
+    } catch (err) {
+      const api = err instanceof ApiError ? err : null;
+      setMsg({ ok: false, text: api?.code === "wrong_password" ? T.wrong : api?.status === 429 ? T.limit : T.error });
+    }
+  }
+
+  return (
+    <Panel className="max-w-2xl" data-testid="settings-security" aria-label={T.title}>
+      <PanelCap title={T.title} />
+      <p className="mb-3 text-13 text-muted">{T.hint}</p>
+      <form onSubmit={(e) => void submit(e)} className="flex flex-col gap-4">
+        <Field label={T.current}>
+          <FieldInput type="password" autoComplete="current-password" value={cur} onChange={(e) => setCur(e.target.value)} data-testid="settings-password-current" />
+        </Field>
+        <Field label={T.next} error={errors.next}>
+          <FieldInput type="password" autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} data-testid="settings-password-new" />
+        </Field>
+        <Field label={T.repeat} error={errors.again}>
+          <FieldInput type="password" autoComplete="new-password" value={again} onChange={(e) => setAgain(e.target.value)} data-testid="settings-password-repeat" />
+        </Field>
+        <div className="flex flex-wrap items-center gap-3">
+          <Button type="submit" loading={change.isPending} disabled={!ready} data-testid="settings-password-submit">
+            {T.submit}
+          </Button>
+          {msg && (
+            <span role={msg.ok ? "status" : "alert"} className={msg.ok ? "text-13 text-muted" : "text-13 text-error"} data-testid="settings-password-message">
+              {msg.text}
+            </span>
+          )}
+        </div>
+      </form>
+    </Panel>
+  );
+}
+
+type TabId = keyof typeof S.tabs;
+
+/** Вкладки по роли: нет вкладки — нет данных или API для роли (приватность и согласия анкеты). */
+export function tabsFor(role: Role | null): TabId[] {
+  if (role === "candidate") return ["profile", "privacy", "notifications", "consents", "appearance", "security"];
+  if (role === "employer") return ["profile", "notifications", "consents", "appearance", "security"];
+  return ["profile", "appearance", "security"];
+}
+
+/**
+ * Настройки `/settings` для всех ролей (E39-8): Профиль, Приватность (кандидат), Уведомления,
+ * Согласия, Оформление, Безопасность. Вкладка — в `?tab=`, на 375 px полоса листается пальцем.
+ * Аватар без загрузки файла: API хранения нет, показываем инициалы.
+ */
+export default function Settings() {
+  const { role } = useAuth();
+  const [params, setParams] = useSearchParams();
+  const tabs = tabsFor(role);
+  const asked = params.get("tab") ?? "";
+  const tab = (tabs as string[]).includes(asked) ? (asked as TabId) : tabs[0]!;
+
+  return (
+    <div className={PAGE.normal} data-testid="settings-page">
+      <H1 className="text-[22px] leading-[1.2] md:text-[26px]">{S.title}</H1>
+      <Tabs value={tab} onValueChange={(v) => setParams({ tab: v }, { replace: true })}>
+        <ScrollTabs aria-label={S.tabsLabel}>
+          {tabs.map((t) => (
+            <TabsTrigger key={t} value={t} data-testid={`settings-tab-${t}`}>
+              {S.tabs[t]}
+            </TabsTrigger>
+          ))}
+        </ScrollTabs>
+        {role && (
+          <div className="pt-4">
+            <TabsContent value="profile">
+              <ProfileTab role={role} />
+            </TabsContent>
+            <TabsContent value="privacy">
+              <PrivacyTab />
+            </TabsContent>
+            <TabsContent value="notifications">
+              <ConsentsTab role={role} view="notifications" />
+            </TabsContent>
+            <TabsContent value="consents">
+              <ConsentsTab role={role} view="consents" />
+            </TabsContent>
+            <TabsContent value="appearance">
+              <div className="max-w-2xl">
+                <AppearanceCard />
+              </div>
+            </TabsContent>
+            <TabsContent value="security">
+              <SecurityTab />
+            </TabsContent>
+          </div>
+        )}
+      </Tabs>
+    </div>
   );
 }

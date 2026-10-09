@@ -68,6 +68,7 @@ const PublicLayout = lazy(() => import("@/app/layouts/PublicLayout"));
 const CandidateLayout = lazy(() => import("@/app/layouts/CandidateLayout"));
 const EmployerLayout = lazy(() => import("@/app/layouts/EmployerLayout"));
 const AdminLayout = lazy(() => import("@/app/layouts/AdminLayout"));
+const AccountLayout = lazy(() => import("@/app/layouts/AccountLayout"));
 const RunPage = lazy(() => import("@/features/runs/RunPage"));
 
 // Старые адреса без своего экрана ведут на рабочий экран (E35-1: заглушек нет).
@@ -95,7 +96,6 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
             <Route path="/me/assessment/attempts/:id/result" element={<Result />} />
             <Route path="/me/profile" element={<Profile />} />
             <Route path="/me/profile/edit" element={<ProfileEdit />} />
-            <Route path="/me/settings" element={<Settings />} />
             <Route path="/me/stats" element={<Stats />} />
             <Route path="/me/tasks" element={<CandidateTasks />} />
             {/* <<< block1 (candidate) */}
@@ -186,6 +186,11 @@ export function App() {
         {guarded("candidate", CandidateLayout)}
         {guarded("employer", EmployerLayout)}
         {guarded("admin", AdminLayout)}
+        <Route element={<RequireRole />}>
+          <Route element={<AccountLayout />}>
+            <Route path="/settings" element={<Settings />} />
+          </Route>
+        </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
