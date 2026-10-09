@@ -50,7 +50,14 @@ const standing = {
   grade: "junior",
   mode: "express",
   confirmed_at: "2026-10-07T10:05:00Z",
-  strength: { value: 0.64, rank: 3, top_percent: 30, parts: [] },
+  strength: {
+    value: 0.64,
+    rank: 3,
+    top_percent: 30,
+    relative: 78,
+    gap_to_next_ten: { top_percent: 20, gap_relative: 6.5 },
+    parts: [{ code: "T", text: "Уровень в тесте", value: 0.7, weight: 0.4 }],
+  },
   category_size: 10,
   peers: [],
 };
@@ -201,8 +208,9 @@ describe("Главная кандидата /me (E38-1)", () => {
     expect(within(ints).getByRole("article", { name: "Северный код" })).toHaveTextContent("4.6 / 5");
 
     const tiles = screen.getByTestId("home-tiles");
-    expect(tiles).toHaveTextContent("64");
-    expect(tiles).toHaveTextContent("топ-30 %");
+    expect(tiles).toHaveTextContent("Топ-30 %");
+    expect(tiles).toHaveTextContent("Backend Junior");
+    expect(tiles).not.toHaveTextContent("64");
     expect(within(tiles).getByRole("meter", { name: "Место" })).toHaveAttribute("aria-valuenow", "70");
 
     // Ссылка «Статистика» (E38-2) со счётчиком компаний, смотревших профиль; баннера пути на Главной нет.

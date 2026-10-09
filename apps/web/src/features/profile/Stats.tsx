@@ -26,11 +26,36 @@ function Tiles({ standing, interests, views }: { standing: CandidateStanding; in
     interests?.salary_from_min != null && interests.salary_to_max != null ? formatRubRangeShort(interests.salary_from_min, interests.salary_to_max) : undefined;
   return (
     <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-4" data-testid="stats-tiles">
-      <MetricTile label={HOME.strength} info={<Gi k="strength" />} value={s ? Math.round(s.value * 100) : HOME.none} />
+      <MetricTile
+        label={STATS.relative}
+        info={<Gi k="strength" />}
+        value={s ? STATS.relativeValue(s.relative ?? 100) : HOME.none}
+        hint={s ? (s.gap_to_next_ten ? STATS.relativeGap(s.gap_to_next_ten.gap_relative, s.gap_to_next_ten.top_percent) : STATS.relativeLeader) : undefined}
+        progress={s ? (s.relative ?? 100) : undefined}
+      />
       <MetricTile label={HOME.place} info={<Gi k="category" />} value={s ? HOME.top(s.top_percent) : HOME.none} progress={s ? 100 - s.top_percent : undefined} />
       <MetricTile label={HOME.interestsTile} info={<Gi k="interest" />} value={interests ? interests.companies : HOME.none} hint={range} />
       <MetricTile label={STATS.views} value={views ? views.companies : HOME.none} hint={views ? STATS.viewsHint : undefined} />
     </div>
+  );
+}
+
+/** Составляющие силы профиля: из чего складывается «% от лидера» (формула assessment.md §9). */
+function PartsCard({ standing }: { standing: CandidateStanding }) {
+  const parts = standing.strength?.parts ?? [];
+  if (parts.length === 0) return null;
+  return (
+    <Panel className="flex flex-col gap-2" data-testid="stats-parts" aria-label={STATS.partsTitle}>
+      <PanelCap title={<Gloss k="strength"><H2>{STATS.partsTitle}</H2></Gloss>} className="mb-0" />
+      <ul className="flex flex-col gap-1.5">
+        {parts.map((x) => (
+          <li key={x.code} className="flex items-center justify-between gap-3 text-14">
+            <span>{x.text}</span>
+            <Num className="text-muted">{Math.round(x.value * 100)} %</Num>
+          </li>
+        ))}
+      </ul>
+    </Panel>
   );
 }
 
@@ -213,6 +238,7 @@ export default function Stats() {
   return page(
     <div className="flex flex-col gap-4" data-testid="stats-main">
       <Tiles standing={standing} interests={interests} views={views} />
+      <PartsCard standing={standing} />
       <div className="flex flex-col gap-4 lg:grid lg:grid-cols-12 lg:items-start">
         <div className="flex flex-col gap-4 lg:col-span-7">
           <PeersCard standing={standing} category={[prof, gradeLabel(standing.grade)].filter(Boolean).join(" ")} />

@@ -49,7 +49,14 @@ const standing = {
   grade: "junior",
   mode: "express",
   confirmed_at: "2026-10-07T10:05:00Z",
-  strength: { value: 0.64, rank: 3, top_percent: 30, parts: [] },
+  strength: {
+    value: 0.64,
+    rank: 3,
+    top_percent: 30,
+    relative: 78,
+    gap_to_next_ten: { top_percent: 20, gap_relative: 6.5 },
+    parts: [{ code: "T", text: "Уровень в тесте", value: 0.7, weight: 0.4 }],
+  },
   category_size: 64,
   peers: [
     { strength: 0.64, salary_min: 70000 },
@@ -154,9 +161,11 @@ describe("Статистика /me/stats (E38-2)", () => {
     expect(screen.getByRole("heading", { level: 1, name: "Статистика" })).toBeInTheDocument();
 
     const tiles = within(main).getByTestId("stats-tiles");
-    expect(tiles).toHaveTextContent("64");
-    expect(tiles).toHaveTextContent("топ-30 %");
-    expect(within(tiles).getByRole("meter", { name: "Место" })).toHaveAttribute("aria-valuenow", "70");
+    expect(tiles).toHaveTextContent("78 %");
+    expect(tiles).toHaveTextContent("От лидера категории");
+    expect(tiles).toHaveTextContent("до топ-20 % не хватает 6.5 п. п.");
+    expect(within(tiles).getByTestId("gi-strength")).toBeInTheDocument();
+    expect(within(main).getByTestId("stats-parts")).toHaveTextContent("Уровень в тесте");
     expect(tiles).toHaveTextContent("140–220");
     expect(await within(tiles).findByText("за 30 дней")).toBeInTheDocument();
 
