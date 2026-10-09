@@ -1,4 +1,5 @@
 import { PAGE } from "@/shared/lib/page";
+import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 
 import {
@@ -9,6 +10,7 @@ import {
   ErrorState,
   formatRubRangeShort,
   H1,
+  InfoTip,
   Panel,
   Sheet,
   SheetContent,
@@ -50,10 +52,13 @@ export function offerCardData(o: CandidateOffer, withDeadline = true): OfferCard
 }
 
 /** Заголовок экрана и правая сводка (вилки интересов). */
-export function ListHeader({ aside }: { aside?: string }) {
+export function ListHeader({ aside, tip }: { aside?: string; tip?: ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <H1 className="text-[22px] md:text-[26px]">{T.title}</H1>
+      <div className="flex min-w-0 items-center gap-2">
+        <H1 className="text-[22px] md:text-[26px]">{T.title}</H1>
+        {tip && <InfoTip title={T.filter.interests} label={`Что такое «${T.filter.interests}»`}>{tip}</InfoTip>}
+      </div>
       {aside && <span className="num text-13">{aside}</span>}
     </div>
   );
