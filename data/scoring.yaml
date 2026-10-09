@@ -44,9 +44,9 @@ evidence_sources:
     suspicious_flag_multiplier: 0.5
 
   test:
-    base_formula: "clip(0.45 + 0.12·θ, 0.30, 0.80)"  # θ is difficulty 0..3
+    base_formula: "clip(0.45 + 0.12·θ, 0.30, 0.75)"  # θ is difficulty 0..3; потолок 0.75 < порога уровня 4 (E41-5)
     min_strength: 0.30
-    max_strength: 0.80
+    max_strength: 0.75
     decay_half_life_years: 1.5
     # Test validity and retake
     validity_months: 12  # test result is valid for 12 months
@@ -204,7 +204,7 @@ assessment:
   # min_s; при < min_n ответах — таймер семейства. Медиана для сигнала «быстро» — тоже от min_n ответов.
   timer: { quantile: 0.95, min_n: 20, window: 500, min_s: 15 }
   # Доказательство `test` в графе: сила = max_strength · доля набранного по навыку.
-  evidence: { max_strength: 0.8 }
+  evidence: { max_strength: 0.75 }
   # Жизненный цикл семейства (§7). Допуск pilot → active: все пороги + кнопка админа. Сиды делятся на
   # seed_groups групп (seed mod G); DIF — разница средних остатков y − P(θ, b) «с ФСП / без ФСП»,
   # считается, когда в обеих группах ≥ dif_min_group ответов. Тревоги переводят active → quarantine.

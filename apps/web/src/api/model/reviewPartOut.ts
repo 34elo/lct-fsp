@@ -9,8 +9,6 @@ import type { ExplainReasonOut } from './explainReasonOut';
 export interface ReviewPartOut {
   kind: string;
   stem: string;
-  options?: string[] | null;
   yours?: string | null;
-  correct?: string | null;
   reason: ExplainReasonOut;
 }

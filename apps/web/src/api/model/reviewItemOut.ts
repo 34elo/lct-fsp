@@ -11,9 +11,7 @@ import type { ReviewPartOut } from './reviewPartOut';
 export interface ReviewItemOut {
   kind: string;
   stem: string;
-  options?: string[] | null;
   yours?: string | null;
-  correct?: string | null;
   reason: ExplainReasonOut;
   response_id: string;
   seq: number;

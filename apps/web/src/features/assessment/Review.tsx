@@ -32,25 +32,17 @@ function Stem({ part }: { part: ReviewPartOut }) {
   );
 }
 
-/** Ответ и верный ответ; у `find_bug` подпись «строки». */
+/** Ответ кандидата; верных ответов и вариантов разбор не показывает (E41-5); у `find_bug` подпись «строки». */
 function Answers({ part, testId }: { part: ReviewPartOut; testId: string }) {
   const unit = part.kind === "find_bug" ? `${R.lines}: ` : "";
   return (
-    <dl className="m-0 grid gap-2 text-14 sm:grid-cols-2">
+    <dl className="m-0 text-14">
       <div className="min-w-0 rounded-lg bg-tint-50 p-3">
         <dt>
           <Lbl>{R.yours}</Lbl>
         </dt>
         <dd className="m-0 mt-1 font-mono break-words" data-testid={`${testId}-yours`}>
           {part.yours ? `${unit}${part.yours}` : <span className="text-muted">{R.noAnswer}</span>}
-        </dd>
-      </div>
-      <div className="min-w-0 rounded-lg bg-tint-50 p-3">
-        <dt>
-          <Lbl>{R.correct}</Lbl>
-        </dt>
-        <dd className="m-0 mt-1 font-mono break-words" data-testid={`${testId}-correct`}>
-          {part.correct ? `${unit}${part.correct}` : "—"}
         </dd>
       </div>
     </dl>
@@ -133,7 +125,7 @@ function Brush({ items }: { items: ReviewItemOut[] }) {
             {weak.map((w) => (
               <li key={w.skill} className="flex items-center gap-2" data-testid={`assessment-review-weak-${w.skill}`}>
                 <SkillTag name={w.skill} state="claimed" />
-                <Num className="text-12 text-muted">{Math.round(w.share * 100)}%</Num>
+                <Num className="text-12 text-muted">{R.missed(w.missed)}</Num>
               </li>
             ))}
           </ul>
@@ -216,7 +208,7 @@ export default function Review() {
               <Panel key={g.type} className="flex flex-col gap-4" data-testid={`assessment-review-group-${g.type}`}>
                 <PanelCap
                   title={<h2 className="m-0 font-mono text-16 leading-[1.3] font-semibold">{T.types[g.type] ?? g.type}</h2>}
-                  aside={<Num className="text-12">{R.group(g.done, g.rows.length)}</Num>}
+                  aside={<Num className="text-12">{R.group(g.rows.length)}</Num>}
                 />
                 <div className="flex flex-col gap-4">
                   {g.rows.map((it) => (

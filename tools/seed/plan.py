@@ -594,7 +594,7 @@ def _candidate(
         if t["skill"] not in names or names[t["skill"]][1] != "hard" or not t["answers"]:
             continue
         frac = sum(1 for a in t["answers"] if a["correct"]) / len(t["answers"])
-        strength = round(min(0.8, max(0.3, 0.45 + 0.12 * 3 * frac)), 3)
+        strength = round(min(0.75, max(0.3, 0.45 + 0.12 * 3 * frac)), 3)
         evidence.append(
             {
                 "skill": t["skill"],
