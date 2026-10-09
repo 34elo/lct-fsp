@@ -14,4 +14,5 @@ export interface CompanyBrief {
   verified: boolean;
   reliability?: CompanyReliability | null;
   description?: string | null;
+  demo?: boolean;
 }

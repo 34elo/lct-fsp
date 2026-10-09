@@ -46,6 +46,7 @@ export function JobCard({ v, search = "" }: { v: PublicVacancyOut; search?: stri
           <p className="text-13 text-muted">
             {place}
             {v.company.verified && <span className="ml-2 text-success">{T.verified}</span>}
+            {v.company.demo && <span className="ml-2 text-muted" data-testid="company-demo">{T.demo}</span>}
           </p>
         </div>
       </div>

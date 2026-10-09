@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.analytics import metrics
+from app.analytics import metrics, service
 from app.analytics.dashboard import DEFAULT_DAYS, MAX_DAYS
 from app.deps import get_session
 from app.identity.deps import require_roles
@@ -19,10 +19,14 @@ _admin = require_roles("fsp_admin")
     "/metrics", response_model=metrics.MetricsOut, responses=problem_responses(401, 403, 422)
 )
 async def get_metrics(
+    request: Request,
     days: int = Query(DEFAULT_DAYS, ge=1, le=MAX_DAYS),
+    include_demo: bool = Query(False, description="считать и демо-аккаунты (показ жюри)"),
     session: AsyncSession = Depends(get_session),
     _user=Depends(_admin),
 ) -> metrics.MetricsOut:
     """Воронки кандидата и работодателя, приглашения (время до первого, доля принятых,
-    ответ за 72 ч, причины отказов), отклики. Ячейки меньше 5 скрыты."""
-    return await metrics.build(session, days)
+    ответ за 72 ч, причины отказов), отклики. Ячейки меньше 5 скрыты. Без демо-аккаунтов."""
+    salt = request.app.state.settings.analytics_salt
+    demo = set() if include_demo else await service.demo_actors(session, salt)
+    return await metrics.build(session, days, exclude_actors=demo)
