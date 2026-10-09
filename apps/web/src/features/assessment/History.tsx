@@ -172,6 +172,15 @@ export default function History() {
                               >
                                 {a.status === "active" ? T.continueTest : T.breakdown}
                               </Link>
+                              {(a.status === "passed" || a.status === "failed") && (
+                                <Link
+                                  to={`/me/assessment/attempts/${a.id}/review`}
+                                  className="ml-3 font-semibold text-brand-fg underline"
+                                  data-testid={`assessment-attempt-review-${a.id}`}
+                                >
+                                  {T.review.link}
+                                </Link>
+                              )}
                             </TableCell>
                           </TableRow>
                         );

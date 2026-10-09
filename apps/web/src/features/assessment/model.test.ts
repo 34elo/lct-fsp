@@ -3,6 +3,11 @@ import { describe, expect, it } from "vitest";
 import { cooldownDate, errorView } from "./text";
 import { ApiError } from "@/api/mutator";
 import {
+  groupByType,
+  loadHideExplain,
+  saveHideExplain,
+  verdict,
+  weakSkills,
   latestSurvey,
   lowerGrade,
   seScale,
@@ -186,5 +191,39 @@ describe("результат v2: шкала 0–100 (E38-5)", () => {
     ];
     expect(latestSurvey(s, "backend")?.id).toBe("b");
     expect(latestSurvey(s, "qa")).toBeNull();
+  });
+});
+
+describe("разбор теста (E39-10)", () => {
+  it("verdict: полный, частичный, нулевой балл", () => {
+    expect([verdict(1), verdict(0.5), verdict(0)]).toEqual(["ok", "part", "bad"]);
+  });
+  it("groupByType: порядок типов, неизвестные в конец, счёт верных", () => {
+    const g = groupByType([
+      { type: "soft", score: 1 },
+      { type: "weird", score: 0 },
+      { type: "hard", score: 0.5 },
+      { type: "hard", score: 1 },
+    ]);
+    expect(g.map((x) => x.type)).toEqual(["hard", "soft", "weird"]);
+    expect(g[0]).toMatchObject({ done: 1 });
+  });
+  it("weakSkills: только неполные, слабые первыми", () => {
+    const w = weakSkills([
+      { skill: "a", score: 1 },
+      { skill: "b", score: 0 },
+      { skill: "c", score: 1 },
+      { skill: "c", score: 0.5 },
+    ]);
+    expect(w.map((x) => x.skill)).toEqual(["b", "c"]);
+    expect(w[1]).toMatchObject({ share: 0.75, missed: 1 });
+  });
+  it("hide-explain запоминается", () => {
+    localStorage.clear();
+    expect(loadHideExplain()).toBe(false);
+    saveHideExplain(true);
+    expect(loadHideExplain()).toBe(true);
+    saveHideExplain(false);
+    expect(loadHideExplain()).toBe(false);
   });
 });

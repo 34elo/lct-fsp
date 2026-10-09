@@ -274,3 +274,61 @@ export function latestSurvey<S extends { profession?: string | null; created_at?
       .sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""))[0] ?? null
   );
 }
+
+/** Разбор теста (E39-10): задание в виде, нужном странице; поля приходят с сервера как есть. */
+export interface ReviewRow {
+  responseId: string;
+  seq: number;
+  skill: string;
+  type: string;
+  score: number;
+}
+
+export type Verdict = "ok" | "part" | "bad";
+export const verdict = (score: number): Verdict => (score >= 1 ? "ok" : score > 0 ? "part" : "bad");
+
+export interface ReviewGroup<R extends { type: string; score: number }> {
+  type: string;
+  rows: R[];
+  done: number;
+}
+
+/** Группировка по типам навыков в порядке `SKILL_TYPES`; неизвестные типы — в конец, пустые группы не нужны. */
+export function groupByType<R extends { type: string; score: number }>(rows: R[]): ReviewGroup<R>[] {
+  const known: string[] = [...SKILL_TYPES];
+  const types = [...new Set(rows.map((r) => r.type))].sort((a, b) => (known.indexOf(a) + 1 || 99) - (known.indexOf(b) + 1 || 99));
+  return types.map((t) => {
+    const list = rows.filter((r) => r.type === t);
+    return { type: t, rows: list, done: list.filter((r) => r.score >= 1).length };
+  });
+}
+
+/** «Что подтянуть»: навыки с неполным баллом, сначала самые слабые; возвращает долю набранного. */
+export function weakSkills(rows: { skill: string; score: number }[]): { skill: string; share: number; missed: number }[] {
+  const acc = new Map<string, number[]>();
+  for (const r of rows) acc.set(r.skill, [...(acc.get(r.skill) ?? []), r.score]);
+  return [...acc.entries()]
+    .map(([skill, v]) => ({ skill, share: v.reduce((a, b) => a + b, 0) / v.length, missed: v.filter((x) => x < 1).length }))
+    .filter((x) => x.missed > 0)
+    .sort((a, b) => a.share - b.share || a.skill.localeCompare(b.skill));
+}
+
+const HIDE_KEY = "fsp.assessment.review.hideExplain";
+
+/** Переключатель «Скрыть объяснения» запоминается в браузере; без хранилища — выключен. */
+export function loadHideExplain(): boolean {
+  try {
+    return localStorage.getItem(HIDE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function saveHideExplain(v: boolean): void {
+  try {
+    if (v) localStorage.setItem(HIDE_KEY, "1");
+    else localStorage.removeItem(HIDE_KEY);
+  } catch {
+    /* хранилище недоступно — переключатель работает до перезагрузки */
+  }
+}

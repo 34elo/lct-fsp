@@ -158,3 +158,21 @@ async def test_explain_unanswered_and_rate_limit(api, factory, taxonomy_loaded):
         assert api.post(url, headers=h).status_code == 200
     limited = api.post(url, headers=h)
     assert limited.status_code == 429
+
+
+async def test_review_hidden_while_active_and_own_only(api, factory, taxonomy_loaded):
+    owner, intruder = register(api), register(api)
+    aid = _start(api, owner)
+    api.get(f"/assessment/attempts/{aid}/next", headers=owner)
+    url = f"/assessment/attempts/{aid}/review"
+    active = api.get(url, headers=owner)
+    assert active.status_code == 409 and active.json()["code"] == "attempt_active"
+    ids = _finish_wrong(api, owner, aid)
+    assert_foreign_is_404(api, "GET", url, intruder)
+    r = api.get(url, headers=owner)
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert [i["response_id"] for i in body["items"]] == ids
+    first = body["items"][0]
+    assert first["why"] and first["correct"] is not None or first["steps"]
+    assert first["reason"]["code"] != "correct" and first["skill_type"]
