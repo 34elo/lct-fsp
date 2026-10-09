@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, useLocation } from "react-router-dom";
 
 import { App } from "@/app/App";
 import { Providers, makeQueryClient } from "@/app/Providers";
@@ -7,37 +7,41 @@ import { setAccessToken } from "@/shared/lib/token";
 
 const res = (status: number, body?: unknown) => new Response(body === undefined ? null : JSON.stringify(body), { status });
 
-const middle = { profession: "backend", title: "Backend", grade: "middle", affinity: 0.82, candidates: 5, median_salary: 220000, fsp_share: 0.24 };
-const junior = { profession: "backend", title: "Backend", grade: "junior", affinity: 0.7, candidates: 2, median_salary: 120000, fsp_share: 0.23 };
-const need = {
-  id: "n1", text: "Backend на Python, Middle", filters: { roles: ["backend"], formats: ["remote"], salary_max: 220000 }, skills: { python: 1 },
-  grades: ["middle"], shortlist: [], created_at: "2026-10-05T00:00:00Z", categories: [middle, junior],
+const middle = {
+  profession: "backend", title: "Backend", grade: "middle", affinity: 0.82, candidates: 5, median_salary: 220000, fsp_share: 0.24,
+  matched_skills: ["Python", "Django"], named: false,
 };
+const junior = { ...middle, grade: "junior", affinity: 0.82, candidates: 2, median_salary: 120000, fsp_share: 0.23 };
+const senior = { ...middle, grade: "senior", candidates: 0, median_salary: null, fsp_share: null };
+const need = (id: string) => ({ id, text: null, filters: {}, skills: { python: 1 }, grades: ["middle"], shortlist: [], created_at: "2026-10-05T00:00:00Z", categories: [] });
 const base = {
   avatar_seed: "x", primary_role: "backend", grade: "middle", grade_preliminary: false, primary_stack: ["python"],
-  top_skills: [{ slug: "python", name: "Python", level: 3, sources: ["test"] }], fsp_highlights: [], salary_min: 200000,
-  formats: ["remote"], city: null, relocation: false, search_status: "active", updated_at: "2026-10-02T00:00:00Z",
-  categories: [{ profession: "backend", grade: "middle" }],
+  top_skills: [{ slug: "python", name: "Python", level: 3, sources: ["test"] }, { slug: "django", name: "Django", level: 2, sources: ["test"] }],
+  fsp_highlights: [], salary_min: 200000, formats: ["remote"], city: null, relocation: false, search_status: "active",
+  updated_at: "2026-10-02T00:00:00Z", categories: [{ profession: "backend", grade: "middle" }],
 };
 const cards = [1, 2, 3, 4, 5].map((i) => ({ ...base, pseudo_id: `p${i}`, pseudonym: `Backend #${i}00${i}`, match: { score: 1 - i / 20, explanation: [] } }));
 const activity = {
-  items: [
-    { id: "e1", kind: "interest_opened", at: new Date().toISOString(), candidate: { pseudo_id: "p1", pseudonym: "Backend #1001" }, link: "/employer/offers/o1" },
-    { id: "e2", kind: "subscription_hit", at: "2026-10-06T09:00:00Z", candidate: { pseudo_id: "p2", pseudonym: "Backend #2002" }, link: "/employer/candidates/p2", detail: "Backend" },
-  ],
+  items: [{ id: "e1", kind: "interest_opened", at: new Date().toISOString(), candidate: { pseudo_id: "p1", pseudonym: "Backend #1001" }, link: "/employer/offers/o1" }],
 };
-const subs = [{ id: "s1", profession: "backend", grades: ["junior"], skills: [], salary_max: null, formats: [], only_confirmed: true, created_at: "2026-10-01T00:00:00Z" }];
+const parsed = {
+  filters: { skills_must: [{ slug: "python" }, { slug: "django" }], grade_min: "middle", grade_max: "middle" },
+  chips: [
+    { key: "skills_must", value: { slug: "python" }, label: "Навык: Python", source: "rule", confidence: 0.9 },
+    { key: "skills_must", value: { slug: "django" }, label: "Навык: Django", source: "rule", confidence: 0.9 },
+    { key: "grade_min", value: "middle", label: "Грейд: Middle", source: "rule", confidence: 0.9 },
+  ],
+  unparsed: [],
+};
 
 const calls: { method: string; url: string; body?: unknown }[] = [];
-let createStatus = 201;
-let activityStatus = 200;
-let categories = [middle, junior];
+let lostNeed = false;
+
+const posts = () => calls.filter((c) => c.method === "POST" && c.url.endsWith("/needs")).map((c) => c.body as { filters: Record<string, unknown> });
 
 beforeEach(() => {
   calls.length = 0;
-  createStatus = 201;
-  activityStatus = 200;
-  categories = [middle, junior];
+  lostNeed = false;
   localStorage.clear();
   setAccessToken(null);
   vi.stubGlobal("EventSource", class { addEventListener() {} close() {} });
@@ -47,110 +51,153 @@ beforeEach(() => {
       const method = init?.method ?? "GET";
       if (url.endsWith("/auth/refresh")) return res(200, { access_token: "t" });
       if (url.endsWith("/me")) return res(200, { id: "u1", email: "o@b.ru", role: "employer", consents: ["pd_processing"], company: { id: "co1", name: "Acme", status: "verified", role: "admin" } });
-      calls.push({ method, url, body: init?.body ? JSON.parse(String(init.body)) : undefined });
-      if (url.endsWith("/needs") && method === "POST") return createStatus === 201 ? res(201, need) : res(422, { type: "x", title: "x", status: 422, code: "need_empty" });
-      if (url.includes("/needs/n1/categories")) return res(200, { need_id: "n1", shortlist: [], categories });
-      if (url.includes("/needs/gone/categories")) return res(404, { type: "x", title: "x", status: 404, code: "need_not_found" });
-      if (url.includes("/categories/backend/middle/candidates")) return res(200, { items: cards, next_cursor: null, total: 5, session_id: "s1" });
+      const body = init?.body ? JSON.parse(String(init.body)) : undefined;
+      calls.push({ method, url, body });
+      if (url.endsWith("/needs") && method === "POST") {
+        const f = body.filters ?? {};
+        if (!f.skills_must && !f.professions) return res(422, { type: "x", title: "x", status: 422, code: "need_empty" });
+        return res(201, need(f.fsp_only ? "n2" : f.professions ? "n3" : "n1"));
+      }
+      if (url.includes("/needs/n1/categories")) return lostNeed ? res(404, { type: "x", title: "x", status: 404, code: "need_not_found" }) : res(200, { need_id: "n1", shortlist: [], categories: [middle, junior, senior] });
+      if (url.includes("/needs/n2/categories")) return res(200, { need_id: "n2", shortlist: [], categories: [{ ...middle, candidates: 1 }] });
+      if (url.includes("/needs/n3/categories")) return res(200, { need_id: "n3", shortlist: [], categories: [{ ...middle, named: true, matched_skills: [] }] });
+      if (url.includes("/categories/backend/middle/candidates")) {
+        if (url.includes("need_id=n2")) return res(200, { items: cards.slice(0, 1), next_cursor: null, total: 1, session_id: "s" });
+        return res(200, { items: cards, next_cursor: null, total: 5, session_id: "s1" });
+      }
       if (url.includes("/categories/backend/junior/candidates")) return res(200, { items: cards.slice(0, 2), next_cursor: null, total: 2, session_id: "s2" });
-      if (url.includes("/employer/activity")) return activityStatus === 200 ? res(200, activity) : res(500, { type: "x", title: "x", status: 500, code: "internal" });
-      if (url.endsWith("/subscriptions")) return res(200, subs);
+      if (url.includes("/search/parse")) return res(200, parsed);
+      if (url.includes("/taxonomy/skills/suggest")) return res(200, [{ slug: "python", name: "Python", provisional: false }]);
+      if (url.includes("/taxonomy/professions/suggest")) return res(200, [{ slug: "backend", title: "Backend" }, { slug: "ai_engineer", title: "AI Engineer" }]);
+      if (url.endsWith("/taxonomy")) return res(200, { version: 1, skills: [{ slug: "python", name: "Python" }, { slug: "django", name: "Django" }] });
+      if (url.includes("/employer/activity")) return res(200, activity);
+      if (url.endsWith("/subscriptions")) return res(200, []);
       return res(404);
     }),
   );
 });
 afterEach(() => vi.unstubAllGlobals());
 
+let location = "";
+function Spy() {
+  const l = useLocation();
+  location = l.pathname + l.search;
+  return null;
+}
+
 function mount(path: string) {
   render(
     <MemoryRouter initialEntries={[path]}>
       <Providers client={makeQueryClient()}>
         <App />
+        <Spy />
       </Providers>
     </MemoryRouter>,
   );
 }
 
-test("первый вход: строка запроса, примеры и лента; Подбор в меню, Поиска нет", async () => {
+const query = () => screen.findByRole("combobox", { name: "Кого вы ищете" });
+
+test("первый вход: строка с тегами, примеры и лента; Подбор в меню", async () => {
   mount("/employer");
-  expect(await screen.findByRole("textbox", { name: "Кого вы ищете" })).toHaveValue("");
+  expect(await query()).toHaveValue("");
   const examples = await screen.findByTestId("match-examples");
   expect(within(examples).getAllByRole("button")).toHaveLength(3);
   const feed = await screen.findByTestId("match-feed");
   expect(await within(feed).findByRole("link", { name: "Backend #1001" })).toHaveAttribute("href", "/employer/offers/o1");
-  expect(within(feed).getByText(/открыл ваш интерес/)).toBeInTheDocument();
-  expect(within(feed).getByText("сегодня")).toBeInTheDocument();
-  expect(within(feed).getByText(/подошёл по подписке Backend/)).toBeInTheDocument();
   const nav = screen.getAllByRole("navigation", { name: "Разделы" })[0]!;
   expect(within(nav).getByRole("link", { name: "Подбор" })).toHaveAttribute("aria-current", "page");
-  expect(within(nav).queryByRole("link", { name: "Поиск" })).not.toBeInTheDocument();
+  expect(posts()).toHaveLength(0);
 });
 
-test("запрос → категории, чипсы, топ-3 и «Ещё», подписки; выбор категории меняет совпадения", async () => {
+test("«python django middle» → чипсы → категории с объяснением → компактные карточки; состояние в URL", async () => {
   mount("/employer");
-  fireEvent.change(await screen.findByRole("textbox", { name: "Кого вы ищете" }), { target: { value: "Backend на Python, Middle" } });
-  fireEvent.click(screen.getByRole("button", { name: "Подобрать" }));
+  fireEvent.change(await query(), { target: { value: "python django middle" } });
+  fireEvent.click(await screen.findByRole("option", { name: /Разобрать «python django middle»/ }));
 
-  expect(await screen.findByText("5 человек")).toBeInTheDocument();
+  // чипсы навыков в строке, грейд — в условиях
+  expect((await screen.findAllByTestId("query-chip-skill")).map((x) => x.textContent)).toEqual(["Python", "Django"]);
+  expect(within(screen.getByTestId("match-chips")).getByText("Middle")).toBeInTheDocument();
+  expect(calls.find((c) => c.url.includes("/search/parse"))?.body).toEqual({ text: "python django middle" });
+
+  // потребность из условий, категории и «почему»
+  const cats = await screen.findByTestId("match-categories");
+  expect(posts()[0]).toEqual({ filters: { skills_must: [{ slug: "python" }, { slug: "django" }], grade_min: "middle", grade_max: "middle" } });
+  expect(within(cats).getByRole("button", { name: /Backend · Middle/ })).toHaveAttribute("aria-pressed", "true");
+  expect(within(cats).queryByRole("button", { name: /Backend · Senior/ })).not.toBeInTheDocument(); // пустая — по кнопке
+  fireEvent.click(within(cats).getByRole("button", { name: "Ещё 1 без кандидатов" }));
+  expect(within(cats).getByRole("button", { name: /Backend · Senior/ })).toBeInTheDocument();
+  expect(within(screen.getByTestId("match-why")).getByText(/совпадают навыки: Python, Django · совпадение 82 %/)).toBeInTheDocument();
+  expect(screen.getByTestId("match-why")).toHaveTextContent("Грейды — из запроса: Middle.");
+
   const top = await screen.findByTestId("match-top");
-  expect(calls.find((c) => c.method === "POST")?.body).toEqual({ text: "Backend на Python, Middle" });
-  expect(within(top).getAllByRole("article")).toHaveLength(3);
-  expect(within(top).getAllByRole("link", { name: "Открыть профиль" })[0]).toHaveAttribute("href", "/employer/candidates/p1?source=match");
-  expect(within(screen.getByTestId("match-chips")).getByText("Backend")).toBeInTheDocument();
-  expect(screen.getByRole("textbox", { name: "Кого вы ищете" })).toHaveValue("Backend на Python, Middle");
+  expect(within(top).getAllByRole("article")).toHaveLength(5);
+  const first = within(top).getByRole("link", { name: "Backend #1001: открыть профиль" });
+  expect(first).toHaveAttribute("href", "/employer/candidates/p1?source=match");
+  // компактная карточка: совпадение (без вакансии — rank), грейд, ожидания, топ-3 навыка
+  expect(first).toHaveTextContent("Middle");
+  expect(first).toHaveTextContent("от 200");
+  expect(first).toHaveTextContent("Python");
+  expect(location).toBe("/employer?skill=python&skill=django&grade=middle&need=n1");
 
-  const more = screen.getByTestId("match-more");
-  expect(within(more).getByRole("link", { name: "Ещё 2" })).toHaveAttribute("href", "/employer/categories/backend/middle?need_id=n1");
-  expect(within(more).getAllByRole("link", { name: /Backend #/ })).toHaveLength(2);
-
-  const subsPanel = await screen.findByTestId("match-subscriptions");
-  expect(within(subsPanel).getByText("Backend · Junior")).toBeInTheDocument();
-
-  const catsPanel = screen.getByTestId("match-categories");
-  expect(within(catsPanel).getByRole("button", { name: /Backend · Middle/ })).toHaveAttribute("aria-pressed", "true");
-  fireEvent.click(within(catsPanel).getByRole("button", { name: /Backend · Junior/ }));
-  expect(await screen.findByText("2 человека")).toBeInTheDocument();
+  // выбор категории — в URL, кандидаты другой категории
+  fireEvent.click(within(cats).getByRole("button", { name: /Backend · Junior/ }));
+  expect(await screen.findByText("Кандидаты · Backend · Junior")).toBeInTheDocument();
   expect(within(await screen.findByTestId("match-top")).getAllByRole("article")).toHaveLength(2);
-  expect(screen.queryByTestId("match-more")).not.toBeInTheDocument();
+  expect(location).toContain("cat=backend%3Ajunior");
 });
 
-test("повторный вход: категории последнего запроса и топ-3 без «Ещё»", async () => {
-  localStorage.setItem("fsp.employer.lastNeed", JSON.stringify({ id: "n1", text: "Backend", chips: ["Backend"], company: "co1" }));
+test("фильтр сужает выдачу: «Есть результаты ФСП» → новая потребность, меньше кандидатов; условие снимается крестиком", async () => {
+  mount("/employer?skill=python&grade=middle&need=n1");
+  expect(within(await screen.findByTestId("match-top")).getAllByRole("article")).toHaveLength(5);
+  expect(posts()).toHaveLength(0); // потребность уже в ссылке
+
+  fireEvent.click(within(screen.getAllByTestId("match-filters")[0]!).getByRole("checkbox", { name: "Есть результаты ФСП" }));
+  expect(await screen.findByText("1 человек", undefined, { timeout: 3000 })).toBeInTheDocument();
+  expect(posts().at(-1)!.filters).toMatchObject({ skills_must: [{ slug: "python" }], fsp_only: true });
+  expect(within(await screen.findByTestId("match-top")).getAllByRole("article")).toHaveLength(1);
+  expect(location).toBe("/employer?skill=python&grade=middle&fsp=1&need=n2");
+
+  fireEvent.click(screen.getByRole("button", { name: "Убрать условие «Есть результаты ФСП»" }));
+  expect(within(await screen.findByTestId("match-top")).getAllByRole("article")).toHaveLength(5);
+});
+
+test("подсказки системы: профессия и навык вставляются чипсами", async () => {
+  mount("/employer");
+  fireEvent.change(await query(), { target: { value: "back" } });
+  const prof = await screen.findByRole("option", { name: /Backend.*профессия/ });
+  fireEvent.click(prof);
+  expect(await screen.findByTestId("query-chip-profession")).toHaveTextContent("Backend");
+  expect(await screen.findByTestId("match-categories")).toBeInTheDocument();
+  expect(posts().at(-1)).toEqual({ filters: { professions: ["backend"] } });
+  expect(screen.getByTestId("match-why")).toHaveTextContent("Backend — выбрана в запросе");
+
+  fireEvent.change(await query(), { target: { value: "pyt" } });
+  fireEvent.click(await screen.findByRole("option", { name: /Python.*навык/ }));
+  expect((await screen.findAllByTestId("query-chip-skill")).map((x) => x.textContent)).toEqual(["Python"]);
+  await screen.findByTestId("match-categories");
+  expect(posts().at(-1)).toEqual({ filters: { professions: ["backend"], skills_must: [{ slug: "python" }] } });
+});
+
+test("только фильтры без навыка и профессии — подсказка, потребность не создаётся", async () => {
+  mount("/employer?grade=middle&fsp=1");
+  expect(await screen.findByText("Добавьте навык или профессию — фильтры только сужают выдачу.")).toBeInTheDocument();
+  expect(posts()).toHaveLength(0);
+});
+
+test("повторный вход: восстанавливаются условия последнего запроса", async () => {
+  localStorage.setItem("fsp.employer.lastNeed", JSON.stringify({ id: "n1", text: "Python", chips: ["Python"], company: "co1", qs: "skill=python&grade=middle" }));
   mount("/employer");
   expect(await screen.findByTestId("match-categories")).toBeInTheDocument();
-  expect(await screen.findByText("топ-3")).toBeInTheDocument();
-  expect(within(await screen.findByTestId("match-top")).getAllByRole("article")).toHaveLength(3);
-  expect(screen.queryByTestId("match-more")).not.toBeInTheDocument();
-  expect(screen.queryByTestId("match-subscriptions")).not.toBeInTheDocument();
+  expect(location).toBe("/employer?skill=python&grade=middle&need=n1");
+  expect(posts()).toHaveLength(0);
 });
 
-test("запомненный запрос пропал — снова примеры", async () => {
-  localStorage.setItem("fsp.employer.lastNeed", JSON.stringify({ id: "gone", text: "x", chips: [], company: "co1" }));
+test("запомненный запрос пропал — потребность строится заново", async () => {
+  lostNeed = true;
+  localStorage.setItem("fsp.employer.lastNeed", JSON.stringify({ id: "n1", text: "x", chips: [], company: "co1", qs: "skill=python&fsp=1" }));
   mount("/employer");
-  expect(await screen.findByTestId("match-examples")).toBeInTheDocument();
-  expect(localStorage.getItem("fsp.employer.lastNeed")).toBeNull();
-});
-
-test("непонятный запрос — ошибка строкой", async () => {
-  createStatus = 422;
-  mount("/employer");
-  fireEvent.click(await screen.findByRole("button", { name: "Backend на Python, Middle, до 220 тыс., удалёнка" }));
-  expect(await screen.findByRole("alert")).toHaveTextContent("Не поняли запрос");
-});
-
-test("никого нет — ближайшие категории и подписка", async () => {
-  categories = [{ ...middle, candidates: 0 }];
-  mount("/employer?need=n1");
-  expect(await screen.findByText("В ближайших категориях пока никого нет")).toBeInTheDocument();
-  expect(screen.getByTestId("match-categories")).toBeInTheDocument();
-});
-
-test("категорий нет — пустое состояние; лента с ошибкой — «Повторить»", async () => {
-  categories = [];
-  activityStatus = 500;
-  mount("/employer?need=n1");
-  expect(await screen.findByText("Под запрос никого нет")).toBeInTheDocument();
-  const feed = screen.getByTestId("match-feed");
-  // Запрос ленты повторяется клиентом перед ошибкой — ждём дольше обычного.
-  expect(await within(feed).findByRole("button", { name: "Повторить" }, { timeout: 5000 })).toBeInTheDocument();
+  // Цепочка: восстановление → 404 → новая потребность (с задержкой) → категории → кандидаты.
+  expect(await screen.findByText("1 человек", undefined, { timeout: 4000 })).toBeInTheDocument();
+  expect(location).toBe("/employer?skill=python&fsp=1&need=n2");
 });
