@@ -6042,7 +6042,9 @@ export const getRegistryImportParticipantsAdminFspParticipantsImportPostUrl = ()
 }
 
 /**
- * CSV «ФИО, email, телефон» (`,` или `;`, заголовок необязателен); совпал контакт — обновление.
+ * CSV «ФИО, email, телефон» (`,` или `;`, заголовок необязателен).
+ *
+ * Совпал email или телефон — запись обновляется.
  * @summary Registry Import Participants
  */
 export const registryImportParticipantsAdminFspParticipantsImportPost = async (csvImportIn: CsvImportIn, options?: Parameters<typeof apiFetch>[1]): Promise<registryImportParticipantsAdminFspParticipantsImportPostResponse> => {

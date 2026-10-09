@@ -16071,7 +16071,7 @@
           "admin"
         ],
         "summary": "Registry Import Participants",
-        "description": "CSV «ФИО, email, телефон» (`,` или `;`, заголовок необязателен); совпал контакт — обновление.",
+        "description": "CSV «ФИО, email, телефон» (`,` или `;`, заголовок необязателен).\n\nСовпал email или телефон — запись обновляется.",
         "operationId": "registry_import_participants_admin_fsp_participants_import_post",
         "requestBody": {
           "content": {
