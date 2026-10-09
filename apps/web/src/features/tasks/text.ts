@@ -54,6 +54,7 @@ export const TASKS_TEXT = {
   empEmpty: "Заданий пока нет",
   empEmptyHint: "Создайте задание в конструкторе: черновик можно опубликовать на выбранную категорию.",
   toConstructor: "Создать задание",
+  howTo: "Как сделать задание",
   empLoadError: "Не удалось загрузить задания компании.",
   empStatus: { draft: "Черновик", open: "Открыто", closed: "Закрыто" } as Record<string, string>,
   category: (profession: string, grade: string) => `${profession} · ${grade}`,

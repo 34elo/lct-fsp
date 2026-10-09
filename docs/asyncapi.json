@@ -4646,7 +4646,8 @@
             "enum": [
               "oauth",
               "code",
-              "manual"
+              "manual",
+              "registry"
             ],
             "title": "Method",
             "type": "string"
@@ -6413,6 +6414,31 @@
             },
             "title": "Warnings",
             "type": "array"
+          },
+          "soft_skills": {
+            "items": {
+              "$ref": "#/components/schemas/ResumeSoftSkill"
+            },
+            "title": "Soft Skills",
+            "type": "array"
+          },
+          "declared_grade": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResumeDeclaredGrade"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "declared_roles": {
+            "items": {
+              "$ref": "#/components/schemas/ResumeDeclaredRole"
+            },
+            "title": "Declared Roles",
+            "type": "array"
           }
         },
         "required": [
@@ -6631,6 +6657,42 @@
           "profession"
         ],
         "title": "RegularTaskPublished",
+        "type": "object"
+      },
+      "ResumeDeclaredGrade": {
+        "description": "Грейд, который кандидат назвал сам (E20-5). Только «заявлено»: категорию даёт тест.",
+        "properties": {
+          "grade": {
+            "$ref": "#/components/schemas/Grade"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          }
+        },
+        "required": [
+          "grade",
+          "quote"
+        ],
+        "title": "ResumeDeclaredGrade",
+        "type": "object"
+      },
+      "ResumeDeclaredRole": {
+        "description": "Роль, которую кандидат назвал сам (E20-5). Только «заявлено»: категорию даёт тест.",
+        "properties": {
+          "role": {
+            "$ref": "#/components/schemas/RoleSlug"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          }
+        },
+        "required": [
+          "role",
+          "quote"
+        ],
+        "title": "ResumeDeclaredRole",
         "type": "object"
       },
       "ResumeEducation": {
@@ -6900,6 +6962,25 @@
           "confidence"
         ],
         "title": "ResumeSkill",
+        "type": "object"
+      },
+      "ResumeSoftSkill": {
+        "description": "Софт-навык, «заявлено в резюме» (E20-5): без доверия, на категорию и подбор не влияет.",
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "quote"
+        ],
+        "title": "ResumeSoftSkill",
         "type": "object"
       },
       "ResumeStatus": {
