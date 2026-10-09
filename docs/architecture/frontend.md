@@ -65,7 +65,7 @@ packages/ui/              # @fsp/ui — дизайн-система, без сб
 │   ├── v2/               # макеты v2 (E38-0): примитивы (Panel, H1/H2, Lbl, SkillTag/StatusTag/GradeTag, MeterBar),
 │   │                     #   графики (MetricTile, SkillConstellation, ScatterPlot, ActivityHeatmap, GradeScale, TypeBar),
 │   │                     #   карточки (CategoryCard, CandidateCardV2, FeedEvent, QueryBar, OfferCardV2),
-│   │                     #   тест (TaskHeader, OptionRow, CodeLines, ErrorBlock), каркас (AppBar, TabBar, MobileBar, AccountMenu)
+│   │                     #   тест (TaskHeader, OptionRow, CodeLines, ErrorBlock), каркас (AppBar, TabBar, AccountMenu)
 │   ├── v3/               # свои контролы (E39-1): Select/Combobox/MultiSelect, SkillInput, ProfessionInput, NumberInput,
 │   │                     #   SalaryRangeInput, InfoTip/Term, Markdown/MarkdownEditor (react-markdown + remark-gfm),
 │   │                     #   ScrollTabs, Avatar, скелетоны-пресеты (SkeletonLine/Card/Table/Chart/Profile)

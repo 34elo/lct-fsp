@@ -149,7 +149,11 @@ export type Tracker = ReturnType<typeof createTracker>;
 
 let shared: Tracker | null = null;
 
-/** Один трекер на вкладку; слушатели ухода со страницы ставятся при первом обращении. */
+/**
+ * Один трекер на вкладку; слушатели ухода со страницы ставятся при первом обращении.
+ * Вызывается из `useTrack()` (metrics.md §2.3); экраны его пока не подключают, поэтому в knip.json — белый список.
+ * @public
+ */
 export function getTracker(): Tracker {
   if (!shared) {
     shared = createTracker();
