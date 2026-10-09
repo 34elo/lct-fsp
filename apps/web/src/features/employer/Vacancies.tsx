@@ -46,7 +46,7 @@ export default function Vacancies() {
       {list.length > 0 && (
         <ul aria-label="Вакансии" className="overflow-hidden rounded-xl border border-hairline bg-card shadow-xs">
           {list.map((v) => (
-            <li key={v.id} className="grid gap-3 border-b border-hairline p-4 last:border-b-0 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+            <li key={v.id} className="grid items-center gap-3 border-b border-hairline p-4 last:border-b-0 md:grid-cols-[minmax(0,1fr)_auto]">
               <div className="grid min-w-0 gap-1.5">
                 <div className="flex flex-wrap items-center gap-2">
                   <Link to={`/employer/vacancies/${v.id}`} className="font-mono text-16 font-semibold hover:underline">

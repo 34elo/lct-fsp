@@ -190,7 +190,7 @@ export function ConstellationAvatar({
       height={size}
       role="img"
       aria-label="Анонимный аватар"
-      className="shrink-0 rounded-[10px] border border-tint-200 bg-tint-50"
+      className="shrink-0 rounded-lg border border-tint-200 bg-tint-50"
     >
       <polygon points={pts.map((p) => p.join(",")).join(" ")} fill="none" stroke="var(--brand)" strokeWidth="1.5" />
       {pts.map(([x, y], i) => (
