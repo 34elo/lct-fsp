@@ -1,7 +1,7 @@
 import { Fragment, useLayoutEffect, useRef } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 
-import { Logo, cn } from "@fsp/ui";
+import { Briefcase, ClipboardList, Filter, Gauge, Handshake, LayoutDashboard, Logo, Network, ShieldCheck, SlidersHorizontal, type LucideIcon, cn } from "@fsp/ui";
 
 import { ADMIN_GROUPS, type NavItem } from "@/app/routes";
 import { activeNav } from "./shell-meta";
@@ -16,29 +16,46 @@ export function groupNav(nav: NavItem[]): { id: string; label?: string; items: N
   return out.filter((g) => g.items.length);
 }
 
+/** Иконки пунктов админки (E41-2): по пути пункта, без изменения маршрутов. */
+const ADMIN_ICONS: Record<string, LucideIcon> = {
+  "/federation": LayoutDashboard,
+  "/federation/requests": Handshake,
+  "/admin/families": SlidersHorizontal,
+  "/federation/moderation": ShieldCheck,
+  "/federation/registry": ClipboardList,
+  "/admin/professions": Briefcase,
+  "/admin/skills": Network,
+  "/federation/funnel": Filter,
+  "/admin/quality": Gauge,
+};
+
 const itemClass = (on: boolean) =>
   cn(
-    "flex min-h-9 items-center rounded-lg px-3 text-14 font-semibold",
+    "flex min-h-9 items-center gap-2.5 rounded-lg px-3 text-14 font-semibold",
     on ? "bg-tint-100 text-brand-deep dark:text-brand-mid" : "text-muted hover:bg-tint-50 hover:text-ink",
   );
 
-/** Боковая панель админки ФСП (макет F1): меню по группам. На телефоне — `AdminMobileNav`. */
+/** Боковая панель админки ФСП (макет F1): меню по группам, закреплено при прокрутке (E41-2). На телефоне — `AdminMobileNav`. */
 export function AdminSidebar({ nav }: { nav: NavItem[] }) {
   const current = activeNav(nav, useLocation().pathname);
   return (
-    <aside className="hidden border-r border-hairline bg-card p-4 md:block">
+    <aside className="hidden border-r border-hairline bg-card p-4 md:sticky md:top-0 md:block md:h-dvh md:self-start md:overflow-y-auto">
       <NavLink to="/federation" aria-label="ФСП Карьера — главная админки" className="mb-6 block">
         <Logo />
       </NavLink>
       <nav aria-label="Разделы" className="flex flex-col gap-4">
-        {groupNav(nav).map((g) => (
-          <div key={g.id} className="flex flex-col gap-1" role="group" aria-label={g.label}>
-            {g.label && <p className="px-3 text-12 font-semibold uppercase tracking-wide text-muted">{g.label}</p>}
-            {g.items.map((n) => (
-              <Link key={n.to} to={n.to} aria-current={current === n ? "page" : undefined} className={itemClass(current === n)}>
-                {n.label}
-              </Link>
-            ))}
+        {groupNav(nav).map((g, i) => (
+          <div key={g.id} className={cn("flex flex-col gap-1", i > 0 && "border-t border-hairline pt-4")} role="group" aria-label={g.label}>
+            {g.label && <p className="px-3 pb-1 text-12 font-semibold uppercase tracking-wider text-muted">{g.label}</p>}
+            {g.items.map((n) => {
+              const Icon = ADMIN_ICONS[n.to];
+              return (
+                <Link key={n.to} to={n.to} aria-current={current === n ? "page" : undefined} className={itemClass(current === n)}>
+                  {Icon && <Icon aria-hidden className="size-4 shrink-0" />}
+                  {n.label}
+                </Link>
+              );
+            })}
           </div>
         ))}
       </nav>

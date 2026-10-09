@@ -89,7 +89,7 @@ export const T = {
   } as Record<string, string>,
   keyStatus: { draft: "черновик", approved: "утверждён" } as Record<string, string>,
   source: { code: "код", spec: "автор", mutation: "мутация", llm: "LLM" } as Record<string, string>,
-  skillType: { hard: "жёсткий", tool: "инструмент", language: "язык", data: "данные", team: "команда", thinking: "мышление" } as Record<string, string>,
+  skillType: { hard: "хард", tool: "инструмент", language: "язык", data: "данные", team: "команда", thinking: "мышление" } as Record<string, string>,
   queue: {
     title: "Допуск заданий",
     lead: "Новые задания сначала идут в пилот: кандидаты получают их как скрытый вопрос, на результат он не влияет. Пороги допуска платформа считает сама, от вас — решение: допустить, отправить в карантин или снять.",
