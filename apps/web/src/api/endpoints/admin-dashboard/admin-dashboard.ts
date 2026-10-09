@@ -110,7 +110,7 @@ export const getGetDashboardAdminDashboardGetUrl = (params?: GetDashboardAdminDa
 
 /**
  * Воронка регистрация → тест → категория → приглашение → ответ, доля с ФСП,
- * конверсия навигатор → соревнование. Ячейки меньше 5 человек скрыты.
+ * конверсия навигатор → соревнование. Ячейки меньше 5 человек скрыты. Без демо-аккаунтов.
  * @summary Get Dashboard
  */
 export const getDashboardAdminDashboardGet = async (params?: GetDashboardAdminDashboardGetParams, options?: Parameters<typeof apiFetch>[1]): Promise<getDashboardAdminDashboardGetResponse> => {

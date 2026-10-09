@@ -4,16 +4,36 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { refreshAccess } from "@/api/mutator";
 import {
   authMagicAuthMagicPost,
+  juryEnterAuthJuryPost,
   loginAuthLoginPost,
   logoutAuthLogoutPost,
   meMeGet,
   registerAuthRegisterPost,
 } from "@/api/endpoints/auth/auth";
 import { putConsentsMeConsentsPut } from "@/api/endpoints/consents/consents";
-import type { AuthOut, ConsentType, MeOut } from "@/api/model";
+import type { AuthOut, ConsentType, JuryAuthOut, MeOut } from "@/api/model";
 import { setAccessToken } from "@/shared/lib/token";
 
 export type Role = "candidate" | "employer" | "fsp_admin";
+
+/** Ключ песочницы жюри (E40-1): тот же браузер возвращается в свою пару «кандидат + работодатель». */
+const JURY_PAIR_KEY = "fsp.jury.pair";
+
+function readJuryPair(): string | null {
+  try {
+    return localStorage.getItem(JURY_PAIR_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function saveJuryPair(pair: string): void {
+  try {
+    localStorage.setItem(JURY_PAIR_KEY, pair);
+  } catch {
+    /* без хранилища — каждый вход в новую песочницу */
+  }
+}
 
 type AuthState =
   | { status: "loading"; me: null }
@@ -29,6 +49,8 @@ interface AuthApi {
   register(email: string, password: string, role: "candidate" | "employer", consents?: ConsentType[]): Promise<void>;
   /** Вход по одноразовому токену из ссылки бота. */
   loginWithMagic(token: string): Promise<void>;
+  /** Вход «Демо для жюри» в свою песочницу (E40-1): без пароля, только на демо-стенде. */
+  loginAsJury(role: "candidate" | "employer"): Promise<void>;
   /** Перечитать `/me` (например, после выдачи согласий). */
   reloadMe(): Promise<void>;
   logout(): Promise<void>;
@@ -121,6 +143,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [signIn],
   );
 
+  const loginAsJury = useCallback(
+    async (role: "candidate" | "employer") => {
+      const auth = (await juryEnterAuthJuryPost({ role, pair: readJuryPair() })).data as JuryAuthOut;
+      saveJuryPair(auth.pair);
+      await signIn(auth);
+    },
+    [signIn],
+  );
+
   const logout = useCallback(async () => {
     try {
       await logoutAuthLogoutPost();
@@ -139,10 +170,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       register,
       loginWithMagic,
+      loginAsJury,
       reloadMe,
       logout,
     }),
-    [state, login, register, loginWithMagic, reloadMe, logout],
+    [state, login, register, loginWithMagic, loginAsJury, reloadMe, logout],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
