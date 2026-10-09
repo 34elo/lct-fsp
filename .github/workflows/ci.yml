@@ -2,7 +2,17 @@ name: ci
 # PR — проверки; push в main — через cd.yml (вызывает этот файл перед деплоем)
 on:
   pull_request:
+    # коммиты только с документами и планом проверки не запускают (агенты часто пушат журнал плана)
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
+      - "reports/**"
   workflow_call:
+# Новый пуш в тот же PR отменяет незаконченный прогон: проверяем только последний коммит, минуты не тратим зря.
+# Вызов из cd.yml (push в main) не отменяется: у него своя группа по SHA.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   python:
     runs-on: ubuntu-latest
