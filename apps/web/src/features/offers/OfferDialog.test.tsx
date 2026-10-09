@@ -4,6 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 import { App } from "@/app/App";
 import { Providers, makeQueryClient } from "@/app/Providers";
 import { setAccessToken } from "@/shared/lib/token";
+import { pickOption } from "@/test-pick";
 
 const res = (status: number, body?: unknown) => new Response(body === undefined ? null : JSON.stringify(body), { status });
 
@@ -88,7 +89,7 @@ test("«Отправить» заблокирована без вилки и п�
 test("без вакансии название обязательно, уходит vacancy_id=null и title", async () => {
   await openDialog();
   await screen.findByLabelText(/Вероятность принятия/);
-  fireEvent.change(screen.getByLabelText(/^Вакансия/), { target: { value: "" } });
+  pickOption(screen.getByRole("combobox", { name: "Вакансия" }), /Без вакансии/);
   const [from, to] = screen.getAllByRole("textbox").filter((e) => e.getAttribute("inputmode") === "numeric");
   fireEvent.change(from, { target: { value: "200000" } });
   fireEvent.change(to, { target: { value: "240000" } });
@@ -96,7 +97,7 @@ test("без вакансии название обязательно, уход�
   fireEvent.change(screen.getByLabelText(/Название приглашения/), { target: { value: "Бэкенд" } });
   expect(sendBtn()).toBeEnabled();
   fireEvent.change(screen.getByLabelText(/О чём приглашение/), { target: { value: "Команда платформы" } });
-  fireEvent.change(screen.getByLabelText(/Как связаться/), { target: { value: "telegram" } });
+  pickOption(screen.getByRole("combobox", { name: /Как связаться/ }), "Telegram");
   fireEvent.click(sendBtn());
   await waitFor(() => expect(posts).toHaveLength(1));
   expect(posts[0].body).toMatchObject({ vacancy_id: null, title: "Бэкенд", description: "Команда платформы", contact_method: "telegram", salary_from: 200000, salary_to: 240000 });
@@ -106,7 +107,12 @@ test("база вилки «на руки» и задание уходят в PO
   await openDialog();
   await screen.findByLabelText(/Вероятность принятия/);
   fireEvent.click(screen.getByRole("radio", { name: "на руки" }));
-  fireEvent.change(await screen.findByLabelText(/Задание/), { target: { value: "f1" } });
+  const task = await screen.findByRole("combobox", { name: /Задание/ });
+  await waitFor(() => {
+    fireEvent.click(task);
+    expect(screen.getByRole("option", { name: "Мини-задание: REST-клиент" })).toBeInTheDocument();
+  });
+  fireEvent.click(screen.getByRole("option", { name: "Мини-задание: REST-клиент" }));
   fireEvent.click(sendBtn());
   await waitFor(() => expect(posts).toHaveLength(1));
   expect(posts[0].body).toMatchObject({ salary_basis: "net", task: { family_id: "f1" } });

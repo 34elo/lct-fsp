@@ -6,7 +6,6 @@
  */
 import type { EmploymentType } from './employmentType';
 import type { Grade } from './grade';
-import type { RoleSlug } from './roleSlug';
 import type { SalaryBasis } from './salaryBasis';
 import type { SkillReqIn } from './skillReqIn';
 import type { TeamSignalKind } from './teamSignalKind';
@@ -14,7 +13,7 @@ import type { WorkFormat } from './workFormat';
 
 export interface VacancyPatch {
   title?: string | null;
-  role?: RoleSlug | null;
+  role?: string | null;
   grade_min?: Grade | null;
   grade_max?: Grade | null;
   formats?: WorkFormat[] | null;

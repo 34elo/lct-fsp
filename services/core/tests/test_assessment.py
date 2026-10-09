@@ -1,7 +1,5 @@
 """Граница блока 1: assessment.service (blocks.md §4.3), email (§4.6), профессии, OpenAPI."""
 
-import subprocess
-import sys
 import uuid
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -14,12 +12,14 @@ from app.identity.models import User
 from app.openapi_errors import problem_responses
 from app.taxonomy import service as tax
 from app.taxonomy.loader import load_taxonomy
+from app.taxonomy.models import Role
+from core_helpers import upgrade_head
 from fsp_contracts.assessment import CategoryChanged, SkillType, TestGrade
 from fsp_contracts.registry import EVENTS
 from fsp_platform.app import ProblemError
 from fsp_platform.db import make_engine, make_session_factory, session_scope
 from fsp_platform.outbox import OutboxRecord
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 CORE = Path(__file__).resolve().parents[1]
 NOW = datetime(2026, 6, 1, 12, tzinfo=UTC)
@@ -28,12 +28,7 @@ NOW = datetime(2026, 6, 1, 12, tzinfo=UTC)
 @pytest.fixture
 def db_url(tmp_path):
     url = f"sqlite+aiosqlite:///{tmp_path / 'a.db'}"
-    subprocess.run(
-        [sys.executable, "-m", "alembic", "-x", f"url={url}", "upgrade", "head"],
-        cwd=CORE,
-        check=True,
-        capture_output=True,
-    )
+    upgrade_head(url)
     return url
 
 
@@ -166,10 +161,14 @@ async def test_list_professions(factory):
         await tax.sync(s, data)
     async with session_scope(factory) as s:
         profs = {p.slug: p for p in await tax.list_professions(s)}
-    assert set(profs) == {"backend", "frontend", "ai_engineer"}  # активные (ADR-027 п.1, E36-2)
+    # все профессии открыты (E39-6, отменяет скрытие E36-2)
+    assert set(profs) == {"backend", "frontend", "ai_engineer", "mobile", "ml", "devops", "qa"}
     async with session_scope(factory) as s:
+        await s.execute(update(Role).where(Role.slug == "ml").values(is_active=False))
+    async with session_scope(factory) as s:
+        assert "ml" not in {p.slug for p in await tax.list_professions(s)}  # флаг скрытия работает
         every = {p.slug: p for p in await tax.list_professions(s, include_hidden=True)}
-    assert set(every) == set(profs) | {"mobile", "ml", "devops", "qa"}
+    assert set(every) == set(profs)
     assert not every["ml"].active and every["ml"].skill_weights  # скрыта, данные на месте
     be = profs["backend"]
     assert be.title and be.skill_weights and all(0 < w <= 1 for w in be.skill_weights.values())
@@ -197,9 +196,12 @@ async def test_professions_endpoint(factory, db_url):
         r = c.get("/taxonomy/professions")
     assert r.status_code == 200
     body = r.json()
-    # в опросе только активные профессии, скрытых нет (ADR-027 п.1, E36-2)
-    assert [p["slug"] for p in body["professions"]] == ["ai_engineer", "backend", "frontend"]
-    assert all(p["active"] for p in body["professions"])
+    # все профессии открыты (E39-6); тонкий банк — «бета», у ядра MVP банк полный
+    profs = {p["slug"]: p for p in body["professions"]}
+    assert set(profs) == {"ai_engineer", "backend", "devops", "frontend", "ml", "mobile", "qa"}
+    assert all(p["active"] for p in profs.values())
+    assert not any(profs[s]["beta"] for s in ("backend", "frontend", "ai_engineer"))
+    assert profs["mobile"]["beta"]
     assert body["skill_types"] == [t.value for t in SkillType]
     assert body["grades"] == [
         {"grade": "junior", "cut": -1.0},

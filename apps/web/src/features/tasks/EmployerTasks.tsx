@@ -1,3 +1,5 @@
+import { PAGE } from "@/shared/lib/page";
+import { Gloss } from "@/shared/Gloss";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
@@ -124,17 +126,22 @@ export default function EmployerTasks() {
   const q = useListTasksEmployerTasksGet();
   const all = (q.data?.status === 200 ? q.data.data : []) as TaskOut[];
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-col gap-4 p-4 md:p-6" data-testid="tasks-employer-page">
+    <main className={PAGE.normal} data-testid="tasks-employer-page">
       <header className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h1 className="font-mono text-24 font-semibold">{T.empTitle}</h1>
+          <h1 className="font-mono text-24 font-semibold">
+            <Gloss k="employerTask">{T.empTitle}</Gloss>
+          </h1>
           <p className="text-14 text-muted">{T.empLead}</p>
         </div>
-        <Link to="/employer/families/new" className={buttonVariants({ variant: "outline" })}>{T.toConstructor}</Link>
+        <div className="flex flex-wrap gap-2">
+          <Link to="/employer/families/guide" className={buttonVariants({ variant: "ghost" })} data-testid="tasks-howto">{T.howTo}</Link>
+          <Link to="/employer/families/new" className={buttonVariants({ variant: "outline" })}>{T.toConstructor}</Link>
+        </div>
       </header>
       {q.isPending && <Skeleton role="status" aria-label="Загрузка" className="h-48" />}
       {q.isError && <ErrorState title={T.empLoadError} onRetry={() => void q.refetch()} />}
-      {q.isSuccess && all.length === 0 && <EmptyState title={T.empEmpty} description={T.empEmptyHint} />}
+      {q.isSuccess && all.length === 0 && <EmptyState title={T.empEmpty} description={T.empEmptyHint} action={<Link to="/employer/families/guide" className={buttonVariants()} data-testid="tasks-empty-guide">{T.howTo}</Link>} />}
       {all.length > 0 && <ul className="grid gap-3">{all.map((t) => <TaskRow key={t.id} t={t} />)}</ul>}
     </main>
   );

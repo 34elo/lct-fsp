@@ -53,10 +53,6 @@ import {
   RadioGroupItem,
   SegmentedControl,
   Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
   Separator,
   Sheet,
   SheetContent,
@@ -89,15 +85,34 @@ import {
   type TrustKind,
 } from "../src";
 import { V2Board } from "./V2Board";
+import { V3Board } from "./V3Board";
 import { DEMO_CANDIDATES, DEMO_FSP, DEMO_SKILLS, RADII, TEXT_SIZES, TOKEN_GROUPS } from "./data";
 
-type Page = "tokens" | "base" | "brand" | "v2";
+type Page = "tokens" | "base" | "brand" | "v2" | "v3";
 const PAGES: { id: Page; title: string }[] = [
   { id: "tokens", title: "Токены" },
   { id: "base", title: "Базовые" },
   { id: "brand", title: "Фирменные" },
   { id: "v2", title: "v2" },
+  { id: "v3", title: "Контролы" },
 ];
+
+function BaseSelect() {
+  const [v, setV] = useState<string | null>("mid");
+  return (
+    <Select
+      className="w-48"
+      aria-label="Грейд"
+      value={v}
+      onChange={setV}
+      options={[
+        { value: "jun", label: "Junior" },
+        { value: "mid", label: "Middle" },
+        { value: "sen", label: "Senior" },
+      ]}
+    />
+  );
+}
 const KINDS: TrustKind[] = ["verified", "inferred", "adjacent", "claimed", "provisional"];
 
 function readHash(): Page {
@@ -237,16 +252,7 @@ function Base() {
             <Textarea placeholder="О себе" className="w-80" aria-label="О себе" />
           </Row>
           <Row name="Select">
-            <Select defaultValue="mid">
-              <SelectTrigger className="w-48" aria-label="Грейд">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="jun">Junior</SelectItem>
-                <SelectItem value="mid">Middle</SelectItem>
-                <SelectItem value="sen">Senior</SelectItem>
-              </SelectContent>
-            </Select>
+            <BaseSelect />
           </Row>
           <Row name="Выбор">
             <label className="flex items-center gap-2 text-14">
@@ -663,6 +669,7 @@ export function Playground() {
       {page === "base" && <Base />}
       {page === "brand" && <Brand />}
       {page === "v2" && <V2Board />}
+      {page === "v3" && <V3Board />}
     </div>
   );
 }

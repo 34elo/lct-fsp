@@ -42,11 +42,6 @@ export const SIGNAL_LABEL: Record<string, string> = {
   growth: "Рост",
 };
 
-export const STRENGTH_LABEL: Record<string, string> = {
-  strong: "сильное подтверждение",
-  present: "есть подтверждение",
-};
-
 export const STATUS_LABEL: Record<SearchStatus, string> = {
   active: "Активно ищу",
   open: "Открыт к предложениям",
@@ -92,17 +87,6 @@ export const RANK_LABEL: Record<string, string> = {
 
 export const TEAM_ROLE_LABEL: Record<string, string> = { captain: "капитан", member: "участник" };
 
-/** «Июнь 2024 — н. в.» по ISO-датам `YYYY-MM...` из опыта. */
-export function periodRu(start?: string | null, end?: string | null): string {
-  const f = (v: string) => {
-    const d = new Date(v);
-    return Number.isNaN(d.getTime()) ? "" : d.toLocaleDateString("ru-RU", { month: "long", year: "numeric" });
-  };
-  const a = start ? f(start) : "";
-  const b = end ? f(end) : "по настоящее время";
-  return a ? `${a} — ${b}` : "";
-}
-
 /** Тексты экрана профиля (макет D). */
 export const T = {
   title: "Мой профиль",
@@ -110,28 +94,29 @@ export const T = {
   loadError: "Не удалось загрузить профиль",
   loadErrorHint: "Проверьте соединение и повторите.",
   seenAs: "Так вас видят компании, пока вы не примете приглашение",
-  noGrade: "Категория и грейд появятся после опроса и теста.",
+  noGrade: "Категория и грейд появятся после теста.",
   preliminary: "Предварительно: пока мало подтверждённых фактов",
   strengthTitle: "Что усилит профиль",
   strengthHint: "Чем больше проверяемого, тем выше доверие к навыкам и точнее грейд.",
   strengthDone: "есть",
   strengthTodo: "добавить",
   editLink: "Заполнить профиль вручную",
+  directionLink: "Направление и навыки",
   pdf: "Скачать PDF",
   pdfBusy: "Готовим PDF…",
   pdfError: "Не удалось скачать PDF. Попробуйте ещё раз.",
   graph: "Граф доказательств",
   claimedTitle: "Заявлено и подтверждено",
-  claimedHint: "Что вы указали в опросе и что подтвердил тест.",
-  skillsEmpty: "Пока нет навыков. Пройдите опрос и тест или подключите ФСП, и они появятся здесь.",
+  claimedHint: "Что вы заявили перед тестом и что он подтвердил.",
+  skillsEmpty: "Пока нет навыков. Выберите направление и пройдите тест или подключите ФСП, и они появятся здесь.",
   skillsHint: "Нажмите на навык, чтобы увидеть, чем он подтверждён. Пунктир: заявлено или выведено, без доказательств сила не растёт.",
   fspEmpty: "Результатов ФСП пока нет. Привяжите профиль ФСП: соревнования и разряды появятся здесь и усилят грейд.",
   fspImported: "Данные ФСП загружены, навыки и грейд обновлены.",
 } as const;
 
 export const STRENGTH_ITEMS = [
-  { key: "resume", label: "Резюме", hint: "навыки с цитатами из текста", to: "/onboarding" },
-  { key: "fsp", label: "ФСП", hint: "результаты и разряды соревнований", to: "/me/settings" },
+  { key: "resume", label: "Резюме", hint: "навыки с цитатами из текста", to: "/me/profile?tab=data" },
+  { key: "fsp", label: "ФСП", hint: "результаты и разряды соревнований", to: "/me/profile?tab=data" },
   { key: "test", label: "Тест", hint: "подтверждает грейд", to: "/me/assessment" },
 ] as const;
 
@@ -140,25 +125,6 @@ export const CLAIM_STATUS_LABEL: Record<string, string> = {
   overclaimed: "тест ниже заявленного",
   underclaimed: "тест выше заявленного",
   unconfirmed: "тест не пройден",
-};
-
-/** Группы навыков (data/taxonomy/skills.yaml); порядок = порядок показа. */
-export const GROUP_LABEL: Record<string, string> = {
-  language: "Языки",
-  backend: "Backend",
-  frontend: "Frontend",
-  storage: "Хранение данных",
-  data_ml: "Данные и ML",
-  devops: "DevOps",
-  fundamentals: "Основы и алгоритмы",
-  testing: "Тестирование",
-  security: "Безопасность",
-  mobile: "Mobile",
-  embedded: "Embedded",
-  gamedev: "Gamedev",
-  product: "Продукт",
-  design: "Дизайн",
-  analysis: "Аналитика",
 };
 
 /** Ручная форма профиля `/me/profile/edit` (E20-7a). */
@@ -233,11 +199,17 @@ export const HOME = {
   fspPlace: (place: number) => `${place} место`,
   constellation: "Созвездие навыков",
   legend: { confirmed: "подтверждено", claimed: "заявлено", adjacent: "смежные" },
-  interests: "Вами интересуются",
+  interests: "Приглашения и интересы",
+  allInvites: "Все приглашения →",
+  allSkills: "Все навыки →",
+  tasks: "Регулярные задания",
+  tasksHint: "Задания компаний по вашей категории: на грейд не влияют, работодатель видит результат.",
+  tasksAll: "Все задания →",
   strength: "Сила",
   place: "Место",
   interestsTile: "Интересы",
   top: (p: number) => `топ-${p} %`,
+  topCap: (p: number) => `Топ-${p} %`,
   none: "—",
   rating: (v: string) => `${v} / 5`,
 } as const;
@@ -259,12 +231,27 @@ export const STATS = {
   loadError: "Не загрузилось",
   errorCode: (status: number) => `ошибка ${status}`,
   views: "Смотрели",
+  relative: "От лидера категории",
+  relativeValue: (v: number) => `${Math.round(v)} %`,
+  relativeGap: (gap: number, top: number) => `до топ-${top} % не хватает ${Math.round(gap * 10) / 10} п. п.`,
+  relativeLeader: "ты лидер категории",
+  partsTitle: "Из чего складывается сила",
   viewsHint: "за 30 дней",
   peers: "Где ты среди своих",
   peersSize: (n: number) => `${n} чел.`,
   peersLabel: (category: string) => `Точечная диаграмма категории ${category}`,
   you: "ты",
-  yLabel: "ожидания, ₽",
+  xAxis: "уровень в тесте →",
+  yAxis: "↑ сила профиля",
+  peersNote: (category: string) =>
+    `Свои — кандидаты категории ${category}, которые прошли тест. По горизонтали — уровень в тесте, по вертикали — сила профиля; чем выше и правее точка, тем сильнее кандидат.`,
+  catTitle: "Твоя категория в цифрах",
+  catCandidates: "Кандидатов в категории",
+  catForks: "Вилки в интересах",
+  catForksHint: (n: number) => `медиана по ${n} ${plural(n, "интересу", "интересам", "интересам")} к категории`,
+  catForksNone: "компании пока не отмечали интерес",
+  catCompanies: "Компаний ищут категорию",
+  catCompaniesHint: "с опубликованной вакансией",
   heatmap: "Просмотры профиля",
   heatmapLabel: (total: number) => `Просмотры профиля по дням: ${total} за 30 дней`,
   heatmapCaption: (n: number) => `${n} ${plural(n, "компания смотрела", "компании смотрели", "компаний смотрели")} за 30 дней`,
@@ -290,8 +277,9 @@ export function plural(n: number, one: string, few: string, many: string): strin
 export const PROFILE = {
   title: "Профиль",
   addEvidence: "Добавить доказательство",
+  tasks: "Регулярные задания",
   tabsLabel: "Разделы профиля",
-  tabs: { skills: "Навыки", fsp: "ФСП", resume: "Резюме", graph: "Граф" },
+  tabs: { overview: "Обзор", skills: "Навыки", data: "Данные", graph: "Граф" },
   loading: "Загрузка профиля…",
   loadError: "Не загрузилось",
   errorCode: (status: number) => `ошибка ${status}`,
@@ -325,6 +313,93 @@ export const PROFILE = {
   graphTitle: "Граф доказательств",
   legendFact: "факт",
   legendClaimed: "заявлено",
+  emptyAction: "Пройти тест",
+  tiles: { confirmed: "Подтверждено навыков", claimed: "Заявлено навыков", fsp: "Достижений ФСП" },
+} as const;
+
+/** Вкладка «Навыки» профиля (E39-15): поиск, фильтры, скрытие, по умолчанию топ-15. */
+export const SKILLS = {
+  title: "Навыки",
+  search: "Поиск навыка",
+  searchPlaceholder: "Например, Python",
+  type: "Тип навыка",
+  typeAll: "Все типы",
+  trust: "Доверие",
+  trustAny: "Любое доверие",
+  trustFrom: (n: number) => `не ниже ${"●".repeat(n)}${"○".repeat(4 - n)}`,
+  state: "Статус навыка",
+  states: { all: "Все", confirmed: "Подтверждено", claimed: "Заявлено" },
+  showHidden: (n: number) => `Показать скрытые (${n})`,
+  shown: (n: number, total: number) => `Показано ${n} из ${total}`,
+  showAll: (n: number) => `Показать все (${n})`,
+  showTop: "Только первые 15",
+  nothing: "Ничего не нашлось",
+  nothingHint: "Измените поиск или сбросьте фильтры.",
+  reset: "Сбросить фильтры",
+  hide: (name: string) => `Скрыть ${name} от компаний`,
+  unhide: (name: string) => `Вернуть ${name} в профиль`,
+  hideShort: "Скрыть",
+  unhideShort: "Вернуть",
+  hiddenTag: "скрыт от компаний",
+  hideError: "Не удалось сохранить. Попробуйте ещё раз.",
+  hideHint: "Скрытый навык компании не видят ни в карточке, ни в выдаче. На грейд он не влияет.",
+} as const;
+
+/** Вкладка «Данные» профиля (E39-15): ФИО, контакты, опыт, образование, ссылки, ФСП. */
+export const DATA = {
+  personal: "Личные данные",
+  fullName: "ФИО",
+  email: "Email",
+  phone: "Телефон",
+  telegram: "Telegram",
+  city: "Город",
+  notSet: "не указано",
+  nameHidden: "Видно вам. Компания увидит после приглашения.",
+  nameOpen: "Видно вам и компаниям: открыто в настройках приватности.",
+  privacyLink: "Приватность",
+  contactsNote: "Контакты компания получит, только когда вы примете приглашение.",
+  experience: "Опыт",
+  education: "Образование",
+  links: "Ссылки",
+  preferences: "Пожелания к работе",
+  preferencesEdit: "Изменить пожелания и стек",
+  noExperience: "Опыт пока не указан.",
+  noEducation: "Образование пока не указано.",
+  noLinks: "Ссылок пока нет.",
+  fromResumeOnly: "Опыт и образование заполняются из резюме: нажмите «Заполнить из резюме».",
+  edit: "Изменить данные",
+  save: "Сохранить",
+  saving: "Сохраняем…",
+  cancel: "Отмена",
+  saved: "Данные сохранены.",
+  saveError: "Не удалось сохранить, попробуйте ещё раз.",
+  fromResume: "Заполнить из резюме",
+  fromResumeHint: "PDF или DOCX до 10 МБ. Разбор заполнит поля ниже, вы проверите и сохраните.",
+  resumeFile: "Файл резюме",
+  uploading: "Загружаем…",
+  parsing: "Разбираем резюме…",
+  draftTitle: "Черновик из резюме",
+  draftHint: "Мы заполнили поля по резюме. Проверьте, поправьте и сохраните: до сохранения компании ничего не видят.",
+  draftSkills: (n: number) => `В резюме найдено навыков: ${n}. После сохранения они появятся в профиле как заявленные.`,
+  draftReview: "Проверить черновик",
+  draftFailed: "Не удалось разобрать резюме. Попробуйте другой файл или заполните вручную.",
+  position: "Должность",
+  company: "Компания",
+  start: "Начало (ГГГГ-ММ)",
+  end: "Конец (ГГГГ-ММ, пусто — по сей день)",
+  institution: "Учебное заведение",
+  degree: "Степень",
+  field: "Специальность",
+  yearEnd: "Год окончания",
+  addExperience: "Добавить место работы",
+  addEducation: "Добавить учёбу",
+  addLink: "Добавить ссылку",
+  remove: "Убрать",
+  link: (i: number) => `Ссылка ${i}`,
+  invalidLink: "Ссылка должна начинаться с http:// или https://",
+  invalidMonth: "Формат ГГГГ-ММ, например 2023-09",
+  invalidYear: "Год из четырёх цифр",
+  present: "по сей день",
 } as const;
 
 /** Настройки приватности кандидата (E36-4, ADR-027): что видно работодателю до приглашения. */
@@ -340,7 +415,7 @@ export const privacyText = {
   ],
 } as const;
 
-/** Настройки кандидата `/me/settings` (E38-7, макеты v2_me-settings__*). */
+/** Настройки кандидата `/settings` (E38-7, E39-8, макеты v2_me-settings__*). */
 export const SETTINGS = {
   title: "Настройки",
   loading: "Загрузка настроек…",
@@ -356,4 +431,67 @@ export const SETTINGS = {
   telegramLinked: "привязан",
   telegramLink: "Привязать",
   telegramLinkError: "Не удалось получить ссылку на бота",
+  appearance: "Оформление",
+  appearanceHint: "Пока вы не выбрали, тема совпадает с системной.",
+  themeLabel: "Тема",
+  themeLight: "Светлая",
+  themeDark: "Тёмная",
+  tabsLabel: "Разделы настроек",
+  tabs: {
+    profile: "Профиль",
+    privacy: "Приватность",
+    notifications: "Уведомления",
+    consents: "Согласия",
+    appearance: "Оформление",
+    security: "Безопасность",
+  },
+  profile: {
+    title: "Профиль",
+    account: "Аккаунт",
+    roles: { candidate: "Кандидат", employer: "Работодатель", fsp_admin: "Администратор ФСП" } as Record<string, string>,
+    fullName: "ФИО",
+    fullNameHint: "Компании видят имя только если вы открыли его в «Приватности».",
+    company: "Название компании",
+    companyDescription: "Описание компании",
+    companyMore: "Остальные данные компании",
+    companyNone: "Компания ещё не создана — заполните данные на странице «Компания».",
+    companyReadonly: "Название и описание меняет администратор компании.",
+    // E39-24: личный профиль сотрудника компании и админа ФСП
+    staffHint: "Имя, должность и фото видят кандидаты в подписи ваших приглашений.",
+    position: "Должность",
+    positionPlaceholder: "Например, HR-партнёр",
+    about: "О себе",
+    aboutHint: "Пара строк о том, кого и как вы ищете. Поддерживается Markdown.",
+    photo: "Фото",
+    photoHint: "PNG, JPEG или WebP до 2 МБ.",
+    photoUpload: "Загрузить фото",
+    photoReplace: "Заменить фото",
+    photoRemove: "Убрать фото",
+    photoError: (code?: string) =>
+      code === "file_too_large" ? "Файл больше 2 МБ." : code === "unsupported_file_type" ? "Нужна картинка PNG, JPEG или WebP." : "Не удалось загрузить фото.",
+    companyLine: "Компания",
+    companyRoles: { admin: "Владелец", member: "HR" } as Record<string, string>,
+    companyOpen: "Открыть страницу компании",
+    save: "Сохранить",
+    saved: "Сохранено",
+    saveError: "Не удалось сохранить",
+    nameTooLong: "Не длиннее 120 символов",
+    nameTooShort: "Не короче 2 символов",
+  },
+  security: {
+    title: "Пароль",
+    hint: "После смены пароля остальные устройства выйдут из аккаунта.",
+    current: "Текущий пароль",
+    next: "Новый пароль",
+    repeat: "Повторите новый пароль",
+    min: "Не короче 8 символов",
+    mismatch: "Пароли не совпадают",
+    same: "Новый пароль совпадает с текущим",
+    submit: "Сменить пароль",
+    done: "Пароль изменён",
+    wrong: "Текущий пароль указан неверно",
+    limit: "Слишком много попыток, попробуйте через час",
+    error: "Не удалось сменить пароль",
+    noPassword: "Вы вошли через Telegram, пароля у аккаунта нет.",
+  },
 } as const;

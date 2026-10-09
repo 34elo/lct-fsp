@@ -382,3 +382,37 @@ async def test_llm_key_is_draft_until_admin_approves(api, factory, taxonomy_load
     async with session_scope(factory) as s:
         row = await s.get(FamilyRow, uuid.UUID(fam["id"]))
         assert [e["source"] for e in row.spec["key_log"]] == ["llm", "custom"]
+
+
+async def test_admission_card_fields(api, taxonomy_loaded):
+    """E39-31: в очереди допуска — грейд, профессии и пример варианта с ответом решателя."""
+    adm = _admin(api)
+    fam = api.post("/families", json=SPECS["exact"], headers=adm).json()
+    items = api.get("/admin/families", params={"status": "pilot"}, headers=adm).json()
+    card = next(x for x in items if x["id"] == fam["id"])
+    assert card["grade"] == "middle" and card["skill"] == SPECS["exact"]["skill"]
+    assert card["example"]["stem"] and card["example"]["answer"]
+    assert all(p["slug"] and p["title"] for p in card["professions"])
+
+
+def test_admission_helpers():
+    from app.assessment import admission
+    from app.assessment.families.base import Item
+    from fsp_contracts.assessment import ProfessionInfo
+
+    assert [admission.grade_of_level(n) for n in (1, 2, 3, 4, 5)] == [
+        "junior", "junior", "middle", "senior", "senior",
+    ]  # fmt: skip
+    profs = [
+        ProfessionInfo(slug="backend", title="A", skill_weights={"py": 0.9}),
+        ProfessionInfo(slug="qa", title="B", skill_weights={"py": 0.3}),
+        ProfessionInfo(slug="ml", title="C", skill_weights={"go": 1.0}),
+    ]
+    assert [p.slug for p in admission.professions_of("py", profs)] == ["backend"]
+    assert [p.slug for p in admission.professions_of("zzz", profs)] == []
+    only_weak = [profs[1]]
+    assert [p.slug for p in admission.professions_of("py", only_weak)] == ["qa"]
+    item = Item(kind=Kind.choice, stem="q", key=1, options=["x", "y"])
+    assert admission.answer_text(item) == "y"
+    assert admission.answer_text(Item(kind=Kind.find_bug, stem="q", key=[2, 5])) == "строки 2, 5"
+    assert admission.answer_text(Item(kind=Kind.exact, stem="q", key=42)) == "42"

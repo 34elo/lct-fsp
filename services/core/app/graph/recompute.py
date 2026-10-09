@@ -209,6 +209,9 @@ async def recompute_profile(
     now: datetime | None = None,
     embedder: Embedder | None = None,
 ) -> RecomputeResult:
+    """Пересобирает `candidate_skills` из активных доказательств и пишет `skills.profile.updated`
+    (graph.md §4.4); пропускает устаревшую команду.
+    """
     now = _utc(now or datetime.now(UTC))
     cand = await session.get(Candidate, candidate_id, with_for_update=True)
     if cand is None or cand.deleted_at is not None:

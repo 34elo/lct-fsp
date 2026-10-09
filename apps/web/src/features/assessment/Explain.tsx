@@ -1,4 +1,4 @@
-import { Button, ErrorBlock, Num, Panel, PanelCap, Tag } from "@fsp/ui";
+import { Button, ErrorBlock, Num, Panel, PanelCap, Select, Tag } from "@fsp/ui";
 import { useState } from "react";
 
 import { useExplainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPost } from "@/api/endpoints/assessment/assessment";
@@ -51,22 +51,17 @@ function Row({ attemptId, row }: { attemptId: string; row: AnswerRow }) {
               </p>
             )}
             {out.self_reason_matches != null && <p className="text-13 text-muted">{out.self_reason_matches ? T.explainMatch : T.explainDiffer}</p>}
-            <label className="flex flex-wrap items-center gap-2 text-13 text-muted">
-              <span>{T.explainMyReason}</span>
-              <select
+            <div className="flex flex-wrap items-center gap-2 text-13 text-muted">
+              <span id={`assessment-explain-self-label-${row.seq}`}>{T.explainMyReason}</span>
+              <Select
                 value={mine}
-                onChange={(e) => setMine(e.target.value)}
-                className="h-9 rounded-lg border border-hairline bg-card px-2 text-14 text-ink"
+                onChange={(v) => setMine(v ?? "")}
+                options={[{ value: "", label: T.explainMyReasonNone }, ...Object.entries(T.selfReasons).map(([k, v]) => ({ value: k, label: v }))]}
+                aria-label={T.explainMyReason}
+                className="w-auto min-w-56 text-ink"
                 data-testid={`assessment-explain-self-${row.seq}`}
-              >
-                <option value="">{T.explainMyReasonNone}</option>
-                {Object.entries(T.selfReasons).map(([k, v]) => (
-                  <option key={k} value={k}>
-                    {v}
-                  </option>
-                ))}
-              </select>
-            </label>
+              />
+            </div>
             <p className="text-12 text-muted">{out.source === "llm" ? T.explainSourceLlm : T.explainSourceTemplate}</p>
           </div>
         )}

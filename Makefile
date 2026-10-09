@@ -3,11 +3,21 @@
 sync:
 	uv sync --all-packages
 
-lint:
+lint: docs-links
 	uv run ruff check .
 	uv run ruff format --check .
 	uv run lint-imports
 	pnpm -r lint && pnpm -r typecheck
+
+# Относительные ссылки и якоря в Markdown (E39-37), без сети; docs/archive не проверяется
+.PHONY: docs-links deadcode
+docs-links:
+	PYTHONUTF8=1 uv run python tools/check_links.py
+
+# Мёртвый код (E39-37): knip по фронту (белый список — knip.json), vulture по Python (уверенность ≥ 80 %)
+deadcode:
+	npx -y knip@5
+	uvx vulture services packages/platform packages/contracts tools --min-confidence 80 --exclude "*/tests/*,*/test_*,*/.venv/*,*/node_modules/*,*/service-template/*"
 
 fmt:
 	uv run ruff check --fix .
@@ -16,7 +26,7 @@ fmt:
 test: test-py test-web
 
 test-py:
-	uv run pytest -q
+	uv run pytest -q -n auto
 
 # Интеграция outbox → RabbitMQ → inbox на временных контейнерах (project fsp-test, порты 285xx)
 TEST_COMPOSE = docker compose -f infra/test/docker-compose.yml
@@ -93,7 +103,7 @@ SPLIT ?= dev
 synth:
 	uv run python tools/synth/synth.py --split $(SPLIT) --out reports/synth/$(SPLIT)
 
-# Стенд оценки (evaluation.md §5): подбор против BM25 на синтетическом рынке → reports/eval/eval.{md,json}
+# Стенд оценки (evaluation.md §5): подбор против BM25 на синтетическом рынке и полнота разбора резюме hh.ru (E39-19) → reports/eval/eval.{md,json}
 eval:
 	uv run python tools/eval/run.py --split $(SPLIT) --out reports/eval
 
@@ -125,9 +135,11 @@ seed:
 	SEED=$(SEED) uv run python -m tools.seed all --env-file $(ENV_FILE)
 # >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
 	SEED=$(SEED) uv run python -m tools.seed grades --env-file $(ENV_FILE)
+	SEED=$(SEED) uv run python -m tools.seed families --env-file $(ENV_FILE)
 # <<< block1
 # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
 	SEED=$(SEED) uv run python -m tools.seed demo2 --env-file $(ENV_FILE)
+	SEED=$(SEED) uv run python -m tools.seed fsp-registry --env-file $(ENV_FILE)
 # <<< block2
 	$(COMPOSE) up -d --build --no-deps --force-recreate fsp-mock
 seed-fsp-mock:
@@ -136,8 +148,8 @@ seed-fsp-mock:
 seed-plan:
 	SEED=$(SEED) uv run python -m tools.seed plan
 
-# Снапшот витрины (evaluation.md §4): make demo-snapshot (после make seed) -> make demo-reset (≤ 1 мин) -> make demo-warm
-# Файлы в infra/snapshots/ (в git не идут): core.dump, fsp_connector.dump, fsp-mock.json
+# Снапшот витрины (evaluation.md §4, E40-1): make demo-snapshot (после make seed) -> make demo-reset (только демо, ≤ 1 мин) -> make demo-warm
+# Снапшот демо — таблицы demo_snap__* в БД core и fsp_connector; infra/snapshots/fsp-mock.json (в git не идёт)
 demo-snapshot:
 	COMPOSE="$(COMPOSE)" sh infra/scripts/demo.sh snapshot
 demo-reset:

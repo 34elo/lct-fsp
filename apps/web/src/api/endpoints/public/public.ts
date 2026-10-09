@@ -20,7 +20,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  HTTPValidationError
+  HTTPValidationError,
+  PublicStatsOut
 } from '../../model';
 
 import { apiFetch } from '../../mutator';
@@ -155,6 +156,119 @@ export function useGetPublicProfilePublicProfilesSlugGet<TData = Awaited<ReturnT
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetPublicProfilePublicProfilesSlugGetQueryOptions(slug,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type getStatsPublicStatsGetResponse200 = {
+  data: PublicStatsOut
+  status: 200
+}
+
+export type getStatsPublicStatsGetResponseSuccess = (getStatsPublicStatsGetResponse200) & {
+  headers: Headers;
+};
+;
+
+export type getStatsPublicStatsGetResponse = (getStatsPublicStatsGetResponseSuccess)
+
+export const getGetStatsPublicStatsGetUrl = () => {
+
+
+
+
+  return `/public/stats`
+}
+
+/**
+ * Кандидаты, компании, приглашения и медиана дней до первого приглашения. Кеш 5 минут.
+ * @summary Цифры для лендинга
+ */
+export const getStatsPublicStatsGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getStatsPublicStatsGetResponse> => {
+
+  return apiFetch<getStatsPublicStatsGetResponse>(getGetStatsPublicStatsGetUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetStatsPublicStatsGetQueryKey = () => {
+    return [
+    `/public/stats`
+    ] as const;
+    }
+
+
+export const getGetStatsPublicStatsGetQueryOptions = <TData = Awaited<ReturnType<typeof getStatsPublicStatsGet>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStatsPublicStatsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetStatsPublicStatsGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getStatsPublicStatsGet>>> = ({ signal }) => getStatsPublicStatsGet({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getStatsPublicStatsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetStatsPublicStatsGetQueryResult = NonNullable<Awaited<ReturnType<typeof getStatsPublicStatsGet>>>
+export type GetStatsPublicStatsGetQueryError = ErrorType<unknown>
+
+
+export function useGetStatsPublicStatsGet<TData = Awaited<ReturnType<typeof getStatsPublicStatsGet>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStatsPublicStatsGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getStatsPublicStatsGet>>,
+          TError,
+          Awaited<ReturnType<typeof getStatsPublicStatsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetStatsPublicStatsGet<TData = Awaited<ReturnType<typeof getStatsPublicStatsGet>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStatsPublicStatsGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getStatsPublicStatsGet>>,
+          TError,
+          Awaited<ReturnType<typeof getStatsPublicStatsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetStatsPublicStatsGet<TData = Awaited<ReturnType<typeof getStatsPublicStatsGet>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStatsPublicStatsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Цифры для лендинга
+ */
+
+export function useGetStatsPublicStatsGet<TData = Awaited<ReturnType<typeof getStatsPublicStatsGet>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStatsPublicStatsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetStatsPublicStatsGetQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

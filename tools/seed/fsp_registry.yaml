@@ -1,0 +1,23 @@
+# Демо-реестр ФСП (E39-28, ADR-052): кладётся в БД fsp-connector командой `python -m tools.seed fsp-registry`.
+# Герои (heroes/*.yaml с блоком fsp.participant) добавляются автоматически: ID участника источника, email их аккаунта.
+# Жюри-кандидат — участник только реестра (r-…) с результатами: «Привязать ФСП» находит его по email аккаунта.
+# Все люди и мероприятия вымышленные. date — ISO или days_ago от якоря плана.
+events:
+  - {id: e-demo-cup, title: "Кубок по продуктовому программированию (вымышленный)", discipline: product, level: national, days_ago: 160}
+  - {id: e-demo-algo, title: "Региональные соревнования по алгоритмическому программированию (вымышленные)", discipline: algorithmic, level: regional, days_ago: 95}
+  - {id: e-demo-ctf, title: "Межрегиональный CTF (вымышленный)", discipline: security, level: interregional, days_ago: 40}
+participants:
+  - {id: r-jury, full_name: "Жюрин Кирилл Андреевич", email: jury-candidate@demo.fsp.test}
+  - {id: r-demo-01, full_name: "Ласточкина Вера Олеговна", email: vera.lastochkina@example.test, phone: "+7 900 100-00-01"}
+  - {id: r-demo-02, full_name: "Комаров Егор Ильич", email: egor.komarov@example.test, phone: "+7 900 100-00-02"}
+  - {id: r-demo-03, full_name: "Дроздова Алина Петровна", email: alina.drozdova@example.test}
+  - {id: r-demo-04, full_name: "Соболев Марк Денисович", phone: "+7 900 100-00-04"}
+results:
+  - {participant_id: r-jury, event_id: e-demo-cup, place: 2, team: "Северный ветер"}
+  - {participant_id: r-demo-01, event_id: e-demo-cup, place: 2, team: "Северный ветер"}
+  - {participant_id: r-demo-02, event_id: e-demo-cup, place: 5, team: "Код без границ"}
+  - {participant_id: r-jury, event_id: e-demo-algo, place: 4}
+  - {participant_id: r-demo-03, event_id: e-demo-algo, place: 1}
+  - {participant_id: r-demo-04, event_id: e-demo-algo, place: 9}
+  - {participant_id: r-demo-02, event_id: e-demo-ctf, place: 3, team: "Код без границ"}
+  - {participant_id: r-demo-03, event_id: e-demo-ctf, place: 12}

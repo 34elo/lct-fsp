@@ -96,6 +96,9 @@ def score_estimate(key: float, answer: Any) -> float:
 
 
 def score_choice(key: int, answer: Any) -> float:
+    """Балл за выбор варианта: 1 при совпадении индекса с ключом (bool не считается числом), иначе
+    0.
+    """
     ok = isinstance(answer, int) and not isinstance(answer, bool) and answer == key
     return 1.0 if ok else 0.0
 

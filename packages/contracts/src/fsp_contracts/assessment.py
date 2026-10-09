@@ -55,12 +55,28 @@ class StandingPart(BaseModel):
     weight: float = Field(ge=0)
 
 
+class StandingGap(BaseModel):
+    """Разрыв до следующей «десятки» (топ-30 → топ-20): на сколько п.п. относительной силы."""
+
+    top_percent: int = Field(ge=1, le=90)  # целевая граница: 10, 20, …
+    gap_relative: float = Field(ge=0)  # п.п. «от лидера», которых не хватает до границы
+
+
+class StandingLeader(BaseModel):
+    """Лидер категории — анонимно: только грейд и 100 % (никаких идентификаторов)."""
+
+    grade: TestGrade
+    relative: float = 100.0
+
+
 class StandingStrength(BaseModel):
     """Сила профиля и место среди кандидатов той же категории (ранг 1 — сильнейший)."""
 
     value: float = Field(ge=0, le=1)
     rank: int = Field(ge=1)
     top_percent: int = Field(ge=1, le=100)  # «топ-30 %»: ceil(rank / category_size · 100)
+    relative: float = Field(default=100.0, ge=0, le=100)  # сила / сила лидера категории, % (E39-12)
+    gap_to_next_ten: StandingGap | None = None  # до ближайшей «десятки» выше; у топ-10 % нет
     parts: list[StandingPart] = Field(default_factory=list)
 
 
@@ -69,6 +85,17 @@ class StandingPeer(BaseModel):
 
     strength: float = Field(ge=0, le=1)
     salary_min: int | None = None
+    theta: float | None = None  # уровень в тесте θ (E39-16); ось X графика
+
+
+class StandingCategoryStats(BaseModel):
+    """Общие числа категории «профессия × грейд» для «Статистики» (E39-16). Без идентификаторов."""
+
+    candidates: int = 0  # кандидатов с действующим грейдом категории
+    interests: int = 0  # интересов и приглашений компаний кандидатам категории
+    interest_salary_from_median: int | None = None  # медиана нижней границы вилок, ₽/мес
+    interest_salary_to_median: int | None = None  # медиана верхней границы вилок, ₽/мес
+    companies_searching: int = 0  # компаний с опубликованной вакансией на эту категорию
 
 
 class CandidateStanding(BaseModel):
@@ -79,8 +106,10 @@ class CandidateStanding(BaseModel):
     mode: AttemptMode | None = None
     confirmed_at: datetime | None = None
     strength: StandingStrength | None = None
+    leader: StandingLeader | None = None
     category_size: int = 0
     peers: list[StandingPeer] = Field(default_factory=list)  # включая самого кандидата
+    category_stats: StandingCategoryStats | None = None  # E39-16
 
 
 class CandidateGrade(BaseModel):
@@ -130,6 +159,27 @@ class ProfessionInfo(BaseModel):
     skill_weights: dict[str, float]
     skill_types: dict[str, SkillType] = Field(default_factory=dict)  # заполняет E21-1
     active: bool = True  # false — скрыта в опросе и выдаче, данные остаются (ADR-027 п.1)
+    # тонкий банк: есть пустая ячейка «грейд × тип навыка», в опросе — метка «бета» (E39-6)
+    beta: bool = False
+
+
+class SkillSuggestion(BaseModel):
+    """Подсказка навыка `GET /taxonomy/skills/suggest` (E39-3)."""
+
+    slug: str
+    name: str
+    group: str | None = None
+    provisional: bool = False  # новый навык, ещё не подтверждён (сила доказательства ≤ 0.25)
+    matched: str | None = None  # синоним, по которому нашли (если не название)
+    score: float = Field(ge=0, le=1)
+
+
+class ProfessionSuggestion(BaseModel):
+    """Подсказка профессии `GET /taxonomy/professions/suggest` (E39-3)."""
+
+    slug: str
+    title: str
+    score: float = Field(ge=0, le=1)
 
 
 # --- события (outbox -> exchange events) ---
@@ -241,9 +291,12 @@ __all__ = [
     "FamilyStatusChanged",
     "ProfessionInfo",
     "ProfessionSlug",
+    "ProfessionSuggestion",
     "RegularTaskPublished",
+    "SkillSuggestion",
     "SkillType",
     "StandingPart",
+    "StandingCategoryStats",
     "StandingPeer",
     "StandingStrength",
     "TestGrade",

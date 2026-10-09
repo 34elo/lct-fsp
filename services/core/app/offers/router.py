@@ -7,13 +7,12 @@ from datetime import UTC, datetime
 from typing import Any, Literal
 
 import structlog
-from fastapi import APIRouter, Depends, Header, Query, Response
+from fastapi import APIRouter, Depends, Header, Query, Request, Response
 from fsp_contracts.enums import (
     DeclineReason,
     EmploymentType,
     Grade,
     OfferStatus,
-    RoleSlug,
     WorkFormat,
 )
 from fsp_contracts.hiring import ContactMethod, OfferInitiator, SalaryBasis
@@ -91,6 +90,14 @@ class DeclineIn(BaseModel):
     comment: str | None = Field(default=None, max_length=1000)
 
 
+class AcceptIn(BaseModel):
+    """Тело «Принять» (E39-26): один короткий ответ кандидата вместе с принятием."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    message: str | None = Field(default=None, max_length=500)
+
+
 class StatusIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -100,7 +107,7 @@ class StatusIn(BaseModel):
 class VacancyBrief(BaseModel):
     id: uuid.UUID
     title: str
-    role: RoleSlug
+    role: str
     grade_min: Grade
     grade_max: Grade
     formats: list[WorkFormat]
@@ -115,6 +122,14 @@ class MatchSnapshot(BaseModel):
 class Decline(BaseModel):
     reason: DeclineReason
     comment: str | None = None
+
+
+class OfferSender(BaseModel):
+    """Подпись приглашения (E39-24): сотрудник компании, без email и телефона."""
+
+    full_name: str
+    position: str | None = None
+    avatar_url: str | None = None  # относительно API: `/users/{id}/avatar?v=`
 
 
 class OfferOut(BaseModel):
@@ -141,6 +156,8 @@ class OfferOut(BaseModel):
     interest_at: datetime | None = None
     interest_opened_at: datetime | None = None
     invited_at: datetime | None = None
+    # E39-24: кто из компании отправил (только у интереса и приглашения компании, нет ФИО — null)
+    sender: OfferSender | None = None
 
 
 class TaskBrief(BaseModel):
@@ -188,12 +205,8 @@ class CompanyBrief(BaseModel):
     responsibility_score: float | None = None
     verified: bool
     reliability: why.CompanyReliability | None = None  # E33-2: доля ответов, срок ответа
-
-
-class OfferForCandidate(OfferOut):
-    company: CompanyBrief
-    why_you: why.WhyYou | None = None  # E33-2: только у интереса и приглашения компании
-    task: TaskBrief | None = None  # E33-3: после приглашения
+    description: str | None = None  # E39-24: «О компании», Markdown
+    demo: bool = False  # E40-1: демо-компания витрины; реальный кандидат видит пометку «демо»
 
 
 class Contacts(BaseModel):
@@ -201,6 +214,13 @@ class Contacts(BaseModel):
     email: str | None = None
     phone: str | None = None
     telegram: str | None = None
+
+
+class OfferForCandidate(OfferOut):
+    company: CompanyBrief
+    why_you: why.WhyYou | None = None  # E33-2: только у интереса и приглашения компании
+    task: TaskBrief | None = None  # E33-3: после приглашения
+    company_contacts: Contacts | None = None  # E39-26: после принятия, пока доступ не отозван
 
 
 class OfferForCompany(OfferOut):
@@ -300,6 +320,11 @@ async def _base(session: AsyncSession, o: Offer) -> dict[str, Any]:
     v = await vacancies.get(session, o.vacancy_id) if o.vacancy_id else None
     reveal = await session.get(ContactReveal, o.id)
     snap = o.match_snapshot
+    sign = (
+        await identity.staff_signature(session, o.created_by)
+        if o.initiator == OfferInitiator.employer.value
+        else None
+    )
     return {
         "id": o.id, "status": o.status, "created_at": o.created_at, "expires_at": o.expires_at,
         "vacancy": VacancyBrief.model_validate(v, from_attributes=True) if v else None,
@@ -315,7 +340,26 @@ async def _base(session: AsyncSession, o: Offer) -> dict[str, Any]:
         "awaiting_reply_from": o.awaiting_reply_from,
         "interest_at": o.interest_at, "interest_opened_at": o.interest_opened_at,
         "invited_at": o.invited_at,
+        "sender": OfferSender(
+            full_name=sign.full_name, position=sign.position, avatar_url=sign.avatar_url
+        ) if sign else None,
     }  # fmt: skip
+
+
+async def _company_contacts(session: AsyncSession, o: Offer, company: Any) -> Contacts | None:
+    """Контакты компании для кандидата (E39-26): только после принятия, пока доступ не отозван.
+    Источник — контакты компании; почта подписанта — запасной вариант."""
+    if o.initiator != OfferInitiator.employer.value or not await service.is_revealed(session, o):
+        return None
+    raw = company.contacts or {}
+    email = raw.get("email")
+    if not email and o.created_by is not None:
+        u = await session.get(User, o.created_by)
+        email = u.email if u else None
+    return Contacts(
+        name=raw.get("name") or company.name, email=email,
+        phone=raw.get("phone"), telegram=raw.get("telegram"),
+    )  # fmt: skip
 
 
 async def for_candidate(session: AsyncSession, o: Offer) -> OfferForCandidate:
@@ -324,6 +368,8 @@ async def for_candidate(session: AsyncSession, o: Offer) -> OfferForCandidate:
         id=c.id, name=c.name, responsibility_score=c.responsibility_score,
         verified=companies.badge_visible(c),
         reliability=await why.company_reliability(session, c.id, c.responsibility_score),
+        description=c.description,
+        demo=bool(c.is_demo) and not await identity.is_demo_user(session, o.candidate_id),
     )  # fmt: skip
     cand = await candidates.get(session, o.candidate_id) if o.candidate_id else None
     reasons = (
@@ -335,6 +381,7 @@ async def for_candidate(session: AsyncSession, o: Offer) -> OfferForCandidate:
     return OfferForCandidate(
         **await _base(session, o), company=brief, why_you=reasons,
         task=_brief(t) if t is not None and invite_task.visible_to_candidate(o) else None,
+        company_contacts=await _company_contacts(session, o, c),
     )  # fmt: skip
 
 
@@ -760,8 +807,11 @@ async def list_offers(
     user: User = Depends(_employer),
     session: AsyncSession = Depends(get_session),
 ) -> Any:
-    """Офферы компании; `initiator=candidate` - отклики на её вакансии."""
-    company, _ = await companies.require_company(session, user.id)
+    """Офферы компании; `initiator=candidate` - её отклики. Без компании - пусто (E39-7)."""
+    found = await companies.my_company(session, user.id)
+    if found is None:
+        return []
+    company = found[0]
     rows = await service.list_for_company(
         session,
         company.id,
@@ -824,6 +874,7 @@ async def withdraw_application(
 )
 async def get_offer(
     offer_id: uuid.UUID,
+    request: Request,
     user: User = Depends(_both),
     session: AsyncSession = Depends(get_session),
 ) -> Any:
@@ -836,7 +887,7 @@ async def get_offer(
     await service.mark_viewed_by_company(session, offer)  # отклик: sent -> viewed
     out = await for_company(session, offer)
     if await service.is_revealed(session, offer):
-        out.contacts = await _contacts(session, offer, user)
+        out.contacts = await _contacts(session, offer, user, request.app.state.settings.pii_key)
     return out
 
 
@@ -883,11 +934,15 @@ async def answer_offer_task(
     responses=problem_responses(401, 403, 404),
 )
 async def accept_offer(
-    offer_id: uuid.UUID, user: User = Depends(_candidate),
+    offer_id: uuid.UUID, body: AcceptIn | None = None, user: User = Depends(_candidate),
     session: AsyncSession = Depends(get_session),
 ) -> Any:  # fmt: skip
+    """Принять; в теле можно оставить один короткий ответ компании (E39-26)."""
     offer = await service.get_for_candidate(session, user.id, offer_id, lock=True)
     await service.accept(session, offer)
+    text = (body.message if body else None) or ""
+    if text.strip():
+        await service.add_message(session, offer, side="candidate", user_id=user.id, text=text)
     return await for_candidate(session, offer)
 
 
@@ -935,19 +990,23 @@ async def set_offer_status(
     return await for_company(session, offer)
 
 
-async def _contacts(session: AsyncSession, offer: Offer, viewer: User) -> Contacts:
-    """Контакты кандидата. Источник пока — учётная запись и привязанный Telegram (анкета не хранит
-    `full_name_enc`/`contacts_enc`), имя — псевдоним. Аудит без ПДн: кто, какой оффер."""
+async def _contacts(
+    session: AsyncSession, offer: Offer, viewer: User, pii_key: str = ""
+) -> Contacts:
+    """Контакты кандидата: то, что он указал в профиле (почта, телефон, Telegram), иначе учётная
+    запись и привязанный Telegram; имя — псевдоним. Аудит без ПДн: кто, какой оффер."""
     assert offer.candidate_id is not None
     cand = await candidates.get(session, offer.candidate_id)
+    own = candidates.contacts_of(cand, pii_key) if cand is not None and pii_key else {}
     u = await session.get(User, offer.candidate_id)
     tg = await telegram.account_of_user(session, offer.candidate_id)
     log.info("contacts.viewed", offer_id=str(offer.id), company_id=str(offer.company_id),
              viewer_user_id=str(viewer.id))  # fmt: skip
     return Contacts(
         name=cand.pseudonym if cand else "Кандидат",
-        email=u.email if u else None,
-        telegram=f"@{tg.username}" if tg and tg.username else None,
+        email=own.get("email") or (u.email if u else None),
+        phone=own.get("phone"),
+        telegram=own.get("telegram") or (f"@{tg.username}" if tg and tg.username else None),
     )
 
 
@@ -957,13 +1016,13 @@ async def _contacts(session: AsyncSession, offer: Offer, viewer: User) -> Contac
     responses=problem_responses(401, 403, 404),
 )
 async def offer_contacts(
-    offer_id: uuid.UUID, user: User = Depends(_employer),
+    offer_id: uuid.UUID, request: Request, user: User = Depends(_employer),
     session: AsyncSession = Depends(get_session),
 ) -> Any:  # fmt: skip
     company, _ = await companies.require_company(session, user.id)
     offer = await service.get_for_company(session, company.id, offer_id)
     await service.require_revealed(session, offer)
-    return await _contacts(session, offer, user)
+    return await _contacts(session, offer, user, request.app.state.settings.pii_key)
 
 
 @router.post(

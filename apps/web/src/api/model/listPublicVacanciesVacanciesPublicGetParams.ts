@@ -4,12 +4,18 @@
  * core
  * OpenAPI spec version: 0.1.0
  */
-import type { RoleSlug } from './roleSlug';
+import type { Grade } from './grade';
+import type { WorkFormat } from './workFormat';
 
 export type ListPublicVacanciesVacanciesPublicGetParams = {
-role?: RoleSlug | null;
+role?: string | null;
 city?: string | null;
 q?: string | null;
+grade?: Grade | null;
+skills?: string[] | null;
+salary_min?: number | null;
+salary_max?: number | null;
+format?: WorkFormat | null;
 /**
  * @minimum 1
  * @maximum 100

@@ -1,14 +1,18 @@
-import { useRef, useState } from "react";
+import { PAGE } from "@/shared/lib/page";
+import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import type { ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import {
+  Avatar,
   Button,
   CircuitLine,
+  cn,
+  Markdown,
   MatchWhy,
   OfferCardV2,
   SalaryRange,
-  SectionLabel,
   Sheet,
   SheetContent,
   SheetDescription,
@@ -23,18 +27,23 @@ import {
   useAcceptOfferOffersOfferIdAcceptPost,
   useDeclineOfferOffersOfferIdDeclinePost,
   useGetOfferOffersOfferIdGet,
+  useListMessagesOffersOfferIdMessagesGet,
   useMyOffersCandidatesMeOffersGet,
   useRevokeContactsOffersOfferIdContactsRevokePost,
 } from "@/api/endpoints/offers/offers";
 import { DeclineReason } from "@/api/model";
-import { ErrorNote } from "@/features/auth/ui";
+import { ErrorNote, fieldClass } from "@/features/auth/ui";
+import { avatarSrc } from "@/shared/lib/avatar";
 import { FORMAT_LABEL } from "@/features/employer/text";
 import { GRADE_LABEL } from "@/features/profile/text";
-import { Conversation, invalidateOffers, Panel, Timeline } from "./parts";
+import { ContactsCard, invalidateOffers, MessageCard, Panel, Timeline } from "./parts";
 import { DeclineSheet, DetailLink, LIST_PAGE, ListEmpty, ListError, ListHeader, ListSkeleton, offerCardData } from "./offer-cards";
 import { isAwaiting, nextSteps, offerTitle, pastSummary, type CandidateOffer } from "./offer-model";
 import { ACTIVE_STATUSES, CAND_TEXT as T, CONTACT_LABEL, dateOnly, DECLINE_LABEL, offerErrorText } from "./text";
 import { WhyYouBlock, whyYouItems } from "./WhyYou";
+import CandidateResponses from "@/features/responses/CandidateResponses";
+import { CandidateInterests } from "./CandidateInterests";
+import { ShowFilter, useShow } from "./ShowFilter";
 
 function OfferItem({ o, onDecline }: { o: CandidateOffer; onDecline: (id: string) => void }) {
   const qc = useQueryClient();
@@ -69,7 +78,16 @@ function OfferItem({ o, onDecline }: { o: CandidateOffer; onDecline: (id: string
 }
 
 /** Вкладка «Приглашения» (E38-14): ждущие ответа сверху, прошлые приглушены ниже; отклики кандидата — в своей вкладке. */
+/** «Приглашения» кандидата (E39-25): один экран с фильтром — приглашения, интересы компаний, свои отклики. */
 export function CandidateOffers() {
+  const show = useShow(["offers", "interests", "responses"] as const);
+  const filter = <ShowFilter options={T.filter} label={T.filterLabel} />;
+  if (show === "interests") return <CandidateInterests filter={filter} />;
+  if (show === "responses") return <CandidateResponses filter={filter} />;
+  return <OffersList filter={filter} />;
+}
+
+function OffersList({ filter }: { filter: ReactNode }) {
   const qc = useQueryClient();
   const q = useMyOffersCandidatesMeOffersGet();
   const all = ((q.data?.status === 200 ? q.data.data : []) as unknown as CandidateOffer[]).filter((o) => o.initiator !== "candidate");
@@ -89,6 +107,7 @@ export function CandidateOffers() {
   return (
     <main className={LIST_PAGE}>
       <ListHeader />
+      {filter}
       {q.isPending && <ListSkeleton />}
       {q.isError && <ListError error={q.error} onRetry={() => void q.refetch()} />}
       {q.isSuccess && all.length === 0 && <ListEmpty title={T.empty} />}
@@ -135,6 +154,8 @@ export function CandidateOfferDetail() {
   });
   const [sheet, setSheet] = useState(false);
   const [revokeSheet, setRevokeSheet] = useState(false);
+  // Единственное сообщение кандидата: уходит вместе с «Принять» или как комментарий к отказу.
+  const [reply, setReply] = useState("");
   const revoke = useRevokeContactsOffersOfferIdContactsRevokePost({
     mutation: {
       onSuccess: () => {
@@ -143,14 +164,17 @@ export function CandidateOfferDetail() {
       },
     },
   });
-  const chat = useRef<HTMLDivElement>(null);
+  const msgs = useListMessagesOffersOfferIdMessagesGet(id, { query: { enabled: !!o, retry: false } });
+  const myReply = (msgs.data?.status === 200 ? msgs.data.data : []).find((m) => m.author_side === "candidate");
   const answerable = !!o && isAwaiting(o.status);
   const accepted = !!o && ["accepted", "interview", "hired", "not_hired"].includes(o.status);
   const why = o ? whyItems(o) : [];
   const hasWhyYou = !!o && whyYouItems(o.why_you).length > 0;
   const err = accept.error;
+  const text = reply.trim() || null;
+  const contacts = o?.company_contacts ?? null;
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4 md:p-6">
+    <main className={PAGE.normal}>
       <Link to="/me/offers" className="text-sm font-semibold text-brand-fg hover:underline">← {T.back}</Link>
       {q.isPending && <Skeleton role="status" aria-label="Загрузка" className="h-64" />}
       {q.isError && <ErrorNote>{T.notFound}</ErrorNote>}
@@ -179,66 +203,88 @@ export function CandidateOfferDetail() {
             </section>
           )}
 
-          <SalaryRange from={o.salary_from} to={o.salary_to} size="offer" label={T.salaryLabel} />
-          <p className="text-13 text-muted">
-            {o.vacancy ? o.vacancy.formats.map((f) => FORMAT_LABEL[f] ?? f).join(", ") : T.invite}
-            {o.contact_method ? ` · ${T.contactVia(CONTACT_LABEL[o.contact_method] ?? o.contact_method)}` : ""}
-            {answerable ? ` · ответить до ${dateOnly(o.expires_at)}` : ` · получен ${dateOnly(o.created_at)}`}
-          </p>
-          {o.below_candidate_min && (
-            <p role="status" className="rounded-lg border border-warning-border bg-warning-bg px-3 py-2 text-13 font-semibold text-warning-fg">{T.belowPlain}</p>
-          )}
-          {o.decline && <p className="text-14 text-muted">{T.yourDecline(DECLINE_LABEL[o.decline.reason] ?? o.decline.reason)}</p>}
+          <div className="grid items-start gap-4 lg:grid-cols-12">
+            <div className="flex min-w-0 flex-col gap-4 lg:col-span-8">
+              <Panel title={T.conditions}>
+                <SalaryRange from={o.salary_from} to={o.salary_to} size="offer" label={T.salaryLabel} />
+                <p className="text-13 text-muted">
+                  {o.vacancy ? o.vacancy.formats.map((f) => FORMAT_LABEL[f] ?? f).join(", ") : T.invite}
+                  {o.contact_method ? ` · ${T.contactVia(CONTACT_LABEL[o.contact_method] ?? o.contact_method)}` : ""}
+                  {answerable ? ` · ответить до ${dateOnly(o.expires_at)}` : ` · получен ${dateOnly(o.created_at)}`}
+                </p>
+                {o.below_candidate_min && (
+                  <p role="status" className="rounded-lg border border-warning-border bg-warning-bg px-3 py-2 text-13 font-semibold text-warning-fg">{T.belowPlain}</p>
+                )}
+                {o.task && (
+                  <p data-testid="offer-task" className="text-14">
+                    {o.task.answered_at ? T.taskAnswered : T.task(o.task.title, o.task.minutes, dateOnly(o.task.deadline_at))}
+                  </p>
+                )}
+                {o.decline && <p className="text-14 text-muted">{T.yourDecline(DECLINE_LABEL[o.decline.reason] ?? o.decline.reason)}</p>}
+                {o.description && <MessageCard label={T.description} text={o.description} />}
+                {o.message && <MessageCard label={T.fromCompany} text={o.message} testId="offer-message" />}
+                {myReply && <MessageCard label={T.yourReply} text={myReply.text} testId="offer-reply" />}
+              </Panel>
 
-          {(o.message || o.description) && (
-            <section className="flex flex-col gap-2 rounded-xl border border-hairline bg-card p-4">
-              {o.message && (
-                <>
-                  <SectionLabel>{T.fromCompany}</SectionLabel>
-                  <p className="whitespace-pre-wrap break-words text-14">{o.message}</p>
-                </>
+              {o.company.description && (
+                <Panel title={T.aboutCompany}>
+                  <Markdown data-testid="offer-company-about">{o.company.description}</Markdown>
+                </Panel>
               )}
-              {o.description && (
-                <>
-                  <SectionLabel>{T.description}</SectionLabel>
-                  <p className="whitespace-pre-wrap break-words text-14">{o.description}</p>
-                </>
+
+              {hasWhyYou && (
+                <Panel title={T.why}>
+                  <WhyYouBlock why={o.why_you} reliability={o.company.reliability} />
+                </Panel>
               )}
-            </section>
-          )}
+              {!hasWhyYou && why.length > 0 && (
+                <Panel title={T.why}>
+                  <MatchWhy items={why} />
+                </Panel>
+              )}
 
-          {hasWhyYou && (
-            <Panel title={T.why}>
-              <WhyYouBlock why={o.why_you} reliability={o.company.reliability} />
-            </Panel>
-          )}
-          {!hasWhyYou && why.length > 0 && (
-            <Panel title={T.why}>
-              <MatchWhy items={why} />
-            </Panel>
-          )}
-
-          {accepted && (
-            <Panel title={T.next}>
-              <CircuitLine steps={nextSteps(o.status)} />
-            </Panel>
-          )}
-
-          <div ref={chat}>
-            <Conversation offerId={o.id} side="candidate" canWrite={ACTIVE_STATUSES.includes(o.status)} />
-          </div>
-          <Timeline offerId={o.id} />
-
-          {err && <ErrorNote>{offerErrorText(err)}</ErrorNote>}
-          {answerable && (
-            <div className="sticky bottom-0 -mx-4 grid gap-2 border-t border-hairline bg-page p-4 md:static md:mx-0 md:border-0 md:bg-transparent md:p-0">
-              <Button size="lg" loading={accept.isPending} onClick={() => accept.mutate({ offerId: o.id })}>{T.accept}</Button>
-              <div className="grid grid-cols-2 gap-2">
-                <Button size="lg" variant="outline" onClick={() => setSheet(true)}>{T.decline}</Button>
-                <Button size="lg" variant="ghost" onClick={() => chat.current?.scrollIntoView({ behavior: "smooth" })}>{T.ask}</Button>
-              </div>
+              {err && <ErrorNote>{offerErrorText(err)}</ErrorNote>}
+              {answerable && (
+                <Panel title={T.replyLabel}>
+                  <label htmlFor="offer-reply-text" className="sr-only">{T.replyLabel}</label>
+                  <textarea
+                    id="offer-reply-text"
+                    value={reply}
+                    onChange={(e) => setReply(e.target.value)}
+                    maxLength={500}
+                    rows={3}
+                    placeholder={T.replyPlaceholder}
+                    className={cn(fieldClass, "h-auto py-2")}
+                  />
+                  <p className="text-12 text-muted">{T.replyOptional}. {T.replyHint}</p>
+                  <div className="sticky bottom-0 -mx-4 grid gap-2 border-t border-hairline bg-page p-4 md:static md:mx-0 md:grid-cols-2 md:border-0 md:bg-transparent md:p-0">
+                    <Button size="lg" loading={accept.isPending} onClick={() => accept.mutate({ offerId: o.id, data: text ? { message: text } : undefined })}>{T.accept}</Button>
+                    <Button size="lg" variant="outline" onClick={() => setSheet(true)}>{T.decline}</Button>
+                  </div>
+                </Panel>
+              )}
             </div>
-          )}
+
+            <div className="flex min-w-0 flex-col gap-4 lg:col-span-4">
+              {o.sender && (
+                <section className="flex items-center gap-3 rounded-xl border border-hairline bg-card p-4" aria-label={T.sentBy} data-testid="offer-sender">
+                  <Avatar name={o.sender.full_name} src={avatarSrc(o.sender.avatar_url)} size={44} />
+                  <div className="flex min-w-0 flex-col">
+                    <span className="text-12 text-muted">{T.sentBy}</span>
+                    <span className="truncate font-medium">{o.sender.full_name}</span>
+                    {o.sender.position && <span className="truncate text-13 text-muted">{`${o.sender.position} · ${o.company.name}`}</span>}
+                  </div>
+                </section>
+              )}
+              {contacts && <ContactsCard title={T.companyContacts} hint={T.companyContactsHint} contacts={contacts} testId="company-contacts" />}
+              <Timeline offerId={o.id} />
+              {accepted && (
+                <Panel title={T.next}>
+                  <CircuitLine steps={nextSteps(o.status)} />
+                </Panel>
+              )}
+            </div>
+          </div>
 
           <Sheet open={revokeSheet} onOpenChange={setRevokeSheet}>
             <SheetContent side="bottom" className="mx-auto max-w-lg">
@@ -262,7 +308,7 @@ export function CandidateOfferDetail() {
                     <button
                       type="button"
                       disabled={decline.isPending}
-                      onClick={() => decline.mutate({ offerId: o.id, data: { reason: r, comment: null } })}
+                      onClick={() => decline.mutate({ offerId: o.id, data: { reason: r, comment: text } })}
                       className="flex h-14 w-full items-center justify-between text-left text-14 hover:bg-tint-50 disabled:opacity-50"
                     >
                       {DECLINE_LABEL[r]}

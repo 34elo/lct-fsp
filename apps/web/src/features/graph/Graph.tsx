@@ -1,9 +1,11 @@
-import { EmptyState, ErrorState, Panel, PanelCap, SkillTag, Skeleton } from "@fsp/ui";
+import { EmptyState, ErrorState, EvidenceGraph, H2, Panel, SkeletonChart } from "@fsp/ui";
+import { Gloss } from "@/shared/Gloss";
 import { Link, useSearchParams } from "react-router-dom";
 
 import { useMyGraphCandidatesMeGraphGet } from "@/api/endpoints/graph/graph";
 import { MyGraphCandidatesMeGraphGetDepth, MyGraphCandidatesMeGraphGetSkills } from "@/api/model";
-import EvidenceGraph from "@/features/graph/EvidenceGraph";
+import { GraphList } from "@/features/graph/GraphList";
+import { slugOf } from "@/features/graph/layout";
 import { T } from "@/features/graph/text";
 
 function Toggle<V extends string>({ label, value, options, onChange, testid }: { label: string; value: V; options: [V, string][]; onChange: (v: V) => void; testid: string }) {
@@ -42,10 +44,8 @@ export default function GraphView() {
   let body: React.ReactNode;
   if (q.isPending) {
     body = (
-      <div role="status" aria-label={T.loading} data-testid="graph-loading" className="flex flex-col gap-3">
-        <Skeleton className="h-16 w-full" />
-        <Skeleton className="h-16 w-full" />
-        <Skeleton className="h-16 w-full" />
+      <div data-testid="graph-loading">
+        <SkeletonChart height={420} />
       </div>
     );
   } else if (q.isError || q.data.status !== 200) {
@@ -57,7 +57,25 @@ export default function GraphView() {
       </div>
     );
   } else {
-    body = <EvidenceGraph graph={q.data.data} />;
+    const graph = q.data.data;
+    body = (
+      <div data-testid="graph-root" className="flex flex-col gap-4">
+        <EvidenceGraph
+          data={graph}
+          title={null}
+          info={null}
+          renderSkillAction={(n) => (
+            <Link to={`/me/skills/${slugOf(n.id)}`} className="inline-flex min-h-11 items-center text-13 font-semibold text-brand-fg" aria-label={`${n.label}: ${T.skillLink}`}>
+              {T.skillLink}
+            </Link>
+          )}
+        />
+        <details data-testid="graph-list-toggle" className="group">
+          <summary className="inline-flex min-h-11 cursor-pointer items-center text-14 font-semibold text-brand-fg">{T.listToggle}</summary>
+          <GraphList graph={graph} />
+        </details>
+      </div>
+    );
   }
 
   return (
@@ -68,15 +86,9 @@ export default function GraphView() {
         <Toggle label={T.depthLabel} value={depth} testid="graph-depth" onChange={(v) => set("depth", v)} options={[["facts", T.depthFacts], ["competitions", T.depthCompetitions]]} />
       </div>
       <Panel aria-label={T.title} className="p-4 md:p-5">
-        <PanelCap
-          title={T.title}
-          aside={
-            <div className="flex gap-1.5">
-              <SkillTag name="факт" />
-              <SkillTag name="заявлено" state="claimed" />
-            </div>
-          }
-        />
+        <Gloss k="graph" className="mb-3">
+          <H2>{T.title}</H2>
+        </Gloss>
         {body}
       </Panel>
     </div>

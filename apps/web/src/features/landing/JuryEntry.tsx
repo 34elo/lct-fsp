@@ -10,9 +10,10 @@ import { T } from "./text";
 
 type Who = "candidate" | "employer";
 
-/** Кнопки «войти как жюри» и подсказка «что попробовать». Без `VITE_JURY_MODE` ничего не рисует. */
+/** Кнопки «войти как жюри» и подсказка «что попробовать». Без `VITE_JURY_MODE` ничего не рисует.
+ * Каждый браузер получает свою песочницу (E40-1): действия разных членов жюри не пересекаются. */
 export function JuryEntry() {
-  const { login } = useAuth();
+  const { loginAsJury } = useAuth();
   const navigate = useNavigate();
   const [busy, setBusy] = useState<Who | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +23,7 @@ export function JuryEntry() {
     setBusy(who);
     setError(null);
     try {
-      await login(JURY[who].email, JURY.password);
+      await loginAsJury(who);
       navigate(JURY[who].to);
     } catch (err) {
       setError(authErrorText(err, T.juryError));

@@ -1,10 +1,11 @@
+import { PAGE } from "@/shared/lib/page";
 import { useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { Button, cn, ErrorState, formatRubRange, SectionLabel, Skeleton, SkillChip } from "@fsp/ui";
 
-import { useListPublicVacanciesVacanciesPublicGet } from "@/api/endpoints/vacancies/vacancies";
+import { useGetPublicVacancyVacanciesPublicVacancyIdGet } from "@/api/endpoints/vacancies/vacancies";
 import { useApplyToVacancyVacanciesVacancyIdApplyPost } from "@/api/endpoints/vacancies/vacancies";
 import { useMarkCandidateInterestCompaniesCompanyIdInterestPost, useRemoveCandidateInterestCompaniesCompanyIdInterestDelete } from "@/api/endpoints/search/search";
 import { ErrorNote, fieldClass } from "@/features/auth/ui";
@@ -39,7 +40,7 @@ function ApplyBox({ vacancyId }: { vacancyId: string }) {
       <section role="status" className="flex flex-col gap-2 rounded-xl border border-brand-mid bg-tint-50 p-4">
         <h2 className="font-mono text-16 font-semibold">{T.sentTitle}</h2>
         <p className="text-14">{T.sentHint}</p>
-        <Link to="/me/responses" className="text-14 font-semibold text-brand-fg hover:underline">{T.toResponses}</Link>
+        <Link to="/me/offers?show=responses" className="text-14 font-semibold text-brand-fg hover:underline">{T.toResponses}</Link>
       </section>
     );
   }
@@ -97,17 +98,18 @@ function CompanyInterest({ companyId }: { companyId: string }) {
   );
 }
 
-/** Вакансия (J1, /jobs/:id). Отдельного публичного эндпоинта нет: ищем в публичной выдаче. */
+/** Вакансия (J1, /jobs/:id). «Назад к списку» возвращает на тот же поиск: фильтры лежат в URL списка. */
 export default function JobDetail() {
   const { id = "" } = useParams();
-  const q = useListPublicVacanciesVacanciesPublicGet({ limit: 100 });
-  const v = (q.data?.status === 200 ? q.data.data : []).find((x) => x.id === id);
+  const loc = useLocation();
+  const search = (loc.state as { search?: string } | null)?.search ?? "";
+  const q = useGetPublicVacancyVacanciesPublicVacancyIdGet(id, { query: { retry: false } });
+  const v = q.data?.status === 200 ? q.data.data : undefined;
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
-      <Link to="/jobs" className="text-sm font-semibold text-brand-fg hover:underline">← {T.back}</Link>
+    <div className={PAGE.narrow}>
+      <Link to={`/jobs${search}`} className="text-sm font-semibold text-brand-fg hover:underline">← {T.back}</Link>
       {q.isPending && <Skeleton role="status" aria-label="Загрузка" className="h-64" />}
       {q.isError && <ErrorState title={T.notFound} onRetry={() => void q.refetch()} />}
-      {q.isSuccess && !v && <ErrorNote>{T.notFound}</ErrorNote>}
       {v && (
         <>
           <header className="flex flex-col gap-1">

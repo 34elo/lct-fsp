@@ -144,6 +144,7 @@ async def build_snapshot(session: AsyncSession) -> dict[str, Any]:
 
 
 def snapshot_hash(snap: dict[str, Any]) -> str:
+    """SHA-256 снимка справочника в каноническом JSON: меняется только вместе с содержимым."""
     raw = json.dumps(snap, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
     return hashlib.sha256(raw.encode()).hexdigest()
 
@@ -649,3 +650,10 @@ async def save_card_draft(
         row.card, row.model, row.status = payload, draft.get("model", ""), "draft"
     await session.flush()
     return row
+
+
+async def pending_merge_count(session: AsyncSession) -> int:
+    """Число предложенных слияний навыков — счётчик на главной админки (E39-29)."""
+    from app.taxonomy import decisions
+
+    return len(await decisions.pending_merges(session))

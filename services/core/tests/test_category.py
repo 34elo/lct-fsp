@@ -1,7 +1,5 @@
 """Категория: роли, мульти-метки, стек, объяснение (ml.md §4)."""
 
-import subprocess
-import sys
 import uuid
 from datetime import UTC, datetime
 from pathlib import Path
@@ -22,6 +20,7 @@ from app.graph.trust import TrustConfig
 from app.identity.models import User
 from app.taxonomy import service as tax
 from app.taxonomy.loader import load_taxonomy
+from core_helpers import upgrade_head
 from fsp_platform.db import make_engine, make_session_factory, session_scope
 from fsp_platform.outbox import OutboxRecord
 from sqlalchemy import select
@@ -128,12 +127,7 @@ def test_deterministic():
 @pytest.fixture
 def db_url(tmp_path):
     url = f"sqlite+aiosqlite:///{tmp_path / 'c.db'}"
-    subprocess.run(
-        [sys.executable, "-m", "alembic", "-x", f"url={url}", "upgrade", "head"],
-        cwd=CORE,
-        check=True,
-        capture_output=True,
-    )
+    upgrade_head(url)
     return url
 
 

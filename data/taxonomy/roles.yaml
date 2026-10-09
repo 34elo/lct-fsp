@@ -1,5 +1,7 @@
 # Роли и веса навыков (E2-1): вес — насколько навык типичен для роли, 0..1.
 # Роли — из RoleSlug (packages/contracts). Используется для подсказок, рекомендаций и разреженных запросов.
+# Все профессии открыты (E39-6, отменяет скрытие E36-2); `active: false` у роли скрывает её, данные остаются.
+# Профессия с пустыми ячейками банка помечается «бета» (families-check предупреждает).
 roles:
   - slug: backend
     profession: true
@@ -14,12 +16,10 @@ roles:
     skills: {frontend: 0.8, backend: 0.8, javascript: 0.9, typescript: 0.7, html: 0.7, css: 0.7, react: 0.7, nodejs: 0.6, python: 0.5, sql: 0.7, postgresql: 0.6, rest: 0.8, docker: 0.6, git: 0.8, databases: 0.6, mongodb: 0.3, nextjs: 0.4, ci_cd: 0.4, linux: 0.3, unit_testing: 0.4, oauth: 0.3}
   - slug: mobile
     profession: true
-    active: false  # скрыта в опросе (ADR-027 п.1, E36-2), данные остаются
     name: Мобильный разработчик
     skills: {mobile: 1.0, android: 0.6, ios: 0.6, kotlin: 0.5, swift: 0.5, flutter: 0.4, dart: 0.3, react-native: 0.3, jetpack-compose: 0.3, swiftui: 0.3, java: 0.3, git: 0.7, rest: 0.7, oop: 0.5, design_patterns: 0.4, unit_testing: 0.4, ci_cd: 0.3, sqlite: 0.3, concurrency: 0.4, ui_design: 0.2, abstraction: 0.4, performance_reasoning: 0.4, user_research: 0.3, production_support: 0.3, open_source: 0.2, decomposition: 0.7, debugging: 0.8, trade_off_analysis: 0.5, edge_case_thinking: 0.4, requirements_analysis: 0.3, business_metrics: 0.2, prioritization: 0.3, communication: 0.6, teamwork: 0.7, code_review: 0.5, ownership: 0.5, commercial_experience: 0.8, pet_projects: 0.4, team_projects: 0.4, self_learning: 0.5}
   - slug: ml
     profession: true
-    active: false  # скрыта в опросе (ADR-027 п.1, E36-2), данные остаются
     name: ML-инженер
     skills: {ml: 1.0, python: 1.0, deep_learning: 0.7, pytorch: 0.7, tensorflow: 0.4, scikit-learn: 0.7, pandas: 0.8, numpy: 0.8, statistics: 0.7, math: 0.7, nlp: 0.4, computer_vision: 0.4, llm: 0.4, transformers: 0.4, xgboost: 0.5, feature_engineering: 0.5, mlops: 0.4, jupyter: 0.5, sql: 0.6, git: 0.6, docker: 0.5, linux: 0.4, data_analysis: 0.6, matplotlib: 0.4, algorithms: 0.4, recsys: 0.3, reinforcement_learning: 0.2, opencv: 0.3, ab_testing: 0.2, time_series: 0.2, data_driven_thinking: 0.8, estimation: 0.4, risk_assessment: 0.4, domain_knowledge: 0.4, unit_economics: 0.2, competitive_programming: 0.3, open_source: 0.3, public_speaking: 0.2, decomposition: 0.7, debugging: 0.8, trade_off_analysis: 0.5, edge_case_thinking: 0.4, requirements_analysis: 0.3, business_metrics: 0.2, prioritization: 0.3, communication: 0.6, teamwork: 0.7, code_review: 0.5, ownership: 0.5, commercial_experience: 0.8, pet_projects: 0.4, team_projects: 0.4, self_learning: 0.5}
   - slug: data_engineer
@@ -27,12 +27,10 @@ roles:
     skills: {data_engineering: 1.0, sql: 1.0, python: 0.8, etl: 0.8, airflow: 0.6, spark: 0.6, kafka: 0.5, dwh: 0.6, postgresql: 0.5, clickhouse: 0.4, hadoop: 0.3, dbt: 0.4, docker: 0.5, git: 0.6, linux: 0.5, databases: 0.7, query_optimization: 0.5, s3: 0.3, bash: 0.3, cloud: 0.3, ci_cd: 0.3, data_analysis: 0.3, java: 0.2, scala: 0.2}
   - slug: devops
     profession: true
-    active: false  # скрыта в опросе (ADR-027 п.1, E36-2), данные остаются
     name: DevOps-инженер
     skills: {devops: 1.0, linux: 1.0, docker: 0.9, kubernetes: 0.7, ci_cd: 0.9, git: 0.8, bash: 0.7, python: 0.4, terraform: 0.5, ansible: 0.5, networks: 0.6, monitoring: 0.7, prometheus: 0.5, grafana: 0.5, nginx: 0.5, aws: 0.4, cloud: 0.5, gcp: 0.2, azure: 0.2, yandex_cloud: 0.2, load_balancing: 0.3, postgresql: 0.3, security: 0.3, go: 0.2, redis: 0.2, root_cause_analysis: 0.7, risk_assessment: 0.6, estimation: 0.4, cost_awareness: 0.5, production_support: 0.8, knowledge_sharing: 0.5, open_source: 0.3, decomposition: 0.7, debugging: 0.8, trade_off_analysis: 0.5, edge_case_thinking: 0.4, requirements_analysis: 0.3, business_metrics: 0.2, prioritization: 0.3, communication: 0.6, teamwork: 0.7, code_review: 0.5, ownership: 0.5, commercial_experience: 0.8, pet_projects: 0.4, team_projects: 0.4, self_learning: 0.5}
   - slug: qa
     profession: true
-    active: false  # скрыта в опросе (ADR-027 п.1, E36-2), данные остаются
     name: QA-инженер
     skills: {qa: 1.0, networks: 0.3, databases: 0.4, oop: 0.3, test_automation: 0.7, bug_tracking: 0.6, api_testing: 0.6, selenium: 0.4, playwright: 0.3, pytest: 0.4, python: 0.4, java: 0.3, sql: 0.5, rest: 0.5, git: 0.5, ci_cd: 0.4, load_testing: 0.3, unit_testing: 0.4, linux: 0.3, docker: 0.3, agile: 0.3, communication: 0.3, attention_to_detail: 0.4, technical_writing: 0.2, edge_case_thinking: 0.9, risk_assessment: 0.6, root_cause_analysis: 0.5, domain_knowledge: 0.4, knowledge_sharing: 0.4, production_support: 0.3, open_source: 0.1, decomposition: 0.7, debugging: 0.8, trade_off_analysis: 0.5, requirements_analysis: 0.3, business_metrics: 0.2, prioritization: 0.3, teamwork: 0.7, code_review: 0.5, ownership: 0.5, commercial_experience: 0.8, pet_projects: 0.4, team_projects: 0.4, self_learning: 0.5}
   - slug: security

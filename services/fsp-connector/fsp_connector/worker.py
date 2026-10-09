@@ -14,6 +14,7 @@ from redis.asyncio import Redis
 from fsp_connector import handlers
 from fsp_connector.config import Settings
 from fsp_connector.factory import build_adapter
+from fsp_connector.registry import RegistryAdapter
 from fsp_connector.sync import SyncService
 
 
@@ -24,7 +25,7 @@ async def main() -> None:
     engine = make_engine(settings.database_url)
     factory = make_session_factory(engine)
     redis = Redis.from_url(settings.redis_url)
-    adapter = build_adapter(settings, redis)
+    adapter = RegistryAdapter(build_adapter(settings, redis), factory)  # реестр ФСП (ADR-052)
     consumers = {"fsp.sync": Consumer(QUEUES["fsp.sync"])}
     handlers.register(consumers, factory, SyncService(adapter, factory), redis)
     for consumer in consumers.values():
@@ -45,7 +46,7 @@ async def main() -> None:
         with contextlib.suppress(asyncio.CancelledError):
             await task
         await broker.stop()
-        await getattr(adapter, "inner", adapter).aclose()
+        await adapter.aclose()
         await redis.aclose()
         await engine.dispose()
 

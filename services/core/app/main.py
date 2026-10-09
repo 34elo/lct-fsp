@@ -32,14 +32,19 @@ from app.assessment.tasks_router import employer_router as employer_tasks_router
 # <<< block2
 from app.candidates.router import router as candidates_router
 from app.companies.router import admin_router as admin_companies_router
+from app.companies.router import invites_router as company_invites_router
 from app.companies.router import router as companies_router
 from app.config import Settings
 from app.consents.router import router as consents_router
 from app.credentials.router import router as credentials_router
+from app.demo.router import router as jury_router
 from app.events_stream import UiHub
 from app.events_stream import router as events_router
+from app.fsp.registry_router import admin_router as fsp_registry_admin_router
+from app.fsp.registry_router import router as fsp_registry_router
 from app.fsp.router import router as fsp_router
 from app.graph.router import router as graph_router
+from app.identity.profile_router import router as profile_router
 from app.identity.router import router as identity_router
 from app.matching.needs_router import router as needs_router
 from app.matching.router import router as search_router
@@ -55,6 +60,7 @@ from app.taxonomy.skills_router import router as admin_skills_router
 from app.telegram.router import internal as telegram_internal_router
 from app.telegram.router import router as telegram_router
 from app.vacancies.router import router as vacancies_router
+from app.views.public_stats import router as public_stats_router
 from app.views.router import router as views_router
 
 
@@ -119,6 +125,8 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     # <<< block1
     # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
     app.include_router(employer_activity_router)
+    app.include_router(fsp_registry_router)  # реестр ФСП (E39-28)
+    app.include_router(fsp_registry_admin_router)
     app.include_router(analytics_router)
     app.include_router(analytics_internal_router)
     app.include_router(live_runs_admin_router)
@@ -128,7 +136,11 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(needs_router)
     app.include_router(subscriptions_router)
     app.include_router(views_router)
+    app.include_router(public_stats_router)
+    app.include_router(jury_router)  # вход жюри в песочницу (E40-1)
     app.include_router(credentials_router)
+    app.include_router(profile_router)
+    app.include_router(company_invites_router)
     # <<< block2
 
     @app.get("/readyz", include_in_schema=False)

@@ -1,3 +1,4 @@
+import { PAGE } from "@/shared/lib/page";
 import { Button, cn, EmptyState, H1, Lbl, Panel, Skeleton, TaskHeader } from "@fsp/ui";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
@@ -11,7 +12,7 @@ import { useGetProfessionsTaxonomyProfessionsGet } from "@/api/endpoints/taxonom
 import type { NextOut } from "@/api/model";
 import { chainSteps, initialAnswer, isAnswered, toPayload, type AnswerValue, type TestItem } from "./model";
 import { Question } from "./Question";
-import { GRADE, T } from "./text";
+import { GRADE, KIND_LABEL, T } from "./text";
 import { ErrorLine, LoadError, retryServerOnly } from "./ui";
 
 type Telemetry = { away_ms: number[]; pastes: number };
@@ -145,6 +146,8 @@ function ItemRunner({
       <TaskHeader
         index={num}
         total={Math.max(total, num)}
+        upTo
+        kindLabel={KIND_LABEL[kind]}
         secondsLeft={clock.left != null && item.time_limit_s ? Math.ceil(clock.left) : undefined}
         onHelp={() => setHelp((v) => !v)}
       />
@@ -317,7 +320,7 @@ export default function Attempt() {
     );
 
   return (
-    <div className="mx-auto flex w-full max-w-[760px] flex-col gap-4">
+    <div className={PAGE.narrow}>
       <ItemRunner
         key={item.response_id}
         item={item}

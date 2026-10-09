@@ -1,3 +1,4 @@
+import { PAGE } from "@/shared/lib/page";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -6,6 +7,7 @@ import { Badge, Button, Card, CardContent, Skeleton } from "@fsp/ui";
 import { useGetHintsAdminSkillsHintsGet, useListProfessionsAdminProfessionsGet } from "@/api/endpoints/admin/admin";
 import { SAMPLE_CLUSTER, type ClusterView } from "./fixtures";
 import { T } from "./text";
+import { AdminPageHeader } from "@/features/admin/PageHeader";
 
 const N = T.newProfession;
 
@@ -24,11 +26,8 @@ export default function NewProfession() {
   const c = clusters[Math.min(i, clusters.length - 1)];
   const count = profs.data?.status === 200 ? profs.data.data.length : null;
   return (
-    <div data-testid="demo-new-profession" className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-6">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-24 font-bold">{N.title}</h1>
-        <p className="text-14 text-muted">{N.lead}</p>
-      </header>
+    <div data-testid="demo-new-profession" className={PAGE.wide}>
+      <AdminPageHeader title={N.title} tip={N.lead} />
       {hints.isLoading ? (
         <Skeleton className="h-40" />
       ) : (

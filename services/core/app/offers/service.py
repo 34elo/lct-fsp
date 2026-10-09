@@ -40,12 +40,13 @@ from fsp_contracts.hiring import (
 )
 from fsp_platform.app import ProblemError
 from fsp_platform.outbox import add_to_outbox
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.candidates.models import Candidate
 from app.companies.models import Company
+from app.identity import service as identity
 from app.matching import service as matching
 from app.matching.scoring import DEFAULT_SCORING_PATH
 from app.offers.models import Complaint, ContactReveal, Offer, OfferEvent, OfferMessage
@@ -199,6 +200,25 @@ async def open_counts(
     return {cid: n for cid, n in (await session.execute(q)).all()}
 
 
+async def first_invitations(
+    session: AsyncSession, *, real_only: bool = False
+) -> tuple[int, dict[uuid.UUID, datetime]]:
+    """Приглашения компаний: сколько всего и `candidate_id → время первого` (счётчики лендинга).
+
+    `real_only` — без демо-приглашений (E40-1).
+    """
+    employer = Offer.initiator == OfferInitiator.employer.value
+    if real_only:
+        employer = employer & Offer.is_demo.is_(False)
+    total = await session.scalar(select(func.count()).select_from(Offer).where(employer))
+    rows = await session.execute(
+        select(Offer.candidate_id, func.min(Offer.created_at))
+        .where(employer, Offer.candidate_id.is_not(None))
+        .group_by(Offer.candidate_id)
+    )
+    return int(total or 0), {cid: at for cid, at in rows}
+
+
 def _retry_after(oldest: datetime | None, now: datetime) -> dict[str, str]:
     if oldest is None:
         return {"Retry-After": str(int(WINDOW.total_seconds()))}
@@ -337,6 +357,7 @@ async def create(
         below_candidate_min=candidate.salary_min is not None and hi < candidate.salary_min,
         idempotency_key=idempotency_key, created_at=now, team_offer_id=team_offer_id,
         expires_at=now + timedelta(days=limits.validity_days),
+        is_demo=bool(company.is_demo) or await identity.is_demo_user(session, candidate.user_id),
     )  # fmt: skip
     try:
         async with session.begin_nested():
@@ -394,6 +415,7 @@ async def apply(
         awaiting_reply_from="company", created_at=now,
         match_snapshot=await matching.snapshot(session, vacancy.id, candidate.user_id),
         below_candidate_min=False, expires_at=now + timedelta(days=limits.validity_days),
+        is_demo=bool(vacancy.is_demo) or await identity.is_demo_user(session, candidate.user_id),
     )  # fmt: skip
     try:
         async with session.begin_nested():
@@ -493,6 +515,7 @@ async def create_interest(
         below_candidate_min=candidate.salary_min is not None and hi < candidate.salary_min,
         interest_at=now, created_at=now,
         expires_at=now + timedelta(days=limits.interest_validity_days),
+        is_demo=bool(company.is_demo) or await identity.is_demo_user(session, candidate.user_id),
     )  # fmt: skip
     session.add(offer)
     await session.flush()
@@ -517,6 +540,20 @@ async def interests_for(
         Offer.expires_at > now,
     )  # fmt: skip
     return list(await session.scalars(q.order_by(Offer.created_at.desc())))
+
+
+async def category_interest_salaries(
+    session: AsyncSession, candidate_ids: list[uuid.UUID]
+) -> list[tuple[int, int]]:
+    """Вилки `(от, до)` интересов и приглашений кандидатам из списка (E39-16)."""
+    if not candidate_ids:
+        return []
+    rows = await session.execute(
+        select(Offer.salary_from, Offer.salary_to).where(
+            Offer.candidate_id.in_(candidate_ids), Offer.interest_at.is_not(None)
+        )
+    )
+    return [(a, b) for a, b in rows]
 
 
 async def open_interest(session: AsyncSession, offer: Offer, now: datetime | None = None) -> Offer:
@@ -685,6 +722,21 @@ async def briefs_for(
     return [{"id": str(i), "status": s} for i, s in (await session.execute(q)).all()]
 
 
+async def invited(session: AsyncSession, company_id: uuid.UUID, candidate_id: uuid.UUID) -> bool:
+    """Компания уже пригласила кандидата (E39-15: ФИО в карточке). Интерес без приглашения
+    (ADR-026) не считается; отклик кандидата — считается (он сам вышел на контакт)."""
+    q = (
+        select(Offer.id)
+        .where(
+            Offer.company_id == company_id,
+            Offer.candidate_id == candidate_id,
+            or_(Offer.interest_at.is_(None), Offer.invited_at.is_not(None)),
+        )
+        .limit(1)
+    )
+    return (await session.scalar(q)) is not None
+
+
 def _is_expired(offer: Offer, now: datetime) -> bool:
     return offer.status in EXPIRABLE and _aware(offer.expires_at) <= now
 
@@ -806,6 +858,15 @@ async def add_message(
         raise ProblemError(409, "offer_closed", "Переписка по этому офферу закрыта")
     if _is_expired(offer, now):
         raise ProblemError(409, "offer_expired", "Срок действия оффера истёк")
+    # E39-26: вместо чата — по одному сообщению от стороны. Сообщение компании — сопроводительное
+    # к приглашению (`offer.message`), ответ кандидата — одно, вместе с «Принять».
+    already = await session.scalar(
+        select(OfferMessage.id).where(
+            OfferMessage.offer_id == offer.id, OfferMessage.author_side == side
+        )
+    )
+    if already is not None or (side == "company" and offer.message):
+        raise ProblemError(409, "message_limit", "В приглашении одно сообщение от каждой стороны")
     msg = OfferMessage(
         id=uuid.uuid4(), offer_id=offer.id, author_side=side, author_user_id=user_id,
         text=text, channel=channel, created_at=now,
@@ -863,6 +924,12 @@ async def list_complaints(
     return [(c, o, co) for c, o, co in (await session.execute(q)).all()]
 
 
+async def count_complaints(session: AsyncSession, status: str) -> int:
+    """Число жалоб в статусе — счётчик на главной админки (E39-29)."""
+    q = select(func.count()).select_from(Complaint).where(Complaint.status == status)
+    return int(await session.scalar(q) or 0)
+
+
 async def resolve_complaint(
     session: AsyncSession, complaint_id: uuid.UUID, decision: str
 ) -> tuple[Complaint, Offer, Company | None]:
@@ -913,6 +980,9 @@ async def withdraw_application(
 
 
 async def accept(session: AsyncSession, offer: Offer, now: datetime | None = None) -> Offer:
+    """Кандидат принимает приглашение: `transition` в `accepted` (там же открываются контакты,
+    api.md §2.5).
+    """
     return await transition(session, offer, S.accepted, actor="candidate", now=now)
 
 
@@ -920,6 +990,9 @@ async def decline(
     session: AsyncSession, offer: Offer, reason: DeclineReason, comment: str | None,
     now: datetime | None = None,
 ) -> Offer:  # fmt: skip
+    """Кандидат отклоняет приглашение работодателя с причиной; свой отклик так не закрыть — 409
+    (api.md §2.5).
+    """
     if offer.status not in EXPIRABLE or (offer.initiator == OfferInitiator.candidate.value):
         raise ProblemError(
             409, "invalid_transition", f"Переход {offer.status} → declined невозможен"

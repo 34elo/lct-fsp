@@ -63,7 +63,7 @@ test("кандидат: агрегат, «почему вы», рейтинг к
     if (method === "POST" && url.endsWith("/interests/i1/open")) return res(200, interestOffer("i1", "interest_opened"));
     return null;
   };
-  mount("/me/interests");
+  mount("/me/offers?show=interests");
   expect(await screen.findByText("2 · 200–300 тыс. ₽")).toBeInTheDocument();
   expect(screen.getAllByText("Подтверждены Python и PostgreSQL")).toHaveLength(2);
   expect(screen.getAllByText("отвечает в 80 % · 6 ч")).toHaveLength(2);
@@ -80,7 +80,7 @@ test("кандидат: «не интересно» — причина одни�
     if (method === "POST" && url.endsWith("/interests/i1/decline")) return res(200, interestOffer("i1", "declined"));
     return null;
   };
-  mount("/me/interests");
+  mount("/me/offers?show=interests");
   fireEvent.click(await screen.findByRole("button", { name: "Отклонить" }));
   fireEvent.click(await screen.findByRole("button", { name: /Не та компания/ }));
   await waitFor(() => expect(calls).toHaveLength(1));
@@ -89,8 +89,10 @@ test("кандидат: «не интересно» — причина одни�
 
 test("кандидат: пустое состояние", async () => {
   routes = (url) => (url.endsWith("/candidates/me/interests") ? res(200, { companies: 0, salary_from_min: null, salary_to_max: null, items: [] }) : null);
-  mount("/me/interests");
+  mount("/me/offers?show=interests");
   expect(await screen.findByText("Пока никто не интересуется")).toBeInTheDocument();
+  expect(screen.getByText(/Откройте его, и компания сможет вас пригласить/)).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Что такое «Интересы»" })).toBeInTheDocument();
 });
 
 const employerRoutes = (url: string, method: string): Response | null => {

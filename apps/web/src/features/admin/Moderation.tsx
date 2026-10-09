@@ -1,5 +1,7 @@
+import { PAGE } from "@/shared/lib/page";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 
 import { Badge, Button, Card, CardContent, EmptyState, ErrorState, Skeleton } from "@fsp/ui";
 
@@ -13,6 +15,7 @@ import {
   useAdminVerifyAdminCompaniesCompanyIdVerifyPost,
 } from "@/api/endpoints/admin/admin";
 import type { CompanyStatus } from "@/api/model";
+import { AdminPageHeader } from "./PageHeader";
 import { T } from "./text";
 
 type Tab = "companies" | "complaints";
@@ -152,12 +155,13 @@ function Complaints() {
   );
 }
 
-/** `/federation/moderation` — модерация компаний и жалоб (F3). */
+/** `/federation/moderation` — модерация компаний и жалоб (F3); `?tab=complaints` — сразу жалобы (с главной админки). */
 export default function Moderation() {
-  const [tab, setTab] = useState<Tab>("companies");
+  const [params] = useSearchParams();
+  const [tab, setTab] = useState<Tab>(params.get("tab") === "complaints" ? "complaints" : "companies");
   return (
-    <div className="flex flex-col gap-4 p-4 md:p-6">
-      <h1 className="text-24 font-semibold">{T.mod.title}</h1>
+    <div className={PAGE.wide}>
+      <AdminPageHeader title={T.mod.title} tip={T.mod.lead} />
       <div role="tablist" className="flex gap-1 border-b border-hairline">
         {(["companies", "complaints"] as Tab[]).map((t) => (
           <button

@@ -11,7 +11,7 @@
 
 | Перечисление | Значения |
 |---|---|
-| `user_role` | `candidate`, `employer`, `fsp_admin` (роль внутри компании хранится в `company_members.role`: `admin`, `member`) |
+| `user_role` | `candidate`, `employer`, `fsp_admin` (роль внутри компании хранится в `company_members.role`: `admin` — владелец, `member` — HR, E39-24) |
 | `grade` | `intern`, `junior`, `junior_plus`, `middle`, `middle_plus`, `senior`, `lead` (порядок 0…6) |
 | `role_slug` | `backend`, `frontend`, `fullstack`, `mobile`, `ml`, `data_engineer`, `devops`, `qa`, `security`, `gamedev`, `embedded`, `analyst`, `product`, `designer` |
 | `work_format` | `office`, `hybrid`, `remote` |
@@ -86,8 +86,13 @@ CREATE TABLE users (
   is_active     boolean NOT NULL DEFAULT true,
   created_at    timestamptz NOT NULL DEFAULT now(),
   deleted_at    timestamptz,
-  email_verified_at timestamptz                   -- v2, миграция s0_02 (blocks.md §4.6)
+  email_verified_at timestamptz,                  -- v2, миграция s0_02 (blocks.md §4.6)
+  is_demo       boolean NOT NULL DEFAULT false    -- E40-1 (b2_17): демо-аккаунт `*@demo.fsp.test` (seed, жюри)
 );
+-- E40-1: is_demo есть у users, companies, vacancies, offers (частичный индекс WHERE is_demo).
+-- Компания — демо, если создана демо-пользователем; вакансия — если компания демо; приглашение —
+-- если демо компания или кандидат. Демо не идёт в цифры лендинга, дашборд ФСП и метрики;
+-- `make demo-reset` сбрасывает только его (evaluation.md §4).
 
 CREATE TABLE telegram_accounts (
   user_id     uuid PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
@@ -127,7 +132,9 @@ CREATE TABLE candidates (
   public_slug        text UNIQUE,                     -- для публичного профиля и бейджа (по желанию)
   full_name_enc      bytea,                           -- ПДн шифруются Fernet
   contacts_enc       bytea,                           -- {email, phone, telegram}
-  full_name_enc      bytea,                           -- ФИО, Fernet; работодателю только при visibility.full_name (E36-5, миграция b2_14)
+  full_name_enc      bytea,                           -- ФИО, Fernet; работодателю после приглашения от его компании или при visibility.full_name (E36-5, E39-15)
+  links_enc          bytea,                           -- ссылки кандидата (JSON-список), Fernet; только владельцу (E39-15, миграция b1_16)
+  hidden_skills      text[],                          -- slug навыков, скрытых от работодателя; подбор не меняют (E39-15, b1_16)
   age_group          text,                            -- adult | minor (15–17 лет), E32-5b; дата рождения не хранится
   parent_consent_at  timestamptz,                     -- согласие родителя на ПДн несовершеннолетнего; без него minor не публикуется
   desired_roles      text[],                          -- желаемые роли из ручной формы (E20-4), RoleSlug
@@ -455,6 +462,22 @@ CREATE TABLE companies (
   status text NOT NULL DEFAULT 'pending', responsibility_score real, created_at timestamptz DEFAULT now()
 );
 CREATE TABLE company_members (company_id uuid REFERENCES companies(id) ON DELETE CASCADE, user_id uuid REFERENCES users(id) ON DELETE CASCADE, role text NOT NULL, PRIMARY KEY (company_id, user_id));
+-- E39-24: приглашение HR в компанию по ссылке; токен хранится sha256, одноразовый, 7 дней
+CREATE TABLE company_invites (
+  id uuid PRIMARY KEY, company_id uuid NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  email text NOT NULL, role text NOT NULL DEFAULT 'member', token_hash text NOT NULL UNIQUE,
+  invited_by uuid REFERENCES users(id) ON DELETE SET NULL, created_at timestamptz NOT NULL DEFAULT now(),
+  expires_at timestamptz NOT NULL, accepted_at timestamptz, accepted_by uuid REFERENCES users(id) ON DELETE SET NULL,
+  revoked_at timestamptz
+);
+CREATE INDEX ix_company_invites_company_id ON company_invites (company_id);
+-- E39-24: личный профиль сотрудника компании или админа ФСП (подпись приглашения кандидату)
+CREATE TABLE user_profiles (
+  user_id uuid PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  full_name text, position text, about text,
+  avatar_key text,                                              -- ключ в MinIO: avatars/{user_id}/{sha256[:16]}.{png|jpg|webp}
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
 CREATE TABLE vacancies (
   id uuid PRIMARY KEY, company_id uuid NOT NULL REFERENCES companies(id),
   title text NOT NULL, role text NOT NULL, grade_min text NOT NULL, grade_max text NOT NULL,
@@ -620,7 +643,7 @@ CREATE TABLE fsp_links (
   candidate_id    uuid PRIMARY KEY,               -- ID кандидата в core (без внешнего ключа: другая база)
   participant_id  text NOT NULL UNIQUE,           -- ID в системе ФСП
   verified        boolean NOT NULL,
-  method          text NOT NULL,                  -- oauth | code | manual
+  method          text NOT NULL,                  -- oauth | code | manual | registry
   linked_at       timestamptz NOT NULL DEFAULT now(),
   last_synced_at  timestamptz,
   sync_cursor     text
@@ -628,6 +651,20 @@ CREATE TABLE fsp_links (
 CREATE TABLE fsp_link_conflicts (id bigserial PRIMARY KEY, candidate_id uuid NOT NULL, participant_id text NOT NULL, method text NOT NULL, created_at timestamptz NOT NULL DEFAULT now());  -- попытки привязать занятый ID, для модерации
 CREATE TABLE raw_responses (id bigserial PRIMARY KEY, participant_id text, endpoint text, body jsonb, fetched_at timestamptz DEFAULT now());  -- аудит
 CREATE TABLE webhook_log (event_id text PRIMARY KEY, type text, payload jsonb, received_at timestamptz DEFAULT now(), processed_at timestamptz);
+-- реестр ФСП (E39-28, ADR-052): ведёт админ; ПДн только здесь, поиск по нормализованным контактам
+CREATE TABLE fsp_reg_events (id text PRIMARY KEY, title text NOT NULL, discipline text NOT NULL, level text NOT NULL,
+  date date NOT NULL, created_at timestamptz NOT NULL, updated_at timestamptz NOT NULL);   -- id "e-…"
+CREATE TABLE fsp_reg_participants (id text PRIMARY KEY,           -- "r-…" — только реестр; иначе ID источника ФСП
+  full_name text NOT NULL, email text, phone text,
+  email_norm text, phone_norm text,                               -- lower(email); телефон в E.164 (+7…)
+  created_at timestamptz NOT NULL);                               -- индексы по email_norm, phone_norm
+CREATE TABLE fsp_reg_results (id bigserial PRIMARY KEY,
+  participant_id text NOT NULL REFERENCES fsp_reg_participants ON DELETE CASCADE,
+  event_id text NOT NULL REFERENCES fsp_reg_events ON DELETE CASCADE,
+  place int, team text, updated_at timestamptz NOT NULL, UNIQUE (participant_id, event_id));
+CREATE TABLE fsp_link_requests (id uuid PRIMARY KEY, candidate_id uuid NOT NULL, full_name text NOT NULL,
+  email text, phone text, event text, status text NOT NULL,      -- pending | accepted | rejected
+  reason text, participant_id text, created_at timestamptz NOT NULL, decided_at timestamptz);
 CREATE TABLE outbox (LIKE core.outbox);         -- та же структура, свой relay
 ```
 

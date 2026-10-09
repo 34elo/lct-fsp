@@ -7,14 +7,14 @@ import { CANDIDATE_BOTTOM, initials } from "./shell-meta";
 import { NAV } from "@/app/routes";
 import { Providers, makeQueryClient } from "@/app/Providers";
 
-test("нижняя навигация кандидата: четыре пункта с подписями и ссылками", () => {
+test("нижняя навигация кандидата: пять пунктов с подписями и ссылками", () => {
   render(
     <MemoryRouter initialEntries={["/me/offers"]}>
       <BottomNav items={CANDIDATE_BOTTOM} all={NAV.candidate} />
     </MemoryRouter>,
   );
   const nav = screen.getByRole("navigation", { name: "Разделы" });
-  expect(within(nav).getAllByRole("link").map((a) => a.textContent)).toEqual(["Главная", "Тест и грейд", "Приглашения", "Профиль"]);
+  expect(within(nav).getAllByRole("link").map((a) => a.textContent)).toEqual(["Главная", "Тест", "Приглашения", "Вакансии", "Профиль"]);
   expect(within(nav).getByRole("link", { name: "Приглашения" })).toHaveAttribute("aria-current", "page");
   expect(within(nav).getByRole("link", { name: "Главная" })).not.toHaveAttribute("aria-current");
 });
@@ -52,24 +52,40 @@ test("шапка: вкладки не раздувают страницу на 8
   expect(within(tabs).getAllByRole("link")[0].className).toContain("shrink-0");
 });
 
-test("вкладки раздела: «Приглашения» кандидата показывают интересы, приглашения и отклики", async () => {
-  const { SectionTabs } = await import("./SectionTabs");
+test("Page: три ширины сетки и общий ритм полей (E39-4)", async () => {
+  const { Page } = await import("./PageContainer");
+  const { PAGE } = await import("@/shared/lib/page");
   render(
-    <MemoryRouter initialEntries={["/me/interests"]}>
-      <SectionTabs nav={NAV.candidate} />
-    </MemoryRouter>,
+    <>
+      <Page width="narrow" data-testid="p-narrow">a</Page>
+      <Page data-testid="p-normal">b</Page>
+      <Page width="wide" data-testid="p-wide">c</Page>
+    </>,
   );
-  const tabs = screen.getByRole("navigation", { name: "Вкладки раздела" });
-  expect(within(tabs).getAllByRole("link").map((a) => a.getAttribute("href"))).toEqual(["/me/interests", "/me/offers", "/me/responses"]);
-  expect(within(tabs).getByRole("link", { name: "Интересы" })).toHaveAttribute("aria-current", "page");
+  expect(screen.getByTestId("p-narrow").className).toContain("max-w-3xl");
+  expect(screen.getByTestId("p-normal").className).toContain("max-w-[1328px]");
+  expect(screen.getByTestId("p-wide").className).not.toContain("max-w-");
+  for (const w of Object.values(PAGE)) expect(w).toContain("px-4 py-4 md:px-6 md:py-6");
 });
 
-test("вкладок нет у раздела без вкладок", async () => {
-  const { SectionTabs } = await import("./SectionTabs");
-  render(
-    <MemoryRouter initialEntries={["/me"]}>
-      <SectionTabs nav={NAV.candidate} />
-    </MemoryRouter>,
-  );
-  expect(screen.queryByRole("navigation", { name: "Вкладки раздела" })).toBeNull();
+test("второй строки вкладок нет ни у одной роли: пункты меню плоские (E39-25)", () => {
+  for (const nav of Object.values(NAV)) for (const n of nav) expect(n, n.label).not.toHaveProperty("tabs");
+});
+
+test("админка: знак в шапке скрыт с md (он уже в боковой панели), у кабинетов остаётся", async () => {
+  const { AppHeader } = await import("./AppHeader");
+  const brand = (side: boolean) => {
+    const { unmount } = render(
+      <Providers client={makeQueryClient()}>
+        <MemoryRouter>
+          <AppHeader nav={NAV.admin} withTabs={!side} brandFromMd={!side} />
+        </MemoryRouter>
+      </Providers>,
+    );
+    const cls = screen.getByRole("link", { name: /на главную/ }).className;
+    unmount();
+    return cls;
+  };
+  expect(brand(true)).toContain("md:hidden");
+  expect(brand(false)).not.toContain("md:hidden");
 });

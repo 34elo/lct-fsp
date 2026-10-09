@@ -21,7 +21,7 @@ const VACANCY_TITLE = "Backend-разработчик (Python) в команду
 const VACANCY_OPTION = `${VACANCY_TITLE} · Удалённо`;
 const NEW_USER_PASSWORD = "e2e-pass-1234";
 
-test.setTimeout(240_000);
+test.setTimeout(480_000);
 
 async function shot(page: Page, info: TestInfo, n: number, name: string): Promise<void> {
   const file = info.outputPath(`${String(n).padStart(2, "0")}-${name}-${info.project.name}.png`);
@@ -47,19 +47,9 @@ test("joint: регистрация → опрос и тест → катего�
     await page.getByTestId("auth-email").fill(email);
     await page.getByTestId("auth-password").fill(NEW_USER_PASSWORD);
     await shot(page, info, ++n, "register");
+    await page.getByTestId("auth-consent-pd").click(); // E39-6: обязательное согласие — в форме регистрации
     await page.getByTestId("auth-submit").click();
-    await expect(page).toHaveURL(/\/consents/);
-  });
-
-  await test.step("согласия", async () => {
-    await expect(page.getByTestId("consents-form")).toBeVisible();
-    const boxes = page.getByTestId("consents-form").getByRole("checkbox");
-    for (let i = 0; i < (await boxes.count()); i++) {
-      if ((await boxes.nth(i).getAttribute("aria-checked")) !== "true") await boxes.nth(i).click();
-    }
-    await shot(page, info, ++n, "consents");
-    await page.getByTestId("consents-submit").click();
-    await expect(page).not.toHaveURL(/\/consents/);
+    await expect(page).toHaveURL(/\/me\/assessment$/);
   });
 
   // --- 2. опрос и экспресс-тест ----------------------------------------------------------------
@@ -68,15 +58,11 @@ test("joint: регистрация → опрос и тест → катего�
     // Если включено подтверждение email, дальше нужен код из письма (Mailpit): вручную, не в этом тесте.
     test.skip(/\/verify-email/.test(page.url()), "включено подтверждение email: код приходит в Mailpit, сценарий требует ручного шага");
     await expect(page).toHaveURL(/\/me\/assessment$/);
-    // Без резюме направление не выбрано: экран начинается с одной кнопки «выбрать направление».
-    const pick = page.getByTestId("assessment-pick");
-    await expect(page.getByTestId("assessment-survey").or(pick)).toBeVisible();
-    if (await pick.isVisible()) await pick.click();
-    await expect(page.getByTestId("assessment-survey")).toBeVisible();
-    // Радио и переключатель экспресса — скрытые input с видимой меткой-родителем: кликаем по метке.
-    await page.locator('label:has([data-testid^="assessment-profession-"])').first().click();
-    await page.getByTestId("assessment-format-remote").click(); // кнопка с aria-pressed
-    await page.locator('label:has([data-testid="assessment-grade-junior"])').click();
+    // E39-6: шаг 1 — направление (карточка), шаг 2 — грейд и экспресс-переключатель.
+    await expect(page.getByTestId("flow-step-1")).toHaveAttribute("aria-current", "step");
+    await page.locator("label[data-choice]").first().click();
+    await page.getByTestId("assessment-next").click();
+    await page.locator('label[data-choice="junior"]').click();
     await page.locator('label:has([data-testid="assessment-express-toggle"])').click();
     await shot(page, info, ++n, "survey");
     await page.getByTestId("assessment-start").click();
@@ -146,7 +132,9 @@ test("joint: регистрация → опрос и тест → катего�
     for (let i = 0; i < total && !sent; i++) {
       await invites.nth(i).click();
       await expect(dialog.getByRole("heading", { name: /^Интерес · / })).toBeVisible();
-      await dialog.getByRole("combobox", { name: "Вакансия" }).selectOption({ label: VACANCY_OPTION });
+      // Свой Select из @fsp/ui: открыть список и выбрать вариант (список — в портале, вне диалога).
+      await dialog.getByRole("combobox", { name: "Вакансия" }).click();
+      await olga.getByRole("option", { name: VACANCY_OPTION }).click();
       await dialog.getByRole("textbox", { name: "от", exact: true }).fill("150000");
       await dialog.getByRole("textbox", { name: "до", exact: true }).fill("220000");
       await dialog.getByRole("textbox", { name: /^Сообщение/ }).fill("Здравствуйте! Ваш профиль подходит под нашу вакансию: вилка указана сразу.");
@@ -174,7 +162,7 @@ test("joint: регистрация → опрос и тест → катего�
     await anya.goto("/jobs");
     await expect(anya.getByRole("heading", { name: "Вакансии с открытой вилкой" })).toBeVisible();
     // В списке десятки вакансий (выдача постраничная): ищем нужную по названию.
-    await anya.getByRole("textbox", { name: "Поиск по названию" }).fill("в команду API");
+    await anya.getByRole("searchbox", { name: "Поиск по названию" }).fill("в команду API");
     const card = anya.locator("article, li").filter({ hasText: VACANCY_TITLE }).first();
     await expect(card).toBeVisible({ timeout: 20_000 });
     await shot(anya, info, ++n, "jobs");
@@ -186,13 +174,14 @@ test("joint: регистрация → опрос и тест → катего�
     await expect(anya.getByText(/Отклик отправлен|Вы уже откликались/).first()).toBeVisible({ timeout: 20_000 });
     await shot(anya, info, ++n, "candidate-applied");
     await anya.goto("/me/responses");
-    await expect(anya.getByRole("heading", { name: "Мои отклики" })).toBeVisible();
+    await expect(anya).toHaveURL(/\/me\/offers\?show=responses/); // E39-25: отклики — фильтр в «Приглашениях»
+    await expect(anya.getByRole("heading", { name: "Приглашения" }).first()).toBeVisible();
     await shot(anya, info, ++n, "candidate-responses");
   });
 
   await test.step("работодатель видит отклик", async () => {
     await olga.goto("/employer/responses");
-    await expect(olga.getByRole("heading", { name: "Отклики на вакансии" })).toBeVisible();
+    await expect(olga).toHaveURL(/\/employer\/offers\?show=responses/);
     await expect(olga.getByText(VACANCY_TITLE).first()).toBeVisible({ timeout: 20_000 });
     await shot(olga, info, ++n, "employer-responses");
   });

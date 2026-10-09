@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import json
 import secrets
 import statistics
 import uuid
@@ -111,15 +112,32 @@ def full_name_of(cand: Candidate, key: str) -> str | None:
     return pii.decrypt_text(key, cand.full_name_enc)
 
 
-def shown_full_name(cand: Candidate, key: str) -> str | None:
-    """ФИО для карточки работодателя: только если кандидат открыл его (`visibility.full_name`)."""
-    return full_name_of(cand, key) if visibility_of(cand)["full_name"] else None
+def shown_full_name(cand: Candidate, key: str, *, invited: bool = False) -> str | None:
+    """ФИО для карточки работодателя (E39-15, ADR-027): после приглашения от этой компании
+    (`invited`) или раньше, если кандидат открыл его сам (`visibility.full_name`)."""
+    return full_name_of(cand, key) if invited or visibility_of(cand)["full_name"] else None
+
+
+def links_of(cand: Candidate, key: str) -> list[str]:
+    """Ссылки владельца (E39-15): расшифрованный список; нечитаемое — пустой список."""
+    raw = pii.decrypt_text(key, cand.links_enc)
+    try:
+        links = json.loads(raw) if raw else []
+    except ValueError:
+        return []
+    return [str(x) for x in links] if isinstance(links, list) else []
+
+
+def hidden_skills_of(cand: Candidate) -> set[str]:
+    """Slug навыков, скрытых кандидатом от работодателя (E39-15)."""
+    return set(cand.hidden_skills or ())
 
 
 async def update_profile(
     session: AsyncSession, cand: Candidate, changes: dict, *, pii_key: str
 ) -> Candidate:
-    """Ручная форма (E20-4): контакты, стек (`self`), стаж, роли, софт-навыки.
+    """Ручная форма (E20-4): контакты, ФИО, ссылки, скрытые навыки (E39-15), стек (`self`), стаж,
+    роли, софт-навыки.
 
     Частичное обновление по ключам `changes`. Стек — полный список: убранные навыки
     деактивируются. Доказательства, стаж и софт-навыки запускают пересчёт, `profile_version` растёт
@@ -132,6 +150,13 @@ async def update_profile(
     if "full_name" in changes:
         name = " ".join(str(changes["full_name"] or "").split())
         cand.full_name_enc = pii.encrypt_text(pii_key, name) if name else None
+    if "links" in changes:
+        links = list(
+            dict.fromkeys(str(x).strip() for x in changes["links"] or [] if str(x).strip())
+        )
+        cand.links_enc = pii.encrypt_text(pii_key, json.dumps(links)) if links else None
+    if "hidden_skills" in changes:
+        cand.hidden_skills = sorted({str(x) for x in changes["hidden_skills"] or []}) or None
     if "desired_roles" in changes:
         cand.desired_roles = list(dict.fromkeys(str(r) for r in changes["desired_roles"] or []))
     if "experience_months" in changes:
@@ -433,6 +458,7 @@ async def category_median(session: AsyncSession, role: str | None, grade: str | 
 
 
 async def open_dispute(session: AsyncSession, candidate_id: uuid.UUID) -> CategoryDispute | None:
+    """Нерешённый спор кандидата о категории (последний) или `None`."""
     return await session.scalar(
         select(CategoryDispute)
         .where(CategoryDispute.candidate_id == candidate_id, CategoryDispute.resolved_at.is_(None))
@@ -501,7 +527,8 @@ async def erase(session: AsyncSession, storage, user) -> Candidate:
         "city", "salary_min", "active_until", "primary_role", "roles", "primary_stack", "grade",
         "grade_score", "grade_confidence", "grade_breakdown", "grade_next", "experience_months",
         "profile_text", "profile_text_sha", "embedding", "embedding_model", "team_signals",
-        "claimed_soft", "contacts_enc", "full_name_enc", "desired_roles", "age_group",
+        "claimed_soft", "contacts_enc", "full_name_enc", "links_enc", "hidden_skills",
+        "desired_roles", "age_group",
         "parent_consent_at",
         "recompute_requested_at", "recomputed_at",
     ):  # fmt: skip

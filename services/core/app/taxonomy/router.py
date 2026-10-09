@@ -9,8 +9,14 @@ from pathlib import Path
 from typing import Any
 
 import structlog
-from fastapi import APIRouter, Depends, Header, Request, Response
-from fsp_contracts.assessment import ProfessionInfo, SkillType, TestGrade
+from fastapi import APIRouter, Depends, Header, Query, Request, Response
+from fsp_contracts.assessment import (
+    ProfessionInfo,
+    ProfessionSuggestion,
+    SkillSuggestion,
+    SkillType,
+    TestGrade,
+)
 from fsp_contracts.enums import EmploymentType, Grade, WorkFormat
 from fsp_platform.app import ProblemError
 from pydantic import BaseModel
@@ -19,7 +25,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.deps import get_redis, get_session
 from app.openapi_errors import problem_responses
-from app.taxonomy import service
+from app.taxonomy import service, suggest
 from app.taxonomy.loader import load_grade_cuts
 
 DEFAULT_SCORING_PATH = Path(__file__).resolve().parents[4] / "data" / "scoring.yaml"
@@ -131,11 +137,76 @@ class ProfessionsOut(BaseModel):
 async def get_professions(
     request: Request, session: AsyncSession = Depends(get_session)
 ) -> ProfessionsOut:
-    """Профессии теста, веса и типы навыков, грейды с порогами θ (assessment.md §10)."""
+    """Профессии теста, веса и типы навыков, грейды с порогами θ (assessment.md §10).
+
+    `beta` — тонкий банк семейств (E39-6): профессия открыта, в опросе помечена «бета».
+    """
+    from app.assessment import service as assessment  # публичное API модуля, без цикла импорта
+
     path = Path(request.app.state.settings.scoring_config_path or DEFAULT_SCORING_PATH)
     cuts = load_grade_cuts(path)
+    profs = await service.list_professions(session)
+    beta = assessment.thin_professions(profs)
     return ProfessionsOut(
-        professions=await service.list_professions(session),
+        professions=[p.model_copy(update={"beta": p.slug in beta}) for p in profs],
         skill_types=list(SkillType),
         grades=[GradeCut(grade=TestGrade(g), cut=c) for g, c in cuts.items()],
     )
+
+
+SUGGEST_TTL = 600  # частоты навыков меняются без новой версии справочника: кеш короткий
+
+
+async def _suggest_cached(redis: Redis, key: str, build) -> list[dict[str, Any]]:
+    try:
+        if (hit := await redis.get(key)) is not None:
+            return json.loads(hit)
+    except Exception:
+        log.warning("taxonomy_suggest_cache_read_failed")
+    items = [i.model_dump() for i in await build()]
+    try:
+        await redis.set(key, json.dumps(items, ensure_ascii=False), ex=SUGGEST_TTL)
+    except Exception:
+        log.warning("taxonomy_suggest_cache_write_failed")
+    return items
+
+
+def _sha(*parts: str) -> str:
+    return hashlib.sha1("".join(parts).encode()).hexdigest()[:16]
+
+
+@router.get(
+    "/taxonomy/skills/suggest",
+    response_model=list[SkillSuggestion],
+    responses=problem_responses(422, 503),
+)
+async def suggest_skills(
+    q: str = Query(default="", max_length=100),
+    limit: int = Query(default=10, ge=1, le=50),
+    profession: str | None = Query(default=None, max_length=32),
+    session: AsyncSession = Depends(get_session),
+    redis: Redis = Depends(get_redis),
+) -> list[dict[str, Any]]:
+    """Подсказки навыков: синонимы, префикс, опечатки; частые выше, `provisional` помечен."""
+    version = await service.get_version(session)
+    key = f"c:tax:suggest:s:{version}:{_sha(suggest.norm_alias(q), str(limit), profession or '')}"
+    return await _suggest_cached(
+        redis, key, lambda: suggest.suggest_skills(session, q, limit, profession)
+    )
+
+
+@router.get(
+    "/taxonomy/professions/suggest",
+    response_model=list[ProfessionSuggestion],
+    responses=problem_responses(422, 503),
+)
+async def suggest_professions(
+    q: str = Query(default="", max_length=100),
+    limit: int = Query(default=10, ge=1, le=50),
+    session: AsyncSession = Depends(get_session),
+    redis: Redis = Depends(get_redis),
+) -> list[dict[str, Any]]:
+    """Подсказки профессий: все видимые роли системы, включая добавленные админом (E39-3)."""
+    version = await service.get_version(session)
+    key = f"c:tax:suggest:p:{version}:{_sha(suggest.norm_alias(q), str(limit))}"
+    return await _suggest_cached(redis, key, lambda: suggest.suggest_professions(session, q, limit))

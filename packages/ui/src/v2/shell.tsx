@@ -66,6 +66,8 @@ export interface AccountMenuItem {
   active?: boolean;
   /** Разделитель перед пунктом («Выйти»). */
   separatorBefore?: boolean;
+  /** Разрушающее действие («Выйти»): красный текст. */
+  danger?: boolean;
 }
 
 /** Меню аватара: «Настройки», «Тема · светлая», разделитель, «Выйти». Пункты передаёт приложение. */
@@ -93,7 +95,7 @@ export function AccountMenu({
             {it.separatorBefore && <DropdownMenuSeparator />}
             <DropdownMenuItem
               onSelect={it.onSelect}
-              className={cn("justify-between rounded-lg px-2.5 font-medium sm:min-h-[38px]", it.active && "bg-tint-50 font-semibold")}
+              className={cn("justify-between rounded-lg px-2.5 font-medium sm:min-h-[38px]", it.active && "bg-tint-50 font-semibold", it.danger && "text-error focus:text-error")}
             >
               {it.label}
               {it.hint && <span className="num text-12 font-normal text-muted">{it.hint}</span>}
@@ -203,15 +205,5 @@ export function TabBar({
         );
       })}
     </nav>
-  );
-}
-
-/** Компактная шапка `.mh` (телефон): знак и аватар. */
-export function MobileBar({ brand, aside, className }: { brand?: ReactNode; aside?: ReactNode; className?: string }) {
-  return (
-    <header className={cn("sticky top-0 z-20 flex h-[52px] items-center justify-between border-b border-hairline bg-card px-4 md:hidden", className)}>
-      {brand ?? <BrandMark />}
-      {aside}
-    </header>
   );
 }

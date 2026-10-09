@@ -1,3 +1,4 @@
+import { PAGE } from "@/shared/lib/page";
 import { Link, useNavigate } from "react-router-dom";
 
 import { buttonVariants, EmptyState, ErrorState, formatRub, SectionLabel, Skeleton, UpliftCard } from "@fsp/ui";
@@ -5,7 +6,6 @@ import { buttonVariants, EmptyState, ErrorState, formatRub, SectionLabel, Skelet
 import { useMyNavigatorCandidatesMeNavigatorGet, useMyUpliftCandidatesMeUpliftGet } from "@/api/endpoints/search/search";
 import type { NavigatorOut, UpliftItem, UpliftOut } from "@/api/model";
 import { UpliftConfirmKind } from "@/api/model";
-import { GRADE_LABEL } from "@/features/profile/text";
 import { NavigatorPath } from "./NavigatorPath";
 import { confirmHint, errorText, T } from "./text";
 
@@ -64,7 +64,7 @@ export default function Navigator() {
     upData ?? (navData?.uplift.length ? { relevant_total: 0, base: 0, items: navData.uplift, combo: null } : null);
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
+    <div className={PAGE.narrow}>
       <header>
         <h1 className="font-mono text-2xl font-semibold">{T.title}</h1>
         <p className="text-14 text-muted">{T.lead}</p>
@@ -88,18 +88,7 @@ export default function Navigator() {
         />
       ) : (
         <>
-          <NavigatorPath nav={navData} />
-          {navData.test && (
-            <section className="flex flex-col gap-2 rounded-xl border border-brand bg-card p-4">
-              <p className="text-14">{T.testLead(GRADE_LABEL[navData.test.grade] ?? navData.test.grade)}</p>
-              <Link
-                to={navData.test.path}
-                className={`${buttonVariants()} self-start`}
-              >
-                {T.takeTest}
-              </Link>
-            </section>
-          )}
+          <NavigatorPath nav={navData} uplift={uplift?.items} />
           {uplift && <UpliftList uplift={uplift} testPath={navData.test?.path} />}
         </>
       )}

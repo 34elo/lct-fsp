@@ -16,6 +16,7 @@ export * from './internal/internal';
 export * from './live-runs/live-runs';
 export * from './needs/needs';
 export * from './offers/offers';
+export * from './profile/profile';
 export * from './public/public';
 export * from './recommendations/recommendations';
 export * from './resumes/resumes';

@@ -29,10 +29,17 @@ def _edges_text(world: World) -> str:
     return f"Узлы: {nodes}.\nЗависимости (A → B: A вызывает B или пишет в B):\n{lines}"
 
 
+def _cell(v: object) -> str:
+    """Ячейка Markdown-таблицы: `|` и переводы строк в значении не ломают разметку."""
+    return str(v).replace("|", "\\|").replace("\n", " ")
+
+
 def _render(t: Table) -> str:
-    head = " | ".join(t.columns)
-    rows = "\n".join(" | ".join(str(v) for v in r) for r in t.rows)
-    return f"{t.schema()}\n{head}\n{rows}"
+    """Таблица для условия задания в Markdown (GFM): подпись со схемой и сама таблица (E39-9)."""
+    head = "| " + " | ".join(_cell(c) for c in t.columns) + " |"
+    rule = "|" + "|".join(" --- " for _ in t.columns) + "|"
+    rows = "\n".join("| " + " | ".join(_cell(v) for v in r) + " |" for r in t.rows)
+    return f"`{t.schema()}`\n\n{head}\n{rule}\n{rows}"
 
 
 def _num_cols(t: Table) -> list[str]:
@@ -378,7 +385,7 @@ class SqlJoinFilter(BaseFamily):
             kind=self.kind,
             stem=(
                 f"Таблицы базы «{world.company}»:\n\n{_render(parent)}\n\n{_render(child)}\n\n"
-                f"Что вернёт запрос?\n\n{sql};"
+                f"Что вернёт запрос?\n\n```sql\n{sql};\n```"
             ),
             key=key,
             time_limit_s=180,
@@ -419,7 +426,7 @@ class SqlLeftJoin(BaseFamily):
             kind=self.kind,
             stem=(
                 f"Таблицы базы «{world.company}»:\n\n{_render(parent)}\n\n{_render(child)}\n\n"
-                f"Что вернёт запрос?\n\n{sql};"
+                f"Что вернёт запрос?\n\n```sql\n{sql};\n```"
             ),
             key=key,
             time_limit_s=180,

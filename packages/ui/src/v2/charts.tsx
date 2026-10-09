@@ -31,6 +31,7 @@ export function MetricTile({
   trend,
   progress,
   hint,
+  info,
   className,
 }: {
   label: string;
@@ -40,12 +41,17 @@ export function MetricTile({
   /** 0–100: полоса под числом («Место»). */
   progress?: number;
   hint?: ReactNode;
+  /** Значок ⓘ рядом с подписью. */
+  info?: ReactNode;
   className?: string;
 }) {
   const d = trend ? sparkPath(trend, 120, 36) : "";
   return (
     <div className={cn("flex min-w-0 flex-col gap-1.5 rounded-xl border border-hairline bg-card p-3", className)}>
-      <Lbl>{label}</Lbl>
+      <span className="flex items-center gap-1">
+        <Lbl>{label}</Lbl>
+        {info}
+      </span>
       <span className="font-mono text-24 leading-[1.1] font-semibold">{value}</span>
       {d && (
         <svg width="100%" height="28" viewBox="0 0 120 36" preserveAspectRatio="none" aria-hidden>
@@ -161,9 +167,9 @@ function rank(n: { level: number; state: string }): number {
 /* ---------- ScatterPlot ---------- */
 
 export interface ScatterPoint {
-  /** 0–100 по оси X (сила). */
+  /** 0–100 по оси X. */
   x: number;
-  /** 0–100 по оси Y (ожидания, нормированные). */
+  /** 0–100 по оси Y. */
   y: number;
 }
 
@@ -173,6 +179,7 @@ export function ScatterPlot({
   you,
   threshold,
   yLabel = "ожидания, ₽",
+  xLabel,
   youLabel = "ты",
   label,
   className,
@@ -181,15 +188,18 @@ export function ScatterPlot({
   you?: ScatterPoint;
   threshold?: { x: number; label: string };
   yLabel?: string;
+  /** Подпись оси X; без неё под осью только числа 0–100. */
+  xLabel?: string;
   youLabel?: string;
   label: string;
   className?: string;
 }) {
+  const H = xLabel ? 198 : 180;
   const X = (v: number) => round(30 + (clamp(v) / 100) * 320);
   const Y = (v: number) => round(160 - (clamp(v) / 100) * 140);
   const dots = points.map((p) => `M${X(p.x)} ${Y(p.y)}h0`).join("");
   return (
-    <svg viewBox="0 0 360 180" width="100%" role="img" aria-label={label} fontFamily={MONO} className={cn("max-h-[250px]", className)}>
+    <svg viewBox={`0 0 360 ${H}`} width="100%" role="img" aria-label={label} fontFamily={MONO} className={cn("max-h-[320px]", className)}>
       <path d="M30 160H350M30 160V14" stroke="var(--hairline)" strokeWidth="1" fill="none" />
       {dots && <path d={dots} stroke="var(--brand-mid)" strokeWidth="6" strokeLinecap="round" />}
       {threshold && (
@@ -214,6 +224,11 @@ export function ScatterPlot({
         <text x="186" y="174">50</text>
         <text x="338" y="174">100</text>
         <text x="34" y="12">{yLabel}</text>
+        {xLabel && (
+          <text x="350" y="193" textAnchor="end">
+            {xLabel}
+          </text>
+        )}
       </g>
     </svg>
   );
@@ -221,7 +236,8 @@ export function ScatterPlot({
 
 /* ---------- ActivityHeatmap ---------- */
 
-const HEAT = ["bg-tint-100", "bg-tint-200", "bg-brand-mid", "bg-brand", "bg-brand-deep"] as const;
+// В тёмной теме шкала светлеет к максимуму (tint-200 там серый, brand-deep сливается с фоном).
+const HEAT = ["bg-tint-100", "bg-tint-200 dark:bg-brand-deep", "bg-brand-mid dark:bg-brand", "bg-brand dark:bg-brand-mid", "bg-brand-deep dark:bg-ink"] as const;
 
 /** Уровень 0–4 для значения относительно максимума. */
 export function heatLevel(v: number, max: number): number {

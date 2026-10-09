@@ -186,7 +186,7 @@ SELECT 'vacancy', vs.vacancy_id, 'skill', vs.skill_id, 'requires', vs.weight, NU
     {"id": "cand", "type": "candidate", "label": "Backend #4821"},
     {"id": "f:fsp:91", "type": "fsp_result", "label": "Кубок России, финал · 2 из 40 · капитан", "date": "2025-04", "verified": true},
     {"id": "f:repo:7", "type": "repo", "label": "репозиторий · её кода 82%", "date": "2026-08"},
-    {"id": "s:fastapi", "type": "skill", "label": "FastAPI", "level": 3, "confidence": 0.65},
+    {"id": "s:fastapi", "type": "skill", "label": "FastAPI", "level": 3, "confidence": 0.65, "skill_type": "hard"},
     {"id": "s:python", "type": "skill", "label": "Python", "level": 2, "confidence": 0.54, "derived_from": "s:fastapi"},
     {"id": "s:django", "type": "skill", "label": "Django", "level": 0, "ghost": true}
   ],
@@ -200,7 +200,7 @@ SELECT 'vacancy', vs.vacancy_id, 'skill', vs.skill_id, 'requires', vs.weight, NU
 }
 ```
 
-Реализация (`services/core/app/graph/subgraph.py`, `router.py`): `skills=top` — 12 навыков с наибольшим доверием; `depth=competitions` добавляет вершины `competition` (`at`) и `team` (`member_of`, только размер команды). Заявленные (`self`/`resume`) навыки без фактов связаны ребром `owns`. `vacancy_id` задаёт `highlight` (`["vac", "s:<slug>", "cand", "<лучший факт>"]`) и «призраков» (`ghost`) для не найденных у кандидата требований; параметр только для работодателя. Кеш по `profile_version` пока не включён: подграф собирается из проекций одним проходом.
+Реализация (`services/core/app/graph/subgraph.py`, `router.py`): `skills=top` — 12 навыков с наибольшим доверием; `depth=competitions` добавляет вершины `competition` (`at`) и `team` (`member_of`, только размер команды). Заявленные (`self`/`resume`) навыки без фактов связаны ребром `owns`. У вершины навыка `skill_type` — тип навыка из справочника (`fundamental | hard | thinking | business | soft | experience`, [assessment.md §2](assessment.md)), по нему фильтрует `EvidenceGraph` (E39-14). `vacancy_id` задаёт `highlight` (`["vac", "s:<slug>", "cand", "<лучший факт>"]`) и «призраков» (`ghost`) для не найденных у кандидата требований; параметр только для работодателя. Кеш по `profile_version` пока не включён: подграф собирается из проекций одним проходом.
 
 Анонимная версия для работодателя: без URL репозиториев (если `visibility.repos=false`), без названий компаний в опыте, без имён в командах (только «команда, 4 участника, 2 на платформе»). Репозитории скрыты при `visibility.repos=false`, соревнования и команды — при `visibility.teams=false`.
 

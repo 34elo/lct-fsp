@@ -27,6 +27,7 @@ import type {
   AdminComplaintOut,
   AdminComplaintsAdminComplaintsGetParams,
   AdminFamilyOut,
+  AdminFspRequestOut,
   AdminListAdminCompaniesGetParams,
   AdminSkillBrief,
   AdmissionQueueAdminFamiliesGetParams,
@@ -36,9 +37,13 @@ import type {
   CardRef,
   CardSaved,
   CompanyOut,
+  CsvImportIn,
+  CsvImportOut,
   DistinctIn,
   DistinctPair,
   DistinctSaved,
+  FspRequestAcceptIn,
+  FspRequestRejectIn,
   HTTPValidationError,
   HintsOut,
   KeyApproveIn,
@@ -52,12 +57,24 @@ import type {
   ProfessionPatch,
   ProvisionalOut,
   QueueItem,
+  RegistryEventIn,
+  RegistryEventOut,
+  RegistryEventPatch,
+  RegistryParticipantIn,
+  RegistryParticipantOut,
+  RegistryParticipantsAdminFspParticipantsGetParams,
+  RegistryRequestsAdminFspRequestsGetParams,
+  RegistryResultIdOut,
+  RegistryResultIn,
+  RegistryResultOut,
+  RegistryResultsAdminFspResultsGetParams,
   RejectBody,
   RemoveBlocklistAdminSkillsBlocklistDeleteParams,
   RemoveDistinctAdminSkillsDistinctDeleteParams,
   ResolveComplaintIn,
   RetiredOut,
   SkillCard,
+  SkillGraphOut,
   TwoWorldsAdminDemoTwoWorldsGetParams,
   TwoWorldsOut,
   VersionOut
@@ -4818,6 +4835,141 @@ export function useListProvisionalAdminSkillsProvisionalGet<TData = Awaited<Retu
 
 
 
+export type getGraphAdminSkillsGraphGetResponse200 = {
+  data: SkillGraphOut
+  status: 200
+}
+
+export type getGraphAdminSkillsGraphGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type getGraphAdminSkillsGraphGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type getGraphAdminSkillsGraphGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type getGraphAdminSkillsGraphGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type getGraphAdminSkillsGraphGetResponseSuccess = (getGraphAdminSkillsGraphGetResponse200) & {
+  headers: Headers;
+};
+export type getGraphAdminSkillsGraphGetResponseError = (getGraphAdminSkillsGraphGetResponse401ApplicationProblemJson | getGraphAdminSkillsGraphGetResponse401ApplicationJson | getGraphAdminSkillsGraphGetResponse403ApplicationProblemJson | getGraphAdminSkillsGraphGetResponse403ApplicationJson) & {
+  headers: Headers;
+};
+
+export type getGraphAdminSkillsGraphGetResponse = (getGraphAdminSkillsGraphGetResponseSuccess | getGraphAdminSkillsGraphGetResponseError)
+
+export const getGetGraphAdminSkillsGraphGetUrl = () => {
+
+
+
+
+  return `/admin/skills/graph`
+}
+
+/**
+ * Граф навыков справочника для просмотра: узлы и связи «рядом» и «часть»; без данных людей.
+ * @summary Get Graph
+ */
+export const getGraphAdminSkillsGraphGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getGraphAdminSkillsGraphGetResponse> => {
+
+  return apiFetch<getGraphAdminSkillsGraphGetResponse>(getGetGraphAdminSkillsGraphGetUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGraphAdminSkillsGraphGetQueryKey = () => {
+    return [
+    `/admin/skills/graph`
+    ] as const;
+    }
+
+
+export const getGetGraphAdminSkillsGraphGetQueryOptions = <TData = Awaited<ReturnType<typeof getGraphAdminSkillsGraphGet>>, TError = ErrorType<ProblemOut>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGraphAdminSkillsGraphGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGraphAdminSkillsGraphGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGraphAdminSkillsGraphGet>>> = ({ signal }) => getGraphAdminSkillsGraphGet({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGraphAdminSkillsGraphGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetGraphAdminSkillsGraphGetQueryResult = NonNullable<Awaited<ReturnType<typeof getGraphAdminSkillsGraphGet>>>
+export type GetGraphAdminSkillsGraphGetQueryError = ErrorType<ProblemOut>
+
+
+export function useGetGraphAdminSkillsGraphGet<TData = Awaited<ReturnType<typeof getGraphAdminSkillsGraphGet>>, TError = ErrorType<ProblemOut>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGraphAdminSkillsGraphGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getGraphAdminSkillsGraphGet>>,
+          TError,
+          Awaited<ReturnType<typeof getGraphAdminSkillsGraphGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetGraphAdminSkillsGraphGet<TData = Awaited<ReturnType<typeof getGraphAdminSkillsGraphGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGraphAdminSkillsGraphGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getGraphAdminSkillsGraphGet>>,
+          TError,
+          Awaited<ReturnType<typeof getGraphAdminSkillsGraphGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetGraphAdminSkillsGraphGet<TData = Awaited<ReturnType<typeof getGraphAdminSkillsGraphGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGraphAdminSkillsGraphGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Graph
+ */
+
+export function useGetGraphAdminSkillsGraphGet<TData = Awaited<ReturnType<typeof getGraphAdminSkillsGraphGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGraphAdminSkillsGraphGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetGraphAdminSkillsGraphGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 export type getHintsAdminSkillsHintsGetResponse200 = {
   data: HintsOut
   status: 200
@@ -5218,4 +5370,1808 @@ export const useRejectSkillAdminSkillsSlugRejectPost = <TError = ErrorType<Probl
         TContext
       > => {
       return useMutation(getRejectSkillAdminSkillsSlugRejectPostMutationOptions(options), queryClient);
+    }
+    export type registryEventsAdminFspEventsGetResponse200 = {
+  data: RegistryEventOut[]
+  status: 200
+}
+
+export type registryEventsAdminFspEventsGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type registryEventsAdminFspEventsGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type registryEventsAdminFspEventsGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type registryEventsAdminFspEventsGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type registryEventsAdminFspEventsGetResponse503ApplicationProblemJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type registryEventsAdminFspEventsGetResponse503ApplicationJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type registryEventsAdminFspEventsGetResponseSuccess = (registryEventsAdminFspEventsGetResponse200) & {
+  headers: Headers;
+};
+export type registryEventsAdminFspEventsGetResponseError = (registryEventsAdminFspEventsGetResponse401ApplicationProblemJson | registryEventsAdminFspEventsGetResponse401ApplicationJson | registryEventsAdminFspEventsGetResponse403ApplicationProblemJson | registryEventsAdminFspEventsGetResponse403ApplicationJson | registryEventsAdminFspEventsGetResponse503ApplicationProblemJson | registryEventsAdminFspEventsGetResponse503ApplicationJson) & {
+  headers: Headers;
+};
+
+export type registryEventsAdminFspEventsGetResponse = (registryEventsAdminFspEventsGetResponseSuccess | registryEventsAdminFspEventsGetResponseError)
+
+export const getRegistryEventsAdminFspEventsGetUrl = () => {
+
+
+
+
+  return `/admin/fsp/events`
+}
+
+/**
+ * @summary Registry Events
+ */
+export const registryEventsAdminFspEventsGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<registryEventsAdminFspEventsGetResponse> => {
+
+  return apiFetch<registryEventsAdminFspEventsGetResponse>(getRegistryEventsAdminFspEventsGetUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getRegistryEventsAdminFspEventsGetQueryKey = () => {
+    return [
+    `/admin/fsp/events`
+    ] as const;
+    }
+
+
+export const getRegistryEventsAdminFspEventsGetQueryOptions = <TData = Awaited<ReturnType<typeof registryEventsAdminFspEventsGet>>, TError = ErrorType<ProblemOut>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof registryEventsAdminFspEventsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getRegistryEventsAdminFspEventsGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof registryEventsAdminFspEventsGet>>> = ({ signal }) => registryEventsAdminFspEventsGet({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof registryEventsAdminFspEventsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type RegistryEventsAdminFspEventsGetQueryResult = NonNullable<Awaited<ReturnType<typeof registryEventsAdminFspEventsGet>>>
+export type RegistryEventsAdminFspEventsGetQueryError = ErrorType<ProblemOut>
+
+
+export function useRegistryEventsAdminFspEventsGet<TData = Awaited<ReturnType<typeof registryEventsAdminFspEventsGet>>, TError = ErrorType<ProblemOut>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof registryEventsAdminFspEventsGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof registryEventsAdminFspEventsGet>>,
+          TError,
+          Awaited<ReturnType<typeof registryEventsAdminFspEventsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRegistryEventsAdminFspEventsGet<TData = Awaited<ReturnType<typeof registryEventsAdminFspEventsGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof registryEventsAdminFspEventsGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof registryEventsAdminFspEventsGet>>,
+          TError,
+          Awaited<ReturnType<typeof registryEventsAdminFspEventsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRegistryEventsAdminFspEventsGet<TData = Awaited<ReturnType<typeof registryEventsAdminFspEventsGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof registryEventsAdminFspEventsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Registry Events
+ */
+
+export function useRegistryEventsAdminFspEventsGet<TData = Awaited<ReturnType<typeof registryEventsAdminFspEventsGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof registryEventsAdminFspEventsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getRegistryEventsAdminFspEventsGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type registryCreateEventAdminFspEventsPostResponse201 = {
+  data: RegistryEventOut
+  status: 201
+}
+
+export type registryCreateEventAdminFspEventsPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type registryCreateEventAdminFspEventsPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type registryCreateEventAdminFspEventsPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type registryCreateEventAdminFspEventsPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type registryCreateEventAdminFspEventsPostResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type registryCreateEventAdminFspEventsPostResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type registryCreateEventAdminFspEventsPostResponse503ApplicationProblemJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type registryCreateEventAdminFspEventsPostResponse503ApplicationJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type registryCreateEventAdminFspEventsPostResponseSuccess = (registryCreateEventAdminFspEventsPostResponse201) & {
+  headers: Headers;
+};
+export type registryCreateEventAdminFspEventsPostResponseError = (registryCreateEventAdminFspEventsPostResponse401ApplicationProblemJson | registryCreateEventAdminFspEventsPostResponse401ApplicationJson | registryCreateEventAdminFspEventsPostResponse403ApplicationProblemJson | registryCreateEventAdminFspEventsPostResponse403ApplicationJson | registryCreateEventAdminFspEventsPostResponse422ApplicationProblemJson | registryCreateEventAdminFspEventsPostResponse422ApplicationJson | registryCreateEventAdminFspEventsPostResponse503ApplicationProblemJson | registryCreateEventAdminFspEventsPostResponse503ApplicationJson) & {
+  headers: Headers;
+};
+
+export type registryCreateEventAdminFspEventsPostResponse = (registryCreateEventAdminFspEventsPostResponseSuccess | registryCreateEventAdminFspEventsPostResponseError)
+
+export const getRegistryCreateEventAdminFspEventsPostUrl = () => {
+
+
+
+
+  return `/admin/fsp/events`
+}
+
+/**
+ * @summary Registry Create Event
+ */
+export const registryCreateEventAdminFspEventsPost = async (registryEventIn: RegistryEventIn, options?: Parameters<typeof apiFetch>[1]): Promise<registryCreateEventAdminFspEventsPostResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<registryCreateEventAdminFspEventsPostResponse>(getRegistryCreateEventAdminFspEventsPostUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(registryEventIn)
+  }
+);}
+
+
+
+
+
+export const getRegistryCreateEventAdminFspEventsPostMutationKey = () => ['registryCreateEventAdminFspEventsPost'] as const;
+
+export const getRegistryCreateEventAdminFspEventsPostMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registryCreateEventAdminFspEventsPost>>, TError,RegistryCreateEventAdminFspEventsPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof registryCreateEventAdminFspEventsPost>>, TError,RegistryCreateEventAdminFspEventsPostMutationVariables, TContext> => {
+
+const mutationKey = getRegistryCreateEventAdminFspEventsPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof registryCreateEventAdminFspEventsPost>>, RegistryCreateEventAdminFspEventsPostMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  registryCreateEventAdminFspEventsPost(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RegistryCreateEventAdminFspEventsPostMutationResult = NonNullable<Awaited<ReturnType<typeof registryCreateEventAdminFspEventsPost>>>
+    export type RegistryCreateEventAdminFspEventsPostMutationBody = RegistryEventIn
+    export type RegistryCreateEventAdminFspEventsPostMutationError = ErrorType<ProblemOut>
+    export type RegistryCreateEventAdminFspEventsPostMutationVariables = {data: RegistryEventIn}
+
+    /**
+ * @summary Registry Create Event
+ */
+export const useRegistryCreateEventAdminFspEventsPost = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registryCreateEventAdminFspEventsPost>>, TError,RegistryCreateEventAdminFspEventsPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof registryCreateEventAdminFspEventsPost>>,
+        TError,
+        RegistryCreateEventAdminFspEventsPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRegistryCreateEventAdminFspEventsPostMutationOptions(options), queryClient);
+    }
+    export type registryUpdateEventAdminFspEventsEventIdPatchResponse200 = {
+  data: RegistryEventOut
+  status: 200
+}
+
+export type registryUpdateEventAdminFspEventsEventIdPatchResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type registryUpdateEventAdminFspEventsEventIdPatchResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type registryUpdateEventAdminFspEventsEventIdPatchResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type registryUpdateEventAdminFspEventsEventIdPatchResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type registryUpdateEventAdminFspEventsEventIdPatchResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type registryUpdateEventAdminFspEventsEventIdPatchResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type registryUpdateEventAdminFspEventsEventIdPatchResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type registryUpdateEventAdminFspEventsEventIdPatchResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type registryUpdateEventAdminFspEventsEventIdPatchResponse503ApplicationProblemJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type registryUpdateEventAdminFspEventsEventIdPatchResponse503ApplicationJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type registryUpdateEventAdminFspEventsEventIdPatchResponseSuccess = (registryUpdateEventAdminFspEventsEventIdPatchResponse200) & {
+  headers: Headers;
+};
+export type registryUpdateEventAdminFspEventsEventIdPatchResponseError = (registryUpdateEventAdminFspEventsEventIdPatchResponse401ApplicationProblemJson | registryUpdateEventAdminFspEventsEventIdPatchResponse401ApplicationJson | registryUpdateEventAdminFspEventsEventIdPatchResponse403ApplicationProblemJson | registryUpdateEventAdminFspEventsEventIdPatchResponse403ApplicationJson | registryUpdateEventAdminFspEventsEventIdPatchResponse404ApplicationProblemJson | registryUpdateEventAdminFspEventsEventIdPatchResponse404ApplicationJson | registryUpdateEventAdminFspEventsEventIdPatchResponse422ApplicationProblemJson | registryUpdateEventAdminFspEventsEventIdPatchResponse422ApplicationJson | registryUpdateEventAdminFspEventsEventIdPatchResponse503ApplicationProblemJson | registryUpdateEventAdminFspEventsEventIdPatchResponse503ApplicationJson) & {
+  headers: Headers;
+};
+
+export type registryUpdateEventAdminFspEventsEventIdPatchResponse = (registryUpdateEventAdminFspEventsEventIdPatchResponseSuccess | registryUpdateEventAdminFspEventsEventIdPatchResponseError)
+
+export const getRegistryUpdateEventAdminFspEventsEventIdPatchUrl = (eventId: string,) => {
+
+
+
+
+  return `/admin/fsp/events/${eventId}`
+}
+
+/**
+ * @summary Registry Update Event
+ */
+export const registryUpdateEventAdminFspEventsEventIdPatch = async (eventId: string,
+    registryEventPatch: RegistryEventPatch, options?: Parameters<typeof apiFetch>[1]): Promise<registryUpdateEventAdminFspEventsEventIdPatchResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<registryUpdateEventAdminFspEventsEventIdPatchResponse>(getRegistryUpdateEventAdminFspEventsEventIdPatchUrl(eventId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(registryEventPatch)
+  }
+);}
+
+
+
+
+
+export const getRegistryUpdateEventAdminFspEventsEventIdPatchMutationKey = () => ['registryUpdateEventAdminFspEventsEventIdPatch'] as const;
+
+export const getRegistryUpdateEventAdminFspEventsEventIdPatchMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registryUpdateEventAdminFspEventsEventIdPatch>>, TError,RegistryUpdateEventAdminFspEventsEventIdPatchMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof registryUpdateEventAdminFspEventsEventIdPatch>>, TError,RegistryUpdateEventAdminFspEventsEventIdPatchMutationVariables, TContext> => {
+
+const mutationKey = getRegistryUpdateEventAdminFspEventsEventIdPatchMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof registryUpdateEventAdminFspEventsEventIdPatch>>, RegistryUpdateEventAdminFspEventsEventIdPatchMutationVariables> = (props) => {
+          const {eventId,data} = props ?? {};
+
+          return  registryUpdateEventAdminFspEventsEventIdPatch(eventId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RegistryUpdateEventAdminFspEventsEventIdPatchMutationResult = NonNullable<Awaited<ReturnType<typeof registryUpdateEventAdminFspEventsEventIdPatch>>>
+    export type RegistryUpdateEventAdminFspEventsEventIdPatchMutationBody = RegistryEventPatch
+    export type RegistryUpdateEventAdminFspEventsEventIdPatchMutationError = ErrorType<ProblemOut>
+    export type RegistryUpdateEventAdminFspEventsEventIdPatchMutationVariables = {eventId: string;data: RegistryEventPatch}
+
+    /**
+ * @summary Registry Update Event
+ */
+export const useRegistryUpdateEventAdminFspEventsEventIdPatch = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registryUpdateEventAdminFspEventsEventIdPatch>>, TError,RegistryUpdateEventAdminFspEventsEventIdPatchMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof registryUpdateEventAdminFspEventsEventIdPatch>>,
+        TError,
+        RegistryUpdateEventAdminFspEventsEventIdPatchMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRegistryUpdateEventAdminFspEventsEventIdPatchMutationOptions(options), queryClient);
+    }
+    export type registryParticipantsAdminFspParticipantsGetResponse200 = {
+  data: RegistryParticipantOut[]
+  status: 200
+}
+
+export type registryParticipantsAdminFspParticipantsGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type registryParticipantsAdminFspParticipantsGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type registryParticipantsAdminFspParticipantsGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type registryParticipantsAdminFspParticipantsGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type registryParticipantsAdminFspParticipantsGetResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type registryParticipantsAdminFspParticipantsGetResponse503ApplicationProblemJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type registryParticipantsAdminFspParticipantsGetResponse503ApplicationJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type registryParticipantsAdminFspParticipantsGetResponseSuccess = (registryParticipantsAdminFspParticipantsGetResponse200) & {
+  headers: Headers;
+};
+export type registryParticipantsAdminFspParticipantsGetResponseError = (registryParticipantsAdminFspParticipantsGetResponse401ApplicationProblemJson | registryParticipantsAdminFspParticipantsGetResponse401ApplicationJson | registryParticipantsAdminFspParticipantsGetResponse403ApplicationProblemJson | registryParticipantsAdminFspParticipantsGetResponse403ApplicationJson | registryParticipantsAdminFspParticipantsGetResponse422 | registryParticipantsAdminFspParticipantsGetResponse503ApplicationProblemJson | registryParticipantsAdminFspParticipantsGetResponse503ApplicationJson) & {
+  headers: Headers;
+};
+
+export type registryParticipantsAdminFspParticipantsGetResponse = (registryParticipantsAdminFspParticipantsGetResponseSuccess | registryParticipantsAdminFspParticipantsGetResponseError)
+
+export const getRegistryParticipantsAdminFspParticipantsGetUrl = (params?: RegistryParticipantsAdminFspParticipantsGetParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/admin/fsp/participants?${stringifiedParams}` : `/admin/fsp/participants`
+}
+
+/**
+ * @summary Registry Participants
+ */
+export const registryParticipantsAdminFspParticipantsGet = async (params?: RegistryParticipantsAdminFspParticipantsGetParams, options?: Parameters<typeof apiFetch>[1]): Promise<registryParticipantsAdminFspParticipantsGetResponse> => {
+
+  return apiFetch<registryParticipantsAdminFspParticipantsGetResponse>(getRegistryParticipantsAdminFspParticipantsGetUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getRegistryParticipantsAdminFspParticipantsGetQueryKey = (params?: RegistryParticipantsAdminFspParticipantsGetParams,) => {
+    return [
+    `/admin/fsp/participants`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getRegistryParticipantsAdminFspParticipantsGetQueryOptions = <TData = Awaited<ReturnType<typeof registryParticipantsAdminFspParticipantsGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(params?: RegistryParticipantsAdminFspParticipantsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof registryParticipantsAdminFspParticipantsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getRegistryParticipantsAdminFspParticipantsGetQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof registryParticipantsAdminFspParticipantsGet>>> = ({ signal }) => registryParticipantsAdminFspParticipantsGet(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof registryParticipantsAdminFspParticipantsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type RegistryParticipantsAdminFspParticipantsGetQueryResult = NonNullable<Awaited<ReturnType<typeof registryParticipantsAdminFspParticipantsGet>>>
+export type RegistryParticipantsAdminFspParticipantsGetQueryError = ErrorType<ProblemOut | HTTPValidationError>
+
+
+export function useRegistryParticipantsAdminFspParticipantsGet<TData = Awaited<ReturnType<typeof registryParticipantsAdminFspParticipantsGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ params: undefined |  RegistryParticipantsAdminFspParticipantsGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof registryParticipantsAdminFspParticipantsGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof registryParticipantsAdminFspParticipantsGet>>,
+          TError,
+          Awaited<ReturnType<typeof registryParticipantsAdminFspParticipantsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRegistryParticipantsAdminFspParticipantsGet<TData = Awaited<ReturnType<typeof registryParticipantsAdminFspParticipantsGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ params?: RegistryParticipantsAdminFspParticipantsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof registryParticipantsAdminFspParticipantsGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof registryParticipantsAdminFspParticipantsGet>>,
+          TError,
+          Awaited<ReturnType<typeof registryParticipantsAdminFspParticipantsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRegistryParticipantsAdminFspParticipantsGet<TData = Awaited<ReturnType<typeof registryParticipantsAdminFspParticipantsGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ params?: RegistryParticipantsAdminFspParticipantsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof registryParticipantsAdminFspParticipantsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Registry Participants
+ */
+
+export function useRegistryParticipantsAdminFspParticipantsGet<TData = Awaited<ReturnType<typeof registryParticipantsAdminFspParticipantsGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ params?: RegistryParticipantsAdminFspParticipantsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof registryParticipantsAdminFspParticipantsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getRegistryParticipantsAdminFspParticipantsGetQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type registryCreateParticipantAdminFspParticipantsPostResponse201 = {
+  data: RegistryParticipantOut
+  status: 201
+}
+
+export type registryCreateParticipantAdminFspParticipantsPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type registryCreateParticipantAdminFspParticipantsPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type registryCreateParticipantAdminFspParticipantsPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type registryCreateParticipantAdminFspParticipantsPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type registryCreateParticipantAdminFspParticipantsPostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type registryCreateParticipantAdminFspParticipantsPostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type registryCreateParticipantAdminFspParticipantsPostResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type registryCreateParticipantAdminFspParticipantsPostResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type registryCreateParticipantAdminFspParticipantsPostResponse503ApplicationProblemJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type registryCreateParticipantAdminFspParticipantsPostResponse503ApplicationJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type registryCreateParticipantAdminFspParticipantsPostResponseSuccess = (registryCreateParticipantAdminFspParticipantsPostResponse201) & {
+  headers: Headers;
+};
+export type registryCreateParticipantAdminFspParticipantsPostResponseError = (registryCreateParticipantAdminFspParticipantsPostResponse401ApplicationProblemJson | registryCreateParticipantAdminFspParticipantsPostResponse401ApplicationJson | registryCreateParticipantAdminFspParticipantsPostResponse403ApplicationProblemJson | registryCreateParticipantAdminFspParticipantsPostResponse403ApplicationJson | registryCreateParticipantAdminFspParticipantsPostResponse409ApplicationProblemJson | registryCreateParticipantAdminFspParticipantsPostResponse409ApplicationJson | registryCreateParticipantAdminFspParticipantsPostResponse422ApplicationProblemJson | registryCreateParticipantAdminFspParticipantsPostResponse422ApplicationJson | registryCreateParticipantAdminFspParticipantsPostResponse503ApplicationProblemJson | registryCreateParticipantAdminFspParticipantsPostResponse503ApplicationJson) & {
+  headers: Headers;
+};
+
+export type registryCreateParticipantAdminFspParticipantsPostResponse = (registryCreateParticipantAdminFspParticipantsPostResponseSuccess | registryCreateParticipantAdminFspParticipantsPostResponseError)
+
+export const getRegistryCreateParticipantAdminFspParticipantsPostUrl = () => {
+
+
+
+
+  return `/admin/fsp/participants`
+}
+
+/**
+ * @summary Registry Create Participant
+ */
+export const registryCreateParticipantAdminFspParticipantsPost = async (registryParticipantIn: RegistryParticipantIn, options?: Parameters<typeof apiFetch>[1]): Promise<registryCreateParticipantAdminFspParticipantsPostResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<registryCreateParticipantAdminFspParticipantsPostResponse>(getRegistryCreateParticipantAdminFspParticipantsPostUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(registryParticipantIn)
+  }
+);}
+
+
+
+
+
+export const getRegistryCreateParticipantAdminFspParticipantsPostMutationKey = () => ['registryCreateParticipantAdminFspParticipantsPost'] as const;
+
+export const getRegistryCreateParticipantAdminFspParticipantsPostMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registryCreateParticipantAdminFspParticipantsPost>>, TError,RegistryCreateParticipantAdminFspParticipantsPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof registryCreateParticipantAdminFspParticipantsPost>>, TError,RegistryCreateParticipantAdminFspParticipantsPostMutationVariables, TContext> => {
+
+const mutationKey = getRegistryCreateParticipantAdminFspParticipantsPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof registryCreateParticipantAdminFspParticipantsPost>>, RegistryCreateParticipantAdminFspParticipantsPostMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  registryCreateParticipantAdminFspParticipantsPost(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RegistryCreateParticipantAdminFspParticipantsPostMutationResult = NonNullable<Awaited<ReturnType<typeof registryCreateParticipantAdminFspParticipantsPost>>>
+    export type RegistryCreateParticipantAdminFspParticipantsPostMutationBody = RegistryParticipantIn
+    export type RegistryCreateParticipantAdminFspParticipantsPostMutationError = ErrorType<ProblemOut>
+    export type RegistryCreateParticipantAdminFspParticipantsPostMutationVariables = {data: RegistryParticipantIn}
+
+    /**
+ * @summary Registry Create Participant
+ */
+export const useRegistryCreateParticipantAdminFspParticipantsPost = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registryCreateParticipantAdminFspParticipantsPost>>, TError,RegistryCreateParticipantAdminFspParticipantsPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof registryCreateParticipantAdminFspParticipantsPost>>,
+        TError,
+        RegistryCreateParticipantAdminFspParticipantsPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRegistryCreateParticipantAdminFspParticipantsPostMutationOptions(options), queryClient);
+    }
+    export type registryImportParticipantsAdminFspParticipantsImportPostResponse200 = {
+  data: CsvImportOut
+  status: 200
+}
+
+export type registryImportParticipantsAdminFspParticipantsImportPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type registryImportParticipantsAdminFspParticipantsImportPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type registryImportParticipantsAdminFspParticipantsImportPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type registryImportParticipantsAdminFspParticipantsImportPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type registryImportParticipantsAdminFspParticipantsImportPostResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type registryImportParticipantsAdminFspParticipantsImportPostResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type registryImportParticipantsAdminFspParticipantsImportPostResponse503ApplicationProblemJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type registryImportParticipantsAdminFspParticipantsImportPostResponse503ApplicationJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type registryImportParticipantsAdminFspParticipantsImportPostResponseSuccess = (registryImportParticipantsAdminFspParticipantsImportPostResponse200) & {
+  headers: Headers;
+};
+export type registryImportParticipantsAdminFspParticipantsImportPostResponseError = (registryImportParticipantsAdminFspParticipantsImportPostResponse401ApplicationProblemJson | registryImportParticipantsAdminFspParticipantsImportPostResponse401ApplicationJson | registryImportParticipantsAdminFspParticipantsImportPostResponse403ApplicationProblemJson | registryImportParticipantsAdminFspParticipantsImportPostResponse403ApplicationJson | registryImportParticipantsAdminFspParticipantsImportPostResponse422ApplicationProblemJson | registryImportParticipantsAdminFspParticipantsImportPostResponse422ApplicationJson | registryImportParticipantsAdminFspParticipantsImportPostResponse503ApplicationProblemJson | registryImportParticipantsAdminFspParticipantsImportPostResponse503ApplicationJson) & {
+  headers: Headers;
+};
+
+export type registryImportParticipantsAdminFspParticipantsImportPostResponse = (registryImportParticipantsAdminFspParticipantsImportPostResponseSuccess | registryImportParticipantsAdminFspParticipantsImportPostResponseError)
+
+export const getRegistryImportParticipantsAdminFspParticipantsImportPostUrl = () => {
+
+
+
+
+  return `/admin/fsp/participants/import`
+}
+
+/**
+ * CSV «ФИО, email, телефон» (`,` или `;`, заголовок необязателен).
+ *
+ * Совпал email или телефон — запись обновляется.
+ * @summary Registry Import Participants
+ */
+export const registryImportParticipantsAdminFspParticipantsImportPost = async (csvImportIn: CsvImportIn, options?: Parameters<typeof apiFetch>[1]): Promise<registryImportParticipantsAdminFspParticipantsImportPostResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<registryImportParticipantsAdminFspParticipantsImportPostResponse>(getRegistryImportParticipantsAdminFspParticipantsImportPostUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(csvImportIn)
+  }
+);}
+
+
+
+
+
+export const getRegistryImportParticipantsAdminFspParticipantsImportPostMutationKey = () => ['registryImportParticipantsAdminFspParticipantsImportPost'] as const;
+
+export const getRegistryImportParticipantsAdminFspParticipantsImportPostMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registryImportParticipantsAdminFspParticipantsImportPost>>, TError,RegistryImportParticipantsAdminFspParticipantsImportPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof registryImportParticipantsAdminFspParticipantsImportPost>>, TError,RegistryImportParticipantsAdminFspParticipantsImportPostMutationVariables, TContext> => {
+
+const mutationKey = getRegistryImportParticipantsAdminFspParticipantsImportPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof registryImportParticipantsAdminFspParticipantsImportPost>>, RegistryImportParticipantsAdminFspParticipantsImportPostMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  registryImportParticipantsAdminFspParticipantsImportPost(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RegistryImportParticipantsAdminFspParticipantsImportPostMutationResult = NonNullable<Awaited<ReturnType<typeof registryImportParticipantsAdminFspParticipantsImportPost>>>
+    export type RegistryImportParticipantsAdminFspParticipantsImportPostMutationBody = CsvImportIn
+    export type RegistryImportParticipantsAdminFspParticipantsImportPostMutationError = ErrorType<ProblemOut>
+    export type RegistryImportParticipantsAdminFspParticipantsImportPostMutationVariables = {data: CsvImportIn}
+
+    /**
+ * @summary Registry Import Participants
+ */
+export const useRegistryImportParticipantsAdminFspParticipantsImportPost = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registryImportParticipantsAdminFspParticipantsImportPost>>, TError,RegistryImportParticipantsAdminFspParticipantsImportPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof registryImportParticipantsAdminFspParticipantsImportPost>>,
+        TError,
+        RegistryImportParticipantsAdminFspParticipantsImportPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRegistryImportParticipantsAdminFspParticipantsImportPostMutationOptions(options), queryClient);
+    }
+    export type registryResultsAdminFspResultsGetResponse200 = {
+  data: RegistryResultOut[]
+  status: 200
+}
+
+export type registryResultsAdminFspResultsGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type registryResultsAdminFspResultsGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type registryResultsAdminFspResultsGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type registryResultsAdminFspResultsGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type registryResultsAdminFspResultsGetResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type registryResultsAdminFspResultsGetResponse503ApplicationProblemJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type registryResultsAdminFspResultsGetResponse503ApplicationJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type registryResultsAdminFspResultsGetResponseSuccess = (registryResultsAdminFspResultsGetResponse200) & {
+  headers: Headers;
+};
+export type registryResultsAdminFspResultsGetResponseError = (registryResultsAdminFspResultsGetResponse401ApplicationProblemJson | registryResultsAdminFspResultsGetResponse401ApplicationJson | registryResultsAdminFspResultsGetResponse403ApplicationProblemJson | registryResultsAdminFspResultsGetResponse403ApplicationJson | registryResultsAdminFspResultsGetResponse422 | registryResultsAdminFspResultsGetResponse503ApplicationProblemJson | registryResultsAdminFspResultsGetResponse503ApplicationJson) & {
+  headers: Headers;
+};
+
+export type registryResultsAdminFspResultsGetResponse = (registryResultsAdminFspResultsGetResponseSuccess | registryResultsAdminFspResultsGetResponseError)
+
+export const getRegistryResultsAdminFspResultsGetUrl = (params?: RegistryResultsAdminFspResultsGetParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/admin/fsp/results?${stringifiedParams}` : `/admin/fsp/results`
+}
+
+/**
+ * @summary Registry Results
+ */
+export const registryResultsAdminFspResultsGet = async (params?: RegistryResultsAdminFspResultsGetParams, options?: Parameters<typeof apiFetch>[1]): Promise<registryResultsAdminFspResultsGetResponse> => {
+
+  return apiFetch<registryResultsAdminFspResultsGetResponse>(getRegistryResultsAdminFspResultsGetUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getRegistryResultsAdminFspResultsGetQueryKey = (params?: RegistryResultsAdminFspResultsGetParams,) => {
+    return [
+    `/admin/fsp/results`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getRegistryResultsAdminFspResultsGetQueryOptions = <TData = Awaited<ReturnType<typeof registryResultsAdminFspResultsGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(params?: RegistryResultsAdminFspResultsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof registryResultsAdminFspResultsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getRegistryResultsAdminFspResultsGetQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof registryResultsAdminFspResultsGet>>> = ({ signal }) => registryResultsAdminFspResultsGet(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof registryResultsAdminFspResultsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type RegistryResultsAdminFspResultsGetQueryResult = NonNullable<Awaited<ReturnType<typeof registryResultsAdminFspResultsGet>>>
+export type RegistryResultsAdminFspResultsGetQueryError = ErrorType<ProblemOut | HTTPValidationError>
+
+
+export function useRegistryResultsAdminFspResultsGet<TData = Awaited<ReturnType<typeof registryResultsAdminFspResultsGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ params: undefined |  RegistryResultsAdminFspResultsGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof registryResultsAdminFspResultsGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof registryResultsAdminFspResultsGet>>,
+          TError,
+          Awaited<ReturnType<typeof registryResultsAdminFspResultsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRegistryResultsAdminFspResultsGet<TData = Awaited<ReturnType<typeof registryResultsAdminFspResultsGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ params?: RegistryResultsAdminFspResultsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof registryResultsAdminFspResultsGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof registryResultsAdminFspResultsGet>>,
+          TError,
+          Awaited<ReturnType<typeof registryResultsAdminFspResultsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRegistryResultsAdminFspResultsGet<TData = Awaited<ReturnType<typeof registryResultsAdminFspResultsGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ params?: RegistryResultsAdminFspResultsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof registryResultsAdminFspResultsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Registry Results
+ */
+
+export function useRegistryResultsAdminFspResultsGet<TData = Awaited<ReturnType<typeof registryResultsAdminFspResultsGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ params?: RegistryResultsAdminFspResultsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof registryResultsAdminFspResultsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getRegistryResultsAdminFspResultsGetQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type registryUpsertResultAdminFspResultsPutResponse200 = {
+  data: RegistryResultIdOut
+  status: 200
+}
+
+export type registryUpsertResultAdminFspResultsPutResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type registryUpsertResultAdminFspResultsPutResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type registryUpsertResultAdminFspResultsPutResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type registryUpsertResultAdminFspResultsPutResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type registryUpsertResultAdminFspResultsPutResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type registryUpsertResultAdminFspResultsPutResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type registryUpsertResultAdminFspResultsPutResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type registryUpsertResultAdminFspResultsPutResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type registryUpsertResultAdminFspResultsPutResponse503ApplicationProblemJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type registryUpsertResultAdminFspResultsPutResponse503ApplicationJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type registryUpsertResultAdminFspResultsPutResponseSuccess = (registryUpsertResultAdminFspResultsPutResponse200) & {
+  headers: Headers;
+};
+export type registryUpsertResultAdminFspResultsPutResponseError = (registryUpsertResultAdminFspResultsPutResponse401ApplicationProblemJson | registryUpsertResultAdminFspResultsPutResponse401ApplicationJson | registryUpsertResultAdminFspResultsPutResponse403ApplicationProblemJson | registryUpsertResultAdminFspResultsPutResponse403ApplicationJson | registryUpsertResultAdminFspResultsPutResponse404ApplicationProblemJson | registryUpsertResultAdminFspResultsPutResponse404ApplicationJson | registryUpsertResultAdminFspResultsPutResponse422ApplicationProblemJson | registryUpsertResultAdminFspResultsPutResponse422ApplicationJson | registryUpsertResultAdminFspResultsPutResponse503ApplicationProblemJson | registryUpsertResultAdminFspResultsPutResponse503ApplicationJson) & {
+  headers: Headers;
+};
+
+export type registryUpsertResultAdminFspResultsPutResponse = (registryUpsertResultAdminFspResultsPutResponseSuccess | registryUpsertResultAdminFspResultsPutResponseError)
+
+export const getRegistryUpsertResultAdminFspResultsPutUrl = () => {
+
+
+
+
+  return `/admin/fsp/results`
+}
+
+/**
+ * Результат участника на мероприятии (повтор — правка). Привязанному кандидату — пересчёт.
+ * @summary Registry Upsert Result
+ */
+export const registryUpsertResultAdminFspResultsPut = async (registryResultIn: RegistryResultIn, options?: Parameters<typeof apiFetch>[1]): Promise<registryUpsertResultAdminFspResultsPutResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<registryUpsertResultAdminFspResultsPutResponse>(getRegistryUpsertResultAdminFspResultsPutUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(registryResultIn)
+  }
+);}
+
+
+
+
+
+export const getRegistryUpsertResultAdminFspResultsPutMutationKey = () => ['registryUpsertResultAdminFspResultsPut'] as const;
+
+export const getRegistryUpsertResultAdminFspResultsPutMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registryUpsertResultAdminFspResultsPut>>, TError,RegistryUpsertResultAdminFspResultsPutMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof registryUpsertResultAdminFspResultsPut>>, TError,RegistryUpsertResultAdminFspResultsPutMutationVariables, TContext> => {
+
+const mutationKey = getRegistryUpsertResultAdminFspResultsPutMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof registryUpsertResultAdminFspResultsPut>>, RegistryUpsertResultAdminFspResultsPutMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  registryUpsertResultAdminFspResultsPut(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RegistryUpsertResultAdminFspResultsPutMutationResult = NonNullable<Awaited<ReturnType<typeof registryUpsertResultAdminFspResultsPut>>>
+    export type RegistryUpsertResultAdminFspResultsPutMutationBody = RegistryResultIn
+    export type RegistryUpsertResultAdminFspResultsPutMutationError = ErrorType<ProblemOut>
+    export type RegistryUpsertResultAdminFspResultsPutMutationVariables = {data: RegistryResultIn}
+
+    /**
+ * @summary Registry Upsert Result
+ */
+export const useRegistryUpsertResultAdminFspResultsPut = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registryUpsertResultAdminFspResultsPut>>, TError,RegistryUpsertResultAdminFspResultsPutMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof registryUpsertResultAdminFspResultsPut>>,
+        TError,
+        RegistryUpsertResultAdminFspResultsPutMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRegistryUpsertResultAdminFspResultsPutMutationOptions(options), queryClient);
+    }
+    export type registryDeleteResultAdminFspResultsResultIdDeleteResponse204 = {
+  data: void
+  status: 204
+}
+
+export type registryDeleteResultAdminFspResultsResultIdDeleteResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type registryDeleteResultAdminFspResultsResultIdDeleteResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type registryDeleteResultAdminFspResultsResultIdDeleteResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type registryDeleteResultAdminFspResultsResultIdDeleteResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type registryDeleteResultAdminFspResultsResultIdDeleteResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type registryDeleteResultAdminFspResultsResultIdDeleteResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type registryDeleteResultAdminFspResultsResultIdDeleteResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type registryDeleteResultAdminFspResultsResultIdDeleteResponse503ApplicationProblemJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type registryDeleteResultAdminFspResultsResultIdDeleteResponse503ApplicationJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type registryDeleteResultAdminFspResultsResultIdDeleteResponseSuccess = (registryDeleteResultAdminFspResultsResultIdDeleteResponse204) & {
+  headers: Headers;
+};
+export type registryDeleteResultAdminFspResultsResultIdDeleteResponseError = (registryDeleteResultAdminFspResultsResultIdDeleteResponse401ApplicationProblemJson | registryDeleteResultAdminFspResultsResultIdDeleteResponse401ApplicationJson | registryDeleteResultAdminFspResultsResultIdDeleteResponse403ApplicationProblemJson | registryDeleteResultAdminFspResultsResultIdDeleteResponse403ApplicationJson | registryDeleteResultAdminFspResultsResultIdDeleteResponse404ApplicationProblemJson | registryDeleteResultAdminFspResultsResultIdDeleteResponse404ApplicationJson | registryDeleteResultAdminFspResultsResultIdDeleteResponse422 | registryDeleteResultAdminFspResultsResultIdDeleteResponse503ApplicationProblemJson | registryDeleteResultAdminFspResultsResultIdDeleteResponse503ApplicationJson) & {
+  headers: Headers;
+};
+
+export type registryDeleteResultAdminFspResultsResultIdDeleteResponse = (registryDeleteResultAdminFspResultsResultIdDeleteResponseSuccess | registryDeleteResultAdminFspResultsResultIdDeleteResponseError)
+
+export const getRegistryDeleteResultAdminFspResultsResultIdDeleteUrl = (resultId: number,) => {
+
+
+
+
+  return `/admin/fsp/results/${resultId}`
+}
+
+/**
+ * @summary Registry Delete Result
+ */
+export const registryDeleteResultAdminFspResultsResultIdDelete = async (resultId: number, options?: Parameters<typeof apiFetch>[1]): Promise<registryDeleteResultAdminFspResultsResultIdDeleteResponse> => {
+
+  return apiFetch<registryDeleteResultAdminFspResultsResultIdDeleteResponse>(getRegistryDeleteResultAdminFspResultsResultIdDeleteUrl(resultId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getRegistryDeleteResultAdminFspResultsResultIdDeleteMutationKey = () => ['registryDeleteResultAdminFspResultsResultIdDelete'] as const;
+
+export const getRegistryDeleteResultAdminFspResultsResultIdDeleteMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registryDeleteResultAdminFspResultsResultIdDelete>>, TError,RegistryDeleteResultAdminFspResultsResultIdDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof registryDeleteResultAdminFspResultsResultIdDelete>>, TError,RegistryDeleteResultAdminFspResultsResultIdDeleteMutationVariables, TContext> => {
+
+const mutationKey = getRegistryDeleteResultAdminFspResultsResultIdDeleteMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof registryDeleteResultAdminFspResultsResultIdDelete>>, RegistryDeleteResultAdminFspResultsResultIdDeleteMutationVariables> = (props) => {
+          const {resultId} = props ?? {};
+
+          return  registryDeleteResultAdminFspResultsResultIdDelete(resultId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RegistryDeleteResultAdminFspResultsResultIdDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof registryDeleteResultAdminFspResultsResultIdDelete>>>
+
+    export type RegistryDeleteResultAdminFspResultsResultIdDeleteMutationError = ErrorType<ProblemOut | HTTPValidationError>
+    export type RegistryDeleteResultAdminFspResultsResultIdDeleteMutationVariables = {resultId: number}
+
+    /**
+ * @summary Registry Delete Result
+ */
+export const useRegistryDeleteResultAdminFspResultsResultIdDelete = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registryDeleteResultAdminFspResultsResultIdDelete>>, TError,RegistryDeleteResultAdminFspResultsResultIdDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof registryDeleteResultAdminFspResultsResultIdDelete>>,
+        TError,
+        RegistryDeleteResultAdminFspResultsResultIdDeleteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRegistryDeleteResultAdminFspResultsResultIdDeleteMutationOptions(options), queryClient);
+    }
+    export type registryRequestsAdminFspRequestsGetResponse200 = {
+  data: AdminFspRequestOut[]
+  status: 200
+}
+
+export type registryRequestsAdminFspRequestsGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type registryRequestsAdminFspRequestsGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type registryRequestsAdminFspRequestsGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type registryRequestsAdminFspRequestsGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type registryRequestsAdminFspRequestsGetResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type registryRequestsAdminFspRequestsGetResponse503ApplicationProblemJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type registryRequestsAdminFspRequestsGetResponse503ApplicationJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type registryRequestsAdminFspRequestsGetResponseSuccess = (registryRequestsAdminFspRequestsGetResponse200) & {
+  headers: Headers;
+};
+export type registryRequestsAdminFspRequestsGetResponseError = (registryRequestsAdminFspRequestsGetResponse401ApplicationProblemJson | registryRequestsAdminFspRequestsGetResponse401ApplicationJson | registryRequestsAdminFspRequestsGetResponse403ApplicationProblemJson | registryRequestsAdminFspRequestsGetResponse403ApplicationJson | registryRequestsAdminFspRequestsGetResponse422 | registryRequestsAdminFspRequestsGetResponse503ApplicationProblemJson | registryRequestsAdminFspRequestsGetResponse503ApplicationJson) & {
+  headers: Headers;
+};
+
+export type registryRequestsAdminFspRequestsGetResponse = (registryRequestsAdminFspRequestsGetResponseSuccess | registryRequestsAdminFspRequestsGetResponseError)
+
+export const getRegistryRequestsAdminFspRequestsGetUrl = (params?: RegistryRequestsAdminFspRequestsGetParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/admin/fsp/requests?${stringifiedParams}` : `/admin/fsp/requests`
+}
+
+/**
+ * @summary Registry Requests
+ */
+export const registryRequestsAdminFspRequestsGet = async (params?: RegistryRequestsAdminFspRequestsGetParams, options?: Parameters<typeof apiFetch>[1]): Promise<registryRequestsAdminFspRequestsGetResponse> => {
+
+  return apiFetch<registryRequestsAdminFspRequestsGetResponse>(getRegistryRequestsAdminFspRequestsGetUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getRegistryRequestsAdminFspRequestsGetQueryKey = (params?: RegistryRequestsAdminFspRequestsGetParams,) => {
+    return [
+    `/admin/fsp/requests`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getRegistryRequestsAdminFspRequestsGetQueryOptions = <TData = Awaited<ReturnType<typeof registryRequestsAdminFspRequestsGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(params?: RegistryRequestsAdminFspRequestsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof registryRequestsAdminFspRequestsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getRegistryRequestsAdminFspRequestsGetQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof registryRequestsAdminFspRequestsGet>>> = ({ signal }) => registryRequestsAdminFspRequestsGet(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof registryRequestsAdminFspRequestsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type RegistryRequestsAdminFspRequestsGetQueryResult = NonNullable<Awaited<ReturnType<typeof registryRequestsAdminFspRequestsGet>>>
+export type RegistryRequestsAdminFspRequestsGetQueryError = ErrorType<ProblemOut | HTTPValidationError>
+
+
+export function useRegistryRequestsAdminFspRequestsGet<TData = Awaited<ReturnType<typeof registryRequestsAdminFspRequestsGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ params: undefined |  RegistryRequestsAdminFspRequestsGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof registryRequestsAdminFspRequestsGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof registryRequestsAdminFspRequestsGet>>,
+          TError,
+          Awaited<ReturnType<typeof registryRequestsAdminFspRequestsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRegistryRequestsAdminFspRequestsGet<TData = Awaited<ReturnType<typeof registryRequestsAdminFspRequestsGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ params?: RegistryRequestsAdminFspRequestsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof registryRequestsAdminFspRequestsGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof registryRequestsAdminFspRequestsGet>>,
+          TError,
+          Awaited<ReturnType<typeof registryRequestsAdminFspRequestsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRegistryRequestsAdminFspRequestsGet<TData = Awaited<ReturnType<typeof registryRequestsAdminFspRequestsGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ params?: RegistryRequestsAdminFspRequestsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof registryRequestsAdminFspRequestsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Registry Requests
+ */
+
+export function useRegistryRequestsAdminFspRequestsGet<TData = Awaited<ReturnType<typeof registryRequestsAdminFspRequestsGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ params?: RegistryRequestsAdminFspRequestsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof registryRequestsAdminFspRequestsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getRegistryRequestsAdminFspRequestsGetQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type registryAcceptRequestAdminFspRequestsRequestIdAcceptPostResponse200 = {
+  data: AdminFspRequestOut
+  status: 200
+}
+
+export type registryAcceptRequestAdminFspRequestsRequestIdAcceptPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type registryAcceptRequestAdminFspRequestsRequestIdAcceptPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type registryAcceptRequestAdminFspRequestsRequestIdAcceptPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type registryAcceptRequestAdminFspRequestsRequestIdAcceptPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type registryAcceptRequestAdminFspRequestsRequestIdAcceptPostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type registryAcceptRequestAdminFspRequestsRequestIdAcceptPostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type registryAcceptRequestAdminFspRequestsRequestIdAcceptPostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type registryAcceptRequestAdminFspRequestsRequestIdAcceptPostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type registryAcceptRequestAdminFspRequestsRequestIdAcceptPostResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type registryAcceptRequestAdminFspRequestsRequestIdAcceptPostResponse503ApplicationProblemJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type registryAcceptRequestAdminFspRequestsRequestIdAcceptPostResponse503ApplicationJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type registryAcceptRequestAdminFspRequestsRequestIdAcceptPostResponseSuccess = (registryAcceptRequestAdminFspRequestsRequestIdAcceptPostResponse200) & {
+  headers: Headers;
+};
+export type registryAcceptRequestAdminFspRequestsRequestIdAcceptPostResponseError = (registryAcceptRequestAdminFspRequestsRequestIdAcceptPostResponse401ApplicationProblemJson | registryAcceptRequestAdminFspRequestsRequestIdAcceptPostResponse401ApplicationJson | registryAcceptRequestAdminFspRequestsRequestIdAcceptPostResponse403ApplicationProblemJson | registryAcceptRequestAdminFspRequestsRequestIdAcceptPostResponse403ApplicationJson | registryAcceptRequestAdminFspRequestsRequestIdAcceptPostResponse404ApplicationProblemJson | registryAcceptRequestAdminFspRequestsRequestIdAcceptPostResponse404ApplicationJson | registryAcceptRequestAdminFspRequestsRequestIdAcceptPostResponse409ApplicationProblemJson | registryAcceptRequestAdminFspRequestsRequestIdAcceptPostResponse409ApplicationJson | registryAcceptRequestAdminFspRequestsRequestIdAcceptPostResponse422 | registryAcceptRequestAdminFspRequestsRequestIdAcceptPostResponse503ApplicationProblemJson | registryAcceptRequestAdminFspRequestsRequestIdAcceptPostResponse503ApplicationJson) & {
+  headers: Headers;
+};
+
+export type registryAcceptRequestAdminFspRequestsRequestIdAcceptPostResponse = (registryAcceptRequestAdminFspRequestsRequestIdAcceptPostResponseSuccess | registryAcceptRequestAdminFspRequestsRequestIdAcceptPostResponseError)
+
+export const getRegistryAcceptRequestAdminFspRequestsRequestIdAcceptPostUrl = (requestId: string,) => {
+
+
+
+
+  return `/admin/fsp/requests/${requestId}/accept`
+}
+
+/**
+ * Принять заявку: кандидат привязывается к выбранному участнику реестра.
+ * @summary Registry Accept Request
+ */
+export const registryAcceptRequestAdminFspRequestsRequestIdAcceptPost = async (requestId: string,
+    fspRequestAcceptIn: FspRequestAcceptIn, options?: Parameters<typeof apiFetch>[1]): Promise<registryAcceptRequestAdminFspRequestsRequestIdAcceptPostResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<registryAcceptRequestAdminFspRequestsRequestIdAcceptPostResponse>(getRegistryAcceptRequestAdminFspRequestsRequestIdAcceptPostUrl(requestId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(fspRequestAcceptIn)
+  }
+);}
+
+
+
+
+
+export const getRegistryAcceptRequestAdminFspRequestsRequestIdAcceptPostMutationKey = () => ['registryAcceptRequestAdminFspRequestsRequestIdAcceptPost'] as const;
+
+export const getRegistryAcceptRequestAdminFspRequestsRequestIdAcceptPostMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registryAcceptRequestAdminFspRequestsRequestIdAcceptPost>>, TError,RegistryAcceptRequestAdminFspRequestsRequestIdAcceptPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof registryAcceptRequestAdminFspRequestsRequestIdAcceptPost>>, TError,RegistryAcceptRequestAdminFspRequestsRequestIdAcceptPostMutationVariables, TContext> => {
+
+const mutationKey = getRegistryAcceptRequestAdminFspRequestsRequestIdAcceptPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof registryAcceptRequestAdminFspRequestsRequestIdAcceptPost>>, RegistryAcceptRequestAdminFspRequestsRequestIdAcceptPostMutationVariables> = (props) => {
+          const {requestId,data} = props ?? {};
+
+          return  registryAcceptRequestAdminFspRequestsRequestIdAcceptPost(requestId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RegistryAcceptRequestAdminFspRequestsRequestIdAcceptPostMutationResult = NonNullable<Awaited<ReturnType<typeof registryAcceptRequestAdminFspRequestsRequestIdAcceptPost>>>
+    export type RegistryAcceptRequestAdminFspRequestsRequestIdAcceptPostMutationBody = FspRequestAcceptIn
+    export type RegistryAcceptRequestAdminFspRequestsRequestIdAcceptPostMutationError = ErrorType<ProblemOut | HTTPValidationError>
+    export type RegistryAcceptRequestAdminFspRequestsRequestIdAcceptPostMutationVariables = {requestId: string;data: FspRequestAcceptIn}
+
+    /**
+ * @summary Registry Accept Request
+ */
+export const useRegistryAcceptRequestAdminFspRequestsRequestIdAcceptPost = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registryAcceptRequestAdminFspRequestsRequestIdAcceptPost>>, TError,RegistryAcceptRequestAdminFspRequestsRequestIdAcceptPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof registryAcceptRequestAdminFspRequestsRequestIdAcceptPost>>,
+        TError,
+        RegistryAcceptRequestAdminFspRequestsRequestIdAcceptPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRegistryAcceptRequestAdminFspRequestsRequestIdAcceptPostMutationOptions(options), queryClient);
+    }
+    export type registryRejectRequestAdminFspRequestsRequestIdRejectPostResponse200 = {
+  data: AdminFspRequestOut
+  status: 200
+}
+
+export type registryRejectRequestAdminFspRequestsRequestIdRejectPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type registryRejectRequestAdminFspRequestsRequestIdRejectPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type registryRejectRequestAdminFspRequestsRequestIdRejectPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type registryRejectRequestAdminFspRequestsRequestIdRejectPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type registryRejectRequestAdminFspRequestsRequestIdRejectPostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type registryRejectRequestAdminFspRequestsRequestIdRejectPostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type registryRejectRequestAdminFspRequestsRequestIdRejectPostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type registryRejectRequestAdminFspRequestsRequestIdRejectPostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type registryRejectRequestAdminFspRequestsRequestIdRejectPostResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type registryRejectRequestAdminFspRequestsRequestIdRejectPostResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type registryRejectRequestAdminFspRequestsRequestIdRejectPostResponse503ApplicationProblemJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type registryRejectRequestAdminFspRequestsRequestIdRejectPostResponse503ApplicationJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type registryRejectRequestAdminFspRequestsRequestIdRejectPostResponseSuccess = (registryRejectRequestAdminFspRequestsRequestIdRejectPostResponse200) & {
+  headers: Headers;
+};
+export type registryRejectRequestAdminFspRequestsRequestIdRejectPostResponseError = (registryRejectRequestAdminFspRequestsRequestIdRejectPostResponse401ApplicationProblemJson | registryRejectRequestAdminFspRequestsRequestIdRejectPostResponse401ApplicationJson | registryRejectRequestAdminFspRequestsRequestIdRejectPostResponse403ApplicationProblemJson | registryRejectRequestAdminFspRequestsRequestIdRejectPostResponse403ApplicationJson | registryRejectRequestAdminFspRequestsRequestIdRejectPostResponse404ApplicationProblemJson | registryRejectRequestAdminFspRequestsRequestIdRejectPostResponse404ApplicationJson | registryRejectRequestAdminFspRequestsRequestIdRejectPostResponse409ApplicationProblemJson | registryRejectRequestAdminFspRequestsRequestIdRejectPostResponse409ApplicationJson | registryRejectRequestAdminFspRequestsRequestIdRejectPostResponse422ApplicationProblemJson | registryRejectRequestAdminFspRequestsRequestIdRejectPostResponse422ApplicationJson | registryRejectRequestAdminFspRequestsRequestIdRejectPostResponse503ApplicationProblemJson | registryRejectRequestAdminFspRequestsRequestIdRejectPostResponse503ApplicationJson) & {
+  headers: Headers;
+};
+
+export type registryRejectRequestAdminFspRequestsRequestIdRejectPostResponse = (registryRejectRequestAdminFspRequestsRequestIdRejectPostResponseSuccess | registryRejectRequestAdminFspRequestsRequestIdRejectPostResponseError)
+
+export const getRegistryRejectRequestAdminFspRequestsRequestIdRejectPostUrl = (requestId: string,) => {
+
+
+
+
+  return `/admin/fsp/requests/${requestId}/reject`
+}
+
+/**
+ * @summary Registry Reject Request
+ */
+export const registryRejectRequestAdminFspRequestsRequestIdRejectPost = async (requestId: string,
+    fspRequestRejectIn: FspRequestRejectIn, options?: Parameters<typeof apiFetch>[1]): Promise<registryRejectRequestAdminFspRequestsRequestIdRejectPostResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<registryRejectRequestAdminFspRequestsRequestIdRejectPostResponse>(getRegistryRejectRequestAdminFspRequestsRequestIdRejectPostUrl(requestId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(fspRequestRejectIn)
+  }
+);}
+
+
+
+
+
+export const getRegistryRejectRequestAdminFspRequestsRequestIdRejectPostMutationKey = () => ['registryRejectRequestAdminFspRequestsRequestIdRejectPost'] as const;
+
+export const getRegistryRejectRequestAdminFspRequestsRequestIdRejectPostMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registryRejectRequestAdminFspRequestsRequestIdRejectPost>>, TError,RegistryRejectRequestAdminFspRequestsRequestIdRejectPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof registryRejectRequestAdminFspRequestsRequestIdRejectPost>>, TError,RegistryRejectRequestAdminFspRequestsRequestIdRejectPostMutationVariables, TContext> => {
+
+const mutationKey = getRegistryRejectRequestAdminFspRequestsRequestIdRejectPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof registryRejectRequestAdminFspRequestsRequestIdRejectPost>>, RegistryRejectRequestAdminFspRequestsRequestIdRejectPostMutationVariables> = (props) => {
+          const {requestId,data} = props ?? {};
+
+          return  registryRejectRequestAdminFspRequestsRequestIdRejectPost(requestId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RegistryRejectRequestAdminFspRequestsRequestIdRejectPostMutationResult = NonNullable<Awaited<ReturnType<typeof registryRejectRequestAdminFspRequestsRequestIdRejectPost>>>
+    export type RegistryRejectRequestAdminFspRequestsRequestIdRejectPostMutationBody = FspRequestRejectIn
+    export type RegistryRejectRequestAdminFspRequestsRequestIdRejectPostMutationError = ErrorType<ProblemOut>
+    export type RegistryRejectRequestAdminFspRequestsRequestIdRejectPostMutationVariables = {requestId: string;data: FspRequestRejectIn}
+
+    /**
+ * @summary Registry Reject Request
+ */
+export const useRegistryRejectRequestAdminFspRequestsRequestIdRejectPost = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registryRejectRequestAdminFspRequestsRequestIdRejectPost>>, TError,RegistryRejectRequestAdminFspRequestsRequestIdRejectPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof registryRejectRequestAdminFspRequestsRequestIdRejectPost>>,
+        TError,
+        RegistryRejectRequestAdminFspRequestsRequestIdRejectPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRegistryRejectRequestAdminFspRequestsRequestIdRejectPostMutationOptions(options), queryClient);
     }

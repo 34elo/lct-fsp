@@ -29,9 +29,12 @@ import type {
   AppFspRouterStartOut,
   FspCallbackAuthFspCallbackGetParams,
   FspOverview,
+  FspRequestIn,
+  FspRequestOut,
   FspStartAuthFspStartGetParams,
   HTTPValidationError,
   ProblemOut,
+  RegistryLinkOut,
   VerifyIn,
   VerifyOut
 } from '../../model';
@@ -1139,4 +1142,452 @@ export const useAdminDemoResetFspAdminDemoResetPost = <TError = ErrorType<Proble
         TContext
       > => {
       return useMutation(getAdminDemoResetFspAdminDemoResetPostMutationOptions(options), queryClient);
+    }
+    export type fspRegistryLinkCandidatesMeFspRegistryLinkPostResponse200 = {
+  data: RegistryLinkOut
+  status: 200
+}
+
+export type fspRegistryLinkCandidatesMeFspRegistryLinkPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type fspRegistryLinkCandidatesMeFspRegistryLinkPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type fspRegistryLinkCandidatesMeFspRegistryLinkPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type fspRegistryLinkCandidatesMeFspRegistryLinkPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type fspRegistryLinkCandidatesMeFspRegistryLinkPostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type fspRegistryLinkCandidatesMeFspRegistryLinkPostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type fspRegistryLinkCandidatesMeFspRegistryLinkPostResponse429ApplicationProblemJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type fspRegistryLinkCandidatesMeFspRegistryLinkPostResponse429ApplicationJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type fspRegistryLinkCandidatesMeFspRegistryLinkPostResponse503ApplicationProblemJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type fspRegistryLinkCandidatesMeFspRegistryLinkPostResponse503ApplicationJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type fspRegistryLinkCandidatesMeFspRegistryLinkPostResponseSuccess = (fspRegistryLinkCandidatesMeFspRegistryLinkPostResponse200) & {
+  headers: Headers;
+};
+export type fspRegistryLinkCandidatesMeFspRegistryLinkPostResponseError = (fspRegistryLinkCandidatesMeFspRegistryLinkPostResponse401ApplicationProblemJson | fspRegistryLinkCandidatesMeFspRegistryLinkPostResponse401ApplicationJson | fspRegistryLinkCandidatesMeFspRegistryLinkPostResponse403ApplicationProblemJson | fspRegistryLinkCandidatesMeFspRegistryLinkPostResponse403ApplicationJson | fspRegistryLinkCandidatesMeFspRegistryLinkPostResponse409ApplicationProblemJson | fspRegistryLinkCandidatesMeFspRegistryLinkPostResponse409ApplicationJson | fspRegistryLinkCandidatesMeFspRegistryLinkPostResponse429ApplicationProblemJson | fspRegistryLinkCandidatesMeFspRegistryLinkPostResponse429ApplicationJson | fspRegistryLinkCandidatesMeFspRegistryLinkPostResponse503ApplicationProblemJson | fspRegistryLinkCandidatesMeFspRegistryLinkPostResponse503ApplicationJson) & {
+  headers: Headers;
+};
+
+export type fspRegistryLinkCandidatesMeFspRegistryLinkPostResponse = (fspRegistryLinkCandidatesMeFspRegistryLinkPostResponseSuccess | fspRegistryLinkCandidatesMeFspRegistryLinkPostResponseError)
+
+export const getFspRegistryLinkCandidatesMeFspRegistryLinkPostUrl = () => {
+
+
+
+
+  return `/candidates/me/fsp/registry-link`
+}
+
+/**
+ * Кнопка «Привязать ФСП»: ищем в реестре email аккаунта и телефон из контактов.
+ *
+ * Совпал ровно один участник — привязка сразу (`fsp.linked`, затем синхронизация достижений);
+ * иначе `linked=false` и кандидат заполняет заявку.
+ * @summary Fsp Registry Link
+ */
+export const fspRegistryLinkCandidatesMeFspRegistryLinkPost = async ( options?: Parameters<typeof apiFetch>[1]): Promise<fspRegistryLinkCandidatesMeFspRegistryLinkPostResponse> => {
+
+  return apiFetch<fspRegistryLinkCandidatesMeFspRegistryLinkPostResponse>(getFspRegistryLinkCandidatesMeFspRegistryLinkPostUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getFspRegistryLinkCandidatesMeFspRegistryLinkPostMutationKey = () => ['fspRegistryLinkCandidatesMeFspRegistryLinkPost'] as const;
+
+export const getFspRegistryLinkCandidatesMeFspRegistryLinkPostMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof fspRegistryLinkCandidatesMeFspRegistryLinkPost>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof fspRegistryLinkCandidatesMeFspRegistryLinkPost>>, TError,void, TContext> => {
+
+const mutationKey = getFspRegistryLinkCandidatesMeFspRegistryLinkPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof fspRegistryLinkCandidatesMeFspRegistryLinkPost>>, void> = () => {
+
+
+          return  fspRegistryLinkCandidatesMeFspRegistryLinkPost(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FspRegistryLinkCandidatesMeFspRegistryLinkPostMutationResult = NonNullable<Awaited<ReturnType<typeof fspRegistryLinkCandidatesMeFspRegistryLinkPost>>>
+
+    export type FspRegistryLinkCandidatesMeFspRegistryLinkPostMutationError = ErrorType<ProblemOut>
+
+
+    /**
+ * @summary Fsp Registry Link
+ */
+export const useFspRegistryLinkCandidatesMeFspRegistryLinkPost = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof fspRegistryLinkCandidatesMeFspRegistryLinkPost>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof fspRegistryLinkCandidatesMeFspRegistryLinkPost>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getFspRegistryLinkCandidatesMeFspRegistryLinkPostMutationOptions(options), queryClient);
+    }
+    export type fspMyRequestCandidatesMeFspRequestGetResponse200 = {
+  data: FspRequestOut | null
+  status: 200
+}
+
+export type fspMyRequestCandidatesMeFspRequestGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type fspMyRequestCandidatesMeFspRequestGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type fspMyRequestCandidatesMeFspRequestGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type fspMyRequestCandidatesMeFspRequestGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type fspMyRequestCandidatesMeFspRequestGetResponse503ApplicationProblemJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type fspMyRequestCandidatesMeFspRequestGetResponse503ApplicationJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type fspMyRequestCandidatesMeFspRequestGetResponseSuccess = (fspMyRequestCandidatesMeFspRequestGetResponse200) & {
+  headers: Headers;
+};
+export type fspMyRequestCandidatesMeFspRequestGetResponseError = (fspMyRequestCandidatesMeFspRequestGetResponse401ApplicationProblemJson | fspMyRequestCandidatesMeFspRequestGetResponse401ApplicationJson | fspMyRequestCandidatesMeFspRequestGetResponse403ApplicationProblemJson | fspMyRequestCandidatesMeFspRequestGetResponse403ApplicationJson | fspMyRequestCandidatesMeFspRequestGetResponse503ApplicationProblemJson | fspMyRequestCandidatesMeFspRequestGetResponse503ApplicationJson) & {
+  headers: Headers;
+};
+
+export type fspMyRequestCandidatesMeFspRequestGetResponse = (fspMyRequestCandidatesMeFspRequestGetResponseSuccess | fspMyRequestCandidatesMeFspRequestGetResponseError)
+
+export const getFspMyRequestCandidatesMeFspRequestGetUrl = () => {
+
+
+
+
+  return `/candidates/me/fsp/request`
+}
+
+/**
+ * Последняя заявка кандидата на привязку (или `null`).
+ * @summary Fsp My Request
+ */
+export const fspMyRequestCandidatesMeFspRequestGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<fspMyRequestCandidatesMeFspRequestGetResponse> => {
+
+  return apiFetch<fspMyRequestCandidatesMeFspRequestGetResponse>(getFspMyRequestCandidatesMeFspRequestGetUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getFspMyRequestCandidatesMeFspRequestGetQueryKey = () => {
+    return [
+    `/candidates/me/fsp/request`
+    ] as const;
+    }
+
+
+export const getFspMyRequestCandidatesMeFspRequestGetQueryOptions = <TData = Awaited<ReturnType<typeof fspMyRequestCandidatesMeFspRequestGet>>, TError = ErrorType<ProblemOut>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof fspMyRequestCandidatesMeFspRequestGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getFspMyRequestCandidatesMeFspRequestGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof fspMyRequestCandidatesMeFspRequestGet>>> = ({ signal }) => fspMyRequestCandidatesMeFspRequestGet({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof fspMyRequestCandidatesMeFspRequestGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type FspMyRequestCandidatesMeFspRequestGetQueryResult = NonNullable<Awaited<ReturnType<typeof fspMyRequestCandidatesMeFspRequestGet>>>
+export type FspMyRequestCandidatesMeFspRequestGetQueryError = ErrorType<ProblemOut>
+
+
+export function useFspMyRequestCandidatesMeFspRequestGet<TData = Awaited<ReturnType<typeof fspMyRequestCandidatesMeFspRequestGet>>, TError = ErrorType<ProblemOut>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof fspMyRequestCandidatesMeFspRequestGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof fspMyRequestCandidatesMeFspRequestGet>>,
+          TError,
+          Awaited<ReturnType<typeof fspMyRequestCandidatesMeFspRequestGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useFspMyRequestCandidatesMeFspRequestGet<TData = Awaited<ReturnType<typeof fspMyRequestCandidatesMeFspRequestGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof fspMyRequestCandidatesMeFspRequestGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof fspMyRequestCandidatesMeFspRequestGet>>,
+          TError,
+          Awaited<ReturnType<typeof fspMyRequestCandidatesMeFspRequestGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useFspMyRequestCandidatesMeFspRequestGet<TData = Awaited<ReturnType<typeof fspMyRequestCandidatesMeFspRequestGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof fspMyRequestCandidatesMeFspRequestGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Fsp My Request
+ */
+
+export function useFspMyRequestCandidatesMeFspRequestGet<TData = Awaited<ReturnType<typeof fspMyRequestCandidatesMeFspRequestGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof fspMyRequestCandidatesMeFspRequestGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getFspMyRequestCandidatesMeFspRequestGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type fspCreateRequestCandidatesMeFspRequestsPostResponse201 = {
+  data: FspRequestOut
+  status: 201
+}
+
+export type fspCreateRequestCandidatesMeFspRequestsPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type fspCreateRequestCandidatesMeFspRequestsPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type fspCreateRequestCandidatesMeFspRequestsPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type fspCreateRequestCandidatesMeFspRequestsPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type fspCreateRequestCandidatesMeFspRequestsPostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type fspCreateRequestCandidatesMeFspRequestsPostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type fspCreateRequestCandidatesMeFspRequestsPostResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type fspCreateRequestCandidatesMeFspRequestsPostResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type fspCreateRequestCandidatesMeFspRequestsPostResponse429ApplicationProblemJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type fspCreateRequestCandidatesMeFspRequestsPostResponse429ApplicationJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type fspCreateRequestCandidatesMeFspRequestsPostResponse503ApplicationProblemJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type fspCreateRequestCandidatesMeFspRequestsPostResponse503ApplicationJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type fspCreateRequestCandidatesMeFspRequestsPostResponseSuccess = (fspCreateRequestCandidatesMeFspRequestsPostResponse201) & {
+  headers: Headers;
+};
+export type fspCreateRequestCandidatesMeFspRequestsPostResponseError = (fspCreateRequestCandidatesMeFspRequestsPostResponse401ApplicationProblemJson | fspCreateRequestCandidatesMeFspRequestsPostResponse401ApplicationJson | fspCreateRequestCandidatesMeFspRequestsPostResponse403ApplicationProblemJson | fspCreateRequestCandidatesMeFspRequestsPostResponse403ApplicationJson | fspCreateRequestCandidatesMeFspRequestsPostResponse409ApplicationProblemJson | fspCreateRequestCandidatesMeFspRequestsPostResponse409ApplicationJson | fspCreateRequestCandidatesMeFspRequestsPostResponse422ApplicationProblemJson | fspCreateRequestCandidatesMeFspRequestsPostResponse422ApplicationJson | fspCreateRequestCandidatesMeFspRequestsPostResponse429ApplicationProblemJson | fspCreateRequestCandidatesMeFspRequestsPostResponse429ApplicationJson | fspCreateRequestCandidatesMeFspRequestsPostResponse503ApplicationProblemJson | fspCreateRequestCandidatesMeFspRequestsPostResponse503ApplicationJson) & {
+  headers: Headers;
+};
+
+export type fspCreateRequestCandidatesMeFspRequestsPostResponse = (fspCreateRequestCandidatesMeFspRequestsPostResponseSuccess | fspCreateRequestCandidatesMeFspRequestsPostResponseError)
+
+export const getFspCreateRequestCandidatesMeFspRequestsPostUrl = () => {
+
+
+
+
+  return `/candidates/me/fsp/requests`
+}
+
+/**
+ * Заявка админу: ФИО, email/телефон, под которыми кандидат участвовал, мероприятие.
+ * @summary Fsp Create Request
+ */
+export const fspCreateRequestCandidatesMeFspRequestsPost = async (fspRequestIn: FspRequestIn, options?: Parameters<typeof apiFetch>[1]): Promise<fspCreateRequestCandidatesMeFspRequestsPostResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<fspCreateRequestCandidatesMeFspRequestsPostResponse>(getFspCreateRequestCandidatesMeFspRequestsPostUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(fspRequestIn)
+  }
+);}
+
+
+
+
+
+export const getFspCreateRequestCandidatesMeFspRequestsPostMutationKey = () => ['fspCreateRequestCandidatesMeFspRequestsPost'] as const;
+
+export const getFspCreateRequestCandidatesMeFspRequestsPostMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof fspCreateRequestCandidatesMeFspRequestsPost>>, TError,FspCreateRequestCandidatesMeFspRequestsPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof fspCreateRequestCandidatesMeFspRequestsPost>>, TError,FspCreateRequestCandidatesMeFspRequestsPostMutationVariables, TContext> => {
+
+const mutationKey = getFspCreateRequestCandidatesMeFspRequestsPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof fspCreateRequestCandidatesMeFspRequestsPost>>, FspCreateRequestCandidatesMeFspRequestsPostMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  fspCreateRequestCandidatesMeFspRequestsPost(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FspCreateRequestCandidatesMeFspRequestsPostMutationResult = NonNullable<Awaited<ReturnType<typeof fspCreateRequestCandidatesMeFspRequestsPost>>>
+    export type FspCreateRequestCandidatesMeFspRequestsPostMutationBody = FspRequestIn
+    export type FspCreateRequestCandidatesMeFspRequestsPostMutationError = ErrorType<ProblemOut>
+    export type FspCreateRequestCandidatesMeFspRequestsPostMutationVariables = {data: FspRequestIn}
+
+    /**
+ * @summary Fsp Create Request
+ */
+export const useFspCreateRequestCandidatesMeFspRequestsPost = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof fspCreateRequestCandidatesMeFspRequestsPost>>, TError,FspCreateRequestCandidatesMeFspRequestsPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof fspCreateRequestCandidatesMeFspRequestsPost>>,
+        TError,
+        FspCreateRequestCandidatesMeFspRequestsPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getFspCreateRequestCandidatesMeFspRequestsPostMutationOptions(options), queryClient);
     }

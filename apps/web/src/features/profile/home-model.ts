@@ -1,4 +1,5 @@
 /** Чистые функции Главной кандидата (E38-1): следующий шаг, созвездие, строки навыков, форматы. */
+import type { OfferForCandidate } from "@/api/model";
 import type { CircuitStep, ConstellationNode } from "@fsp/ui";
 
 import { FORMAT_WORD, HOME, SOURCE_TAG } from "./text";
@@ -30,10 +31,10 @@ export interface NextStep {
 export function nextStep(i: NextStepInput): NextStep {
   const raw: { key: StepKey; done: boolean; label: string; action: string; to: string }[] = [
     { key: "test", done: i.tested, label: i.tested ? HOME.steps.test.done : HOME.steps.test.todo, action: HOME.steps.test.todo, to: "/me/assessment" },
-    { key: "fsp", done: i.fspLinked, label: i.fspLinked ? HOME.steps.fsp.done : HOME.steps.fsp.todo, action: HOME.steps.fsp.todo, to: "/onboarding" },
+    { key: "fsp", done: i.fspLinked, label: i.fspLinked ? HOME.steps.fsp.done : HOME.steps.fsp.todo, action: HOME.steps.fsp.todo, to: "/me/profile?tab=data" },
   ];
   if (i.pendingInterests > 0)
-    raw.push({ key: "interest", done: false, label: HOME.steps.interest.todo, action: HOME.steps.interest.todo, to: "/me/interests" });
+    raw.push({ key: "interest", done: false, label: HOME.steps.interest.todo, action: HOME.steps.interest.todo, to: "/me/offers?show=interests" });
   if (i.nextTest)
     raw.push({ key: "next", done: false, label: HOME.nextTest(i.nextTest.grade), action: HOME.nextTestAction(i.nextTest.grade), to: i.nextTest.path });
   const cur = raw.findIndex((s) => !s.done);
@@ -109,4 +110,11 @@ export function dayMonth(iso: string | null | undefined): string {
   if (!iso) return "";
   const d = new Date(iso);
   return Number.isNaN(d.getTime()) ? "" : d.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit", timeZone: "UTC" });
+}
+
+/** Последние приглашения и интересы одним списком (E39-13): статус, вилка, ссылка на карточку. */
+export function latestInvites(interests: OfferForCandidate[], offers: OfferForCandidate[], n = 3): OfferForCandidate[] {
+  const byId = new Map<string, OfferForCandidate>();
+  for (const o of [...interests, ...offers]) if (o.initiator !== "candidate") byId.set(o.id, o);
+  return [...byId.values()].sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? "")).slice(0, n);
 }

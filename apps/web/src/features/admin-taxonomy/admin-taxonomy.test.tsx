@@ -68,6 +68,11 @@ function mount() {
   );
 }
 const type = (id: string, value: string) => fireEvent.change(screen.getByTestId(id), { target: { value } });
+// Combobox из @fsp/ui: ввод фильтрует список, Enter выбирает первый найденный.
+const choose = (id: string, value: string) => {
+  type(id, value);
+  fireEvent.keyDown(screen.getByTestId(id), { key: "Enter" });
+};
 
 describe("model", () => {
   test("веса: запятая, диапазон (0, 1], повтор навыка", () => {
@@ -95,7 +100,7 @@ describe("E13-4a профессии", () => {
   test("скрытая профессия помечена в списке (E36-2)", async () => {
     professions = [...professions, { slug: "ml", title: "ML", skill_weights: { python: 1 }, skill_types: {}, active: false }];
     mount();
-    expect(await screen.findByTestId("admin-prof-hidden-ml")).toHaveTextContent("скрыта в опросе");
+    expect(await screen.findByTestId("admin-prof-hidden-ml")).toHaveTextContent("скрыта");
     expect(screen.queryByTestId("admin-prof-hidden-backend")).toBeNull();
   });
 
@@ -116,7 +121,7 @@ describe("E13-4a профессии", () => {
     fireEvent.click(await screen.findByTestId("admin-prof-create"));
     type("admin-prof-slug", "qa");
     type("admin-prof-title", "QA");
-    type("admin-prof-skill-0", "sql");
+    choose("admin-prof-skill-0", "sql");
     type("admin-prof-weight-0", "2");
     fireEvent.click(screen.getByTestId("admin-prof-save"));
     expect(await screen.findByTestId("admin-prof-weights-error")).toBeInTheDocument();
@@ -138,7 +143,7 @@ describe("E13-4a профессии", () => {
     fireEvent.click(await screen.findByTestId("admin-prof-create"));
     type("admin-prof-slug", "qa");
     type("admin-prof-title", "QA");
-    type("admin-prof-skill-0", "sql");
+    choose("admin-prof-skill-0", "sql");
     fireEvent.click(screen.getByTestId("admin-prof-save"));
     expect(await screen.findByTestId("admin-prof-error")).toHaveTextContent(text);
   });

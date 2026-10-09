@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { PAGE } from "@/shared/lib/page";
+import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -6,6 +7,7 @@ import { Button, EmptyState, ErrorState, Skeleton, formatRubRange } from "@fsp/u
 
 import { useMyApplicationsCandidatesMeApplicationsGet, useWithdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPost } from "@/api/endpoints/offers/offers";
 import type { OfferForCandidate } from "@/api/model";
+import { ListHeader } from "@/features/offers/offer-cards";
 import { ErrorNote } from "@/features/auth/ui";
 import { invalidateOffers } from "@/features/offers/parts";
 import { dateOnly } from "@/features/offers/text";
@@ -65,15 +67,16 @@ function ResponseCard({ o }: { o: OfferForCandidate }) {
 }
 
 /** Мои отклики (R1, кандидат): статусы, отзыв, переход к приглашению. */
-export default function CandidateResponses() {
+export default function CandidateResponses({ filter }: { filter?: ReactNode } = {}) {
   const q = useMyApplicationsCandidatesMeApplicationsGet();
   const all = (q.data?.status === 200 ? q.data.data : []) as OfferForCandidate[];
   const sorted = [...all].sort((a, b) => b.created_at.localeCompare(a.created_at));
   const [tab, setTab] = useState("all");
   const shown = filterBy(sorted, tab, candTabOf);
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4 md:p-6">
-      <h1 className="font-mono text-24 font-semibold">{T.candTitle}</h1>
+    <main className={PAGE.normal}>
+      <ListHeader />
+      {filter}
       {q.isPending && <Skeleton role="status" aria-label="Загрузка" className="h-48" />}
       {q.isError && <ErrorState title={T.loadError} onRetry={() => void q.refetch()} />}
       {q.isSuccess && all.length === 0 && (
@@ -82,7 +85,7 @@ export default function CandidateResponses() {
       {all.length > 0 && (
         <>
           <FilterTabs label="Фильтр откликов" tabs={T.tabs} value={tab} counts={countBy(sorted, candTabOf)} onChange={setTab} />
-          <ul className="grid gap-3 md:grid-cols-2">{shown.map((o) => <ResponseCard key={o.id} o={o} />)}</ul>
+          <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{shown.map((o) => <ResponseCard key={o.id} o={o} />)}</ul>
           <p className="text-12 text-muted">{T.contactsNote}</p>
         </>
       )}

@@ -1,4 +1,4 @@
-import { Button, Chips, cn, Field, FieldInput, GradeTag, H1, Input, Lbl, Num, Panel, Skeleton, SkillTag, StatusTag } from "@fsp/ui";
+import { Button, Chips, cn, H1, Lbl, Num, Panel, SalaryRangeInput, Skeleton, SkillInput, StatusTag, Tag } from "@fsp/ui";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
@@ -12,54 +12,16 @@ import {
 } from "@/api/endpoints/assessment/assessment";
 import { useGetProfessionsTaxonomyProfessionsGet } from "@/api/endpoints/taxonomy/taxonomy";
 import type { SurveyIn, TestGrade, WorkFormat } from "@/api/model";
+import { Gi, Gloss } from "@/shared/Gloss";
+import { useSkillSource } from "@/shared/lib/skills";
 import { addStack, isFuture, salaryError } from "./model";
 import { FORMAT_OPTIONS, GRADE, GRADE_CARDS, T, dateShort } from "./text";
-import { ErrorLine, LoadError, Page } from "./ui";
+import { ChoiceCards, ErrorLine, FlowSteps, LoadError, Page } from "./ui";
 
 const isGrade = (g: string | null | undefined): g is TestGrade => GRADE_CARDS.some((c) => c.grade === g);
 const GRADE_ORDER: TestGrade[] = ["junior", "middle", "senior"];
 
-/** Сегмент `.sg`: радио-группа в виде переключателя; `lockedValue` — грейд в кулдауне (контур вместо заливки). */
-function Segmented<V extends string>({
-  label,
-  value,
-  options,
-  onChange,
-  testid,
-  lockedValue,
-}: {
-  label: string;
-  value: V | "";
-  options: { value: V; label: string }[];
-  onChange: (v: V) => void;
-  testid: (v: V) => string;
-  lockedValue?: V | "";
-}) {
-  return (
-    <div role="radiogroup" aria-label={label} className="inline-flex flex-wrap gap-0.5 rounded-lg bg-tint-50 p-0.5">
-      {options.map((o) => {
-        const on = value === o.value;
-        const locked = on && lockedValue === o.value;
-        return (
-          <label
-            key={o.value}
-            className={cn(
-              "inline-flex min-h-9 cursor-pointer items-center rounded-md px-3.5 text-14 font-semibold has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-brand",
-              on && !locked && "bg-brand text-on-brand",
-              locked && "bg-transparent text-brand-fg shadow-[inset_0_0_0_1px_var(--brand)]",
-              !on && "text-muted hover:text-ink",
-            )}
-          >
-            <input type="radio" className="sr-only" checked={on} onChange={() => onChange(o.value)} data-testid={testid(o.value)} />
-            {o.label}
-          </label>
-        );
-      })}
-    </div>
-  );
-}
-
-function Fld({ label, resume, tid, children }: { label: string; resume?: boolean; tid?: string; children: React.ReactNode }) {
+function Fld({ label, resume, tid, children }: { label: React.ReactNode; resume?: boolean; tid?: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-2">
@@ -75,9 +37,14 @@ function Fld({ label, resume, tid, children }: { label: string; resume?: boolean
   );
 }
 
-const money = (v: string) => `${Number(v).toLocaleString("ru-RU")} ₽`;
+type Step = 1 | 2;
 
-/** S1: опрос и выбор грейда (макет v2_me-assessment). Одна форма на всех ширинах; справа (на 375 — снизу) «Заявляешь» и кнопка старта. */
+/**
+ * S1 (E39-6): поток «Шаг 1. Направление и навыки → Шаг 2. Грейд и ожидания → Шаг 3. Тест».
+ * Новый кандидат попадает сюда сразу после регистрации; «Начать тест» сохраняет ответы и открывает
+ * первое задание. Шаг 2 открывается сразу, если направление уже сохранено или пришло в ссылке
+ * (навигатор, результат теста); `?step=1` — правка направления и навыков из профиля.
+ */
 export default function Survey() {
   const nav = useNavigate();
   const qc = useQueryClient();
@@ -89,9 +56,9 @@ export default function Survey() {
   const history = hq.data?.status === 200 ? hq.data.data : undefined;
   const professions = useMemo(() => (pq.data?.status === 200 ? pq.data.data.professions : []), [pq.data]);
 
+  const [step, setStep] = useState<Step>(1);
   const [profession, setProfession] = useState("");
   const [stack, setStack] = useState<string[]>([]);
-  const [stackDraft, setStackDraft] = useState("");
   const [formats, setFormats] = useState<WorkFormat[]>([]);
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
@@ -99,20 +66,23 @@ export default function Survey() {
   const [express, setExpress] = useState(params.get("mode") === "express"); // E32-4a: вход жюри
   const [touched, setTouched] = useState(false);
   const [done, setDone] = useState(false);
-  const [picking, setPicking] = useState(false);
-  const [hint, setHint] = useState(false);
+  const { suggest } = useSkillSource(profession || undefined);
+  const editStep1 = params.get("step") === "1";
 
-  // Предзаполнение один раз: опрос или черновик из анкеты, затем параметры ссылки из навигатора.
+  // Предзаполнение один раз: сохранённые ответы или черновик из анкеты, затем параметры ссылки.
   const [filled, setFilled] = useState(false);
   useEffect(() => {
     if (filled || !survey) return;
-    setProfession(params.get("profession") ?? survey.profession ?? "");
+    const p = params.get("profession") ?? survey.profession ?? "";
+    setProfession(p);
     setStack(survey.stack ?? []);
     setFormats((survey.formats ?? []) as WorkFormat[]);
     setFrom(survey.salary_from != null ? String(survey.salary_from) : "");
     setTo(survey.salary_to != null ? String(survey.salary_to) : "");
     const g = params.get("grade") ?? survey.declared_grade;
     setGrade(isGrade(g) ? g : "");
+    const known = !!p && (!!survey.id || params.has("profession") || params.has("grade"));
+    setStep(params.get("step") === "1" ? 1 : params.get("step") === "2" || known ? 2 : 1);
     setFilled(true);
   }, [survey, filled, params]);
 
@@ -142,7 +112,14 @@ export default function Survey() {
     declared_grade: g || null,
   });
 
-  const valid = !!profession && !rangeBad;
+  function next() {
+    setTouched(true);
+    if (!profession) return;
+    setTouched(false);
+    setDone(false);
+    setStep(2);
+    window.scrollTo?.({ top: 0 });
+  }
 
   async function submit(start: boolean, as?: TestGrade) {
     setTouched(true);
@@ -150,7 +127,7 @@ export default function Survey() {
     create.reset();
     const g = as ?? grade;
     if (as) setGrade(as);
-    if (!valid || (start && !g)) return;
+    if (!profession || rangeBad || (start && !g)) return;
     try {
       await put.mutateAsync({ data: body(g) });
       void qc.invalidateQueries({ queryKey: getHistoryAssessmentHistoryGetQueryKey() });
@@ -168,235 +145,223 @@ export default function Survey() {
     }
   }
 
-  const profTitle = professions.find((p) => p.slug === profession)?.title ?? profession;
   const resume = !!survey?.prefilled;
-  const showEmpty = !!survey && !profession && !picking;
-
   const startLabel = lockUntil && lowerGrade ? T.startLower(GRADE[lowerGrade] ?? lowerGrade) : T.startTest;
   const startDisabled = busy || (!!lockUntil && !lowerGrade);
   const onStart = () => (lockUntil && lowerGrade ? submit(true, lowerGrade) : submit(true));
 
+  const savedNote = done && (
+    <p role="status" className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-success-bg px-3 py-2 text-14 text-success" data-testid="assessment-saved">
+      <span>
+        {T.saved}. {step === 2 && T.savedLater}
+      </span>
+      <Link to={step === 1 ? "/me/profile" : "/me"} className="font-semibold underline" data-testid="assessment-later">
+        {step === 1 ? T.toProfile : T.toHome}
+      </Link>
+    </p>
+  );
+
   return (
-    <Page wide>
-      <div className="flex items-center justify-between gap-3">
-        <H1 className="max-md:text-[22px]">{T.surveyHeading}</H1>
-        <Link to="/me/assessment/history" className="text-14 font-semibold text-brand-fg underline" data-testid="assessment-history-link">
-          {T.historyLink}
-        </Link>
+    <Page>
+      <div className="flex flex-col gap-4">
+        <FlowSteps current={step} steps={T.flow} label={T.flowLabel} />
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+          <H1 className="max-md:text-[22px]">{T.flow[step - 1]}</H1>
+          <Link to="/me/assessment/history" className="text-14 font-semibold text-brand-fg underline" data-testid="assessment-history-link">
+            {T.historyLink}
+          </Link>
+        </div>
+        <p className="text-14 text-muted">{step === 1 ? T.step1Lead : T.step2Lead}</p>
       </div>
 
       {sq.isPending || pq.isPending ? (
-        <div role="status" aria-label={T.loading} className="grid gap-4 md:grid-cols-2">
-          {[0, 1].map((i) => (
-            <Panel key={i} className="flex flex-col gap-2.5">
-              <Skeleton className="h-4 w-2/5" />
-              <Skeleton className="h-3" />
-              <Skeleton className="h-3" />
-              <Skeleton className="h-3" />
-              <Skeleton className="h-3 w-3/4" />
-            </Panel>
+        <div role="status" aria-label={T.loading} className="grid gap-3 md:grid-cols-3">
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} className="h-20 rounded-xl" />
           ))}
         </div>
       ) : sq.isError || pq.isError ? (
         <LoadError error={sq.error ?? pq.error} onRetry={() => (sq.isError ? sq.refetch() : pq.refetch())} />
-      ) : showEmpty ? (
-        <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-hairline p-10 text-center" data-testid="assessment-empty">
-          <b className="font-mono text-16">{T.noProfession}</b>
-          <Button size="lg" onClick={() => setPicking(true)} data-testid="assessment-pick">
-            {T.pickProfession}
-          </Button>
+      ) : step === 1 ? (
+        <div className="flex flex-col gap-6" data-testid="assessment-step-1">
+          <Panel className="flex flex-col gap-6" data-testid="assessment-survey">
+            <Fld label={<Gloss k="category">{T.direction}</Gloss>} resume={resume} tid="assessment-prefilled">
+              <ChoiceCards
+                label={T.profession}
+                name="assessment-profession"
+                value={profession}
+                options={professions.map((p) => ({
+                  value: p.slug,
+                  title: p.title,
+                  aside: p.beta ? (
+                    <span className="inline-flex shrink-0 items-center gap-1" data-testid={`assessment-beta-${p.slug}`}>
+                      <Tag>{T.beta}</Tag>
+                      <Gi k="beta" />
+                    </span>
+                  ) : undefined,
+                  text: p.beta ? T.betaHint : undefined,
+                }))}
+                onChange={(v) => {
+                  setProfession(v);
+                  setTouched(false);
+                }}
+                testid={(v) => `assessment-profession-${v}`}
+                className="grid-cols-1 sm:grid-cols-2 md:grid-cols-3"
+              />
+              {touched && !profession && (
+                <p role="alert" className="text-13 text-error" data-testid="assessment-need-profession">
+                  {T.needProfession}
+                </p>
+              )}
+            </Fld>
+
+            <Fld label={T.skills} resume={resume}>
+              <div data-testid="assessment-stack">
+                <SkillInput
+                  aria-label={T.stackAdd}
+                  placeholder={T.stackAdd}
+                  value={stack.map((s) => ({ value: s, label: s }))}
+                  onChange={(v) => setStack(v.reduce<string[]>((acc, x) => addStack(acc, x.label), []))}
+                  suggest={suggest}
+                  max={30}
+                  data-testid="assessment-stack-input"
+                />
+              </div>
+              <p className="text-12 text-muted">{T.skillsHint}</p>
+            </Fld>
+          </Panel>
+
+          {put.isError && <ErrorLine error={put.error} data-testid="assessment-survey-error" />}
+          {savedNote}
+          <div className="flex flex-wrap items-center gap-3">
+            <Button size="lg" onClick={next} disabled={busy} data-testid="assessment-next">
+              {T.next}
+            </Button>
+            {editStep1 && (
+              <Button variant="outline" size="lg" loading={put.isPending} disabled={busy} onClick={() => submit(false)} data-testid="assessment-save-step">
+                {T.saveStep}
+              </Button>
+            )}
+            <span className="text-12 text-muted">{T.step1Later}</span>
+          </div>
         </div>
       ) : (
-        <div className="grid items-start gap-4 md:grid-cols-12">
-          <div className="flex flex-col gap-3 md:col-span-7">
-            {lockUntil && (
-              <Panel className="flex items-center gap-3 bg-tint-50" data-testid="assessment-cooldown">
-                <Lbl>{T.nextAttempt(GRADE[grade] ?? grade)}</Lbl>
-                <Num className="ml-auto text-18" data-testid="assessment-cooldown-date">
-                  {dateShort(lockUntil)}
-                </Num>
-              </Panel>
-            )}
+        <div className="flex flex-col gap-6" data-testid="assessment-step-2">
+          {lockUntil && (
+            <Panel className="flex items-center gap-3 bg-tint-50" data-testid="assessment-cooldown">
+              <Lbl>{T.nextAttempt(GRADE[grade] ?? grade)}</Lbl>
+              <Num className="ml-auto text-18" data-testid="assessment-cooldown-date">
+                {dateShort(lockUntil)}
+              </Num>
+            </Panel>
+          )}
 
-            <Panel className="flex flex-col gap-[18px]" data-testid="assessment-survey">
-              <Fld label={T.direction} resume={resume} tid="assessment-prefilled">
-                <Segmented
-                  label={T.profession}
-                  value={profession}
-                  options={professions.map((p) => ({ value: p.slug, label: p.title }))}
-                  onChange={setProfession}
-                  testid={(v) => `assessment-profession-${v}`}
-                />
-                {touched && !profession && (
-                  <p role="alert" className="text-13 text-error">
-                    {T.needProfession}
-                  </p>
-                )}
-              </Fld>
+          <Panel className="flex flex-col gap-6" data-testid="assessment-survey">
+            <Fld label={<Gloss k="grade">{T.gradeLabel}</Gloss>} resume={resume && !!grade}>
+              <ChoiceCards
+                label={T.gradeQ}
+                name="assessment-grade"
+                value={grade}
+                options={GRADE_CARDS.map((c) => ({
+                  value: c.grade,
+                  title: GRADE[c.grade] ?? c.grade,
+                  aside: <Num className="text-12 text-muted">{T.minutesShort(c.minutes)}</Num>,
+                  text: c.lead,
+                }))}
+                onChange={setGrade}
+                testid={(v) => `assessment-grade-${v}`}
+                lockedValue={lockUntil ? grade : ""}
+                className="grid-cols-1 md:grid-cols-3"
+              />
+              <p className="text-12 text-muted">{T.gradeHint}</p>
+              {touched && !grade && (
+                <p role="alert" className="text-13 text-error" data-testid="assessment-need-grade">
+                  {T.needGrade}
+                </p>
+              )}
+            </Fld>
 
-              <Fld label={T.stack} resume={resume}>
-                <Chips data-testid="assessment-stack">
-                  {stack.map((s) => (
-                    <button key={s} type="button" aria-label={T.stackRemove(s)} onClick={() => setStack(stack.filter((x) => x !== s))} className="rounded-sm">
-                      <SkillTag
-                        name={
-                          <>
-                            {s} <span aria-hidden>×</span>
-                          </>
-                        }
-                        state="claimed"
-                      />
+            <Fld label={T.format} resume={resume}>
+              <Chips role="group" aria-label={T.formats}>
+                {FORMAT_OPTIONS.map((f) => {
+                  const on = formats.includes(f.value);
+                  return (
+                    <button
+                      key={f.value}
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() => setFormats(on ? formats.filter((x) => x !== f.value) : [...formats, f.value])}
+                      data-testid={`assessment-format-${f.value}`}
+                      className={cn(
+                        "min-h-9 rounded-sm border px-3 font-mono text-12 font-medium transition-colors",
+                        on ? "border-brand bg-tint-50 text-chip-fg" : "border-hairline bg-card text-muted hover:border-brand-mid",
+                      )}
+                    >
+                      {f.label}
                     </button>
-                  ))}
-                </Chips>
-                <form
-                  className="flex gap-2"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    setStack(addStack(stack, stackDraft));
-                    setStackDraft("");
-                  }}
-                >
-                  <Input aria-label={T.stackAdd} placeholder={T.stackAdd} value={stackDraft} onChange={(e) => setStackDraft(e.target.value)} data-testid="assessment-stack-input" />
-                  <Button type="submit" variant="outline" data-testid="assessment-stack-add">
-                    {T.stackAddBtn}
-                  </Button>
-                </form>
-              </Fld>
-
-              <Fld label={T.format} resume={resume}>
-                <Chips role="group" aria-label={T.formats}>
-                  {FORMAT_OPTIONS.map((f) => {
-                    const on = formats.includes(f.value);
-                    return (
-                      <button
-                        key={f.value}
-                        type="button"
-                        aria-pressed={on}
-                        onClick={() => setFormats(on ? formats.filter((x) => x !== f.value) : [...formats, f.value])}
-                        data-testid={`assessment-format-${f.value}`}
-                        className={cn(
-                          "min-h-8 rounded-sm border px-2.5 font-mono text-12 font-medium",
-                          on ? "border-brand bg-tint-50 text-chip-fg" : "border-hairline bg-card text-muted hover:border-brand-mid",
-                        )}
-                      >
-                        {f.label}
-                      </button>
-                    );
-                  })}
-                </Chips>
-              </Fld>
-
-              <Fld label={T.fork} resume={resume}>
-                <div className="grid grid-cols-2 gap-3">
-                  <Field label={T.salaryFrom} error={rangeBad ? T.invalidRange : undefined}>
-                    <FieldInput type="number" inputMode="numeric" min={0} value={from} onChange={(e) => setFrom(e.target.value)} data-testid="assessment-salary-from" />
-                  </Field>
-                  <Field label={T.salaryTo}>
-                    <FieldInput type="number" inputMode="numeric" min={0} value={to} onChange={(e) => setTo(e.target.value)} data-testid="assessment-salary-to" />
-                  </Field>
-                </div>
-              </Fld>
-
-              <Fld label={T.gradeLabel}>
-                <div className="flex items-center gap-2">
-                  <Segmented
-                    label={T.gradeQ}
-                    value={grade}
-                    options={GRADE_CARDS.map((c) => ({ value: c.grade, label: GRADE[c.grade] ?? c.grade }))}
-                    onChange={setGrade}
-                    testid={(v) => `assessment-grade-${v}`}
-                    lockedValue={lockUntil ? grade : ""}
-                  />
-                  <button
-                    type="button"
-                    aria-label={T.gradeHelp}
-                    aria-expanded={hint}
-                    onClick={() => setHint(!hint)}
-                    className="h-6 rounded-xl bg-tint-100 px-1.5 font-mono text-12 font-semibold text-brand-fg"
-                    data-testid="assessment-grade-help"
-                  >
-                    ?
-                  </button>
-                </div>
-                {hint && (
-                  <div className="flex flex-col gap-1 rounded-lg bg-tint-50 p-3 text-13 text-muted" data-testid="assessment-grade-hint">
-                    {GRADE_CARDS.map((c) => (
-                      <p key={c.grade}>
-                        <b className="text-ink">{GRADE[c.grade]}</b> · {T.gradeMinutes(c.minutes)}. {c.lead}
-                      </p>
-                    ))}
-                    <p>{T.gradeHint}</p>
-                  </div>
-                )}
-                {touched && !grade && (
-                  <p role="alert" className="text-13 text-error" data-testid="assessment-need-grade">
-                    {T.needGrade}
-                  </p>
-                )}
-              </Fld>
-
-              <label className="flex cursor-pointer items-center gap-3">
-                <input type="checkbox" className="peer sr-only" checked={express} onChange={(e) => setExpress(e.target.checked)} data-testid="assessment-express-toggle" />
-                <span
-                  aria-hidden
-                  className="relative h-5 w-9 shrink-0 rounded-full bg-hairline transition-colors peer-checked:bg-brand peer-focus-visible:outline-2 peer-focus-visible:outline-brand after:absolute after:top-0.5 after:left-0.5 after:size-4 after:rounded-full after:bg-card after:transition-transform peer-checked:after:translate-x-4"
-                />
-                <span className="font-semibold">{T.expressShort}</span>
-                <Num className="text-12 text-muted">{T.expressMinutes}</Num>
-              </label>
-              {express && <p className="text-13 text-muted">{T.expressHint}</p>}
-            </Panel>
-
-            {put.isError && <ErrorLine error={put.error} data-testid="assessment-survey-error" />}
-            {create.isError && <ErrorLine error={create.error} data-testid="assessment-start-error" />}
-            {done && (
-              <p role="status" className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-success-bg px-3 py-2 text-14 text-success" data-testid="assessment-saved">
-                <span>
-                  {T.saved}. {T.savedLater}
-                </span>
-                <Link to="/me" className="font-semibold underline" data-testid="assessment-later">
-                  {T.toHome}
-                </Link>
-              </p>
-            )}
-            <div className="flex flex-wrap items-center gap-3">
-              <Button variant="outline" loading={put.isPending && !create.isPending} disabled={busy} onClick={() => submit(false)} data-testid="assessment-save">
-                {T.save}
-              </Button>
-              <span className="text-12 text-muted">{T.historyHint}</span>
-            </div>
-          </div>
-
-          <div className="md:col-span-5">
-            <Panel className="flex flex-col gap-3 max-md:border-0 max-md:bg-transparent max-md:p-0">
-              <Lbl className="max-md:hidden">{T.declares}</Lbl>
-              <div className="flex flex-wrap items-center gap-2 max-md:hidden">
-                <GradeTag claimed>
-                  {grade ? GRADE[grade] : "—"} · {profTitle || "—"}
-                </GradeTag>
-                <StatusTag state="claimed">{T.notConfirmed}</StatusTag>
-              </div>
-              <Chips className="max-md:hidden">
-                {stack.map((s) => (
-                  <SkillTag key={s} name={s} state="claimed" />
-                ))}
+                  );
+                })}
               </Chips>
-              <div className="text-13 text-muted max-md:hidden" data-testid="assessment-summary">
-                {T.expectations} <Num className="text-ink">{from ? `${T.salaryFromShort} ${money(from)}` : "—"}</Num>
-                {formats.length > 0 && (
-                  <>
-                    <br />
-                    {formats.map((f) => FORMAT_OPTIONS.find((o) => o.value === f)?.label.toLowerCase()).join(" · ")}
-                  </>
-                )}
-              </div>
-              <Button size="lg" className="w-full" loading={create.isPending} disabled={startDisabled} onClick={onStart} data-testid="assessment-start">
-                {startLabel}
-              </Button>
-              {lockUntil && !lowerGrade && <p className="text-13 text-muted">{T.until(dateShort(lockUntil))}</p>}
-            </Panel>
+            </Fld>
+
+            <Fld label={T.fork} resume={resume}>
+              <SalaryRangeInput
+                value={{ from: from ? Number(from) : null, to: to ? Number(to) : null }}
+                onChange={(v) => {
+                  setFrom(v.from == null ? "" : String(v.from));
+                  setTo(v.to == null ? "" : String(v.to));
+                }}
+                fromLabel={T.salaryFrom}
+                toLabel={T.salaryTo}
+                invalid={rangeBad}
+                fromTestId="assessment-salary-from"
+                toTestId="assessment-salary-to"
+              />
+              {rangeBad && (
+                <p role="alert" className="text-12 text-error">
+                  {T.invalidRange}
+                </p>
+              )}
+            </Fld>
+
+            <label className="flex cursor-pointer items-center gap-3">
+              <input type="checkbox" className="peer sr-only" checked={express} onChange={(e) => setExpress(e.target.checked)} data-testid="assessment-express-toggle" />
+              <span
+                aria-hidden
+                className="relative h-5 w-9 shrink-0 rounded-full bg-hairline transition-colors peer-checked:bg-brand peer-focus-visible:outline-2 peer-focus-visible:outline-brand after:absolute after:top-0.5 after:left-0.5 after:size-4 after:rounded-full after:bg-card after:transition-transform peer-checked:after:translate-x-4"
+              />
+              <span className="font-semibold">{T.expressShort}</span>
+              <Num className="text-12 text-muted">{T.expressMinutes}</Num>
+            </label>
+            {express && <p className="-mt-3 text-13 text-muted">{T.expressHint}</p>}
+          </Panel>
+
+          {put.isError && <ErrorLine error={put.error} data-testid="assessment-survey-error" />}
+          {create.isError && <ErrorLine error={create.error} data-testid="assessment-start-error" />}
+          {savedNote}
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+            <Button size="lg" loading={create.isPending} disabled={startDisabled} onClick={onStart} data-testid="assessment-start">
+              {startLabel}
+            </Button>
+            <Button variant="outline" size="lg" loading={put.isPending && !create.isPending} disabled={busy} onClick={() => submit(false)} data-testid="assessment-save">
+              {T.save}
+            </Button>
+            <Button
+              variant="ghost"
+              size="lg"
+              disabled={busy}
+              onClick={() => {
+                setDone(false);
+                setStep(1);
+              }}
+              data-testid="assessment-back"
+              className="sm:ml-auto"
+            >
+              {T.back}
+            </Button>
           </div>
+          {lockUntil && !lowerGrade && <p className="text-13 text-muted">{T.until(dateShort(lockUntil))}</p>}
+          <p className="text-12 text-muted">{T.historyHint}</p>
         </div>
       )}
     </Page>

@@ -55,7 +55,7 @@ afterEach(() => vi.unstubAllGlobals());
 test("публичный лендинг доступен без входа", async () => {
   mockFetch(() => ({ status: 401 }));
   mount("/");
-  expect(await screen.findByRole("heading", { level: 1, name: "Тест подтверждает грейд. Работодатель приходит с вилкой." })).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { level: 1, name: "Тест вместо резюме. Компании приходят сами" })).toBeInTheDocument();
 });
 
 test("аноним на /me уходит на форму входа", async () => {
@@ -77,10 +77,10 @@ test("кандидат не попадает в раздел работодат�
   expect(await screen.findByRole("heading", { name: "Главная" })).toBeInTheDocument();
 });
 
-test("админ ФСП видит дашборд", async () => {
+test("админ ФСП видит главную админки", async () => {
   asUser("fsp_admin");
   mount("/federation");
-  expect(await screen.findByRole("heading", { name: "Дашборд ФСП" })).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { name: "Главная" })).toBeInTheDocument();
 });
 
 test("неизвестный путь — 404", async () => {
