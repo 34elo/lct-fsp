@@ -1,15 +1,15 @@
 import { PAGE } from "@/shared/lib/page";
 import { Gloss } from "@/shared/Gloss";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 
 import { Badge, Card, CardContent, CardHeader, CardTitle, ErrorState, Skeleton } from "@fsp/ui";
 
 import { useGetDashboardAdminDashboardGet } from "@/api/endpoints/admin-dashboard/admin-dashboard";
 import type { AppAnalyticsDashboardStage as Stage, Ratio } from "@/api/model";
-import { RegistryEntry } from "@/features/fsp-registry/FspRegistry";
 import { Summary } from "@/features/quality/Quality";
 import { T as QT } from "@/features/quality/text";
+import { AdminPageHeader } from "./PageHeader";
 import { cell, T } from "./text";
 
 const PERIODS = [7, 30, 90];
@@ -37,7 +37,7 @@ function StageRow({ s, max }: { s: Stage; max: number }) {
   );
 }
 
-function RatioCard({ title, r, min }: { title: string; r: Ratio; min: number }) {
+function RatioCard({ title, r, min }: { title: ReactNode; r: Ratio; min: number }) {
   return (
     <Card>
       <CardContent className="flex flex-col gap-1">
@@ -51,7 +51,7 @@ function RatioCard({ title, r, min }: { title: string; r: Ratio; min: number }) 
   );
 }
 
-/** `/federation` — дашборд ФСП (F1): воронка и доли. Ячейки меньше порога приходят скрытыми. */
+/** `/federation/funnel` — воронка ФСП (F1, раздел «Аналитика»): воронка и доли. Ячейки меньше порога приходят скрытыми. */
 export default function Dashboard() {
   const [days, setDays] = useState(30);
   const q = useGetDashboardAdminDashboardGet({ days }, { query: { retry: false } });
@@ -60,13 +60,7 @@ export default function Dashboard() {
 
   return (
     <div className={PAGE.wide}>
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-24 font-semibold">
-            <Gloss k="fspRelevance">{T.dash.title}</Gloss>
-          </h1>
-          <p className="max-w-2xl text-14 text-muted">{T.dash.lead}</p>
-        </div>
+      <AdminPageHeader title={T.dash.title} tip={T.dash.lead}>
         <div role="group" aria-label={T.dash.daysLabel} className="flex gap-1">
           {PERIODS.map((p) => (
             <button
@@ -80,9 +74,7 @@ export default function Dashboard() {
             </button>
           ))}
         </div>
-      </header>
-
-      <RegistryEntry />
+      </AdminPageHeader>
 
       {q.isLoading && <Skeleton className="h-64" />}
       {(q.isError || (q.data && q.data.status !== 200)) && <ErrorState onRetry={() => void q.refetch()} />}
@@ -101,7 +93,7 @@ export default function Dashboard() {
             </CardContent>
           </Card>
           <div className="grid gap-4 sm:grid-cols-2">
-            <RatioCard title={T.dash.fspShare} r={d.fsp_share} min={d.min_cell} />
+            <RatioCard title={<Gloss k="fspRelevance">{T.dash.fspShare}</Gloss>} r={d.fsp_share} min={d.min_cell} />
             <RatioCard title={T.dash.navigator} r={d.navigator_to_competition} min={d.min_cell} />
           </div>
           <Badge variant="muted" className="self-start">

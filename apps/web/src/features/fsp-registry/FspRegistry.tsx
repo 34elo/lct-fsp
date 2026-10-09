@@ -1,5 +1,4 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
 import { useState, type ChangeEvent, type ComponentProps, type FormEvent } from "react";
 
 import {
@@ -49,11 +48,12 @@ import type {
   RegistryParticipantOut,
 } from "@/api/model";
 import { ApiError } from "@/api/mutator";
+import { AdminPageHeader } from "@/features/admin/PageHeader";
 import { PAGE } from "@/shared/lib/page";
 
 import { DISCIPLINE, LEVEL, R } from "./text";
 
-type Tab = "events" | "participants" | "results" | "requests";
+type Tab = "events" | "participants" | "results";
 type ReqStatus = "pending" | "accepted" | "rejected";
 
 const DISCIPLINE_OPTIONS: ComboOption[] = Object.entries(DISCIPLINE).map(([value, label]) => ({ value, label }));
@@ -546,12 +546,13 @@ function RequestCard({ r }: { r: AdminFspRequestOut }) {
   );
 }
 
-function Requests() {
+/** Заявки на привязку с фильтром по статусу — страница «Заявки ФСП» (E39-29). */
+export function Requests() {
   const [status, setStatus] = useState<ReqStatus | "all">("pending");
   const q = useRegistryRequestsAdminFspRequestsGet(status === "all" ? undefined : { status }, { query: { retry: false } });
   const items = q.data?.status === 200 ? q.data.data : null;
   return (
-    <section aria-label={R.tabs.requests} className="flex flex-col gap-3">
+    <section aria-label={R.requests.title} className="flex flex-col gap-3">
       <div role="group" className="flex flex-wrap gap-1">
         {(["pending", "accepted", "rejected", "all"] as const).map((o) => (
           <button
@@ -573,49 +574,22 @@ function Requests() {
   );
 }
 
-/** Вход в реестр с Дашборда ФСП: сколько заявок ждут решения. */
-export function RegistryEntry() {
-  const pending = useRegistryRequestsAdminFspRequestsGet({ status: "pending" }, { query: { retry: false } });
-  const n = pending.data?.status === 200 ? pending.data.data.length : null;
-  return (
-    <Card data-testid="registry-entry">
-      <CardContent className="flex flex-wrap items-center justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-16 font-semibold">{R.title}</p>
-          <p className="text-14 text-muted">{R.entry}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          {n !== null && n > 0 && <Badge variant="warning">{R.pending(n)}</Badge>}
-          <Link to="/federation/registry" className="text-14 font-semibold text-brand-deep underline dark:text-brand-mid">
-            {R.open}
-          </Link>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-/** `/federation/registry` — реестр ФСП (E39-28): мероприятия, участники (руками и CSV), результаты, заявки. */
+/**
+ * `/federation/registry` — реестр ФСП (E39-28, справочник): мероприятия, участники (руками и CSV), результаты.
+ * Заявки на привязку — отдельная очередь `/federation/requests` (E39-29).
+ */
 export default function FspRegistry() {
   const [tab, setTab] = useState<Tab>("events");
   const [eventId, setEventId] = useState<string | null>(null);
-  const pending = useRegistryRequestsAdminFspRequestsGet({ status: "pending" }, { query: { retry: false } });
-  const pendingCount = pending.data?.status === 200 ? pending.data.data.length : undefined;
 
   return (
     <div className={PAGE.wide}>
-      <div className="flex flex-col gap-1">
-        <h1 className="text-24 font-semibold">{R.title}</h1>
-        <p className="max-w-3xl text-14 text-muted">{R.lead}</p>
-      </div>
+      <AdminPageHeader title={R.title} tip={R.lead} />
       <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
         <TabsList className="max-w-full overflow-x-auto">
           <TabsTrigger value="events">{R.tabs.events}</TabsTrigger>
           <TabsTrigger value="participants">{R.tabs.participants}</TabsTrigger>
           <TabsTrigger value="results">{R.tabs.results}</TabsTrigger>
-          <TabsTrigger value="requests" count={pendingCount || undefined}>
-            {R.tabs.requests}
-          </TabsTrigger>
         </TabsList>
         <TabsContent value="events" className="pt-4">
           <Events
@@ -630,9 +604,6 @@ export default function FspRegistry() {
         </TabsContent>
         <TabsContent value="results" className="pt-4">
           <Results eventId={eventId} setEventId={setEventId} />
-        </TabsContent>
-        <TabsContent value="requests" className="pt-4">
-          <Requests />
         </TabsContent>
       </Tabs>
     </div>

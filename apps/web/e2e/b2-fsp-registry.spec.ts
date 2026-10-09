@@ -58,9 +58,9 @@ test("b2: заявка с чужим email → админ принимает →
   const admin = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   await login(admin, ADMIN);
   await admin.goto("/federation");
-  await admin.getByTestId("registry-entry").getByRole("link", { name: "Открыть реестр" }).click();
-  await expect(admin).toHaveURL(/\/federation\/registry/);
-  await admin.getByRole("tab", { name: /Заявки/ }).click();
+  // «Что требует вас» на главной админки ведёт в очередь заявок (E39-29)
+  await admin.getByTestId("queue-fsp_requests").click();
+  await expect(admin).toHaveURL(/\/federation\/requests/);
   const card = admin.getByTestId("fsp-request").filter({ hasText: "Дроздова Алина Петровна" }).first();
   await expect(card).toBeVisible();
   // подсказка по совпавшему email уже выбрана

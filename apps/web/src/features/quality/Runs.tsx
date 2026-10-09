@@ -7,6 +7,7 @@ import { useCreateRunAdminLiveRunsPost, useListRunsAdminLiveRunsGet } from "@/ap
 import type { RunOut } from "@/api/model";
 import { QualityNav } from "./Nav";
 import { T } from "./text";
+import { AdminPageHeader } from "@/features/admin/PageHeader";
 
 type Scenario = "candidate" | "employer";
 const R = T.runs;
@@ -89,10 +90,7 @@ export default function Runs() {
   const forbidden = q.data?.status === 403;
   return (
     <div className={PAGE.wide}>
-      <header>
-        <h1 className="text-24 font-semibold">{R.title}</h1>
-        <p className="max-w-2xl text-14 text-muted">{R.lead}</p>
-      </header>
+      <AdminPageHeader title={R.title} tip={R.lead} />
       <QualityNav />
       <div className="flex gap-2" role="group" aria-label={R.cols.scenario}>
         {(["candidate", "employer"] as const).map((s) => (
