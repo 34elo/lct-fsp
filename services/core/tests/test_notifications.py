@@ -107,9 +107,9 @@ def _link_tg(c, headers, uid, consent=True):
         assert c.put("/me/consents", json=body, headers=headers).status_code == 200
 
 
-def _offer(c, e, vid):
+def _offer(c, e, vid, message="Привет!"):
     body = {"vacancy_id": vid, "candidate_pseudo_id": "pid0001", "salary_from": 250000,
-            "salary_to": 320000, "message": "Привет!"}  # fmt: skip
+            "salary_to": 320000, "message": message}  # fmt: skip
     r = c.post("/offers", json=body, headers={**e, "Idempotency-Key": uuid.uuid4().hex})
     assert r.status_code == 201, r.text
     return r.json()["id"]
@@ -221,13 +221,13 @@ def test_decline_reason_goes_to_company(world):
 
 def test_message_goes_to_other_side_without_text(world):
     c, e, e_uid, vid, ch, ch_uid = world
-    oid = _offer(c, e, vid)
+    oid = _offer(c, e, vid, message=None)
     c.post(f"/offers/{oid}/accept", headers=ch)
-    r = c.post(f"/offers/{oid}/messages", json={"text": "секретный текст"}, headers=ch)
+    r = c.post(f"/offers/{oid}/messages", json={"text": "секретный текст"}, headers=e)
     assert r.status_code in (200, 201), r.text
     _drain(c)
     rows = _db(c, "select user_id, payload from notifications where type='offer_message'")
-    assert [r[0] for r in rows] == [_hex(e_uid)]
+    assert [r[0] for r in rows] == [_hex(ch_uid)]
     assert "секретный текст" not in json.dumps(rows, ensure_ascii=False)
 
 
