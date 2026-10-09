@@ -83,10 +83,10 @@ describe("навигатор роста", () => {
     expect(screen.getByRole("button", { name: "Пройти тест" })).toBeInTheDocument();
   });
 
-  it("пустой профиль: подсказка пройти опрос", async () => {
+  it("пустой профиль: подсказка выбрать направление", async () => {
     mount({ skill_gaps: [], competitions: [], uplift: [] }, 200, { relevant_total: 0, base: 0, items: [], combo: null });
     expect(await screen.findByText("Пока нечего предложить")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Пройти опрос" })).toHaveAttribute("href", "/me/assessment");
+    expect(screen.getByRole("link", { name: "Выбрать направление" })).toHaveAttribute("href", "/me/assessment");
   });
 
   it("403 без согласий: понятный текст", async () => {

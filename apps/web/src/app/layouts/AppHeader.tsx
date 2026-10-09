@@ -29,7 +29,7 @@ export function ThemeToggle() {
 
 const THEME_HINT: Record<ThemeMode, string> = { light: "светлая", dark: "тёмная" };
 
-/** Меню аватара v2 (`.menu`): тема и выход. «Настройки» — только у кандидата (`/me/settings`, E38-7). */
+/** Меню аватара v2 (`.menu`): тема и выход. «Настройки» — у всех ролей (`/settings`, E39-8). */
 function UserMenu() {
   const { me, status, logout } = useAuth();
   const { mode, setMode } = useTheme();
@@ -42,7 +42,7 @@ function UserMenu() {
       letter={initials(me.email ?? name)}
       label={`Меню аккаунта: ${name}, ${ROLE_LABEL[me.role] ?? me.role}`}
       items={[
-        ...(me.role === "candidate" ? [{ label: "Настройки", onSelect: () => navigate("/me/settings"), active: pathname === "/me/settings" }] : []),
+        { label: "Настройки", onSelect: () => navigate("/settings"), active: pathname === "/settings" },
         { label: "Тема", hint: THEME_HINT[mode], onSelect: () => setMode(NEXT[mode]) },
         { label: "Выйти", separatorBefore: true, danger: true, onSelect: () => void logout() },
       ]}

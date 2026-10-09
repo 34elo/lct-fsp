@@ -759,8 +759,11 @@ async def list_offers(
     user: User = Depends(_employer),
     session: AsyncSession = Depends(get_session),
 ) -> Any:
-    """Офферы компании; `initiator=candidate` - отклики на её вакансии."""
-    company, _ = await companies.require_company(session, user.id)
+    """Офферы компании; `initiator=candidate` - её отклики. Без компании - пусто (E39-7)."""
+    found = await companies.my_company(session, user.id)
+    if found is None:
+        return []
+    company = found[0]
     rows = await service.list_for_company(
         session,
         company.id,

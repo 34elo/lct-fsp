@@ -130,6 +130,8 @@ class ProfessionInfo(BaseModel):
     skill_weights: dict[str, float]
     skill_types: dict[str, SkillType] = Field(default_factory=dict)  # заполняет E21-1
     active: bool = True  # false — скрыта в опросе и выдаче, данные остаются (ADR-027 п.1)
+    # тонкий банк: есть пустая ячейка «грейд × тип навыка», в опросе — метка «бета» (E39-6)
+    beta: bool = False
 
 
 class SkillSuggestion(BaseModel):

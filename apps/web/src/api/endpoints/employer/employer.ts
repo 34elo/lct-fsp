@@ -74,16 +74,6 @@ export type employerActivityEmployerActivityGetResponse403ApplicationJson = {
   status: 403
 }
 
-export type employerActivityEmployerActivityGetResponse404ApplicationProblemJson = {
-  data: ProblemOut
-  status: 404
-}
-
-export type employerActivityEmployerActivityGetResponse404ApplicationJson = {
-  data: ProblemOut
-  status: 404
-}
-
 export type employerActivityEmployerActivityGetResponse422 = {
   data: HTTPValidationError
   status: 422
@@ -92,7 +82,7 @@ export type employerActivityEmployerActivityGetResponse422 = {
 export type employerActivityEmployerActivityGetResponseSuccess = (employerActivityEmployerActivityGetResponse200) & {
   headers: Headers;
 };
-export type employerActivityEmployerActivityGetResponseError = (employerActivityEmployerActivityGetResponse401ApplicationProblemJson | employerActivityEmployerActivityGetResponse401ApplicationJson | employerActivityEmployerActivityGetResponse403ApplicationProblemJson | employerActivityEmployerActivityGetResponse403ApplicationJson | employerActivityEmployerActivityGetResponse404ApplicationProblemJson | employerActivityEmployerActivityGetResponse404ApplicationJson | employerActivityEmployerActivityGetResponse422) & {
+export type employerActivityEmployerActivityGetResponseError = (employerActivityEmployerActivityGetResponse401ApplicationProblemJson | employerActivityEmployerActivityGetResponse401ApplicationJson | employerActivityEmployerActivityGetResponse403ApplicationProblemJson | employerActivityEmployerActivityGetResponse403ApplicationJson | employerActivityEmployerActivityGetResponse422) & {
   headers: Headers;
 };
 
@@ -114,7 +104,7 @@ export const getEmployerActivityEmployerActivityGetUrl = (params?: EmployerActiv
 }
 
 /**
- * Лента событий компании, новые сверху. Чужие данные в неё не попадают.
+ * Лента событий компании, новые сверху. Чужих данных нет. Без компании - пусто.
  * @summary Employer Activity
  */
 export const employerActivityEmployerActivityGet = async (params?: EmployerActivityEmployerActivityGetParams, options?: Parameters<typeof apiFetch>[1]): Promise<employerActivityEmployerActivityGetResponse> => {

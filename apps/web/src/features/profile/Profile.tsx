@@ -237,6 +237,10 @@ function StatusCard({ p, standing }: { p: CandidateProfile; standing?: Candidate
         <Link to="/me/profile/edit" data-testid="profile-edit-link" className="inline-flex min-h-11 items-center font-semibold text-brand-fg">
           {T.editLink}
         </Link>
+        {/* Данные шага 1 потока до теста (E39-6) правятся здесь же: направление и навыки. */}
+        <Link to="/me/assessment?step=1" data-testid="profile-direction-link" className="inline-flex min-h-11 items-center font-semibold text-brand-fg">
+          {T.directionLink}
+        </Link>
       </div>
     </Panel>
   );
