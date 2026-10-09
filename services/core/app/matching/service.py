@@ -19,6 +19,8 @@ from fsp_contracts.enums import ConsentType
 from fsp_contracts.events import MatchesReady
 from fsp_platform.outbox import add_to_outbox
 from sqlalchemy import delete, select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.assessment import service as assessment
@@ -273,13 +275,33 @@ def _fill(m: Match, r: MatchResult, vacancy_version: int, now: datetime) -> None
     m.computed_at = now
 
 
-def _new(vacancy_id: uuid.UUID, r: MatchResult, vacancy_version: int, now: datetime) -> Match:
-    m = Match(
-        vacancy_id=vacancy_id, candidate_id=r.candidate_id, candidate_version=-1,
-        vacancy_version=-1, rationale=None,
-    )  # fmt: skip
-    _fill(m, r, vacancy_version, now)
-    return m
+async def _upsert_new(
+    session: AsyncSession,
+    vacancy_id: uuid.UUID,
+    r: MatchResult,
+    vacancy_version: int,
+    now: datetime,
+) -> None:
+    """Вставить строку без падения на гонке (E42-5): конфликт по PK — обновляем уже созданную."""
+    insert = pg_insert if session.get_bind().dialect.name == "postgresql" else sqlite_insert
+    await session.execute(
+        insert(Match)
+        .values(
+            vacancy_id=vacancy_id,
+            candidate_id=r.candidate_id,
+            score=0.0,
+            breakdown={},
+            explanation=[],
+            candidate_version=-1,
+            vacancy_version=-1,
+            rationale=None,
+            computed_at=now,
+        )  # fmt: skip
+        .on_conflict_do_nothing(index_elements=["vacancy_id", "candidate_id"])
+    )
+    m = await session.get(Match, (vacancy_id, r.candidate_id), populate_existing=True)
+    if m is not None:
+        _fill(m, r, vacancy_version, now)
 
 
 async def match_vacancy(
@@ -312,7 +334,7 @@ async def match_vacancy(
         if (m := old.pop(r.candidate_id, None)) is not None:
             _fill(m, r, v.version, now)
         else:
-            session.add(_new(vacancy_id, r, v.version, now))
+            await _upsert_new(session, vacancy_id, r, v.version, now)
     for m in old.values():
         await session.delete(m)
     await session.flush()
@@ -361,7 +383,7 @@ async def match_candidate(
         if m is not None:
             _fill(m, r, v.version, now)
         else:
-            session.add(_new(vac.id, r, v.version, now))
+            await _upsert_new(session, vac.id, r, v.version, now)
     for m in old.values():  # вакансия закрыта или снята с публикации
         await session.delete(m)
     await session.flush()

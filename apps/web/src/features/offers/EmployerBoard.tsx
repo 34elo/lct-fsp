@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 
 import { buttonVariants, cn, EmptyState, ErrorState, formatRubRangeShort, GradeTag, H1, Lbl, Num, Panel, Skeleton, StatusBadge, type OfferStatus } from "@fsp/ui";
 
-import { useListMessagesOffersOfferIdMessagesGet, useListOffersOffersGet } from "@/api/endpoints/offers/offers";
+import { useListOffersOffersGet } from "@/api/endpoints/offers/offers";
 import type { OfferForCompany } from "@/api/model";
 import { ApiError } from "@/api/mutator";
 import { GRADE_LABEL } from "@/features/profile/text";
@@ -110,18 +110,16 @@ function OffersTable({ offers }: { offers: OfferForCompany[] }) {
   );
 }
 
-/** Последняя переписка по активному приглашению: быстрый «Ответить» без поиска по списку. */
+/** Активное приглашение (E41-4): переписки нет, ответ кандидата — только статус и контакты после принятия. */
 function Latest({ offer }: { offer: OfferForCompany }) {
-  const q = useListMessagesOffersOfferIdMessagesGet(offer.id, { query: { refetchInterval: 30_000 } });
-  const msgs = q.data?.status === 200 ? q.data.data : [];
-  const last = [...msgs].reverse().find((m) => m.author_side !== "company") ?? msgs[msgs.length - 1];
+  const answered = ["accepted", "interview", "hired", "not_hired"].includes(offer.status);
   return (
     <Panel className="flex flex-col gap-2.5" aria-label={T.latestTitle}>
       <div className="flex items-center justify-between gap-2">
         <Name o={offer} />
         <StatusBadge status={offer.status as OfferStatus} />
       </div>
-      <p className="m-0 whitespace-pre-wrap break-words rounded-lg border border-tint-200 bg-tint-50 p-3 text-14">{last?.text ?? T.noMessages}</p>
+      <p className="m-0 rounded-lg border border-tint-200 bg-tint-50 p-3 text-14">{answered ? "Контакты открыты" : T.noMessages}</p>
       <Link to={`/employer/offers/${offer.id}`} className={cn(buttonVariants({ size: "lg" }), "w-full")}>{T.reply}</Link>
     </Panel>
   );

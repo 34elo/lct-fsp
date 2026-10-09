@@ -217,6 +217,8 @@ describe("Навигация и оверлеи", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: "Фильтры" }));
     expect(screen.getByRole("dialog")).toHaveAttribute("data-side", "bottom");
+    expect(screen.getByRole("dialog").className).toContain("md:left-1/2");
+    expect(screen.getByRole("button", { name: "Закрыть" })).toBeInTheDocument();
   });
   it("Popover: триггер раскрывает содержимое, aria-expanded", () => {
     render(

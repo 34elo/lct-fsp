@@ -25,15 +25,9 @@ export function roadmapSteps(nav: NavigatorOut, uplift: UpliftItem[] = nav.uplif
     caption: cur ? (cur.needs_confirmation ? T.expired : T.validUntil(dateShort(cur.valid_until))) : undefined,
     actions: retake,
   });
-  const used = new Set<string>();
   nav.skill_gaps.forEach((g, i) => {
     const up = uplift.find((u) => u.skill === g.skill);
-    const comps = nav.competitions.filter((c) => c.skills.some((x) => x.toLowerCase() === g.name.toLowerCase()));
     const actions: RoadmapAction[] = [{ label: T.doTask, href: TASKS_PATH }];
-    comps.forEach((c) => {
-      used.add(c.id);
-      if (c.registration_url) actions.push({ label: T.competitionLink(c.title), href: c.registration_url, external: true });
-    });
     steps.push({
       id: `gap-${g.skill}`,
       kind: "skill",
@@ -46,7 +40,6 @@ export function roadmapSteps(nav: NavigatorOut, uplift: UpliftItem[] = nav.uplif
     });
   });
   if (testPath) {
-    const rest = nav.competitions.filter((c) => !used.has(c.id) && c.registration_url);
     steps.push({
       id: "test",
       kind: "test",
@@ -54,10 +47,7 @@ export function roadmapSteps(nav: NavigatorOut, uplift: UpliftItem[] = nav.uplif
       eyebrow: T.stepTest,
       title: T.testTitle,
       caption: nav.test ? T.testLead(GRADE_LABEL[nav.test.grade] ?? nav.test.grade) : undefined,
-      actions: [
-        { label: T.takeTest, href: testPath },
-        ...rest.map((c): RoadmapAction => ({ label: T.competitionLink(c.title), href: c.registration_url!, external: true })),
-      ],
+      actions: [{ label: T.takeTest, href: testPath }],
     });
   }
   const goal = nav.target?.grade ?? nav.test?.grade;
@@ -117,7 +107,7 @@ export function NavigatorPath({ nav, uplift }: { nav: NavigatorOut; uplift?: Upl
         ) : (
           <>
             <p className="text-13 text-muted">{T.competitionsLead}</p>
-            <ul className="flex flex-col gap-2">
+            <ul className="m-0 flex list-none flex-col gap-2 p-0">
               {nav.competitions.map((c) => (
                 <Flag key={c.id} c={c} />
               ))}
