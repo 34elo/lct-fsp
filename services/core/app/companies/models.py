@@ -46,3 +46,29 @@ class CompanyMember(Base):
         ForeignKey("users.id", ondelete="CASCADE"), primary_key=True, unique=True
     )
     role: Mapped[str] = mapped_column(Text)
+
+
+class CompanyInvite(Base):
+    """Приглашение в компанию по email (E39-24): токен ссылки хранится sha256, одноразовый."""
+
+    __tablename__ = "company_invites"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    company_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("companies.id", ondelete="CASCADE"), index=True
+    )
+    email: Mapped[str] = mapped_column(Text)
+    role: Mapped[str] = mapped_column(Text, default="member", server_default="member")
+    token_hash: Mapped[str] = mapped_column(Text, unique=True)
+    invited_by: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), default=None
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), default=utcnow, server_default=sa.func.now()
+    )
+    expires_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True))
+    accepted_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), default=None)
+    accepted_by: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), default=None
+    )
+    revoked_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), default=None)

@@ -9,6 +9,7 @@ import type { ContactMethod } from './contactMethod';
 import type { Decline } from './decline';
 import type { MatchSnapshot } from './matchSnapshot';
 import type { OfferInitiator } from './offerInitiator';
+import type { OfferSender } from './offerSender';
 import type { OfferStatus } from './offerStatus';
 import type { SalaryBasis } from './salaryBasis';
 import type { TaskBrief } from './taskBrief';
@@ -38,6 +39,7 @@ export interface OfferForCandidate {
   interest_at?: string | null;
   interest_opened_at?: string | null;
   invited_at?: string | null;
+  sender?: OfferSender | null;
   company: CompanyBrief;
   why_you?: WhyYou | null;
   task?: TaskBrief | null;

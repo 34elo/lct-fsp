@@ -166,6 +166,9 @@ export const CAND_TEXT = {
   salaryLabel: "Вилка в месяц",
   fromCompany: "Сообщение компании",
   description: "О приглашении",
+  // E39-24: подпись HR и описание компании (Markdown)
+  sentBy: "Приглашение отправил(а)",
+  aboutCompany: "О компании",
   contactVia: (m: string) => `Связь: ${m}`,
   why: "Почему вы подходите",
   accept: "Принять",
