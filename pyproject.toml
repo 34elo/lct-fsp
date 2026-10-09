@@ -46,6 +46,7 @@ dev = [
   "import-linter>=2.1",
   "fakeredis[lua]>=2.26",
   "moto[s3]>=5.0",
+  "pytest-xdist>=3.8.0",
 ]
 # Нагрузочный стенд (E29-2): ставится только для `make load`, в сервисы не попадает.
 load = ["locust>=2.29"]

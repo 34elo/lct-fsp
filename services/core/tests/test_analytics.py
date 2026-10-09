@@ -3,14 +3,13 @@
 import asyncio
 import json
 import sqlite3
-import subprocess
-import sys
 import uuid
 from pathlib import Path
 
 import pytest
 from app.analytics import handlers, service
 from app.analytics.mapper import MAPPERS, map_event
+from core_helpers import upgrade_head
 from fsp_contracts import new_event
 from fsp_contracts.enums import DeclineReason, OfferStatus
 from fsp_contracts.events import (
@@ -33,10 +32,7 @@ SALT = "test-salt"
 def db(tmp_path):
     path = tmp_path / "a.db"
     url = f"sqlite+aiosqlite:///{path}"
-    subprocess.run(
-        [sys.executable, "-m", "alembic", "-x", f"url={url}", "upgrade", "head"],
-        cwd=CORE, check=True, capture_output=True,
-    )  # fmt: skip
+    upgrade_head(url)
     return path, make_session_factory(make_engine(url))
 
 

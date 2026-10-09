@@ -1,7 +1,5 @@
 """Связи людей по командам ФСП: перестройка, идемпотентность, приватность (E16-9)."""
 
-import subprocess
-import sys
 import uuid
 from pathlib import Path
 
@@ -10,6 +8,7 @@ from app.candidates.models import Candidate
 from app.graph import fsp_links
 from app.graph.fsp_models import CandidateLink, FspResultRow, FspTeamMember, FspTeamRow
 from app.identity.models import User
+from core_helpers import upgrade_head
 from fsp_contracts import new_envelope
 from fsp_contracts.commands import CoreJob
 from fsp_platform.db import make_engine, make_session_factory, session_scope
@@ -22,10 +21,7 @@ CORE = Path(__file__).resolve().parents[1]
 @pytest.fixture
 def factory(tmp_path):
     url = f"sqlite+aiosqlite:///{tmp_path / 'l.db'}"
-    subprocess.run(
-        [sys.executable, "-m", "alembic", "-x", f"url={url}", "upgrade", "head"],
-        cwd=CORE, check=True, capture_output=True,
-    )  # fmt: skip
+    upgrade_head(url)
     return make_session_factory(make_engine(url))
 
 
