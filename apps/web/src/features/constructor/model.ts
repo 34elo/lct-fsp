@@ -165,7 +165,7 @@ export function problemView(err: unknown): ProblemView {
   return { code: err.code, message: T.errors.generic, details };
 }
 
-export function admissionClosedNames(failed: string[]): string {
-  const label: Record<string, string> = { n: "n", r_pb: "r_pb", b: "|b|", seed_spread: "сиды", dif: "DIF" };
-  return failed.map((x) => label[x] ?? x).join(", ");
+/** Невыполненные пороги → причины человеческим языком через запятую. */
+export function admissionReasons(failed: string[]): string {
+  return failed.map((x) => T.queue.reasons[x] ?? x).join(", ");
 }

@@ -118,7 +118,7 @@
 | `POST /employer/tasks/{task_id}/publish`, `POST /employer/tasks/{task_id}/close` | E | Рассылка по категории (событие `regular_task.published`), закрытие |
 | `GET /employer/tasks/{task_id}/submissions` | E | Ответы: только `pseudo_id` и `invite_url` |
 | `PUT /employer/tasks/{task_id}/submissions/{submission_id}/score` | E | `{marks: [bool]}` — оценка рубрики открытого задания |
-| `GET /admin/families`, `POST /admin/families/{family_id}/approve\|pilot\|quarantine\|retire` | A | Очередь допуска семейств со статистикой и решение админа |
+| `GET /admin/families`, `POST /admin/families/{family_id}/approve\|pilot\|quarantine\|retire` | A | Очередь допуска семейств со статистикой и решение админа; карточка (E39-31): `grade` (по уровню), `skill`, `professions[{slug,title}]` (профессии, где навык основной), `example{kind,stem,options,answer}` — сгенерированный вариант и ответ решателя (ключ) |
 | `POST /admin/families/{family_id}/key` | A | Утвердить ключ задания конструктора |
 | `GET /admin/demo/two-worlds`, `GET /admin/demo/llm-exam` | A | Демо-экраны качества теста (E34-3). Демо ФСП (`/admin/demo/fsp-result`, `/reset`) — §2.6 |
 | `GET /assessment/interviews/{id}` и `POST /assessment/interviews`, `…/answers` | C | **Не реализовано:** ИИ-интервью по репозиторию (E11-3/E11-4, вне прототипа). Формат: `{repo_id?}` → `202 {interview_id}`; `{status, questions[], grades?}`; `{question_id, text}` |
