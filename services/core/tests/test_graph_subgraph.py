@@ -37,7 +37,8 @@ def world(api):
             await s.execute(text("update companies set status='verified'"))
             sk = {}
             for slug in ("python", "fastapi", "django", "teamwork"):
-                sk[slug] = Skill(slug=slug, name=slug.title(), kind="hard", source="core")
+                sk[slug] = Skill(slug=slug, name=slug.title(), kind="hard", source="core",
+                                 skill_type="soft" if slug == "teamwork" else "hard")  # fmt: skip
                 s.add(sk[slug])
             await s.flush()
             s.add(SkillRelation(skill_a=sk["fastapi"].id, skill_b=sk["python"].id, kind="parent",
@@ -91,6 +92,8 @@ def test_owner_graph_includes_test_source(api, world):
     assert by_id["cand"]["type"] == "candidate"
     assert by_id[f"f:test:{world['att']}"]["label"] == "Тест: backend, middle"
     assert by_id["s:fastapi"]["level"] == 3 and by_id["s:python"]["confidence"] == 0.54
+    assert by_id["s:fastapi"]["skill_type"] == "hard"
+    assert by_id["s:teamwork"]["skill_type"] == "soft"
     confirms = [e for e in g["edges"] if e["type"] == "confirms"]
     assert {(e["from"], e["to"]) for e in confirms} >= {(f"f:test:{world['att']}", "s:python")}
     assert all(e["evidence_id"] and 0 <= e["strength"] <= 1 for e in confirms)
