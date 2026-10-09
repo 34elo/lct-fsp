@@ -369,7 +369,3 @@ def k_soft(
     )
     beta = w["beta"] + (cfg.emphasis_ceiling_bonus if emph else 0.0)
     return 1.0 + min(min(beta, cfg.beta_hard_cap), total)
-
-
-def apply_k_soft(score: float, k: float) -> float:
-    return min(1.0, score * k)
