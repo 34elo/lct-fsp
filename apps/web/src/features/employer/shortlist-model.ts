@@ -1,6 +1,9 @@
 import type { CandidateCard, OfferForCompany } from "@/api/model";
 import { OFFER_STATUS_LABEL } from "@/features/offers/text";
-import { SHORTLIST_PAGE_TEXT as T } from "./text";
+import { formatRub } from "@fsp/ui";
+import { fspResults } from "./candidate-model";
+import { toMatchCard } from "./match-model";
+import { FORMAT_LABEL, SHORTLIST_PAGE_TEXT as T } from "./text";
 
 /* Модель общего шорт-листа (E38-12): статус интереса по последнему приглашению компании кандидату. */
 
@@ -42,4 +45,40 @@ export function nextToInvite(cards: CandidateCard[], offers: Map<string, OfferFo
   }
   const fresh = cards.find((c) => !offers.has(c.pseudo_id));
   return fresh ? { card: fresh } : null;
+}
+
+export const COMPARE_MIN = 2;
+export const COMPARE_MAX = 4;
+
+/** Отметка для сравнения: добавить/снять, не больше `COMPARE_MAX`. Порядок — как отмечали. */
+export function togglePick(picked: string[], id: string): string[] {
+  if (picked.includes(id)) return picked.filter((x) => x !== id);
+  return picked.length >= COMPARE_MAX ? picked : [...picked, id];
+}
+
+export interface CompareRow {
+  key: keyof typeof T.rows;
+  cells: string[];
+}
+
+/** Строки сравнения 2–4 кандидатов: одна строка — один признак, ячейки — по кандидатам. */
+export function compareRows(cards: CandidateCard[], offers: Map<string, OfferForCompany>): CompareRow[] {
+  const d = cards.map((c) => ({ c, m: toMatchCard(c, c.categories?.[0]?.profession ?? c.primary_role ?? "") }));
+  const fsp = (c: CandidateCard) => {
+    const list = fspResults(c.fsp_highlights);
+    const top = list[0];
+    if (!top) return T.noFsp;
+    const first = top.place ? T.fspBest(top.discipline, top.place, top.year) : `${top.discipline}, ${top.year}`;
+    return list.length > 1 ? `${first} · ${T.fspMore(list.length - 1)}` : first;
+  };
+  return [
+    { key: "grade", cells: d.map(({ m }) => m.grade) },
+    { key: "proof", cells: d.map(({ m }) => (m.confirmed ? T.confirmed : T.claimed)) },
+    { key: "skills", cells: d.map(({ c }) => c.top_skills.slice(0, 5).map((s) => s.name).join(", ") || "—") },
+    { key: "salary", cells: d.map(({ c }) => (c.salary_min ? formatRub(c.salary_min) : "—")) },
+    { key: "format", cells: d.map(({ c }) => c.formats.map((f) => FORMAT_LABEL[f] ?? f).join(", ") || "—") },
+    { key: "city", cells: d.map(({ c }) => c.city ?? "—") },
+    { key: "fsp", cells: d.map(({ c }) => fsp(c)) },
+    { key: "interest", cells: d.map(({ c }) => interestLabel(offers.get(c.pseudo_id))) },
+  ];
 }

@@ -35,6 +35,9 @@ function install(opts: { pd?: boolean; consentsStatus?: number; telegramLinked?:
   const profilePatches: unknown[] = [];
   const passwords: unknown[] = [];
   const companyPatches: unknown[] = [];
+  const staffPatches: unknown[] = [];
+  const avatars: unknown[] = [];
+  let staff = { full_name: "Анна", position: null as string | null, about: null as string | null, avatar_url: null as string | null };
   vi.stubGlobal(
     "fetch",
     vi.fn(async (url: string, init?: RequestInit) => {
@@ -57,6 +60,18 @@ function install(opts: { pd?: boolean; consentsStatus?: number; telegramLinked?:
         return json(200, profile);
       }
       if (url.endsWith("/candidates/me/profile")) return json(200, profile);
+      if (url.endsWith("/me/profile") && init?.method === "PATCH") {
+        const body = JSON.parse(String(init.body));
+        staffPatches.push(body);
+        staff = { ...staff, ...body };
+        return json(200, staff);
+      }
+      if (url.endsWith("/me/profile")) return json(200, staff);
+      if (url.endsWith("/me/avatar") && init?.method === "PUT") {
+        avatars.push(init.body);
+        staff = { ...staff, avatar_url: "/users/u1/avatar?v=abc" };
+        return json(200, staff);
+      }
       if (url.endsWith("/auth/password/change")) {
         passwords.push(JSON.parse(String(init?.body)));
         return opts.passwordStatus && opts.passwordStatus !== 204 ? json(opts.passwordStatus, { code: "wrong_password", title: "x", status: opts.passwordStatus }) : new Response(null, { status: 204 });
@@ -75,7 +90,7 @@ function install(opts: { pd?: boolean; consentsStatus?: number; telegramLinked?:
       return json(404);
     }),
   );
-  return { visibility, puts, profilePatches, passwords, companyPatches };
+  return { visibility, puts, profilePatches, passwords, companyPatches, staffPatches, avatars };
 }
 
 function mount(path = "/settings") {
@@ -206,21 +221,38 @@ test("вкладки: у кандидата шесть, неизвестная ?
   for (const t of ["profile", "privacy", "notifications", "consents", "appearance", "security"]) expect(screen.getByTestId(`settings-tab-${t}`)).toBeInTheDocument();
 });
 
-test("работодатель: без приватности, название компании уходит в PATCH /companies/me", async () => {
-  const { companyPatches } = install({ role: "employer", company: true });
+test("работодатель: личный профиль уходит в PATCH /me/profile, компания — ссылкой с ролью (E39-24)", async () => {
+  const { staffPatches, companyPatches } = install({ role: "employer", company: true });
   mount();
-  const name = await screen.findByTestId("settings-company-name");
+  const name = await screen.findByTestId("settings-full-name");
   expect(screen.queryByTestId("settings-tab-privacy")).toBeNull();
-  await waitFor(() => expect(name).toHaveValue("Ромашка"));
-  fireEvent.change(name, { target: { value: "Ромашка 2" } });
+  await waitFor(() => expect(name).toHaveValue("Анна"));
+  fireEvent.change(screen.getByTestId("settings-position"), { target: { value: "HR-партнёр" } });
+  fireEvent.change(screen.getByTestId("settings-about"), { target: { value: "**Ищу** бэкендеров" } });
   fireEvent.submit(screen.getByTestId("settings-profile-form"));
-  await waitFor(() => expect(companyPatches).toContainEqual({ name: "Ромашка 2", description: "О нас" }));
+  await waitFor(() => expect(staffPatches).toContainEqual({ full_name: "Анна", position: "HR-партнёр", about: "**Ищу** бэкендеров" }));
+  expect(await screen.findByTestId("settings-saved")).toBeInTheDocument();
+  expect(screen.getByTestId("settings-company-role")).toHaveTextContent("Владелец");
+  expect(companyPatches).toEqual([]);
+});
+
+test("работодатель: фото уходит в PUT /me/avatar, появляется «Убрать фото»", async () => {
+  const { avatars } = install({ role: "employer", company: true });
+  mount();
+  const input = await screen.findByTestId("settings-avatar-input");
+  const file = new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47])], "a.png", { type: "image/png" });
+  fireEvent.change(input, { target: { files: [file] } });
+  await waitFor(() => expect(avatars).toHaveLength(1));
+  expect(avatars[0]).toBeInstanceOf(FormData);
+  expect(await screen.findByTestId("settings-avatar-remove")).toBeInTheDocument();
 });
 
 test("админ ФСП: профиль, оформление и безопасность", async () => {
   install({ role: "fsp_admin" });
   mount();
   expect(await screen.findByTestId("settings-account-email")).toHaveTextContent("a@b.ru");
+  expect(await screen.findByTestId("settings-full-name")).toBeInTheDocument();
+  expect(screen.queryByTestId("settings-company")).toBeNull();
   expect(screen.getAllByRole("tab").map((t) => t.textContent)).toEqual(["Профиль", "Оформление", "Безопасность"]);
 });
 

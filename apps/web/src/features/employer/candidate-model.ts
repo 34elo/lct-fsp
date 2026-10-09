@@ -107,15 +107,20 @@ export function skillLevel(s: SkillWithTrust): 0 | 1 | 2 | 3 | 4 {
   return dots(s.level);
 }
 
+const RELEVANCE_NOTE = { relevant: "релевантно профессии", other: "соревнование другого направления" } as const;
+
+/** Результаты ФСП: релевантные профессии сначала, у каждого подпись релевантности. */
 export function fspResults(list: FspHighlight[]): FspResult[] {
   const uniq = dedupeBy(list, (h) => `${h.title}|${h.level}|${h.place ?? ""}|${h.of ?? ""}|${h.year}`);
-  return uniq.map((h) => ({
+  const rank = (h: FspHighlight) => (h.relevance === "relevant" ? 0 : h.relevance === "other" ? 2 : 1);
+  const sorted = uniq.map((h, i) => ({ h, i })).sort((a, b) => rank(a.h) - rank(b.h) || a.i - b.i);
+  return sorted.map(({ h }) => ({
     discipline: h.title,
     tournament: FSP_LEVEL_LABEL[h.level] ?? h.level,
     place: h.place ?? 0,
     total: h.of ?? undefined,
     year: h.year,
-    note: h.note ?? undefined,
+    note: h.note ?? (h.relevance ? RELEVANCE_NOTE[h.relevance] : undefined),
   }));
 }
 
@@ -133,4 +138,29 @@ export function yearsLabel(months: number): string {
   const y = Math.floor(months / 12);
   const m = months % 12;
   return [y ? `${y} г` : "", m ? `${m} мес` : ""].filter(Boolean).join(" ") || "меньше месяца";
+}
+
+export type SkillFilter = "all" | "confirmed" | "claimed";
+export const TOP_SKILLS = 10;
+
+/** Сначала подтверждённые, внутри — по уровню доверия и имени. */
+export function rankSkills(all: SkillWithTrust[]): SkillWithTrust[] {
+  return dedupeSkills(all).sort(
+    (a, b) => Number(a.claimed_only) - Number(b.claimed_only) || b.level - a.level || a.skill.name.localeCompare(b.skill.name),
+  );
+}
+
+/** Подтверждено — есть независимое доказательство; заявлено — только слова кандидата. */
+export function splitClaimed(all: SkillWithTrust[]): { confirmed: SkillWithTrust[]; claimed: SkillWithTrust[] } {
+  const ranked = rankSkills(all);
+  return { confirmed: ranked.filter((s) => !s.claimed_only), claimed: ranked.filter((s) => s.claimed_only) };
+}
+
+export function filterSkills(list: SkillWithTrust[], query: string, filter: SkillFilter): SkillWithTrust[] {
+  const q = query.trim().toLowerCase();
+  return list.filter(
+    (s) =>
+      (filter === "all" || (filter === "claimed") === s.claimed_only) &&
+      (!q || s.skill.name.toLowerCase().includes(q) || s.skill.slug.toLowerCase().includes(q) || groupLabel(s.skill.group).toLowerCase().includes(q)),
+  );
 }

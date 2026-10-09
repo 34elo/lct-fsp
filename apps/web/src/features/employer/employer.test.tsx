@@ -126,7 +126,7 @@ test("карточка кандидата: навыки и доказатель�
   expect(await screen.findByText(/Кубок ФСП, финал/)).toBeInTheDocument();
 });
 
-test("карточка кандидата: тёмная, навыки без повторов, заявленные свёрнуты", async () => {
+test("карточка кандидата: обе темы, навыки без повторов, заявленные в своей колонке", async () => {
   const base = (await (fetch as unknown as (u: string) => Promise<Response>)("/candidates/p1/card").then((r) => r.json())) as typeof card & { skills: unknown[] };
   const py = base.skills[0] as Record<string, unknown>;
   const claimed = { ...py, skill: { slug: "redis", name: "Redis", group: "db" }, claimed_only: true, level: 0, sources: ["resume"], top_evidence: [] };
@@ -148,7 +148,7 @@ test("карточка кандидата: тёмная, навыки без п�
   expect(container.querySelector('[data-theme-scope="dark"]')).toBeNull();
   const tags = [...screen.getByRole("region", { name: "Навыки" }).querySelectorAll("[data-state]")].filter((e) => e.textContent?.startsWith("Python"));
   expect(tags).toHaveLength(1);
-  expect(screen.getByText("ещё 1 без подтверждения")).toBeInTheDocument();
+  expect(within(screen.getByRole("region", { name: "Заявлено кандидатом" })).getByText("Redis")).toBeInTheDocument();
   expect(screen.getAllByText(/Кубок · всероссийский этап/)).toHaveLength(1);
 });
 
@@ -206,8 +206,8 @@ test("карточка кандидата: заявлено и подтверж�
   });
   mount("/employer/candidates/p1?source=match&need_id=n1");
   const panel = await screen.findByRole("region", { name: "Заявлено и подтверждено" });
-  expect(within(panel).getByText("Заявлен")).toBeInTheDocument();
-  expect(within(panel).getByText("Подтверждён")).toBeInTheDocument();
+  expect(within(panel).getByRole("region", { name: "Заявлено кандидатом" })).toBeInTheDocument();
+  expect(within(panel).getByRole("region", { name: "Подтверждено" })).toBeInTheDocument();
   expect(screen.getByText("скрыто приватностью")).toBeInTheDocument();
   const crumb = screen.getByRole("navigation", { name: "Навигация" });
   expect(within(crumb).getByRole("link", { name: /Junior/ })).toHaveAttribute("href", "/employer/categories/backend/junior?need_id=n1");
@@ -227,4 +227,33 @@ test("карточка кандидата: ошибка 503 с кодом и «�
   expect(await screen.findByText("Не загрузилось")).toBeInTheDocument();
   expect(screen.getByText("ошибка 503")).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Повторить" })).toBeInTheDocument();
+});
+
+test("карточка кандидата: топ-10 навыков, «Все навыки» с поиском и фильтром, счётчики колонок", async () => {
+  const skill = (n: number, claimed: boolean) => ({
+    skill: { slug: `s${n}`, name: `Навык${n}`, group: "tools" },
+    confidence: 0.5,
+    level: 2,
+    sources: [claimed ? "resume" : "fsp"],
+    claimed_only: claimed,
+    status: "active",
+    top_evidence: [],
+  });
+  stubCard(200, { skills: Array.from({ length: 12 }, (_, i) => skill(i + 1, i >= 9)) });
+  mount("/employer/candidates/p1");
+  const skills = await screen.findByRole("region", { name: "Навыки" });
+  expect(within(skills).getAllByText(/^Навык[0-9]+$/)).toHaveLength(10);
+  expect(within(skills).queryByText("Навык12")).toBeNull();
+  const cols = screen.getByRole("region", { name: "Заявлено и подтверждено" });
+  expect(within(within(cols).getByRole("region", { name: "Подтверждено" })).getByLabelText("9 навыков")).toBeInTheDocument();
+  expect(within(within(cols).getByRole("region", { name: "Заявлено кандидатом" })).getByLabelText("3 навыков")).toBeInTheDocument();
+  fireEvent.click(within(skills).getByRole("button", { name: "Все навыки (12)" }));
+  expect(within(skills).getByText("Навык12")).toBeInTheDocument();
+  fireEvent.change(within(skills).getByRole("searchbox", { name: "Найти навык" }), { target: { value: "навык11" } });
+  expect(within(skills).getByText("Навык11")).toBeInTheDocument();
+  expect(within(skills).queryByText("Навык12")).toBeNull();
+  fireEvent.change(within(skills).getByRole("searchbox", { name: "Найти навык" }), { target: { value: "" } });
+  fireEvent.click(within(skills).getByRole("radio", { name: "Подтверждённые" }));
+  expect(within(skills).queryByText("Навык12")).toBeNull();
+  expect(within(skills).getByText("Навык1")).toBeInTheDocument();
 });

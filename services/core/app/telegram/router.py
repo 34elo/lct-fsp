@@ -643,34 +643,3 @@ async def tg_offer_decline(
     offer = await offers.get_for_candidate(session, user.id, offer_id, lock=True)
     await offers.decline(session, offer, body.reason, body.comment)
     return await _offer_out(session, offer)
-
-
-class TgMessageIn(BaseModel):
-    tg_user_id: int
-    text: str = Field(min_length=1, max_length=2000)
-
-
-class TgMessageOut(BaseModel):
-    id: UUID
-
-
-@internal.post(
-    "/tg/offers/{offer_id}/messages",
-    response_model=TgMessageOut,
-    status_code=201,
-    dependencies=[Depends(require_bot)],
-)
-async def tg_offer_message(
-    offer_id: UUID,
-    body: TgMessageIn,
-    session: AsyncSession = Depends(get_session),
-    limiter: RateLimiter = Depends(get_limiter),
-):
-    """Вопрос работодателю из бота: те же правила и лимит, что у сайта, канал `tg`."""
-    user = await _candidate_by_tg(session, body.tg_user_id)
-    offer = await offers.get_for_candidate(session, user.id, offer_id, lock=True)
-    await limiter.check(f"offer_msg:{offer.id}:{user.id}", offers.MESSAGES_PER_HOUR, 3600)
-    msg = await offers.add_message(
-        session, offer, side="candidate", user_id=user.id, text=body.text, channel="tg"
-    )
-    return TgMessageOut(id=msg.id)
