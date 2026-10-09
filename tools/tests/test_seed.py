@@ -366,3 +366,41 @@ def test_demo_v2_data_consistent(plan):
     assert all("example.test" in c["site"] for c in d["companies"])  # компании вымышленные
     c = _hero_candidate(cfg, date(2026, 10, 3), heroes["boris"])
     assert c["hero"] == "boris" and c["fsp"] is None
+
+
+async def test_fsp_registry_demo_heroes_and_jury(plan, tmp_path):
+    """E39-28: герои и жюри-кандидат в реестре с email своих аккаунтов; seed идемпотентен."""
+    from fsp_connector.models import metadata as fspc_metadata
+    from fsp_connector.registry import normalize_email
+    from fsp_platform.db import make_engine, make_session_factory
+
+    from tools.seed.fsp_registry import build_registry, seed_registry
+    from tools.seed.jury import jury_emails
+
+    data = build_registry(plan)
+    by_email = {normalize_email(p.get("email")): p["id"] for p in data["participants"]}
+    assert by_email[jury_emails()["candidate"]] == "r-jury"
+    assert by_email["anya@demo.fsp.test"] == "p-anya" and by_email["dima@demo.fsp.test"] == "p-dima"
+    ids = {p["id"] for p in data["participants"]}
+    events = {e["id"] for e in data["events"]}
+    assert all(r["participant_id"] in ids and r["event_id"] in events for r in data["results"])
+    assert any(r["participant_id"] == "r-jury" for r in data["results"])
+
+    url = f"sqlite+aiosqlite:///{tmp_path}/fspc.db"
+    engine = make_engine(url)
+    async with engine.begin() as conn:
+        await conn.run_sync(fspc_metadata.create_all)
+    await engine.dispose()
+    first = await seed_registry(url, plan)
+    assert first == await seed_registry(url, plan)
+    from fsp_connector.models import FspLink, RegistryParticipant, RegistryResult
+    from sqlalchemy import func, select
+
+    engine = make_engine(url)
+    async with make_session_factory(engine)() as s:
+        assert await s.scalar(select(func.count()).select_from(RegistryParticipant)) == len(ids)
+        assert await s.scalar(select(func.count()).select_from(RegistryResult)) == len(
+            data["results"]
+        )
+        assert await s.scalar(select(func.count()).select_from(FspLink)) == 0  # «не привязан»
+    await engine.dispose()

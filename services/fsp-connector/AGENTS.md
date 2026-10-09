@@ -6,7 +6,7 @@
 - `uv run --package fsp-fsp-connector uvicorn fsp_connector.main:app --port 8300` — api (`/healthz`)
 - `cd services/fsp-connector && uv run python -m fsp_connector.worker` — relay outbox → RabbitMQ
 - `cd services/fsp-connector && uv run alembic upgrade head` — миграции (`-x url=...` или `DATABASE_URL`)
-- `uv run pytest services/fsp-connector -q` — тесты (контрактные идут на fsp-mock in-process)
+- `uv run pytest services/fsp-connector -q` — тесты (контрактные идут на fsp-mock in-process); из корня не собирается без `fsp_mock` — тогда `cd services/fsp-connector && uv run --package fsp-fsp-connector --with-editable ../fsp-mock pytest -q tests`
 - `uv run ruff check services/fsp-connector` — линтер
 
 ## Ключевые файлы
@@ -19,6 +19,7 @@
 - `fsp_connector/models.py`, `migrations/` — `fsp_links`, `fsp_link_conflicts`, `raw_responses`, `webhook_log`, outbox/inbox
 - `fsp_connector/linking.py` — `LinkService`: OAuth / код / ручной ID, `fsp_link_conflicts`; `api.py` — `/internal/*` (`Service <SERVICE_TOKEN_CORE>`)
 - `fsp_connector/sync.py` — `SyncService`: `fsp.sync` / `fsp.sync_all` → `fsp.competitions.updated` + `fsp.results.imported` (полная при `new=true`); `handlers.py` — подписчик очереди `fsp.sync` (замок, inbox); запуск в `worker.py`
+- `fsp_connector/registry.py` — реестр ФСП (E39-28, ADR-052): нормализация контактов, CSV, `RegistryService` (привязка по контактам, заявки), `RegistryAdapter` (реестр как `FspPort` поверх источника); `registry_api.py` — `/internal/registry/*`
 - `fsp_connector/publisher.py` — `fsp.linked`, `fsp.results.imported`, `fsp.competitions.updated` в outbox
 
 ## Правила
