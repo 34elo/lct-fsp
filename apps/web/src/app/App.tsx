@@ -49,6 +49,7 @@ import Landing from "@/features/landing/Landing";
 import Legal from "@/features/landing/Legal";
 import FederationDashboard from "@/features/admin/Dashboard";
 import FederationModeration from "@/features/admin/Moderation";
+import FspRegistry from "@/features/fsp-registry/FspRegistry";
 import Quality from "@/features/quality/Quality";
 import Fairness from "@/features/quality/Fairness";
 import Runs from "@/features/quality/Runs";
@@ -151,6 +152,7 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
             {/* >>> block2 (admin) */}
             <Route path="/federation" element={<FederationDashboard />} />
             <Route path="/federation/moderation" element={<FederationModeration />} />
+            <Route path="/federation/registry" element={<FspRegistry />} />
             <Route path="/admin/quality" element={<Quality />} />
             <Route path="/admin/quality/fairness" element={<Fairness />} />
             <Route path="/admin/quality/runs" element={<Runs />} />
