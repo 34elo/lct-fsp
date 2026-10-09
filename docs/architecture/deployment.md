@@ -217,8 +217,8 @@ OB_ISSUER_DID=did:web:fsp.patissons.tech
 | `make migrate` | `alembic upgrade head` |
 | `make taxonomy-load` | Загрузить `data/taxonomy/*.yaml`, `data/fsp/discipline_rules.yaml`, банк вопросов |
 | `make seed` | Сгенерировать демо-витрину и данные мока (детерминированно, `SEED=42`) |
-| `make demo-snapshot` | `pg_dump` + выгрузка MinIO → `infra/snapshots/demo.*` |
-| `make demo-reset` | Восстановить снапшот, `FLUSHDB` кешей (очереди не трогаем), перезапуск воркеров, `demo-warm` |
+| `make demo-snapshot` | Снапшот только демо-строк (`is_demo`) в таблицы `demo_snap__*` БД core и fsp_connector + `fsp-mock.json` (E40-1, [evaluation.md §4](evaluation.md)) |
+| `make demo-reset` | Сбросить только демо к снапшоту (реальные регистрации не трогаются), без остановки стека |
 | `make demo-warm` | Прогрев кешей героев демо ([messaging.md §7](messaging.md#6-кеши)) |
 | `make eval` | Пересчёт метрик → отчёт → страница качества |
 | `make load` | Нагрузка locust (E29-2): 50 пользователей, 3 мин, против `LOAD_HOST` (по умолчанию gateway `:28080`) после `make seed`; отчёт `reports/load/`, код выхода 1 при нарушении порога ([metrics.md](metrics.md#нагрузочный-стенд-e29-2)) |
