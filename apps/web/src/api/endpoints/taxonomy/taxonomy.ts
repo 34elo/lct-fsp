@@ -354,6 +354,8 @@ export const getGetProfessionsTaxonomyProfessionsGetUrl = () => {
 
 /**
  * Профессии теста, веса и типы навыков, грейды с порогами θ (assessment.md §10).
+ *
+ * `beta` — тонкий банк семейств (E39-6): профессия открыта, в опросе помечена «бета».
  * @summary Get Professions
  */
 export const getProfessionsTaxonomyProfessionsGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getProfessionsTaxonomyProfessionsGetResponse> => {

@@ -434,7 +434,7 @@ export const getListOffersOffersGetUrl = (params?: ListOffersOffersGetParams,) =
 }
 
 /**
- * Офферы компании; `initiator=candidate` - отклики на её вакансии.
+ * Офферы компании; `initiator=candidate` - её отклики. Без компании - пусто (E39-7).
  * @summary List Offers
  */
 export const listOffersOffersGet = async (params?: ListOffersOffersGetParams, options?: Parameters<typeof apiFetch>[1]): Promise<listOffersOffersGetResponse> => {

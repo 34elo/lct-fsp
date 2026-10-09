@@ -80,16 +80,20 @@ export interface LastNeed {
   id: string;
   text: string;
   chips: string[];
+  /** Компания, чей это запрос: чужой запрос из того же браузера не читаем (иначе 404 в консоли). */
+  company?: string;
 }
 
 const LAST_NEED_KEY = "fsp.employer.lastNeed";
 
-export function loadLastNeed(): LastNeed | null {
+export function loadLastNeed(companyId?: string): LastNeed | null {
   try {
     const raw = localStorage.getItem(LAST_NEED_KEY);
     if (!raw) return null;
     const v = JSON.parse(raw) as Partial<LastNeed>;
-    return typeof v.id === "string" ? { id: v.id, text: v.text ?? "", chips: Array.isArray(v.chips) ? v.chips : [] } : null;
+    if (typeof v.id !== "string") return null;
+    if (companyId && v.company !== companyId) return null;
+    return { id: v.id, text: v.text ?? "", chips: Array.isArray(v.chips) ? v.chips : [], company: v.company };
   } catch {
     return null;
   }
@@ -101,5 +105,25 @@ export function saveLastNeed(v: LastNeed | null): void {
     else localStorage.removeItem(LAST_NEED_KEY);
   } catch {
     /* хранилище недоступно — работаем без памяти */
+  }
+}
+
+/* Онбординг компании пройден или пропущен — больше не показываем сам (кнопка «Начать настройку» остаётся). */
+const ONBOARDING_KEY = "fsp.employer.onboardingSkipped";
+
+export function onboardingSkipped(): boolean {
+  try {
+    return localStorage.getItem(ONBOARDING_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function setOnboardingSkipped(v: boolean): void {
+  try {
+    if (v) localStorage.setItem(ONBOARDING_KEY, "1");
+    else localStorage.removeItem(ONBOARDING_KEY);
+  } catch {
+    /* хранилище недоступно — спросим снова при следующем входе */
   }
 }

@@ -461,6 +461,15 @@ export default function Result() {
           )}
 
           <Link
+            to={`/me/assessment/attempts/${id}/review`}
+            className="flex items-center justify-between gap-3 rounded-xl border border-hairline bg-card p-4 font-semibold"
+            data-testid="assessment-to-review"
+          >
+            <span>{T.review.link}</span>
+            <Num className="text-muted">›</Num>
+          </Link>
+
+          <Link
             to="/me/navigator"
             className="flex items-center justify-between gap-3 rounded-xl border border-hairline bg-card p-4 font-semibold"
             data-testid="assessment-to-growth"

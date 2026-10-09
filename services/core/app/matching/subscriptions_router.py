@@ -38,13 +38,15 @@ async def create_subscription(
 @router.get(
     "/subscriptions",
     response_model=list[SubscriptionOut],
-    responses=problem_responses(401, 403, 404),
+    responses=problem_responses(401, 403),
 )
 async def list_subscriptions(
     user: User = Depends(_employer), session: AsyncSession = Depends(get_session)
 ) -> Any:
-    company, _ = await companies.require_company(session, user.id)
-    return [subscriptions.to_out(s) for s in await subscriptions.list_for(session, company.id)]
+    found = await companies.my_company(session, user.id)
+    if found is None:  # новая компания: подписок ещё нет (E39-7)
+        return []
+    return [subscriptions.to_out(s) for s in await subscriptions.list_for(session, found[0].id)]
 
 
 @router.delete(

@@ -164,10 +164,12 @@ async def create_task(
     return await _out(session, task)
 
 
-@employer_router.get("", response_model=list[TaskOut], responses=problem_responses(401, 403, 404))
+@employer_router.get("", response_model=list[TaskOut], responses=problem_responses(401, 403))
 async def list_tasks(user: User = Depends(_employer), session: AsyncSession = Depends(get_session)):
-    company_id = await _company_id(session, user)
-    rows = await tasks.list_company_tasks(session, company_id)
+    found = await companies.my_company(session, user.id)
+    if found is None:  # новая компания: заданий ещё нет (E39-7)
+        return []
+    rows = await tasks.list_company_tasks(session, found[0].id)
     c = await tasks.counts(session, [t.id for t in rows])
     return [_task_out(t, await tasks.kind_of(session, t), c.get(t.id, (0, 0))) for t in rows]
 

@@ -59,8 +59,8 @@ def test_profession_crud_bumps_version(api, seeded):
     adm = _admin(api)
     profs = api.get("/admin/professions", headers=adm).json()
     assert "backend" in {p["slug"] for p in profs}
-    # админ видит и скрытые профессии с флагом (E36-2)
-    assert {p["slug"]: p["active"] for p in profs}["ml"] is False
+    # все профессии открыты (E39-6), флаг `active` остаётся у каждой
+    assert {p["slug"]: p["active"] for p in profs}["ml"] is True
     assert api.get("/admin/professions/nope", headers=adm).status_code == 404
     assert api.patch("/admin/professions/nope", json={"title": "X"}, headers=adm).status_code == 404
 

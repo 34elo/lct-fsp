@@ -25,7 +25,7 @@ export const T = {
   ],
   navAria: "Разделы",
   steps: "Три шага",
-  step1: "Опрос и тест",
+  step1: "Направление и тест",
   step2: "Категория",
   step3: "Вилка от работодателя",
   gradeClaimed: "Junior · Backend",

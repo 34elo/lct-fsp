@@ -244,6 +244,29 @@ async def logout(request: Request, session: AsyncSession = Depends(get_session))
     return resp
 
 
+class PasswordChangeIn(BaseModel):
+    current_password: str = Field(min_length=1, max_length=128)
+    new_password: str = Field(min_length=8, max_length=128)
+
+
+@router.post(
+    "/auth/password/change", status_code=204, responses=problem_responses(401, 403, 422, 429)
+)
+async def password_change(
+    body: PasswordChangeIn,
+    request: Request,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+    limiter: RateLimiter = Depends(get_limiter),
+):
+    """Смена пароля любой ролью: текущий пароль + новый (≥ 8). Остальные сессии закрываются."""
+    await limiter.check(f"password_change:{user.id}", 5, 3600)
+    await service.change_password(
+        session, user, body.current_password, body.new_password, request.cookies.get(REFRESH_COOKIE)
+    )
+    return Response(status_code=204)
+
+
 class MeCompany(BaseModel):
     id: UUID
     name: str
