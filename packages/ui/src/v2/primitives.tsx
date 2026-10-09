@@ -168,11 +168,11 @@ export function MeterBar({
       aria-valuemax={100}
       aria-valuenow={v}
       aria-label={label}
-      className={cn("relative rounded-[3px] bg-tint-100", thin ? "h-1" : "h-1.5", threshold === undefined && "overflow-hidden", className)}
+      className={cn("relative rounded-sm bg-tint-100", thin ? "h-1" : "h-1.5", threshold === undefined && "overflow-hidden", className)}
     >
-      <b className="block h-full rounded-[3px] bg-brand" style={{ width: `${v}%` }} />
+      <b className="block h-full rounded-sm bg-brand" style={{ width: `${v}%` }} />
       {threshold !== undefined && (
-        <i data-threshold className="absolute -top-1 -bottom-1 w-0.5 rounded-[1px] bg-ink" style={{ left: `${clamp(threshold)}%` }} />
+        <i data-threshold className="absolute -top-1 -bottom-1 w-0.5 rounded-sm bg-ink" style={{ left: `${clamp(threshold)}%` }} />
       )}
     </div>
   );

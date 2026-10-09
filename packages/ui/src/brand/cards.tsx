@@ -152,7 +152,7 @@ export function OfferCard({
   return (
     <article aria-label={`Оффер ${o.company}`} className={cn("flex flex-col gap-3.5 rounded-xl border border-hairline bg-card p-[18px] shadow-xs", className)}>
       <header className="flex items-center gap-3">
-        <div aria-hidden className="grid size-11 shrink-0 place-items-center rounded-[10px] bg-ink font-mono font-bold text-page">
+        <div aria-hidden className="grid size-11 shrink-0 place-items-center rounded-lg bg-ink font-mono font-bold text-page">
           {o.company.slice(0, 2).toUpperCase()}
         </div>
         <div className="min-w-0 flex-1">

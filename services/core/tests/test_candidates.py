@@ -412,3 +412,32 @@ def test_category_dispute_validation_and_access(c):
     h2 = _user(c, "b@x.io")  # чужое оспаривание не видно
     c.post("/candidates/me/category/dispute", json=ok, headers=h)
     assert c.get("/candidates/me/category", headers=h2).json()["dispute"] is None
+
+
+async def test_pseudonym_exhausted_uses_unique_fallback(tmp_path, monkeypatch):
+    """E42-3: 20 коллизий подряд не роняют создание: псевдоним берётся от pseudo_id."""
+    from app.identity.models import User
+    from fsp_platform.db import make_engine, make_session_factory, session_scope
+
+    url = f"sqlite+aiosqlite:///{tmp_path / 'p.db'}"
+    subprocess.run(  # noqa: ASYNC221
+        [sys.executable, "-m", "alembic", "-x", f"url={url}", "upgrade", "head"],
+        cwd=CORE,
+        check=True,
+        capture_output=True,
+    )
+    factory = make_session_factory(make_engine(url))
+    monkeypatch.setattr(service, "make_pseudonym", lambda: "Candidate #1111")
+    async with session_scope(factory) as s:
+        ids = [uuid.uuid4() for _ in range(3)]
+        s.add_all(
+            [
+                User(id=u, email=f"{u.hex[:6]}@x.io", password_hash="x", role="candidate")
+                for u in ids
+            ]
+        )
+        await s.flush()
+        got = [await service.get_or_create(s, u, "secret") for u in ids]
+        assert got[0].pseudonym == "Candidate #1111"
+        assert len({c.pseudonym for c in got}) == 3
+        assert got[1].pseudonym == f"Candidate #{got[1].pseudo_id[:8]}"

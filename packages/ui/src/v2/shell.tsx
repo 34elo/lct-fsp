@@ -32,7 +32,7 @@ const defaultLink: RenderShellLink = ({ href, className, current, children }) =>
 export function NavCount({ value, className }: { value?: number; className?: string }) {
   if (!value) return null;
   return (
-    <span className={cn("ml-1.5 rounded-[10px] bg-tint-100 px-[7px] py-[3px] font-mono text-11 leading-none font-semibold text-chip-fg", className)}>
+    <span className={cn("ml-1.5 rounded-lg bg-tint-100 px-[7px] py-[3px] font-mono text-11 leading-none font-semibold text-chip-fg", className)}>
       {value}
     </span>
   );

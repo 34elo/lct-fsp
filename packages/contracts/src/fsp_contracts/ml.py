@@ -229,7 +229,7 @@ class SkillCardDraft(BaseModel):
 
 class MlHealth(BaseModel):
     llm: Literal["up", "down"]
-    embedder: Literal["up", "down"]
+    embedder: Literal["up", "down", "fallback"]  # fallback: детерминированные векторы без модели
     model: str
     queue_depth: int
 
