@@ -144,3 +144,20 @@ def test_shortlist_ownership_check(c, market_with_shortlist):
     resp = c.post(f"/needs/{need_id}/shortlist/{pseudo_id}", headers=_hdr(other))
     assert resp.status_code == 404
     assert resp.json()["code"] == "need_not_found"
+
+
+def test_shortlist_all_merges_needs_without_repeats(c, market_with_shortlist):
+    """GET /shortlist собирает отмеченных из всех потребностей компании без повторов (E39-23)."""
+    h = market_with_shortlist
+    assert c.get("/shortlist", headers=_hdr(h)).json() == {"items": []}
+    n1 = _create_need(c, h, filters={"skills_must": [{"slug": "python"}]}).json()["id"]
+    n2 = _create_need(c, h, filters={"skills_must": [{"slug": "python"}]}).json()["id"]
+    items = _get_candidates(c, h, "backend", "middle", n1).json()["items"]
+    first = items[0]["pseudo_id"]
+    for need in (n1, n2):
+        assert c.post(f"/needs/{need}/shortlist/{first}", headers=_hdr(h)).status_code == 204
+    got = c.get("/shortlist", headers=_hdr(h)).json()["items"]
+    assert [i["pseudo_id"] for i in got] == [first]
+    # чужая компания чужого шорт-листа не видит
+    other = _employer(c, "other2@x.ru", name="Other Corp")
+    assert c.get("/shortlist", headers=_hdr(other)).json() == {"items": []}

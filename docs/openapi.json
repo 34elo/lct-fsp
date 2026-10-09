@@ -16127,6 +16127,73 @@
         }
       }
     },
+    "/shortlist": {
+      "get": {
+        "tags": [
+          "needs"
+        ],
+        "summary": "Shortlist All",
+        "description": "Общий шорт-лист компании (E39-23): отмеченные во всех её потребностях, без повторов.\n\nСначала отмеченные в свежих потребностях; запоминать последний запрос в браузере не нужно.",
+        "operationId": "shortlist_all_shortlist_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShortlistOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/needs/{need_id}/shortlist/{pseudo_id}": {
       "post": {
         "tags": [
@@ -27664,6 +27731,41 @@
         ],
         "title": "SessionTuning",
         "description": "Учтённая подстройка сессии (matching.md §7): чипсы «Учли: …» и подсказки фильтров."
+      },
+      "ShortlistItem": {
+        "properties": {
+          "pseudo_id": {
+            "type": "string",
+            "title": "Pseudo Id"
+          },
+          "need_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Need Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pseudo_id",
+          "need_id"
+        ],
+        "title": "ShortlistItem"
+      },
+      "ShortlistOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ShortlistItem"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "ShortlistOut"
       },
       "SimilarCard": {
         "properties": {
