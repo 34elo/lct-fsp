@@ -96,6 +96,12 @@ def affinity(need: Mapping[str, float], prof: Mapping[str, float]) -> float:
     return sum(min(w, prof.get(s, 0.0)) for s, w in need.items()) / total
 
 
+def matched_skills(need: Mapping[str, float], prof: Mapping[str, float], top: int = 5) -> list[str]:
+    """Навыки запроса, которые есть у профессии, по вкладу в affinity — «почему эта категория»."""
+    got = [(s, min(w, prof.get(s, 0.0))) for s, w in need.items()]
+    return [s for s, v in sorted(got, key=lambda x: (-x[1], x[0])) if v > 0][:top]
+
+
 def recommend(
     need: Mapping[str, float],
     professions: Mapping[str, Mapping[str, float]],

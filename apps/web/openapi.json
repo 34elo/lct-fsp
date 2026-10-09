@@ -23538,6 +23538,19 @@
               }
             ],
             "title": "Fsp Share"
+          },
+          "matched_skills": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Matched Skills",
+            "default": []
+          },
+          "named": {
+            "type": "boolean",
+            "title": "Named",
+            "default": false
           }
         },
         "type": "object",
@@ -27384,6 +27397,43 @@
               }
             ],
             "title": "Semantic Text"
+          },
+          "professions": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Professions"
+          },
+          "only_confirmed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Only Confirmed"
+          },
+          "salary_min": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary Min"
           }
         },
         "type": "object",
