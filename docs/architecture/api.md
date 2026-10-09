@@ -103,6 +103,7 @@
 | `GET /assessment/attempts/{id}` | C | Итог: грейд, θ по типам, разбор ошибок, честность |
 | `GET /assessment/attempts/{id}/next` | C | Следующее задание без ключа: `{response_id, kind, stem, options?, time_limit_s, steps?}` или итог |
 | `POST /assessment/attempts/{id}/answers` | C | `{response_id, answer, rt_ms, telemetry}`; повтор с тем же `response_id` идемпотентен |
+| `GET /assessment/attempts/{id}/review` | C | Разбор теста (E39-10): `{attempt_id, profession, items[{response_id, seq, kind, stem, options?, yours?, correct?, reason{code,label,detail}, skill, skill_type, score, rt_ms?, time_limit_s, why, misconception?, steps?}]}`; ключи (`correct`) только у завершённой попытки: идёт — `409 attempt_active`, чужая — `404` |
 | `POST /assessment/attempts/{id}/upgrade` | C | Тест следующего грейда по приглашению бонусного этапа (ADR-025): `201`, новая попытка |
 | `POST /assessment/attempts/{id}/responses/{response_id}/explain` | C | «Объясни ответ» после завершения попытки: `{self_reason?}` → причина ошибки по правилам |
 | `GET /assessment/history` | C | История опросов и попыток, даты кулдаунов |

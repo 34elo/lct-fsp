@@ -43,6 +43,7 @@ import type {
   PlanPreviewIn,
   PlanPreviewOut,
   ProblemOut,
+  ReviewOut,
   SubmissionOut,
   SurveyIn,
   SurveyOut,
@@ -984,7 +985,167 @@ export const useExplainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExpla
       > => {
       return useMutation(getExplainAnswerAssessmentAttemptsAttemptIdResponsesResponseIdExplainPostMutationOptions(options), queryClient);
     }
-    export type getSurveyAssessmentSurveyGetResponse200 = {
+    export type reviewAttemptAssessmentAttemptsAttemptIdReviewGetResponse200 = {
+  data: ReviewOut
+  status: 200
+}
+
+export type reviewAttemptAssessmentAttemptsAttemptIdReviewGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type reviewAttemptAssessmentAttemptsAttemptIdReviewGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type reviewAttemptAssessmentAttemptsAttemptIdReviewGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type reviewAttemptAssessmentAttemptsAttemptIdReviewGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type reviewAttemptAssessmentAttemptsAttemptIdReviewGetResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type reviewAttemptAssessmentAttemptsAttemptIdReviewGetResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type reviewAttemptAssessmentAttemptsAttemptIdReviewGetResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type reviewAttemptAssessmentAttemptsAttemptIdReviewGetResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type reviewAttemptAssessmentAttemptsAttemptIdReviewGetResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type reviewAttemptAssessmentAttemptsAttemptIdReviewGetResponseSuccess = (reviewAttemptAssessmentAttemptsAttemptIdReviewGetResponse200) & {
+  headers: Headers;
+};
+export type reviewAttemptAssessmentAttemptsAttemptIdReviewGetResponseError = (reviewAttemptAssessmentAttemptsAttemptIdReviewGetResponse401ApplicationProblemJson | reviewAttemptAssessmentAttemptsAttemptIdReviewGetResponse401ApplicationJson | reviewAttemptAssessmentAttemptsAttemptIdReviewGetResponse403ApplicationProblemJson | reviewAttemptAssessmentAttemptsAttemptIdReviewGetResponse403ApplicationJson | reviewAttemptAssessmentAttemptsAttemptIdReviewGetResponse404ApplicationProblemJson | reviewAttemptAssessmentAttemptsAttemptIdReviewGetResponse404ApplicationJson | reviewAttemptAssessmentAttemptsAttemptIdReviewGetResponse409ApplicationProblemJson | reviewAttemptAssessmentAttemptsAttemptIdReviewGetResponse409ApplicationJson | reviewAttemptAssessmentAttemptsAttemptIdReviewGetResponse422) & {
+  headers: Headers;
+};
+
+export type reviewAttemptAssessmentAttemptsAttemptIdReviewGetResponse = (reviewAttemptAssessmentAttemptsAttemptIdReviewGetResponseSuccess | reviewAttemptAssessmentAttemptsAttemptIdReviewGetResponseError)
+
+export const getReviewAttemptAssessmentAttemptsAttemptIdReviewGetUrl = (attemptId: string,) => {
+
+
+
+
+  return `/assessment/attempts/${attemptId}/review`
+}
+
+/**
+ * Разбор теста: условие, ваш и верный ответ, причина. Только завершённая своя попытка.
+ * @summary Review Attempt
+ */
+export const reviewAttemptAssessmentAttemptsAttemptIdReviewGet = async (attemptId: string, options?: Parameters<typeof apiFetch>[1]): Promise<reviewAttemptAssessmentAttemptsAttemptIdReviewGetResponse> => {
+
+  return apiFetch<reviewAttemptAssessmentAttemptsAttemptIdReviewGetResponse>(getReviewAttemptAssessmentAttemptsAttemptIdReviewGetUrl(attemptId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getReviewAttemptAssessmentAttemptsAttemptIdReviewGetQueryKey = (attemptId: string,) => {
+    return [
+    `/assessment/attempts/${attemptId}/review`
+    ] as const;
+    }
+
+
+export const getReviewAttemptAssessmentAttemptsAttemptIdReviewGetQueryOptions = <TData = Awaited<ReturnType<typeof reviewAttemptAssessmentAttemptsAttemptIdReviewGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(attemptId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reviewAttemptAssessmentAttemptsAttemptIdReviewGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getReviewAttemptAssessmentAttemptsAttemptIdReviewGetQueryKey(attemptId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof reviewAttemptAssessmentAttemptsAttemptIdReviewGet>>> = ({ signal }) => reviewAttemptAssessmentAttemptsAttemptIdReviewGet(attemptId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: attemptId !== null && attemptId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof reviewAttemptAssessmentAttemptsAttemptIdReviewGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ReviewAttemptAssessmentAttemptsAttemptIdReviewGetQueryResult = NonNullable<Awaited<ReturnType<typeof reviewAttemptAssessmentAttemptsAttemptIdReviewGet>>>
+export type ReviewAttemptAssessmentAttemptsAttemptIdReviewGetQueryError = ErrorType<ProblemOut | HTTPValidationError>
+
+
+export function useReviewAttemptAssessmentAttemptsAttemptIdReviewGet<TData = Awaited<ReturnType<typeof reviewAttemptAssessmentAttemptsAttemptIdReviewGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ attemptId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof reviewAttemptAssessmentAttemptsAttemptIdReviewGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof reviewAttemptAssessmentAttemptsAttemptIdReviewGet>>,
+          TError,
+          Awaited<ReturnType<typeof reviewAttemptAssessmentAttemptsAttemptIdReviewGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useReviewAttemptAssessmentAttemptsAttemptIdReviewGet<TData = Awaited<ReturnType<typeof reviewAttemptAssessmentAttemptsAttemptIdReviewGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ attemptId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reviewAttemptAssessmentAttemptsAttemptIdReviewGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof reviewAttemptAssessmentAttemptsAttemptIdReviewGet>>,
+          TError,
+          Awaited<ReturnType<typeof reviewAttemptAssessmentAttemptsAttemptIdReviewGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useReviewAttemptAssessmentAttemptsAttemptIdReviewGet<TData = Awaited<ReturnType<typeof reviewAttemptAssessmentAttemptsAttemptIdReviewGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ attemptId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reviewAttemptAssessmentAttemptsAttemptIdReviewGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Review Attempt
+ */
+
+export function useReviewAttemptAssessmentAttemptsAttemptIdReviewGet<TData = Awaited<ReturnType<typeof reviewAttemptAssessmentAttemptsAttemptIdReviewGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ attemptId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reviewAttemptAssessmentAttemptsAttemptIdReviewGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getReviewAttemptAssessmentAttemptsAttemptIdReviewGetQueryOptions(attemptId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type getSurveyAssessmentSurveyGetResponse200 = {
   data: SurveyOut
   status: 200
 }
