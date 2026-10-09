@@ -4,6 +4,7 @@ import {
   Avatar,
   Button,
   Combobox,
+  EvidenceGraph,
   Field,
   InfoTip,
   Markdown,
@@ -27,6 +28,7 @@ import {
   Term,
   ThemeScope,
   localSkillSource,
+  type EvidenceGraphData,
   type SalaryRangeValue,
   type SkillValue,
 } from "../src";
@@ -63,6 +65,26 @@ const MD = `**Условие.** Найдите медиану по столбц�
 \`\`\`python
 print(sorted(xs)[len(xs) // 2])
 \`\`\``;
+
+/** Демо-граф E39-14: 200 навыков всех типов, тесты и результаты ФСП, иерархия и смежность. */
+const GRAPH: EvidenceGraphData = (() => {
+  const types = ["fundamental", "hard", "thinking", "business", "soft", "experience"];
+  const names = [...SKILLS.map((s) => s.name), "Алгоритмы", "Структуры данных", "Командная работа", "Английский", "Системный дизайн"];
+  const nodes: EvidenceGraphData["nodes"] = [];
+  const edges: EvidenceGraphData["edges"] = [];
+  for (let i = 0; i < 200; i++) {
+    const conf = ((i * 37) % 100) / 100;
+    nodes.push({ id: `s:${i}`, type: "skill", label: i < names.length ? names[i]! : `${names[i % names.length]} ${Math.floor(i / names.length) + 1}`, level: Math.round(conf * 4), confidence: conf, skill_type: types[i % types.length] });
+    if (i > 0 && i % 5 === 0) edges.push({ from: `s:${i}`, to: `s:${i - 5}`, type: "parent" });
+    if (i % 7 === 0 && i > 7) edges.push({ from: `s:${i}`, to: `s:${i - 7}`, type: "adjacent" });
+  }
+  for (let f = 0; f < 40; f++) {
+    const fsp = f % 4 === 0;
+    nodes.push({ id: `f:${f}`, type: fsp ? "fsp_result" : f % 3 === 0 ? "repo" : "test", label: fsp ? `Кубок ФСП, этап ${f}` : f % 3 === 0 ? `Репозиторий №${f}` : `Тест: backend, задание ${f}`, date: `2026-0${(f % 9) + 1}`, verified: fsp });
+    for (let j = 0; j < 4; j++) edges.push({ from: `f:${f}`, to: `s:${(f * 5 + j * 3) % 200}`, type: "confirms", strength: 0.3 + ((f + j) % 7) / 10 });
+  }
+  return { nodes, edges, highlight: [{ requirement: "s:0", path: ["vac", "s:0", "cand", "f:0"] }] };
+})();
 
 function Cell({ name, children }: { name: string; children: ReactNode }) {
   return (
@@ -190,6 +212,9 @@ function Controls() {
             { id: "g", kind: "goal", state: "future", eyebrow: "Цель", title: "Middle" },
           ]}
         />
+      </Cell>
+      <Cell name="EvidenceGraph · 200 навыков">
+        <EvidenceGraph data={GRAPH} renderSkillAction={() => <a href="#" className="text-14 font-semibold text-brand-fg">Чем подтверждён</a>} />
       </Cell>
       <Cell name="Скелетоны">
         <div className="grid gap-4 sm:grid-cols-2">

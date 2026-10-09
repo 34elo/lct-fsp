@@ -57,3 +57,6 @@ export * from "./v3/inputs";
 export * from "./v3/content";
 export * from "./v3/skeletons";
 export * from "./v3/roadmap";
+// E39-14: интерактивный граф доказательств.
+export * from "./v3/graph-model";
+export * from "./v3/graph";
