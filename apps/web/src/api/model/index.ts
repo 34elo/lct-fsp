@@ -5,6 +5,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './acceptIn';
 export * from './activityCandidate';
 export * from './activityEvent';
 export * from './activityFeed';
@@ -402,8 +403,6 @@ export * from './tgFspLinkIn';
 export * from './tgFspLinkOut';
 export * from './tgFspOut';
 export * from './tgFspVerifyIn';
-export * from './tgMessageIn';
-export * from './tgMessageOut';
 export * from './tgOfferOut';
 export * from './tgOfferOutExplanationItem';
 export * from './tgOffersInternalTgOffersGetParams';

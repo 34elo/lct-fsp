@@ -2142,76 +2142,6 @@
         }
       }
     },
-    "/internal/tg/offers/{offer_id}/messages": {
-      "post": {
-        "tags": [
-          "internal"
-        ],
-        "summary": "Tg Offer Message",
-        "description": "Вопрос работодателю из бота: те же правила и лимит, что у сайта, канал `tg`.",
-        "operationId": "tg_offer_message_internal_tg_offers__offer_id__messages_post",
-        "parameters": [
-          {
-            "name": "offer_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Offer Id"
-            }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TgMessageIn"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TgMessageOut"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/candidates/me/profile": {
       "get": {
         "tags": [
@@ -8860,6 +8790,7 @@
           "offers"
         ],
         "summary": "Accept Offer",
+        "description": "Принять; в теле можно оставить один короткий ответ компании (E39-26).",
         "operationId": "accept_offer_offers__offer_id__accept_post",
         "parameters": [
           {
@@ -8873,6 +8804,23 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/AcceptIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -17955,6 +17903,26 @@
   },
   "components": {
     "schemas": {
+      "AcceptIn": {
+        "properties": {
+          "message": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "AcceptIn",
+        "description": "Тело «Принять» (E39-26): один короткий ответ кандидата вместе с принятием."
+      },
       "ActivityCandidate": {
         "properties": {
           "pseudo_id": {
@@ -25339,6 +25307,16 @@
                 "type": "null"
               }
             ]
+          },
+          "company_contacts": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Contacts-Output"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -31075,40 +31053,6 @@
           "code"
         ],
         "title": "TgFspVerifyIn"
-      },
-      "TgMessageIn": {
-        "properties": {
-          "tg_user_id": {
-            "type": "integer",
-            "title": "Tg User Id"
-          },
-          "text": {
-            "type": "string",
-            "maxLength": 2000,
-            "minLength": 1,
-            "title": "Text"
-          }
-        },
-        "type": "object",
-        "required": [
-          "tg_user_id",
-          "text"
-        ],
-        "title": "TgMessageIn"
-      },
-      "TgMessageOut": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id"
-        ],
-        "title": "TgMessageOut"
       },
       "TgOfferOut": {
         "properties": {

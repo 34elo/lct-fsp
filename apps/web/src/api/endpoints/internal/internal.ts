@@ -45,8 +45,6 @@ import type {
   TgFspLinkOut,
   TgFspOut,
   TgFspVerifyIn,
-  TgMessageIn,
-  TgMessageOut,
   TgOfferOut,
   TgOffersInternalTgOffersGetParams,
   TgProfileInternalTgProfileGetParams,
@@ -2443,114 +2441,6 @@ export const useTgOfferDeclineInternalTgOffersOfferIdDeclinePost = <TError = Err
         TContext
       > => {
       return useMutation(getTgOfferDeclineInternalTgOffersOfferIdDeclinePostMutationOptions(options), queryClient);
-    }
-    export type tgOfferMessageInternalTgOffersOfferIdMessagesPostResponse201 = {
-  data: TgMessageOut
-  status: 201
-}
-
-export type tgOfferMessageInternalTgOffersOfferIdMessagesPostResponse422 = {
-  data: HTTPValidationError
-  status: 422
-}
-
-export type tgOfferMessageInternalTgOffersOfferIdMessagesPostResponseSuccess = (tgOfferMessageInternalTgOffersOfferIdMessagesPostResponse201) & {
-  headers: Headers;
-};
-export type tgOfferMessageInternalTgOffersOfferIdMessagesPostResponseError = (tgOfferMessageInternalTgOffersOfferIdMessagesPostResponse422) & {
-  headers: Headers;
-};
-
-export type tgOfferMessageInternalTgOffersOfferIdMessagesPostResponse = (tgOfferMessageInternalTgOffersOfferIdMessagesPostResponseSuccess | tgOfferMessageInternalTgOffersOfferIdMessagesPostResponseError)
-
-export const getTgOfferMessageInternalTgOffersOfferIdMessagesPostUrl = (offerId: string,) => {
-
-
-
-
-  return `/internal/tg/offers/${offerId}/messages`
-}
-
-/**
- * Вопрос работодателю из бота: те же правила и лимит, что у сайта, канал `tg`.
- * @summary Tg Offer Message
- */
-export const tgOfferMessageInternalTgOffersOfferIdMessagesPost = async (offerId: string,
-    tgMessageIn: TgMessageIn, options?: Parameters<typeof apiFetch>[1]): Promise<tgOfferMessageInternalTgOffersOfferIdMessagesPostResponse> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return apiFetch<tgOfferMessageInternalTgOffersOfferIdMessagesPostResponse>(getTgOfferMessageInternalTgOffersOfferIdMessagesPostUrl(offerId),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(tgMessageIn)
-  }
-);}
-
-
-
-
-
-export const getTgOfferMessageInternalTgOffersOfferIdMessagesPostMutationKey = () => ['tgOfferMessageInternalTgOffersOfferIdMessagesPost'] as const;
-
-export const getTgOfferMessageInternalTgOffersOfferIdMessagesPostMutationOptions = <TError = ErrorType<HTTPValidationError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof tgOfferMessageInternalTgOffersOfferIdMessagesPost>>, TError,TgOfferMessageInternalTgOffersOfferIdMessagesPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof tgOfferMessageInternalTgOffersOfferIdMessagesPost>>, TError,TgOfferMessageInternalTgOffersOfferIdMessagesPostMutationVariables, TContext> => {
-
-const mutationKey = getTgOfferMessageInternalTgOffersOfferIdMessagesPostMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof tgOfferMessageInternalTgOffersOfferIdMessagesPost>>, TgOfferMessageInternalTgOffersOfferIdMessagesPostMutationVariables> = (props) => {
-          const {offerId,data} = props ?? {};
-
-          return  tgOfferMessageInternalTgOffersOfferIdMessagesPost(offerId,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type TgOfferMessageInternalTgOffersOfferIdMessagesPostMutationResult = NonNullable<Awaited<ReturnType<typeof tgOfferMessageInternalTgOffersOfferIdMessagesPost>>>
-    export type TgOfferMessageInternalTgOffersOfferIdMessagesPostMutationBody = TgMessageIn
-    export type TgOfferMessageInternalTgOffersOfferIdMessagesPostMutationError = ErrorType<HTTPValidationError>
-    export type TgOfferMessageInternalTgOffersOfferIdMessagesPostMutationVariables = {offerId: string;data: TgMessageIn}
-
-    /**
- * @summary Tg Offer Message
- */
-export const useTgOfferMessageInternalTgOffersOfferIdMessagesPost = <TError = ErrorType<HTTPValidationError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof tgOfferMessageInternalTgOffersOfferIdMessagesPost>>, TError,TgOfferMessageInternalTgOffersOfferIdMessagesPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof tgOfferMessageInternalTgOffersOfferIdMessagesPost>>,
-        TError,
-        TgOfferMessageInternalTgOffersOfferIdMessagesPostMutationVariables,
-        TContext
-      > => {
-      return useMutation(getTgOfferMessageInternalTgOffersOfferIdMessagesPostMutationOptions(options), queryClient);
     }
     export type internalTrackInternalTrackPostResponse202 = {
   data: TrackOut
