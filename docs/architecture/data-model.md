@@ -11,7 +11,7 @@
 
 | Перечисление | Значения |
 |---|---|
-| `user_role` | `candidate`, `employer`, `fsp_admin` (роль внутри компании хранится в `company_members.role`: `admin`, `member`) |
+| `user_role` | `candidate`, `employer`, `fsp_admin` (роль внутри компании хранится в `company_members.role`: `admin` — владелец, `member` — HR, E39-24) |
 | `grade` | `intern`, `junior`, `junior_plus`, `middle`, `middle_plus`, `senior`, `lead` (порядок 0…6) |
 | `role_slug` | `backend`, `frontend`, `fullstack`, `mobile`, `ml`, `data_engineer`, `devops`, `qa`, `security`, `gamedev`, `embedded`, `analyst`, `product`, `designer` |
 | `work_format` | `office`, `hybrid`, `remote` |
@@ -457,6 +457,22 @@ CREATE TABLE companies (
   status text NOT NULL DEFAULT 'pending', responsibility_score real, created_at timestamptz DEFAULT now()
 );
 CREATE TABLE company_members (company_id uuid REFERENCES companies(id) ON DELETE CASCADE, user_id uuid REFERENCES users(id) ON DELETE CASCADE, role text NOT NULL, PRIMARY KEY (company_id, user_id));
+-- E39-24: приглашение HR в компанию по ссылке; токен хранится sha256, одноразовый, 7 дней
+CREATE TABLE company_invites (
+  id uuid PRIMARY KEY, company_id uuid NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  email text NOT NULL, role text NOT NULL DEFAULT 'member', token_hash text NOT NULL UNIQUE,
+  invited_by uuid REFERENCES users(id) ON DELETE SET NULL, created_at timestamptz NOT NULL DEFAULT now(),
+  expires_at timestamptz NOT NULL, accepted_at timestamptz, accepted_by uuid REFERENCES users(id) ON DELETE SET NULL,
+  revoked_at timestamptz
+);
+CREATE INDEX ix_company_invites_company_id ON company_invites (company_id);
+-- E39-24: личный профиль сотрудника компании или админа ФСП (подпись приглашения кандидату)
+CREATE TABLE user_profiles (
+  user_id uuid PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  full_name text, position text, about text,
+  avatar_key text,                                              -- ключ в MinIO: avatars/{user_id}/{sha256[:16]}.{png|jpg|webp}
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
 CREATE TABLE vacancies (
   id uuid PRIMARY KEY, company_id uuid NOT NULL REFERENCES companies(id),
   title text NOT NULL, role text NOT NULL, grade_min text NOT NULL, grade_max text NOT NULL,
