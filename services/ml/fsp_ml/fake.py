@@ -32,7 +32,6 @@ from fsp_contracts.ml import (
     SkillRelationGuess,
     SkillRequirement,
     SkillResolveItem,
-    SkillsResolveRequest,
 )
 
 FIXTURES = Path(__file__).resolve().parent.parent / "fixtures"
@@ -140,10 +139,6 @@ def resolve_skill(raw: str) -> SkillResolveItem:
         kind="hard",
         relation=SkillRelationGuess(type="related", to_slug="python", confidence=0.4),
     )
-
-
-def resolve_skills(req: SkillsResolveRequest) -> list[SkillResolveItem]:
-    return [resolve_skill(m.raw) for m in req.mentions]
 
 
 # --- query.parse ---

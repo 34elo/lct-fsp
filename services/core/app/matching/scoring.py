@@ -237,6 +237,9 @@ def _w(req: Requirement, cfg: MatchConfig) -> float:
 
 
 def grade_distance(grade: str | None, lo: str, hi: str) -> int | None:
+    """Расстояние в ступенях от грейда до диапазона вакансии; внутри — 0, неизвестный грейд —
+    `None`.
+    """
     if grade not in GRADES:
         return None
     g, a, b = GRADES.index(grade), GRADES.index(lo), GRADES.index(hi)
@@ -244,6 +247,7 @@ def grade_distance(grade: str | None, lo: str, hi: str) -> int | None:
 
 
 def grade_component(grade: str | None, lo: str, hi: str, cfg: MatchConfig) -> float:
+    """Слагаемое грейда в скоринге: внутри диапазона, соседний, дальше (ml.md §6.2)."""
     d = grade_distance(grade, lo, hi)
     if d is None:
         return 0.0
@@ -265,6 +269,7 @@ def salary_component(salary_min: int | None, salary_from: int, salary_to: int) -
 
 
 def cosine(a: Sequence[float], b: Sequence[float]) -> float:
+    """Косинусная близость векторов; нулевой вектор — 0."""
     dot = sum(x * y for x, y in zip(a, b, strict=False))
     na, nb = math.sqrt(sum(x * x for x in a)), math.sqrt(sum(y * y for y in b))
     return dot / (na * nb) if na and nb else 0.0
@@ -403,6 +408,7 @@ def score_candidate(
 
 
 def dots(level: int) -> str:
+    """Уровень доверия 0–4 точками ●○ для текстов объяснений."""
     level = max(0, min(4, level))
     return "●" * level + "○" * (4 - level)
 

@@ -30,6 +30,7 @@ class Decision:
 
 
 def hypotheses(cut: float, cfg: AssessmentConfig) -> tuple[float, float]:
+    """Гипотезы SPRT у порога: `(θ₀, θ₁) = (cut − δ, cut + δ)` (assessment.md §5, ADR-030)."""
     return cut - cfg.sprt_delta, cut + cfg.sprt_delta
 
 
@@ -76,6 +77,9 @@ def decide(
 
 
 def next_grade(grade: TestGrade) -> TestGrade | None:
+    """Следующий грейд по лестнице теста или `None` для старшего — для бонусного этапа
+    (assessment.md §5).
+    """
     i = TEST_GRADE_ORDER.index(grade)
     return TEST_GRADE_ORDER[i + 1] if i + 1 < len(TEST_GRADE_ORDER) else None
 

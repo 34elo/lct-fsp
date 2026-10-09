@@ -95,6 +95,9 @@ def effective_strength(
 
 
 def level_for(confidence: float, cfg: TrustConfig) -> int:
+    """Уровень доверия 0–4 (точки ○○○○…●●●●): старший уровень, чей порог `level_min` не выше
+    `confidence` (ml.md §3.3).
+    """
     return max(i for i, lo in enumerate(cfg.level_min) if confidence >= lo)
 
 

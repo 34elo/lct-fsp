@@ -49,6 +49,9 @@ def similarity(
     va: Sequence[float] | None,
     vb: Sequence[float] | None,
 ) -> float:
+    """Похожесть кандидатов: `W_SKILLS·J + W_VECTOR·cos⁺`; без вектора у одной из сторон — только
+    `J` (matching.md §11).
+    """
     j = skill_overlap(a, b)
     if va is None or vb is None or len(va) == 0 or len(vb) == 0 or len(va) != len(vb):
         return round(j, 6)

@@ -19,6 +19,7 @@ REGISTRY: dict[str, Family] = {}
 
 
 def register(family: Family) -> Family:
+    """Регистрирует кодовое семейство; повтор slug или уровень вне 1..5 — ошибка при импорте."""
     if not isinstance(family, Family):
         raise TypeError(f"{family!r} не реализует Family")
     if family.slug in REGISTRY:

@@ -1,4 +1,4 @@
-import { Check, X } from "lucide-react";
+import { X } from "lucide-react";
 import { Dialog as RDialog, DropdownMenu as RMenu, Popover as RPopover, Tabs as RTabs, ToggleGroup as RToggle, Tooltip as RTooltip } from "radix-ui";
 import type { ComponentProps, ReactNode } from "react";
 import { Toaster as Sonner } from "sonner";
@@ -197,23 +197,6 @@ export function DropdownMenuItem({ className, ...p }: ComponentProps<typeof RMen
       )}
       {...p}
     />
-  );
-}
-
-export function DropdownMenuCheckboxItem({ className, children, ...p }: ComponentProps<typeof RMenu.CheckboxItem>) {
-  return (
-    <RMenu.CheckboxItem
-      className={cn(
-        "relative flex min-h-11 cursor-pointer items-center rounded-md py-2 pl-8 pr-3 text-14 outline-none data-[highlighted]:bg-tint-50 sm:min-h-9",
-        className,
-      )}
-      {...p}
-    >
-      <RMenu.ItemIndicator className="absolute left-2">
-        <Check className="size-4 text-brand-fg" aria-hidden />
-      </RMenu.ItemIndicator>
-      {children}
-    </RMenu.CheckboxItem>
   );
 }
 

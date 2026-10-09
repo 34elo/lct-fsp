@@ -1,7 +1,5 @@
 /** Чистые функции экрана теста: форма ответа по `kind`, таймер, разбор стема, доли по навыкам. */
 
-export type ItemKind = "exact" | "estimate" | "choice" | "find_bug" | "order" | "sjt";
-
 export interface TestItem {
   kind: string;
   stem: string;
@@ -273,15 +271,6 @@ export function latestSurvey<S extends { profession?: string | null; created_at?
       .filter((s) => s.profession === profession)
       .sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""))[0] ?? null
   );
-}
-
-/** Разбор теста (E39-10): задание в виде, нужном странице; поля приходят с сервера как есть. */
-export interface ReviewRow {
-  responseId: string;
-  seq: number;
-  skill: string;
-  type: string;
-  score: number;
 }
 
 export type Verdict = "ok" | "part" | "bad";

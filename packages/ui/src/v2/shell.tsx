@@ -207,13 +207,3 @@ export function TabBar({
     </nav>
   );
 }
-
-/** Компактная шапка `.mh` (телефон): знак и аватар. */
-export function MobileBar({ brand, aside, className }: { brand?: ReactNode; aside?: ReactNode; className?: string }) {
-  return (
-    <header className={cn("sticky top-0 z-20 flex h-[52px] items-center justify-between border-b border-hairline bg-card px-4 md:hidden", className)}>
-      {brand ?? <BrandMark />}
-      {aside}
-    </header>
-  );
-}

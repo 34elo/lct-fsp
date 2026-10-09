@@ -66,6 +66,9 @@ async def compute(
     ucfg: UpliftConfig,
     today: date | None = None,
 ) -> dict[str, Any]:
+    """Навигатор кандидата: текущий грейд, пробелы по навыкам профессии до следующего, соревнования
+    ФСП и uplift (matching.md §6).
+    """
     day = today or datetime.now(UTC).date()
     grades = await assessment.get_grades(session, cand.user_id)
     cur = pick_current(grades, cand.primary_role)
