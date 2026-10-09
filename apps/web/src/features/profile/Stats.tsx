@@ -59,13 +59,59 @@ function PartsCard({ standing }: { standing: CandidateStanding }) {
   );
 }
 
+/** «Где ты среди своих» на всю ширину: оси подписаны, «свои» объяснены (E39-16). */
 function PeersCard({ standing, category }: { standing: CandidateStanding; category: string }) {
   const { points, you } = scatter(standing.peers ?? [], standing.strength?.value);
   return (
-    <Panel data-testid="stats-peers" aria-label={STATS.peers}>
-      <PanelCap title={<Gloss k="strength"><H2>{STATS.peers}</H2></Gloss>} aside={<Lbl>{STATS.peersSize(standing.category_size ?? 0)}</Lbl>} />
-      <ScatterPlot points={points} you={you} youLabel={STATS.you} yLabel={STATS.yLabel} label={STATS.peersLabel(category)} />
+    <Panel className="flex flex-col gap-2.5" data-testid="stats-peers" aria-label={STATS.peers}>
+      <PanelCap
+        className="mb-0"
+        title={
+          <span className="inline-flex items-center gap-1">
+            <H2>{STATS.peers}</H2>
+            <Gi k="peers" />
+          </span>
+        }
+        aside={<Lbl>{STATS.peersSize(standing.category_size ?? 0)}</Lbl>}
+      />
+      <ScatterPlot
+        points={points}
+        you={you}
+        youLabel={STATS.you}
+        xLabel={STATS.xAxis}
+        yLabel={STATS.yAxis}
+        label={STATS.peersLabel(category)}
+        className="max-h-[320px]"
+      />
+      <p className="flex items-start gap-1 text-13 text-muted" data-testid="stats-peers-note">
+        <span>{STATS.peersNote(category)}</span>
+        <Gi k="theta" />
+      </p>
     </Panel>
+  );
+}
+
+/** Общие числа категории: сколько кандидатов, вилки интересов, сколько компаний ищут (E39-16). */
+function CategoryCard({ standing }: { standing: CandidateStanding }) {
+  const c = standing.category_stats;
+  if (!c) return null;
+  const forks =
+    c.interest_salary_from_median != null && c.interest_salary_to_median != null
+      ? formatRubRangeShort(c.interest_salary_from_median, c.interest_salary_to_median)
+      : null;
+  return (
+    <section className="flex flex-col gap-2.5" data-testid="stats-category" aria-label={STATS.catTitle}>
+      <H2>{STATS.catTitle}</H2>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 lg:gap-4">
+        <MetricTile label={STATS.catCandidates} info={<Gi k="peers" />} value={c.candidates} />
+        <MetricTile
+          label={STATS.catForks}
+          value={forks ?? HOME.none}
+          hint={forks ? STATS.catForksHint(c.interests ?? 0) : STATS.catForksNone}
+        />
+        <MetricTile label={STATS.catCompanies} value={c.companies_searching} hint={STATS.catCompaniesHint} />
+      </div>
+    </section>
   );
 }
 
@@ -238,10 +284,11 @@ export default function Stats() {
   return page(
     <div className="flex flex-col gap-4" data-testid="stats-main">
       <Tiles standing={standing} interests={interests} views={views} />
+      <PeersCard standing={standing} category={[prof, gradeLabel(standing.grade)].filter(Boolean).join(" ")} />
+      <CategoryCard standing={standing} />
       <PartsCard standing={standing} />
       <div className="flex flex-col gap-4 lg:grid lg:grid-cols-12 lg:items-start">
         <div className="flex flex-col gap-4 lg:col-span-7">
-          <PeersCard standing={standing} category={[prof, gradeLabel(standing.grade)].filter(Boolean).join(" ")} />
           {views && <ViewsCard views={views} />}
         </div>
         <div className="flex flex-col gap-4 lg:col-span-5">

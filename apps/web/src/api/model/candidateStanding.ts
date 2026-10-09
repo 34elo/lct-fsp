@@ -5,6 +5,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { CandidateStandingMode } from './candidateStandingMode';
+import type { StandingCategoryStats } from './standingCategoryStats';
 import type { StandingLeader } from './standingLeader';
 import type { StandingPeer } from './standingPeer';
 import type { StandingStrength } from './standingStrength';
@@ -22,4 +23,5 @@ export interface CandidateStanding {
   leader?: StandingLeader | null;
   category_size?: number;
   peers?: StandingPeer[];
+  category_stats?: StandingCategoryStats | null;
 }
