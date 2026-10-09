@@ -458,6 +458,7 @@ async def category_median(session: AsyncSession, role: str | None, grade: str | 
 
 
 async def open_dispute(session: AsyncSession, candidate_id: uuid.UUID) -> CategoryDispute | None:
+    """Нерешённый спор кандидата о категории (последний) или `None`."""
     return await session.scalar(
         select(CategoryDispute)
         .where(CategoryDispute.candidate_id == candidate_id, CategoryDispute.resolved_at.is_(None))

@@ -144,6 +144,7 @@ async def build_snapshot(session: AsyncSession) -> dict[str, Any]:
 
 
 def snapshot_hash(snap: dict[str, Any]) -> str:
+    """SHA-256 снимка справочника в каноническом JSON: меняется только вместе с содержимым."""
     raw = json.dumps(snap, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
     return hashlib.sha256(raw.encode()).hexdigest()
 

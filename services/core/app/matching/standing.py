@@ -87,6 +87,9 @@ async def compute(
     fsp_cfg: FspStrengthConfig,
     today: datetime | None = None,
 ) -> CandidateStanding:
+    """Сила и место кандидата в его категории той же формулой, что у работодателя (assessment.md §9,
+    E35-12a).
+    """
     now = today or datetime.now(UTC)
     grades = await assessment.get_grades(session, cand.user_id)
     cur = navigator.pick_current(grades, cand.primary_role)

@@ -90,6 +90,7 @@ def need_grades(filters: SearchFilters) -> list[str]:
 
 
 def affinity(need: Mapping[str, float], prof: Mapping[str, float]) -> float:
+    """Близость профессии к потребности: `Σ min(w_need, w_prof) / Σ w_need` (assessment.md §9)."""
     total = sum(need.values())
     if total <= 0:
         return 0.0
@@ -122,5 +123,8 @@ def recommend(
 
 
 def median_salary(values: Iterable[int | None]) -> int | None:
+    """Медиана ожиданий по зарплате; меньше `MEDIAN_MIN_SAMPLE` значений — `None` (не раскрываем
+    малые выборки).
+    """
     vals = [v for v in values if v is not None]
     return int(statistics.median(vals)) if len(vals) >= MEDIAN_MIN_SAMPLE else None

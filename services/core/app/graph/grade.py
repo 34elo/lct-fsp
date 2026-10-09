@@ -200,6 +200,7 @@ class GradeResult:
 
 
 def experience_points(months: int | None, cfg: GradeConfig) -> float:
+    """Баллы за стаж: значение последней ступени `experience`, до которой дорос стаж (ml.md §5)."""
     if not months or months <= 0:
         return 0.0
     pts = 0.0
@@ -210,6 +211,7 @@ def experience_points(months: int | None, cfg: GradeConfig) -> float:
 
 
 def achievement_kind(r: FspResult) -> str:
+    """Вид достижения ФСП для баллов грейда: медаль и уровень соревнования, финал (ml.md §5)."""
     medal = r.place is not None and r.place <= 3
     national = FSP_LEVELS.get(r.level, 0) >= FSP_LEVELS["national"]
     if medal and national:
@@ -224,6 +226,7 @@ def achievement_kind(r: FspResult) -> str:
 
 
 def theta_points(theta: float | None, cfg: GradeConfig) -> float:
+    """Баллы за θ теста по ступеням `test_points` (<0, <1, ≤2, >2); нет теста — 0 (ml.md §5)."""
     if theta is None:
         return 0.0
     p = cfg.test_points
@@ -235,6 +238,7 @@ def theta_points(theta: float | None, cfg: GradeConfig) -> float:
 
 
 def grade_for_points(points: float, cfg: GradeConfig, *, leadership_ok: bool) -> str:
+    """Старший грейд, чей порог набран; Lead — только при подтверждённом лидерстве (ml.md §5)."""
     grade = cfg.thresholds[0][0]
     for g, lo in cfg.thresholds:
         if points >= lo and (g != LEAD or leadership_ok):
@@ -351,6 +355,9 @@ def _hints(inp: GradeInputs, cfg: GradeConfig, role_skill: str | None) -> list[H
 def compute_grade(
     inp: GradeInputs, cfg: GradeConfig, *, role_skill: str | None = None
 ) -> GradeResult:
+    """Сигнал силы профиля в баллах: сумма сигналов, грейд по порогам, ограничения и разбивка (ml.md
+    §5).
+    """
     breakdown = _signals(inp, cfg)
     score = round(sum(b.points for b in breakdown), 2)
     leadership_ok = inp.leadership >= cfg.lead_min_leadership or inp.management_confirmed

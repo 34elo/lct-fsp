@@ -49,6 +49,7 @@ export function Field({ label, hint, error, children, className }: { label: Reac
   );
 }
 
+/** `id`, `aria-invalid` и `aria-describedby` поля из ближайшего `Field`, чтобы подсказка и ошибка читались скринридером. */
 export function useFieldProps() {
   const c = useContext(FieldCtx);
   return c ? { id: c.id, "aria-invalid": c.error ? true : undefined, "aria-describedby": c.hintId } : {};

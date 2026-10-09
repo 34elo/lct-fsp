@@ -103,6 +103,7 @@ def _clip(x: float) -> float:
 
 
 def recency(days: float | None, cfg: StrengthConfig) -> float:
+    """R — свежесть теста: `exp(−дней / recency_days)`; нет даты теста — 0 (assessment.md §9)."""
     if days is None:
         return 0.0
     return math.exp(-max(0.0, days) / cfg.recency_days)
@@ -115,6 +116,9 @@ def band_position(theta: float, cut_lo: float, cut_hi: float) -> float:
 
 
 def strength(inp: StrengthInput, cfg: StrengthConfig) -> StrengthResult:
+    """Сила профиля внутри категории: взвешенная сумма T, F, S, R, C, при честности `I` ниже порога
+    — ×`integrity_mult` (assessment.md §9).
+    """
     terms = {
         "T": _clip(inp.band_position),
         "F": _clip(inp.fsp),
@@ -129,6 +133,9 @@ def strength(inp: StrengthInput, cfg: StrengthConfig) -> StrengthResult:
 
 
 def rank(match: float, strength_value: float, cfg: StrengthConfig) -> float:
+    """Итоговый `rank = rank_match·match + rank_strength·strength` для выдачи работодателю
+    (assessment.md §9).
+    """
     return round(cfg.rank_match * match + cfg.rank_strength * strength_value, 6)
 
 
@@ -146,6 +153,7 @@ def explain(res: StrengthResult, cfg: StrengthConfig) -> list[StrengthPart]:
 
 
 def view(res: StrengthResult, cfg: StrengthConfig, match: float | None = None) -> StrengthView:
+    """DTO силы для API: значение, `rank` (если передан `match`) и топ слагаемых-объяснений."""
     return StrengthView(
         value=res.value,
         rank=None if match is None else rank(match, res.value, cfg),

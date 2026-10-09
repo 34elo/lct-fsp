@@ -969,6 +969,9 @@ async def withdraw_application(
 
 
 async def accept(session: AsyncSession, offer: Offer, now: datetime | None = None) -> Offer:
+    """Кандидат принимает приглашение: `transition` в `accepted` (там же открываются контакты,
+    api.md §2.5).
+    """
     return await transition(session, offer, S.accepted, actor="candidate", now=now)
 
 
@@ -976,6 +979,9 @@ async def decline(
     session: AsyncSession, offer: Offer, reason: DeclineReason, comment: str | None,
     now: datetime | None = None,
 ) -> Offer:  # fmt: skip
+    """Кандидат отклоняет приглашение работодателя с причиной; свой отклик так не закрыть — 409
+    (api.md §2.5).
+    """
     if offer.status not in EXPIRABLE or (offer.initiator == OfferInitiator.candidate.value):
         raise ProblemError(
             409, "invalid_transition", f"Переход {offer.status} → declined невозможен"
