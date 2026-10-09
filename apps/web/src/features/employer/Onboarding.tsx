@@ -11,6 +11,7 @@ import { Gloss } from "@/shared/Gloss";
 import { useAuth } from "@/shared/lib/auth";
 import { PAGE } from "@/shared/lib/page";
 import { saveLastNeed } from "./match-model";
+import { criteriaKey, fromFilters } from "./query-model";
 import { MATCH_TEXT as M, ONBOARDING_TEXT as T } from "./text";
 
 const INN_RE = /^(\d{10}|\d{12})$/;
@@ -124,7 +125,7 @@ function NeedStep({ companyId, onNext }: { companyId?: string; onNext: (needId: 
       {
         onSuccess: (r) => {
           if (r.status !== 201) return;
-          saveLastNeed({ id: r.data.id, text: value, chips: needChips(r.data), company: companyId });
+          saveLastNeed({ id: r.data.id, text: value, chips: needChips(r.data), company: companyId, qs: criteriaKey(fromFilters(r.data.filters)) });
           onNext(r.data.id);
         },
         onError: (err) => setError(err instanceof ApiError && err.code === "need_empty" ? M.notUnderstood : M.failed),
