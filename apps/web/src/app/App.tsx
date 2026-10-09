@@ -36,6 +36,7 @@ import Stats from "@/features/profile/Stats";
 import CandidateTasks from "@/features/tasks/CandidateTasks";
 import EmployerTasks from "@/features/tasks/EmployerTasks";
 import Constructor from "@/features/constructor/Constructor";
+import Guide from "@/features/constructor/Guide";
 import AdmissionQueue from "@/features/constructor/AdmissionQueue";
 import AdminSkills from "@/features/admin-taxonomy/AdminSkills";
 import AdminTaxonomy from "@/features/admin-taxonomy/AdminTaxonomy";
@@ -125,6 +126,7 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
             {/* >>> block1 (employer) */}
             <Route path="/employer/tasks" element={<EmployerTasks />} />
             <Route path="/employer/families/new" element={<Constructor />} />
+            <Route path="/employer/families/guide" element={<Guide />} />
             {/* <<< block1 (employer) */}
             {/* >>> block2 (employer) */}
             <Route path="/employer" element={<EmployerMatch />} />
