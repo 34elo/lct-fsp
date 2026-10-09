@@ -134,11 +134,14 @@ export default function EmployerTasks() {
           </h1>
           <p className="text-14 text-muted">{T.empLead}</p>
         </div>
-        <Link to="/employer/families/new" className={buttonVariants({ variant: "outline" })}>{T.toConstructor}</Link>
+        <div className="flex flex-wrap gap-2">
+          <Link to="/employer/families/guide" className={buttonVariants({ variant: "ghost" })} data-testid="tasks-howto">{T.howTo}</Link>
+          <Link to="/employer/families/new" className={buttonVariants({ variant: "outline" })}>{T.toConstructor}</Link>
+        </div>
       </header>
       {q.isPending && <Skeleton role="status" aria-label="Загрузка" className="h-48" />}
       {q.isError && <ErrorState title={T.empLoadError} onRetry={() => void q.refetch()} />}
-      {q.isSuccess && all.length === 0 && <EmptyState title={T.empEmpty} description={T.empEmptyHint} />}
+      {q.isSuccess && all.length === 0 && <EmptyState title={T.empEmpty} description={T.empEmptyHint} action={<Link to="/employer/families/guide" className={buttonVariants()} data-testid="tasks-empty-guide">{T.howTo}</Link>} />}
       {all.length > 0 && <ul className="grid gap-3">{all.map((t) => <TaskRow key={t.id} t={t} />)}</ul>}
     </main>
   );
