@@ -11,7 +11,8 @@ export const T = {
   metric: "Метрика",
   status: { green: "Цель выполнена", yellow: "Небольшой промах", red: "Цель не выполнена", unmeasured: "Не измерено", info: "Справочно" } as Record<string, string>,
   counts: { green: "выполнено", yellow: "почти", red: "не выполнено", unmeasured: "не измерено", info: "справочно" } as Record<string, string>,
-  unavailable: (name: string, reason: string) => `${name}: ${reason}`,
+  // Причина приходит из tools/metrics: команды разработчика («нужен `make up`…») админу не показываем.
+  unavailable: (name: string, reason: string) => `Не измерено — ${name}: ${reason.replace(/\s*\(нужен[^)]*\)/, "").replace(/`/g, "")}`,
   candidateFunnel: "Кандидаты",
   employerFunnel: "Работодатели",
   invites: "Приглашения",

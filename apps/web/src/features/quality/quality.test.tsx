@@ -6,6 +6,7 @@ import Fairness from "./Fairness";
 import Quality from "./Quality";
 import Runs from "./Runs";
 import { report } from "./report";
+import { T } from "./text";
 
 beforeEach(() => {
   vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ code: "not_found" }), { status: 404 })));
@@ -65,4 +66,8 @@ test("живые прогоны: пустой список", async () => {
   vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ items: [], summary: { runs: 0, finished: 0, task_success_pct: null, median_time_s: null, median_sus: null, category_agree_pct: null } }), { status: 200, headers: { "content-type": "application/json" } })));
   renderAt(<Runs />);
   expect(await screen.findByText(/Прогонов пока нет/)).toBeInTheDocument();
+});
+
+test("причина «не измерено» без команд разработчика", () => {
+  expect(T.unavailable("load", "нет reports/load/load_stats.csv (нужен `make up`, `make seed`, `make load`)")).toBe("Не измерено — load: нет reports/load/load_stats.csv");
 });
