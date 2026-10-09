@@ -162,7 +162,10 @@ def test_api_validation_error_is_problem(client):
     assert r.status_code == 422 and r.json()["code"] == "validation_error"
 
 
-def test_api_without_fake_is_503():
-    c = TestClient(build_app(Settings(ml_fake=False)))
+def test_embeddings_without_model_use_fallback_not_503():
+    c = TestClient(build_app(Settings(ml_fake=False, llm_enabled=True)))
     r = c.post("/v1/embeddings", json={"texts": ["a"], "kind": "query"})
-    assert r.status_code == 503 and r.json()["code"] == "ml_unavailable"
+    assert r.status_code == 200 and r.json()["dim"] == 1024
+    again = c.post("/v1/embeddings", json={"texts": ["a"], "kind": "query"}).json()
+    assert again["vectors"] == r.json()["vectors"]  # детерминированно
+    assert c.get("/healthz").json()["embedder"] == "fallback"
