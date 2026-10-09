@@ -288,13 +288,18 @@ def _card(
     interested_you: bool = False,
 ) -> CandidateCard:
     vis = candidates.visibility_of(c)  # ADR-027: что кандидат открыл работодателю
-    ordered = sorted(skills, key=lambda s: (s.claimed_only, -s.confidence, str(s.skill_id)))
+    hidden = candidates.hidden_skills_of(c)  # E39-15: скрытые кандидатом навыки не показываем
+    shown = [s for s in skills if s.skill_id in names and names[s.skill_id][0] not in hidden]
+    ordered = sorted(shown, key=lambda s: (s.claimed_only, -s.confidence, str(s.skill_id)))
     top = [
         SkillBrief(slug=names[s.skill_id][0], name=names[s.skill_id][1], level=s.level,
                    sources=[x for x in s.sources or () if vis["fsp"] or x != "fsp"])
         for s in ordered[:TOP_SKILLS]
-        if s.skill_id in names
     ]  # fmt: skip
+    if result is not None and hidden:
+        result = replace(
+            result, explanation=[e for e in result.explanation if e.skill not in hidden]
+        )
     if strength_view is not None and not vis["fsp"]:  # ФСП скрыт: слагаемого F в объяснении нет
         strength_view = strength_view.model_copy(
             update={"top": [p for p in strength_view.top if p.code != "F"]}
@@ -306,7 +311,7 @@ def _card(
         primary_role=c.primary_role,
         grade=c.grade,
         grade_preliminary=c.grade_confidence is None or c.grade_confidence < 0.5,
-        primary_stack=list(c.primary_stack or ()),
+        primary_stack=[x for x in c.primary_stack or () if x not in hidden],
         top_skills=top,
         fsp_highlights=highlights if vis["fsp"] else [],
         salary_min=c.salary_min,
