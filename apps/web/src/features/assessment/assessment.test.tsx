@@ -713,13 +713,13 @@ describe("путь: тест сейчас или позже, результат 
 });
 
 describe("разбор теста (E39-10)", () => {
-  const part = { kind: "exact", stem: "Сколько будет 2+2?", options: null, reason: { code: "calc_error", label: "Ошибка в вычислении", detail: null } };
+  const part = { kind: "exact", stem: "Сколько будет 2+2?", reason: { code: "calc_error", label: "Ошибка в вычислении", detail: null } };
   const review = {
     attempt_id: "a1",
     profession: "backend",
     items: [
-      { ...part, response_id: "r1", seq: 1, skill: "python", skill_type: "hard", score: 1, time_limit_s: 60, why: "Ответ верный.", yours: "4", correct: "4", reason: { code: "correct", label: "Ответ верный", detail: null } },
-      { ...part, response_id: "r2", seq: 2, skill: "system_design", skill_type: "thinking", score: 0, time_limit_s: 60, why: "Пройдите по шагам.", yours: "5", correct: "4" },
+      { ...part, response_id: "r1", seq: 1, skill: "python", skill_type: "hard", score: 0.5, time_limit_s: 60, why: "Найдена только часть.", yours: "4" },
+      { ...part, response_id: "r2", seq: 2, skill: "system_design", skill_type: "thinking", score: 0, time_limit_s: 60, why: "Пройдите по шагам.", yours: "5" },
     ],
   };
   const handler = (url: string) => {
@@ -732,10 +732,12 @@ describe("разбор теста (E39-10)", () => {
     expect(await tid("assessment-review-group-hard")).toBeInTheDocument();
     expect(screen.getByTestId("assessment-review-group-thinking")).toBeInTheDocument();
     expect(screen.getByTestId("assessment-review-item-2-yours")).toHaveTextContent("5");
-    expect(screen.getByTestId("assessment-review-item-2-correct")).toHaveTextContent("4");
+    // E41-5: верных ответов в разборе нет
+    expect(screen.queryByTestId("assessment-review-item-2-correct")).toBeNull();
+    expect(screen.queryByText(/Верный ответ/)).toBeNull();
     expect(screen.getByTestId("assessment-review-item-2")).toHaveAttribute("data-verdict", "bad");
     expect(screen.getByTestId("assessment-review-weak-system_design")).toBeInTheDocument();
-    expect(screen.queryByTestId("assessment-review-weak-python")).toBeNull();
+    expect(screen.getByTestId("assessment-review-weak-python")).toBeInTheDocument();
     expect(screen.getByTestId("assessment-review-to-growth")).toHaveAttribute("href", "/me/navigator");
 
     // сворачивание у одного задания

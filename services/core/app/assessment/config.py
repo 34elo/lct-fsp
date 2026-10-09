@@ -60,7 +60,7 @@ class AssessmentConfig:
     invite_days: int = 30  # приглашение бонусного этапа на тест следующего грейда (ADR-025 п.2)
     integrity_threshold: float = 0.6
     unconfirmed_cap: float = 0.59
-    evidence_max_strength: float = 0.8
+    evidence_max_strength: float = 0.75
     # Жизненный цикл семейства (§7): пороги допуска pilot → active и тревоги → quarantine
     admit_min_n: int = 30
     admit_min_rpb: float = 0.2
@@ -152,7 +152,7 @@ def load_config(path: str | None = None) -> AssessmentConfig:
         invite_days=int(rules.get("invite_days", 30)),
         integrity_threshold=float(integ.get("threshold", 0.6)),
         unconfirmed_cap=float(integ.get("unconfirmed_cap", 0.59)),
-        evidence_max_strength=float(evid.get("max_strength", 0.8)),
+        evidence_max_strength=float(evid.get("max_strength", 0.75)),
         admit_min_n=int(adm.get("min_n", 30)),
         admit_min_rpb=float(adm.get("min_rpb", 0.2)),
         admit_max_abs_b=float(adm.get("max_abs_b", 3.0)),
