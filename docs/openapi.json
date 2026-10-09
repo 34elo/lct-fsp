@@ -18421,6 +18421,42 @@
             "type": "array",
             "title": "Claimed Vs Confirmed",
             "default": []
+          },
+          "education": {
+            "items": {
+              "$ref": "#/components/schemas/EducationItem"
+            },
+            "type": "array",
+            "title": "Education",
+            "default": []
+          },
+          "links": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Links",
+            "default": []
+          },
+          "hidden_skills": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Hidden Skills",
+            "default": []
+          },
+          "resume_draft_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resume Draft Id"
           }
         },
         "type": "object",
@@ -20672,6 +20708,62 @@
           "type"
         ],
         "title": "Edge"
+      },
+      "EducationItem": {
+        "properties": {
+          "institution": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Institution"
+          },
+          "degree": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Degree"
+          },
+          "field": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Field"
+          },
+          "year_end": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year End"
+          }
+        },
+        "type": "object",
+        "required": [
+          "institution",
+          "degree",
+          "field",
+          "year_end"
+        ],
+        "title": "EducationItem"
       },
       "EmploymentType": {
         "type": "string",
@@ -25365,6 +25457,40 @@
               }
             ],
             "title": "Parent Consent"
+          },
+          "links": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "maxLength": 300,
+                  "pattern": "^https?://[^\\s]+$"
+                },
+                "type": "array",
+                "maxItems": 10
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Links"
+          },
+          "hidden_skills": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "maxLength": 100,
+                  "minLength": 1
+                },
+                "type": "array",
+                "maxItems": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hidden Skills"
           }
         },
         "additionalProperties": false,
@@ -27812,6 +27938,17 @@
           "group": {
             "type": "string",
             "title": "Group"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type"
           }
         },
         "type": "object",
