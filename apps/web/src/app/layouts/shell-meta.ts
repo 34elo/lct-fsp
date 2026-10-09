@@ -1,5 +1,3 @@
-import { Building2, LayoutDashboard } from "@fsp/ui";
-
 import { NAV, activeNav, type NavItem } from "@/app/routes";
 
 /** Нижняя панель на телефоне — пять пунктов (шестой не помещается в 375 px): у кандидата «Статистика» открывается с Главной (E39-25). */
@@ -14,8 +12,6 @@ export const ROLE_LABEL: Record<string, string> = {
   fsp_admin: "Администратор ФСП",
 };
 
-export const ADMIN_ICON = LayoutDashboard;
-export const COMPANY_ICON = Building2;
 
 export { NAV, activeNav };
 

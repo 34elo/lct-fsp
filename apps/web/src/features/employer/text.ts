@@ -1,5 +1,3 @@
-import type { ExplanationItem } from "@/api/model";
-
 export const FORMAT_LABEL: Record<string, string> = { office: "Офис", hybrid: "Гибрид", remote: "Удалённо" };
 
 export const EMPLOYMENT_LABEL: Record<string, string> = {
@@ -96,14 +94,6 @@ export function rub(n: number): string {
 
 export function percent(score: number): number {
   return Math.round(Math.max(0, Math.min(1, score)) * 100);
-}
-
-/** Плюсы и минусы объяснения: `plus` зелёным, остальное (`warn`/`minus`) предупреждением. */
-export function splitExplanation(items: ExplanationItem[]) {
-  return {
-    pluses: items.filter((i) => i.kind === "plus"),
-    others: items.filter((i) => i.kind !== "plus"),
-  };
 }
 
 export const COMPANY_STATUS_LABEL: Record<string, string> = {

@@ -42,11 +42,6 @@ export const SIGNAL_LABEL: Record<string, string> = {
   growth: "Рост",
 };
 
-export const STRENGTH_LABEL: Record<string, string> = {
-  strong: "сильное подтверждение",
-  present: "есть подтверждение",
-};
-
 export const STATUS_LABEL: Record<SearchStatus, string> = {
   active: "Активно ищу",
   open: "Открыт к предложениям",
@@ -92,17 +87,6 @@ export const RANK_LABEL: Record<string, string> = {
 
 export const TEAM_ROLE_LABEL: Record<string, string> = { captain: "капитан", member: "участник" };
 
-/** «Июнь 2024 — н. в.» по ISO-датам `YYYY-MM...` из опыта. */
-export function periodRu(start?: string | null, end?: string | null): string {
-  const f = (v: string) => {
-    const d = new Date(v);
-    return Number.isNaN(d.getTime()) ? "" : d.toLocaleDateString("ru-RU", { month: "long", year: "numeric" });
-  };
-  const a = start ? f(start) : "";
-  const b = end ? f(end) : "по настоящее время";
-  return a ? `${a} — ${b}` : "";
-}
-
 /** Тексты экрана профиля (макет D). */
 export const T = {
   title: "Мой профиль",
@@ -141,25 +125,6 @@ export const CLAIM_STATUS_LABEL: Record<string, string> = {
   overclaimed: "тест ниже заявленного",
   underclaimed: "тест выше заявленного",
   unconfirmed: "тест не пройден",
-};
-
-/** Группы навыков (data/taxonomy/skills.yaml); порядок = порядок показа. */
-export const GROUP_LABEL: Record<string, string> = {
-  language: "Языки",
-  backend: "Backend",
-  frontend: "Frontend",
-  storage: "Хранение данных",
-  data_ml: "Данные и ML",
-  devops: "DevOps",
-  fundamentals: "Основы и алгоритмы",
-  testing: "Тестирование",
-  security: "Безопасность",
-  mobile: "Mobile",
-  embedded: "Embedded",
-  gamedev: "Gamedev",
-  product: "Продукт",
-  design: "Дизайн",
-  analysis: "Аналитика",
 };
 
 /** Ручная форма профиля `/me/profile/edit` (E20-7a). */
