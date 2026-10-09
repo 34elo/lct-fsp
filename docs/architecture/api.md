@@ -36,6 +36,7 @@
 | `POST /auth/magic` | P | `{token}` из ссылки бота → `{access_token, user}` + cookie. Токен одноразовый (5 мин); иначе `401 invalid_magic_token` |
 | `GET /auth/fsp/start` | P/C | Редирект на OAuth ФСП (мок). Для вошедшего кандидата это привязка, иначе вход |
 | `GET /auth/fsp/callback` | P/C | Обмен кода → `fsp_links` → `fsp_sync` |
+| `POST /auth/password/change` | U | E39-8. `{current_password, new_password(8..128)}` → 204. Неверный текущий или нет пароля (вход через Telegram) → 403 `wrong_password`; короткий новый → 422; 5 в час (429). Все остальные сессии (refresh-семьи) закрываются, текущая остаётся |
 | `GET /me` | любая | `{user, role, candidate?, company?, consents, telegram_linked}` |
 | `GET /me/consents`, `PUT /me/consents` | любая | Список и выдача/отзыв согласий |
 | `POST /me/credentials` | кандидат | Выпустить Open Badge `{profession?}` на действующую категорию. `201 {id, profession, grade, url, issued_at, valid_until, revoked_at, credential}`; тот же грейд повторно — тот же бейдж, новый грейд — старый отзывается (`superseded`). `404 grade_not_found`, `409 publication_required` (нет `public_profile` или согласия `profile_publication`) |
