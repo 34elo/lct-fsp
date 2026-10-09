@@ -86,8 +86,13 @@ CREATE TABLE users (
   is_active     boolean NOT NULL DEFAULT true,
   created_at    timestamptz NOT NULL DEFAULT now(),
   deleted_at    timestamptz,
-  email_verified_at timestamptz                   -- v2, миграция s0_02 (blocks.md §4.6)
+  email_verified_at timestamptz,                  -- v2, миграция s0_02 (blocks.md §4.6)
+  is_demo       boolean NOT NULL DEFAULT false    -- E40-1 (b2_17): демо-аккаунт `*@demo.fsp.test` (seed, жюри)
 );
+-- E40-1: is_demo есть у users, companies, vacancies, offers (частичный индекс WHERE is_demo).
+-- Компания — демо, если создана демо-пользователем; вакансия — если компания демо; приглашение —
+-- если демо компания или кандидат. Демо не идёт в цифры лендинга, дашборд ФСП и метрики;
+-- `make demo-reset` сбрасывает только его (evaluation.md §4).
 
 CREATE TABLE telegram_accounts (
   user_id     uuid PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,

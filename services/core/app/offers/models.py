@@ -62,6 +62,8 @@ class Offer(Base):
     invited_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), default=None)
     viewed_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), default=None)
     responded_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), default=None)
+    # E40-1: демо-данные (seed, жюри): не в статистике, сбрасываются `demo-reset`
+    is_demo: Mapped[bool] = mapped_column(default=False, server_default=sa.false())
     created_at: Mapped[datetime] = mapped_column(
         sa.DateTime(timezone=True), default=utcnow, server_default=sa.func.now()
     )

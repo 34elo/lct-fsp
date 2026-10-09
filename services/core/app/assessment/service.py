@@ -135,11 +135,19 @@ async def category_counts(session: AsyncSession) -> dict[tuple[str, str], int]:
     return {(p, g): n for p, g, n in rows}
 
 
-async def graded_candidates_first_at(session: AsyncSession) -> dict[uuid.UUID, datetime]:
-    """`candidate_id → когда впервые подтверждён грейд` (все, и истёкшие): для лендинга."""
-    rows = await session.execute(
-        select(Grade.candidate_id, func.min(Grade.confirmed_at)).group_by(Grade.candidate_id)
-    )
+async def graded_candidates_first_at(
+    session: AsyncSession, *, real_only: bool = False
+) -> dict[uuid.UUID, datetime]:
+    """`candidate_id → когда впервые подтверждён грейд` (все, и истёкшие): для лендинга.
+
+    `real_only` — без демо-кандидатов (E40-1).
+    """
+    q = select(Grade.candidate_id, func.min(Grade.confirmed_at)).group_by(Grade.candidate_id)
+    if real_only:
+        from app.identity.service import demo_user_ids
+
+        q = q.where(Grade.candidate_id.not_in(demo_user_ids()))
+    rows = await session.execute(q)
     return {cid: at for cid, at in rows}
 
 

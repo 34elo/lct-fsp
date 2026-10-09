@@ -46,6 +46,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.candidates.models import Candidate
 from app.companies.models import Company
+from app.identity import service as identity
 from app.matching import service as matching
 from app.matching.scoring import DEFAULT_SCORING_PATH
 from app.offers.models import Complaint, ContactReveal, Offer, OfferEvent, OfferMessage
@@ -199,9 +200,16 @@ async def open_counts(
     return {cid: n for cid, n in (await session.execute(q)).all()}
 
 
-async def first_invitations(session: AsyncSession) -> tuple[int, dict[uuid.UUID, datetime]]:
-    """Приглашения компаний: сколько всего и `candidate_id → время первого` (счётчики лендинга)."""
+async def first_invitations(
+    session: AsyncSession, *, real_only: bool = False
+) -> tuple[int, dict[uuid.UUID, datetime]]:
+    """Приглашения компаний: сколько всего и `candidate_id → время первого` (счётчики лендинга).
+
+    `real_only` — без демо-приглашений (E40-1).
+    """
     employer = Offer.initiator == OfferInitiator.employer.value
+    if real_only:
+        employer = employer & Offer.is_demo.is_(False)
     total = await session.scalar(select(func.count()).select_from(Offer).where(employer))
     rows = await session.execute(
         select(Offer.candidate_id, func.min(Offer.created_at))
@@ -349,6 +357,7 @@ async def create(
         below_candidate_min=candidate.salary_min is not None and hi < candidate.salary_min,
         idempotency_key=idempotency_key, created_at=now, team_offer_id=team_offer_id,
         expires_at=now + timedelta(days=limits.validity_days),
+        is_demo=bool(company.is_demo) or await identity.is_demo_user(session, candidate.user_id),
     )  # fmt: skip
     try:
         async with session.begin_nested():
@@ -406,6 +415,7 @@ async def apply(
         awaiting_reply_from="company", created_at=now,
         match_snapshot=await matching.snapshot(session, vacancy.id, candidate.user_id),
         below_candidate_min=False, expires_at=now + timedelta(days=limits.validity_days),
+        is_demo=bool(vacancy.is_demo) or await identity.is_demo_user(session, candidate.user_id),
     )  # fmt: skip
     try:
         async with session.begin_nested():
@@ -505,6 +515,7 @@ async def create_interest(
         below_candidate_min=candidate.salary_min is not None and hi < candidate.salary_min,
         interest_at=now, created_at=now,
         expires_at=now + timedelta(days=limits.interest_validity_days),
+        is_demo=bool(company.is_demo) or await identity.is_demo_user(session, candidate.user_id),
     )  # fmt: skip
     session.add(offer)
     await session.flush()
