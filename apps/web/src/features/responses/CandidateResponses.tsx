@@ -7,6 +7,7 @@ import { Button, EmptyState, ErrorState, Skeleton, formatRubRange } from "@fsp/u
 
 import { useMyApplicationsCandidatesMeApplicationsGet, useWithdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPost } from "@/api/endpoints/offers/offers";
 import type { OfferForCandidate } from "@/api/model";
+import { ListHeader } from "@/features/offers/offer-cards";
 import { ErrorNote } from "@/features/auth/ui";
 import { invalidateOffers } from "@/features/offers/parts";
 import { dateOnly } from "@/features/offers/text";
@@ -74,7 +75,7 @@ export default function CandidateResponses({ filter }: { filter?: ReactNode } = 
   const shown = filterBy(sorted, tab, candTabOf);
   return (
     <main className={PAGE.normal}>
-      <h1 className="font-mono text-24 font-semibold">{T.candTitle}</h1>
+      <ListHeader />
       {filter}
       {q.isPending && <Skeleton role="status" aria-label="Загрузка" className="h-48" />}
       {q.isError && <ErrorState title={T.loadError} onRetry={() => void q.refetch()} />}
@@ -84,7 +85,7 @@ export default function CandidateResponses({ filter }: { filter?: ReactNode } = 
       {all.length > 0 && (
         <>
           <FilterTabs label="Фильтр откликов" tabs={T.tabs} value={tab} counts={countBy(sorted, candTabOf)} onChange={setTab} />
-          <ul className="grid gap-3 md:grid-cols-2">{shown.map((o) => <ResponseCard key={o.id} o={o} />)}</ul>
+          <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{shown.map((o) => <ResponseCard key={o.id} o={o} />)}</ul>
           <p className="text-12 text-muted">{T.contactsNote}</p>
         </>
       )}
