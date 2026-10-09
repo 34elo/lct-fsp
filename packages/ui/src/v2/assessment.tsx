@@ -2,7 +2,7 @@ import type { ButtonHTMLAttributes, ReactNode } from "react";
 
 import { cn } from "../lib/cn";
 import { Button } from "../primitives/button";
-import { Lbl, MeterBar, SkillTag } from "./primitives";
+import { MeterBar, SkillTag } from "./primitives";
 
 /* Тест v2: шапка задания, варианты ответа, выбор строки кода, разбор ошибки. */
 
@@ -18,6 +18,8 @@ export function TaskHeader({
   total,
   secondsLeft,
   onHelp,
+  kindLabel,
+  upTo,
   className,
 }: {
   /** Номер текущего задания, с 1. */
@@ -25,17 +27,26 @@ export function TaskHeader({
   total: number;
   secondsLeft?: number;
   onHelp?: () => void;
+  /** Тип задания («вывод кода»): показывается в полосе между номером и таймером. */
+  kindLabel?: string;
+  /** Тест адаптивный и может закончиться раньше: «из ≤20». */
+  upTo?: boolean;
   className?: string;
 }) {
   return (
-    <div className={cn("flex items-center gap-3 md:gap-4", className)}>
-      <Lbl className="hidden sm:inline">Задание</Lbl>
-      <span className="num text-[18px]" aria-label={`Задание ${index} из ${total}`}>
-        {index} / {total}
+    <div className={cn("flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-hairline bg-tint-50 px-3 py-2 md:gap-x-4", className)}>
+      <span className="num text-[16px] md:text-[18px]" aria-label={`Задание ${index} из ${total}`}>
+        Задание {index} из {upTo ? "≤" : ""}
+        {total}
       </span>
-      <MeterBar value={total ? (index / total) * 100 : 0} label="Прогресс теста" className="flex-1" />
+      {kindLabel && (
+        <span className="text-13 text-muted" data-testid="task-kind">
+          · {kindLabel}
+        </span>
+      )}
+      <MeterBar value={total ? (index / total) * 100 : 0} label="Прогресс теста" className="order-last min-w-full flex-1 sm:order-none sm:min-w-24" />
       {secondsLeft !== undefined && (
-        <span className="num text-[22px]" role="timer" aria-label={`Осталось ${formatTimer(secondsLeft)}`}>
+        <span className="num ml-auto text-[22px] sm:ml-0" role="timer" aria-label={`Осталось ${formatTimer(secondsLeft)}`}>
           {formatTimer(secondsLeft)}
         </span>
       )}
