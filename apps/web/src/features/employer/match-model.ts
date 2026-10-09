@@ -40,7 +40,8 @@ export function toMatchCard(card: CandidateCard, profession: string): CandidateC
   const meta = [formats || null, card.city, confirmedSkills > 0 ? T.confirmedCount(confirmedSkills) : null].filter(Boolean).join(" · ");
   return {
     pseudonym: displayPseudonym(card.pseudonym, profession || card.primary_role),
-    match: card.match ? percent(card.match.score) : 0,
+    // Без вакансии `match` нет: совпадение с запросом в категории — `rank` (0.6·покрытие + 0.4·сила).
+    match: card.match ? percent(card.match.score) : card.strength?.rank != null ? percent(card.strength.rank) : 0,
     grade: grade ? (GRADE_LABEL[grade] ?? grade) : T.noGrade,
     confirmed: cv.confirmed !== null,
     salary: card.salary_min ? T.from(formatRub(card.salary_min)) : undefined,
@@ -82,6 +83,8 @@ export interface LastNeed {
   chips: string[];
   /** Компания, чей это запрос: чужой запрос из того же браузера не читаем (иначе 404 в консоли). */
   company?: string;
+  /** Условия поиска в URL (E39-21): по ним экран восстанавливает чипсы и фильтры. */
+  qs?: string;
 }
 
 const LAST_NEED_KEY = "fsp.employer.lastNeed";
@@ -93,7 +96,7 @@ export function loadLastNeed(companyId?: string): LastNeed | null {
     const v = JSON.parse(raw) as Partial<LastNeed>;
     if (typeof v.id !== "string") return null;
     if (companyId && v.company !== companyId) return null;
-    return { id: v.id, text: v.text ?? "", chips: Array.isArray(v.chips) ? v.chips : [], company: v.company };
+    return { id: v.id, text: v.text ?? "", chips: Array.isArray(v.chips) ? v.chips : [], company: v.company, qs: typeof v.qs === "string" ? v.qs : undefined };
   } catch {
     return null;
   }

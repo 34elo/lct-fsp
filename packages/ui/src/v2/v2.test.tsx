@@ -88,6 +88,13 @@ describe("v2: графики", () => {
     expect(svg.querySelector("[data-you]")).not.toBeNull();
   });
 
+  it("ScatterPlot: подписи обеих осей", () => {
+    render(<ScatterPlot label="График" points={[]} you={{ x: 50, y: 50 }} xLabel="уровень в тесте" yLabel="сила профиля" />);
+    const svg = screen.getByRole("img", { name: "График" }) as unknown as HTMLElement;
+    expect(within(svg).getByText("уровень в тесте")).toBeInTheDocument();
+    expect(within(svg).getByText("сила профиля")).toBeInTheDocument();
+  });
+
   it("ActivityHeatmap: уровни относительно максимума", () => {
     const { container } = render(<ActivityHeatmap label="Просмотры" values={[0, 1, 2, 4]} />);
     expect([...container.querySelectorAll("i")].map((i) => i.dataset.level)).toEqual(["0", "1", "2", "4"]);

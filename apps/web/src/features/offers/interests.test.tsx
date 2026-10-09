@@ -91,6 +91,8 @@ test("кандидат: пустое состояние", async () => {
   routes = (url) => (url.endsWith("/candidates/me/interests") ? res(200, { companies: 0, salary_from_min: null, salary_to_max: null, items: [] }) : null);
   mount("/me/offers?show=interests");
   expect(await screen.findByText("Пока никто не интересуется")).toBeInTheDocument();
+  expect(screen.getByText(/Откройте его, и компания сможет вас пригласить/)).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Что такое «Интересы»" })).toBeInTheDocument();
 });
 
 const employerRoutes = (url: string, method: string): Response | null => {
