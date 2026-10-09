@@ -125,6 +125,7 @@ seed:
 	SEED=$(SEED) uv run python -m tools.seed all --env-file $(ENV_FILE)
 # >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
 	SEED=$(SEED) uv run python -m tools.seed grades --env-file $(ENV_FILE)
+	SEED=$(SEED) uv run python -m tools.seed families --env-file $(ENV_FILE)
 # <<< block1
 # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
 	SEED=$(SEED) uv run python -m tools.seed demo2 --env-file $(ENV_FILE)

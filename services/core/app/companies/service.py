@@ -9,7 +9,7 @@ from datetime import UTC, datetime, timedelta
 
 from fsp_contracts.enums import CompanyMemberRole, CompanyStatus
 from fsp_platform.app import ProblemError
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -105,6 +105,12 @@ async def list_by_status(session: AsyncSession, status: str | None) -> list[Comp
     if status is not None:
         q = q.where(Company.status == status)
     return list((await session.scalars(q)).all())
+
+
+async def count_by_status(session: AsyncSession, status: str) -> int:
+    """Число компаний в статусе — счётчик модерации на главной админки (E39-29)."""
+    q = select(func.count()).select_from(Company).where(Company.status == status)
+    return int(await session.scalar(q) or 0)
 
 
 async def _moderate(

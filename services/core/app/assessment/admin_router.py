@@ -7,17 +7,21 @@ from datetime import datetime
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, Request
+from fsp_contracts.assessment import ProfessionInfo
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.assessment import constructor, lifecycle
+from app.assessment import admission, constructor, lifecycle
+from app.assessment.attempts import family_of
 from app.assessment.config import AssessmentConfig, load_config
 from app.assessment.families.spec import FamilySpec
 from app.assessment.models import FamilyRow
+from app.assessment.world import domain_for_profession
 from app.deps import get_session
 from app.identity.deps import require_roles
 from app.identity.models import User
 from app.openapi_errors import problem_responses
+from app.taxonomy import service as taxonomy
 
 router = APIRouter(prefix="/admin/families", tags=["admin"])
 _admin = require_roles("fsp_admin")
@@ -39,6 +43,20 @@ class FamilyStatsOut(BaseModel):
     appeals: int = 0
 
 
+class FamilyProfessionOut(BaseModel):
+    slug: str
+    title: str
+
+
+class FamilyExampleOut(BaseModel):
+    """Сгенерированный вариант задания и ответ решателя (ключ) — для карточки допуска."""
+
+    kind: str
+    stem: str
+    options: list[str] | None = None
+    answer: str
+
+
 class AdminFamilyOut(BaseModel):
     id: uuid.UUID
     slug: str
@@ -58,10 +76,25 @@ class AdminFamilyOut(BaseModel):
     updated_at: datetime | None = None
     company_id: uuid.UUID | None = None  # задание компании (конструктор)
     spec: dict[str, Any] | None = None  # конструктор: form, author, key_draft, autocheck
+    skill: str | None = None  # slug навыка (E39-31)
+    grade: Literal["junior", "middle", "senior"] = "middle"  # ячейка «грейд» по уровню
+    professions: list[FamilyProfessionOut] = Field(default_factory=list)  # для кого задание
+    example: FamilyExampleOut | None = None  # пример варианта с ответом решателя
 
 
-def _out(row: FamilyRow, stats: lifecycle.FamilyStats | None, failed: list[str]) -> AdminFamilyOut:
+def _out(
+    row: FamilyRow,
+    stats: lifecycle.FamilyStats | None,
+    failed: list[str],
+    profs: list[ProfessionInfo] | None = None,
+) -> AdminFamilyOut:
     s = stats.as_json() if stats is not None else lifecycle._stats_of(row).as_json()
+    fam = family_of(row)
+    skill = getattr(fam, "skill", None)
+    found = admission.professions_of(skill, profs or [])
+    example = admission.example_of(
+        fam, row.slug, domain_for_profession(found[0].slug) if found else None
+    )
     return AdminFamilyOut(
         id=row.id,
         slug=row.slug,
@@ -81,7 +114,15 @@ def _out(row: FamilyRow, stats: lifecycle.FamilyStats | None, failed: list[str])
         updated_at=row.updated_at,
         company_id=row.company_id,
         spec=row.spec,
+        skill=skill,
+        grade=admission.grade_of_level(row.level),  # type: ignore[arg-type]
+        professions=[FamilyProfessionOut(slug=p.slug, title=p.title) for p in found],
+        example=FamilyExampleOut(**example) if example else None,
     )
+
+
+async def _profs(session: AsyncSession) -> list[ProfessionInfo]:
+    return await taxonomy.list_professions(session, include_hidden=True)
 
 
 @router.get("", response_model=list[AdminFamilyOut], responses=problem_responses(401, 403))
@@ -94,7 +135,8 @@ async def admission_queue(
     """Очередь допуска со статистикой и невыполненными порогами."""
     cfg = _cfg(request)
     rows = await lifecycle.queue(session, status, cfg)
-    return [_out(row, st, failed) for row, st, failed in rows]
+    profs = await _profs(session)
+    return [_out(row, st, failed, profs) for row, st, failed in rows]
 
 
 async def _decide(action, family_id, request, user, session) -> AdminFamilyOut:
@@ -102,7 +144,10 @@ async def _decide(action, family_id, request, user, session) -> AdminFamilyOut:
     row = await action(session, family_id, user.id, cfg)
     stats = lifecycle._stats_of(row)
     return _out(
-        row, stats, lifecycle.admission_failures(stats, row.b, cfg, need_dif=row.source == "fsp")
+        row,
+        stats,
+        lifecycle.admission_failures(stats, row.b, cfg, need_dif=row.source == "fsp"),
+        await _profs(session),
     )
 
 
@@ -173,7 +218,10 @@ async def approve_key(
     row = await constructor.approve_key(session, family_id, user.id, body.source, body.spec)
     stats = lifecycle._stats_of(row)
     return _out(
-        row, stats, lifecycle.admission_failures(stats, row.b, cfg, need_dif=row.source == "fsp")
+        row,
+        stats,
+        lifecycle.admission_failures(stats, row.b, cfg, need_dif=row.source == "fsp"),
+        await _profs(session),
     )
 
 

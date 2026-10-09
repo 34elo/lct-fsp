@@ -77,10 +77,10 @@ test("кандидат не попадает в раздел работодат�
   expect(await screen.findByRole("heading", { name: "Главная" })).toBeInTheDocument();
 });
 
-test("админ ФСП видит дашборд", async () => {
+test("админ ФСП видит главную админки", async () => {
   asUser("fsp_admin");
   mount("/federation");
-  expect(await screen.findByRole("heading", { name: "Дашборд ФСП" })).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { name: "Главная" })).toBeInTheDocument();
 });
 
 test("неизвестный путь — 404", async () => {

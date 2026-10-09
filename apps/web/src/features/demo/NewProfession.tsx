@@ -7,6 +7,7 @@ import { Badge, Button, Card, CardContent, Skeleton } from "@fsp/ui";
 import { useGetHintsAdminSkillsHintsGet, useListProfessionsAdminProfessionsGet } from "@/api/endpoints/admin/admin";
 import { SAMPLE_CLUSTER, type ClusterView } from "./fixtures";
 import { T } from "./text";
+import { AdminPageHeader } from "@/features/admin/PageHeader";
 
 const N = T.newProfession;
 
@@ -26,10 +27,7 @@ export default function NewProfession() {
   const count = profs.data?.status === 200 ? profs.data.data.length : null;
   return (
     <div data-testid="demo-new-profession" className={PAGE.wide}>
-      <header className="flex flex-col gap-1">
-        <h1 className="text-24 font-bold">{N.title}</h1>
-        <p className="text-14 text-muted">{N.lead}</p>
-      </header>
+      <AdminPageHeader title={N.title} tip={N.lead} />
       {hints.isLoading ? (
         <Skeleton className="h-40" />
       ) : (

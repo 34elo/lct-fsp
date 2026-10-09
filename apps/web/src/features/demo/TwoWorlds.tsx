@@ -5,6 +5,7 @@ import { Badge, Card, CardContent, ErrorState, NumberInput, Select, Skeleton } f
 
 import { useTwoWorldsAdminDemoTwoWorldsGet } from "@/api/endpoints/admin/admin";
 import { T } from "./text";
+import { AdminPageHeader } from "@/features/admin/PageHeader";
 
 const TW = T.twoWorlds;
 
@@ -16,10 +17,7 @@ export default function TwoWorlds() {
   const d = q.data?.status === 200 ? q.data.data : null;
   return (
     <div data-testid="demo-two-worlds" className={PAGE.wide}>
-      <header className="flex flex-col gap-1">
-        <h1 className="text-24 font-bold">{TW.title}</h1>
-        <p className="text-14 text-muted">{TW.lead}</p>
-      </header>
+      <AdminPageHeader title={TW.title} tip={TW.lead} />
       <div className="flex flex-wrap items-end gap-3">
         <div className="flex flex-col gap-1 text-13 text-muted">
           <span>{TW.family}</span>

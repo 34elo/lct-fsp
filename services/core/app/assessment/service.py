@@ -388,3 +388,10 @@ async def erase_candidate(session: AsyncSession, candidate_id: uuid.UUID) -> Non
     await session.execute(delete(Response).where(Response.attempt_id.in_(attempt_ids)))
     for model in (Attempt, Grade, Survey, TaskSubmission):
         await session.execute(delete(model).where(model.candidate_id == candidate_id))
+
+
+async def count_families(session: AsyncSession, status: str) -> int:
+    """Число семейств в статусе — счётчик очереди допуска на главной админки (E39-29)."""
+    from app.assessment.models import FamilyRow
+
+    return int(await session.scalar(select(func.count()).where(FamilyRow.status == status)) or 0)

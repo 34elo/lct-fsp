@@ -61,17 +61,20 @@ export function AppHeader({
   nav,
   counts = {},
   withTabs = true,
+  brandFromMd = true,
 }: {
   nav: NavItem[];
   /** Счётчики вкладок по пути (`/employer/offers` → 8). */
   counts?: Record<string, number | undefined>;
   withTabs?: boolean;
+  /** Показывать знак в шапке с `md`. У админки с боковой панелью знак уже в панели — на десктопе не дублируем. */
+  brandFromMd?: boolean;
 }) {
   const current = activeNav(nav, useLocation().pathname);
   return (
     <AppBar
       brand={
-        <NavLink to="/" aria-label="ФСП Карьера — на главную" className="shrink-0">
+        <NavLink to="/" aria-label="ФСП Карьера — на главную" className={brandFromMd ? "shrink-0" : "shrink-0 md:hidden"}>
           <BrandMark />
         </NavLink>
       }

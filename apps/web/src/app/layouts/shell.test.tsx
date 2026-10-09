@@ -71,3 +71,21 @@ test("Page: три ширины сетки и общий ритм полей (E3
 test("второй строки вкладок нет ни у одной роли: пункты меню плоские (E39-25)", () => {
   for (const nav of Object.values(NAV)) for (const n of nav) expect(n, n.label).not.toHaveProperty("tabs");
 });
+
+test("админка: знак в шапке скрыт с md (он уже в боковой панели), у кабинетов остаётся", async () => {
+  const { AppHeader } = await import("./AppHeader");
+  const brand = (side: boolean) => {
+    const { unmount } = render(
+      <Providers client={makeQueryClient()}>
+        <MemoryRouter>
+          <AppHeader nav={NAV.admin} withTabs={!side} brandFromMd={!side} />
+        </MemoryRouter>
+      </Providers>,
+    );
+    const cls = screen.getByRole("link", { name: /на главную/ }).className;
+    unmount();
+    return cls;
+  };
+  expect(brand(true)).toContain("md:hidden");
+  expect(brand(false)).not.toContain("md:hidden");
+});

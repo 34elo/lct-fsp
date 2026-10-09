@@ -9,6 +9,7 @@ export interface MetricRow {
   note: string;
   source: string;
   status: Status;
+  value: number | null;
   value_text: string;
   target_text: string;
 }

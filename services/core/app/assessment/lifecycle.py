@@ -194,6 +194,8 @@ async def refresh_stats(
 ) -> FamilyStats:
     """Пересчитать и сохранить `families.stats`. DIF — только по запросу (нужен граф)."""
     pairs = await _answers(session, row.id)
+    if not pairs and (row.stats or {}).get("n"):
+        return _stats_of(row)  # статистика задана снаружи (импорт, демо), ответов нет — не затираем
     if with_dif:
         from app.graph import service as graph
 

@@ -17,6 +17,8 @@ const family = (over: Record<string, unknown> = {}) => ({
   status: "pilot", key_status: "approved", ai_solvable: 0.2,
   stats: { n: 31, p: 0.5, r_pb: 0.23, seed_spread: 0.11, dif: 0.06, appeals: 0 },
   failed_thresholds: [], log: [{ at: "2026-10-04", from: "draft", to: "pilot", reason: "autocheck" }], spec: { form: { title: "Запросы" } },
+  skill: "sql", grade: "middle", professions: [{ slug: "backend", title: "Backend-разработчик" }],
+  example: { kind: "exact", stem: "Сервис получает 60 запросов в секунду. Сколько за минуту?", options: null, answer: "3600" },
   ...over,
 });
 
@@ -150,60 +152,91 @@ describe("K1 конструктор", () => {
   });
 });
 
-describe("K2 очередь допуска", () => {
+describe("K2 допуск заданий", () => {
   beforeEach(() => {
     role = "fsp_admin";
   });
+  const confirmOk = () => fireEvent.click(screen.getByTestId("admission-confirm-ok"));
 
-  test("список с запросом status=pilot и пороги", async () => {
+  test("карточка: профессия, грейд, пример с ответом, статистика пилота", async () => {
     mount("/admin/families");
-    expect(await screen.findByTestId("admission-open-f1")).toBeInTheDocument();
+    expect(await screen.findByTestId("admission-card-f1")).toBeInTheDocument();
     expect(calls.some((c) => c.url.includes("/admin/families?status=pilot"))).toBe(true);
-    expect(screen.getByTestId("admission-admit-f1")).toHaveTextContent("пороги");
-    fireEvent.click(screen.getByTestId("admission-open-f1"));
+    expect(screen.getByTestId("admission-cell-f1")).toHaveTextContent("Backend-разработчик");
+    expect(screen.getByTestId("admission-cell-f1")).toHaveTextContent("Middle");
+    expect(screen.getByTestId("admission-stem-f1")).toHaveTextContent("60 запросов");
+    expect(screen.getByTestId("admission-answer-f1")).toHaveTextContent("3600");
     expect(screen.getByTestId("admission-thr-n")).toHaveAttribute("data-failed", "false");
-    expect(screen.getByTestId("admission-approve")).toBeEnabled();
+    expect(screen.getByTestId("admission-thr-n")).toHaveTextContent("31");
+    expect(screen.getByTestId("admission-thr-p")).toHaveTextContent("50%");
+    expect(screen.getByTestId("admission-ready")).toBeInTheDocument();
+    expect(screen.getByTestId("admission-approve-f1")).toBeEnabled();
+    expect(screen.getByTestId("admission-status-help")).toHaveTextContent("скрытый вопрос");
   });
 
-  test("пороги не выполнены: допуск закрыт, причины видны", async () => {
+  test("пороги не выполнены: допуск закрыт, причины человеческим языком", async () => {
     queue = [family({ failed_thresholds: ["n", "dif"], stats: { n: 18, r_pb: 0.14, seed_spread: 0.1, dif: 0.12 }, n: 18 })];
     mount("/admin/families");
-    fireEvent.click(await screen.findByTestId("admission-open-f1"));
-    expect(screen.getByTestId("admission-approve")).toBeDisabled();
-    expect(screen.getByTestId("admission-closed")).toHaveTextContent("n, DIF");
+    await screen.findByTestId("admission-card-f1");
+    expect(screen.getByTestId("admission-approve-f1")).toBeDisabled();
+    expect(screen.getByTestId("admission-closed")).toHaveTextContent("мало ответов, результаты участников ФСП отличаются");
     expect(screen.getByTestId("admission-thr-n")).toHaveAttribute("data-failed", "true");
   });
 
-  test("ключ не утверждён: допуск закрыт, утверждение ключа автора шлёт source", async () => {
+  test("фильтр по профессии оставляет только её карточки", async () => {
+    queue = [
+      family(),
+      family({ id: "f2", slug: "c-2", professions: [{ slug: "qa", title: "QA-инженер" }] }),
+    ];
+    mount("/admin/families");
+    await screen.findByTestId("admission-card-f2");
+    fireEvent.click(screen.getByTestId("admission-prof-qa"));
+    expect(screen.queryByTestId("admission-card-f1")).not.toBeInTheDocument();
+    expect(screen.getByTestId("admission-card-f2")).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("admission-prof-all"));
+    expect(screen.getByTestId("admission-card-f1")).toBeInTheDocument();
+  });
+
+  test("ключ не утверждён: допуск закрыт, утверждение черновика шлёт source", async () => {
     queue = [family({ key_status: "draft", spec: { form: {}, key_draft: { correct: 1 } } })];
     mount("/admin/families");
-    fireEvent.click(await screen.findByTestId("admission-open-f1"));
-    expect(screen.getByTestId("admission-approve")).toBeDisabled();
+    await screen.findByTestId("admission-card-f1");
+    expect(screen.getByTestId("admission-approve-f1")).toBeDisabled();
     expect(screen.getByTestId("admission-key-draft")).toHaveTextContent("correct");
     fireEvent.click(screen.getByTestId("admission-key-llm"));
     await waitFor(() => expect(calls.find((c) => c.url.includes("/f1/key"))?.body).toEqual({ source: "llm" }));
   });
 
-  test("draft: «В пилот» вызывает /pilot; 409 thresholds_not_met даёт понятный текст", async () => {
+  test("«В пилот» просит подтверждение и только потом вызывает /pilot", async () => {
     queue = [family({ status: "draft" })];
     mount("/admin/families");
     fireEvent.click(await screen.findByTestId("admission-tab-draft"));
-    fireEvent.click(await screen.findByTestId("admission-open-f1"));
-    fireEvent.click(screen.getByTestId("admission-pilot"));
+    fireEvent.click(await screen.findByTestId("admission-pilot-f1"));
+    expect(calls.some((c) => c.url.includes("/f1/pilot"))).toBe(false);
+    expect(screen.getByTestId("admission-confirm")).toHaveTextContent("скрытый вопрос");
+    confirmOk();
     await waitFor(() => expect(calls.some((c) => c.url.includes("/f1/pilot") && c.method === "POST")).toBe(true));
   });
 
-  test("approve при 409 показывает причину", async () => {
+  test("отмена подтверждения ничего не вызывает", async () => {
     mount("/admin/families");
-    fireEvent.click(await screen.findByTestId("admission-open-f1"));
-    fireEvent.click(screen.getByTestId("admission-approve"));
-    expect(await screen.findByTestId("admission-error")).toHaveTextContent("пороги");
+    fireEvent.click(await screen.findByTestId("admission-retire-f1"));
+    fireEvent.click(screen.getByTestId("admission-confirm-cancel"));
+    await waitFor(() => expect(screen.queryByTestId("admission-confirm")).not.toBeInTheDocument());
+    expect(calls.some((c) => c.url.includes("/retire"))).toBe(false);
+  });
+
+  test("approve при 409 показывает причину в окне", async () => {
+    mount("/admin/families");
+    fireEvent.click(await screen.findByTestId("admission-approve-f1"));
+    confirmOk();
+    expect(await screen.findByTestId("admission-confirm-error")).toHaveTextContent("пороги");
   });
 
   test("пусто", async () => {
     queue = [];
     mount("/admin/families");
-    expect(await screen.findByText("Здесь пусто")).toBeInTheDocument();
+    expect(await screen.findByText("Здесь пока пусто")).toBeInTheDocument();
   });
 
   test("чужая роль не попадает в очередь", async () => {
