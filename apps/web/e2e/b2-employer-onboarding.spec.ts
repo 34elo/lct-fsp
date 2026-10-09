@@ -53,7 +53,7 @@ test("b2: новый работодатель проходит онбордин�
   await page.getByTestId("onboarding-done").click();
 
   // Первый подбор: категории запроса, лента и подписки с пустым состоянием и действием.
-  await expect(page).toHaveURL(/\/employer\?need=/);
+  await expect(page).toHaveURL(/\/employer\?.*need=/);
   await expect(page.getByTestId("match-chips")).toBeVisible();
   await expect(page.getByTestId("match-feed-empty")).toBeVisible();
   await expect(page.getByTestId("match-subscriptions-empty").getByRole("link", { name: "Подписаться на категорию" })).toBeVisible();
