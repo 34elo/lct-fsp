@@ -1,4 +1,4 @@
-import { Logo } from "@fsp/ui";
+import { Logo, toast } from "@fsp/ui";
 import { Link } from "react-router-dom";
 
 import { Net } from "./Hero";
@@ -46,9 +46,15 @@ export function Footer() {
             <Link to="/privacy" className={footLink}>
               {T.privacy}
             </Link>
-            <a href={`mailto:${T.contactEmail}`} className={footLink}>
+            <button
+              type="button"
+              className={footLink}
+              onClick={() =>
+                toast(T.contactToast, { action: { label: T.contactOpen, onClick: () => window.open(T.contactUrl, "_blank", "noopener,noreferrer") } })
+              }
+            >
               {T.contacts}
-            </a>
+            </button>
           </nav>
         </div>
         {jury && (
