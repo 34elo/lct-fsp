@@ -449,7 +449,7 @@ function ConsentsTab({ role, view }: { role: Role; view: "notifications" | "cons
   if (role === "candidate" && !items.find((c) => c.type === "pd_processing")?.granted) return <ConsentEmpty />;
   const telegram = items.find((c) => c.type === "telegram_notifications");
   // Работодателю нужны согласие на ПДн и Telegram: остальные типы относятся к анкете кандидата.
-  const rest = items.filter((c) => c.type !== "telegram_notifications" && (role === "candidate" || c.type === "pd_processing"));
+  const rest = items.filter((c) => c.type !== "telegram_notifications" && c.type !== "code_analysis" && (role === "candidate" || c.type === "pd_processing"));
   return <div>{view === "notifications" ? <NotificationsCard consent={telegram} /> : <ConsentsCard items={rest} />}</div>;
 }
 

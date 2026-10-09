@@ -16,6 +16,8 @@ export function failureText(code: string | null | undefined): string {
   switch (code) {
     case "scanned_pdf":
       return "Похоже, это скан без текста. Загрузите PDF или DOCX с текстом либо заполните профиль вручную.";
+    case "llm_unavailable":
+      return "Разбор резюме сейчас недоступен, заполните данные вручную.";
     case "bad_file":
       return "Не получилось прочитать файл. Проверьте, что это PDF или DOCX.";
     default:

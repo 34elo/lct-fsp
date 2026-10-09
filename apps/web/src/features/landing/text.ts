@@ -95,7 +95,9 @@ export const T = {
   terms: "Условия",
   privacy: "Политика ПДн",
   contacts: "Контакты",
-  contactEmail: "career@fsp.example",
+  contactToast: "По вопросам проекта — капитану команды в Telegram @elo_34",
+  contactOpen: "Открыть",
+  contactUrl: "https://t.me/elo_34",
   demo: "Демо для жюри",
   copyright: "© 2026 Федерация спортивного программирования. Заглушка подвала.",
 

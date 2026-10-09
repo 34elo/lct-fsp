@@ -4,6 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 import { App } from "@/app/App";
 import { Providers, makeQueryClient } from "@/app/Providers";
 import { setAccessToken } from "@/shared/lib/token";
+import { failureText } from "./text";
 
 interface Call {
   url: string;
@@ -195,4 +196,10 @@ test("один шаг на экран: схемная линия отмечае�
   fireEvent.click(screen.getByTestId("onboarding-skip"));
   expect(await screen.findByTestId("onboarding-step-fsp")).toBeInTheDocument();
   expect(screen.queryByTestId("onboarding-step-resume")).not.toBeInTheDocument();
+});
+
+describe("failureText (E41-3)", () => {
+  it("llm_unavailable: понятное сообщение без фикстуры", () => {
+    expect(failureText("llm_unavailable")).toBe("Разбор резюме сейчас недоступен, заполните данные вручную.");
+  });
 });

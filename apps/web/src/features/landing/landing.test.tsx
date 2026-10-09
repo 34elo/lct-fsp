@@ -171,13 +171,14 @@ describe("Переходы лендинга (E39-34)", () => {
   it("«Войти» → /login", () => {
     expect(go("Войти")).toBe("/login|");
   });
-  it("подвал: документы и политика — на свои экраны, контакты — вымышленная почта", () => {
+  it("подвал: документы и политика — на свои экраны, контакты — тост с Telegram капитана", () => {
     expect(go("Условия")).toBe("/terms|");
     cleanup();
     expect(go("Политика ПДн")).toBe("/privacy|");
     cleanup();
     render(<Providers client={makeQueryClient()}><MemoryRouter><Landing /></MemoryRouter></Providers>);
-    expect(screen.getByRole("link", { name: "Контакты" })).toHaveAttribute("href", "mailto:career@fsp.example");
+    expect(screen.getByRole("button", { name: "Контакты" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Контакты" })).not.toBeInTheDocument();
   });
 });
 
