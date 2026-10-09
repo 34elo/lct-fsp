@@ -116,6 +116,14 @@ class Decline(BaseModel):
     comment: str | None = None
 
 
+class OfferSender(BaseModel):
+    """Подпись приглашения (E39-24): сотрудник компании, без email и телефона."""
+
+    full_name: str
+    position: str | None = None
+    avatar_url: str | None = None  # относительно API: `/users/{id}/avatar?v=`
+
+
 class OfferOut(BaseModel):
     id: uuid.UUID
     status: OfferStatus
@@ -140,6 +148,8 @@ class OfferOut(BaseModel):
     interest_at: datetime | None = None
     interest_opened_at: datetime | None = None
     invited_at: datetime | None = None
+    # E39-24: кто из компании отправил (только у интереса и приглашения компании, нет ФИО — null)
+    sender: OfferSender | None = None
 
 
 class TaskBrief(BaseModel):
@@ -187,6 +197,7 @@ class CompanyBrief(BaseModel):
     responsibility_score: float | None = None
     verified: bool
     reliability: why.CompanyReliability | None = None  # E33-2: доля ответов, срок ответа
+    description: str | None = None  # E39-24: «О компании», Markdown
 
 
 class OfferForCandidate(OfferOut):
@@ -299,6 +310,11 @@ async def _base(session: AsyncSession, o: Offer) -> dict[str, Any]:
     v = await vacancies.get(session, o.vacancy_id) if o.vacancy_id else None
     reveal = await session.get(ContactReveal, o.id)
     snap = o.match_snapshot
+    sign = (
+        await identity.staff_signature(session, o.created_by)
+        if o.initiator == OfferInitiator.employer.value
+        else None
+    )
     return {
         "id": o.id, "status": o.status, "created_at": o.created_at, "expires_at": o.expires_at,
         "vacancy": VacancyBrief.model_validate(v, from_attributes=True) if v else None,
@@ -314,6 +330,9 @@ async def _base(session: AsyncSession, o: Offer) -> dict[str, Any]:
         "awaiting_reply_from": o.awaiting_reply_from,
         "interest_at": o.interest_at, "interest_opened_at": o.interest_opened_at,
         "invited_at": o.invited_at,
+        "sender": OfferSender(
+            full_name=sign.full_name, position=sign.position, avatar_url=sign.avatar_url
+        ) if sign else None,
     }  # fmt: skip
 
 
@@ -323,6 +342,7 @@ async def for_candidate(session: AsyncSession, o: Offer) -> OfferForCandidate:
         id=c.id, name=c.name, responsibility_score=c.responsibility_score,
         verified=companies.badge_visible(c),
         reliability=await why.company_reliability(session, c.id, c.responsibility_score),
+        description=c.description,
     )  # fmt: skip
     cand = await candidates.get(session, o.candidate_id) if o.candidate_id else None
     reasons = (

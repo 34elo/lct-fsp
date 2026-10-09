@@ -5,8 +5,10 @@ import type { ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import {
+  Avatar,
   Button,
   CircuitLine,
+  Markdown,
   MatchWhy,
   OfferCardV2,
   SalaryRange,
@@ -30,6 +32,7 @@ import {
 } from "@/api/endpoints/offers/offers";
 import { DeclineReason } from "@/api/model";
 import { ErrorNote } from "@/features/auth/ui";
+import { avatarSrc } from "@/shared/lib/avatar";
 import { FORMAT_LABEL } from "@/features/employer/text";
 import { GRADE_LABEL } from "@/features/profile/text";
 import { Conversation, invalidateOffers, Panel, Timeline } from "./parts";
@@ -205,6 +208,17 @@ export function CandidateOfferDetail() {
           )}
           {o.decline && <p className="text-14 text-muted">{T.yourDecline(DECLINE_LABEL[o.decline.reason] ?? o.decline.reason)}</p>}
 
+          {o.sender && (
+            <section className="flex items-center gap-3 rounded-xl border border-hairline bg-card p-4" aria-label={T.sentBy} data-testid="offer-sender">
+              <Avatar name={o.sender.full_name} src={avatarSrc(o.sender.avatar_url)} size={44} />
+              <div className="flex min-w-0 flex-col">
+                <span className="text-12 text-muted">{T.sentBy}</span>
+                <span className="truncate font-medium">{o.sender.full_name}</span>
+                {o.sender.position && <span className="truncate text-13 text-muted">{`${o.sender.position} · ${o.company.name}`}</span>}
+              </div>
+            </section>
+          )}
+
           {(o.message || o.description) && (
             <section className="flex flex-col gap-2 rounded-xl border border-hairline bg-card p-4">
               {o.message && (
@@ -220,6 +234,12 @@ export function CandidateOfferDetail() {
                 </>
               )}
             </section>
+          )}
+
+          {o.company.description && (
+            <Panel title={T.aboutCompany}>
+              <Markdown data-testid="offer-company-about">{o.company.description}</Markdown>
+            </Panel>
           )}
 
           {hasWhyYou && (
