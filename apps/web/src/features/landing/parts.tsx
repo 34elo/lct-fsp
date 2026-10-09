@@ -41,7 +41,7 @@ export function SecHead({ label, title, children }: { label: string; title: Reac
   );
 }
 
-const cta = "group h-[52px] gap-2 rounded-[10px] px-[26px] text-16 whitespace-nowrap hover:-translate-y-px active:translate-y-0 transition-[transform,box-shadow,background-color,border-color] duration-150 ease-out w-full min-[861px]:w-auto";
+const cta = "group h-[52px] gap-2 rounded-lg px-[26px] text-16 whitespace-nowrap hover:-translate-y-px active:translate-y-0 transition-[transform,box-shadow,background-color,border-color] duration-150 ease-out w-full min-[861px]:w-auto";
 
 /** T1 и T2: две кнопки призыва. `onBrand` — на фоне цвета бренда (финальный блок). */
 export function CtaPair({ onBrand, className }: { onBrand?: boolean; className?: string }) {

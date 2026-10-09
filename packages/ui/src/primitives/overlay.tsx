@@ -107,7 +107,7 @@ export function DialogDescription({ className, ...p }: ComponentProps<typeof RDi
 }
 
 const sheetSide = {
-  bottom: "inset-x-0 bottom-0 max-h-[85vh] rounded-t-xl border-t",
+  bottom: "inset-x-0 bottom-0 max-h-[85vh] rounded-t-xl border-t md:inset-x-auto md:bottom-auto md:left-1/2 md:top-1/2 md:max-h-[85dvh] md:w-full md:max-w-md md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-xl md:border",
   right: "inset-y-0 right-0 w-[min(24rem,100%)] border-l",
 } as const;
 

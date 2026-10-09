@@ -37,11 +37,11 @@ export function Header() {
             type="button"
             onClick={() => setMode(dark ? "light" : "dark")}
             aria-label={dark ? T.themeToLight : T.themeToDark}
-            className="grid size-10 place-items-center rounded-[10px] border border-hairline bg-card text-ink transition-colors duration-150 hover:border-brand"
+            className="grid size-10 place-items-center rounded-lg border border-hairline bg-card text-ink transition-colors duration-150 hover:border-brand"
           >
             <Icon className="size-5" aria-hidden />
           </button>
-          <Link to="/login" className={cn(buttonVariants({ variant: "outline" }), "h-10 rounded-[10px] px-[18px] text-14 dark:hover:bg-tint-100")}>
+          <Link to="/login" className={cn(buttonVariants({ variant: "outline" }), "h-10 rounded-lg px-[18px] text-14 dark:hover:bg-tint-100")}>
             {T.login}
           </Link>
         </div>
