@@ -1,7 +1,5 @@
 """Граница блока 1: assessment.service (blocks.md §4.3), email (§4.6), профессии, OpenAPI."""
 
-import subprocess
-import sys
 import uuid
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -15,6 +13,7 @@ from app.openapi_errors import problem_responses
 from app.taxonomy import service as tax
 from app.taxonomy.loader import load_taxonomy
 from app.taxonomy.models import Role
+from core_helpers import upgrade_head
 from fsp_contracts.assessment import CategoryChanged, SkillType, TestGrade
 from fsp_contracts.registry import EVENTS
 from fsp_platform.app import ProblemError
@@ -29,12 +28,7 @@ NOW = datetime(2026, 6, 1, 12, tzinfo=UTC)
 @pytest.fixture
 def db_url(tmp_path):
     url = f"sqlite+aiosqlite:///{tmp_path / 'a.db'}"
-    subprocess.run(
-        [sys.executable, "-m", "alembic", "-x", f"url={url}", "upgrade", "head"],
-        cwd=CORE,
-        check=True,
-        capture_output=True,
-    )
+    upgrade_head(url)
     return url
 
 

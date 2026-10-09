@@ -16,7 +16,7 @@ fmt:
 test: test-py test-web
 
 test-py:
-	uv run pytest -q
+	uv run pytest -q -n auto
 
 # Интеграция outbox → RabbitMQ → inbox на временных контейнерах (project fsp-test, порты 285xx)
 TEST_COMPOSE = docker compose -f infra/test/docker-compose.yml

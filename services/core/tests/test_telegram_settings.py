@@ -3,8 +3,6 @@
 import json
 import shutil
 import sqlite3
-import subprocess
-import sys
 from pathlib import Path
 
 import fakeredis
@@ -13,6 +11,7 @@ import pytest
 from app.config import Settings
 from app.fsp.client import ConnectorClient
 from app.main import build_app
+from core_helpers import upgrade_head
 from fastapi.testclient import TestClient
 from fsp_platform.ratelimit import RateLimiter
 
@@ -38,12 +37,7 @@ def _connector(request: httpx.Request) -> httpx.Response:
 @pytest.fixture(scope="module")
 def template_db(tmp_path_factory):
     db = tmp_path_factory.mktemp("tpl") / "s.db"
-    subprocess.run(
-        [sys.executable, "-m", "alembic", "-x", f"url=sqlite+aiosqlite:///{db}", "upgrade", "head"],
-        cwd=CORE,
-        check=True,
-        capture_output=True,
-    )
+    upgrade_head(f"sqlite+aiosqlite:///{db}")
     return db
 
 

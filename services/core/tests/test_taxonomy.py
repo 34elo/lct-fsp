@@ -12,6 +12,7 @@ from app.main import build_app
 from app.taxonomy import service
 from app.taxonomy.loader import TaxonomyError, load_taxonomy
 from app.taxonomy.models import Skill, SkillAlias, SkillRelation
+from core_helpers import upgrade_head
 from fastapi.testclient import TestClient
 from fsp_contracts.enums import RoleSlug
 from fsp_platform.db import make_engine, make_session_factory, session_scope
@@ -28,12 +29,7 @@ TOKEN = "ml-secret"
 def db_url(tmp_path):
     db = tmp_path / "t.db"
     url = f"sqlite+aiosqlite:///{db}"
-    subprocess.run(
-        [sys.executable, "-m", "alembic", "-x", f"url={url}", "upgrade", "head"],
-        cwd=CORE,
-        check=True,
-        capture_output=True,
-    )
+    upgrade_head(url)
     return url
 
 

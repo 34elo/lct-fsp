@@ -1,8 +1,6 @@
 """Правиловый парсер текстового запроса и POST /search/parse (ml.md §7, E7-5)."""
 
 import sqlite3
-import subprocess
-import sys
 import uuid
 from pathlib import Path
 
@@ -12,6 +10,7 @@ from app.config import Settings
 from app.main import build_app
 from app.matching.query_parser import parse_query
 from app.taxonomy.loader import load_taxonomy, norm_alias
+from core_helpers import upgrade_head
 from fastapi.testclient import TestClient
 from fsp_platform.ratelimit import RateLimiter
 
@@ -155,10 +154,7 @@ def test_deterministic(forms):
 @pytest.fixture
 def c(tmp_path):
     db = tmp_path / "p.db"
-    subprocess.run(
-        [sys.executable, "-m", "alembic", "-x", f"url=sqlite+aiosqlite:///{db}", "upgrade", "head"],
-        cwd=CORE, check=True, capture_output=True,
-    )  # fmt: skip
+    upgrade_head(f"sqlite+aiosqlite:///{db}")
     with sqlite3.connect(db) as con:
         for slug, name, aliases in (
             ("python", "Python", ["питон"]),
