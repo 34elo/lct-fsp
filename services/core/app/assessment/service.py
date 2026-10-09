@@ -132,6 +132,14 @@ async def category_counts(session: AsyncSession) -> dict[tuple[str, str], int]:
     return {(p, g): n for p, g, n in rows}
 
 
+async def graded_candidates_first_at(session: AsyncSession) -> dict[uuid.UUID, datetime]:
+    """`candidate_id → когда впервые подтверждён грейд` (все, и истёкшие): для лендинга."""
+    rows = await session.execute(
+        select(Grade.candidate_id, func.min(Grade.confirmed_at)).group_by(Grade.candidate_id)
+    )
+    return {cid: at for cid, at in rows}
+
+
 # Старая шкала резюме (enums.Grade) → тестовая: «плюс» и крайние ступени сворачиваются.
 _RESUME_TO_TEST = {
     "intern": TestGrade.junior,

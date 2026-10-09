@@ -18629,6 +18629,28 @@
         }
       }
     },
+    "/public/stats": {
+      "get": {
+        "tags": [
+          "public"
+        ],
+        "summary": "Цифры для лендинга",
+        "description": "Кандидаты, компании, приглашения и медиана дней до первого приглашения. Кеш 5 минут.",
+        "operationId": "get_stats_public_stats_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicStatsOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/me/credentials": {
       "get": {
         "tags": [
@@ -28981,6 +29003,56 @@
           "verified"
         ],
         "title": "PublicCompany"
+      },
+      "PublicStatsOut": {
+        "properties": {
+          "candidates": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidates"
+          },
+          "companies": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Companies"
+          },
+          "invitations": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invitations"
+          },
+          "median_days_to_invite": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median Days To Invite"
+          }
+        },
+        "type": "object",
+        "title": "PublicStatsOut"
       },
       "PublicVacancyOut": {
         "properties": {
