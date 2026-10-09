@@ -41,7 +41,7 @@
 | E19-0 | 6b206dd | 👤 | `packages/ui`, корневой pnpm-workspace, CI-job web на `pnpm -r` (разрешено §3.4), Dockerfile; lint/typecheck/test зелёные | Сборка Docker-образа web и CI на GitHub; `pnpm shot` |
 | E19-1 | 5b362dd | 👤 | Токены, светлая тема по умолчанию, `ThemeScope dark` | Визуально: контраст токенов в обеих темах |
 | E19-2 | 33de220 | 👤 | Базовые компоненты Radix со состояниями, Skeleton/EmptyState/ErrorState/NotFound; тесты `packages/ui` | Playground: состояния компонентов, фокус с клавиатуры |
-| E19-3 | b914ba7 | 👤 | TrustDots, SkillChip, GradeBadge и др.; тесты | Визуально против эталонов `docs/design/pack/` |
+| E19-3 | b914ba7 | 👤 | TrustDots, SkillChip, GradeBadge и др.; тесты | Визуально против эталонов `docs/archive/design-pack/` |
 | E19-4 | 98cb01f | 👤 | MatchWhy, SalaryRange, CandidateCard, OfferCard; `formatRub`; тесты | Визуально против эталонов |
 | E19-16b | df36db9 | 👤 | Макеты v2 блока 2 (только `docs/design`) | Утвердить макеты |
 | E19-5 | 02b2e41 | 👤 | частично заменено E38-0, E38-7 (`BottomNav`, `AppHeader`). AppHeader со счётчиками, BottomNav, AdminSidebar, PageContainer | 375 px и тёмная тема |

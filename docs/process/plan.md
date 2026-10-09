@@ -14,7 +14,7 @@
 
 ## 2–3. Вехи и план по дням v1
 
-Перенесены в [archive/plan-v1.md](archive/plan-v1.md). Актуальный порядок — вехи и уровни в §4.2 и [backlog.md «v2. Вехи и порядок»](backlog.md#v2-вехи-и-порядок).
+Перенесены в [archive/plan-v1.md](../archive/plan-v1.md). Актуальный порядок — вехи и уровни в §4.2 и [backlog.md «v2. Вехи и порядок»](backlog.md#v2-вехи-и-порядок).
 
 ## 4. Очередь для агентов
 
@@ -472,7 +472,7 @@
 
 ### 6.0. Очередь v1
 
-Журнал — в [archive/plan-v1.md](archive/plan-v1.md).
+Журнал — в [archive/plan-v1.md](../archive/plan-v1.md).
 
 ### 6.1. Блок 1 и этап 0
 
