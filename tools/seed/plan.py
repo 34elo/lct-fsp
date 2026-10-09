@@ -385,7 +385,6 @@ def build_plan(
         row["participant_id"] = f"p-{row['n']:04d}"
         fsp.person(row["participant_id"], row["n"], linked=True)
 
-    cand_results: dict[str, list[dict[str, Any]]] = {}
     for i in linked_ix:
         row = cand_rows[i]
         pid = row["participant_id"]
@@ -433,7 +432,6 @@ def build_plan(
                     "team_id": entry_team,
                 }
             )
-        cand_results[row["key"]] = entries
         rk = _best_rank(entries)
         if rk is not None:
             disc, packed = rk
@@ -479,7 +477,7 @@ def build_plan(
     # --- кандидаты: резюме, доказательства, анкета
     candidates: list[dict[str, Any]] = []
     for row in cand_rows:
-        candidates.append(_candidate(cfg, rng, names, anchor, row, cand_results.get(row["key"])))
+        candidates.append(_candidate(cfg, rng, names, anchor, row))
     # герои-кандидаты идут первыми
     hero_candidates = [
         _hero_candidate(cfg, anchor, h) for h in heroes.values() if h["role"] == "candidate"
@@ -538,7 +536,6 @@ def _candidate(
     names: dict[str, tuple[str, str]],
     anchor: date,
     row: dict[str, Any],
-    fsp_entries: list[dict[str, Any]] | None,
 ) -> dict[str, Any]:
     obs = row["obs"]
     key = row["key"]
