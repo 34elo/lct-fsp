@@ -125,9 +125,8 @@ async def test_list_offers_shows_fork_and_status_buttons(redis):
     sent = session.of(SendMessage)
     assert len(sent) == 2 and "200 000 – 250 000 ₽" in sent[0].text
     first = [b.callback_data for row in sent[0].reply_markup.inline_keyboard for b in row]
-    assert first == [f"o:{a}:{OID}" for a in "adqv"]
-    second = [b.callback_data for row in sent[1].reply_markup.inline_keyboard for b in row]
-    assert second == [f"o:q:{OID}"]  # принятый: только вопрос
+    assert first == [f"o:{a}:{OID}" for a in "adv"]
+    assert sent[1].reply_markup is None  # принятый: кнопок нет, чата нет (E39-26)
     assert core.requests == [("GET", "/internal/tg/offers", {})]
 
 
@@ -179,32 +178,3 @@ async def test_core_error_is_shown_not_raised(redis):
     bot, dp, session = await make(redis, core)
     await press(dp, bot, f"o:a:{OID}")
     assert session.of(EditMessageText) == []  # сообщение не менялось
-
-
-async def test_question_fsm(redis):
-    core = Core()
-    bot, dp, session = await make(redis, core)
-    await press(dp, bot, f"o:q:{OID}")
-    assert "Напиши вопрос" in session.of(SendMessage)[-1].text
-    await say(dp, bot, "Есть ли релокация?")
-    assert core.requests[-1] == (
-        "POST",
-        f"/internal/tg/offers/{OID}/messages",
-        {"tg_user_id": 5, "text": "Есть ли релокация?"},
-    )
-    assert "Вопрос отправлен" in session.of(SendMessage)[-1].text
-    n = len(core.requests)
-    await say(dp, bot, "случайный текст")  # состояние сброшено: в core не уходит
-    assert len(core.requests) == n
-
-
-async def test_question_cancel_and_menu_not_sent(redis):
-    core = Core()
-    bot, dp, session = await make(redis, core)
-    await press(dp, bot, f"o:q:{OID}")
-    await say(dp, bot, "/cancel")
-    await say(dp, bot, "текст после отмены")
-    assert core.requests == []
-    await press(dp, bot, f"o:q:{OID}")
-    await say(dp, bot, "👤 Профиль")  # кнопка меню — не вопрос
-    assert all(not r[1].endswith("/messages") for r in core.requests)

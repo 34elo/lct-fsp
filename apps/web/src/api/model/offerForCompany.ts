@@ -10,6 +10,7 @@ import type { ContactsOutput } from './contactsOutput';
 import type { Decline } from './decline';
 import type { MatchSnapshot } from './matchSnapshot';
 import type { OfferInitiator } from './offerInitiator';
+import type { OfferSender } from './offerSender';
 import type { OfferStatus } from './offerStatus';
 import type { SalaryBasis } from './salaryBasis';
 import type { TaskResult } from './taskResult';
@@ -38,6 +39,7 @@ export interface OfferForCompany {
   interest_at?: string | null;
   interest_opened_at?: string | null;
   invited_at?: string | null;
+  sender?: OfferSender | null;
   candidate?: CandidateCard | null;
   contacts?: ContactsOutput | null;
   task?: TaskResult | null;

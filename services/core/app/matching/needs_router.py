@@ -24,6 +24,7 @@ from app.identity.deps import require_roles
 from app.identity.models import User
 from app.matching import needs, needs_service, query_parser, search
 from app.matching import query_llm as qllm
+from app.matching.models import Need
 from app.matching.needs_service import NeedCategory
 from app.matching.router import _get_candidate_id_by_pseudo_id, _query_llm
 from app.matching.scoring import MatchConfig
@@ -65,6 +66,15 @@ class NeedCategories(BaseModel):
     need_id: uuid.UUID
     shortlist: list[str] = []  # pseudo_id кандидатов в шорт-листе (E23-5)
     categories: list[NeedCategory]
+
+
+class ShortlistItem(BaseModel):
+    pseudo_id: str
+    need_id: uuid.UUID  # потребность, в чьём шорт-листе кандидат (для удаления)
+
+
+class ShortlistOut(BaseModel):
+    items: list[ShortlistItem]
 
 
 class CategoryPage(BaseModel):
@@ -214,6 +224,35 @@ async def category_candidates(
         )  # fmt: skip
         await session.commit()
     return {**{k: page[k] for k in ("items", "next_cursor", "total")}, "session_id": sid}
+
+
+@router.get(
+    "/shortlist",
+    response_model=ShortlistOut,
+    responses=problem_responses(401, 403, 404),
+)
+async def shortlist_all(
+    user: User = Depends(_employer),
+    session: AsyncSession = Depends(get_session),
+) -> Any:
+    """Общий шорт-лист компании (E39-23): отмеченные во всех её потребностях, без повторов.
+
+    Сначала отмеченные в свежих потребностях; запоминать последний запрос в браузере не нужно.
+    """
+    from sqlalchemy import select
+
+    company, _ = await companies.require_company(session, user.id)
+    rows = await session.scalars(
+        select(Need).where(Need.company_id == company.id).order_by(Need.created_at.desc(), Need.id)
+    )
+    seen: set[str] = set()
+    items: list[ShortlistItem] = []
+    for need in rows:
+        for pid in need.shortlist or []:
+            if pid not in seen:
+                seen.add(pid)
+                items.append(ShortlistItem(pseudo_id=pid, need_id=need.id))
+    return ShortlistOut(items=items)
 
 
 async def _track_shortlist(

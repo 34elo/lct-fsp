@@ -524,7 +524,7 @@ def test_contacts_permissions(world):
 
 def test_messages_flow_and_privacy(world):
     c, e, vid, ch, pid, uid = world
-    oid = _offer(c, e, vid, pid).json()["id"]
+    oid = _offer(c, e, vid, pid, message=None).json()["id"]
     r = c.post(f"/offers/{oid}/messages", json={"text": "  Вопрос по стеку  "}, headers=ch)
     assert r.status_code == 201 and r.json()["author_side"] == "candidate"
     assert r.json()["text"] == "Вопрос по стеку"
@@ -535,6 +535,10 @@ def test_messages_flow_and_privacy(world):
         assert "author_user_id" not in msgs[0]
     ev = _db(c, "select payload from outbox where type='offer.message'")
     assert len(ev) == 2
+    # E39-26: вместо чата по одному сообщению от стороны
+    for h in (e, ch):
+        again = c.post(f"/offers/{oid}/messages", json={"text": "ещё"}, headers=h)
+        assert again.status_code == 409 and again.json()["code"] == "message_limit"
     assert c.post(f"/offers/{oid}/messages", json={"text": "  "}, headers=e).status_code == 422
     other = _employer(c, "o@x.ru", name="Other", inn="7736050003")
     assert c.get(f"/offers/{oid}/messages", headers=other).status_code == 404
@@ -546,7 +550,7 @@ def test_messages_flow_and_privacy(world):
 
 def test_messages_awaiting_and_closed(world):
     c, e, vid, ch, pid, uid = world
-    oid = _offer(c, e, vid, pid).json()["id"]
+    oid = _offer(c, e, vid, pid, message=None).json()["id"]
     c.post(f"/offers/{oid}/accept", headers=ch)
     c.post(f"/offers/{oid}/messages", json={"text": "Привет"}, headers=ch)
     assert c.get(f"/offers/{oid}", headers=e).json()["awaiting_reply_from"] == "company"
@@ -570,13 +574,35 @@ def test_messages_closed_for_declined_and_expired(world):
     assert r.status_code == 409 and r.json()["code"] == "offer_closed"
 
 
-def test_messages_rate_limit(world):
+def test_accept_with_reply_shows_contacts_to_both_sides(world):
     c, e, vid, ch, pid, uid = world
     oid = _offer(c, e, vid, pid).json()["id"]
-    for _ in range(service.MESSAGES_PER_HOUR):
-        assert c.post(f"/offers/{oid}/messages", json={"text": "a"}, headers=ch).status_code == 201
-    r = c.post(f"/offers/{oid}/messages", json={"text": "a"}, headers=ch)
-    assert r.status_code == 429 and "Retry-After" in r.headers
+    before = c.get(f"/offers/{oid}", headers=ch).json()
+    assert before["company_contacts"] is None
+    r = c.post(f"/offers/{oid}/accept", json={"message": "  Готов обсудить  "}, headers=ch)
+    assert r.status_code == 200 and r.json()["status"] == "accepted"
+    assert r.json()["company_contacts"]["name"]
+    msgs = c.get(f"/offers/{oid}/messages", headers=e).json()
+    assert [(m["author_side"], m["text"]) for m in msgs] == [("candidate", "Готов обсудить")]
+    got = c.get(f"/offers/{oid}", headers=e).json()
+    assert got["contacts"]["email"]
+    # сопроводительное компании — это `message` приглашения: второго сообщения у неё нет
+    own = c.post(f"/offers/{oid}/messages", json={"text": "ещё"}, headers=e)
+    assert own.status_code == 409 and own.json()["code"] == "message_limit"
+    # ответ один: повторное сообщение кандидата отклоняется
+    again = c.post(f"/offers/{oid}/messages", json={"text": "ещё"}, headers=ch)
+    assert again.status_code == 409 and again.json()["code"] == "message_limit"
+    # отзыв доступа прячет контакты у обеих сторон
+    c.post(f"/offers/{oid}/contacts/revoke", headers=ch)
+    assert c.get(f"/offers/{oid}", headers=ch).json()["company_contacts"] is None
+    assert c.get(f"/offers/{oid}", headers=e).json()["contacts"] is None
+
+
+def test_accept_without_body_still_works(world):
+    c, e, vid, ch, pid, uid = world
+    oid = _offer(c, e, vid, pid).json()["id"]
+    assert c.post(f"/offers/{oid}/accept", headers=ch).status_code == 200
+    assert c.get(f"/offers/{oid}/messages", headers=ch).json() == []
 
 
 def test_complaint(world):

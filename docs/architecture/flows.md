@@ -240,7 +240,7 @@ sequenceDiagram
   CW->>MQ: ui.user.{hr} оффер принят
 ```
 
-Отклонение: бот показывает причины кнопками → `POST /internal/tg/offers/{id}/decline {reason}`. Вопрос: FSM ждёт текст → `POST /internal/tg/offers/{id}/messages`. «Подробнее» — одноразовая ссылка на сайт.
+Отклонение: бот показывает причины кнопками → `POST /internal/tg/offers/{id}/decline {reason}`. Вопросов работодателю из бота нет (E39-26: вместо переписки одно сообщение при приглашении и один ответ на сайте). «Подробнее» — одноразовая ссылка на сайт.
 
 ```mermaid
 stateDiagram-v2

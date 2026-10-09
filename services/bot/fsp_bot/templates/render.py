@@ -267,21 +267,15 @@ _DECLINE_LABELS = (
 
 
 def offer_keyboard(offer_id: str, status: str) -> InlineKeyboardMarkup | None:
-    """Ответить можно, пока оффер `sent|viewed`; после принятия — только вопрос."""
-    ask = InlineKeyboardButton(text="❓ Задать вопрос", callback_data=f"o:q:{offer_id}")
+    """Ответить можно, пока оффер `sent|viewed`; после принятия кнопок нет (E39-26: чата нет)."""
     if status in ("sent", "viewed"):
         rows = [
             [
                 InlineKeyboardButton(text="✅ Принять", callback_data=f"o:a:{offer_id}"),
                 InlineKeyboardButton(text="❌ Отклонить", callback_data=f"o:d:{offer_id}"),
             ],
-            [
-                ask,
-                InlineKeyboardButton(text="📄 Подробнее", callback_data=f"o:v:{offer_id}"),
-            ],
+            [InlineKeyboardButton(text="📄 Подробнее", callback_data=f"o:v:{offer_id}")],
         ]
-    elif status in ("accepted", "interview"):
-        rows = [[ask]]
     else:
         return None
     return InlineKeyboardMarkup(inline_keyboard=rows)

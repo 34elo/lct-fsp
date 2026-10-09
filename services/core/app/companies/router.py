@@ -4,20 +4,24 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request, Response
 from fsp_contracts.enums import CompanyMemberRole, CompanyStatus
+from fsp_platform.app import ProblemError
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.companies import service
 from app.companies.models import Company
 from app.deps import get_session
+from app.identity import profile
 from app.identity.deps import require_roles
+from app.identity.mailer import SmtpMailer
 from app.identity.models import User
 from app.openapi_errors import problem_responses
 
 router = APIRouter(tags=["companies"])
 admin_router = APIRouter(prefix="/admin/companies", tags=["admin"])
+invites_router = APIRouter(prefix="/company-invites", tags=["companies"])
 
 _employer = require_roles("employer")
 _admin = require_roles("fsp_admin")
@@ -154,6 +158,178 @@ async def invite_member(
     company, _ = await service.require_company(session, user.id, admin=True)
     member = await service.add_member(session, company, body.email, body.role)
     return MemberOut(user_id=member.user_id, role=CompanyMemberRole(member.role))
+
+
+# --- E39-24: команда компании — владелец (`admin`) и HR (`member`) ---
+
+
+class CompanyMemberOut(BaseModel):
+    user_id: UUID
+    role: CompanyMemberRole
+    email: str | None = None
+    full_name: str | None = None
+    position: str | None = None
+    avatar_url: str | None = None
+    is_me: bool = False
+
+
+class InviteOut(BaseModel):
+    id: UUID
+    email: str
+    created_at: datetime
+    expires_at: datetime
+
+
+class InviteCreated(InviteOut):
+    url: str  # ссылка-приглашение: токен показывается один раз
+
+
+class CompanyTeamOut(BaseModel):
+    members: list[CompanyMemberOut]
+    invites: list[InviteOut]  # действующие приглашения — только владельцу, HR видит []
+    can_manage: bool
+
+
+class InviteIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    email: str = Field(min_length=3, max_length=254, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+class InvitePreview(BaseModel):
+    company_name: str
+    company_verified: bool
+    inviter_name: str | None = None
+    email_masked: str
+    expires_at: datetime
+
+
+def _mask(email: str) -> str:
+    local, _, domain = email.partition("@")
+    return f"{local[:1]}***@{domain}"
+
+
+def _invite_out(i) -> InviteOut:
+    return InviteOut(id=i.id, email=i.email, created_at=i.created_at, expires_at=i.expires_at)
+
+
+@router.get(
+    "/companies/me/members",
+    response_model=CompanyTeamOut,
+    responses=problem_responses(401, 403, 404),
+)
+async def my_team(user: User = Depends(_employer), session: AsyncSession = Depends(get_session)):
+    """Команда компании: видят все участники, приглашения и управление — только владелец."""
+    company, member = await service.require_company(session, user.id)
+    owner = member.role == CompanyMemberRole.admin.value
+    members = await service.list_members(session, company.id)
+    return CompanyTeamOut(
+        members=[
+            CompanyMemberOut(
+                user_id=m.user_id, role=CompanyMemberRole(m.role), email=m.email,
+                full_name=m.full_name, position=m.position, avatar_url=m.avatar_url,
+                is_me=m.user_id == user.id,
+            )
+            for m in members
+        ],
+        invites=[_invite_out(i) for i in await service.list_invites(session, company.id)]
+        if owner
+        else [],
+        can_manage=owner,
+    )  # fmt: skip
+
+
+@router.post(
+    "/companies/me/invites",
+    response_model=InviteCreated,
+    status_code=201,
+    responses=problem_responses(401, 403, 404, 409, 422, 429),
+)
+async def create_invite(
+    body: InviteIn,
+    request: Request,
+    user: User = Depends(_employer),
+    session: AsyncSession = Depends(get_session),
+):
+    """Владелец приглашает HR по email: письмо со ссылкой (SMTP) и та же ссылка в ответе."""
+    company, _ = await service.require_company(session, user.id, admin=True)
+    await request.app.state.limiter.check(f"company_invite:{company.id}", 30, 3600)
+    invite, token = await service.create_invite(session, company, user, body.email)
+    settings = request.app.state.settings
+    url = f"{settings.web_base_url.rstrip('/')}/invite/company/{token}"
+    mailer = getattr(request.app.state, "mailer", None) or SmtpMailer(settings)
+    sender = await profile.signature(session, user.id)
+    who = sender.full_name if sender else "Владелец компании"
+    await mailer.send(
+        invite.email,
+        f"Приглашение в команду «{company.name}» на ФСП Карьере",
+        f"{who} приглашает вас в команду компании «{company.name}» на ФСП Карьере.\n\n"
+        f"Принять приглашение: {url}\n\nСсылка действует 7 дней. "
+        "Войдите или зарегистрируйтесь как работодатель с этим email.",
+    )
+    return InviteCreated(**_invite_out(invite).model_dump(), url=url)
+
+
+@router.delete(
+    "/companies/me/invites/{invite_id}",
+    status_code=204,
+    response_class=Response,
+    responses=problem_responses(401, 403, 404),
+)
+async def revoke_invite(
+    invite_id: UUID,
+    user: User = Depends(_employer),
+    session: AsyncSession = Depends(get_session),
+):
+    company, _ = await service.require_company(session, user.id, admin=True)
+    await service.revoke_invite(session, company.id, invite_id)
+    return Response(status_code=204)
+
+
+@router.delete(
+    "/companies/me/members/{user_id}",
+    status_code=204,
+    response_class=Response,
+    responses=problem_responses(401, 403, 404, 409),
+)
+async def remove_member(
+    user_id: UUID,
+    user: User = Depends(_employer),
+    session: AsyncSession = Depends(get_session),
+):
+    company, _ = await service.require_company(session, user.id, admin=True)
+    await service.remove_member(session, company.id, user_id)
+    return Response(status_code=204)
+
+
+@invites_router.get("/{token}", response_model=InvitePreview, responses=problem_responses(404))
+async def invite_preview(token: str, session: AsyncSession = Depends(get_session)):
+    """Без авторизации: кто зовёт и куда; адрес приглашения — замаскирован."""
+    invite = await service.invite_by_token(session, token)
+    company = await service.get_company(session, invite.company_id)
+    if company is None:
+        raise ProblemError(404, "invite_not_found", "Приглашение не найдено или истекло")
+    sender = await profile.signature(session, invite.invited_by)
+    return InvitePreview(
+        company_name=company.name,
+        company_verified=service.badge_visible(company),
+        inviter_name=sender.full_name if sender else None,
+        email_masked=_mask(invite.email),
+        expires_at=invite.expires_at,
+    )
+
+
+@invites_router.post(
+    "/{token}/accept", response_model=CompanyOut, responses=problem_responses(401, 403, 404, 409)
+)
+async def invite_accept(
+    token: str,
+    user: User = Depends(_employer),
+    session: AsyncSession = Depends(get_session),
+):
+    company = await service.accept_invite(session, user, token)
+    member = await service.membership(session, user.id)
+    return company_out(company, member.role if member else None)
 
 
 @admin_router.get("", response_model=list[CompanyOut], responses=problem_responses(401, 403))
