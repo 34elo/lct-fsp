@@ -19849,6 +19849,44 @@
               }
             ],
             "title": "Spec"
+          },
+          "skill": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Skill"
+          },
+          "grade": {
+            "type": "string",
+            "enum": [
+              "junior",
+              "middle",
+              "senior"
+            ],
+            "title": "Grade",
+            "default": "middle"
+          },
+          "professions": {
+            "items": {
+              "$ref": "#/components/schemas/FamilyProfessionOut"
+            },
+            "type": "array",
+            "title": "Professions"
+          },
+          "example": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FamilyExampleOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -23997,6 +24035,44 @@
         ],
         "title": "ExplanationItem"
       },
+      "FamilyExampleOut": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "stem": {
+            "type": "string",
+            "title": "Stem"
+          },
+          "options": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Options"
+          },
+          "answer": {
+            "type": "string",
+            "title": "Answer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "stem",
+          "answer"
+        ],
+        "title": "FamilyExampleOut",
+        "description": "Сгенерированный вариант задания и ответ решателя (ключ) — для карточки допуска."
+      },
       "FamilyOut": {
         "properties": {
           "id": {
@@ -24116,6 +24192,24 @@
           "author_form"
         ],
         "title": "FamilyOut"
+      },
+      "FamilyProfessionOut": {
+        "properties": {
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slug",
+          "title"
+        ],
+        "title": "FamilyProfessionOut"
       },
       "FamilySpec": {
         "properties": {
