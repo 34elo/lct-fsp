@@ -5,6 +5,7 @@ import { BlocklistTab, DistinctTab, HintsTab, ProvisionalTab } from "./SkillsLis
 import { MergesTab, QueueTab } from "./SkillsQueue";
 import { cn } from "@fsp/ui";
 import { SK } from "./text";
+import { AdminPageHeader } from "@/features/admin/PageHeader";
 
 const TABS = ["queue", "merges", "distinct", "blocklist", "provisional", "hints"] as const;
 type Tab = (typeof TABS)[number];
@@ -14,10 +15,7 @@ export default function AdminSkills() {
   const [tab, setTab] = useState<Tab>("queue");
   return (
     <div data-testid="admin-skills-page" className={PAGE.wide}>
-      <header className="flex flex-col gap-1">
-        <h1 className="text-24 font-bold">{SK.title}</h1>
-        <p className="text-14 text-muted">{SK.lead}</p>
-      </header>
+      <AdminPageHeader title={SK.title} tip={SK.lead} />
       <div role="tablist" aria-label={SK.title} className="flex flex-wrap gap-1">
         {TABS.map((t) => (
           <button

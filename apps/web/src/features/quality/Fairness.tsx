@@ -5,6 +5,7 @@ import { QualityNav } from "./Nav";
 import { StatusDot } from "./Quality";
 import { report } from "./report";
 import { T } from "./text";
+import { AdminPageHeader } from "@/features/admin/PageHeader";
 
 const RELATED = ["integrity_fpr", "fsp_effort", "unconfirmed_below", "grade_acc_all"];
 
@@ -14,10 +15,7 @@ export default function Fairness() {
   const related = RELATED.flatMap((id) => report.rows.filter((r) => r.id === id));
   return (
     <div className={PAGE.wide}>
-      <header>
-        <h1 className="text-24 font-semibold">{T.fair.title}</h1>
-        <p className="max-w-2xl text-14 text-muted">{T.fair.lead}</p>
-      </header>
+      <AdminPageHeader title={T.fair.title} tip={T.fair.lead} />
       <QualityNav />
       <Card>
         <CardHeader>

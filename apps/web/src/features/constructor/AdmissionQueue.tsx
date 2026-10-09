@@ -17,6 +17,7 @@ import type { AdminFamilyOut, KeyApproveInSource } from "@/api/model";
 import { ApiError } from "@/api/mutator";
 import { admissionClosedNames } from "./model";
 import { T } from "./text";
+import { AdminPageHeader } from "@/features/admin/PageHeader";
 
 type Status = "draft" | "pilot" | "active" | "quarantine" | "retired";
 const STATUSES: Status[] = ["draft", "pilot", "active", "quarantine", "retired"];
@@ -208,10 +209,7 @@ export default function AdmissionQueue() {
 
   return (
     <div data-testid={sel("page")} className={PAGE.wide}>
-      <header className="flex flex-col gap-1">
-        <h1 className="text-24 font-bold">{T.queue.title}</h1>
-        <p className="text-14 text-muted">{T.queue.lead}</p>
-      </header>
+      <AdminPageHeader title={T.queue.title} tip={T.queue.lead} />
       <div role="tablist" aria-label={T.queue.title} className="flex flex-wrap gap-1">
         {STATUSES.map((s) => (
           <button

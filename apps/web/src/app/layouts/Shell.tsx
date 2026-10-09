@@ -7,7 +7,7 @@ import { useListOffersOffersGet, useMyInterestsCandidatesMeInterestsGet, useMyOf
 import { type NavItem } from "@/app/routes";
 import { JuryPanel } from "@/features/landing/JuryPanel";
 import { useAuth } from "@/shared/lib/auth";
-import { AdminSidebar } from "./AdminSidebar";
+import { AdminMobileNav, AdminSidebar } from "./AdminSidebar";
 import { AppHeader } from "./AppHeader";
 import { BottomNav } from "./BottomNav";
 import { PageContainer } from "./PageContainer";
@@ -39,7 +39,8 @@ export function offerCount(res?: { status: number; data: unknown }): number | un
 
 /**
  * Каркас по ролям (E19-5). Кабинеты кандидата и работодателя: шапка с меню на десктопе,
- * на ≤768 px ещё и нижняя панель (у работодателя — с E38-8); админка — боковая панель. `banner` — над страницей
+ * на ≤768 px ещё и нижняя панель (у работодателя — с E38-8); админка — боковая панель по группам,
+ * на телефоне — строка разделов под шапкой (E39-29). `banner` — над страницей
  * (у кандидата — баннер пути «опрос → тест», E35-2a).
  */
 export function Shell({ nav, variant, banner }: { nav: NavItem[]; variant: "top" | "side"; banner?: ReactNode }) {
@@ -52,6 +53,7 @@ export function Shell({ nav, variant, banner }: { nav: NavItem[]; variant: "top"
       {variant === "side" && <AdminSidebar nav={nav} />}
       <div className="flex min-h-dvh min-w-0 flex-col">
         <AppHeader nav={nav} counts={counts} withTabs={variant === "top"} />
+        {variant === "side" && <AdminMobileNav nav={nav} />}
         {/* Поля задают сами страницы (p-4 md:p-6), поэтому контейнер без своих полей. */}
         <PageContainer className={cn("flex-1 px-0 md:px-0 lg:px-0", bottom && "pb-20 md:pb-0")} as="main">
           {banner}

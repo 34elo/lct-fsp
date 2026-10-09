@@ -98,7 +98,8 @@ export const ROUTES: RouteDef[] = [
   { path: "/employer/subscriptions", title: "Подписки на категории", section: "employer", owner: "b2" },
   // <<< block2 (employer)
 
-  { path: "/federation", title: "Дашборд ФСП", screen: "F1", section: "admin", owner: "b2", nav: true },
+  // Главная админки (E39-29): «Что требует вас» и что работает само; воронка — /federation/funnel.
+  { path: "/federation", title: "Главная", section: "admin", owner: "b2", nav: true },
   { path: "/federation/moderation", title: "Модерация", screen: "F3", section: "admin", owner: "b2", nav: true },
   { path: "/admin/skills", title: "Граф навыков", screen: "G3", section: "admin", owner: "b1", nav: true },
   { path: "/admin/quality", title: "Качество", screen: "Q1", section: "admin", owner: "b2", nav: true },
@@ -112,8 +113,10 @@ export const ROUTES: RouteDef[] = [
   { path: "/admin/demo/new-profession", title: "Новая профессия", section: "admin", owner: "b1" },
   // <<< block1 (admin)
   // >>> block2 (admin)
-  // Реестр ФСП (E39-28): вход с Дашборда, в меню подсвечен «Дашборд» (/federation — префикс).
-  { path: "/federation/registry", title: "Реестр ФСП", section: "admin", owner: "b2" },
+  // Меню админки по группам (E39-29): реестр — справочник, заявки — очередь, воронка — аналитика.
+  { path: "/federation/registry", title: "Реестр ФСП", section: "admin", owner: "b2", nav: true },
+  { path: "/federation/requests", title: "Заявки ФСП", section: "admin", owner: "b2", nav: true },
+  { path: "/federation/funnel", title: "Воронка", screen: "F1", section: "admin", owner: "b2", nav: true },
   // <<< block2 (admin)
 ];
 
@@ -123,9 +126,20 @@ export const SECTION_ROLE: Partial<Record<Section, Role>> = {
   admin: "fsp_admin",
 };
 
+export type AdminGroup = "queues" | "refs" | "analytics";
+
+/** Группы меню админки (E39-29): порядок и подписи. */
+export const ADMIN_GROUPS: { id: AdminGroup; label: string }[] = [
+  { id: "queues", label: "Очереди" },
+  { id: "refs", label: "Справочники" },
+  { id: "analytics", label: "Аналитика" },
+];
+
 export interface NavItem {
   to: string;
   label: string;
+  /** Группа пункта в меню админки; без группы — «Главная» над группами. */
+  group?: AdminGroup;
   /** Ещё префиксы путей, на которых пункт меню подсвечен. */
   match?: string[];
 }
@@ -157,13 +171,17 @@ export const NAV: Record<"candidate" | "employer" | "admin", NavItem[]> = {
     { to: "/employer/tasks", label: "Задания", match: ["/employer/families"] },
     { to: "/employer/company", label: "Компания" },
   ],
+  // Админка (E39-29): «Главная» и три группы — где нужно решение, что админ ведёт, что смотрит.
   admin: [
-    { to: "/federation", label: "Дашборд" },
-    { to: "/admin/families", label: "Допуск заданий" },
-    { to: "/admin/professions", label: "Профессии" },
-    { to: "/admin/skills", label: "Граф навыков" },
-    { to: "/federation/moderation", label: "Модерация" },
-    { to: "/admin/quality", label: "Качество" },
+    { to: "/federation", label: "Главная" },
+    { to: "/federation/requests", label: "Заявки ФСП", group: "queues" },
+    { to: "/admin/families", label: "Допуск заданий", group: "queues" },
+    { to: "/federation/moderation", label: "Модерация", group: "queues" },
+    { to: "/federation/registry", label: "Реестр ФСП", group: "refs" },
+    { to: "/admin/professions", label: "Профессии", group: "refs" },
+    { to: "/admin/skills", label: "Граф навыков", group: "refs" },
+    { to: "/federation/funnel", label: "Воронка", group: "analytics" },
+    { to: "/admin/quality", label: "Качество", group: "analytics" },
   ],
 };
 

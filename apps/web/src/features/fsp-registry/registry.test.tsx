@@ -3,6 +3,7 @@ import { MemoryRouter } from "react-router-dom";
 
 import { Providers, makeQueryClient } from "@/app/Providers";
 import FspRegistry from "@/features/fsp-registry/FspRegistry";
+import FspRequests from "@/features/fsp-registry/Requests";
 import { setAccessToken } from "@/shared/lib/token";
 
 const res = (status: number, body?: unknown) => new Response(body === undefined ? null : JSON.stringify(body), { status });
@@ -47,11 +48,11 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllGlobals());
 
-function mount() {
+function mount(page: "registry" | "requests" = "registry") {
   render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={[page === "registry" ? "/federation/registry" : "/federation/requests"]}>
       <Providers client={makeQueryClient()}>
-        <FspRegistry />
+        {page === "registry" ? <FspRegistry /> : <FspRequests />}
       </Providers>
     </MemoryRouter>,
   );
@@ -74,19 +75,22 @@ test("мероприятие: правка из списка уходит PATCH"
   await waitFor(() => expect(calls.find((c) => c.method === "PATCH")?.body).toEqual({ title: "Кубок 2026", discipline: "product", level: "national", date: "2026-05-01" }));
 });
 
-test("заявка: подсказка участника и «Принять»", async () => {
+test("реестр без вкладки заявок, у страниц есть подзаголовок «зачем» (E39-29)", async () => {
   mount();
-  await screen.findByRole("tab", { name: /Заявки/ });
-  openTab(/Заявки/);
+  await screen.findByRole("tab", { name: /Участники/ });
+  expect(screen.queryByRole("tab", { name: /Заявки/ })).toBeNull();
+  expect(screen.getByTestId("page-why")).toHaveTextContent("Мероприятия ФСП");
+});
+
+test("заявка: подсказка участника и «Принять»", async () => {
+  mount("requests");
   expect(await screen.findByTestId("fsp-request")).toHaveTextContent("Чужой Человек");
   fireEvent.click(screen.getByRole("button", { name: "Принять" }));
   await waitFor(() => expect(calls.find((c) => c.url.endsWith("/accept"))?.body).toEqual({ participant_id: "r-1" }));
 });
 
 test("заявка: отказ с причиной", async () => {
-  mount();
-  await screen.findByRole("tab", { name: /Заявки/ });
-  openTab(/Заявки/);
+  mount("requests");
   await screen.findByTestId("fsp-request");
   const reject = screen.getByRole("button", { name: "Отклонить" });
   expect(reject).toBeDisabled();
