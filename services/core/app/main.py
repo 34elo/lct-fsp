@@ -59,6 +59,7 @@ from app.taxonomy.skills_router import router as admin_skills_router
 from app.telegram.router import internal as telegram_internal_router
 from app.telegram.router import router as telegram_router
 from app.vacancies.router import router as vacancies_router
+from app.views.public_stats import router as public_stats_router
 from app.views.router import router as views_router
 
 
@@ -134,6 +135,7 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(needs_router)
     app.include_router(subscriptions_router)
     app.include_router(views_router)
+    app.include_router(public_stats_router)
     app.include_router(credentials_router)
     app.include_router(profile_router)
     app.include_router(company_invites_router)

@@ -274,7 +274,7 @@
 
 | Метод и путь | Назначение |
 |---|---|
-| `GET /public/stats` | Счётчики для лендинга: кандидатов, с ФСП, компаний, офферов |
+| `GET /public/stats` | E39-35: цифры лендинга без авторизации и ПДн, кеш Redis 5 минут (`Cache-Control: public, max-age=300`). `PublicStatsOut {candidates, companies, invitations, median_days_to_invite}`: кандидаты с грейдом из теста, компании `verified`, приглашения компаний, медиана дней от первого грейда до первого приглашения; нет данных — `null`, лендинг прячет такой счётчик (и весь блок, если ответа нет) |
 | `GET /public/badge/{slug}.svg` | Бейдж «Подтверждено ФСП · Middle Backend · ●●●●». Кеш 1 ч |
 | `GET /public/credentials/{id}` | **Open Badge 3.0** (W3C VC 2.0, `application/ld+json`, `OpenBadgeCredential`): достижение «Подтверждено ФСП» с категорией и доверием ●●●●. Подпись Data Integrity `eddsa-jcs-2022` (Ed25519, JCS; ADR-051). `404 credential_not_found`, если не выпущен, отозван или профиль не публичный (нет `public_profile` или согласия `profile_publication`). Кеш 60 с |
 | `GET /public/credentials/{id}/verify` | Проверка подписи, отзыва и срока: `{id, valid, signature_valid, known, revoked, expired, issuer, checked_at}`. Отозванный бейдж: `200 {valid:false, revoked:true}`; неизвестный или скрытый владельцем: `404` |
