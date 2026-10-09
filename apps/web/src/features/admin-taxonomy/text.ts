@@ -12,10 +12,10 @@ export const T = {
   open: "Открыть",
   skillType: {
     fundamental: "фундамент",
-    hard: "жёсткий",
+    hard: "хард",
     thinking: "мышление",
     business: "бизнес",
-    soft: "мягкий",
+    soft: "софт",
     experience: "опыт",
   } as Record<string, string>,
   prof: {
