@@ -132,7 +132,7 @@ export const T = {
 
 export const STRENGTH_ITEMS = [
   { key: "resume", label: "Резюме", hint: "навыки с цитатами из текста", to: "/onboarding" },
-  { key: "fsp", label: "ФСП", hint: "результаты и разряды соревнований", to: "/me/settings" },
+  { key: "fsp", label: "ФСП", hint: "результаты и разряды соревнований", to: "/settings?tab=privacy" },
   { key: "test", label: "Тест", hint: "подтверждает грейд", to: "/me/assessment" },
 ] as const;
 
@@ -342,7 +342,7 @@ export const privacyText = {
   ],
 } as const;
 
-/** Настройки кандидата `/me/settings` (E38-7, макеты v2_me-settings__*). */
+/** Настройки кандидата `/settings` (E38-7, E39-8, макеты v2_me-settings__*). */
 export const SETTINGS = {
   title: "Настройки",
   loading: "Загрузка настроек…",
@@ -363,4 +363,46 @@ export const SETTINGS = {
   themeLabel: "Тема",
   themeLight: "Светлая",
   themeDark: "Тёмная",
+  tabsLabel: "Разделы настроек",
+  tabs: {
+    profile: "Профиль",
+    privacy: "Приватность",
+    notifications: "Уведомления",
+    consents: "Согласия",
+    appearance: "Оформление",
+    security: "Безопасность",
+  },
+  profile: {
+    title: "Профиль",
+    account: "Аккаунт",
+    roles: { candidate: "Кандидат", employer: "Работодатель", fsp_admin: "Администратор ФСП" } as Record<string, string>,
+    fullName: "ФИО",
+    fullNameHint: "Компании видят имя только если вы открыли его в «Приватности».",
+    company: "Название компании",
+    companyDescription: "Описание компании",
+    companyMore: "Остальные данные компании",
+    companyNone: "Компания ещё не создана — заполните данные на странице «Компания».",
+    companyReadonly: "Название и описание меняет администратор компании.",
+    save: "Сохранить",
+    saved: "Сохранено",
+    saveError: "Не удалось сохранить",
+    nameTooLong: "Не длиннее 120 символов",
+    nameTooShort: "Не короче 2 символов",
+  },
+  security: {
+    title: "Пароль",
+    hint: "После смены пароля остальные устройства выйдут из аккаунта.",
+    current: "Текущий пароль",
+    next: "Новый пароль",
+    repeat: "Повторите новый пароль",
+    min: "Не короче 8 символов",
+    mismatch: "Пароли не совпадают",
+    same: "Новый пароль совпадает с текущим",
+    submit: "Сменить пароль",
+    done: "Пароль изменён",
+    wrong: "Текущий пароль указан неверно",
+    limit: "Слишком много попыток, попробуйте через час",
+    error: "Не удалось сменить пароль",
+    noPassword: "Вы вошли через Telegram, пароля у аккаунта нет.",
+  },
 } as const;

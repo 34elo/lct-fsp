@@ -48,7 +48,9 @@ export const ROUTES: RouteDef[] = [
   { path: "/me/offers/:id", title: "Приглашение", screen: "M2", section: "candidate", owner: "b2" },
   { path: "/me/growth", title: "Рост и тест", section: "candidate", owner: "b1", redirect: "/me/navigator" },
   // Настройки (E38-7): пункт меню аватара, не вкладка.
-  { path: "/me/settings", title: "Настройки", screen: "v2_me-settings", section: "candidate", owner: "b1" },
+  { path: "/me/settings", title: "Настройки", section: "candidate", owner: "b2", redirect: "/settings" },
+  // Общий для всех ролей (E39-8): раздел только для карты, каркас выбирается по роли (AccountLayout).
+  { path: "/settings", title: "Настройки", screen: "v2_me-settings", section: "candidate", owner: "b2" },
   // >>> block1 (candidate)
   { path: "/me/assessment", title: "Тест и грейд", section: "candidate", owner: "b1", nav: true },
   { path: "/me/assessment/history", title: "История тестов", section: "candidate", owner: "b1" },

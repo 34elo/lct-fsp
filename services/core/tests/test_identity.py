@@ -201,3 +201,51 @@ def test_require_roles(ctx):
     assert c.get("/_only_employer", headers=_auth(cand)).status_code == 403
     emp = _reg(c, "boss@example.com", "employer")
     assert c.get("/_only_employer", headers=_auth(emp)).status_code == 200
+
+
+def test_password_change(ctx):
+    c, engine, _ = ctx
+    r = _reg(c)
+    h = _auth(r)
+    new = "another-strong-pass"
+    # неверный текущий — 403, пароль не меняется
+    bad = c.post(
+        "/auth/password/change",
+        json={"current_password": "nope-nope", "new_password": new},
+        headers=h,
+    )
+    assert bad.status_code == 403 and bad.json()["code"] == "wrong_password"
+    # короткий новый — 422
+    short = c.post(
+        "/auth/password/change", json={"current_password": PWD, "new_password": "short"}, headers=h
+    )
+    assert short.status_code == 422
+    # без токена — 401
+    assert (
+        c.post(
+            "/auth/password/change", json={"current_password": PWD, "new_password": new}
+        ).status_code
+        == 401
+    )
+    # вторая сессия закрывается, текущая живёт
+    other = TestClient(c.app)
+    other.cookies.clear()
+    assert (
+        other.post("/auth/login", json={"email": "ann@example.com", "password": PWD}).status_code
+        == 200
+    )
+    ok = c.post(
+        "/auth/password/change", json={"current_password": PWD, "new_password": new}, headers=h
+    )
+    assert ok.status_code == 204
+    assert c.post("/auth/refresh", headers={"Origin": "https://dashboard.test"}).status_code == 200
+    assert (
+        other.post("/auth/refresh", headers={"Origin": "https://dashboard.test"}).status_code == 401
+    )
+    c.cookies.clear()
+    assert (
+        c.post("/auth/login", json={"email": "ann@example.com", "password": PWD}).status_code == 401
+    )
+    assert (
+        c.post("/auth/login", json={"email": "ann@example.com", "password": new}).status_code == 200
+    )

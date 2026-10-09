@@ -30,6 +30,7 @@ import type {
   LoginIn,
   MagicIn,
   MeOut,
+  PasswordChangeIn,
   ProblemOut,
   RegisterIn,
   VerifyIn
@@ -1057,6 +1058,148 @@ export const useLogoutAuthLogoutPost = <TError = ErrorType<ProblemOut>,
         TContext
       > => {
       return useMutation(getLogoutAuthLogoutPostMutationOptions(options), queryClient);
+    }
+    export type passwordChangeAuthPasswordChangePostResponse204 = {
+  data: void
+  status: 204
+}
+
+export type passwordChangeAuthPasswordChangePostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type passwordChangeAuthPasswordChangePostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type passwordChangeAuthPasswordChangePostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type passwordChangeAuthPasswordChangePostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type passwordChangeAuthPasswordChangePostResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type passwordChangeAuthPasswordChangePostResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type passwordChangeAuthPasswordChangePostResponse429ApplicationProblemJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type passwordChangeAuthPasswordChangePostResponse429ApplicationJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type passwordChangeAuthPasswordChangePostResponseSuccess = (passwordChangeAuthPasswordChangePostResponse204) & {
+  headers: Headers;
+};
+export type passwordChangeAuthPasswordChangePostResponseError = (passwordChangeAuthPasswordChangePostResponse401ApplicationProblemJson | passwordChangeAuthPasswordChangePostResponse401ApplicationJson | passwordChangeAuthPasswordChangePostResponse403ApplicationProblemJson | passwordChangeAuthPasswordChangePostResponse403ApplicationJson | passwordChangeAuthPasswordChangePostResponse422ApplicationProblemJson | passwordChangeAuthPasswordChangePostResponse422ApplicationJson | passwordChangeAuthPasswordChangePostResponse429ApplicationProblemJson | passwordChangeAuthPasswordChangePostResponse429ApplicationJson) & {
+  headers: Headers;
+};
+
+export type passwordChangeAuthPasswordChangePostResponse = (passwordChangeAuthPasswordChangePostResponseSuccess | passwordChangeAuthPasswordChangePostResponseError)
+
+export const getPasswordChangeAuthPasswordChangePostUrl = () => {
+
+
+
+
+  return `/auth/password/change`
+}
+
+/**
+ * Смена пароля любой ролью: текущий пароль + новый (≥ 8). Остальные сессии закрываются.
+ * @summary Password Change
+ */
+export const passwordChangeAuthPasswordChangePost = async (passwordChangeIn: PasswordChangeIn, options?: Parameters<typeof apiFetch>[1]): Promise<passwordChangeAuthPasswordChangePostResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<passwordChangeAuthPasswordChangePostResponse>(getPasswordChangeAuthPasswordChangePostUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(passwordChangeIn)
+  }
+);}
+
+
+
+
+
+export const getPasswordChangeAuthPasswordChangePostMutationKey = () => ['passwordChangeAuthPasswordChangePost'] as const;
+
+export const getPasswordChangeAuthPasswordChangePostMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof passwordChangeAuthPasswordChangePost>>, TError,PasswordChangeAuthPasswordChangePostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof passwordChangeAuthPasswordChangePost>>, TError,PasswordChangeAuthPasswordChangePostMutationVariables, TContext> => {
+
+const mutationKey = getPasswordChangeAuthPasswordChangePostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof passwordChangeAuthPasswordChangePost>>, PasswordChangeAuthPasswordChangePostMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  passwordChangeAuthPasswordChangePost(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PasswordChangeAuthPasswordChangePostMutationResult = NonNullable<Awaited<ReturnType<typeof passwordChangeAuthPasswordChangePost>>>
+    export type PasswordChangeAuthPasswordChangePostMutationBody = PasswordChangeIn
+    export type PasswordChangeAuthPasswordChangePostMutationError = ErrorType<ProblemOut>
+    export type PasswordChangeAuthPasswordChangePostMutationVariables = {data: PasswordChangeIn}
+
+    /**
+ * @summary Password Change
+ */
+export const usePasswordChangeAuthPasswordChangePost = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof passwordChangeAuthPasswordChangePost>>, TError,PasswordChangeAuthPasswordChangePostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof passwordChangeAuthPasswordChangePost>>,
+        TError,
+        PasswordChangeAuthPasswordChangePostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPasswordChangeAuthPasswordChangePostMutationOptions(options), queryClient);
     }
     export type meMeGetResponse200 = {
   data: MeOut
