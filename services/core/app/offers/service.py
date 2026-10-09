@@ -901,6 +901,12 @@ async def list_complaints(
     return [(c, o, co) for c, o, co in (await session.execute(q)).all()]
 
 
+async def count_complaints(session: AsyncSession, status: str) -> int:
+    """Число жалоб в статусе — счётчик на главной админки (E39-29)."""
+    q = select(func.count()).select_from(Complaint).where(Complaint.status == status)
+    return int(await session.scalar(q) or 0)
+
+
 async def resolve_complaint(
     session: AsyncSession, complaint_id: uuid.UUID, decision: str
 ) -> tuple[Complaint, Offer, Company | None]:
