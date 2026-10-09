@@ -151,7 +151,7 @@ describe("модель Главной (E38-1)", () => {
 
     const b = nextStep({ tested: true, fspLinked: false, pendingInterests: 0 });
     expect(b.steps.map((s) => s.id)).toEqual(["test", "fsp"]);
-    expect(b.current).toEqual({ key: "fsp", label: "Привязать ФСП", to: "/onboarding" });
+    expect(b.current).toEqual({ key: "fsp", label: "Привязать ФСП", to: "/me/profile?tab=data" });
 
     const c = nextStep({ tested: true, fspLinked: true, pendingInterests: 0, nextTest: { grade: "Middle", path: "/x" } });
     expect(c.current).toEqual({ key: "next", label: "Пройти тест на Middle", to: "/x" });
@@ -254,7 +254,7 @@ describe("Главная кандидата /me (E38-1)", () => {
     mount();
     const card = await screen.findByTestId("home-skills");
     expect(within(card).getAllByText(/^Навык [0-9]$/)).toHaveLength(8);
-    expect(within(card).getByTestId("home-skills-all")).toHaveAttribute("href", "/me/profile");
+    expect(within(card).getByTestId("home-skills-all")).toHaveAttribute("href", "/me/profile?tab=skills");
   });
 
   it("кулдаун следующего грейда: дата следующей попытки", async () => {
@@ -288,6 +288,23 @@ describe("Главная кандидата /me (E38-1)", () => {
     expect(card).toHaveAttribute("data-step", "continue");
     expect(within(card).getAllByRole("link")[0]).toHaveAttribute("href", "/me/assessment/attempts/a1");
     expect(within(card).getAllByRole("link")[0]).toHaveTextContent("Продолжить тест");
+  });
+
+  it("регулярные задания (E39-15): открытые — блок на Главной, без заданий — блока нет", async () => {
+    const task = (id: string, extra: object = {}) => ({ id, title: `Задание ${id}`, kind: "choice", profession: "backend", grade: "middle", answer_until: "2999-01-01T00:00:00Z", submitted: false, score: null, ...extra });
+    routes["/assessment/tasks"] = () => res(200, [task("t1"), task("t2", { submitted: true }), task("t3", { answer_until: "2000-01-01T00:00:00Z" })]);
+    mount();
+    const card = await screen.findByTestId("home-tasks");
+    expect(within(card).getAllByTestId("home-task")).toHaveLength(1);
+    expect(within(card).getByRole("link", { name: /Задание t1/ })).toHaveAttribute("href", "/me/tasks?task=t1");
+    expect(within(card).getByTestId("home-tasks-all")).toHaveAttribute("href", "/me/tasks");
+  });
+
+  it("регулярных заданий нет — блока нет", async () => {
+    routes["/assessment/tasks"] = () => res(200, []);
+    mount();
+    expect(await screen.findByTestId("home-after")).toBeInTheDocument();
+    expect(screen.queryByTestId("home-tasks")).not.toBeInTheDocument();
   });
 
   it("загрузка — скелетон; ошибка профиля — «Повторить»", async () => {

@@ -5,7 +5,7 @@ import { buttonVariants, Chips, CircuitLine, cn, ConstellationAvatar, type Const
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 
-import { useHistoryAssessmentHistoryGet } from "@/api/endpoints/assessment/assessment";
+import { useHistoryAssessmentHistoryGet, useMyTasksAssessmentTasksGet } from "@/api/endpoints/assessment/assessment";
 import { useGetProfileCandidatesMeProfileGet, useMyViewsCandidatesMeViewsGet } from "@/api/endpoints/candidates/candidates";
 import { useMyInterestsCandidatesMeInterestsGet, useMyOffersCandidatesMeOffersGet } from "@/api/endpoints/offers/offers";
 import { useMyNavigatorCandidatesMeNavigatorGet, useMyStandingCandidatesMeStandingGet } from "@/api/endpoints/search/search";
@@ -13,7 +13,10 @@ import { useGetProfessionsTaxonomyProfessionsGet } from "@/api/endpoints/taxonom
 import type { CandidateProfile, CandidateStanding, HistoryOut, InterestsSummary, NavigatorOut, OfferForCandidate } from "@/api/model";
 import { isFuture, pathStep, type PathStep } from "@/features/assessment/model";
 import { GRADE } from "@/features/assessment/text";
+import { dateOnly } from "@/features/offers/text";
 import { StatusBadge } from "@/features/offers/parts";
+import { candStatus } from "@/features/tasks/model";
+import { TASKS_TEXT } from "@/features/tasks/text";
 import { displayPseudonym } from "@/shared/lib/pseudonym";
 import { constellationNodes, dayMonth, formatsText, latestInvites, nextStep, skillSource, sortSkills } from "./home-model";
 import { parseViews, type ViewsStats } from "./stats-model";
@@ -130,7 +133,7 @@ function SkillsCard({ p, className }: { p: CandidateProfile; className?: string 
           );
         })}
       {skills.length > SKILLS_LIMIT && (
-        <Link to="/me/profile" className="mt-2 inline-block text-14 font-semibold text-brand-fg hover:underline" data-testid="home-skills-all">
+        <Link to="/me/profile?tab=skills" className="mt-2 inline-block text-14 font-semibold text-brand-fg hover:underline" data-testid="home-skills-all">
           {HOME.allSkills}
         </Link>
       )}
@@ -239,6 +242,32 @@ function Interests({ interests, offers }: { interests?: InterestsSummary; offers
   );
 }
 
+/** Открытые регулярные задания (E39-15: раньше — кнопка в профиле). Нет открытых — блока нет. */
+function RegularTasks() {
+  const q = useMyTasksAssessmentTasksGet({ query: { retry: false } });
+  const open = (q.data?.status === 200 ? q.data.data : []).filter((t) => candStatus(t) === "new");
+  if (!open.length) return null;
+  return (
+    <Panel className="order-4 flex flex-col gap-2 lg:order-none" data-testid="home-tasks" aria-label={HOME.tasks}>
+      <PanelCap title={<H2>{HOME.tasks}</H2>} aside={<Num className="text-13">{open.length}</Num>} />
+      <p className="text-13 text-muted">{HOME.tasksHint}</p>
+      <ul className="m-0 flex list-none flex-col p-0">
+        {open.slice(0, 3).map((t) => (
+          <li key={t.id} data-testid="home-task">
+            <Link to={`/me/tasks?task=${t.id}`} className="flex min-h-11 flex-wrap items-center gap-x-3 gap-y-1 border-b border-hairline py-3 last:border-b-0 hover:text-brand-fg">
+              <span className="min-w-0 flex-1 truncate font-medium">{t.title}</span>
+              {t.answer_until && <Num className="text-13 text-muted">{TASKS_TEXT.until(dateOnly(t.answer_until))}</Num>}
+            </Link>
+          </li>
+        ))}
+      </ul>
+      <Link to="/me/tasks" className="self-start text-14 font-semibold text-brand-fg hover:underline" data-testid="home-tasks-all">
+        {HOME.tasksAll}
+      </Link>
+    </Panel>
+  );
+}
+
 function Tiles({ standing, interests, profTitle }: { standing?: CandidateStanding; interests?: InterestsSummary; profTitle: (s: string) => string }) {
   const s = standing?.strength;
   const range =
@@ -294,6 +323,7 @@ function After(props: {
         <NextStepCard {...props} />
         <ConstellationCard nodes={nodes} />
         <Interests interests={props.interests} offers={props.offers} />
+        <RegularTasks />
       </div>
       <div className="contents lg:col-span-3 lg:flex lg:flex-col lg:gap-4">
         <Tiles standing={props.standing} interests={props.interests} profTitle={props.profTitle} />

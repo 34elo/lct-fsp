@@ -7,56 +7,41 @@ import {
   Chips,
   EmptyState,
   ErrorState,
-  FspProtocol,
   GradeTag,
   H1,
   H2,
   Lbl,
-  Num,
+  MetricTile,
   Panel,
   PanelCap,
-  Skeleton,
-  SkillTag,
+  ScrollTabs,
+  SkeletonProfile,
   StatusTag,
-  Tag,
+  Tabs,
+  TabsContent,
+  TabsTrigger,
   TeamSignal as TeamSignalRow,
   buttonVariants,
   cn,
-  dotsText,
-  formatRub,
-  type FspResult,
 } from "@fsp/ui";
 import { useState, type ReactNode } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
 import { useGetProfileCandidatesMeProfileGet } from "@/api/endpoints/candidates/candidates";
 import { useMyStandingCandidatesMeStandingGet } from "@/api/endpoints/search/search";
-import type { CandidateProfile, CandidateStanding, SkillWithTrust } from "@/api/model";
+import type { CandidateProfile, CandidateStanding } from "@/api/model";
 import { GRADE } from "@/features/assessment/text";
-import { FspLinkPanel } from "@/features/fsp/FspLinkPanel";
 import GraphView from "@/features/graph/Graph";
 import { downloadProfilePdf } from "@/features/profile/pdf";
-import { dayMonth, formatsText, sortSkills } from "./home-model";
-import {
-  CLAIM_STATUS_LABEL,
-  DISCIPLINE_LABEL,
-  FSP_LEVEL_LABEL,
-  GRADE_LABEL,
-  HOME,
-  PROFILE,
-  RANK_LABEL,
-  SIGNAL_LABEL,
-  SOURCE_TAG,
-  STATUS_LABEL,
-  STRENGTH_ITEMS,
-  T,
-  TEAM_ROLE_LABEL,
-  periodRu,
-  roleLabel,
-} from "./text";
+import { dayMonth } from "./home-model";
+import { DataTab } from "./ProfileData";
+import { SkillsTab } from "./ProfileSkills";
+import { CLAIM_STATUS_LABEL, GRADE_LABEL, HOME, PROFILE, SIGNAL_LABEL, STATUS_LABEL, STRENGTH_ITEMS, T, roleLabel } from "./text";
 import { useEventStream } from "@/shared/lib/useEventStream";
 
-const TABS = ["skills", "fsp", "resume", "graph"] as const;
+const TABS = ["overview", "skills", "data", "graph"] as const;
+/** Старые вкладки «ФСП» и «Резюме» (до E39-15) слились в «Данные». */
+const LEGACY: Record<string, Tab> = { fsp: "data", resume: "data" };
 type Tab = (typeof TABS)[number];
 const gradeLabel = (g: string) => GRADE[g] ?? GRADE_LABEL[g] ?? g;
 
@@ -95,99 +80,30 @@ function PdfButton({ name }: { name: string }) {
   );
 }
 
-/* ---------- Каркас: заголовок, действие, вкладки ---------- */
+/* ---------- Каркас: заголовок и вкладки ---------- */
 
-function Frame({ tab, children, bare }: { tab: Tab; children: ReactNode; bare?: boolean }) {
+function Frame({ tab, children, tabs = true }: { tab: Tab; children: ReactNode; tabs?: boolean }) {
+  const [, setSp] = useSearchParams();
   return (
     <div className={PAGE.normal} data-testid="profile-page" data-tab={tab}>
-      <div className="flex flex-col gap-2.5 md:flex-row md:items-center md:justify-between">
-        <H1 className="text-[22px] leading-[1.2] md:text-[26px]">{PROFILE.title}</H1>
-        {!bare && (
-          <div className="hidden items-center gap-2 md:flex">
-            <Link to="/me/tasks" className={buttonVariants({ variant: "ghost", size: "md" })} data-testid="profile-tasks">
-              {PROFILE.tasks}
-            </Link>
-            <Link to="/onboarding" className={buttonVariants({ variant: "outline", size: "md" })} data-testid="profile-add">
-              {PROFILE.addEvidence}
-            </Link>
-          </div>
-        )}
-      </div>
-      {!bare && (
-        <nav aria-label={PROFILE.tabsLabel} className="flex gap-0 overflow-x-auto border-b border-hairline md:gap-1" data-testid="profile-tabs">
-          {TABS.map((k) => (
-            <Link
-              key={k}
-              to={k === "skills" ? "/me/profile" : `/me/profile?tab=${k}`}
-              replace
-              aria-current={k === tab ? "page" : undefined}
-              data-testid={`profile-tab-${k}`}
-              className={cn(
-                "-mb-px flex min-h-11 items-center whitespace-nowrap border-b-2 px-2 text-13 md:px-3.5 md:text-14",
-                k === tab ? "border-brand font-semibold text-ink" : "border-transparent font-medium text-muted",
-              )}
-            >
-              {PROFILE.tabs[k]}
-            </Link>
-          ))}
-        </nav>
+      <H1 className="text-[22px] leading-[1.2] md:text-[26px]">{PROFILE.title}</H1>
+      {tabs ? (
+        <Tabs value={tab} onValueChange={(v) => setSp(v === "overview" ? {} : { tab: v }, { replace: true })}>
+          <ScrollTabs aria-label={PROFILE.tabsLabel} data-testid="profile-tabs">
+            {TABS.map((k) => (
+              <TabsTrigger key={k} value={k} data-testid={`profile-tab-${k}`}>
+                {PROFILE.tabs[k]}
+              </TabsTrigger>
+            ))}
+          </ScrollTabs>
+          <TabsContent value={tab} className="pt-4">
+            {children}
+          </TabsContent>
+        </Tabs>
+      ) : (
+        children
       )}
-      {!bare && (
-        <div className="flex flex-col gap-2 md:hidden">
-          <Link to="/onboarding" className={cn(buttonVariants({ size: "lg" }), "w-full")} data-testid="profile-add-mobile">
-            {PROFILE.addEvidence}
-          </Link>
-          <Link to="/me/tasks" className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full")} data-testid="profile-tasks-mobile">
-            {PROFILE.tasks}
-          </Link>
-        </div>
-      )}
-      {children}
     </div>
-  );
-}
-
-/* ---------- Навыки ---------- */
-
-function skillTags(s: SkillWithTrust): string[] {
-  if (s.claimed_only) return [s.sources.includes("resume") ? PROFILE.claimedInResume : PROFILE.claimedSelf];
-  const testEv = s.top_evidence?.find((e) => e.source === "test");
-  const tags = ["test", "fsp", "task", "resume"].filter((k) => s.sources.includes(k)).map((k) => (k === "test" ? PROFILE.testTag(dayMonth(testEv?.observed_at)) : SOURCE_TAG[k]));
-  if (!tags.length) tags.push(s.derived_from ? PROFILE.derived : PROFILE.claimedSelf);
-  return tags;
-}
-
-function SkillRows({ items }: { items: SkillWithTrust[] }) {
-  return (
-    <ul className="flex flex-col">
-      {items.map((s) => (
-        <li key={s.skill.slug} className="border-t border-hairline first:border-t-0">
-          <Link to={`/me/skills/${encodeURIComponent(s.skill.slug)}`} aria-label={PROFILE.skillLink(s.skill.name)} className="flex min-h-11 items-center gap-3 py-2">
-            <SkillTag name={s.skill.name} state={s.claimed_only ? "claimed" : "confirmed"} className="min-w-24" />
-            <span aria-label={`доверие ${s.claimed_only ? 0 : Math.round(s.level)} из 4`} className="font-mono text-12 font-semibold tracking-[1px] text-brand-fg">
-              {dotsText(s.claimed_only ? 0 : s.level)}
-            </span>
-            <Chips className="min-w-0 flex-1 justify-end">
-              {skillTags(s).map((t) => (
-                <Tag key={t}>{t}</Tag>
-              ))}
-            </Chips>
-            <span aria-hidden className="text-muted">
-              ›
-            </span>
-          </Link>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-function SkillsCard({ title, items, testid }: { title: string; items: SkillWithTrust[]; testid: string }) {
-  if (!items.length) return null;
-  return (
-    <Section title={title} testid={testid} aside={<Num className="text-12 text-muted">{items.length}</Num>}>
-      <SkillRows items={items} />
-    </Section>
   );
 }
 
@@ -326,150 +242,49 @@ function TeamSignals({ p }: { p: CandidateProfile }) {
   );
 }
 
-function SkillsTab({ p, standing }: { p: CandidateProfile; standing?: CandidateStanding }) {
-  const skills = sortSkills(p.skills ?? []);
-  const confirmed = skills.filter((s) => !s.claimed_only);
-  const claimed = skills.filter((s) => s.claimed_only);
+/* ---------- Обзор: плитки на всю ширину ---------- */
+
+function Tiles({ p }: { p: CandidateProfile }) {
+  const skills = p.skills ?? [];
+  const fsp = (p.fsp?.achievements.length ?? 0) + (p.fsp?.ranks.length ?? 0);
+  const tiles = [
+    { key: "confirmed", label: PROFILE.tiles.confirmed, value: skills.filter((s) => !s.claimed_only).length, to: "/me/profile?tab=skills" },
+    { key: "claimed", label: PROFILE.tiles.claimed, value: skills.filter((s) => s.claimed_only).length, to: "/me/profile?tab=skills" },
+    { key: "fsp", label: PROFILE.tiles.fsp, value: fsp, to: "/me/profile?tab=data" },
+  ];
   return (
-    <div className="flex flex-col gap-4 lg:grid lg:grid-cols-12 lg:items-start" data-testid="profile-skills">
-      <div className="order-2 flex flex-col gap-4 lg:order-none lg:col-span-8">
-        <SkillsCard title={PROFILE.confirmed} items={confirmed} testid="profile-skills-confirmed" />
-        <SkillsCard title={PROFILE.claimed} items={claimed} testid="profile-skills-claimed" />
-        <Claimed p={p} />
-        <TeamSignals p={p} />
-      </div>
-      <div className="order-1 flex flex-col gap-4 lg:order-none lg:col-span-4">
-        <StatusCard p={p} standing={standing} />
-        <Strength p={p} />
-      </div>
-    </div>
-  );
-}
-
-/* ---------- ФСП ---------- */
-
-function FspTab({ p, imported }: { p: CandidateProfile; imported: boolean }) {
-  const items = p.fsp?.achievements ?? [];
-  const ranks = p.fsp?.ranks ?? [];
-  const placed: FspResult[] = items
-    .filter((a) => a.place != null)
-    .map((a) => ({
-      discipline: FSP_LEVEL_LABEL[a.level] ?? a.level,
-      tournament: a.title,
-      place: a.place as number,
-      total: a.of ?? undefined,
-      role: a.team_role ? (TEAM_ROLE_LABEL[a.team_role] ?? a.team_role) : undefined,
-      year: a.year,
-    }));
-  const unplaced = items.filter((a) => a.place == null);
-  const linked = Boolean(p.fsp?.verified);
-  return (
-    <div className="flex flex-col gap-4" data-testid="profile-fsp-tab">
-      <Section
-        title={PROFILE.fspTitle}
-        tip="fspRelevance"
-        label="Достижения ФСП"
-        testid="profile-fsp"
-        aside={<StatusTag state={linked ? "ok" : "claimed"}>{linked ? PROFILE.fspLinked : PROFILE.fspNotLinked}</StatusTag>}
-      >
-        {items.length === 0 && ranks.length === 0 ? (
-          <p className="text-14 text-muted">{T.fspEmpty}</p>
-        ) : (
-          <>
-            {placed.length > 0 && <FspProtocol results={placed} />}
-            {unplaced.length > 0 && (
-              <ul className="flex flex-col gap-1">
-                {unplaced.map((a) => (
-                  <li key={a.fact_id} className="text-14">
-                    {a.title} <span className="font-mono text-12 text-muted">· {a.year}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {ranks.length > 0 && (
-              <ul className="flex flex-wrap gap-2 border-t border-hairline pt-3">
-                {ranks.map((r) => (
-                  <li key={r.discipline}>
-                    <Badge>
-                      {RANK_LABEL[r.rank] ?? r.rank} · {DISCIPLINE_LABEL[r.discipline] ?? r.discipline}
-                    </Badge>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </>
-        )}
-        {imported && (
-          <p role="status" className="text-14 font-semibold text-brand-fg">
-            {T.fspImported}
-          </p>
-        )}
-        <FspLinkPanel next="/me/profile?tab=fsp" />
-      </Section>
-    </div>
-  );
-}
-
-/* ---------- Резюме ---------- */
-
-function Row({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="flex min-h-11 items-center gap-3 border-t border-hairline py-2.5 first:border-t-0 first:pt-0">
-      <Lbl className="w-24 flex-none">{label}</Lbl>
-      <div className="min-w-0 flex-1">{children}</div>
-    </div>
-  );
-}
-
-function ResumeTab({ p }: { p: CandidateProfile }) {
-  const pref = p.preferences;
-  const formats = formatsText(pref.formats ?? []);
-  const months = p.experience_months;
-  const exp = p.experience ?? [];
-  const roles = (p.desired_roles ?? []).map(roleLabel);
-  const none = <StatusTag state="claimed">{PROFILE.notSpecified}</StatusTag>;
-  return (
-    <div className="flex flex-col gap-4" data-testid="profile-resume">
-      <Section title={PROFILE.resume} label="Резюме" testid="profile-resume-card">
-        <div>
-          <Row label={PROFILE.city}>{pref.city ? <Num className="text-14">{pref.city}</Num> : none}</Row>
-          <Row label={PROFILE.salary}>{pref.salary_min != null ? <Num className="text-14">{PROFILE.salaryFrom(formatRub(pref.salary_min))}</Num> : none}</Row>
-          <Row label={PROFILE.format}>{formats ? <Num className="text-14">{formats.toLowerCase()}</Num> : none}</Row>
-          <Row label={PROFILE.experience}>{months != null ? <Num className="text-14">{PROFILE.experienceMonths(months)}</Num> : none}</Row>
-          {roles.length > 0 && (
-            <Row label={PROFILE.roles}>
-              <Num className="text-14">{roles.join(", ")}</Num>
-            </Row>
-          )}
-        </div>
-        <Link to="/me/profile/edit" data-testid="profile-edit-link" className="inline-flex min-h-11 items-center self-start font-semibold text-brand-fg">
-          {T.editLink}
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3" data-testid="profile-tiles">
+      {tiles.map((t) => (
+        <Link key={t.key} to={t.to} className="rounded-2xl focus-visible:outline-2 focus-visible:outline-brand" data-testid={`profile-tile-${t.key}`}>
+          <MetricTile label={t.label} value={t.value} className="h-full" />
         </Link>
-      </Section>
-      {exp.length > 0 && (
-        <Section title="Опыт" testid="profile-experience">
-          <ul className="flex flex-col gap-3">
-            {exp.map((e, i) => (
-              <li key={`${e.title}-${i}`} className="flex flex-col gap-0.5">
-                <span className="font-semibold">{e.title}</span>
-                <span className="text-14 text-muted">{[e.company, periodRu(e.start, e.end)].filter(Boolean).join(" · ")}</span>
-              </li>
-            ))}
-          </ul>
-        </Section>
-      )}
+      ))}
+    </div>
+  );
+}
+
+function OverviewTab({ p, standing }: { p: CandidateProfile; standing?: CandidateStanding }) {
+  return (
+    <div className="flex flex-col gap-4" data-testid="profile-overview">
+      <StatusCard p={p} standing={standing} />
+      <Tiles p={p} />
+      <Strength p={p} />
+      <Claimed p={p} />
+      <TeamSignals p={p} />
     </div>
   );
 }
 
 /**
- * Профиль кандидата `/me/profile` (E38-6, макеты v2_me-profile__*, бриф §6.7): вкладки «Навыки · ФСП · Резюме · Граф»
- * (`?tab=`), «Подтверждено» и «Заявлено» отдельно, справа статус и грейд. Граф — бывший `/me/graph`.
+ * Профиль кандидата `/me/profile` (E38-6, переработан в E39-15): вкладки `ScrollTabs` «Обзор · Навыки · Данные ·
+ * Граф» (`?tab=`). Обзор — грейд и статус, плитки, что усилит профиль, заявлено и подтверждено, командные
+ * сигналы; Навыки — список с поиском и фильтрами; Данные — ФИО, контакты, опыт, образование, ссылки и ФСП;
+ * Граф — `EvidenceGraph`. Старые адреса `?tab=fsp|resume` ведут в «Данные».
  */
 export default function Profile() {
   const [sp] = useSearchParams();
-  const raw = sp.get("tab");
-  const tab: Tab = TABS.includes(raw as Tab) ? (raw as Tab) : "skills";
+  const raw = sp.get("tab") ?? "";
+  const tab: Tab = (TABS as readonly string[]).includes(raw) ? (raw as Tab) : LEGACY[raw] ?? "overview";
   if (tab === "graph")
     return (
       <Frame tab={tab}>
@@ -487,23 +302,19 @@ function ProfileData({ tab }: { tab: Tab }) {
 
   if (q.isPending)
     return (
-      <Frame tab={tab} bare>
-        <div className="flex flex-col gap-3" data-testid="profile-loading">
+      <Frame tab={tab}>
+        <div data-testid="profile-loading">
           <p role="status" className="sr-only">
             {PROFILE.loading}
           </p>
-          <div className="grid gap-4 lg:grid-cols-3">
-            {[0, 1, 2].map((i) => (
-              <Skeleton key={i} className="h-40" />
-            ))}
-          </div>
+          <SkeletonProfile />
         </div>
       </Frame>
     );
   if (q.isError || q.data.status !== 200) {
     const status = q.error?.status;
     return (
-      <Frame tab={tab} bare>
+      <Frame tab={tab} tabs={false}>
         <div className="w-full max-w-2xl" data-testid="profile-error">
           <ErrorState title={PROFILE.loadError} code={status ? PROFILE.errorCode(status) : undefined} onRetry={() => void q.refetch()} />
         </div>
@@ -512,27 +323,26 @@ function ProfileData({ tab }: { tab: Tab }) {
   }
   const p = q.data.data;
   const standing = sq.data?.status === 200 ? sq.data.data : undefined;
-  const empty = !(p.skills ?? []).length && !(p.fsp?.achievements.length) && !(p.fsp?.ranks.length) && !p.grade.grade;
-  if (empty && tab === "skills")
-    return (
-      <Frame tab={tab} bare>
-        <EmptyState
-          className="min-h-[200px]"
-          title={PROFILE.empty}
-          description={T.noGrade}
-          action={
-            <Link to="/onboarding" className={buttonVariants({ size: "lg" })} data-testid="profile-empty-action">
-              {PROFILE.addEvidence}
-            </Link>
-          }
-        />
-      </Frame>
-    );
+  const empty = !(p.skills ?? []).length && !p.fsp?.achievements.length && !p.fsp?.ranks.length && !p.grade.grade;
   return (
     <Frame tab={tab}>
-      {tab === "skills" && <SkillsTab p={p} standing={standing} />}
-      {tab === "fsp" && <FspTab p={p} imported={imported} />}
-      {tab === "resume" && <ResumeTab p={p} />}
+      {tab === "overview" &&
+        (empty ? (
+          <EmptyState
+            className="min-h-[200px]"
+            title={PROFILE.empty}
+            description={T.noGrade}
+            action={
+              <Link to="/me/assessment" className={buttonVariants({ size: "lg" })} data-testid="profile-empty-action">
+                {PROFILE.emptyAction}
+              </Link>
+            }
+          />
+        ) : (
+          <OverviewTab p={p} standing={standing} />
+        ))}
+      {tab === "skills" && <SkillsTab p={p} />}
+      {tab === "data" && <DataTab p={p} imported={imported} />}
     </Frame>
   );
 }

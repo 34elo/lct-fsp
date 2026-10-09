@@ -129,6 +129,7 @@ export * from './distinctPair';
 export * from './distinctSaved';
 export * from './edge';
 export * from './edgeType';
+export * from './educationItem';
 export * from './employerActivityEmployerActivityGetParams';
 export * from './employmentType';
 export * from './evidenceBrief';

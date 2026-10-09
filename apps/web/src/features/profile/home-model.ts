@@ -31,7 +31,7 @@ export interface NextStep {
 export function nextStep(i: NextStepInput): NextStep {
   const raw: { key: StepKey; done: boolean; label: string; action: string; to: string }[] = [
     { key: "test", done: i.tested, label: i.tested ? HOME.steps.test.done : HOME.steps.test.todo, action: HOME.steps.test.todo, to: "/me/assessment" },
-    { key: "fsp", done: i.fspLinked, label: i.fspLinked ? HOME.steps.fsp.done : HOME.steps.fsp.todo, action: HOME.steps.fsp.todo, to: "/onboarding" },
+    { key: "fsp", done: i.fspLinked, label: i.fspLinked ? HOME.steps.fsp.done : HOME.steps.fsp.todo, action: HOME.steps.fsp.todo, to: "/me/profile?tab=data" },
   ];
   if (i.pendingInterests > 0)
     raw.push({ key: "interest", done: false, label: HOME.steps.interest.todo, action: HOME.steps.interest.todo, to: "/me/offers?show=interests" });
