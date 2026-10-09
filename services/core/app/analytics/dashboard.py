@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Collection
 from datetime import UTC, datetime, timedelta
 
 from pydantic import BaseModel
@@ -86,7 +86,10 @@ def _ratio(n: int, d: int) -> Ratio:
     return Ratio(**_cell(n).model_dump(), pct=_pct(n, d), of=None if d < MIN_CELL else d)
 
 
-async def build(session: AsyncSession, days: int = DEFAULT_DAYS) -> DashboardOut:
+async def build(
+    session: AsyncSession, days: int = DEFAULT_DAYS, *, exclude_actors: Collection[str] = ()
+) -> DashboardOut:
+    """Воронка за `days` дней; `exclude_actors` — псевдонимы демо-аккаунтов (E40-1)."""
     days = max(1, min(days, MAX_DAYS))
     since = datetime.now(UTC) - timedelta(days=days)
     rows = (
@@ -96,6 +99,9 @@ async def build(session: AsyncSession, days: int = DEFAULT_DAYS) -> DashboardOut
             )
         )
     ).all()
+    if exclude_actors:
+        skip = set(exclude_actors)
+        rows = [r for r in rows if r[1] not in skip]
 
     def actors(pred: Pred) -> set[str]:
         return {a for e, a, p in rows if pred(e, p or {})}

@@ -29,6 +29,8 @@ class Company(Base):
     show_verified_badge: Mapped[bool] = mapped_column(default=True, server_default=sa.true())
     status: Mapped[str] = mapped_column(Text, default="pending", server_default="pending")
     responsibility_score: Mapped[float | None] = mapped_column(sa.Float, default=None)
+    # E40-1: демо-данные (seed, жюри): не в статистике, сбрасываются `demo-reset`
+    is_demo: Mapped[bool] = mapped_column(default=False, server_default=sa.false())
     created_at: Mapped[datetime] = mapped_column(
         sa.DateTime(timezone=True), default=utcnow, server_default=sa.func.now()
     )

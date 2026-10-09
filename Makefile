@@ -148,8 +148,8 @@ seed-fsp-mock:
 seed-plan:
 	SEED=$(SEED) uv run python -m tools.seed plan
 
-# Снапшот витрины (evaluation.md §4): make demo-snapshot (после make seed) -> make demo-reset (≤ 1 мин) -> make demo-warm
-# Файлы в infra/snapshots/ (в git не идут): core.dump, fsp_connector.dump, fsp-mock.json
+# Снапшот витрины (evaluation.md §4, E40-1): make demo-snapshot (после make seed) -> make demo-reset (только демо, ≤ 1 мин) -> make demo-warm
+# Снапшот демо — таблицы demo_snap__* в БД core и fsp_connector; infra/snapshots/fsp-mock.json (в git не идёт)
 demo-snapshot:
 	COMPOSE="$(COMPOSE)" sh infra/scripts/demo.sh snapshot
 demo-reset:
