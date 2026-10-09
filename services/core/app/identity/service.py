@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import Settings
 from app.identity.mailer import Mailer
 from app.identity.models import EmailVerification, RefreshToken, User, utcnow
+from app.identity.profile import signature as staff_signature  # noqa: F401  (E39-24)
 
 REFRESH_TTL = timedelta(days=30)
 ACCESS_TTL = timedelta(minutes=15)
@@ -27,6 +28,25 @@ SELF_REGISTER_ROLES = {"candidate", "employer"}
 _hasher = PasswordHasher()
 # Хеш для выравнивания времени ответа, когда пользователя нет
 _DUMMY_HASH = _hasher.hash("dummy-password-for-timing")
+# E40-1: домен демо-аккаунтов (seed, жюри); такие пользователи помечаются `is_demo`
+DEMO_EMAIL_DOMAIN = "@demo.fsp.test"
+
+
+def is_demo_email(email: str | None) -> bool:
+    """Демо-аккаунт: email в домене `demo.fsp.test` (вымышленный, письма туда не доходят)."""
+    return bool(email) and str(email).lower().endswith(DEMO_EMAIL_DOMAIN)
+
+
+async def is_demo_user(session: AsyncSession, user_id: uuid.UUID | None) -> bool:
+    """Пользователь помечен как демо (E40-1)."""
+    if user_id is None:
+        return False
+    return bool(await session.scalar(select(User.is_demo).where(User.id == user_id)))
+
+
+def demo_user_ids():
+    """Подзапрос id демо-пользователей (кандидат: `candidate_id = user_id`) — для фильтров."""
+    return select(User.id).where(User.is_demo.is_(True))
 
 
 def normalize_email(email: str) -> str:
@@ -59,7 +79,9 @@ async def register(session: AsyncSession, email: str, password: str, role: str) 
     exists = await session.scalar(select(User.id).where(User.email == email))
     if exists:
         raise ProblemError(409, "email_taken", "Email уже зарегистрирован")
-    user = User(email=email, password_hash=_hasher.hash(password), role=role)
+    user = User(
+        email=email, password_hash=_hasher.hash(password), role=role, is_demo=is_demo_email(email)
+    )
     session.add(user)
     try:
         await session.flush()
@@ -250,6 +272,33 @@ def password_matches(user: User, password: str) -> bool:
     except (VerifyMismatchError, InvalidHashError):
         return False
     return True
+
+
+async def change_password(
+    session: AsyncSession, user: User, current: str, new: str, keep_raw: str | None
+) -> None:
+    """Смена пароля (E39-8): сверка текущего, новый хеш, чужие сессии закрываются.
+
+    Сессия с refresh-токеном `keep_raw` (текущая вкладка) остаётся. Нет пароля
+    (вход через Telegram) или неверный текущий — 403 `wrong_password`.
+    """
+    if not password_matches(user, current):
+        raise ProblemError(403, "wrong_password", "Неверный текущий пароль")
+    user.password_hash = _hasher.hash(new)
+    keep_family = None
+    if keep_raw:
+        keep_family = await session.scalar(
+            select(RefreshToken.family_id).where(RefreshToken.token_hash == hash_token(keep_raw))
+        )
+    stmt = (
+        update(RefreshToken)
+        .where(RefreshToken.user_id == user.id, RefreshToken.revoked_at.is_(None))
+        .values(revoked_at=datetime.now(UTC))
+    )
+    if keep_family is not None:
+        stmt = stmt.where(RefreshToken.family_id != keep_family)
+    await session.execute(stmt)
+    await session.flush()
 
 
 async def erase_user(session: AsyncSession, user: User) -> None:

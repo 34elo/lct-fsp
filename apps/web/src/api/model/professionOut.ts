@@ -14,5 +14,6 @@ export interface ProfessionOut {
   skill_weights: ProfessionOutSkillWeights;
   skill_types?: ProfessionOutSkillTypes;
   active?: boolean;
+  beta?: boolean;
   taxonomy_version?: number | null;
 }

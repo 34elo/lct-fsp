@@ -1,4 +1,6 @@
-import { ActivityHeatmap, buttonVariants, Chips, cn, ConstellationAvatar, EmptyState, ErrorState, formatRub, formatRubRangeShort, GradeTag, H1, Lbl, MetricTile, Num, Panel, PanelCap, ScatterPlot, Skeleton, SkillTag, StatusTag } from "@fsp/ui";
+import { PAGE } from "@/shared/lib/page";
+import { Gi, Gloss } from "@/shared/Gloss";
+import { ActivityHeatmap, buttonVariants, Chips, cn, ConstellationAvatar, EmptyState, ErrorState, formatRub, formatRubRangeShort, GradeTag, H1, H2, Lbl, MetricTile, Num, Panel, PanelCap, ScatterPlot, Skeleton, SkillTag, StatusTag } from "@fsp/ui";
 import { useMemo, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 
@@ -15,7 +17,6 @@ import { dayMonth, nextStep, sortSkills } from "./home-model";
 import { finishedAttempts, parseViews, scatter, viewsSeries, type ViewsStats } from "./stats-model";
 import { HOME, STATS, roleLabel } from "./text";
 
-const PAGE = "mx-auto flex w-full max-w-[1328px] flex-col gap-4 px-4 py-4 md:px-6 md:py-6";
 const PENDING = new Set(["interest", "interest_opened"]);
 const gradeLabel = (g: string) => GRADE[g] ?? g;
 
@@ -25,21 +26,92 @@ function Tiles({ standing, interests, views }: { standing: CandidateStanding; in
     interests?.salary_from_min != null && interests.salary_to_max != null ? formatRubRangeShort(interests.salary_from_min, interests.salary_to_max) : undefined;
   return (
     <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-4" data-testid="stats-tiles">
-      <MetricTile label={HOME.strength} value={s ? Math.round(s.value * 100) : HOME.none} />
-      <MetricTile label={HOME.place} value={s ? HOME.top(s.top_percent) : HOME.none} progress={s ? 100 - s.top_percent : undefined} />
-      <MetricTile label={HOME.interestsTile} value={interests ? interests.companies : HOME.none} hint={range} />
+      <MetricTile
+        label={STATS.relative}
+        info={<Gi k="strength" />}
+        value={s ? STATS.relativeValue(s.relative ?? 100) : HOME.none}
+        hint={s ? (s.gap_to_next_ten ? STATS.relativeGap(s.gap_to_next_ten.gap_relative, s.gap_to_next_ten.top_percent) : STATS.relativeLeader) : undefined}
+        progress={s ? (s.relative ?? 100) : undefined}
+      />
+      <MetricTile label={HOME.place} info={<Gi k="category" />} value={s ? HOME.top(s.top_percent) : HOME.none} progress={s ? 100 - s.top_percent : undefined} />
+      <MetricTile label={HOME.interestsTile} info={<Gi k="interest" />} value={interests ? interests.companies : HOME.none} hint={range} />
       <MetricTile label={STATS.views} value={views ? views.companies : HOME.none} hint={views ? STATS.viewsHint : undefined} />
     </div>
   );
 }
 
+/** Составляющие силы профиля: из чего складывается «% от лидера» (формула assessment.md §9). */
+function PartsCard({ standing }: { standing: CandidateStanding }) {
+  const parts = standing.strength?.parts ?? [];
+  if (parts.length === 0) return null;
+  return (
+    <Panel className="flex flex-col gap-2" data-testid="stats-parts" aria-label={STATS.partsTitle}>
+      <PanelCap title={<Gloss k="strength"><H2>{STATS.partsTitle}</H2></Gloss>} className="mb-0" />
+      <ul className="flex flex-col gap-1.5">
+        {parts.map((x) => (
+          <li key={x.code} className="flex items-center justify-between gap-3 text-14">
+            <span>{x.text}</span>
+            <Num className="text-muted">{Math.round(x.value * 100)} %</Num>
+          </li>
+        ))}
+      </ul>
+    </Panel>
+  );
+}
+
+/** «Где ты среди своих» на всю ширину: оси подписаны, «свои» объяснены (E39-16). */
 function PeersCard({ standing, category }: { standing: CandidateStanding; category: string }) {
   const { points, you } = scatter(standing.peers ?? [], standing.strength?.value);
   return (
-    <Panel data-testid="stats-peers" aria-label={STATS.peers}>
-      <PanelCap title={STATS.peers} aside={<Lbl>{STATS.peersSize(standing.category_size ?? 0)}</Lbl>} />
-      <ScatterPlot points={points} you={you} youLabel={STATS.you} yLabel={STATS.yLabel} label={STATS.peersLabel(category)} />
+    <Panel className="flex flex-col gap-2.5" data-testid="stats-peers" aria-label={STATS.peers}>
+      <PanelCap
+        className="mb-0"
+        title={
+          <span className="inline-flex items-center gap-1">
+            <H2>{STATS.peers}</H2>
+            <Gi k="peers" />
+          </span>
+        }
+        aside={<Lbl>{STATS.peersSize(standing.category_size ?? 0)}</Lbl>}
+      />
+      <ScatterPlot
+        points={points}
+        you={you}
+        youLabel={STATS.you}
+        xLabel={STATS.xAxis}
+        yLabel={STATS.yAxis}
+        label={STATS.peersLabel(category)}
+        className="max-h-[320px]"
+      />
+      <p className="flex items-start gap-1 text-13 text-muted" data-testid="stats-peers-note">
+        <span>{STATS.peersNote(category)}</span>
+        <Gi k="theta" />
+      </p>
     </Panel>
+  );
+}
+
+/** Общие числа категории: сколько кандидатов, вилки интересов, сколько компаний ищут (E39-16). */
+function CategoryCard({ standing }: { standing: CandidateStanding }) {
+  const c = standing.category_stats;
+  if (!c) return null;
+  const forks =
+    c.interest_salary_from_median != null && c.interest_salary_to_median != null
+      ? formatRubRangeShort(c.interest_salary_from_median, c.interest_salary_to_median)
+      : null;
+  return (
+    <section className="flex flex-col gap-2.5" data-testid="stats-category" aria-label={STATS.catTitle}>
+      <H2>{STATS.catTitle}</H2>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 lg:gap-4">
+        <MetricTile label={STATS.catCandidates} info={<Gi k="peers" />} value={c.candidates} />
+        <MetricTile
+          label={STATS.catForks}
+          value={forks ?? HOME.none}
+          hint={forks ? STATS.catForksHint(c.interests ?? 0) : STATS.catForksNone}
+        />
+        <MetricTile label={STATS.catCompanies} value={c.companies_searching} hint={STATS.catCompaniesHint} />
+      </div>
+    </section>
   );
 }
 
@@ -147,7 +219,7 @@ export default function Stats() {
   const tq = useGetProfessionsTaxonomyProfessionsGet();
 
   const page = (body: ReactNode, action?: ReactNode, title = true) => (
-    <div className={PAGE} data-testid="stats-page">
+    <div className={PAGE.normal} data-testid="stats-page">
       {title && (
         <div className="flex flex-col gap-2.5 md:flex-row md:items-center md:justify-between">
           <H1 className="text-[22px] leading-[1.2] md:text-[26px]">{STATS.title}</H1>
@@ -212,9 +284,11 @@ export default function Stats() {
   return page(
     <div className="flex flex-col gap-4" data-testid="stats-main">
       <Tiles standing={standing} interests={interests} views={views} />
+      <PeersCard standing={standing} category={[prof, gradeLabel(standing.grade)].filter(Boolean).join(" ")} />
+      <CategoryCard standing={standing} />
+      <PartsCard standing={standing} />
       <div className="flex flex-col gap-4 lg:grid lg:grid-cols-12 lg:items-start">
         <div className="flex flex-col gap-4 lg:col-span-7">
-          <PeersCard standing={standing} category={[prof, gradeLabel(standing.grade)].filter(Boolean).join(" ")} />
           {views && <ViewsCard views={views} />}
         </div>
         <div className="flex flex-col gap-4 lg:col-span-5">

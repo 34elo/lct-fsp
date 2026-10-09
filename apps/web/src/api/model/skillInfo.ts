@@ -9,4 +9,5 @@ export interface SkillInfo {
   slug: string;
   name: string;
   group: string;
+  type?: string | null;
 }

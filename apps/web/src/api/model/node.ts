@@ -16,4 +16,5 @@ export interface Node {
   verified?: boolean | null;
   derived_from?: string | null;
   ghost?: boolean | null;
+  skill_type?: string | null;
 }

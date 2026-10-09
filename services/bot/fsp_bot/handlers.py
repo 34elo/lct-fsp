@@ -30,7 +30,7 @@ from fsp_bot.account import (
 )
 from fsp_bot.assessment import BTN_TASKS, build_assessment_router
 from fsp_bot.core_client import CoreClient, CoreError
-from fsp_bot.states import Offer, Onboarding, Resume
+from fsp_bot.states import Onboarding, Resume
 from fsp_bot.templates.render import (
     DECLINE_CODES,
     decline_keyboard,
@@ -90,7 +90,6 @@ OFFER_ERRORS = {
     "telegram_unknown": "Сначала нажми /start.",
     "forbidden": "Офферы доступны кандидатам.",
 }
-ASK_QUESTION = "Напиши вопрос работодателю одним сообщением. Отмена: /cancel"
 NO_OFFERS = "Активных офферов пока нет. Они появятся здесь, как только работодатель ответит."
 MENU_TEXTS = (BTN_RESUME, BTN_PROFILE, BTN_OFFERS, BTN_TASKS, *ACCOUNT_BUTTONS)
 
@@ -274,39 +273,10 @@ def build_router(
                 call.message, "❌ Вы отклонили оффер. Спасибо за ответ, мы передали причину."
             )
 
-    @router.callback_query(F.data.startswith("o:q:"))
-    async def offer_question_ask(call: CallbackQuery, state: FSMContext) -> None:
-        offer_id = _offer_id(call, "o:q:")
-        await state.set_state(Offer.awaiting_question)
-        await state.update_data(offer_id=offer_id)
-        await call.answer()
-        if isinstance(call.message, Message):
-            await call.message.answer(ASK_QUESTION)
-
     @router.message(Command("cancel"))
     async def cancel(message: Message, state: FSMContext) -> None:
         await state.clear()
         await message.answer("Отменено.", reply_markup=MENU_KB)
-
-    @router.message(
-        Offer.awaiting_question, F.text, ~F.text.startswith("/"), ~F.text.in_(MENU_TEXTS)
-    )
-    async def offer_question(message: Message, state: FSMContext) -> None:
-        user = message.from_user
-        data = await state.get_data()
-        offer_id = data.get("offer_id")
-        if user is None or not offer_id or not message.text:
-            await state.clear()
-            return
-        try:
-            await core.offer_message(user.id, str(offer_id), message.text)
-        except CoreError as exc:
-            if exc.status != 429:  # при лимите состояние остаётся: можно повторить позже
-                await state.clear()
-            await message.answer(offer_error(exc))
-            return
-        await state.clear()
-        await message.answer("✉️ Вопрос отправлен работодателю. Ответ придёт сюда.")
 
     @router.message(Command("resume"))
     @router.message(F.text == BTN_RESUME)

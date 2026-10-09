@@ -3,7 +3,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 
 import { cn } from "../lib/cn";
 
-/* Фирменные компоненты: грейд, протокол ФСП, командные сигналы. Эталон — docs/design/pack/screens/html/Main.html, блок 07. */
+/* Фирменные компоненты: грейд, протокол ФСП, командные сигналы. Эталон — docs/archive/design-pack/screens/html/Main.html, блок 07. */
 
 const ROLE_NAMES: Record<string, string> = {
   backend: "Backend",
@@ -97,7 +97,7 @@ function Medal({ place }: { place: number }) {
       : place === 2
         ? "border-brand-mid bg-brand-mid text-brand-deep"
         : place === 3
-          ? "border-tint-200 bg-tint-100 text-brand-deep"
+          ? "border-tint-200 bg-tint-100 text-brand-deep dark:text-ink"
           : "border-transparent bg-transparent text-muted";
   return (
     <span

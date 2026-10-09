@@ -13,9 +13,10 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
 
+import sqlalchemy as sa
 import yaml
 from fsp_contracts import new_envelope
-from fsp_contracts.enums import CompanyStatus, Grade
+from fsp_contracts.enums import CompanyStatus, Grade, RoleSlug
 from fsp_contracts.events import VacancyEvent
 from fsp_platform.app import ProblemError
 from fsp_platform.outbox import add_to_outbox
@@ -25,7 +26,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.companies import service as companies
 from app.identity.models import User
 from app.matching.scoring import DEFAULT_SCORING_PATH
-from app.taxonomy.models import Skill
+from app.taxonomy.models import Role, Skill
 from app.vacancies.models import Vacancy, VacancySkill
 
 
@@ -62,6 +63,7 @@ class SkillReq:
 
 
 def range_too_wide(salary_from: int, salary_to: int, cfg: VacancyConfig | None = None) -> bool:
+    """Вилка слишком широкая: `salary_to / salary_from > salary_range_too_wide_ratio`."""
     if cfg is None:
         cfg = VacancyConfig.load()
     return salary_from > 0 and salary_to / salary_from > cfg.salary_range_too_wide_ratio
@@ -118,21 +120,92 @@ async def list_published(session: AsyncSession) -> list[Vacancy]:
     return list(await session.scalars(select(Vacancy).where(Vacancy.status == "published")))
 
 
+async def companies_searching(session: AsyncSession, role: str, grade: str) -> int:
+    """Компаний с опубликованной вакансией на `role` с `grade` в вилке (E39-16)."""
+    from app.candidates.service import GRADE_ORDER
+
+    if grade not in GRADE_ORDER:
+        return 0
+    i = GRADE_ORDER.index(grade)
+    rows = await session.execute(
+        select(Vacancy.company_id, Vacancy.grade_min, Vacancy.grade_max).where(
+            Vacancy.status == "published", Vacancy.role == role
+        )
+    )
+    return len(
+        {
+            cid
+            for cid, lo, hi in rows
+            if lo in GRADE_ORDER
+            and hi in GRADE_ORDER
+            and GRADE_ORDER.index(lo) <= i <= GRADE_ORDER.index(hi)
+        }
+    )
+
+
+async def known_role(session: AsyncSession, slug: str) -> bool:
+    """Роль вакансии — профессия из справочника (`roles.is_profession`) или старый `RoleSlug`."""
+    if slug in {r.value for r in RoleSlug}:
+        return True
+    role = await session.scalar(select(Role).where(Role.slug == slug))
+    return role is not None and role.is_profession
+
+
+async def require_known_role(session: AsyncSession, slug: str) -> None:
+    if not await known_role(session, slug):
+        raise ProblemError(422, "unknown_role", "Такой профессии нет в справочнике")
+
+
 async def list_public(
     session: AsyncSession, *, role: str | None = None, city: str | None = None,
     q: str | None = None, limit: int = 50, offset: int = 0,
+    grade: str | None = None, skills: list[str] | None = None,
+    salary_min: int | None = None, salary_max: int | None = None,
+    work_format: str | None = None,
 ) -> list[Vacancy]:  # fmt: skip
-    """Опубликованные вакансии для кандидатов и лендинга (E20-3), свежие первыми."""
+    """Опубликованные вакансии для кандидатов и лендинга (E20-3), свежие первыми.
+
+    Фильтры (E39-17): `grade` — грейд входит в вилку вакансии; `skills` — вакансия требует все
+    перечисленные; `salary_min`/`salary_max` — вилка вакансии пересекает указанную.
+    """
     stmt = select(Vacancy).where(Vacancy.status == VacancyStatus.published.value)
     if role:
         stmt = stmt.where(Vacancy.role == role)
     if city:
-        stmt = stmt.where(Vacancy.city == city)
+        stmt = stmt.where(func.lower(Vacancy.city) == city.strip().lower())
     if q:
         like = f"%{q.strip().lower()}%"
         stmt = stmt.where(func.lower(Vacancy.title).like(like))
+    if grade:
+        order = Grade(grade).order
+        stmt = stmt.where(
+            Vacancy.grade_min.in_([g.value for g in Grade if g.order <= order]),
+            Vacancy.grade_max.in_([g.value for g in Grade if g.order >= order]),
+        )
+    if work_format:
+        if session.bind is not None and session.bind.dialect.name == "sqlite":
+            stmt = stmt.where(sa.cast(Vacancy.formats, sa.Text).like(f'%"{work_format}"%'))
+        else:
+            stmt = stmt.where(Vacancy.formats.contains([work_format]))
+    if salary_min is not None:
+        stmt = stmt.where(Vacancy.salary_to >= salary_min)
+    if salary_max is not None:
+        stmt = stmt.where(Vacancy.salary_from <= salary_max)
+    for slug in dict.fromkeys(skills or []):
+        stmt = stmt.where(
+            select(VacancySkill.vacancy_id)
+            .join(Skill, Skill.id == VacancySkill.skill_id)
+            .where(VacancySkill.vacancy_id == Vacancy.id, Skill.slug == slug)
+            .exists()
+        )
     stmt = stmt.order_by(Vacancy.published_at.desc(), Vacancy.id).limit(limit).offset(offset)
     return list(await session.scalars(stmt))
+
+
+async def get_public(session: AsyncSession, vacancy_id: uuid.UUID) -> Vacancy | None:
+    """Опубликованная вакансия по id или `None` (для карточки кандидата)."""
+    v = await session.get(Vacancy, vacancy_id)
+    return v if v is not None and v.status == VacancyStatus.published.value else None
 
 
 async def skills_of(session: AsyncSession, vacancy_ids: list[uuid.UUID]) -> dict:
@@ -155,9 +228,13 @@ async def create(
     session: AsyncSession, user: User, fields: dict, skills: list[SkillReq]
 ) -> Vacancy:
     company, _ = await companies.require_company(session, user.id)
+    await require_known_role(session, fields["role"])
     check_consistency(fields)
     resolved = await _resolve_skills(session, skills)
-    v = Vacancy(**fields, company_id=company.id, created_by=user.id, status="draft", version=1)
+    v = Vacancy(
+        **fields, company_id=company.id, created_by=user.id, status="draft", version=1,
+        is_demo=bool(company.is_demo),
+    )  # fmt: skip
     session.add(v)
     await session.flush()
     for vs in resolved:
@@ -168,8 +245,10 @@ async def create(
 
 
 async def list_owned(session: AsyncSession, user: User, status: str | None = None) -> list[Vacancy]:
-    company, _ = await companies.require_company(session, user.id)
-    q = select(Vacancy).where(Vacancy.company_id == company.id)
+    found = await companies.my_company(session, user.id)
+    if found is None:  # новая компания: вакансий ещё нет (E39-7)
+        return []
+    q = select(Vacancy).where(Vacancy.company_id == found[0].id)
     if status is not None:
         q = q.where(Vacancy.status == status)
     return list((await session.scalars(q.order_by(Vacancy.created_at.desc(), Vacancy.id))).all())
@@ -186,6 +265,8 @@ async def update(
     if v.status == VacancyStatus.closed:
         raise ProblemError(409, "invalid_status", "Закрытую вакансию нельзя изменить")
 
+    if "role" in changes:
+        await require_known_role(session, changes["role"])
     check_consistency({**_snapshot(v), **changes})
     new_skills = await _resolve_skills(session, skills) if skills is not None else None
     if not changes and new_skills is None:

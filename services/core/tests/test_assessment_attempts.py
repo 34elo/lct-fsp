@@ -184,6 +184,30 @@ async def test_empty_answer_moves_to_new_item(api, factory, taxonomy_loaded):
     assert len(ids) >= 2
 
 
+async def test_answer_and_next_lock_attempt_row(api, factory, taxonomy_loaded, monkeypatch):
+    """Параллельный повтор ответа не должен дважды менять LLR: попытка читается FOR UPDATE."""
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    h = register(api)
+    aid = _start(api, h).json()["id"]
+    locks: list[bool] = []
+    orig = AsyncSession.get
+
+    async def spy(self, entity, ident, **kw):
+        if entity is Attempt:
+            locks.append(bool(kw.get("with_for_update")))
+        return await orig(self, entity, ident, **kw)
+
+    monkeypatch.setattr(AsyncSession, "get", spy)
+    item = api.get(f"/assessment/attempts/{aid}/next", headers=h).json()
+    api.post(
+        f"/assessment/attempts/{aid}/answers",
+        json={"response_id": item["response_id"], "answer": "x"},
+        headers=h,
+    )
+    assert locks and locks[0] is True and locks[1] is True
+
+
 async def test_foreign_attempt_is_404(api, factory, taxonomy_loaded):
     owner = register(api)
     aid = _start(api, owner).json()["id"]
@@ -211,8 +235,12 @@ async def test_foreign_attempt_is_404(api, factory, taxonomy_loaded):
 async def test_attempt_checks(api, taxonomy_loaded, monkeypatch):
     h = register(api)
     assert _start(api, h, profession="designer").json()["code"] == "unknown_profession"
-    # скрытая профессия (ADR-027 п.1, E36-2): новый тест по ней не начать
-    assert _start(api, h, profession="ml").json()["code"] == "unknown_profession"
+    # все профессии открыты (E39-6): тест по профессии с тонким банком («бета») начинается
+    other = register(api)
+    beta = _start(api, other, profession="mobile")
+    assert beta.status_code == 201, beta.text
+    first = api.get(f"/assessment/attempts/{beta.json()['id']}/next", headers=other)
+    assert first.status_code == 200 and first.json().get("response_id"), first.text
     assert _start(api, h).status_code == 201
     dup = _start(api, h)
     assert dup.status_code == 409 and dup.json()["code"] == "attempt_active"

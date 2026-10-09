@@ -10,7 +10,7 @@ on:
       action:
         description: Что сделать со стендом
         type: choice
-        options: [deploy, backup, demo-reset, demo-reseed, prod-init]
+        options: [deploy, backup, demo-reset, demo-reseed, demo-e2e, prod-init]
         default: deploy
       confirm:
         description: Для prod-init впишите ПЕРЕСОЗДАТЬ (тома БД будут удалены)
@@ -62,3 +62,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: sh infra/scripts/deploy.sh "${{ inputs.action }}"
+
+  # E40-1: e2e демо-сценария против прода по кнопке (только демо-аккаунты: песочницы жюри, герои).
+  # Адрес — переменная репозитория E2E_PROD_URL; на сервере ничего не выполняется.
+  demo-e2e:
+    if: github.event_name == 'workflow_dispatch' && inputs.action == 'demo-e2e'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      E2E_PROD_URL: ${{ vars.E2E_PROD_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: test -n "$E2E_PROD_URL" || { echo "задайте переменную репозитория E2E_PROD_URL" >&2; exit 1; }
+      - run: pnpm exec playwright install --with-deps chromium
+        working-directory: apps/web
+      - run: pnpm exec playwright test e2e/b2-prod-demo.spec.ts --project=desktop
+        working-directory: apps/web

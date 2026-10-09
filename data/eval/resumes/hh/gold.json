@@ -1,0 +1,380 @@
+{
+  "version": 1,
+  "resumes": [
+    {
+      "file": "01.pdf",
+      "full_name": "Воронов Артём Игоревич",
+      "phone": "+79000001101",
+      "email": "a.voronov@example.test",
+      "city": "Москва",
+      "summary": "Пишу надёжные сервисы и люблю разбирать инциденты. Ищу команду с сильной инженерной культурой.",
+      "experience": [
+        {
+          "company": "ООО «Вымышленная логистика»",
+          "title": "Backend-разработчик",
+          "start": "2021-08",
+          "end": null
+        },
+        {
+          "company": "АО «Придуманные системы»",
+          "title": "Python-разработчик",
+          "start": "2018-06",
+          "end": "2021-07"
+        }
+      ],
+      "education": [
+        {
+          "institution": "Московский вымышленный университет",
+          "year_end": 2018,
+          "field": "Прикладная математика и информатика"
+        }
+      ],
+      "skills": [
+        "django",
+        "docker",
+        "fastapi",
+        "git",
+        "postgresql",
+        "pytest",
+        "python",
+        "redis"
+      ]
+    },
+    {
+      "file": "02.docx",
+      "full_name": "Лебедева Ксения Андреевна",
+      "phone": "+79000001102",
+      "email": "k.lebedeva@example.test",
+      "city": "Санкт-Петербург",
+      "summary": "Занимаюсь рекомендательными системами. Люблю воспроизводимые эксперименты.",
+      "experience": [
+        {
+          "company": "ООО «Придуманные данные»",
+          "title": "Data Scientist",
+          "start": "2022-09",
+          "end": null
+        },
+        {
+          "company": "ООО «Вымышленный банк»",
+          "title": "Аналитик данных",
+          "start": "2020-02",
+          "end": "2022-08"
+        }
+      ],
+      "education": [
+        {
+          "institution": "Санкт-Петербургский вымышленный университет",
+          "year_end": 2020,
+          "field": "Машинное обучение"
+        }
+      ],
+      "skills": [
+        "airflow",
+        "grafana",
+        "pandas",
+        "python",
+        "pytorch",
+        "scikit-learn",
+        "sql"
+      ]
+    },
+    {
+      "file": "03.pdf",
+      "full_name": "Соколов Дмитрий Павлович",
+      "phone": "+79000001103",
+      "email": "d.sokolov@example.test",
+      "city": "Казань",
+      "summary": null,
+      "experience": [
+        {
+          "company": "ООО «Выдуманные интерфейсы»",
+          "title": "Ведущий frontend-разработчик",
+          "start": "2020-03",
+          "end": "2026-05"
+        },
+        {
+          "company": "ИП Тестов",
+          "title": "Верстальщик",
+          "start": "2016-09",
+          "end": "2020-02"
+        }
+      ],
+      "education": [
+        {
+          "institution": "Казанский вымышленный технический университет",
+          "year_end": 2016,
+          "field": "Программная инженерия"
+        }
+      ],
+      "skills": [
+        "css",
+        "figma",
+        "git",
+        "html",
+        "javascript",
+        "react",
+        "typescript"
+      ]
+    },
+    {
+      "file": "04.docx",
+      "full_name": "Кузнецова Анна Викторовна",
+      "phone": "+79000001104",
+      "email": "a.kuznetsova@example.test",
+      "city": "Новосибирск",
+      "summary": "Автоматизирую всё, что делается руками больше двух раз.",
+      "experience": [
+        {
+          "company": "ООО «Придуманный хостинг»",
+          "title": "DevOps-инженер",
+          "start": "2023-01",
+          "end": null
+        },
+        {
+          "company": "АО «Вымышленные сети»",
+          "title": "Системный администратор",
+          "start": "2019-04",
+          "end": "2022-12"
+        }
+      ],
+      "education": [
+        {
+          "institution": "Новосибирский вымышленный государственный университет",
+          "year_end": 2017,
+          "field": "Информационные системы"
+        }
+      ],
+      "skills": [
+        "ansible",
+        "bash",
+        "docker",
+        "grafana",
+        "kubernetes",
+        "linux",
+        "terraform"
+      ]
+    },
+    {
+      "file": "05.pdf",
+      "full_name": "Морозов Илья Сергеевич",
+      "phone": "+79000001105",
+      "email": "i.morozov@example.test",
+      "city": "Екатеринбург",
+      "summary": "Хочу вырасти до автоматизатора тестирования.",
+      "experience": [
+        {
+          "company": "ООО «Выдуманный софт»",
+          "title": "Инженер по тестированию",
+          "start": "2024-06",
+          "end": null
+        },
+        {
+          "company": "ООО «Придуманные игры»",
+          "title": "Стажёр QA",
+          "start": "2023-02",
+          "end": "2024-05"
+        }
+      ],
+      "education": [
+        {
+          "institution": "Уральский вымышленный федеральный университет",
+          "year_end": 2024,
+          "field": "Информатика"
+        }
+      ],
+      "skills": [
+        "bug_tracking",
+        "git",
+        "pytest",
+        "python",
+        "selenium",
+        "sql"
+      ]
+    },
+    {
+      "file": "06.docx",
+      "full_name": "Павлова Елена Николаевна",
+      "phone": "+79000001106",
+      "email": "e.pavlova@example.test",
+      "city": "Москва",
+      "summary": "Люблю аккуратные интерфейсы и быстрые приложения.",
+      "experience": [
+        {
+          "company": "ООО «Вымышленный маркет»",
+          "title": "Android-разработчик",
+          "start": "2021-11",
+          "end": null
+        },
+        {
+          "company": "ООО «Придуманные приложения»",
+          "title": "Junior Android-разработчик",
+          "start": "2019-09",
+          "end": "2021-10"
+        }
+      ],
+      "education": [
+        {
+          "institution": "Московский вымышленный технический институт",
+          "year_end": 2019,
+          "field": "Программная инженерия"
+        }
+      ],
+      "skills": [
+        "bug_tracking",
+        "docker",
+        "git",
+        "kotlin",
+        "sql"
+      ]
+    },
+    {
+      "file": "07.pdf",
+      "full_name": "Николаев Григорий Олегович",
+      "phone": "+79000001107",
+      "email": "g.nikolaev@example.test",
+      "city": "Самара",
+      "summary": "Строю надёжные конвейеры данных.",
+      "experience": [
+        {
+          "company": "ПАО «Вымышленная энергия»",
+          "title": "Ведущий инженер данных",
+          "start": "2019-05",
+          "end": null
+        },
+        {
+          "company": "ООО «Придуманные данные»",
+          "title": "Разработчик SQL",
+          "start": "2014-08",
+          "end": "2019-04"
+        }
+      ],
+      "education": [
+        {
+          "institution": "Самарский вымышленный университет",
+          "year_end": 2012,
+          "field": "Прикладная информатика"
+        }
+      ],
+      "skills": [
+        "airflow",
+        "clickhouse",
+        "kafka",
+        "linux",
+        "postgresql",
+        "python",
+        "sql"
+      ]
+    },
+    {
+      "file": "08.docx",
+      "full_name": "Захарова Ольга Дмитриевна",
+      "phone": "+79000001108",
+      "email": "o.zakharova@example.test",
+      "city": "Нижний Новгород",
+      "summary": "Перевожу пожелания бизнеса на язык разработки.",
+      "experience": [
+        {
+          "company": "ООО «Выдуманные решения»",
+          "title": "Системный аналитик",
+          "start": "2022-02",
+          "end": null
+        },
+        {
+          "company": "АО «Придуманный банк»",
+          "title": "Бизнес-аналитик",
+          "start": "2018-10",
+          "end": "2022-01"
+        }
+      ],
+      "education": [
+        {
+          "institution": "Нижегородский вымышленный университет",
+          "year_end": 2018,
+          "field": "Бизнес-информатика"
+        }
+      ],
+      "skills": [
+        "agile",
+        "bug_tracking",
+        "excel",
+        "python",
+        "sql"
+      ]
+    },
+    {
+      "file": "09.pdf",
+      "full_name": "Беляев Максим Александрович",
+      "phone": "+79000001109",
+      "email": "m.belyaev@example.test",
+      "city": "Воронеж",
+      "summary": null,
+      "experience": [
+        {
+          "company": "ООО «Вымышленные сервисы»",
+          "title": "Fullstack-разработчик",
+          "start": "2023-04",
+          "end": "2026-08"
+        },
+        {
+          "company": "ИП Тестов",
+          "title": "Веб-разработчик",
+          "start": "2020-01",
+          "end": "2023-03"
+        }
+      ],
+      "education": [
+        {
+          "institution": "Воронежский вымышленный колледж",
+          "year_end": 2019,
+          "field": "Программирование в компьютерных системах"
+        }
+      ],
+      "skills": [
+        "docker",
+        "flask",
+        "git",
+        "javascript",
+        "postgresql",
+        "python",
+        "vue"
+      ]
+    },
+    {
+      "file": "10.docx",
+      "full_name": "Тихонова Дарья Максимовна",
+      "phone": "+79000001110",
+      "email": "d.tikhonova@example.test",
+      "city": "Томск",
+      "summary": "Интересуюсь компьютерным зрением и оптимизацией моделей.",
+      "experience": [
+        {
+          "company": "ООО «Придуманный интеллект»",
+          "title": "ML-инженер",
+          "start": "2023-07",
+          "end": null
+        }
+      ],
+      "education": [
+        {
+          "institution": "Томский вымышленный политехнический университет",
+          "year_end": 2023,
+          "field": "Искусственный интеллект"
+        },
+        {
+          "institution": "Томский вымышленный политехнический университет",
+          "year_end": 2021,
+          "field": "Прикладная информатика"
+        }
+      ],
+      "skills": [
+        "docker",
+        "git",
+        "linux",
+        "numpy",
+        "pandas",
+        "python",
+        "pytorch"
+      ]
+    }
+  ]
+}

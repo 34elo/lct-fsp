@@ -382,6 +382,36 @@ async def experience_for_profile(session: AsyncSession, candidate_id: uuid.UUID)
     ]
 
 
+async def education_for_profile(session: AsyncSession, candidate_id: uuid.UUID) -> list[dict]:
+    """Образование для `CandidateProfile.education` (E39-15): свежие первыми."""
+    rows = await session.scalars(
+        select(Education)
+        .where(Education.candidate_id == candidate_id)
+        .order_by(Education.year_end.desc().nulls_last(), Education.id)
+    )
+    return [
+        {"institution": r.institution, "degree": r.degree, "field": r.field, "year_end": r.year_end}
+        for r in rows
+    ]
+
+
+DRAFT_STATUSES = ("queued", "parsing", "parsed")
+
+
+async def draft_id_for_profile(session: AsyncSession, candidate_id: uuid.UUID) -> uuid.UUID | None:
+    """Черновик для вкладки «Данные» (E39-15): последнее загруженное резюме, если оно ещё не
+    подтверждено и не упало. Подтверждённое или неудачное последним — черновика нет."""
+    last = (
+        await session.execute(
+            select(Resume.id, Resume.status)
+            .where(Resume.candidate_id == candidate_id)
+            .order_by(Resume.created_at.desc())
+            .limit(1)
+        )
+    ).first()
+    return last[0] if last is not None and last[1] in DRAFT_STATUSES else None
+
+
 async def erase_candidate(
     session: AsyncSession, storage: ObjectStorage, candidate_id: uuid.UUID
 ) -> None:

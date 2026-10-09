@@ -4,8 +4,6 @@ import asyncio
 import json
 import shutil
 import sqlite3
-import subprocess
-import sys
 import uuid
 from pathlib import Path
 
@@ -14,6 +12,7 @@ import pytest
 from app.config import Settings
 from app.main import build_app
 from app.notifications.handlers import register
+from core_helpers import upgrade_head
 from fastapi.testclient import TestClient
 from fsp_contracts import Envelope, new_envelope
 from fsp_contracts.assessment import RegularTaskPublished
@@ -37,10 +36,7 @@ CHAT = 424242
 @pytest.fixture(scope="module")
 def template_db(tmp_path_factory):
     db = tmp_path_factory.mktemp("tpl") / "n.db"
-    subprocess.run(
-        [sys.executable, "-m", "alembic", "-x", f"url=sqlite+aiosqlite:///{db}", "upgrade", "head"],
-        cwd=CORE, check=True, capture_output=True,
-    )  # fmt: skip
+    upgrade_head(f"sqlite+aiosqlite:///{db}")
     with sqlite3.connect(db) as con:
         con.execute(
             "insert into skills (id, slug, name, kind, status, source, support_candidates,"

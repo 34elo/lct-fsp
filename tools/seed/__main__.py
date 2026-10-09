@@ -5,7 +5,9 @@ fsp-mock  — записать JSON с данными fsp-mock (FSP_MOCK_DATA=<�
 core      — наполнить БД core через его сервисные слои (DATABASE_URL, справочник навыков загружен)
 all       — fsp-mock + core
 demo2     — демо-данные v2 (E34-1, demo_v2.py): герои, компании, офферы, задания; после grades
+families  — демо-очередь допуска заданий (E39-31): профессия × грейд, идемпотентно
 grades    — seed-грейды (таблица grades, блок 1); после core, идемпотентно
+fsp-registry — демо-реестр ФСП в БД fsp-connector (FSP_CONNECTOR_DATABASE_URL; E39-28)
 """
 
 from __future__ import annotations
@@ -108,6 +110,19 @@ async def seed_grades_cmd(plan: dict) -> dict:
         await engine.dispose()
 
 
+async def seed_families_cmd() -> dict:
+    from app.config import Settings
+    from fsp_platform.db import make_engine, make_session_factory
+
+    from .families import seed_families
+
+    engine = make_engine(Settings().database_url)
+    try:
+        return await seed_families(make_session_factory(engine))
+    finally:
+        await engine.dispose()
+
+
 async def seed_demo2_cmd(plan: dict) -> dict:
     from app.config import Settings
     from fsp_platform.db import make_engine, make_session_factory
@@ -142,8 +157,14 @@ def load_env_file(path: Path, db_host_port: str = "28432") -> None:
     for key in ("PSEUDO_ID_SECRET", "ANALYTICS_SALT", "PII_KEY", "JWT_SECRET"):
         if env.get(key):
             os.environ.setdefault(key, env[key])
+    host_port = env.get("POSTGRES_HOST_PORT") or db_host_port
+    if env.get("FSPC_DB_PASSWORD"):
+        os.environ.setdefault(
+            "FSP_CONNECTOR_DATABASE_URL",
+            f"postgresql+asyncpg://fspc:{env['FSPC_DB_PASSWORD']}@127.0.0.1:{host_port}"
+            "/fsp_connector",
+        )
     if env.get("CORE_DB_PASSWORD"):
-        host_port = env.get("POSTGRES_HOST_PORT") or db_host_port
         os.environ.setdefault(
             "DATABASE_URL",
             f"postgresql+asyncpg://core:{env['CORE_DB_PASSWORD']}@127.0.0.1:{host_port}/core",
@@ -168,7 +189,10 @@ def print_accounts(plan: dict) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="tools.seed", description=__doc__)
-    p.add_argument("command", choices=["plan", "fsp-mock", "core", "all", "grades", "demo2"])
+    p.add_argument(
+        "command",
+        choices=["plan", "fsp-mock", "core", "all", "grades", "families", "demo2", "fsp-registry"],
+    )
     p.add_argument(
         "--seed", type=int, default=int(os.environ["SEED"]) if os.environ.get("SEED") else None
     )
@@ -202,11 +226,31 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Ошибка seed-грейдов: {type(exc).__name__}: {exc}", file=sys.stderr)
             return 1
         print(json.dumps(stats, ensure_ascii=False, indent=1, sort_keys=True))
+    if args.command == "families":
+        try:
+            stats = asyncio.run(seed_families_cmd())
+        except Exception as exc:  # noqa: BLE001
+            print(f"Ошибка демо-заданий допуска: {type(exc).__name__}: {exc}", file=sys.stderr)
+            return 1
+        print(json.dumps(stats, ensure_ascii=False, indent=1, sort_keys=True))
     if args.command == "demo2":
         try:
             stats = asyncio.run(seed_demo2_cmd(plan))
         except Exception as exc:  # noqa: BLE001
             print(f"Ошибка демо-данных v2: {type(exc).__name__}: {exc}", file=sys.stderr)
+            return 1
+        print(json.dumps(stats, ensure_ascii=False, indent=1, sort_keys=True))
+    if args.command == "fsp-registry":
+        from .fsp_registry import seed_registry
+
+        url = os.environ.get("FSP_CONNECTOR_DATABASE_URL")
+        if not url:
+            print("Нужен FSP_CONNECTOR_DATABASE_URL или --env-file", file=sys.stderr)
+            return 1
+        try:
+            stats = asyncio.run(seed_registry(url, plan))
+        except Exception as exc:  # noqa: BLE001
+            print(f"Ошибка демо-реестра ФСП: {type(exc).__name__}: {exc}", file=sys.stderr)
             return 1
         print(json.dumps(stats, ensure_ascii=False, indent=1, sort_keys=True))
     return 0

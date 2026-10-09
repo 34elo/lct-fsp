@@ -54,6 +54,8 @@ class Node(BaseModel):
     verified: bool | None = None
     derived_from: str | None = None
     ghost: bool | None = None
+    # тип навыка (assessment.md §2: fundamental | hard | thinking | business | soft | experience)
+    skill_type: str | None = None
 
 
 class Edge(BaseModel):
@@ -117,6 +119,7 @@ async def build(
     briefs = await taxonomy.skill_briefs(session, [s.skill_id for s in chosen])
     chosen = [s for s in chosen if s.skill_id in briefs]
     slug_of = {s.skill_id: briefs[s.skill_id][0] for s in chosen}
+    types = await taxonomy.skill_types_of(session, list(slug_of.values()))
 
     nodes: dict[str, Node] = {CAND: Node(id=CAND, type="candidate", label=cand.pseudonym)}
     edges: list[Edge] = []
@@ -126,6 +129,7 @@ async def build(
             id=f"s:{slug}", type="skill", label=name, level=s.level,
             confidence=round(s.confidence, 4),
             derived_from=f"s:{briefs[s.derived_from][0]}" if s.derived_from in briefs else None,
+            skill_type=types[slug].value if slug in types else None,
         )  # fmt: skip
 
     # факты → навыки (источник test входит наравне с остальными)

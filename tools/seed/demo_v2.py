@@ -18,6 +18,7 @@ from typing import Any
 
 import yaml
 from app.assessment import grading, tasks
+from app.assessment import service as assessment_service
 from app.assessment.attempts import build_item, family_of
 from app.assessment.config import load_config as load_assessment_config
 from app.assessment.models import Attempt, FamilyRow, RegularTask, Response
@@ -29,7 +30,10 @@ from app.config import Settings
 from app.graph.recompute import recompute_profile
 from app.identity import service as identity
 from app.identity.models import User
+from app.matching import needs as needs_cfg
+from app.matching import needs_service
 from app.matching import service as matching
+from app.matching.models import Need
 from app.offers import service as offers
 from app.offers.models import Offer
 from app.vacancies import service as vacancies
@@ -37,6 +41,7 @@ from app.vacancies.models import Vacancy
 from app.vacancies.service import SkillReq
 from fsp_contracts.assessment import TestGrade
 from fsp_contracts.enums import DeclineReason, OfferStatus
+from fsp_contracts.ml import SearchFilters
 from fsp_platform.app import ProblemError
 from fsp_platform.db import session_scope
 from sqlalchemy import select
@@ -62,6 +67,10 @@ def plan_attempts(data: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
     return {k: sorted(v, key=lambda a: -a["days_ago"]) for k, v in out.items()}
 
 
+SHORTLIST_EMAILS = ("olga", "jury-hr", "hr02", "hr03", "hr04", "hr05")
+SHORTLIST_NEED_TEXT = "Демо: кандидаты на заметку"
+
+
 class DemoV2:
     def __init__(self, seeder: Seeder, data: dict[str, Any] | None = None) -> None:
         self.sd = seeder
@@ -79,6 +88,7 @@ class DemoV2:
         await self.companies_and_vacancies()
         await self.offers_and_applications()
         await self.regular_tasks()
+        await self.shortlists()
         return dict(self.stats)
 
     # ------------------------------------------------------------------------- герои
@@ -381,6 +391,51 @@ class DemoV2:
                     answer = str(item.key) if verdict == "correct" else "0"
                     await tasks.submit(s, task, uid, answer)
                     self.stats["demo2_task_answers"] += 1
+
+    # ------------------------------------------------------------------ шорт-листы (E39-23)
+    async def shortlists(self) -> None:
+        """Шорт-лист демо-работодателей не пуст (E39-23): 3–5 видимых кандидатов у каждого.
+
+        Берём кандидатов с грейдом и согласием на публикацию по кругу со сдвигом на работодателя,
+        чтобы наборы различались. Идемпотентно: потребность помечена текстом.
+        """
+        async with session_scope(self.factory) as s:
+            rows = (await s.execute(select(Candidate.user_id, Candidate.pseudo_id))).all()
+            visible = await matching.visible_ids(s, [uid for uid, _ in rows])
+            pool = sorted(((pid, uid) for uid, pid in rows if uid in visible))
+            grades = await assessment_service.get_grades_many(s, [uid for _, uid in pool])
+        pool = [(pid, uid) for pid, uid in pool if grades.get(uid)]
+        if len(pool) < 3:
+            return
+        for i, name in enumerate(SHORTLIST_EMAILS):
+            email = f"{name}@demo.fsp.test"
+            async with session_scope(self.factory) as s:
+                user = await self.sd._user_by_email(s, email)
+                if user is None:
+                    continue
+                m = await companies.membership(s, user.id)
+                if m is None:
+                    continue
+                exists = await s.scalar(
+                    select(Need.id).where(
+                        Need.company_id == m.company_id, Need.text == SHORTLIST_NEED_TEXT
+                    )
+                )
+                if exists is not None:
+                    continue
+                size = 3 + i % 3
+                start = (i * 4) % len(pool)
+                picked = [pool[(start + k) % len(pool)] for k in range(min(size, len(pool)))]
+                profession = grades[picked[0][1]][0].profession
+                need = await needs_service.create(
+                    s,
+                    m.company_id,
+                    SHORTLIST_NEED_TEXT,
+                    SearchFilters(professions=[profession]),
+                    needs_cfg.NeedsConfig.load(),
+                )
+                need.shortlist = [pid for pid, _ in picked]
+                self.stats["demo2_shortlists"] += len(picked)
 
 
 async def seed_demo_v2(seeder: Seeder) -> dict[str, int]:

@@ -1,7 +1,11 @@
+import { PAGE } from "@/shared/lib/page";
+import { Gloss } from "@/shared/Gloss";
 import {
   buttonVariants,
   Button,
   Chips,
+  Input,
+  SegmentedControl,
   ConstellationAvatar,
   dotsText,
   EmptyState,
@@ -10,6 +14,7 @@ import {
   FspProtocol,
   GradeTag,
   H1,
+  H2,
   Lbl,
   ListRow,
   MatchRingV2,
@@ -21,7 +26,6 @@ import {
   SkillTag,
   StatusTag,
   Tag,
-  ThemeScope,
   type WhyItem,
 } from "@fsp/ui";
 import { useState } from "react";
@@ -40,7 +44,18 @@ import { OfferDialog } from "@/features/offers/OfferDialog";
 import { EMP_INT_TEXT as IT, OFFER_STATUS_LABEL } from "@/features/offers/text";
 import { GRADE_LABEL, roleLabel } from "@/features/profile/text";
 import { displayPseudonym } from "@/shared/lib/pseudonym";
-import { dedupeExperience, fspResults, groupSkills, kindOf, skillLevel, yearsLabel } from "./candidate-model";
+import {
+  dedupeExperience,
+  filterSkills,
+  fspResults,
+  kindOf,
+  rankSkills,
+  skillLevel,
+  splitClaimed,
+  TOP_SKILLS,
+  yearsLabel,
+  type SkillFilter,
+} from "./candidate-model";
 import { FORMAT_LABEL, SEARCH_STATUS_LABEL, SOURCE_SHORT } from "./text";
 
 const T = {
@@ -56,9 +71,25 @@ const T = {
   rank: (r: number) => `ранг ${r.toFixed(2)}`,
   skills: "Навыки",
   skillsHint: "сплошная — подтверждено · пунктир — заявлено",
-  noSkills: "Навыки ещё не подтверждены.",
-  claimedMore: (n: number) => `ещё ${n} без подтверждения`,
-  claimedNote: "Заявлены кандидатом, независимого подтверждения нет.",
+  noSkills: "Навыки ещё не указаны.",
+  allSkills: (n: number) => `Все навыки (${n})`,
+  hideSkills: "Свернуть",
+  skillSearch: "Найти навык",
+  skillFilter: "Фильтр навыков",
+  filterAll: "Все",
+  filterConfirmed: "Подтверждённые",
+  filterClaimed: "Заявленные",
+  nothingFound: "Ничего не найдено — измените запрос или фильтр.",
+  claimedCol: "Заявлено кандидатом",
+  confirmedCol: "Подтверждено",
+  claimedColHint: "Слова кандидата и резюме, без независимого подтверждения",
+  confirmedColHint: "Тест, ФСП, GitHub и другие проверяемые источники",
+  skillsCount: (n: number) => `${n} навыков`,
+  gradeLbl: "Грейд",
+  noneClaimed: "Заявленных без подтверждения нет.",
+  noneConfirmed: "Подтверждённых навыков пока нет.",
+  more: (n: number) => `и ещё ${n}`,
+  fspHint: "Сначала соревнования, релевантные профессии кандидата",
   evidence: "Показать связи списком",
   fsp: "Достижения ФСП",
   claimedConfirmed: "Заявлено и подтверждено",
@@ -104,34 +135,54 @@ function Skeletons() {
   );
 }
 
-function Skills({ list, claimed }: { list: SkillWithTrust[]; claimed: SkillWithTrust[] }) {
-  if (list.length === 0 && claimed.length === 0) return <p className="text-14 text-muted">{T.noSkills}</p>;
-  const withEv = list.filter((s) => s.top_evidence.length > 0);
+function SkillRow({ s }: { s: SkillWithTrust }) {
   return (
-    <div className="flex flex-col">
-      {list.map((s) => (
-        <ListRow key={s.skill.slug}>
-          <SkillTag name={s.skill.name} state={kindOf(s) === "verified" ? "confirmed" : "claimed"} className="min-w-24" />
-          <span aria-label={`доверие ${skillLevel(s)} из 4`} className="num text-12 text-brand-fg">
-            {dotsText(skillLevel(s))}
-          </span>
-          <Chips className="ml-auto justify-end">
-            {s.sources.map((x) => (
-              <Tag key={x}>{SOURCE_SHORT[x] ?? x}</Tag>
-            ))}
-          </Chips>
-        </ListRow>
-      ))}
-      {claimed.length > 0 && (
-        <details className="pt-3 text-13 text-muted">
-          <summary className="cursor-pointer select-none font-medium text-ink">{T.claimedMore(claimed.length)}</summary>
-          <p className="mt-2">{T.claimedNote}</p>
-          <Chips className="mt-2">
-            {claimed.map((s) => (
-              <SkillTag key={s.skill.slug} name={s.skill.name} state="claimed" />
-            ))}
-          </Chips>
-        </details>
+    <ListRow>
+      <SkillTag name={s.skill.name} state={kindOf(s) === "verified" ? "confirmed" : "claimed"} className="min-w-24" />
+      <span aria-label={`доверие ${skillLevel(s)} из 4`} className="num text-12 text-brand-fg">
+        {dotsText(skillLevel(s))}
+      </span>
+      <Chips className="ml-auto justify-end">
+        {s.sources.map((x) => (
+          <Tag key={x}>{SOURCE_SHORT[x] ?? x}</Tag>
+        ))}
+      </Chips>
+    </ListRow>
+  );
+}
+
+/** Топ-10 навыков; «Все навыки» открывает полный список с поиском и фильтром. */
+function Skills({ all }: { all: SkillWithTrust[] }) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<SkillFilter>("all");
+  const ranked = rankSkills(all);
+  if (ranked.length === 0) return <p className="text-14 text-muted">{T.noSkills}</p>;
+  const shown = open ? filterSkills(ranked, query, filter) : ranked.slice(0, TOP_SKILLS);
+  const withEv = shown.filter((s) => s.top_evidence.length > 0);
+  return (
+    <div className="flex min-w-0 flex-col">
+      {open && (
+        <div className="flex flex-col gap-2 pb-2 sm:flex-row sm:items-center">
+          <Input type="search" aria-label={T.skillSearch} placeholder={T.skillSearch} value={query} onChange={(e) => setQuery(e.target.value)} className="sm:max-w-xs" />
+          <SegmentedControl
+            label={T.skillFilter}
+            value={filter}
+            onValueChange={(v) => setFilter(v as SkillFilter)}
+            options={[
+              { value: "all", label: T.filterAll },
+              { value: "confirmed", label: T.filterConfirmed },
+              { value: "claimed", label: T.filterClaimed },
+            ]}
+            className="self-start"
+          />
+        </div>
+      )}
+      {shown.length === 0 ? <p className="py-2 text-14 text-muted">{T.nothingFound}</p> : shown.map((s) => <SkillRow key={s.skill.slug} s={s} />)}
+      {ranked.length > TOP_SKILLS && (
+        <Button variant="outline" className="mt-3 self-start" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+          {open ? T.hideSkills : T.allSkills(ranked.length)}
+        </Button>
       )}
       {withEv.length > 0 && (
         <details className="pt-3 text-14">
@@ -150,24 +201,76 @@ function Skills({ list, claimed }: { list: SkillWithTrust[]; claimed: SkillWithT
   );
 }
 
-function ClaimedConfirmed({ row }: { row: ClaimedVsConfirmed }) {
-  const declared = row.declared_grade ?? row.resume_grade ?? null;
-  const cell = "w-24 shrink-0";
+const COL_SKILLS = 12;
+
+function ClaimedColumn({
+  title,
+  hint,
+  grade,
+  claimedGrade,
+  skills,
+  empty,
+  state,
+}: {
+  title: string;
+  hint: string;
+  grade: string | null;
+  claimedGrade: boolean;
+  skills: SkillWithTrust[];
+  empty: string;
+  state: "claimed" | "confirmed";
+}) {
   return (
-    <>
-      <ListRow className="gap-2.5">
-        <Lbl className={cell}>{T.profession}</Lbl>
-        <Num className="text-13">{professionTitle(row.profession)}</Num>
-      </ListRow>
-      <ListRow className="gap-2.5">
-        <Lbl className={cell}>{T.declared}</Lbl>
-        {declared ? <GradeTag claimed>{gradeTitle(declared)}</GradeTag> : <span className="text-13 text-muted">{T.noGrade}</span>}
-      </ListRow>
-      <ListRow className="gap-2.5">
-        <Lbl className={cell}>{T.confirmed}</Lbl>
-        {row.confirmed_grade ? <GradeTag>{gradeTitle(row.confirmed_grade)}</GradeTag> : <span className="text-13 text-muted">{T.noGrade}</span>}
-      </ListRow>
-    </>
+    <section aria-label={title} className="flex min-w-0 flex-col gap-2.5 rounded-lg border border-hairline p-3.5">
+      <div className="flex items-baseline justify-between gap-2">
+        <Lbl>{title}</Lbl>
+        <Num className="text-20 font-semibold" aria-label={T.skillsCount(skills.length)}>
+          {skills.length}
+        </Num>
+      </div>
+      <p className="text-12 text-muted">{hint}</p>
+      <div className="flex items-center gap-2 text-13">
+        <span className="text-muted">{T.gradeLbl}</span>
+        {grade ? <GradeTag claimed={claimedGrade}>{grade}</GradeTag> : <span className="text-muted">{T.noGrade}</span>}
+      </div>
+      {skills.length === 0 ? (
+        <p className="text-13 text-muted">{empty}</p>
+      ) : (
+        <Chips>
+          {skills.slice(0, COL_SKILLS).map((s) => (
+            <SkillTag key={s.skill.slug} name={s.skill.name} state={state} />
+          ))}
+          {skills.length > COL_SKILLS && <span className="text-13 text-muted">{T.more(skills.length - COL_SKILLS)}</span>}
+        </Chips>
+      )}
+    </section>
+  );
+}
+
+/** Отдельный блок: слева то, что кандидат заявил, справа то, что подтверждено; у каждой колонки счётчик. */
+function ClaimedConfirmed({ row, skills }: { row: ClaimedVsConfirmed | null; skills: SkillWithTrust[] }) {
+  const { confirmed, claimed } = splitClaimed(skills);
+  const declared = row ? (row.declared_grade ?? row.resume_grade ?? null) : null;
+  return (
+    <div className="flex flex-col gap-3">
+      {row && (
+        <p className="text-13 text-muted">
+          {T.profession}: <Num className="text-ink">{professionTitle(row.profession)}</Num>
+        </p>
+      )}
+      <div className="grid gap-3 md:grid-cols-2">
+        <ClaimedColumn title={T.claimedCol} hint={T.claimedColHint} grade={declared ? gradeTitle(declared) : null} claimedGrade skills={claimed} empty={T.noneClaimed} state="claimed" />
+        <ClaimedColumn
+          title={T.confirmedCol}
+          hint={T.confirmedColHint}
+          grade={row?.confirmed_grade ? gradeTitle(row.confirmed_grade) : null}
+          claimedGrade={false}
+          skills={confirmed}
+          empty={T.noneConfirmed}
+          state="confirmed"
+        />
+      </div>
+    </div>
   );
 }
 
@@ -179,8 +282,6 @@ function Body({ c, vacancyId, needId }: { c: CandidateCardFull; vacancyId: strin
   const role = c.primary_role ? roleLabel(c.primary_role) : null;
   const stack = c.primary_stack.slice(0, 2).join(", ");
   const items: WhyItem[] = (c.match?.explanation ?? []).map((i) => ({ kind: WHY_KIND[i.kind], text: i.text }));
-  const { groups, claimed } = groupSkills(c.skills);
-  const list = groups.flatMap((g) => g.skills);
   const protocol = fspResults(c.fsp_highlights);
   const experience = dedupeExperience(c.experience);
   const strength = c.strength ? Math.round(c.strength.value * 100) : null;
@@ -258,25 +359,21 @@ function Body({ c, vacancyId, needId }: { c: CandidateCardFull; vacancyId: strin
 
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <div className="flex min-w-0 flex-col gap-4">
+          {(c.skills.length > 0 || main) && (
+            <Panel aria-label={T.claimedConfirmed}>
+              <PanelCap title={<Gloss k="claimed"><H2>{T.claimedConfirmed}</H2></Gloss>} />
+              <ClaimedConfirmed row={main} skills={c.skills} />
+            </Panel>
+          )}
           <Panel aria-label={T.skills}>
-            <PanelCap title={T.skills} aside={<Lbl>{T.skillsHint}</Lbl>} />
-            <Skills list={list} claimed={claimed} />
+            <PanelCap title={<Gloss k="trust"><H2>{T.skills}</H2></Gloss>} aside={<Lbl>{T.skillsHint}</Lbl>} />
+            <Skills all={c.skills} />
           </Panel>
-          {(protocol.length > 0 || main) && (
-            <div className="grid gap-4 md:grid-cols-2">
-              {protocol.length > 0 && (
-                <Panel aria-label={T.fsp}>
-                  <PanelCap title={T.fsp} />
-                  <FspProtocol results={protocol} />
-                </Panel>
-              )}
-              {main && (
-                <Panel aria-label={T.claimedConfirmed}>
-                  <PanelCap title={T.claimedConfirmed} />
-                  <ClaimedConfirmed row={main} />
-                </Panel>
-              )}
-            </div>
+          {protocol.length > 0 && (
+            <Panel aria-label={T.fsp}>
+              <PanelCap title={T.fsp} aside={<Lbl>{T.fspHint}</Lbl>} />
+              <FspProtocol results={protocol} />
+            </Panel>
           )}
           <Panel aria-label={T.experience}>
             <PanelCap
@@ -315,8 +412,8 @@ function Body({ c, vacancyId, needId }: { c: CandidateCardFull; vacancyId: strin
             <Button variant="outline" className="w-full" onClick={() => setInterestOpen(true)}>
               {T.interest}
             </Button>
-            <OfferDialog open={interestOpen} onOpenChange={setInterestOpen} dark mode="interest" candidate={dialogCandidate} vacancyId={vacancyId ?? ""} />
-            <OfferDialog open={offerOpen} onOpenChange={setOfferOpen} dark candidate={dialogCandidate} vacancyId={vacancyId ?? ""} alreadyOffered={offered} />
+            <OfferDialog open={interestOpen} onOpenChange={setInterestOpen} mode="interest" candidate={dialogCandidate} vacancyId={vacancyId ?? ""} />
+            <OfferDialog open={offerOpen} onOpenChange={setOfferOpen} candidate={dialogCandidate} vacancyId={vacancyId ?? ""} alreadyOffered={offered} />
             {needId && (
               <Button variant="outline" className="w-full" aria-pressed={shortlisted} onClick={toggleShortlist}>
                 {shortlisted ? `✓ ${T.shortlisted}` : T.shortlist}
@@ -373,8 +470,8 @@ export default function CandidateView() {
   const err = q.error instanceof ApiError ? q.error : null;
   const hidden = q.isError && (err?.status === 404 || err?.status === 403);
   return (
-    <ThemeScope dark className="min-h-[calc(100dvh-4rem)]">
-      <main className="mx-auto flex w-full max-w-[1328px] flex-col gap-4 p-4 md:p-6">
+    <div className="min-h-[calc(100dvh-4rem)]">
+      <main className={PAGE.normal}>
         <nav aria-label={T.nav} className="flex flex-wrap items-center gap-1.5 text-13">
           <Link to={back} className="font-semibold text-brand-fg hover:underline">
             {T.crumbRoot}
@@ -408,6 +505,6 @@ export default function CandidateView() {
         {q.isError && !hidden && <ErrorState title={T.failed} code={err ? `ошибка ${err.status}` : undefined} onRetry={() => void q.refetch()} />}
         {card && <Body c={card} vacancyId={vacancyId} needId={needId} />}
       </main>
-    </ThemeScope>
+    </div>
   );
 }

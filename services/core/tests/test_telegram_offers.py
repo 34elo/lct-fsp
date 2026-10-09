@@ -2,8 +2,6 @@
 
 import shutil
 import sqlite3
-import subprocess
-import sys
 import uuid
 from pathlib import Path
 
@@ -11,6 +9,7 @@ import fakeredis
 import pytest
 from app.config import Settings
 from app.main import build_app
+from core_helpers import upgrade_head
 from fastapi.testclient import TestClient
 from fsp_platform.ratelimit import RateLimiter
 
@@ -25,12 +24,7 @@ OTHER_TG = 777_002
 @pytest.fixture(scope="module")
 def template_db(tmp_path_factory):
     db = tmp_path_factory.mktemp("tpl") / "o.db"
-    subprocess.run(
-        [sys.executable, "-m", "alembic", "-x", f"url=sqlite+aiosqlite:///{db}", "upgrade", "head"],
-        cwd=CORE,
-        check=True,
-        capture_output=True,
-    )
+    upgrade_head(f"sqlite+aiosqlite:///{db}")
     with sqlite3.connect(db) as con:
         con.execute(
             "insert into skills (id, slug, name, kind, status, source, support_candidates,"
@@ -148,7 +142,6 @@ def test_foreign_offer_is_404(world):
         ("view", {}),
         ("accept", {}),
         ("decline", {"reason": "other"}),
-        ("messages", {"text": "привет"}),
     ):
         r = c.post(
             f"/internal/tg/offers/{oid}/{path}", json={"tg_user_id": OTHER_TG, **body}, headers=SVC
@@ -188,30 +181,3 @@ def test_decline_with_reason(world):
     assert _db(c, "select decline_reason from offers where id=?", _hex(oid)) == [("low_salary",)]
     # отклонённого нет в списке активных
     assert c.get("/internal/tg/offers", params={"tg_user_id": TG}, headers=SVC).json() == []
-
-
-def test_message_from_bot(world):
-    c, e, vid = world
-    oid = _offer(c, e, vid)
-    r = c.post(
-        f"/internal/tg/offers/{oid}/messages",
-        json={"tg_user_id": TG, "text": "  Есть релокация?  "},
-        headers=SVC,
-    )
-    assert r.status_code == 201
-    row = _db(c, "select author_side, text, channel from offer_messages")
-    assert row == [("candidate", "Есть релокация?", "tg")]
-    assert _db(c, "select count(*) from outbox where type='offer.message'")[0][0] == 1
-    empty = c.post(
-        f"/internal/tg/offers/{oid}/messages", json={"tg_user_id": TG, "text": "   "}, headers=SVC
-    )
-    assert empty.status_code == 422 and empty.json()["code"] == "empty_message"
-    c.post(
-        f"/internal/tg/offers/{oid}/decline",
-        json={"tg_user_id": TG, "reason": "other"},
-        headers=SVC,
-    )
-    closed = c.post(
-        f"/internal/tg/offers/{oid}/messages", json={"tg_user_id": TG, "text": "ещё"}, headers=SVC
-    )
-    assert closed.status_code == 409 and closed.json()["code"] == "offer_closed"

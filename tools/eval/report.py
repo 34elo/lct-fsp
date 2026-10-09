@@ -20,6 +20,40 @@ def _pct(x: float | None) -> str:
     return "—" if x is None else f"{x * 100:+.1f} %"
 
 
+SECTION_LABELS = {
+    "person": "ФИО, телефон, почта, город",
+    "summary": "«Обо мне»",
+    "experience": "Опыт: компания, должность, даты",
+    "education": "Образование: вуз, год, специальность",
+    "skills": "Навыки (полнота)",
+}
+
+
+def _resumes_md(r: dict[str, Any]) -> list[str]:
+    verdict = "достигнута" if r["meets_target"] else "не достигнута"
+    lines = [
+        "# Разбор резюме hh.ru (E39-19)",
+        "",
+        f"Набор: {r['n_resumes']} обезличенных резюме (PDF и DOCX, вымышленные люди), "
+        "`data/eval/resumes/hh/`; правиловая ветка ml без LLM.",
+        "",
+        f"Полнота полей: **{r['completeness']:.3f}** ({r['matched']} из {r['total']}); цель "
+        f"≥ {r['target']} — {verdict}. Точность навыков (справочно): "
+        f"{r['skills_precision']:.3f}.",
+        "",
+        "| Раздел | Полнота |",
+        "|---|---|",
+    ]
+    for key, label in SECTION_LABELS.items():
+        value = r["by_section"].get(key)
+        lines.append(f"| {label} | {'—' if value is None else f'{value:.3f}'} |")
+    lines += ["", "| Файл | Полнота | Не найдено |", "|---|---|---|"]
+    for f in r["files"]:
+        lines.append(f"| {f['file']} | {f['completeness']:.3f} | {', '.join(f['missed']) or '—'} |")
+    lines.append("")
+    return lines
+
+
 def to_markdown(result: dict[str, Any], meta: dict[str, Any]) -> str:
     m = result["matching"]
     lines = [
@@ -51,6 +85,8 @@ def to_markdown(result: dict[str, Any], meta: dict[str, Any]) -> str:
         "моделью доказательств (резюме, GitHub без подделок, тест, ФСП), а не полным графом core.",
         "",
     ]
+    if "resumes" in result:
+        lines += _resumes_md(result["resumes"])
     return "\n".join(lines)
 
 

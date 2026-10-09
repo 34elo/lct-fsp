@@ -13,4 +13,6 @@ export interface CompanyBrief {
   responsibility_score?: number | null;
   verified: boolean;
   reliability?: CompanyReliability | null;
+  description?: string | null;
+  demo?: boolean;
 }

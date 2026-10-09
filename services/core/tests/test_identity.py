@@ -1,5 +1,3 @@
-import subprocess
-import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -8,6 +6,7 @@ import pytest
 from app.config import Settings
 from app.identity.models import RefreshToken
 from app.main import build_app
+from core_helpers import upgrade_head
 from fastapi.testclient import TestClient
 from fsp_platform.jwt import decode_token
 from fsp_platform.ratelimit import RateLimiter
@@ -21,12 +20,7 @@ PWD = "correct-horse-battery"
 @pytest.fixture
 def ctx(tmp_path):
     db = tmp_path / "i.db"
-    subprocess.run(
-        [sys.executable, "-m", "alembic", "-x", f"url=sqlite+aiosqlite:///{db}", "upgrade", "head"],
-        cwd=CORE,
-        check=True,
-        capture_output=True,
-    )
+    upgrade_head(f"sqlite+aiosqlite:///{db}")
     settings = Settings(
         database_url=f"sqlite+aiosqlite:///{db}",
         ui_bus_enabled=False,
@@ -201,3 +195,51 @@ def test_require_roles(ctx):
     assert c.get("/_only_employer", headers=_auth(cand)).status_code == 403
     emp = _reg(c, "boss@example.com", "employer")
     assert c.get("/_only_employer", headers=_auth(emp)).status_code == 200
+
+
+def test_password_change(ctx):
+    c, engine, _ = ctx
+    r = _reg(c)
+    h = _auth(r)
+    new = "another-strong-pass"
+    # неверный текущий — 403, пароль не меняется
+    bad = c.post(
+        "/auth/password/change",
+        json={"current_password": "nope-nope", "new_password": new},
+        headers=h,
+    )
+    assert bad.status_code == 403 and bad.json()["code"] == "wrong_password"
+    # короткий новый — 422
+    short = c.post(
+        "/auth/password/change", json={"current_password": PWD, "new_password": "short"}, headers=h
+    )
+    assert short.status_code == 422
+    # без токена — 401
+    assert (
+        c.post(
+            "/auth/password/change", json={"current_password": PWD, "new_password": new}
+        ).status_code
+        == 401
+    )
+    # вторая сессия закрывается, текущая живёт
+    other = TestClient(c.app)
+    other.cookies.clear()
+    assert (
+        other.post("/auth/login", json={"email": "ann@example.com", "password": PWD}).status_code
+        == 200
+    )
+    ok = c.post(
+        "/auth/password/change", json={"current_password": PWD, "new_password": new}, headers=h
+    )
+    assert ok.status_code == 204
+    assert c.post("/auth/refresh", headers={"Origin": "https://dashboard.test"}).status_code == 200
+    assert (
+        other.post("/auth/refresh", headers={"Origin": "https://dashboard.test"}).status_code == 401
+    )
+    c.cookies.clear()
+    assert (
+        c.post("/auth/login", json={"email": "ann@example.com", "password": PWD}).status_code == 401
+    )
+    assert (
+        c.post("/auth/login", json={"email": "ann@example.com", "password": new}).status_code == 200
+    )

@@ -4,6 +4,7 @@
  * core
  * OpenAPI spec version: 0.1.0
  */
+import type { StandingGap } from './standingGap';
 import type { StandingPart } from './standingPart';
 
 /**
@@ -22,5 +23,11 @@ export interface StandingStrength {
      * @maximum 100
      */
   top_percent: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  relative?: number;
+  gap_to_next_ten?: StandingGap | null;
   parts?: StandingPart[];
 }

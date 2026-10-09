@@ -109,7 +109,7 @@ export const getGetMetricsAdminMetricsGetUrl = (params?: GetMetricsAdminMetricsG
 
 /**
  * Воронки кандидата и работодателя, приглашения (время до первого, доля принятых,
- * ответ за 72 ч, причины отказов), отклики. Ячейки меньше 5 скрыты.
+ * ответ за 72 ч, причины отказов), отклики. Ячейки меньше 5 скрыты. Без демо-аккаунтов.
  * @summary Get Metrics
  */
 export const getMetricsAdminMetricsGet = async (params?: GetMetricsAdminMetricsGetParams, options?: Parameters<typeof apiFetch>[1]): Promise<getMetricsAdminMetricsGetResponse> => {

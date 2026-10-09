@@ -13,4 +13,6 @@ export interface NeedCategory {
   candidates: number;
   median_salary?: number | null;
   fsp_share?: number | null;
+  matched_skills?: string[];
+  named?: boolean;
 }

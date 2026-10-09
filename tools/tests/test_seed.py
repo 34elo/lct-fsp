@@ -366,3 +366,76 @@ def test_demo_v2_data_consistent(plan):
     assert all("example.test" in c["site"] for c in d["companies"])  # компании вымышленные
     c = _hero_candidate(cfg, date(2026, 10, 3), heroes["boris"])
     assert c["hero"] == "boris" and c["fsp"] is None
+
+
+async def test_fsp_registry_demo_heroes_and_jury(plan, tmp_path):
+    """E39-28: герои и жюри-кандидат в реестре с email своих аккаунтов; seed идемпотентен."""
+    from fsp_connector.models import metadata as fspc_metadata
+    from fsp_connector.registry import normalize_email
+    from fsp_platform.db import make_engine, make_session_factory
+
+    from tools.seed.fsp_registry import build_registry, seed_registry
+    from tools.seed.jury import jury_emails
+
+    data = build_registry(plan)
+    by_email = {normalize_email(p.get("email")): p["id"] for p in data["participants"]}
+    assert by_email[jury_emails()["candidate"]] == "r-jury"
+    assert by_email["anya@demo.fsp.test"] == "p-anya" and by_email["dima@demo.fsp.test"] == "p-dima"
+    ids = {p["id"] for p in data["participants"]}
+    events = {e["id"] for e in data["events"]}
+    assert all(r["participant_id"] in ids and r["event_id"] in events for r in data["results"])
+    assert any(r["participant_id"] == "r-jury" for r in data["results"])
+
+    url = f"sqlite+aiosqlite:///{tmp_path}/fspc.db"
+    engine = make_engine(url)
+    async with engine.begin() as conn:
+        await conn.run_sync(fspc_metadata.create_all)
+    await engine.dispose()
+    first = await seed_registry(url, plan)
+    assert first == await seed_registry(url, plan)
+    from fsp_connector.models import FspLink, RegistryParticipant, RegistryResult
+    from sqlalchemy import func, select
+
+    engine = make_engine(url)
+    async with make_session_factory(engine)() as s:
+        assert await s.scalar(select(func.count()).select_from(RegistryParticipant)) == len(ids)
+        assert await s.scalar(select(func.count()).select_from(RegistryResult)) == len(
+            data["results"]
+        )
+        assert await s.scalar(select(func.count()).select_from(FspLink)) == 0  # «не привязан»
+    await engine.dispose()
+
+
+def test_families_demo_covers_every_cell():
+    """E39-31: по заданию на каждую ячейку «профессия × грейд», каждое собирается и имеет ответ."""
+    from app.assessment import admission
+    from app.assessment.families.spec import FamilySpec, SpecFamily
+
+    from tools.seed.families import GRADES, PROFESSIONS, plan
+
+    items = plan()
+    assert {(i["profession"], i["grade"]) for i in items} == {
+        (p, g) for p in PROFESSIONS for g in GRADES
+    }
+    assert len({i["slug"] for i in items}) == len(items)
+    for p in PROFESSIONS:  # в пилоте у каждой профессии есть карточка
+        assert any(i["profession"] == p and i["status"] == "pilot" for i in items)
+    assert {i["status"] for i in items} == {"draft", "pilot", "quarantine"}
+    for i in items:
+        fam = SpecFamily(FamilySpec.model_validate(i["form"]), slug=i["slug"], skill_type="hard")
+        ex = admission.example_of(fam, i["slug"])
+        assert ex is not None and ex["answer"], i["slug"]
+
+
+async def test_seed_families_idempotent(factory):
+    from app.assessment.models import FamilyRow
+    from fsp_platform.db import session_scope
+    from sqlalchemy import func, select
+
+    from tools.seed.families import plan, seed_families
+
+    assert await seed_families(factory) == {"families": 21}
+    assert await seed_families(factory) == {"families": 0}
+    async with session_scope(factory) as s:
+        n = await s.scalar(select(func.count()).select_from(FamilyRow))
+    assert n == len(plan())

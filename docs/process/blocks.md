@@ -184,7 +184,7 @@ TEST_GRADE_ORDER: tuple[TestGrade, ...] = (TestGrade.junior, TestGrade.middle, T
 ProfessionSlug = Annotated[str, Field(pattern=r"^[a-z][a-z0-9_]{1,31}$")]
 ```
 
-- **Профессии MVP** (ADR-027, уточняет ADR-025): `backend`, `frontend` с полным покрытием банка + `ai_engineer` как витрина (добавляет E21-1, Б1), грейды Junior / Middle / Senior. `ml` (Data/ML), `mobile`, `devops`, `qa` остаются в `roles.yaml`, но в опросе скрыты (флаг `active` у профессии — E36-2, Б1; до него опрос показывает все). Код не должен на скрытые профессии рассчитывать, но и ломаться на них (и на уже выданных по ним грейдах) не должен.
+- **Профессии MVP** (ADR-027, уточняет ADR-025): `backend`, `frontend` с полным покрытием банка + `ai_engineer` как витрина (добавляет E21-1, Б1), грейды Junior / Middle / Senior. `ml` (Data/ML), `mobile`, `devops`, `qa` остаются в `roles.yaml`; с E39-6 они снова открыты в опросе с меткой «бета» (тонкий банк, `ProfessionInfo.beta`), флаг `active` (E36-2) остаётся механизмом скрытия. Код не должен на скрытые профессии рассчитывать, но и ломаться на них (и на уже выданных по ним грейдах) не должен.
 - `enums.RoleSlug` и `enums.Grade` остаются для старых полей (резюме, вакансии). Новые поля v2 используют `ProfessionSlug` и `TestGrade`.
 - **Категория** — пара `(profession, grade)`. В URL и ключах записывается как `backend/middle`, в логах и аналитике — как `backend.middle`.
 
@@ -263,6 +263,7 @@ class ProfessionInfo(BaseModel):
     ]  # slug навыка → вес 0..1 («насколько типичен», как в roles.yaml); не нормирован
     skill_types: dict[str, SkillType] = {}  # заполняет E21-1
     active: bool = True  # E36-2: false — скрыта в опросе (ADR-027 п.1)
+    beta: bool = False  # E39-6: тонкий банк семейств, в опросе метка «бета»
 ```
 
 Сигнатуры заморожены. Все функции асинхронные, первый аргумент — `session: AsyncSession`:
@@ -733,7 +734,7 @@ from app.assessment.router import router as assessment_router
 | | | | | | |
 | 2026-10-06 | З-1-01 | Б1 → общий | Команда `skills.relations.refresh` в `packages/contracts/commands.py` и подключение ночного `taxonomy.growth.refresh` в scheduler/worker | E16-6 | открыта |
 | 2026-10-06 | З-1-02 | Б1 → Б2 | Публичная функция видимости кандидата в `matching.service` (сейчас правило продублировано в `graph/router.py`) | E16-2 | открыта |
-| 2026-10-06 | З-1-03 | Б1 → инфра | Пакеты `libpango-1.0-0`, `libpangoft2-1.0-0`, `fonts-dejavu-core` в `infra/docker/python.Dockerfile` для PDF-профиля | E20-6 | открыта |
+| 2026-10-06 | З-1-03 | Б1 → инфра | Пакеты `libpango-1.0-0`, `libpangoft2-1.0-0`, `fonts-dejavu-core` в `infra/docker/python.Dockerfile` для PDF-профиля | E20-6 | закрыта E39-20 (пакеты в финальном образе core, смоук в CI `pdf-smoke`) |
 | 2026-10-06 | B1-b | Б1 → Б2 | Событие `regular_task.published` (`fsp_contracts/assessment.py`, `recipients[]` — уже отфильтрованы по грейду и `profile_publication`); `last_activity_at` учитывает ответы на регулярные задания; ссылка «Пригласить» в `GET /employer/tasks/{id}/submissions` (`invite_url`) | E25-1 | готово |
 | 2026-10-06 | З-1-04 | Б1 ↔ Б2 | `RegularTaskPublished` совместим с обработчиком E9-6: старые имена `family_id`, `candidate_ids` принимаются как алиасы `task_id`, `recipients`; `company_id`, `grade`, `round`, `period_days`, `published_at` необязательны | E25-1 | закрыта |
 | 2026-10-06 | З-1-05 | Б1 → все | Добавлены ml-контракты `AnswerExplainRequest`/`AnswerExplain` (fsp_contracts/ml.py) и необязательное поле `result.answers` в `AttemptResultOut`; клиент фронта перегенерирован (Node 26) | E24-2 | закрыта |
@@ -745,6 +746,7 @@ from app.assessment.router import router as assessment_router
 | 2026-10-06 | З-1-09 | Т2 → Б1 | Тот же дефект логирования, что Т2-a: `log.warning("...", event=...)` в `resumes/handlers.py:48` и `assessment/track.py:56` — при сбое ломает обработчик вместо предупреждения. Переименовать ключ (например `ui_event`, `analytics_event`) | Т2 | открыта |
 | 2026-10-06 | З-1-10 | Б1 → Б2 | F13: `DELETE /candidates/me` стирает данные зоны Б1 и шлёт `candidate.deleted` (`CandidateDeleted{candidate_id}`, уже был в `events.py`, контракт не менялся); строка `candidates` остаётся обезличенной (`deleted_at`, псевдоним), `matching` уже отсекает `deleted`. Нужно в Б2 (обработчики с inbox): удалить `matches`, `profile_views`, `impressions`/`rec_feedback`, `issued_credentials` (бейджи), `telegram_accounts`, `fsp_*` кандидата (в т.ч. команда fsp-connector на `fsp_links`); офферы — оставить только псевдоним, личные поля и сообщения кандидата обезличить, открытые офферы закрыть; пуш/SSE не слать | F13 | открыта |
 | 2026-10-08 | B1-e | Б1 ↔ Б2 | ADR-027 (ответы в чате): профессии MVP — `backend`, `frontend` + `ai_engineer`, остальные скрыты в опросе (§4.1, E36-2); F × релевантность дисциплины профессии (§4.3, E36-3, Б2); поля карточки и `visibility` — ФИО по выбору, опыт и компании видны по умолчанию, контакты закрыты до принятия или отклика (§4.5, E36-4 Б1, E36-5 Б2). Контракты в коде пока не менялись, только документы | E36-1 | ждёт подтверждения обоих блоков |
+| 2026-10-09 | B1-f | Б1 → оба | E39-6 (решение владельца): все профессии открыты — в `roles.yaml` скрытых нет, `ProfessionInfo.beta` (по умолчанию `false`, `GET /taxonomy/professions`) — тонкий банк семейств, метка «бета» в опросе; `assessment.service.thin_professions(professions)`; `families-check` предупреждает о пустой ячейке, а не падает. Совместимо | E39-6 | готово |
 
 ### 13.2. Блок 2
 
@@ -761,3 +763,5 @@ from app.assessment.router import router as assessment_router
 | 2026-10-07 | С-2-04 | Б2 → Б1 | E35-1: `Stub` и заглушки удалены; `RouteDef.redirect` для старых адресов. В записях Б1: `/me/growth` → `/me/navigator`, `/me/settings` → `/me` (на них ссылаются `Result.tsx` и `profile/text.ts` — при случае заменить ссылки), `/me/badge` и `/auth/fsp/callback` удалены (экранов нет); флаги `nav` — по новому меню. В `profile.test.tsx` обновлена проверка меню. Пункты «Настройки», «Согласия» в меню аватара появятся с экраном E36-4 | E35-1 | готово |
 | 2026-10-08 | С-2-05 | Б2 → оба | E36-2 (с разрешения владельца в зоне Б1): `ProfessionInfo.active` (по умолчанию `true`), `roles.is_active` (миграция `b2_13`, скрыты `ml`, `mobile`, `devops`, `qa`); `taxonomy.list_professions` по умолчанию отдаёт только активные, `include_hidden=True` — все (подписи и старые грейды). Новый тест по скрытой профессии — `422 unknown_profession`, навигатор не предлагает тест по ней. `families-check` падает на пустой ячейке «активная профессия × грейд × тип навыка». Совместимо | E36-2 | готово |
 | 2026-10-08 | С-2-06 | Б2 → Б1 | E36-5 (с разрешения владельца в зоне Б1): `candidates.full_name_enc` (миграция `b2_14`, шифр Fernet, как `contacts_enc`), `PATCH /candidates/me/profile {full_name}`, `CandidateProfile.full_name`; в карточке работодателя `CandidateCardFull.full_name` только при `visibility.full_name`. Совместимо (поля необязательные) | E36-5 | готово |
+| 2026-10-09 | B1-g | Б1 → Б2 | E39-15 (ограничение зон для E39 снято владельцем): `CandidateCardFull.full_name` — после приглашения от компании (`offers.service.invited`: оффер без интереса или с `invited_at`; отклик кандидата тоже) или при `visibility.full_name`; скрытые кандидатом навыки (`candidates.hidden_skills`, миграция `b1_16`) убираются из карточки, `top_skills`, `primary_stack` и пунктов объяснения подбора; `SkillInfo.type` (необязательное). Совместимо | E39-15 | готово |
+| 2026-10-09 | З-2-07 | Б2 → Б1 | E39-35 (зона снята владельцем): `assessment.service.graded_candidates_first_at(session)` (только чтение, для `GET /public/stats`); сигнатуры существующих функций не менялись | E39-35 | готово |

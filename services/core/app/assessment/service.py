@@ -17,6 +17,7 @@ from fsp_contracts.assessment import (
     CategoryRef,
     ClaimedVsConfirmed,
     DeclaredGrade,
+    ProfessionInfo,
     TestGrade,
 )
 from fsp_contracts.registry import new_event
@@ -62,6 +63,14 @@ def _active(now: datetime | None = None):
     return Grade.valid_until > (now or datetime.now(UTC))
 
 
+def thin_professions(professions: Iterable[ProfessionInfo]) -> set[str]:
+    """Слаги профессий с тонким банком семейств — «бета» в опросе (E39-6, families-check)."""
+    from app.assessment.families import REGISTRY
+    from app.assessment.families.check import thin_professions as thin
+
+    return thin(list(REGISTRY.values()), {p.slug: dict(p.skill_weights) for p in professions})
+
+
 async def get_grades(session: AsyncSession, candidate_id: uuid.UUID) -> list[CandidateGrade]:
     """Только действующие грейды (`valid_until > now()`), по профессии."""
     rows = await session.scalars(
@@ -93,6 +102,9 @@ async def get_grades_many(
 async def get_grade(
     session: AsyncSession, candidate_id: uuid.UUID, profession: str
 ) -> CandidateGrade | None:
+    """Действующий грейд кандидата по одной профессии или `None` (публичное API блока 1, blocks.md
+    §4.3).
+    """
     row = await session.scalar(
         select(Grade).where(
             Grade.candidate_id == candidate_id, Grade.profession == profession, _active()
@@ -121,6 +133,22 @@ async def category_counts(session: AsyncSession) -> dict[tuple[str, str], int]:
         .group_by(Grade.profession, Grade.grade)
     )
     return {(p, g): n for p, g, n in rows}
+
+
+async def graded_candidates_first_at(
+    session: AsyncSession, *, real_only: bool = False
+) -> dict[uuid.UUID, datetime]:
+    """`candidate_id → когда впервые подтверждён грейд` (все, и истёкшие): для лендинга.
+
+    `real_only` — без демо-кандидатов (E40-1).
+    """
+    q = select(Grade.candidate_id, func.min(Grade.confirmed_at)).group_by(Grade.candidate_id)
+    if real_only:
+        from app.identity.service import demo_user_ids
+
+        q = q.where(Grade.candidate_id.not_in(demo_user_ids()))
+    rows = await session.execute(q)
+    return {cid: at for cid, at in rows}
 
 
 # Старая шкала резюме (enums.Grade) → тестовая: «плюс» и крайние ступени сворачиваются.
@@ -379,3 +407,10 @@ async def erase_candidate(session: AsyncSession, candidate_id: uuid.UUID) -> Non
     await session.execute(delete(Response).where(Response.attempt_id.in_(attempt_ids)))
     for model in (Attempt, Grade, Survey, TaskSubmission):
         await session.execute(delete(model).where(model.candidate_id == candidate_id))
+
+
+async def count_families(session: AsyncSession, status: str) -> int:
+    """Число семейств в статусе — счётчик очереди допуска на главной админки (E39-29)."""
+    from app.assessment.models import FamilyRow
+
+    return int(await session.scalar(select(func.count()).where(FamilyRow.status == status)) or 0)

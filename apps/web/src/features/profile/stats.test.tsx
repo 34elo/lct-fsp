@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
 import { App } from "@/app/App";
@@ -49,14 +49,22 @@ const standing = {
   grade: "junior",
   mode: "express",
   confirmed_at: "2026-10-07T10:05:00Z",
-  strength: { value: 0.64, rank: 3, top_percent: 30, parts: [] },
+  strength: {
+    value: 0.64,
+    rank: 3,
+    top_percent: 30,
+    relative: 78,
+    gap_to_next_ten: { top_percent: 20, gap_relative: 6.5 },
+    parts: [{ code: "T", text: "Уровень в тесте", value: 0.7, weight: 0.4 }],
+  },
   category_size: 64,
   peers: [
-    { strength: 0.64, salary_min: 70000 },
-    { strength: 0.4, salary_min: 50000 },
-    { strength: 0.8, salary_min: 150000 },
-    { strength: 0.2, salary_min: null },
+    { strength: 0.64, salary_min: 70000, theta: 0.5 },
+    { strength: 0.4, salary_min: 50000, theta: 0 },
+    { strength: 0.8, salary_min: 150000, theta: 1 },
+    { strength: 0.2, salary_min: null, theta: -1 },
   ],
+  category_stats: { candidates: 64, interests: 5, interest_salary_from_median: 160000, interest_salary_to_median: 230000, companies_searching: 4 },
 };
 
 const interests = {
@@ -116,16 +124,17 @@ function mount(path = "/me/stats") {
 }
 
 describe("модель Статистики (E38-2)", () => {
-  it("точки: своя первая — «ты», ожидания нормированы по категории, без ожиданий — у оси", () => {
+  it("точки: X — θ в 0–100 по категории, Y — сила; без θ X — сила; одинаковая θ — посередине", () => {
     const { points, you } = scatter(standing.peers);
-    expect(you).toEqual({ x: 64, y: 20 });
+    expect(you).toEqual({ x: 75, y: 64 });
     expect(points).toEqual([
-      { x: 40, y: 0 },
-      { x: 80, y: 100 },
-      { x: 20, y: 0 },
+      { x: 50, y: 40 },
+      { x: 100, y: 80 },
+      { x: 0, y: 20 },
     ]);
-    expect(scatter([{ strength: 0.5, salary_min: 1 }, { strength: 0.3, salary_min: 1 }]).you).toEqual({ x: 50, y: 50 });
-    expect(scatter([], 0.7)).toEqual({ points: [], you: { x: 70, y: 0 } });
+    expect(scatter([{ strength: 0.5, theta: 1 }, { strength: 0.3, theta: 1 }]).you).toEqual({ x: 50, y: 50 });
+    expect(scatter([{ strength: 0.5 }, { strength: 0.3 }]).points).toEqual([{ x: 30, y: 30 }]);
+    expect(scatter([], 0.7)).toEqual({ points: [], you: { x: 70, y: 70 } });
   });
 
   it("просмотры: разбор ответа и ряд по дням до сегодня", () => {
@@ -154,9 +163,11 @@ describe("Статистика /me/stats (E38-2)", () => {
     expect(screen.getByRole("heading", { level: 1, name: "Статистика" })).toBeInTheDocument();
 
     const tiles = within(main).getByTestId("stats-tiles");
-    expect(tiles).toHaveTextContent("64");
-    expect(tiles).toHaveTextContent("топ-30 %");
-    expect(within(tiles).getByRole("meter", { name: "Место" })).toHaveAttribute("aria-valuenow", "70");
+    expect(tiles).toHaveTextContent("78 %");
+    expect(tiles).toHaveTextContent("От лидера категории");
+    expect(tiles).toHaveTextContent("до топ-20 % не хватает 6.5 п. п.");
+    expect(within(tiles).getByTestId("gi-strength")).toBeInTheDocument();
+    expect(within(main).getByTestId("stats-parts")).toHaveTextContent("Уровень в тесте");
     expect(tiles).toHaveTextContent("140–220");
     expect(await within(tiles).findByText("за 30 дней")).toBeInTheDocument();
 
@@ -164,6 +175,19 @@ describe("Статистика /me/stats (E38-2)", () => {
     expect(peers).toHaveTextContent("64 чел.");
     expect(within(peers).getByRole("img", { name: "Точечная диаграмма категории Backend Junior" })).toBeInTheDocument();
     expect(peers.querySelector("[data-you]")).not.toBeNull();
+    expect(within(peers).getByText("уровень в тесте →")).toBeInTheDocument();
+    expect(within(peers).getByText("↑ сила профиля")).toBeInTheDocument();
+    expect(within(peers).getByTestId("gi-peers")).toBeInTheDocument();
+    expect(within(peers).getByTestId("stats-peers-note")).toHaveTextContent("Свои — кандидаты категории Backend Junior");
+    expect(within(peers).getByTestId("gi-theta")).toBeInTheDocument();
+
+    const cat = within(main).getByTestId("stats-category");
+    expect(cat).toHaveTextContent("Кандидатов в категории");
+    expect(cat).toHaveTextContent("64");
+    expect(cat).toHaveTextContent("160–230");
+    expect(cat).toHaveTextContent("медиана по 5 интересам");
+    expect(cat).toHaveTextContent("Компаний ищут категорию");
+    expect(cat).toHaveTextContent("4");
 
     const views = await screen.findByTestId("stats-views");
     expect(within(views).getByRole("img", { name: /7 за 30 дней/ })).toBeInTheDocument();
@@ -189,7 +213,7 @@ describe("Статистика /me/stats (E38-2)", () => {
     // Одна главная кнопка — следующий шаг: есть интерес без ответа.
     const action = await screen.findByTestId("stats-action");
     expect(await within(action).findByText("Ответить на интерес")).toBeInTheDocument();
-    expect(action).toHaveAttribute("href", "/me/interests");
+    expect(action).toHaveAttribute("href", "/me/offers?show=interests");
   });
 
   it("без теста — пустое состояние с одной кнопкой «Пройти тест»", async () => {
@@ -199,6 +223,18 @@ describe("Статистика /me/stats (E38-2)", () => {
     expect(screen.getByTestId("stats-empty-action")).toHaveAttribute("href", "/me/assessment");
     expect(screen.queryByTestId("stats-main")).not.toBeInTheDocument();
     expect(screen.queryByTestId("stats-action")).not.toBeInTheDocument();
+  });
+
+  it("без интересов и без category_stats — вилка «нет данных», блок скрыт", async () => {
+    routes["/candidates/me/standing"] = () => res(200, { ...standing, category_stats: { ...standing.category_stats, interests: 0, interest_salary_from_median: null, interest_salary_to_median: null } });
+    mount();
+    const cat = await screen.findByTestId("stats-category");
+    expect(cat).toHaveTextContent("компании пока не отмечали интерес");
+    cleanup();
+    routes["/candidates/me/standing"] = () => res(200, { ...standing, category_stats: null });
+    mount();
+    await screen.findByTestId("stats-main");
+    expect(screen.queryByTestId("stats-category")).not.toBeInTheDocument();
   });
 
   it("загрузка — скелетон; ошибка — код и «Повторить»", async () => {

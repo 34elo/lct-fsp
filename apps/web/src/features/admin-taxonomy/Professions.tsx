@@ -1,7 +1,8 @@
 import { useMemo, useState, type FormEvent } from "react";
+import { Gloss } from "@/shared/Gloss";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { Badge, Button, Card, CardContent, cn, EmptyState, ErrorState, Field, Skeleton, useFieldProps } from "@fsp/ui";
+import { Badge, Button, Card, CardContent, cn, Combobox, EmptyState, ErrorState, Field, Skeleton, useFieldProps } from "@fsp/ui";
 
 import {
   getListProfessionsAdminProfessionsGetQueryKey,
@@ -84,16 +85,20 @@ function Editor({ prof, skills, onDone }: { prof: ProfessionOut | null; skills: 
             <p className="text-13 text-muted">{T.prof.weightsHint}</p>
             {rows.map((r, i) => (
               <div key={r.id} className="grid grid-cols-[minmax(0,1fr)_5rem_auto] items-end gap-2" data-testid={sel(`row-${i}`)}>
-                <label className="flex flex-col gap-1 text-13 text-muted">
-                  {T.prof.skill}
-                  <select className={fieldClass} data-testid={sel(`skill-${i}`)} value={r.skill} onChange={(e) => patch(r.id, { skill: e.target.value })}>
-                    <option value="">{T.prof.pickSkill}</option>
-                    {r.skill && !skills.some((s) => s.slug === r.skill) && <option value={r.skill}>{r.skill}</option>}
-                    {skills.map((s) => (
-                      <option key={s.slug} value={s.slug}>{s.name}</option>
-                    ))}
-                  </select>
-                </label>
+                <div className="flex flex-col gap-1 text-13 text-muted">
+                  <span>{T.prof.skill}</span>
+                  <Combobox
+                    data-testid={sel(`skill-${i}`)}
+                    aria-label={T.prof.skill}
+                    placeholder={T.prof.pickSkill}
+                    value={r.skill || null}
+                    onChange={(v) => patch(r.id, { skill: v ?? "" })}
+                    options={[
+                      ...(r.skill && !skills.some((s) => s.slug === r.skill) ? [{ value: r.skill, label: r.skill }] : []),
+                      ...skills.map((s) => ({ value: s.slug, label: s.name, hint: s.slug })),
+                    ]}
+                  />
+                </div>
                 <label className="flex flex-col gap-1 text-13 text-muted">
                   {T.prof.weight}
                   <input className={fieldClass} inputMode="decimal" data-testid={sel(`weight-${i}`)} value={r.weight} onChange={(e) => patch(r.id, { weight: e.target.value })} />
@@ -157,7 +162,9 @@ export function ProfessionsTab() {
   return (
     <div className="flex flex-col gap-4" data-testid={sel("tab")}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-18 font-semibold">{T.prof.listTitle}</h2>
+        <h2 className="text-18 font-semibold">
+          <Gloss k="category">{T.prof.listTitle}</Gloss>
+        </h2>
         <Button type="button" data-testid={sel("create")} onClick={() => { setEditing("new"); setNotice(""); }}>
           {T.prof.create}
         </Button>

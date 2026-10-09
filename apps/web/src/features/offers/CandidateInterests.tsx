@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { Button, formatRubRangeShort, OfferCardV2 } from "@fsp/ui";
@@ -48,7 +48,7 @@ function InterestItem({ o, onDecline }: { o: CandidateOffer; onDecline: (id: str
 }
 
 /** Вкладка «Интересы» (E38-14, ADR-026): карточки без контактов, «открыть интерес» / «отклонить» с причиной. */
-export function CandidateInterests() {
+export function CandidateInterests({ filter }: { filter?: ReactNode } = {}) {
   const qc = useQueryClient();
   const q = useMyInterestsCandidatesMeInterestsGet();
   const summary = q.data?.status === 200 ? q.data.data : null;
@@ -70,7 +70,8 @@ export function CandidateInterests() {
       : undefined;
   return (
     <main className={LIST_PAGE}>
-      <ListHeader aside={aside} />
+      <ListHeader aside={aside} tip={T.tip} />
+      {filter}
       {q.isPending && <ListSkeleton />}
       {q.isError && <ListError error={q.error} onRetry={() => void q.refetch()} />}
       {summary && items.length === 0 && <ListEmpty title={T.empty} hint={T.emptyHint} />}

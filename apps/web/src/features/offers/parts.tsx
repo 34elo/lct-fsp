@@ -1,15 +1,8 @@
-import { useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
-import {
-  useListEventsOffersOfferIdEventsGet,
-  useListMessagesOffersOfferIdMessagesGet,
-  usePostMessageOffersOfferIdMessagesPost,
-} from "@/api/endpoints/offers/offers";
-import { Button, cn } from "@fsp/ui";
-import type { MessageOut } from "@/api/model";
-import { ErrorNote, fieldClass } from "@/features/auth/ui";
-import { ACTOR_LABEL, dateTime, OFFER_STATUS_LABEL, offerErrorText, statusTone } from "./text";
+import { useListEventsOffersOfferIdEventsGet } from "@/api/endpoints/offers/offers";
+import { buttonVariants, cn, SectionLabel } from "@fsp/ui";
+import { ACTOR_LABEL, dateTime, OFFER_STATUS_LABEL, statusTone } from "./text";
 
 export function StatusBadge({ status }: { status: string }) {
   return (
@@ -33,7 +26,7 @@ export function Timeline({ offerId }: { offerId: string }) {
   const q = useListEventsOffersOfferIdEventsGet(offerId);
   const events = q.data?.status === 200 ? q.data.data : [];
   return (
-    <Panel title="История">
+    <Panel title="Статус">
       {q.isPending && <p role="status" className="text-sm text-muted">Загрузка…</p>}
       <ol className="flex flex-col gap-2 border-l border-hairline pl-4">
         {events.map((e) => (
@@ -48,56 +41,47 @@ export function Timeline({ offerId }: { offerId: string }) {
   );
 }
 
-/** Переписка по приглашению. `side` — кто мы, чтобы подписать «Вы». */
-export function Conversation({ offerId, side, canWrite }: { offerId: string; side: "candidate" | "company"; canWrite: boolean }) {
-  const qc = useQueryClient();
-  const q = useListMessagesOffersOfferIdMessagesGet(offerId, { query: { refetchInterval: 15_000 } });
-  const [text, setText] = useState("");
-  const post = usePostMessageOffersOfferIdMessagesPost({
-    mutation: {
-      onSuccess: (r) => {
-        setText("");
-        // Сервер коммитит после ответа: мгновенный refetch может прийти раньше записи, поэтому
-        // сразу кладём новое сообщение в кеш, а сверку делаем чуть позже.
-        qc.setQueryData([`/offers/${offerId}/messages`], (old: { data: MessageOut[]; status: number; headers: Headers } | undefined) =>
-          old && r.status === 201 ? { ...old, data: [...old.data, r.data] } : old,
-        );
-        setTimeout(() => void qc.invalidateQueries({ queryKey: [`/offers/${offerId}/messages`] }), 800);
-      },
-    },
-  });
-  const list = q.data?.status === 200 ? q.data.data : [];
-  const submit = (e: FormEvent) => {
-    e.preventDefault();
-    if (text.trim()) post.mutate({ offerId, data: { text: text.trim() } });
-  };
+export type ContactsData = { name?: string | null; email?: string | null; phone?: string | null; telegram?: string | null };
+
+/** Ссылка на чат в Telegram по @нику (или готовой ссылке); без ника кнопки нет. */
+export function telegramHref(handle: string | null | undefined): string | null {
+  const h = (handle ?? "").trim();
+  if (!h) return null;
+  if (/^https?:\/\//.test(h)) return h;
+  const nick = h.replace(/^@/, "");
+  return /^[A-Za-z0-9_]{3,32}$/.test(nick) ? `https://t.me/${nick}` : null;
+}
+
+/** Контакты другой стороны (E39-26): после принятия видны обеим сторонам; кнопка «Написать в Telegram». */
+export function ContactsCard({ title, hint, contacts, testId }: { title: string; hint: string; contacts: ContactsData; testId?: string }) {
+  const tg = telegramHref(contacts.telegram);
   return (
-    <Panel title="Переписка">
-      {list.length === 0 && !q.isPending && <p className="text-sm text-muted">Сообщений пока нет.</p>}
-      <ul className="flex flex-col gap-2">
-        {list.map((m) => (
-          <li key={m.id} className={cn("max-w-[85%] rounded-xl px-3 py-2 text-sm", m.author_side === side ? "self-end bg-tint-50" : "self-start border border-hairline")}>
-            <p className="whitespace-pre-wrap break-words">{m.text}</p>
-            <p className="mt-1 text-[11px] text-muted">
-              {m.author_side === side ? "Вы" : m.author_side === "company" ? "Компания" : "Кандидат"} · {dateTime(m.created_at)}
-              {m.channel === "telegram" ? " · Telegram" : ""}
-            </p>
-          </li>
-        ))}
-      </ul>
-      {canWrite ? (
-        <form onSubmit={submit} className="flex flex-col gap-2">
-          <label htmlFor="offer-msg" className="sr-only">Сообщение</label>
-          <textarea id="offer-msg" value={text} onChange={(e) => setText(e.target.value)} maxLength={2000} rows={2} placeholder="Напишите сообщение" className={cn(fieldClass, "h-auto py-2")} />
-          {post.isError && <ErrorNote>{offerErrorText(post.error)}</ErrorNote>}
-          <Button type="submit" size="sm" className="self-end" disabled={post.isPending || !text.trim()}>
-            Отправить
-          </Button>
-        </form>
-      ) : (
-        <p className="text-sm text-muted">Переписка закрыта.</p>
-      )}
+    <Panel title={title}>
+      <div data-testid={testId} className="flex flex-col gap-3">
+        <p className="text-xs text-muted">{hint}</p>
+        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+          {contacts.name && (<><dt className="text-muted">Имя</dt><dd className="break-words">{contacts.name}</dd></>)}
+          {contacts.email && (<><dt className="text-muted">Почта</dt><dd className="break-all"><a className="text-brand-fg" href={`mailto:${contacts.email}`}>{contacts.email}</a></dd></>)}
+          {contacts.phone && (<><dt className="text-muted">Телефон</dt><dd><a className="text-brand-fg" href={`tel:${contacts.phone.replace(/[^+\d]/g, "")}`}>{contacts.phone}</a></dd></>)}
+          {contacts.telegram && (<><dt className="text-muted">Telegram</dt><dd className="break-all">{contacts.telegram}</dd></>)}
+        </dl>
+        {tg && (
+          <a href={tg} target="_blank" rel="noreferrer" className={cn(buttonVariants({ size: "lg" }), "w-full")}>
+            Написать в Telegram
+          </a>
+        )}
+      </div>
     </Panel>
+  );
+}
+
+/** Одно сообщение стороны (сопроводительное или ответ): подпись и текст. */
+export function MessageCard({ label, text, testId }: { label: string; text: string; testId?: string }) {
+  return (
+    <div data-testid={testId} className="flex flex-col gap-1">
+      <SectionLabel>{label}</SectionLabel>
+      <p className="whitespace-pre-wrap break-words rounded-lg bg-tint-50 p-3 text-sm">{text}</p>
+    </div>
   );
 }
 

@@ -1,7 +1,7 @@
 import type { ExperienceBrief, FspHighlight, SkillWithTrust } from "@/api/model";
-import type { FspResult, TrustKind, TrustSource } from "@fsp/ui";
+import type { FspResult, TrustKind } from "@fsp/ui";
 import { dots } from "@/features/profile/text";
-import { FSP_LEVEL_LABEL, SOURCE_SHORT } from "./text";
+import { FSP_LEVEL_LABEL } from "./text";
 
 /** Группы навыков для экрана B (slug группы из ядра навыков → подпись). */
 export const SKILL_GROUP_LABEL: Record<string, string> = {
@@ -90,32 +90,24 @@ export function groupSkills(all: SkillWithTrust[]): GroupedSkills {
   return { groups, claimed };
 }
 
-/** Источники для поповера «Откуда навык»: доказательства, а не текст под каждым навыком. */
-export function trustSources(s: SkillWithTrust): TrustSource[] {
-  if (s.top_evidence.length === 0) {
-    return s.sources.map((x) => ({ title: SOURCE_SHORT[x] ?? x, strength: "none" as const }));
-  }
-  return s.top_evidence.map((e) => ({
-    title: e.title,
-    detail: `${SOURCE_SHORT[e.source] ?? e.source}${e.verified ? ", проверено" : ""}`,
-    strength: e.strength >= 0.7 ? "strong" : e.strength >= 0.4 ? "medium" : "weak",
-    date: new Date(e.observed_at).toLocaleDateString("ru-RU", { month: "short", year: "numeric", timeZone: "UTC" }),
-  }));
-}
-
 export function skillLevel(s: SkillWithTrust): 0 | 1 | 2 | 3 | 4 {
   return dots(s.level);
 }
 
+const RELEVANCE_NOTE = { relevant: "релевантно профессии", other: "соревнование другого направления" } as const;
+
+/** Результаты ФСП: релевантные профессии сначала, у каждого подпись релевантности. */
 export function fspResults(list: FspHighlight[]): FspResult[] {
   const uniq = dedupeBy(list, (h) => `${h.title}|${h.level}|${h.place ?? ""}|${h.of ?? ""}|${h.year}`);
-  return uniq.map((h) => ({
+  const rank = (h: FspHighlight) => (h.relevance === "relevant" ? 0 : h.relevance === "other" ? 2 : 1);
+  const sorted = uniq.map((h, i) => ({ h, i })).sort((a, b) => rank(a.h) - rank(b.h) || a.i - b.i);
+  return sorted.map(({ h }) => ({
     discipline: h.title,
     tournament: FSP_LEVEL_LABEL[h.level] ?? h.level,
     place: h.place ?? 0,
     total: h.of ?? undefined,
     year: h.year,
-    note: h.note ?? undefined,
+    note: h.note ?? (h.relevance ? RELEVANCE_NOTE[h.relevance] : undefined),
   }));
 }
 
@@ -133,4 +125,29 @@ export function yearsLabel(months: number): string {
   const y = Math.floor(months / 12);
   const m = months % 12;
   return [y ? `${y} г` : "", m ? `${m} мес` : ""].filter(Boolean).join(" ") || "меньше месяца";
+}
+
+export type SkillFilter = "all" | "confirmed" | "claimed";
+export const TOP_SKILLS = 10;
+
+/** Сначала подтверждённые, внутри — по уровню доверия и имени. */
+export function rankSkills(all: SkillWithTrust[]): SkillWithTrust[] {
+  return dedupeSkills(all).sort(
+    (a, b) => Number(a.claimed_only) - Number(b.claimed_only) || b.level - a.level || a.skill.name.localeCompare(b.skill.name),
+  );
+}
+
+/** Подтверждено — есть независимое доказательство; заявлено — только слова кандидата. */
+export function splitClaimed(all: SkillWithTrust[]): { confirmed: SkillWithTrust[]; claimed: SkillWithTrust[] } {
+  const ranked = rankSkills(all);
+  return { confirmed: ranked.filter((s) => !s.claimed_only), claimed: ranked.filter((s) => s.claimed_only) };
+}
+
+export function filterSkills(list: SkillWithTrust[], query: string, filter: SkillFilter): SkillWithTrust[] {
+  const q = query.trim().toLowerCase();
+  return list.filter(
+    (s) =>
+      (filter === "all" || (filter === "claimed") === s.claimed_only) &&
+      (!q || s.skill.name.toLowerCase().includes(q) || s.skill.slug.toLowerCase().includes(q) || groupLabel(s.skill.group).toLowerCase().includes(q)),
+  );
 }

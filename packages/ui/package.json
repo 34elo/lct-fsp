@@ -26,6 +26,8 @@
     "clsx": "^2.1.1",
     "lucide-react": "^1.52.0",
     "radix-ui": "^1.6.7",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
     "sonner": "^2.0.8",
     "tailwind-merge": "^3.7.0"
   },

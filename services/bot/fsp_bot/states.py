@@ -24,10 +24,6 @@ class Test(StatesGroup):
     in_progress = State()  # id сессии — в данных FSM
 
 
-class Offer(StatesGroup):
-    awaiting_question = State()  # offer_id — в данных FSM
-
-
 class Interview(StatesGroup):
     answering = State()  # id и номер вопроса — в данных FSM
 

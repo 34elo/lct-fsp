@@ -1,3 +1,4 @@
+import { PAGE } from "@/shared/lib/page";
 import { useState } from "react";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Input, Skeleton } from "@fsp/ui";
 import { useQueryClient } from "@tanstack/react-query";
@@ -6,6 +7,7 @@ import { useCreateRunAdminLiveRunsPost, useListRunsAdminLiveRunsGet } from "@/ap
 import type { RunOut } from "@/api/model";
 import { QualityNav } from "./Nav";
 import { T } from "./text";
+import { AdminPageHeader } from "@/features/admin/PageHeader";
 
 type Scenario = "candidate" | "employer";
 const R = T.runs;
@@ -87,11 +89,8 @@ export default function Runs() {
   const d = q.data?.status === 200 ? q.data.data : null;
   const forbidden = q.data?.status === 403;
   return (
-    <div className="flex flex-col gap-6 p-4 md:p-6">
-      <header>
-        <h1 className="text-24 font-semibold">{R.title}</h1>
-        <p className="max-w-2xl text-14 text-muted">{R.lead}</p>
-      </header>
+    <div className={PAGE.wide}>
+      <AdminPageHeader title={R.title} tip={R.lead} />
       <QualityNav />
       <div className="flex gap-2" role="group" aria-label={R.cols.scenario}>
         {(["candidate", "employer"] as const).map((s) => (

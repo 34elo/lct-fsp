@@ -14,9 +14,10 @@
 По банку: каждый тип навыка покрыт ≥ 2 семействами, каждый `kind` (кроме `open`) — хотя бы одним,
 навык семейства есть в `data/taxonomy` и его тип совпадает, есть якорные семейства.
 
-Покрытие (E36-2, ADR-027 п.1): у каждой активной профессии справочника для каждого грейда и типа
-навыка есть семейство — навык из весов профессии, уровень в окне грейда (`selection.level_ok`).
-Пустая ячейка «профессия × грейд × тип навыка» — провал.
+Покрытие (E36-2, E39-6): у каждой активной профессии справочника для каждого грейда и типа навыка
+ищется семейство — навык из весов профессии, уровень в окне грейда (`selection.level_ok`). Пустая
+ячейка «профессия × грейд × тип навыка» — предупреждение «тонкий банк»: профессия остаётся открытой,
+в опросе помечена «бета» (`thin_professions`). Провал — только если активных профессий нет.
 
 Исполняется только код, который сгенерировали сами семейства. Код кандидатов не исполняется.
 """
@@ -218,21 +219,36 @@ def coverage(
     return out
 
 
+def thin_professions(
+    families: Sequence[Family],
+    professions: dict[str, dict[str, float]],
+    level_window: int | None = None,
+) -> set[str]:
+    """Профессии с тонким банком — есть пустая ячейка «грейд × тип навыка» (E39-6, «бета»)."""
+    if level_window is None:
+        level_window = load_config().level_window
+    return {
+        p for (p, _, _), slugs in coverage(families, professions, level_window).items() if not slugs
+    }
+
+
+def _active_professions(taxonomy_dir: Path) -> dict[str, dict[str, float]]:
+    from app.taxonomy.loader import load_taxonomy
+
+    return {
+        r.slug: r.skills for r in load_taxonomy(taxonomy_dir).roles if r.profession and r.active
+    }
+
+
 def check_coverage(
     families: Sequence[Family], taxonomy_dir: Path, level_window: int | None = None
 ) -> list[str]:
-    """Пустые ячейки покрытия у активных профессий справочника (ADR-027 п.1)."""
-    from app.taxonomy.loader import load_taxonomy
-
+    """Пустые ячейки покрытия у активных профессий справочника — предупреждения (E39-6)."""
     if level_window is None:
         level_window = load_config().level_window
-    professions = {
-        r.slug: r.skills for r in load_taxonomy(taxonomy_dir).roles if r.profession and r.active
-    }
-    if not professions:
-        return ["нет активных профессий в справочнике"]
+    professions = _active_professions(taxonomy_dir)
     return [
-        f"покрытие: {p} × {g.value} × {t.value} — нет семейств"
+        f"тонкий банк (бета): {p} × {g.value} × {t.value} — нет семейств"
         for (p, g, t), slugs in coverage(families, professions, level_window).items()
         if not slugs
     ]
@@ -263,8 +279,8 @@ def check_hashseed(n: int) -> list[str]:
 def run(families: Sequence[Family], n: int, taxonomy_dir: Path | None = TAXONOMY) -> list[str]:
     seed_list = seeds(n)
     errs = check_bank(families, taxonomy_dir)
-    if taxonomy_dir is not None:
-        errs += check_coverage(families, taxonomy_dir)
+    if taxonomy_dir is not None and not _active_professions(taxonomy_dir):
+        errs.append("нет активных профессий в справочнике")
     for fam in families:
         errs += check_family(fam, seed_list)
     return errs
@@ -293,8 +309,13 @@ def main(argv: list[str] | None = None) -> int:
     for f in sorted(families, key=lambda f: (SkillType(f.skill_type).value, f.slug)):
         anchor = " anchor" if getattr(f, "anchor", False) else ""
         print(f"  {f.skill_type:<11} {f.kind.value:<9} L{f.level} {f.slug} ({f.skill}){anchor}")
+    for w in check_coverage(families, args.taxonomy):
+        print(f"WARN {w}", file=sys.stderr)
     for e in errs:
         print(f"FAIL {e}", file=sys.stderr)
+    beta = sorted(thin_professions(families, _active_professions(args.taxonomy)))
+    if beta:
+        print(f"families-check: тонкий банк, помечены «бета» — {', '.join(beta)}")
     state = "OK" if not errs else f"ошибок: {len(errs)}"
     print(f"families-check: семейств {len(families)}, сидов {args.seeds} — {state}")
     return 1 if errs else 0

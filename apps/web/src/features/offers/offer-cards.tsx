@@ -1,3 +1,5 @@
+import { PAGE } from "@/shared/lib/page";
+import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 
 import {
@@ -8,6 +10,7 @@ import {
   ErrorState,
   formatRubRangeShort,
   H1,
+  InfoTip,
   Panel,
   Sheet,
   SheetContent,
@@ -35,7 +38,7 @@ export function responseNote(r: CompanyReliability | null | undefined): string |
 /** Приглашение или интерес → данные карточки v2: вилка, срок, задание, «почему ты» (до трёх строк). */
 export function offerCardData(o: CandidateOffer, withDeadline = true): OfferCardV2Data {
   return {
-    company: o.company.name,
+    company: o.company.demo ? `${o.company.name} · ${T.demo}` : o.company.name,
     rating: ratingText(o.company.responsibility_score),
     verified: o.company.verified,
     responseNote: responseNote(o.company.reliability),
@@ -49,16 +52,19 @@ export function offerCardData(o: CandidateOffer, withDeadline = true): OfferCard
 }
 
 /** Заголовок экрана и правая сводка (вилки интересов). */
-export function ListHeader({ aside }: { aside?: string }) {
+export function ListHeader({ aside, tip }: { aside?: string; tip?: ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <H1 className="text-[22px] md:text-[26px]">{T.title}</H1>
+      <div className="flex min-w-0 items-center gap-2">
+        <H1 className="text-[22px] md:text-[26px]">{T.title}</H1>
+        {tip && <InfoTip title={T.filter.interests} label={`Что такое «${T.filter.interests}»`}>{tip}</InfoTip>}
+      </div>
       {aside && <span className="num text-13">{aside}</span>}
     </div>
   );
 }
 
-export const LIST_PAGE = "mx-auto flex w-full max-w-[1328px] flex-col gap-4 px-4 py-4 md:px-6 md:py-6";
+export const LIST_PAGE = PAGE.normal;
 
 export function ListSkeleton() {
   return (

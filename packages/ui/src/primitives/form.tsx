@@ -1,5 +1,5 @@
-import { Check, ChevronDown, Loader2 } from "lucide-react";
-import { Checkbox as RCheckbox, Label as RLabel, RadioGroup as RRadio, Select as RSelect, Slider as RSlider, Switch as RSwitch } from "radix-ui";
+import { Check, Loader2 } from "lucide-react";
+import { Checkbox as RCheckbox, Label as RLabel, RadioGroup as RRadio, Slider as RSlider, Switch as RSwitch } from "radix-ui";
 import { createContext, useContext, useId, type ComponentProps, type InputHTMLAttributes, type ReactNode, type TextareaHTMLAttributes } from "react";
 
 import { cn } from "../lib/cn";
@@ -49,6 +49,7 @@ export function Field({ label, hint, error, children, className }: { label: Reac
   );
 }
 
+/** `id`, `aria-invalid` и `aria-describedby` поля из ближайшего `Field`, чтобы подсказка и ошибка читались скринридером. */
 export function useFieldProps() {
   const c = useContext(FieldCtx);
   return c ? { id: c.id, "aria-invalid": c.error ? true : undefined, "aria-describedby": c.hintId } : {};
@@ -60,41 +61,6 @@ export function FieldInput(p: InputHTMLAttributes<HTMLInputElement> & { loading?
 
 export function FormMessage({ error, className, ...p }: ComponentProps<"p"> & { error?: boolean }) {
   return <p role={error ? "alert" : undefined} className={cn("text-12", error ? "text-error" : "text-muted", className)} {...p} />;
-}
-
-export const Select = RSelect.Root;
-export const SelectValue = RSelect.Value;
-
-export function SelectTrigger({ className, children, ...p }: ComponentProps<typeof RSelect.Trigger>) {
-  return (
-    <RSelect.Trigger className={cn(control, "inline-flex h-11 items-center justify-between gap-2 data-[placeholder]:text-muted", className)} {...p}>
-      {children}
-      <RSelect.Icon asChild>
-        <ChevronDown className="size-4 text-muted" aria-hidden />
-      </RSelect.Icon>
-    </RSelect.Trigger>
-  );
-}
-
-export function SelectContent({ className, children, ...p }: ComponentProps<typeof RSelect.Content>) {
-  return (
-    <RSelect.Portal>
-      <RSelect.Content position="popper" sideOffset={4} className={cn("z-50 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-lg border border-hairline bg-card shadow-card", className)} {...p}>
-        <RSelect.Viewport className="p-1">{children}</RSelect.Viewport>
-      </RSelect.Content>
-    </RSelect.Portal>
-  );
-}
-
-export function SelectItem({ className, children, ...p }: ComponentProps<typeof RSelect.Item>) {
-  return (
-    <RSelect.Item className={cn("relative flex min-h-11 cursor-pointer items-center rounded-md py-2 pl-8 pr-3 text-14 outline-none data-[highlighted]:bg-tint-50 data-[disabled]:opacity-50 sm:min-h-9", className)} {...p}>
-      <RSelect.ItemIndicator className="absolute left-2">
-        <Check className="size-4 text-brand-fg" aria-hidden />
-      </RSelect.ItemIndicator>
-      <RSelect.ItemText>{children}</RSelect.ItemText>
-    </RSelect.Item>
-  );
 }
 
 export function Checkbox({ className, ...p }: ComponentProps<typeof RCheckbox.Root>) {

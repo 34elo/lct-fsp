@@ -1,44 +1,39 @@
 #!/bin/sh
-# Снапшоты демо-витрины (evaluation.md §4). Вызывается из Makefile:
+# Демо-витрина (evaluation.md §4, E40-1). Вызывается из Makefile:
 #   COMPOSE="docker compose ..." GATEWAY_PORT=28080 sh infra/scripts/demo.sh snapshot|reset|warm
-# snapshot: pg_dump core и fsp_connector (формат custom) + reports/seed/fsp-mock.json -> infra/snapshots/ (в git не идёт).
-# reset: остановить сервисы -> восстановить БД -> FLUSHALL Redis -> вернуть fsp-mock -> поднять сервисы.
+# Сбрасываются только демо-данные (is_demo): реальные регистрации и их данные не трогаются.
+# snapshot: демо-строки core и fsp_connector -> таблицы demo_snap__* тех же БД (python -m app.demo,
+#           python -m fsp_connector.demo) + reports/seed/fsp-mock.json -> infra/snapshots/.
+#           Делать на чистой витрине сразу после make seed.
+# reset: удалить всё, что касается демо (герои, жюри и их песочницы, попытки, интересы,
+#        приглашения, ФСП-привязки), вернуть демо из снапшота, вернуть fsp-mock. Без остановки стека.
 # warm: логин демо-аккаунтов, первый поиск, профиль (прогрев кешей).
 set -eu
 : "${COMPOSE:?нужен COMPOSE (см. Makefile)}"
 SNAP=infra/snapshots
 SEED=reports/seed/fsp-mock.json
-APP="core-api core-worker core-scheduler fsp-connector fsp-connector-worker ml-worker-llm ml-worker-code fsp-mock"
-DBS="core fsp_connector"
 PW="${DEMO_PASSWORD:-demo-pass-1234}"
 BASE="http://127.0.0.1:${GATEWAY_PORT:-28080}"
 
-pg() { $COMPOSE exec -T postgres sh -c "$1"; }
+core_demo() { $COMPOSE exec -T core-api python -m app.demo "$1"; }
+fspc_demo() { $COMPOSE exec -T fsp-connector python -m fsp_connector.demo "$1"; }
 
 case "${1:-}" in
 snapshot)
   mkdir -p "$SNAP"
-  for db in $DBS; do
-    pg "pg_dump -U \"\$POSTGRES_USER\" -Fc $db" > "$SNAP/$db.dump.tmp"
-    mv "$SNAP/$db.dump.tmp" "$SNAP/$db.dump"
-  done
+  IDS=$(core_demo snapshot)
+  echo "$IDS" | fspc_demo snapshot
   [ -f "$SEED" ] && cp "$SEED" "$SNAP/fsp-mock.json"
-  ls -la "$SNAP"
+  echo "snapshot: $(echo "$IDS" | grep -c '^DEMO_ID ') демо-аккаунтов"
   ;;
 reset)
-  for f in $DBS; do [ -s "$SNAP/$f.dump" ] || { echo "нет $SNAP/$f.dump: сначала make demo-snapshot" >&2; exit 1; }; done
   START=$(date +%s)
-  $COMPOSE stop $APP
-  for db in $DBS; do
-    owner=core; [ "$db" = fsp_connector ] && owner=fspc
-    pg "psql -q -v ON_ERROR_STOP=1 -U \"\$POSTGRES_USER\" -d postgres -c 'DROP DATABASE IF EXISTS $db WITH (FORCE)' -c 'CREATE DATABASE $db OWNER $owner'"
-    $COMPOSE exec -T postgres sh -c "pg_restore -U \"\$POSTGRES_USER\" -d $db --exit-on-error" < "$SNAP/$db.dump"
-  done
-  # кеши, лимиты, idempotency-ключи, сессии
-  $COMPOSE exec -T redis redis-cli FLUSHALL
-  if [ -f "$SNAP/fsp-mock.json" ]; then mkdir -p reports/seed; cp "$SNAP/fsp-mock.json" "$SEED"; fi
-  $COMPOSE up -d --no-deps --force-recreate fsp-mock
-  $COMPOSE up -d --no-deps --wait $APP
+  IDS=$(core_demo reset)
+  echo "$IDS" | fspc_demo reset
+  if [ -f "$SNAP/fsp-mock.json" ]; then
+    mkdir -p reports/seed; cp "$SNAP/fsp-mock.json" "$SEED"
+    $COMPOSE up -d --no-deps --force-recreate fsp-mock
+  fi
   echo "reset: $(( $(date +%s) - START )) c"
   ;;
 warm)

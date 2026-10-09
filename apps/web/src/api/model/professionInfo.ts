@@ -14,4 +14,5 @@ export interface ProfessionInfo {
   skill_weights: ProfessionInfoSkillWeights;
   skill_types?: ProfessionInfoSkillTypes;
   active?: boolean;
+  beta?: boolean;
 }

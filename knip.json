@@ -1,0 +1,18 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "ignoreExportsUsedInFile": true,
+  "ignore": ["docs/**"],
+  "rules": { "duplicates": "off" },
+  "workspaces": {
+    "apps/web": {
+      "entry": ["e2e/**/*.ts", "scripts/**/*.mjs"],
+      "project": ["src/**/*.{ts,tsx}", "e2e/**/*.ts"],
+      "ignore": ["src/api/**", "src/shared/lib/useTrack.ts"],
+      "ignoreDependencies": ["tailwindcss"]
+    },
+    "packages/ui": {
+      "entry": ["playground/**/*.{ts,tsx}", "scripts/**/*.mjs"],
+      "project": ["src/**/*.{ts,tsx}", "playground/**/*.{ts,tsx}"]
+    }
+  }
+}

@@ -10,4 +10,5 @@ export interface PublicCompany {
   name: string;
   verified: boolean;
   responsibility_score?: number | null;
+  demo?: boolean;
 }

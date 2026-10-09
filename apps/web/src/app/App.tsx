@@ -1,6 +1,7 @@
 import { lazy, Suspense, type ComponentType } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 
+import { DocumentTitle } from "@/app/DocumentTitle";
 import { RequireRole } from "@/app/RequireRole";
 import { ROUTES, SECTION_ROLE } from "@/app/routes";
 import Consents from "@/pages/Consents";
@@ -27,6 +28,7 @@ import Survey from "@/features/assessment/Survey";
 import Attempt from "@/features/assessment/Attempt";
 import Result from "@/features/assessment/Result";
 import History from "@/features/assessment/History";
+import Review from "@/features/assessment/Review";
 import VerifyEmail from "@/features/auth/VerifyEmail";
 import ProfileEdit from "@/features/profile/ProfileEdit";
 import Settings from "@/features/profile/Settings";
@@ -34,6 +36,7 @@ import Stats from "@/features/profile/Stats";
 import CandidateTasks from "@/features/tasks/CandidateTasks";
 import EmployerTasks from "@/features/tasks/EmployerTasks";
 import Constructor from "@/features/constructor/Constructor";
+import Guide from "@/features/constructor/Guide";
 import AdmissionQueue from "@/features/constructor/AdmissionQueue";
 import AdminSkills from "@/features/admin-taxonomy/AdminSkills";
 import AdminTaxonomy from "@/features/admin-taxonomy/AdminTaxonomy";
@@ -45,7 +48,10 @@ import DemoTwoWorlds from "@/features/demo/TwoWorlds";
 import Landing from "@/features/landing/Landing";
 import Legal from "@/features/landing/Legal";
 import FederationDashboard from "@/features/admin/Dashboard";
+import AdminHome from "@/features/admin/Home";
 import FederationModeration from "@/features/admin/Moderation";
+import FspRegistry from "@/features/fsp-registry/FspRegistry";
+import FspRequests from "@/features/fsp-registry/Requests";
 import Quality from "@/features/quality/Quality";
 import Fairness from "@/features/quality/Fairness";
 import Runs from "@/features/quality/Runs";
@@ -60,6 +66,7 @@ import CategoryCandidates from "@/features/needs/CategoryCandidates";
 import Subscriptions from "@/features/needs/Subscriptions";
 import { CandidateInterests } from "@/features/offers/CandidateInterests";
 import EmployerMatch from "@/features/employer/Match";
+import InviteAccept from "@/features/employer/InviteAccept";
 // <<< block2 imports
 
 // Разделы по ролям грузятся лениво (frontend.md: «ленивые разделы»).
@@ -67,6 +74,7 @@ const PublicLayout = lazy(() => import("@/app/layouts/PublicLayout"));
 const CandidateLayout = lazy(() => import("@/app/layouts/CandidateLayout"));
 const EmployerLayout = lazy(() => import("@/app/layouts/EmployerLayout"));
 const AdminLayout = lazy(() => import("@/app/layouts/AdminLayout"));
+const AccountLayout = lazy(() => import("@/app/layouts/AccountLayout"));
 const RunPage = lazy(() => import("@/features/runs/RunPage"));
 
 // Старые адреса без своего экрана ведут на рабочий экран (E35-1: заглушек нет).
@@ -92,9 +100,9 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
             <Route path="/me/assessment/history" element={<History />} />
             <Route path="/me/assessment/attempts/:id" element={<Attempt />} />
             <Route path="/me/assessment/attempts/:id/result" element={<Result />} />
+            <Route path="/me/assessment/attempts/:id/review" element={<Review />} />
             <Route path="/me/profile" element={<Profile />} />
             <Route path="/me/profile/edit" element={<ProfileEdit />} />
-            <Route path="/me/settings" element={<Settings />} />
             <Route path="/me/stats" element={<Stats />} />
             <Route path="/me/tasks" element={<CandidateTasks />} />
             {/* <<< block1 (candidate) */}
@@ -121,6 +129,7 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
             {/* >>> block1 (employer) */}
             <Route path="/employer/tasks" element={<EmployerTasks />} />
             <Route path="/employer/families/new" element={<Constructor />} />
+            <Route path="/employer/families/guide" element={<Guide />} />
             {/* <<< block1 (employer) */}
             {/* >>> block2 (employer) */}
             <Route path="/employer" element={<EmployerMatch />} />
@@ -143,8 +152,11 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
             <Route path="/admin/demo/new-profession" element={<DemoNewProfession />} />
             {/* <<< block1 (admin) */}
             {/* >>> block2 (admin) */}
-            <Route path="/federation" element={<FederationDashboard />} />
+            <Route path="/federation" element={<AdminHome />} />
+            <Route path="/federation/funnel" element={<FederationDashboard />} />
+            <Route path="/federation/requests" element={<FspRequests />} />
             <Route path="/federation/moderation" element={<FederationModeration />} />
+            <Route path="/federation/registry" element={<FspRegistry />} />
             <Route path="/admin/quality" element={<Quality />} />
             <Route path="/admin/quality/fairness" element={<Fairness />} />
             <Route path="/admin/quality/runs" element={<Runs />} />
@@ -159,6 +171,7 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
 export function App() {
   return (
     <Suspense fallback={<p role="status" className="p-6 text-muted">Загрузка…</p>}>
+      <DocumentTitle />
       <Routes>
         <Route element={<PublicLayout />}>
           <Route path="/login" element={<Login />} />
@@ -179,11 +192,17 @@ export function App() {
           <Route path="/jobs/:id" element={<JobDetail />} />
           <Route path="/terms" element={<Legal />} />
           <Route path="/privacy" element={<Legal />} />
+          <Route path="/invite/company/:token" element={<InviteAccept />} />
           {/* <<< block2 (public) */}
         </Route>
         {guarded("candidate", CandidateLayout)}
         {guarded("employer", EmployerLayout)}
         {guarded("admin", AdminLayout)}
+        <Route element={<RequireRole />}>
+          <Route element={<AccountLayout />}>
+            <Route path="/settings" element={<Settings />} />
+          </Route>
+        </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>

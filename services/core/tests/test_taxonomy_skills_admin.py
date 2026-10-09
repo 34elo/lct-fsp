@@ -80,6 +80,7 @@ def test_roles_required(api, seeded):
         ("get", "/admin/skills/blocklist"),
         ("get", "/admin/skills/provisional"),
         ("get", "/admin/skills/hints"),
+        ("get", "/admin/skills/graph"),
     ]:
         assert getattr(api, method)(url).status_code == 401
         assert getattr(api, method)(url, headers=cand).status_code == 403
@@ -229,3 +230,15 @@ def test_provisional_list_approve_reject_and_hints(api, seeded, db_url):
         )
     assert api.get("/admin/skills/hints", headers=adm).json() == hints
     assert ScoringConfig  # модель подключена
+
+
+def test_graph_for_viewing(api, seeded):
+    adm = _admin(api)
+    g = api.get("/admin/skills/graph", headers=adm)
+    assert g.status_code == 200, g.text
+    body = g.json()
+    ids = {n["id"] for n in body["nodes"]}
+    assert "postgres-sql" in ids and "postgresql" in ids
+    assert body["edges"] and all(e["from"] in ids and e["to"] in ids for e in body["edges"])
+    assert {e["type"] for e in body["edges"]} <= {"adjacent", "parent"}
+    assert body["version"] >= 1

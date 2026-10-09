@@ -71,6 +71,9 @@ async def compute(
     ucfg: UpliftConfig | None = None,
     today: date | None = None,
 ) -> dict[str, Any]:
+    """Uplift кандидата: какие навыки добавят больше всего релевантных вакансий, с кешем в Redis
+    (matching.md §6).
+    """
     ucfg = ucfg or UpliftConfig.load()
     day = today or datetime.now(UTC).date()
     published = await vacancies.list_published(session)

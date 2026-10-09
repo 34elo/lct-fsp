@@ -159,6 +159,7 @@ def _ts(d: datetime) -> float:
 
 
 def grades_between(lo: str | None, hi: str | None) -> list[str] | None:
+    """Грейды от `lo` до `hi` включительно для SQL-фильтра; без границ — `None` (фильтра нет)."""
     if lo is None and hi is None:
         return None
     order = candidates.GRADE_ORDER
@@ -168,6 +169,9 @@ def grades_between(lo: str | None, hi: str | None) -> list[str] | None:
 
 
 def trust_of(skills: list[Any]) -> float:
+    """Доверие профиля для сортировки: среднее `TRUST_TOP` лучших подтверждённых навыков (не
+    `claimed_only`).
+    """
     top = sorted((s.confidence for s in skills if not s.claimed_only), reverse=True)[:TRUST_TOP]
     return round(sum(top) / TRUST_TOP, 6)
 
@@ -182,6 +186,43 @@ def relevance_of(
     got = sum(min(1.0, held[s].confidence) for s in must if s in held)
     got += NICE_WEIGHT * sum(min(1.0, held[s].confidence) for s in nice if s in held)
     return round(got / total, 6)
+
+
+def extra_ok(
+    cand: Any,
+    held: dict[uuid.UUID, Any],
+    fsp_disc: set[str],
+    grades: list[Any],
+    f: SearchFilters,
+    nice_ids: list[uuid.UUID],
+    *,
+    has_musts: bool,
+    profession: str | None = None,
+) -> bool:
+    """Фильтры поверх пула анкет (E39-21) — одни для выдачи и для счётчиков категорий.
+
+    `salary_min` — ожидания кандидата не ниже (не указаны — проходит); `fsp_only` — есть ФСП;
+    `min_trust` без обязательных навыков — хотя бы один навык запроса (без навыков — любой)
+    с доверием не ниже; `professions` — действующий грейд одной из профессий (в категории —
+    её профессии); `only_confirmed` — такой грейд без «нужно подтвердить» и низкой уверенности.
+    """
+    if f.salary_min is not None and cand.salary_min is not None and cand.salary_min < f.salary_min:
+        return False
+    if f.fsp_only and not (fsp_disc or any("fsp" in (s.sources or ()) for s in held.values())):
+        return False
+    if f.min_trust is not None and not has_musts:
+        floor = int(f.min_trust)
+        mine = [held[i] for i in nice_ids if i in held] if nice_ids else list(held.values())
+        if not any(s.level >= floor for s in mine):
+            return False
+    if f.professions or f.only_confirmed:
+        profs = {profession} if profession else set(f.professions or ())
+        gs = [g for g in grades if not profs or g.profession in profs]
+        if f.only_confirmed:
+            gs = [g for g in gs if not (g.needs_confirmation or g.low_confidence)]
+        if not gs:
+            return False
+    return True
 
 
 def encode_cursor(sort: Sort, key: float, pseudo_id: str) -> str:
@@ -288,13 +329,18 @@ def _card(
     interested_you: bool = False,
 ) -> CandidateCard:
     vis = candidates.visibility_of(c)  # ADR-027: что кандидат открыл работодателю
-    ordered = sorted(skills, key=lambda s: (s.claimed_only, -s.confidence, str(s.skill_id)))
+    hidden = candidates.hidden_skills_of(c)  # E39-15: скрытые кандидатом навыки не показываем
+    shown = [s for s in skills if s.skill_id in names and names[s.skill_id][0] not in hidden]
+    ordered = sorted(shown, key=lambda s: (s.claimed_only, -s.confidence, str(s.skill_id)))
     top = [
         SkillBrief(slug=names[s.skill_id][0], name=names[s.skill_id][1], level=s.level,
                    sources=[x for x in s.sources or () if vis["fsp"] or x != "fsp"])
         for s in ordered[:TOP_SKILLS]
-        if s.skill_id in names
     ]  # fmt: skip
+    if result is not None and hidden:
+        result = replace(
+            result, explanation=[e for e in result.explanation if e.skill not in hidden]
+        )
     if strength_view is not None and not vis["fsp"]:  # ФСП скрыт: слагаемого F в объяснении нет
         strength_view = strength_view.model_copy(
             update={"top": [p for p in strength_view.top if p.code != "F"]}
@@ -306,7 +352,7 @@ def _card(
         primary_role=c.primary_role,
         grade=c.grade,
         grade_preliminary=c.grade_confidence is None or c.grade_confidence < 0.5,
-        primary_stack=list(c.primary_stack or ()),
+        primary_stack=[x for x in c.primary_stack or () if x not in hidden],
         top_skills=top,
         fsp_highlights=highlights if vis["fsp"] else [],
         salary_min=c.salary_min,
@@ -595,6 +641,10 @@ async def search_candidates(
     }  # None — неизвестный навык: не найдёт никого
     nice_ids = [by_slug[s] for s in f.skills_nice or () if s in by_slug]
     disc = await graph.fsp_disciplines_of(session, ids) if f.fsp_only or f.fsp_disciplines else {}
+    cand_grades = (
+        await assessment.get_grades_many(session, ids) if f.professions or f.only_confirmed else {}
+    )
+    prof_of_cat = category.profession if category is not None else None
 
     rows: list[Row] = []
     for c in pool:
@@ -606,9 +656,10 @@ async def search_candidates(
             continue
         if f.fsp_disciplines and not set(f.fsp_disciplines) & disc.get(c.user_id, set()):
             continue
-        if f.fsp_only and not (
-            disc.get(c.user_id) or any("fsp" in s.sources for s in held.values())
-        ):
+        if not extra_ok(
+            c, held, disc.get(c.user_id, set()), cand_grades.get(c.user_id, []), f, nice_ids,
+            has_musts=bool(musts), profession=prof_of_cat,
+        ):  # fmt: skip
             continue
         rows.append(
             Row(c, trust_of(owned[c.user_id]),
