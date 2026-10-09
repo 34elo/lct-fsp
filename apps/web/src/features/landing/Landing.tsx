@@ -92,10 +92,18 @@ function Hero() {
             <Lbl className="text-brand-fg">{T.eyebrow}</Lbl>
             <H1 className="text-[32px] leading-[1.08] font-bold md:text-[54px]">{T.heroTitle}</H1>
             <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap">
-              <Link to="/register" className={cn(buttonVariants({ variant: "default" }), cta)}>
+              <Link
+                to="/register"
+                state={{ role: "candidate" }}
+                className={cn(buttonVariants({ variant: "default" }), cta)}
+              >
                 {T.ctaCandidate}
               </Link>
-              <Link to="/register" className={cn(buttonVariants({ variant: "outline" }), cta)}>
+              <Link
+                to="/register"
+                state={{ role: "employer" }}
+                className={cn(buttonVariants({ variant: "outline" }), cta)}
+              >
                 {T.ctaEmployer}
               </Link>
               {jury && (
@@ -235,11 +243,12 @@ function Footer() {
     <ThemeScope dark>
       <footer className={cn("flex flex-col gap-3 py-7 text-13 md:flex-row md:justify-between", pad)}>
         <span className="text-muted">{T.copyright}</span>
-        <span className="flex gap-5">
-          <Link to="/terms">{T.terms}</Link>
+        <nav aria-label={T.footerAria} className="flex flex-wrap gap-x-5 gap-y-2">
+          <Link to="/terms">{T.docs}</Link>
           <Link to="/privacy">{T.privacy}</Link>
-          <a href="mailto:career@fsp.example">{T.contacts}</a>
-        </span>
+          <a href="#steps">{T.about}</a>
+          <a href={`mailto:${T.contactEmail}`}>{T.contacts}</a>
+        </nav>
       </footer>
     </ThemeScope>
   );

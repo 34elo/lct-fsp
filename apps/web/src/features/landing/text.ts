@@ -2,7 +2,7 @@ export const T = {
   eyebrow: "Платформа Федерации спортивного программирования",
   heroTitle: "Тест подтверждает грейд. Работодатель приходит с вилкой.",
   ctaCandidate: "Пройти тест",
-  ctaEmployer: "Найти специалиста",
+  ctaEmployer: "Ищу сотрудников",
   ctaJury: "Демо для жюри →",
   login: "Войти",
   navCandidates: "Кандидатам",
@@ -60,9 +60,12 @@ export const T = {
   matchTitle: "Совпадение",
   matchWho: "кандидат #4821",
   copyright: "© 2026 Федерация спортивного программирования России",
-  terms: "Условия",
+  footerAria: "Подвал",
+  docs: "Документы",
   privacy: "Политика ПДн",
-  contacts: "Контакт",
+  about: "О проекте",
+  contacts: "Контакты",
+  contactEmail: "career@fsp.example",
 } as const;
 
 /** Панель «что попробовать» (E34-2): сценарий жюри за 5 минут. */
