@@ -67,7 +67,10 @@
 | `GET /candidates/me/skills/{skill_id}/evidence` | `Evidence[]` — «откуда взялся навык» |
 | `GET /candidates/me/category` | `CategoryExplanation`: роли, грейд, разбивка, уверенность, как подняться |
 | `POST /candidates/me/category/dispute` | `{claimed_role, claimed_grade, comment}` |
-| `POST /candidates/me/fsp/link` | `{participant_id? , email?}` → `{method: "code"|"manual", masked_contact?}` |
+| `POST /candidates/me/fsp/registry-link` | Кнопка «Привязать ФСП» (E39-28, ADR-052): core передаёт в реестр email аккаунта и телефон из контактов → `{linked, matched_by: email|phone|null, participant_id}`. Совпал ровно один участник — привязка сразу (`fsp.linked`, `method=registry`, `verified=true`), достижения приходят следующей синхронизацией; иначе `linked=false` и UI показывает заявку. Нужно согласие `pd_processing`; лимит 10 за 10 мин; 409 `fsp_already_linked` |
+| `GET /candidates/me/fsp/request` | Последняя своя заявка на привязку `{id, full_name, email, phone, event, status: pending|accepted|rejected, reason, created_at, decided_at}` или `null` |
+| `POST /candidates/me/fsp/requests` | `201` заявка админу `{full_name, email?, phone?, event?}` (нужен email или телефон; повтор правит открытую заявку). 422 `bad_email`/`bad_phone`/`validation_error`, 409 `candidate_already_linked`; лимит 5 за 10 мин |
+| `POST /candidates/me/fsp/link` | Старый путь (UI не использует с E39-28, бэкенд сохранён): `{participant_id? , email?}` → `{method: "code"|"manual", masked_contact?}` |
 | `POST /candidates/me/fsp/verify` | `{code}` |
 | `POST /candidates/me/fsp/sync` | `202` — ручное обновление (не чаще раза в 10 минут) |
 | `GET /candidates/me/fsp` | `{link, achievements: FspAchievement[], ranks, teams}` |
@@ -257,6 +260,11 @@
 | `POST /run/{token}/start` | Для испытателя: запускает таймер и привязывает псевдоним вошедшего пользователя (идемпотентно) |
 | `POST /run/{token}/sus` | Для испытателя: `{answers: [1..5]×10, category_agree?, notes?}`, завершает прогон; повтор → 409 `run_finished` |
 | `GET /admin/health` | SLO, очереди, DLQ, GPU (блок «Здоровье») |
+| `GET|POST /admin/fsp/events`, `PATCH /admin/fsp/events/{id}` | Реестр ФСП (E39-28, ADR-052), роль `fsp_admin`: мероприятия `{title, discipline, level, date}` → `RegistryEventOut` (+ `results` — число результатов); 404 `not_found` |
+| `GET /admin/fsp/participants?q=&limit=`, `POST /admin/fsp/participants` | Участники реестра `{full_name, email?, phone?}` (контакты нормализуются; дубль по email/телефону → 409 `participant_exists`); поиск по ФИО, email, телефону, ID; `linked` — уже привязан к кандидату |
+| `POST /admin/fsp/participants/import` | `{csv}` «ФИО, email, телефон» (`,`/`;`, заголовок необязателен, до 5000 строк) → `{created, updated, errors: [{line, reason}]}`; совпал контакт — обновление |
+| `GET /admin/fsp/results?event_id=&participant_id=`, `PUT /admin/fsp/results`, `DELETE /admin/fsp/results/{id}` | Результат «участник × мероприятие» `{participant_id, event_id, place?, team?}` (повтор правит); привязанному кандидату сразу уходит полная синхронизация |
+| `GET /admin/fsp/requests?status=`, `POST /admin/fsp/requests/{id}/accept` `{participant_id}`, `POST …/reject` `{reason}` | Очередь заявок; в ответе `candidates` — участники реестра с теми же контактами (подсказка). Принять → привязка `method=registry`; повторное решение → 409 `request_decided` |
 | `POST /admin/demo/fsp-result` | Демо: создать результат в моке → вебхук (F11) |
 | `POST /admin/demo/reset` | Только при `DEMO_MODE=true`: сброс к снапшоту |
 
@@ -320,6 +328,7 @@
 | `POST /internal/oauth/exchange` | `{code, code_verifier, candidate_id}` → `{participant_id, verified: true}` + событие `fsp.linked` (`method=oauth`); код одноразовый, повтор → 502 `fsp_auth_error` |
 | `POST /internal/links` | `{candidate_id, participant_id?, email?, manual?}` → `{method: code|manual, masked_contact?}`. Есть контакт в ФСП → отправляет код (`s:fspcode:{cid}`, TTL 10 мин), привязки ещё нет; контакта нет или `manual=true` → сразу `fsp_links(manual, verified=false)` + `fsp.linked`. Ошибки: 404 `fsp_not_found`, 409 `fsp_already_linked` (+ запись в `fsp_link_conflicts`), 409 `candidate_already_linked`, 409 `fsp_ambiguous` |
 | `POST /internal/links/verify` | `{candidate_id, code}` → `{verified}`; верный код → `fsp_links(code, verified=true)` + `fsp.linked`; 5 неверных попыток → 429 `too_many_attempts`, нет ожидающего кода → 410 `code_expired` |
+| `/internal/registry/*` | Реестр ФСП (E39-28): `events`, `participants` (+`/import`), `results`, `match` `{candidate_id, emails[], phones[]}` → `{linked, participant_id, matched_by}`, `requests` (+`/by-candidate/{cid}`, `/{id}/accept`, `/{id}/reject`) — те же тела, что у публичных `/admin/fsp/*` и `/candidates/me/fsp/*`; права проверяет core |
 | `GET /internal/competitions?from=&to=` | Календарь (для навигатора, если копия в core устарела) |
 | `POST /integrations/fsp/webhook` | Публичный, вебхук ФСП/мока (HMAC) — маршрутизируется edge'ем сюда |
 

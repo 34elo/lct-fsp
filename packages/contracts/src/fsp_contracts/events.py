@@ -153,7 +153,7 @@ class FspLinked(BaseModel):
     candidate_id: UUID
     participant_id: str
     verified: bool
-    method: Literal["oauth", "code", "manual"]
+    method: Literal["oauth", "code", "manual", "registry"]  # registry — реестр ФСП (ADR-052)
 
 
 class FspResultsImported(BaseModel):

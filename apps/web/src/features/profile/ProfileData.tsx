@@ -395,7 +395,7 @@ function FspCard({ p, imported }: { p: CandidateProfile; imported: boolean }) {
           {T.fspImported}
         </p>
       )}
-      <FspLinkPanel next="/me/profile?tab=data" />
+      <FspLinkPanel />
     </Panel>
   );
 }

@@ -28,6 +28,10 @@ def test_upgrade_and_downgrade(tmp_path):
         "raw_responses",
         "webhook_log",
         "fsp_link_conflicts",
+        "fsp_reg_events",
+        "fsp_reg_participants",
+        "fsp_reg_results",
+        "fsp_link_requests",
     } <= tables
     _alembic(url, "downgrade", "base")
     assert "fsp_links" not in set(inspect(create_engine(f"sqlite:///{db}")).get_table_names())

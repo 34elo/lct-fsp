@@ -60,11 +60,11 @@ class ResumeConfirmed(_Props):
 
 
 class FspLinkStarted(_Props):
-    method: Literal["oauth", "code", "manual"]
+    method: Literal["oauth", "code", "manual", "registry"]
 
 
 class FspLinkCompleted(_Props):
-    method: Literal["oauth", "code", "manual"]
+    method: Literal["oauth", "code", "manual", "registry"]
     verified: bool
     duration_ms: Nat | None = None
     results_imported: Nat | None = None

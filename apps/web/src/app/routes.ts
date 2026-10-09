@@ -84,6 +84,7 @@ export const ROUTES: RouteDef[] = [
   // >>> block1 (employer)
   { path: "/employer/tasks", title: "Задания компании", section: "employer", owner: "b1", nav: true },
   { path: "/employer/families/new", title: "Конструктор задания", section: "employer", owner: "b1" },
+  { path: "/employer/families/guide", title: "Как сделать задание", section: "employer", owner: "b1" },
   // <<< block1 (employer)
   // >>> block2 (employer)
   { path: "/employer", title: "Подбор", screen: "v2_employer__first, v2_employer__results", section: "employer", owner: "b2", nav: true },
@@ -111,6 +112,8 @@ export const ROUTES: RouteDef[] = [
   { path: "/admin/demo/new-profession", title: "Новая профессия", section: "admin", owner: "b1" },
   // <<< block1 (admin)
   // >>> block2 (admin)
+  // Реестр ФСП (E39-28): вход с Дашборда, в меню подсвечен «Дашборд» (/federation — префикс).
+  { path: "/federation/registry", title: "Реестр ФСП", section: "admin", owner: "b2" },
   // <<< block2 (admin)
 ];
 

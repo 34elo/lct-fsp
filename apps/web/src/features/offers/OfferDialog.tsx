@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { type AcceptanceLevel, AcceptanceMeter, Button, cn, Dialog, DialogContent, DialogDescription, DialogTitle, formatRub, Lbl, Num, SalaryRangeInput, SegmentedControl, Select, Sheet, SheetContent, SheetDescription, SheetTitle, Skeleton } from "@fsp/ui";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { useListTasksEmployerTasksGet } from "@/api/endpoints/assessment/assessment";
 import { useCreateInterestInterestsPost, useCreateOfferOffersPost, useInviteFromInterestInterestsOfferIdInvitePost, useSalaryHintOffersSalaryHintPost } from "@/api/endpoints/offers/offers";
@@ -38,6 +38,7 @@ const T = {
   placeholder: "Почему вы пишете именно ему: навыки, результаты, задачи.",
   task: "Задание · по желанию",
   noTask: "Без задания",
+  howTo: "Как сделать задание",
   tasksFail: "Список заданий недоступен: приглашение можно отправить без задания.",
   info: "Срок ответа 7 дней. Приглашение придёт кандидату в Telegram и в кабинет. Контакты раскрываются только после принятия.",
   send: "Отправить",
@@ -310,6 +311,7 @@ function OfferForm({ candidate, vacancyId: initialVacancy, alreadyOffered, onClo
             options={[{ value: "", label: T.noTask }, ...tasks.map((t) => ({ value: t.family_id, label: t.title }))]}
           />
           {tq.isError && <span className="text-xs text-muted">{T.tasksFail}</span>}
+          <Link to="/employer/families/guide" className="text-xs text-brand-deep underline dark:text-brand-mid" data-testid="offer-task-howto">{T.howTo}</Link>
         </div>
       )}
 
