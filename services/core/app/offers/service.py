@@ -40,7 +40,7 @@ from fsp_contracts.hiring import (
 )
 from fsp_platform.app import ProblemError
 from fsp_platform.outbox import add_to_outbox
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -683,6 +683,21 @@ async def briefs_for(
         .order_by(Offer.created_at.desc())
     )
     return [{"id": str(i), "status": s} for i, s in (await session.execute(q)).all()]
+
+
+async def invited(session: AsyncSession, company_id: uuid.UUID, candidate_id: uuid.UUID) -> bool:
+    """Компания уже пригласила кандидата (E39-15: ФИО в карточке). Интерес без приглашения
+    (ADR-026) не считается; отклик кандидата — считается (он сам вышел на контакт)."""
+    q = (
+        select(Offer.id)
+        .where(
+            Offer.company_id == company_id,
+            Offer.candidate_id == candidate_id,
+            or_(Offer.interest_at.is_(None), Offer.invited_at.is_not(None)),
+        )
+        .limit(1)
+    )
+    return (await session.scalar(q)) is not None
 
 
 def _is_expired(offer: Offer, now: datetime) -> bool:

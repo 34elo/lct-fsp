@@ -114,6 +114,10 @@ class Candidate(Base):
     # ФИО (E36-5): шифруется как контакты; работодателю — только при `visibility.full_name`
     full_name_enc: Mapped[bytes | None] = mapped_column(sa.LargeBinary, default=None)
     desired_roles: Mapped[list[str] | None] = mapped_column(TextArray, default=None)
+    # E39-15: slug навыков, скрытых кандидатом от работодателя (карточка, выдача); подбор не меняют
+    hidden_skills: Mapped[list[str] | None] = mapped_column(TextArray, default=None)
+    # E39-15: ссылки кандидата (GitHub, портфолио) — JSON-список, шифруется; видны только владельцу
+    links_enc: Mapped[bytes | None] = mapped_column(sa.LargeBinary, default=None)
     # возраст (E32-5b): только группа, дата рождения не собирается; `minor` = 15–17 лет
     age_group: Mapped[str | None] = mapped_column(Text, default=None)  # adult | minor
     parent_consent_at: Mapped[datetime | None] = mapped_column(
