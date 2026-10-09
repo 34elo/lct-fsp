@@ -239,6 +239,7 @@
 | `GET /admin/skills/queue` | Очередь слияний («то же», уверенность 0.6–0.9) с превью «что объединится»; `POST /admin/skills/queue/{slug}/approve` — слить в предложенный навык, `…/reject {mark_distinct}` — оставить отдельным (E16-7) |
 | `POST /admin/skills/{slug}/approve|reject`, `POST /admin/skills/merge {from, into}`, `GET /admin/skills/merges`, `POST /admin/skills/merges/{id}/revert`, `GET /admin/skills/provisional` | Решения админа по графу: временный навык (с черновиком карточки), ручное слияние, журнал и откат. Нет навыка/слияния → 404, пара «точно разные» → 409 `merge_forbidden_distinct`; роль `fsp_admin` |
 | `GET|POST /admin/skills/distinct`, `DELETE /admin/skills/distinct?a=&b=`, `GET|POST /admin/skills/blocklist`, `DELETE /admin/skills/blocklist?norm=` | «Точно разные» пары и стоп-лист |
+| `GET /admin/skills/graph` | Граф навыков для просмотра: `nodes` (slug, название, тип, статус), `edges` (`adjacent`, `parent`), `version` справочника; роль `fsp_admin` |
 | `GET /admin/skills/hints` | Подсказки экспертам (`taxonomy_hints`): правила дисциплин и кандидаты в новые профессии |
 | `GET|POST /admin/professions`, `GET|PATCH|DELETE /admin/professions/{slug}` | Профессии теста и веса навыков (E13-1a, `fsp_admin`). POST `{slug, title, skill_weights{slug:вес}}` → 201; PATCH `{title?, skill_weights?}` (веса заменяются целиком); DELETE снимает признак профессии (веса остаются). Веса в (0, 1], навыки живые, покрыты все 6 типов: иначе 422 `invalid_weight` / `unknown_skill` / `missing_skill_types`; повтор слага — 409 `profession_exists`. Ответ — `ProfessionInfo` + `taxonomy_version`; список включает скрытые профессии (`active: false`, E36-2) |
 | `GET /admin/skill-cards`, `GET|PUT /admin/skill-cards/{slug}` | Карточки навыков (E13-1a). `source`: `admin` (правка в `scoring_config`, ключ `skill_card:<slug>`, своя `version`), `file` (`data/skills/cards`), `draft` (ml). PUT принимает `SkillCard`; `skill` ≠ путь → 422 `card_skill_mismatch`, `type` ≠ типу навыка → 422 `card_type_mismatch` |
@@ -273,7 +274,7 @@
 
 | Метод и путь | Назначение |
 |---|---|
-| `GET /public/stats` | Счётчики для лендинга: кандидатов, с ФСП, компаний, офферов |
+| `GET /public/stats` | E39-35: цифры лендинга без авторизации и ПДн, кеш Redis 5 минут (`Cache-Control: public, max-age=300`). `PublicStatsOut {candidates, companies, invitations, median_days_to_invite}`: кандидаты с грейдом из теста, компании `verified`, приглашения компаний, медиана дней от первого грейда до первого приглашения; нет данных — `null`, лендинг прячет такой счётчик (и весь блок, если ответа нет) |
 | `GET /public/badge/{slug}.svg` | Бейдж «Подтверждено ФСП · Middle Backend · ●●●●». Кеш 1 ч |
 | `GET /public/credentials/{id}` | **Open Badge 3.0** (W3C VC 2.0, `application/ld+json`, `OpenBadgeCredential`): достижение «Подтверждено ФСП» с категорией и доверием ●●●●. Подпись Data Integrity `eddsa-jcs-2022` (Ed25519, JCS; ADR-051). `404 credential_not_found`, если не выпущен, отозван или профиль не публичный (нет `public_profile` или согласия `profile_publication`). Кеш 60 с |
 | `GET /public/credentials/{id}/verify` | Проверка подписи, отзыва и срока: `{id, valid, signature_valid, known, revoked, expired, issuer, checked_at}`. Отозванный бейдж: `200 {valid:false, revoked:true}`; неизвестный или скрытый владельцем: `404` |

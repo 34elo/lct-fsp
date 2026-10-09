@@ -15,6 +15,7 @@ let distinct: unknown[];
 let blocklist: unknown[];
 let provisional: unknown[];
 let hints: unknown;
+let graph: unknown;
 let revertReply: () => Response;
 let mergeReply: () => Response;
 
@@ -37,6 +38,18 @@ beforeEach(() => {
     updated_at: "2026-10-03T00:00:00+00:00",
     discipline_rules: [{ discipline: "algo", discipline_name: "Алгоритмы", skill: "graphs", lift: 2.5, support: 12 }],
     profession_candidates: [{ skills: ["unity", "csharp"], support: 7, covered_by_professions: 0.1 }],
+  };
+  graph = {
+    version: 5,
+    nodes: [
+      { id: "python", type: "skill", label: "Python", skill_type: "hard", status: "active" },
+      { id: "django", type: "skill", label: "Django", skill_type: "hard", status: "active" },
+      { id: "sql", type: "skill", label: "SQL", skill_type: "hard", status: "active" },
+    ],
+    edges: [
+      { from: "python", to: "django", type: "adjacent", weight: 0.7 },
+      { from: "django", to: "sql", type: "parent", weight: 0.5 },
+    ],
   };
   revertReply = () => res(200, { taxonomy_version: 7 });
   mergeReply = () => res(200, { id: "m2", from_skill: "postgres-sql", into_skill: "postgresql", taxonomy_version: 8 });
@@ -62,6 +75,7 @@ beforeEach(() => {
       if (url.endsWith("/admin/skills/blocklist")) return res(200, blocklist);
       if (url.endsWith("/admin/skills/provisional")) return res(200, provisional);
       if (url.endsWith("/admin/skills/helmfile/approve")) return res(200, brief("helmfile", "Helmfile", "active"));
+      if (url.endsWith("/admin/skills/graph")) return graph ? res(200, graph) : problem(500, "internal");
       if (url.endsWith("/admin/skills/hints")) return res(200, hints);
       return problem(404, "not_found");
     }),
@@ -72,7 +86,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-function mount() {
+function mount(open: string | null = "queue") {
   render(
     <MemoryRouter initialEntries={["/admin/skills"]}>
       <Providers client={makeQueryClient()}>
@@ -80,11 +94,35 @@ function mount() {
       </Providers>
     </MemoryRouter>,
   );
+  if (open) void screen.findByTestId(`admin-sk-tab-${open}`).then((b) => fireEvent.click(b));
 }
 const tab = async (t: string) => fireEvent.click(await screen.findByTestId(`admin-sk-tab-${t}`));
 const last = (m: string, part: string) => calls.filter((c) => c.method === m && c.url.includes(part)).at(-1);
 
 describe("/admin/skills", () => {
+  it("карта связей: назначение, граф и что ждёт решения", async () => {
+    mount(null);
+    expect(await screen.findByTestId("page-why")).toHaveTextContent("похожие навыки и рекомендации");
+    expect(await screen.findByTestId("admin-sk-egraph")).toBeInTheDocument();
+    expect(screen.getByTestId("admin-sk-graph-summary")).toHaveTextContent("Навыков: 3, связей: 2");
+    expect(screen.queryByTestId("admin-sk-egraph-confirmed")).toBeNull();
+    expect(await screen.findByTestId("admin-sk-graph-pending")).toHaveTextContent("слияний 1, новых навыков 1");
+    fireEvent.click(screen.getByTestId("admin-sk-graph-to-queue"));
+    expect(await screen.findByTestId("admin-sk-preview-postgres-sql")).toBeInTheDocument();
+  });
+
+  it("карта связей: ошибка загрузки", async () => {
+    graph = null;
+    mount(null);
+    expect(await screen.findByText(/Не удалось загрузить данные/)).toBeInTheDocument();
+  });
+
+  it("карта связей: пустой справочник", async () => {
+    graph = { version: 1, nodes: [], edges: [] };
+    mount(null);
+    expect(await screen.findByText("Навыков пока нет")).toBeInTheDocument();
+  });
+
   it("очередь: превью и слияние", async () => {
     mount();
     expect(await screen.findByTestId("admin-sk-preview-postgres-sql")).toHaveTextContent("postgres sql");

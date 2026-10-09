@@ -13562,6 +13562,58 @@
         }
       }
     },
+    "/admin/skills/graph": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Get Graph",
+        "description": "Граф навыков справочника для просмотра: узлы и связи «рядом» и «часть»; без данных людей.",
+        "operationId": "get_graph_admin_skills_graph_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillGraphOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/admin/skills/hints": {
       "get": {
         "tags": [
@@ -18570,6 +18622,28 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/public/stats": {
+      "get": {
+        "tags": [
+          "public"
+        ],
+        "summary": "Цифры для лендинга",
+        "description": "Кандидаты, компании, приглашения и медиана дней до первого приглашения. Кеш 5 минут.",
+        "operationId": "get_stats_public_stats_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicStatsOut"
                 }
               }
             }
@@ -28930,6 +29004,56 @@
         ],
         "title": "PublicCompany"
       },
+      "PublicStatsOut": {
+        "properties": {
+          "candidates": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidates"
+          },
+          "companies": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Companies"
+          },
+          "invitations": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invitations"
+          },
+          "median_days_to_invite": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median Days To Invite"
+          }
+        },
+        "type": "object",
+        "title": "PublicStatsOut"
+      },
       "PublicVacancyOut": {
         "properties": {
           "id": {
@@ -35867,6 +35991,108 @@
           "linked"
         ],
         "title": "StartOut"
+      },
+      "SkillGraphOut": {
+        "properties": {
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/SkillGraphNode"
+            },
+            "type": "array",
+            "title": "Nodes"
+          },
+          "edges": {
+            "items": {
+              "$ref": "#/components/schemas/SkillGraphEdge"
+            },
+            "type": "array",
+            "title": "Edges"
+          }
+        },
+        "type": "object",
+        "required": [
+          "version",
+          "nodes",
+          "edges"
+        ],
+        "title": "SkillGraphOut"
+      },
+      "SkillGraphNode": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type",
+            "default": "skill"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "skill_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Skill Type"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "status"
+        ],
+        "title": "SkillGraphNode"
+      },
+      "SkillGraphEdge": {
+        "properties": {
+          "from": {
+            "type": "string",
+            "title": "From"
+          },
+          "to": {
+            "type": "string",
+            "title": "To"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "weight": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weight"
+          }
+        },
+        "type": "object",
+        "required": [
+          "from",
+          "to",
+          "type"
+        ],
+        "title": "SkillGraphEdge"
       }
     }
   }
