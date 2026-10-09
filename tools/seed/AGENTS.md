@@ -15,6 +15,7 @@
 - `grades.py` — seed-грейды блока 1 (`make seed` вызывает `python -m tools.seed grades`): 6 профессий × 3 грейда через `assessment.seed_grade`, идемпотентно.
 - `jury.py` — аккаунты жюри (E32-4b): `jury-candidate@` (без грейда) и `jury-hr@demo.fsp.test` (проверенная компания «Жюри Демо»); создаются в конце `make seed`, идемпотентно. Лендинг показывает кнопки входа при сборке с `VITE_JURY_MODE=true` (`apps/web/src/features/landing/JuryEntry.tsx`): кандидат попадает на `/me/assessment?mode=express`, работодатель — на `/employer/search`.
 - `demo_v2.yaml` + `demo_v2.py` — демо v2 (E34-1): герои Борис/Вика/Глеб/Мира/Тимур с историей теста (через `grading.on_finished`), 3 компании и вакансии, офферы и отклики, регулярные задания; команда `python -m tools.seed demo2` (в `make seed`).
+- `fsp_registry.yaml` + `fsp_registry.py` — демо-реестр ФСП (E39-28): герои (ID источника, email аккаунта) и `jury-candidate@` (`r-jury` с результатами) в БД fsp-connector; команда `python -m tools.seed fsp-registry` (`FSP_CONNECTOR_DATABASE_URL` или `--env-file`, шаг `make seed`); привязок не создаёт.
 - `make demo-reset` возвращает снапшот (`make demo-snapshot` сразу после `make seed`); `make demo-warm` прогревает кеши.
 
 ## Правила

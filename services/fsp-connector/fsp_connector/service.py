@@ -13,6 +13,13 @@ from fsp_connector.port import FspPort
 log = structlog.get_logger()
 
 
+def _http(port: object) -> object:
+    """Снять обёртки (реестр, кеш) до HTTP-адаптера мока."""
+    while hasattr(port, "inner"):
+        port = port.inner
+    return port
+
+
 async def demo_create_result(port: FspPort) -> None:
     """Демо-кнопка: создать результат ФСП для случайного кандидата."""
     try:
@@ -53,8 +60,9 @@ async def demo_create_result(port: FspPort) -> None:
         # Для этого нужно использовать internal API мока
         from fsp_connector.http_adapter import HttpFspAdapter
 
-        if isinstance(port, HttpFspAdapter):
-            await port._request(
+        http = _http(port)
+        if isinstance(http, HttpFspAdapter):
+            await http._request(
                 "POST",
                 "/mock/results",
                 json={
@@ -78,8 +86,9 @@ async def demo_reset(port: FspPort) -> None:
     try:
         from fsp_connector.http_adapter import HttpFspAdapter
 
-        if isinstance(port, HttpFspAdapter):
-            await port._request("POST", "/mock/reset")
+        http = _http(port)
+        if isinstance(http, HttpFspAdapter):
+            await http._request("POST", "/mock/reset")
             log.info("demo_reset: results cleared")
         else:
             log.warning("demo_reset: not HttpFspAdapter")
