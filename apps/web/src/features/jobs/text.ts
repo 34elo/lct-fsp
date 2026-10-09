@@ -53,6 +53,7 @@ export const JOBS_TEXT = {
   sentHint: "Статус смотрите в разделе «Отклики».",
   toResponses: "Мои отклики",
   verified: "Проверена",
+  demo: "демо", // E40-1: вакансия демо-компании
   employment: { full: "полная занятость", part: "частичная занятость", project: "проект", internship: "стажировка" } as Record<string, string>,
 };
 
