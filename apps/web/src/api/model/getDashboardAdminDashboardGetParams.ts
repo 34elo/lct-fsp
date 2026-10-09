@@ -11,4 +11,8 @@ export type GetDashboardAdminDashboardGetParams = {
  * @maximum 180
  */
 days?: number;
+/**
+ * считать и демо-аккаунты (показ жюри)
+ */
+include_demo?: boolean;
 };
