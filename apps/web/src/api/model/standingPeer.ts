@@ -15,4 +15,5 @@ export interface StandingPeer {
      */
   strength: number;
   salary_min?: number | null;
+  theta?: number | null;
 }

@@ -83,7 +83,8 @@ test("новая компания: три шага онбординга без �
   fireEvent.click(screen.getByTestId("onboarding-done"));
 
   // Дальше — подбор по созданному запросу.
-  expect(await screen.findByTestId("match-chips")).toBeInTheDocument();
+  // Условия запроса восстанавливаются в строке: профессия из текста — чипсом.
+  expect(await screen.findByTestId("query-chip-profession")).toHaveTextContent("Backend");
   expect(screen.queryByTestId("employer-onboarding")).toBeNull();
   expect(JSON.parse(localStorage.getItem("fsp.employer.lastNeed") ?? "{}").company).toBe("co1");
   // До создания компании ни одного запроса, который дал бы 404.

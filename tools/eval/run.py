@@ -1,6 +1,6 @@
 """`make eval`: раннеры стенда оценки → отчёт (evaluation.md §5).
 
-Сейчас раннер один — подбор (E27-2). Остальные из §5 добавляются в `RUNNERS`.
+Раннеры: подбор (E27-2) и разбор резюме hh.ru (E39-19).
 
     uv run python tools/eval/run.py --split test --out reports/eval
     uv run python tools/eval/run.py --quick          # 200 кандидатов, 30 потребностей
@@ -17,14 +17,17 @@ if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))
 
 from report import to_markdown, write_report  # noqa: E402
-from runners import matching  # noqa: E402
+from runners import matching, resumes  # noqa: E402
 
 
 def run(split: str, candidates: int | None, vacancies: int | None, max_needs: int | None) -> tuple:
     market = matching.synth.generate_market(
         split=split, n_candidates=candidates, n_vacancies=vacancies
     )
-    result = {"matching": matching.run_matching(market, max_needs=max_needs)}
+    result = {
+        "matching": matching.run_matching(market, max_needs=max_needs),
+        "resumes": resumes.run_resumes(),
+    }
     return result, market.meta()
 
 
