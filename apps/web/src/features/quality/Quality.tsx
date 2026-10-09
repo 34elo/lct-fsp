@@ -6,6 +6,7 @@ import type { AppAnalyticsMetricsStage as Stage } from "@/api/model";
 import { QualityNav } from "./Nav";
 import { byArea, report, STATUS_ORDER, type Status } from "./report";
 import { T } from "./text";
+import { AdminPageHeader } from "@/features/admin/PageHeader";
 
 const DOT: Record<Status, string> = {
   green: "bg-success",
@@ -118,10 +119,7 @@ export default function Quality() {
   const unavailable = Object.entries(report.components).filter(([, c]) => !c.ok);
   return (
     <div className={PAGE.wide}>
-      <header>
-        <h1 className="text-24 font-semibold">{T.title}</h1>
-        <p className="max-w-2xl text-14 text-muted">{T.lead}</p>
-      </header>
+      <AdminPageHeader title={T.title} tip={T.lead} />
       <QualityNav />
       <Summary />
       {unavailable.length > 0 && (

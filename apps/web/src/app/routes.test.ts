@@ -1,5 +1,5 @@
 import appSource from "./App.tsx?raw";
-import { NAV, ROUTES, activeNav, type NavItem } from "./routes";
+import { ADMIN_GROUPS, NAV, ROUTES, activeNav, type NavItem } from "./routes";
 
 const segs = (p: string) => p.split("/").filter(Boolean);
 const isParam = (s: string) => s.startsWith(":");
@@ -59,11 +59,31 @@ describe("routes", () => {
     for (const r of ROUTES.filter((x) => x.nav)) expect(inMenu.has(r.path), r.path).toBe(true);
   });
 
-  it("меню без подвкладок: кандидат и работодатель по E39-25, админ не больше 6 пунктов", () => {
+  it("меню без подвкладок: кандидат и работодатель по E39-25", () => {
     expect(NAV.candidate.map((n) => n.label)).toEqual(["Главная", "Тест", "Приглашения", "Вакансии", "Статистика", "Профиль"]);
     expect(NAV.employer.map((n) => n.label)).toEqual(["Подбор", "Шорт-лист", "Приглашения", "Вакансии", "Задания", "Компания"]);
     for (const n of Object.values(NAV).flat()) expect(n, n.label).not.toHaveProperty("tabs");
-    expect(NAV.admin.length).toBeLessThanOrEqual(6);
+    for (const n of [...NAV.candidate, ...NAV.employer]) expect(n, n.label).not.toHaveProperty("group");
+  });
+
+  it("меню админа (E39-29): «Главная», затем группы Очереди · Справочники · Аналитика, в группе не больше 4 пунктов", () => {
+    const [home, ...rest] = NAV.admin;
+    expect(home).toEqual({ to: "/federation", label: "Главная" });
+    expect(ADMIN_GROUPS.map((g) => g.label)).toEqual(["Очереди", "Справочники", "Аналитика"]);
+    // пункты идут группами в порядке ADMIN_GROUPS, без «висящих» пунктов
+    const order = ADMIN_GROUPS.map((g) => g.id);
+    const seen = rest.map((n) => order.indexOf(n.group!));
+    expect(seen.every((g) => g >= 0)).toBe(true);
+    expect(seen).toEqual([...seen].sort((a, b) => a - b));
+    for (const g of order) {
+      const n = rest.filter((x) => x.group === g).length;
+      expect(n, g).toBeGreaterThan(0);
+      expect(n, g).toBeLessThanOrEqual(4);
+    }
+    const by = (g: string) => rest.filter((n) => n.group === g).map((n) => n.label);
+    expect(by("queues")).toEqual(["Заявки ФСП", "Допуск заданий", "Модерация"]);
+    expect(by("refs")).toEqual(["Реестр ФСП", "Профессии", "Граф навыков"]);
+    expect(by("analytics")).toEqual(["Воронка", "Качество"]);
   });
 
   it("подсветка пункта меню по самому длинному префиксу", () => {
@@ -83,5 +103,9 @@ describe("routes", () => {
     expect(activeNav(NAV.candidate, "/onboarding")).toBeUndefined(); // онбординга в меню нет (E39-15)
     expect(activeNav(NAV.candidate, "/me/stats")?.label).toBe("Статистика");
     expect(activeNav(NAV.admin, "/federation/moderation")?.label).toBe("Модерация");
+    expect(activeNav(NAV.admin, "/federation")?.label).toBe("Главная");
+    expect(activeNav(NAV.admin, "/federation/registry")?.label).toBe("Реестр ФСП");
+    expect(activeNav(NAV.admin, "/federation/requests")?.label).toBe("Заявки ФСП");
+    expect(activeNav(NAV.admin, "/admin/quality/runs")?.label).toBe("Качество");
   });
 });
