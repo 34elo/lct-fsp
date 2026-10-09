@@ -24,8 +24,6 @@ export const KIND_LABEL: Record<string, string> = {
   chain: "цепочка-инцидент",
 };
 
-/** ADR-025 п.4: первый шаг — IT-направление (это и есть профессия), отрасль не спрашиваем. */
-export const STEPS = ["IT-направление", "Стек", "Формат и вилка", "Грейд"] as const;
 
 /** Русское множественное: 1 работодатель, 3 работодателя, 5 работодателей. */
 export function plural(n: number, one: string, few: string, many: string): string {
