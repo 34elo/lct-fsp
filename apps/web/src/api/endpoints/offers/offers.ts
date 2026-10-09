@@ -24,6 +24,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AcceptIn,
   ComplaintIn,
   ComplaintOut,
   ContactsOutput,
@@ -2513,16 +2514,32 @@ export const getAcceptOfferOffersOfferIdAcceptPostUrl = (offerId: string,) => {
 }
 
 /**
+ * Принять; в теле можно оставить один короткий ответ компании (E39-26).
  * @summary Accept Offer
  */
-export const acceptOfferOffersOfferIdAcceptPost = async (offerId: string, options?: Parameters<typeof apiFetch>[1]): Promise<acceptOfferOffersOfferIdAcceptPostResponse> => {
+export const acceptOfferOffersOfferIdAcceptPost = async (offerId: string,
+    acceptInNull?: AcceptIn | null, options?: Parameters<typeof apiFetch>[1]): Promise<acceptOfferOffersOfferIdAcceptPostResponse> => {
 
-  return apiFetch<acceptOfferOffersOfferIdAcceptPostResponse>(getAcceptOfferOffersOfferIdAcceptPostUrl(offerId),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<acceptOfferOffersOfferIdAcceptPostResponse>(getAcceptOfferOffersOfferIdAcceptPostUrl(offerId),
   {
     ...options,
-    method: 'POST'
-
-
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(acceptInNull)
   }
 );}
 
@@ -2547,9 +2564,9 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof acceptOfferOffersOfferIdAcceptPost>>, AcceptOfferOffersOfferIdAcceptPostMutationVariables> = (props) => {
-          const {offerId} = props ?? {};
+          const {offerId,data} = props ?? {};
 
-          return  acceptOfferOffersOfferIdAcceptPost(offerId,requestOptions)
+          return  acceptOfferOffersOfferIdAcceptPost(offerId,data,requestOptions)
         }
 
 
@@ -2560,9 +2577,9 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type AcceptOfferOffersOfferIdAcceptPostMutationResult = NonNullable<Awaited<ReturnType<typeof acceptOfferOffersOfferIdAcceptPost>>>
-
+    export type AcceptOfferOffersOfferIdAcceptPostMutationBody = AcceptIn | null | undefined
     export type AcceptOfferOffersOfferIdAcceptPostMutationError = ErrorType<ProblemOut | HTTPValidationError>
-    export type AcceptOfferOffersOfferIdAcceptPostMutationVariables = {offerId: string}
+    export type AcceptOfferOffersOfferIdAcceptPostMutationVariables = {offerId: string;data?: AcceptIn | null}
 
     /**
  * @summary Accept Offer

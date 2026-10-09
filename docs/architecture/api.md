@@ -135,11 +135,11 @@
 | `GET /vacancies/public?role=&city=&q=&grade=&skills=&salary_min=&salary_max=&format=&limit=&offset=` | — | E20-3, E39-17: опубликованные вакансии без авторизации (`PublicVacancyOut`: вилка, навыки, `company{id,name,verified,responsibility_score}`). `role` — slug профессии справочника (`str`, а не `RoleSlug`: роль вне старого списка не роняет ответ); `grade` — грейд входит в вилку вакансии; `skills` (повторяется) — вакансия требует все; `salary_min/max` — вилка вакансии пересекает указанную; `format` — `office|hybrid|remote` |
 | `GET /vacancies/public/{id}` | — | E39-17: карточка опубликованной вакансии; черновик, закрытая, чужой id — 404 `vacancy_not_found` |
 | `POST /vacancies/{id}/apply` | C | E20-3: `{message?}` → `201 OfferForCandidate` с `initiator=candidate`; вилка — из вакансии, контакты кандидата раскрыты сразу |
-| `POST /offers/{id}/accept` | C | → `accepted`, раскрытие контактов |
+| `POST /offers/{id}/accept` | C | Необязательное тело `{message?}` (≤ 500) → `accepted`, раскрытие контактов; `message` — единственный ответ кандидата (E39-26) |
 | `POST /offers/{id}/decline` | C | `{reason, comment?}` |
 | `POST /offers/{id}/withdraw` | E | Только из `sent/viewed` |
 | `POST /offers/{id}/status` | E | `{status: interview|hired|not_hired}` |
-| `GET /offers/{id}/messages`, `POST /offers/{id}/messages` | C, E | Переписка по офферу |
+| `GET /offers/{id}/messages`, `POST /offers/{id}/messages` | C, E | Два сообщения вместо чата (E39-26): сопроводительное компании (`offer.message`) и один ответ кандидата; во втором `POST` от стороны — `409 message_limit` |
 | `GET /offers/{id}/events` | C, E | Таймлайн переходов: `[{id, from_status?, to_status, actor, created_at}]`, без payload |
 | `GET /offers/{id}/contacts` | E | Контакты кандидата, только если `accepted` и дальше |
 | `POST /offers/{id}/complaint` | C | `{reason, comment}` |
@@ -217,6 +217,8 @@
 Реализовано (E20-2, ADR-022): приглашение без вакансии. `CreateOffer`: `vacancy_id` необязателен, новые поля `title` (≤ 200), `description` (≤ 4000), `contact_method` (`platform|email|phone|telegram`); без вакансии нужен `title` (422 `title_required`), вилка обязательна как раньше. Перед созданием — `identity.require_verified_email` (403 `email_not_verified`, пока `EMAIL_VERIFICATION_REQUIRED=false` — пропускает). Второе открытое (`sent|viewed`) приглашение без вакансии той же компании тому же кандидату — 409 `offer_exists`; повтор по `Idempotency-Key` — исходный оффер. В ответах `Offer*`: `vacancy` может быть `null`, добавлены `title` (без своего — название вакансии), `description`, `contact_method`, `initiator` (`employer|candidate`). Принятие и раскрытие контактов — тот же автомат. События `offer.*` — `schema_version: 2` (messaging.md §2.1).
 
 Реализовано (E8-6, минимум): `POST /offers/salary-hint` (роль `employer`, своя вакансия, кандидат виден компании, вилка обязательна) → `SalaryHint`: `p_accept` — детерминированная формула [matching.md §4.1](matching.md#41-взаимный-подбор-интерес-кандидата) (`app/matching/p_accept.py`, коэффициенты и пороги — `scoring.yaml` `p_accept`; `company_rating` берётся из `responsibility_score`, `stack_interest` — доля `primary_stack` кандидата среди навыков вакансии), `acceptance_hint` по порогам 0.35/0.65, `below_candidate_min`, `range_too_wide` (>1.6); `category_median` — медиана `salary_min` анкет в ячейке role×grade (нужно ≥ 3 анкет, иначе `null`), `vs_category_median = salary_to / median − 1`. Реализовано (E33-5): `salary-hint` работает и для интереса/приглашения — `vacancy_id` необязателен (без него формат и стек в `p_accept` не учитываются); в `SalaryHint` добавлены `suggested_salary_to` и `suggested_p_accept` (минимальный верх вилки с шагом 5 % до +40 %, округление вверх до 5000 ₽, при котором `p_accept` достигает порога «высокая», а для «низкой», если это недостижимо, — «средней»; иначе `null`) и `avg_response_hours` (средний срок ответа кандидатов роли на приглашения, нужно ≥ 3 ответов; иначе `null`); параметры — `scoring.yaml` `p_accept.forecast`. Реализовано (E18-6): сортировка `mutual` — `H = 2·score·p_accept / (score + p_accept)` (`mutual()` в `p_accept.py`); без `sort` в теле при `vacancy_id` — `mutual`, без вакансии — `match`; `mutual` без вакансии сводится к `match`; не прошедшие жёсткие фильтры вакансии идут в конце. В `CandidateCard.match` и в полной карточке с `vacancy_id` поле `interest` (`low|medium|high`) — интерес кандидата при вилке вакансии. `GET /offers/{id}/events` — таймлайн для обеих сторон.
+
+Страница приглашения (E39-26): вместо чата — два сообщения. Сопроводительное компании — `message` приглашения; кандидат отвечает одним коротким сообщением (`POST /offers/{id}/accept {message?}` ≤ 500, сохраняется как `offer_messages` со стороной `candidate`; к отказу — `comment` в `decline`). `POST /offers/{id}/messages` оставлен для этих сообщений: по одному на сторону, второе — `409 message_limit` (у компании сообщение уже занято `offer.message`). Бот переписку не поддерживает: кнопки «Задать вопрос» и `POST /internal/tg/offers/{id}/messages` убраны. `OfferForCandidate.company_contacts {name, email?, phone?, telegram?}` — контакты компании (из `companies.contacts`, запасная почта — аккаунт подписанта) только после принятия и пока кандидат не отозвал доступ; у `Contacts` кандидата (`OfferForCompany.contacts`, `GET /offers/{id}/contacts`) к почте и Telegram добавлен `phone` — из профиля кандидата, с запасом на данные аккаунта. Фронт: кнопка «Написать в Telegram» — `https://t.me/<ник>`.
 
 Работодатель без компании (E39-7): списки `GET /offers`, `GET /vacancies`, `GET /subscriptions`, `GET /employer/tasks` отвечают `200 []`, `GET /employer/activity` — `200 {items: []}` (раньше 404 `company_not_found` падал в консоль нового аккаунта). Запись и карточки (`POST /subscriptions`, `POST /needs`, `GET /companies/me` и др.) по-прежнему 404 `company_not_found`; наличие компании фронт берёт из `GET /me` (`company`).
 
@@ -305,7 +307,6 @@
 | `GET /internal/tg/offers?tg_user_id=` | bot | Активные офферы кандидата (`sent|viewed|accepted|interview`, до 10, новые первыми) → `TgOffer[]`: поля `offer_id`, `status` и те же данные, что у шаблона `offer_new` (`company_name`, `company_responsibility`, `vacancy_title`, `formats[]`, `employment_type`, `salary_from/to`, `message`, `match_score`, `explanation[]`, `below_candidate_min`, `expires_at`) |
 | `POST /internal/tg/offers/{id}/view|accept` | bot | `{tg_user_id}` → `TgOffer`. `view` переводит `sent → viewed`; правила и ошибки как у `/offers/{id}/accept` (`409 invalid_transition`, `409 offer_expired`) |
 | `POST /internal/tg/offers/{id}/decline` | bot | `{tg_user_id, reason, comment?}` → `TgOffer`; `reason` — `DeclineReason` (бот переводит коды кнопок `ls|ws|wf|wg|nl|ot`) |
-| `POST /internal/tg/offers/{id}/messages` | bot | `{tg_user_id, text}` (1–2000) → `201 {id}`; канал `tg`, правила и лимит 30/час как у сайта (`409 offer_closed`, `422 empty_message`). Чужой оффер, как и везде, — `404 offer_not_found`; неизвестный Telegram — `404 telegram_unknown` |
 | `POST /internal/tg/tests`, `…/{id}/answer` | bot | Адаптивный тест |
 | `GET /internal/tg/navigator?tg_user_id=` | bot | Навигатор кратко |
 | `PATCH /internal/tg/status` | bot | Статус поиска |
@@ -564,7 +565,7 @@ interface ParsedResumeEdits {
 |---|---|
 | `c:ok` / `c:no` | Согласия |
 | `r:ok:<resume_id>` | Подтвердить разбор резюме |
-| `o:v:<offer_id>` / `o:a:<offer_id>` / `o:d:<offer_id>` / `o:q:<offer_id>` | Подробнее / принять / отклонить / вопрос |
+| `o:v:<offer_id>` / `o:a:<offer_id>` / `o:d:<offer_id>` | Подробнее / принять / отклонить |
 | `o:r:<offer_id>:<reason>` | Причина отказа (`ls`, `ws`, `wf`, `wg`, `nl`, `ot`) |
 | `o:b:<offer_id>` | Назад от выбора причины к кнопкам оффера |
 | `t:s:<skill_slug>` | Начать тест |
