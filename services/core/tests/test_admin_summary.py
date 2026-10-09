@@ -83,3 +83,26 @@ def test_fsp_requests_from_connector(api):
     )
     assert counts(api, admin(api))["fsp_requests"] == 3
     assert seen == [{"status": "pending"}]
+
+
+def test_queue_keeps_external_pilot_stats(api):
+    """E39-31: внешняя статистика пилота не обнуляется очередью."""
+    h = admin(api)
+
+    async def go():
+        engine = make_engine(f"sqlite+aiosqlite:///{api.db_path}")
+        async with session_scope(make_session_factory(engine)) as s:
+            s.add(
+                FamilyRow(
+                    slug="t-ext-stats", kind="code", source="spec", skill_id=uuid.uuid4(),
+                    skill_type="hard", level=2, b=-1.0, n=52, status="pilot",
+                    stats={"n": 52, "p": 0.6, "r_pb": 0.4, "seed_spread": 0.05},
+                )
+            )  # fmt: skip
+        await engine.dispose()
+
+    asyncio.run(go())
+    items = api.get("/admin/families", params={"status": "pilot"}, headers=h).json()
+    card = next(x for x in items if x["slug"] == "t-ext-stats")
+    assert card["stats"]["n"] == 52 and card["failed_thresholds"] == []
+    assert card["grade"] == "junior" and card["example"] is None
