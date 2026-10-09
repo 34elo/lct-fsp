@@ -20,6 +20,7 @@
 - `fsp_connector/linking.py` — `LinkService`: OAuth / код / ручной ID, `fsp_link_conflicts`; `api.py` — `/internal/*` (`Service <SERVICE_TOKEN_CORE>`)
 - `fsp_connector/sync.py` — `SyncService`: `fsp.sync` / `fsp.sync_all` → `fsp.competitions.updated` + `fsp.results.imported` (полная при `new=true`); `handlers.py` — подписчик очереди `fsp.sync` (замок, inbox); запуск в `worker.py`
 - `fsp_connector/registry.py` — реестр ФСП (E39-28, ADR-052): нормализация контактов, CSV, `RegistryService` (привязка по контактам, заявки), `RegistryAdapter` (реестр как `FspPort` поверх источника); `registry_api.py` — `/internal/registry/*`
+- `fsp_connector/demo.py` — `python -m fsp_connector.demo snapshot|reset` (E40-1): снапшот и сброс привязок демо-кандидатов (id на stdin `DEMO_ID <uuid>` от core), удаление участников реестра песочниц жюри
 - `fsp_connector/publisher.py` — `fsp.linked`, `fsp.results.imported`, `fsp.competitions.updated` в outbox
 
 ## Правила

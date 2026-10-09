@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 from collections import Counter
-from collections.abc import Callable
+from collections.abc import Callable, Collection
 from datetime import UTC, datetime, timedelta
 from statistics import median
 
@@ -328,7 +328,10 @@ def interests(rows: list[Row]) -> InterestMetrics:
     )
 
 
-async def build(session: AsyncSession, days: int = DEFAULT_DAYS) -> MetricsOut:
+async def build(
+    session: AsyncSession, days: int = DEFAULT_DAYS, *, exclude_actors: Collection[str] = ()
+) -> MetricsOut:
+    """Метрики за `days` дней; `exclude_actors` — псевдонимы демо-аккаунтов (E40-1)."""
     days = max(1, min(days, MAX_DAYS))
     since = datetime.now(UTC) - timedelta(days=days)
     raw = (
@@ -336,7 +339,8 @@ async def build(session: AsyncSession, days: int = DEFAULT_DAYS) -> MetricsOut:
             select(E.event, E.actor, E.props, E.ts).where(E.ts >= since, E.event.in_(_EVENTS))
         )
     ).all()
-    rows: list[Row] = [(e, a, p or {}, _utc(ts)) for e, a, p, ts in raw]
+    skip = set(exclude_actors)
+    rows: list[Row] = [(e, a, p or {}, _utc(ts)) for e, a, p, ts in raw if a not in skip]
     return MetricsOut(
         since=since,
         days=days,

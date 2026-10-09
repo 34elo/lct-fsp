@@ -30,6 +30,7 @@ async def membership(session: AsyncSession, user_id: uuid.UUID) -> CompanyMember
 async def create_company(session: AsyncSession, user: User, fields: dict) -> Company:
     if await membership(session, user.id) is not None:
         raise ProblemError(409, "company_exists", "Вы уже состоите в компании")
+    fields = {**fields, "is_demo": bool(fields.get("is_demo")) or bool(user.is_demo)}
     company = Company(**fields, status=CompanyStatus.pending.value)
     session.add(company)
     await session.flush()
@@ -107,9 +108,19 @@ async def list_by_status(session: AsyncSession, status: str | None) -> list[Comp
     return list((await session.scalars(q)).all())
 
 
-async def count_by_status(session: AsyncSession, status: str) -> int:
-    """Число компаний в статусе — счётчик модерации на главной админки (E39-29)."""
+def demo_company_ids():
+    """Подзапрос id демо-компаний (E40-1) — для фильтров статистики и сброса демо."""
+    return select(Company.id).where(Company.is_demo.is_(True))
+
+
+async def count_by_status(session: AsyncSession, status: str, *, real_only: bool = False) -> int:
+    """Число компаний в статусе — счётчик модерации на главной админки (E39-29).
+
+    `real_only` — без демо-компаний (лендинг, E40-1).
+    """
     q = select(func.count()).select_from(Company).where(Company.status == status)
+    if real_only:
+        q = q.where(Company.is_demo.is_(False))
     return int(await session.scalar(q) or 0)
 
 
