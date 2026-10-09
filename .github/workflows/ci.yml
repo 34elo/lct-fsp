@@ -9,11 +9,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
       - run: uv sync --all-packages --frozen
       - run: uv run ruff check . && uv run ruff format --check .
       - run: uv run lint-imports
       - run: cd services/core && uv run python export_openapi.py > /tmp/openapi.json && diff -q /tmp/openapi.json ../../docs/openapi.json
-      - run: uv run pytest -q
+      # параллельно по ядрам раннера (pytest-xdist); тесты на SQLite во временных каталогах, общих ресурсов нет
+      - run: uv run pytest -q -n auto
   pdf-smoke:
     # E39-20: образ core с системными библиотеками WeasyPrint отдаёт PDF-профиль
     runs-on: ubuntu-latest
@@ -26,6 +29,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
       - run: uv sync --all-packages --frozen
       - run: make families-check
       - run: make cards-check

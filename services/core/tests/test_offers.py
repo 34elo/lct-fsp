@@ -5,8 +5,6 @@ import itertools
 import json
 import shutil
 import sqlite3
-import subprocess
-import sys
 import uuid
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -17,6 +15,7 @@ from app.config import Settings
 from app.main import build_app
 from app.offers import router as offers_router
 from app.offers import service
+from core_helpers import upgrade_head
 from fastapi.testclient import TestClient
 from fsp_contracts.enums import OfferStatus
 from fsp_platform.db import make_engine, make_session_factory
@@ -32,10 +31,7 @@ S = OfferStatus
 def template_db(tmp_path_factory):
     """Миграции гоняем один раз на модуль, дальше копируем файл."""
     db = tmp_path_factory.mktemp("tpl") / "o.db"
-    subprocess.run(
-        [sys.executable, "-m", "alembic", "-x", f"url=sqlite+aiosqlite:///{db}", "upgrade", "head"],
-        cwd=CORE, check=True, capture_output=True,
-    )  # fmt: skip
+    upgrade_head(f"sqlite+aiosqlite:///{db}")
     with sqlite3.connect(db) as con:
         for slug in ("python", "fastapi"):
             con.execute(

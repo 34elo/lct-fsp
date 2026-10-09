@@ -1,5 +1,3 @@
-import subprocess
-import sys
 import uuid
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -15,6 +13,7 @@ from app.graph.trust import TrustConfig
 from app.identity.models import User
 from app.taxonomy.models import Skill
 from app.worker import Worker
+from core_helpers import upgrade_head
 from fsp_contracts import new_envelope
 from fsp_contracts.commands import CoreRecompute
 from fsp_platform.db import make_engine, make_session_factory, session_scope
@@ -30,12 +29,7 @@ D = NOW.date()
 @pytest.fixture
 def db(tmp_path):
     url = f"sqlite+aiosqlite:///{tmp_path / 'r.db'}"
-    subprocess.run(
-        [sys.executable, "-m", "alembic", "-x", f"url={url}", "upgrade", "head"],
-        cwd=CORE,
-        check=True,
-        capture_output=True,
-    )
+    upgrade_head(url)
     return url
 
 

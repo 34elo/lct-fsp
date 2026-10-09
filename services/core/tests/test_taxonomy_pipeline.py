@@ -1,13 +1,12 @@
 """E16-4: журнал решений конвейера навыков и черновики карточек (taxonomy/service.py)."""
 
-import subprocess
-import sys
 import uuid
 from pathlib import Path
 
 import pytest
 from app.taxonomy import service
 from app.taxonomy.models import Skill, SkillCardDraftRow
+from core_helpers import upgrade_head
 from fsp_contracts.ml import (
     SkillCardConcept,
     SkillCardDraft,
@@ -23,12 +22,7 @@ CORE = Path(__file__).resolve().parents[1]
 @pytest.fixture
 def db_url(tmp_path):
     url = f"sqlite+aiosqlite:///{tmp_path / 'p.db'}"
-    subprocess.run(
-        [sys.executable, "-m", "alembic", "-x", f"url={url}", "upgrade", "head"],
-        cwd=CORE,
-        check=True,
-        capture_output=True,
-    )
+    upgrade_head(url)
     return url
 
 
