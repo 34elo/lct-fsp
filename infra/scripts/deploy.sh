@@ -3,7 +3,7 @@
 # Прод — каталог стенда с .env.server: .env собирается render-env.sh из infra/env/prod.env, .env.server и секретов
 # окружения GitHub `prod`. Без .env.server (старый стенд на .env.demo) — деплой как раньше, без сборки .env.
 #   deploy       — STAND_DIR на коммит SHA (из копии SRC_DIR), бэкап, сборка и запуск (миграции — core-migrate),
-#                  проверка здоровья; при сбое — откат кода на прежний коммит. Данные не трогаются.
+#                  проверка здоровья и смоук ML/LLM/бота (smoke-ml.sh); при сбое — откат кода на прежний коммит. Данные не трогаются.
 #   backup       — внеочередной бэкап.
 #   demo-reset   — демо-данные из снапшота (make demo-reset) и прогрев.
 #   demo-reseed  — заново наполнить демо (make seed) и снять новый снапшот.
@@ -35,6 +35,16 @@ health() {
       && curl -fsS -o /dev/null "$B/api/v1/taxonomy/professions"; then return 0; fi
     i=$((i + 1)); sleep 5
   done
+  return 1
+}
+
+# Смоук ML, LLM и бота (E42-6); причина сбоя остаётся в SMOKE_FAIL для алерта
+smoke() {
+  mkdir -p reports/seed
+  if sh infra/scripts/smoke-ml.sh >reports/seed/smoke-ml.log 2>&1; then cat reports/seed/smoke-ml.log; return 0; fi
+  cat reports/seed/smoke-ml.log >&2
+  SMOKE_FAIL=$(grep '^FAIL' reports/seed/smoke-ml.log | cut -c1-300 | tr '
+' ';')
   return 1
 }
 
@@ -76,19 +86,21 @@ deploy)
     sh infra/scripts/render-env.sh
     if pg_running; then sh infra/scripts/backup.sh "pre-$SHORT"; fi
   fi
-  if up && health; then
+  SMOKE_FAIL=""
+  if up && health && smoke; then
     docker image prune -f >/dev/null
     if is_prod; then sh infra/scripts/install-prod.sh; fi
     notify "✅ Развёрнут $SHORT: $(printf "%s" "${MSG:-}" | head -1)"
     echo "deploy: готово"
   else
     # Откат кода. Миграции назад не откатываются: новая миграция должна быть совместима с прежним кодом
-    echo "deploy: сбой, откат на $PREV" >&2
+    WHY="${SMOKE_FAIL:-API/SPA не ответили}"
+    echo "deploy: сбой ($WHY), откат на $PREV" >&2
     make ps || true
     git checkout --quiet --detach "$PREV"
     if is_prod; then sh infra/scripts/render-env.sh; fi
-    if up && health; then notify "❌ Деплой $SHORT упал, откатились на $(printf '%.7s' "$PREV")"
-    else notify "🔴 Деплой $SHORT упал, откат тоже не поднялся — нужен человек"; fi
+    if up && health; then notify "❌ Деплой $SHORT упал: $WHY. Откатились на $(printf '%.7s' "$PREV")"
+    else notify "🔴 Деплой $SHORT упал ($WHY), откат тоже не поднялся — нужен человек"; fi
     exit 1
   fi
   ;;
@@ -115,7 +127,8 @@ prod-init)
   if [ -n "$OLD" ]; then docker compose --env-file "$OLD" -p fsp $ALL down -v --remove-orphans; fi
   sh infra/scripts/gen-server-secrets.sh "$STAND_DIR"
   sh infra/scripts/render-env.sh
-  up && health || { notify "🔴 prod-init: стенд не поднялся"; exit 1; }
+  SMOKE_FAIL=""
+  up && health && smoke || { notify "🔴 prod-init: стенд не поднялся${SMOKE_FAIL:+: $SMOKE_FAIL}"; exit 1; }
   seed_demo
   sh infra/scripts/install-prod.sh
   sh infra/scripts/backup.sh after-prod-init
