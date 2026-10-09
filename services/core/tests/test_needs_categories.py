@@ -217,3 +217,59 @@ def test_category_page_returns_session_and_feedback_works(c, market):
         headers=_hdr(market),
     )
     assert f.status_code == 404
+
+
+def test_matched_skills_by_contribution():
+    """«Почему эта категория» (E39-21): навыки запроса, которые есть у профессии, по вкладу."""
+    need = {"python": 1.0, "fastapi": 1.0, "cobol": 1.0}
+    assert n.matched_skills(need, ROLES["backend"]) == ["python", "fastapi"]
+    assert n.matched_skills(need, ROLES["frontend"]) == ["python"]
+    assert n.matched_skills({"cobol": 1.0}, ROLES["ml"]) == []
+
+
+def test_categories_explain_why(c, market):
+    r = _create(c, market, filters={"skills_must": [{"slug": "python"}, {"slug": "fastapi"}]})
+    cats = _cats(r)
+    # python 1.0 vs 0.7 весит больше fastapi 1.0 vs 0.5; подписи — названия навыков
+    assert cats[("backend", "middle")]["matched_skills"] == ["Python", "Fastapi"]
+    assert cats[("ml", "middle")]["matched_skills"] and not cats[("ml", "middle")]["named"]
+    r = _create(c, market, filters={"skills_must": [{"slug": "python"}], "roles": ["frontend"]})
+    assert _cats(r)[("frontend", "middle")]["named"] is True
+
+
+def test_professions_filter_restricts_categories_and_listing(c, market):
+    """Фильтр `professions` (E39-21): категории только этих профессий, без навыков тоже можно."""
+    r = _create(c, market, filters={"skills_must": [{"slug": "python"}], "professions": ["ml"]})
+    cats = _cats(r)
+    assert {p for p, _ in cats} == {"ml"} and cats[("ml", "middle")]["named"] is True
+    r = _create(c, market, filters={"professions": ["backend"], "grade_min": "middle",
+                                    "grade_max": "middle"})  # fmt: skip
+    assert r.status_code == 201, r.text
+    assert _cats(r)[("backend", "middle")]["candidates"] == 3
+    # неизвестная профессия — категорий нет, но запрос не падает
+    assert _create(c, market, filters={"professions": ["nope"]}).json()["categories"] == []
+
+
+def test_extra_filters_narrow_counters_and_listing(c, market):
+    """Доверие, ФСП, «только подтверждённые» и ожидания «от» сужают и счётчики, и выдачу."""
+    base = {"skills_must": [{"slug": "python"}], "grade_min": "middle", "grade_max": "middle"}
+
+    def count_and_pids(**extra):
+        r = _create(c, market, filters={**base, **extra})
+        nid = r.json()["id"]
+        cnt = _cats(r)[("backend", "middle")]["candidates"]
+        page = c.get(f"/categories/backend/middle/candidates?need_id={nid}", headers=_hdr(market))
+        return cnt, sorted(i["pseudo_id"] for i in page.json()["items"])
+
+    assert count_and_pids() == (3, ["pid0002", "pid0003", "pid0004"])
+    # доверие ●●●○ по навыку запроса: python level 3 только у pid2
+    assert count_and_pids(min_trust=3) == (1, ["pid0002"])
+    # ожидания от 230к: 240к проходит, 200/220 — нет
+    assert count_and_pids(salary_min=230_000) == (1, ["pid0004"])
+    with sqlite3.connect(c.db) as con:
+        con.execute(
+            "update grades set needs_confirmation = 1 where candidate_id ="
+            " (select user_id from candidates where pseudo_id = 'pid0003')"
+        )
+    assert count_and_pids(only_confirmed=True) == (2, ["pid0002", "pid0004"])
+    assert count_and_pids(fsp_only=True) == (0, [])

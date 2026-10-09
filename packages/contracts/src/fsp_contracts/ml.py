@@ -115,6 +115,12 @@ class SearchFilters(BaseModel):
     fsp_disciplines: list[str] | None = None
     active_only: bool | None = None
     semantic_text: str | None = None
+    # E39-21 (поиск сотрудников): профессии системы (slug справочника, не только RoleSlug) —
+    # сужают категории и выдачу до кандидатов с действующим грейдом этих профессий;
+    # грейд без «нужно подтвердить» и низкой уверенности; ожидания кандидата не ниже.
+    professions: list[str] | None = None
+    only_confirmed: bool | None = None
+    salary_min: int | None = Field(default=None, ge=0)  # ₽/мес
 
 
 class FilterChip(BaseModel):
