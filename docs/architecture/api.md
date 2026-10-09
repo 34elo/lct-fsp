@@ -347,7 +347,7 @@
 | `POST /v1/assessment/explain` | `AnswerExplainRequest`: `{kind, skill, stem, reason_code, reason_label, misconception?, truth?}` — причину определил core, без ключа и ответа кандидата | `AnswerExplain`: `{text, model}` — формулировка (E24-2, [assessment.md §10](assessment.md#10-api-v2)); `ML_FAKE` — шаблон, `LLM_ENABLED=false` — `503 llm_disabled` (core берёт свой шаблон) |
 | `POST /v1/families/generate` | `FamilyGenerateRequest`: `{skill, skill_type?, kind, level 1–5, domain?, n 1–5}` | `FamilyGenerateResponse`: `{specs[], model}` — черновики форм конструктора `FamilySpec` (`kind`, `skill`, `level` — из заказа); core проверяет схемой и автопроверкой (E26-4, [assessment.md §7](assessment.md#7-жизненный-цикл-семейства-и-калибровка)); `ML_FAKE` — шаблоны по `kind`, `LLM_ENABLED=false` — `503 llm_disabled` |
 | `POST /v1/families/solve` | `FamilySolveRequest`: `{kind, stem, options[]}` — вариант, как его видит кандидат (без ключа) | `FamilySolveAnswer`: `{answer, model}` — ответ в формате кандидата (число/строка, индекс, строки, порядок); вне границ варианта — `503 llm_invalid`. `ML_FAKE` — детерминированный «наугад» (E26-4) |
-| `GET /healthz` | — | `{llm: up|down, embedder: up|down, model, queue_depth}` |
+| `GET /healthz` | — | `{llm: up|down, embedder: up|fallback|down, model, queue_depth}`; `embedder: fallback` — модели эмбеддингов нет, `/v1/embeddings` отдаёт детерминированные запасные векторы (200, не 503; E42-2) |
 
 ## 3. Ключевые схемы (TypeScript-нотация)
 

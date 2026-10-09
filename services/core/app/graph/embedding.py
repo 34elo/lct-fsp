@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import time
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Protocol
@@ -91,6 +92,7 @@ class MlEmbedder:
         model: str = "BAAI/bge-m3",
         dim: int = 1024,
         timeout: float = 10.0,
+        cooldown: float = 60.0,
         redis=None,
         transport: httpx.AsyncBaseTransport | None = None,
     ) -> None:
@@ -99,6 +101,9 @@ class MlEmbedder:
         )
         self._dim = dim
         self._redis = redis
+        # после сбоя ml-api не долбим его на каждый пересчёт: пауза `cooldown` секунд (E42-2)
+        self._cooldown = cooldown
+        self._down_until = 0.0
         self._client = httpx.AsyncClient(base_url=base_url, timeout=timeout, transport=transport)
 
     async def aclose(self) -> None:
@@ -114,6 +119,8 @@ class MlEmbedder:
                     return Embedded(data["model"], data["vector"])
             except Exception:  # кеш не критичен
                 log.warning("embedding_cache_read_failed")
+        if time.monotonic() < self._down_until:
+            raise EmbeddingError("ml-api embeddings: пауза после сбоя")
         try:
             resp = await self._client.post(
                 "/v1/embeddings", json={"texts": [text], "kind": "passage"}
@@ -122,6 +129,7 @@ class MlEmbedder:
             body = resp.json()
             model, dim, vectors = body["model"], body["dim"], body["vectors"]
         except (httpx.HTTPError, ValueError, KeyError) as exc:
+            self._down_until = time.monotonic() + self._cooldown
             raise EmbeddingError(f"ml-api embeddings: {exc!r}") from exc
         if dim != self._dim or len(vectors) != 1 or len(vectors[0]) != self._dim:
             raise EmbeddingError(f"неожиданная размерность эмбеддинга: {dim}")

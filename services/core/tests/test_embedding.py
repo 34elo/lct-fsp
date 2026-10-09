@@ -207,3 +207,12 @@ async def test_ml_embedder_errors():
         e = MlEmbedder("http://ml", transport=_transport([], **kw))
         with pytest.raises(EmbeddingError):
             await e.embed_passage("x")
+
+
+async def test_ml_embedder_pauses_after_failure():
+    calls: list[dict] = []
+    e = MlEmbedder("http://ml", transport=_transport(calls, status=503), cooldown=60)
+    for _ in range(3):
+        with pytest.raises(EmbeddingError):
+            await e.embed_passage("x")
+    assert len(calls) == 1  # один запрос к ml-api, остальные — в паузе
