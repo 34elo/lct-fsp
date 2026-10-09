@@ -71,3 +71,34 @@ test("живые прогоны: пустой список", async () => {
 test("причина «не измерено» без команд разработчика", () => {
   expect(T.unavailable("load", "нет reports/load/load_stats.csv (нужен `make up`, `make seed`, `make load`)")).toBe("Не измерено — load: нет reports/load/load_stats.csv");
 });
+
+test("главные метрики: 4–6 карточек, у каждой смысл и методика", async () => {
+  const { HEADLINES } = await import("./headline");
+  expect(HEADLINES.length).toBeGreaterThanOrEqual(4);
+  expect(HEADLINES.length).toBeLessThanOrEqual(6);
+  renderAt(<Quality />);
+  for (const h of HEADLINES) {
+    const card = screen.getByTestId(`headline-${h.id}`);
+    expect(card).toHaveTextContent(h.title);
+    expect(card).toHaveTextContent(h.means);
+    expect(h.method.length).toBeGreaterThan(20);
+    expect(card.querySelector('[data-testid="headline-tip"]')).toBeTruthy();
+  }
+});
+
+test("главные метрики: «не измерено» без данных онлайн-метрик", async () => {
+  renderAt(<Quality />);
+  await screen.findByText(/Пока нет событий/);
+  expect(screen.getByTestId("headline-value-online")).toHaveTextContent("—");
+  expect(screen.getByTestId("headline-online")).toHaveTextContent("Не измерено");
+});
+
+test("у каждого графика подписаны обе оси", () => {
+  renderAt(<Quality />);
+  const charts = screen.getAllByTestId("chart");
+  expect(charts.length).toBeGreaterThan(0);
+  for (const c of charts) {
+    expect(c.querySelector('[data-testid="x-label"]')?.textContent).toBeTruthy();
+    expect(c.querySelector('[data-testid="y-label"]')?.textContent).toBeTruthy();
+  }
+});
