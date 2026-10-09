@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime
-from typing import Literal
+from typing import Annotated, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Request, Response
@@ -80,6 +80,13 @@ class ExperienceItem(BaseModel):
     skills: list[str]
 
 
+class EducationItem(BaseModel):
+    institution: str | None
+    degree: str | None
+    field: str | None
+    year_end: int | None
+
+
 class CandidateProfile(BaseModel):
     """`CandidateProfile` (api.md §3). Пока без `code`, `completeness`."""
 
@@ -104,6 +111,12 @@ class CandidateProfile(BaseModel):
     fsp: card.OwnerFsp | None = None
     experience: list[ExperienceItem] = []
     claimed_vs_confirmed: list[ClaimedVsConfirmed] = []  # E23-3: заявлено (опрос/резюме) vs тест
+    # E39-15: вкладка «Данные» — образование, ссылки (только владельцу), скрытые навыки и
+    # неподтверждённый черновик резюме (загружено после последнего подтверждённого)
+    education: list[EducationItem] = []
+    links: list[str] = []
+    hidden_skills: list[str] = []
+    resume_draft_id: UUID | None = None
 
 
 class PreferencesIn(BaseModel):
@@ -145,6 +158,10 @@ class StackItem(BaseModel):
     years: float | None = Field(default=None, ge=0, le=60)
 
 
+Link = Annotated[str, Field(max_length=300, pattern=r"^https?://[^\s]+$")]
+Slug = Annotated[str, Field(min_length=1, max_length=100)]
+
+
 class ProfileIn(BaseModel):
     """`PATCH /candidates/me/profile`: частичное обновление ручной формы (E20-4)."""
 
@@ -158,6 +175,9 @@ class ProfileIn(BaseModel):
     soft_skills: list[str] | None = Field(default=None, max_length=30)  # slug
     age_group: Literal["adult", "minor"] | None = None
     parent_consent: bool | None = None  # true — родитель согласен; false — отзыв
+    # E39-15: полный список; null или [] очищает
+    links: list[Link] | None = Field(default=None, max_length=10)
+    hidden_skills: list[Slug] | None = Field(default=None, max_length=200)
 
 
 class StoplistIO(BaseModel):
@@ -196,6 +216,12 @@ async def profile_out(session: AsyncSession, c: Candidate, settings: Settings) -
         fsp=await card.owner_fsp(session, c),
         experience=await resumes.experience_for_profile(session, c.user_id),
         claimed_vs_confirmed=await assessment.claimed_vs_confirmed(session, c.user_id),
+        education=[
+            EducationItem(**e) for e in await resumes.education_for_profile(session, c.user_id)
+        ],
+        links=service.links_of(c, settings.pii_key),
+        hidden_skills=sorted(service.hidden_skills_of(c)),
+        resume_draft_id=await resumes.draft_id_for_profile(session, c.user_id),
     )
 
 
@@ -274,7 +300,14 @@ async def patch_profile(
 ):
     cand = await _cand(request, session, user)
     changes = body.model_dump(exclude_unset=True, mode="json")
-    for key in ("stack", "experience_months", "desired_roles", "soft_skills"):
+    for key in (
+        "stack",
+        "experience_months",
+        "desired_roles",
+        "soft_skills",
+        "links",
+        "hidden_skills",
+    ):
         if key in changes and changes[key] is None and key != "experience_months":
             changes[key] = []  # null и [] для списков одно и то же
     await service.update_profile(session, cand, changes, pii_key=request.app.state.settings.pii_key)

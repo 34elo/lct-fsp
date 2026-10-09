@@ -8,6 +8,7 @@ import type { CandidateProfileAgeGroup } from './candidateProfileAgeGroup';
 import type { Category } from './category';
 import type { ClaimedVsConfirmed } from './claimedVsConfirmed';
 import type { ContactsIO } from './contactsIO';
+import type { EducationItem } from './educationItem';
 import type { ExperienceItem } from './experienceItem';
 import type { GradeInfo } from './gradeInfo';
 import type { OwnerFsp } from './ownerFsp';
@@ -42,4 +43,8 @@ export interface CandidateProfile {
   fsp?: OwnerFsp | null;
   experience?: ExperienceItem[];
   claimed_vs_confirmed?: ClaimedVsConfirmed[];
+  education?: EducationItem[];
+  links?: string[];
+  hidden_skills?: string[];
+  resume_draft_id?: string | null;
 }

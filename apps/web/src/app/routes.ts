@@ -134,14 +134,15 @@ export interface NavItem {
  */
 export const NAV: Record<"candidate" | "employer" | "admin", NavItem[]> = {
   candidate: [
-    { to: "/me", label: "Главная" },
+    // Регулярные задания открываются с Главной (E39-15), когда они есть.
+    { to: "/me", label: "Главная", match: ["/me/tasks"] },
     { to: "/me/assessment", label: "Тест" },
     // «Интересы» и «Отклики» — фильтр внутри страницы (E39-25).
     { to: "/me/offers", label: "Приглашения", match: ["/me/interests", "/me/responses"] },
     { to: "/jobs", label: "Вакансии" },
     { to: "/me/stats", label: "Статистика" },
-    // Резюме, ФСП, данные и задания — ссылки внутри профиля.
-    { to: "/me/profile", label: "Профиль", match: ["/onboarding", "/me/tasks"] },
+    // Резюме, ФСП и данные — вкладка «Данные» профиля (E39-15); /onboarding в меню нет.
+    { to: "/me/profile", label: "Профиль" },
   ],
   employer: [
     // Подбор (E38-8): «Поиск» и «Кого ищете» заменяет строка запроса; подписки — блок «Ваши категории».

@@ -21,4 +21,6 @@ export interface ProfileIn {
   soft_skills?: string[] | null;
   age_group?: ProfileInAgeGroup;
   parent_consent?: boolean | null;
+  links?: string[] | null;
+  hidden_skills?: string[] | null;
 }

@@ -18421,6 +18421,42 @@
             "type": "array",
             "title": "Claimed Vs Confirmed",
             "default": []
+          },
+          "education": {
+            "items": {
+              "$ref": "#/components/schemas/EducationItem"
+            },
+            "type": "array",
+            "title": "Education",
+            "default": []
+          },
+          "links": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Links",
+            "default": []
+          },
+          "hidden_skills": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Hidden Skills",
+            "default": []
+          },
+          "resume_draft_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resume Draft Id"
           }
         },
         "type": "object",
@@ -18491,6 +18527,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/StandingStrength"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "leader": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StandingLeader"
               },
               {
                 "type": "null"
@@ -20662,6 +20708,62 @@
           "type"
         ],
         "title": "Edge"
+      },
+      "EducationItem": {
+        "properties": {
+          "institution": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Institution"
+          },
+          "degree": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Degree"
+          },
+          "field": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Field"
+          },
+          "year_end": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year End"
+          }
+        },
+        "type": "object",
+        "required": [
+          "institution",
+          "degree",
+          "field",
+          "year_end"
+        ],
+        "title": "EducationItem"
       },
       "EmploymentType": {
         "type": "string",
@@ -23750,6 +23852,17 @@
               }
             ],
             "title": "Ghost"
+          },
+          "skill_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Skill Type"
           }
         },
         "type": "object",
@@ -25344,6 +25457,40 @@
               }
             ],
             "title": "Parent Consent"
+          },
+          "links": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "maxLength": 300,
+                  "pattern": "^https?://[^\\s]+$"
+                },
+                "type": "array",
+                "maxItems": 10
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Links"
+          },
+          "hidden_skills": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "maxLength": 100,
+                  "minLength": 1
+                },
+                "type": "array",
+                "maxItems": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hidden Skills"
           }
         },
         "additionalProperties": false,
@@ -27791,6 +27938,17 @@
           "group": {
             "type": "string",
             "title": "Group"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type"
           }
         },
         "type": "object",
@@ -28063,6 +28221,46 @@
         ],
         "title": "StackItem"
       },
+      "StandingGap": {
+        "properties": {
+          "top_percent": {
+            "type": "integer",
+            "maximum": 90.0,
+            "minimum": 1.0,
+            "title": "Top Percent"
+          },
+          "gap_relative": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Gap Relative"
+          }
+        },
+        "type": "object",
+        "required": [
+          "top_percent",
+          "gap_relative"
+        ],
+        "title": "StandingGap",
+        "description": "Разрыв до следующей «десятки» (топ-30 → топ-20): на сколько п.п. относительной силы."
+      },
+      "StandingLeader": {
+        "properties": {
+          "grade": {
+            "$ref": "#/components/schemas/TestGrade"
+          },
+          "relative": {
+            "type": "number",
+            "title": "Relative",
+            "default": 100.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "grade"
+        ],
+        "title": "StandingLeader",
+        "description": "Лидер категории — анонимно: только грейд и 100 % (никаких идентификаторов)."
+      },
       "StandingPart": {
         "properties": {
           "code": {
@@ -28140,6 +28338,23 @@
             "maximum": 100.0,
             "minimum": 1.0,
             "title": "Top Percent"
+          },
+          "relative": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Relative",
+            "default": 100.0
+          },
+          "gap_to_next_ten": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StandingGap"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "parts": {
             "items": {

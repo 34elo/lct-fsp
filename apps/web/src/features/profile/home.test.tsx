@@ -4,7 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 import { App } from "@/app/App";
 import { Providers, makeQueryClient } from "@/app/Providers";
 import { setAccessToken } from "@/shared/lib/token";
-import { constellationNodes, formatsText, nextStep, ratingText, skillSource } from "./home-model";
+import { constellationNodes, formatsText, latestInvites, nextStep, ratingText, skillSource } from "./home-model";
 
 const res = (status: number, body?: unknown) => new Response(body === undefined ? null : JSON.stringify(body), { status });
 
@@ -50,7 +50,14 @@ const standing = {
   grade: "junior",
   mode: "express",
   confirmed_at: "2026-10-07T10:05:00Z",
-  strength: { value: 0.64, rank: 3, top_percent: 30, parts: [] },
+  strength: {
+    value: 0.64,
+    rank: 3,
+    top_percent: 30,
+    relative: 78,
+    gap_to_next_ten: { top_percent: 20, gap_relative: 6.5 },
+    parts: [{ code: "T", text: "Уровень в тесте", value: 0.7, weight: 0.4 }],
+  },
   category_size: 10,
   peers: [],
 };
@@ -97,6 +104,7 @@ beforeEach(() => {
     "/assessment/history": () => res(200, { surveys: [survey], attempts: [passed], cooldowns: [], retries: [] }),
     "/candidates/me/standing": () => res(200, standing),
     "/candidates/me/interests": () => res(200, interests),
+    "/candidates/me/offers": () => res(200, [{ ...offer("o9", "Новая компания", 170000, 230000, "sent"), created_at: "2026-10-08T00:00:00Z" }]),
     "/candidates/me/navigator": () => res(200, navigator),
     "/candidates/me/views": () => res(200, { total_30d: 5, companies_30d: 2, by_day: [{ date: "2026-10-07", count: 5 }] }),
     "/taxonomy/professions": () => res(200, { professions: [{ slug: "backend", title: "Backend" }] }),
@@ -125,6 +133,12 @@ function mount(path = "/me") {
 }
 
 describe("модель Главной (E38-1)", () => {
+  it("latestInvites: объединяет, убирает дубли и отклики кандидата, берёт 3 свежих", () => {
+    const o = (id: string, d: string, initiator?: string) => ({ ...offer(id, id, 1, 2), created_at: d, initiator }) as never;
+    const r = latestInvites([o("a", "2026-10-01"), o("b", "2026-10-05")], [o("b", "2026-10-05"), o("c", "2026-10-06"), o("d", "2026-10-09", "candidate"), o("e", "2026-10-02")]);
+    expect(r.map((x) => x.id)).toEqual(["c", "b", "e"]);
+  });
+
   it("следующий шаг: первый не пройденный, интерес — только при интересах без ответа", () => {
     const a = nextStep({ tested: true, fspLinked: true, pendingInterests: 2, nextTest: { grade: "Middle", path: "/x" } });
     expect(a.steps.map((s) => [s.label, s.state])).toEqual([
@@ -137,7 +151,7 @@ describe("модель Главной (E38-1)", () => {
 
     const b = nextStep({ tested: true, fspLinked: false, pendingInterests: 0 });
     expect(b.steps.map((s) => s.id)).toEqual(["test", "fsp"]);
-    expect(b.current).toEqual({ key: "fsp", label: "Привязать ФСП", to: "/onboarding" });
+    expect(b.current).toEqual({ key: "fsp", label: "Привязать ФСП", to: "/me/profile?tab=data" });
 
     const c = nextStep({ tested: true, fspLinked: true, pendingInterests: 0, nextTest: { grade: "Middle", path: "/x" } });
     expect(c.current).toEqual({ key: "next", label: "Пройти тест на Middle", to: "/x" });
@@ -196,13 +210,21 @@ describe("Главная кандидата /me (E38-1)", () => {
     expect(screen.getByRole("img", { name: /Созвездие навыков: Python, SQL, Git, Docker/ })).toBeInTheDocument();
 
     const ints = screen.getByTestId("home-interests");
-    expect(within(ints).getAllByRole("article")).toHaveLength(3);
+    expect(within(ints).getAllByTestId("home-invite")).toHaveLength(3);
     expect(ints).toHaveTextContent("3 · 140–220");
-    expect(within(ints).getByRole("article", { name: "Северный код" })).toHaveTextContent("4.6 / 5");
+    expect(ints).toHaveTextContent("Северный код");
+    expect(ints).toHaveTextContent("150–220");
+    // Приглашение (не интерес) попадает в список и ведёт на карточку; «Все приглашения» — на список.
+    const inv = within(ints).getByRole("link", { name: /Новая компания/ });
+    expect(inv).toHaveAttribute("href", "/me/offers/o9");
+    expect(within(ints).getByTestId("home-invites-all")).toHaveAttribute("href", "/me/offers");
+    // Навыков 4 (≤ 8) — ссылки «Все навыки» нет.
+    expect(screen.queryByTestId("home-skills-all")).not.toBeInTheDocument();
 
     const tiles = screen.getByTestId("home-tiles");
-    expect(tiles).toHaveTextContent("64");
-    expect(tiles).toHaveTextContent("топ-30 %");
+    expect(tiles).toHaveTextContent("Топ-30 %");
+    expect(tiles).toHaveTextContent("Backend Junior");
+    expect(tiles).not.toHaveTextContent("64");
     expect(within(tiles).getByRole("meter", { name: "Место" })).toHaveAttribute("aria-valuenow", "70");
 
     // Ссылка «Статистика» (E38-2) со счётчиком компаний, смотревших профиль; баннера пути на Главной нет.
@@ -216,6 +238,7 @@ describe("Главная кандидата /me (E38-1)", () => {
     routes["/assessment/history"] = () => res(200, { surveys: [survey], attempts: [{ ...passed, status: "failed" }], cooldowns: [], retries: [] });
     routes["/candidates/me/standing"] = () => res(200, { peers: [], category_size: 0 });
     routes["/candidates/me/interests"] = () => res(200, { companies: 0, items: [] });
+    routes["/candidates/me/offers"] = () => res(200, []);
     routes["/candidates/me/navigator"] = () => res(200, { skill_gaps: [], competitions: [], uplift: [] });
     mount();
     expect(await screen.findByTestId("home-grade-status")).toHaveTextContent("не подтверждён");
@@ -223,6 +246,15 @@ describe("Главная кандидата /me (E38-1)", () => {
     expect(await screen.findByTestId("home-next-action")).toHaveTextContent("Пройти тест");
     expect(screen.getByTestId("home-tiles")).toHaveTextContent("—");
     expect(screen.queryByTestId("home-interests")).not.toBeInTheDocument();
+  });
+
+  it("навыков больше 8: показаны 8 сильнейших и ссылка «Все навыки» в профиль", async () => {
+    const many = Array.from({ length: 10 }, (_, i) => sk(`s${i}`, `Навык ${i}`, 1 + (i % 3), ["test"]));
+    routes["/candidates/me/profile"] = () => res(200, { ...profile, skills: many });
+    mount();
+    const card = await screen.findByTestId("home-skills");
+    expect(within(card).getAllByText(/^Навык [0-9]$/)).toHaveLength(8);
+    expect(within(card).getByTestId("home-skills-all")).toHaveAttribute("href", "/me/profile?tab=skills");
   });
 
   it("кулдаун следующего грейда: дата следующей попытки", async () => {
@@ -256,6 +288,23 @@ describe("Главная кандидата /me (E38-1)", () => {
     expect(card).toHaveAttribute("data-step", "continue");
     expect(within(card).getAllByRole("link")[0]).toHaveAttribute("href", "/me/assessment/attempts/a1");
     expect(within(card).getAllByRole("link")[0]).toHaveTextContent("Продолжить тест");
+  });
+
+  it("регулярные задания (E39-15): открытые — блок на Главной, без заданий — блока нет", async () => {
+    const task = (id: string, extra: object = {}) => ({ id, title: `Задание ${id}`, kind: "choice", profession: "backend", grade: "middle", answer_until: "2999-01-01T00:00:00Z", submitted: false, score: null, ...extra });
+    routes["/assessment/tasks"] = () => res(200, [task("t1"), task("t2", { submitted: true }), task("t3", { answer_until: "2000-01-01T00:00:00Z" })]);
+    mount();
+    const card = await screen.findByTestId("home-tasks");
+    expect(within(card).getAllByTestId("home-task")).toHaveLength(1);
+    expect(within(card).getByRole("link", { name: /Задание t1/ })).toHaveAttribute("href", "/me/tasks?task=t1");
+    expect(within(card).getByTestId("home-tasks-all")).toHaveAttribute("href", "/me/tasks");
+  });
+
+  it("регулярных заданий нет — блока нет", async () => {
+    routes["/assessment/tasks"] = () => res(200, []);
+    mount();
+    expect(await screen.findByTestId("home-after")).toBeInTheDocument();
+    expect(screen.queryByTestId("home-tasks")).not.toBeInTheDocument();
   });
 
   it("загрузка — скелетон; ошибка профиля — «Повторить»", async () => {

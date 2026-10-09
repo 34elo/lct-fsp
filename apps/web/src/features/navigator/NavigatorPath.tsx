@@ -1,26 +1,75 @@
-import { CircuitLine, SectionLabel, type CircuitStep } from "@fsp/ui";
+import { useNavigate } from "react-router-dom";
 
-import type { NavCompetition, NavigatorOut } from "@/api/model";
+import { Roadmap, SectionLabel, type RoadmapAction, type RoadmapStep } from "@fsp/ui";
+
+import type { NavCompetition, NavigatorOut, UpliftItem } from "@/api/model";
 import { GRADE_LABEL } from "@/features/profile/text";
 import { T } from "./text";
 
 const dateShort = (iso: string) => new Date(iso).toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
 
-/** Узлы схемы: текущий грейд, навыки-пробелы, целевой грейд. Чистая функция для тестов. */
-export function pathSteps(nav: NavigatorOut): CircuitStep[] {
-  const steps: CircuitStep[] = [];
+const TASKS_PATH = "/me/tasks";
+
+/** Этапы роадмапа: текущий грейд → навыки-пробелы → тест → следующий грейд. Чистая функция для тестов. */
+export function roadmapSteps(nav: NavigatorOut, uplift: UpliftItem[] = nav.uplift): RoadmapStep[] {
+  const steps: RoadmapStep[] = [];
   const cur = nav.current_grade;
+  const testPath = nav.test?.path;
+  const retake: RoadmapAction[] = cur?.needs_confirmation && testPath ? [{ label: T.retake, href: testPath }] : [];
   steps.push({
     id: "current",
+    kind: "current",
     state: "done",
-    label: cur ? T.current(GRADE_LABEL[cur.grade] ?? cur.grade) : T.current("—"),
+    eyebrow: T.stepNow,
+    title: cur ? (GRADE_LABEL[cur.grade] ?? cur.grade) : "—",
+    caption: cur ? (cur.needs_confirmation ? T.expired : T.validUntil(dateShort(cur.valid_until))) : undefined,
+    actions: retake,
   });
-  nav.skill_gaps.forEach((g, i) =>
-    steps.push({ id: `gap-${g.skill}`, state: i === 0 ? "current" : "future", label: g.name }),
-  );
-  if (nav.target?.grade || nav.test?.grade) {
-    const grade = nav.target?.grade ?? nav.test!.grade;
-    steps.push({ id: "next", state: "future", label: T.nextGrade(GRADE_LABEL[grade] ?? grade) });
+  const used = new Set<string>();
+  nav.skill_gaps.forEach((g, i) => {
+    const up = uplift.find((u) => u.skill === g.skill);
+    const comps = nav.competitions.filter((c) => c.skills.some((x) => x.toLowerCase() === g.name.toLowerCase()));
+    const actions: RoadmapAction[] = [{ label: T.doTask, href: TASKS_PATH }];
+    comps.forEach((c) => {
+      used.add(c.id);
+      if (c.registration_url) actions.push({ label: T.competitionLink(c.title), href: c.registration_url, external: true });
+    });
+    steps.push({
+      id: `gap-${g.skill}`,
+      kind: "skill",
+      state: i === 0 ? "current" : "future",
+      eyebrow: T.stepSkill,
+      title: g.name,
+      uplift: up ? T.upliftChip(Math.round(up.pct)) : undefined,
+      caption: T.gapCaption,
+      actions,
+    });
+  });
+  if (testPath) {
+    const rest = nav.competitions.filter((c) => !used.has(c.id) && c.registration_url);
+    steps.push({
+      id: "test",
+      kind: "test",
+      state: "future",
+      eyebrow: T.stepTest,
+      title: T.testTitle,
+      caption: nav.test ? T.testLead(GRADE_LABEL[nav.test.grade] ?? nav.test.grade) : undefined,
+      actions: [
+        { label: T.takeTest, href: testPath },
+        ...rest.map((c): RoadmapAction => ({ label: T.competitionLink(c.title), href: c.registration_url!, external: true })),
+      ],
+    });
+  }
+  const goal = nav.target?.grade ?? nav.test?.grade;
+  if (goal) {
+    steps.push({
+      id: "next",
+      kind: "goal",
+      state: "future",
+      eyebrow: T.stepGoal,
+      title: GRADE_LABEL[goal] ?? goal,
+      caption: nav.next_grade ? T.pointsNeeded(nav.next_grade.points_needed) : undefined,
+    });
   }
   return steps;
 }
@@ -47,24 +96,19 @@ function Flag({ c }: { c: NavCompetition }) {
   );
 }
 
-/** Схемная линия от текущего грейда к следующему: узлы — навыки, флажки — соревнования ФСП. */
-export function NavigatorPath({ nav }: { nav: NavigatorOut }) {
-  const steps = pathSteps(nav);
-  const cur = nav.current_grade;
+/** Роадмап от текущего грейда к следующему; ниже подсказки и список соревнований ФСП. */
+export function NavigatorPath({ nav, uplift }: { nav: NavigatorOut; uplift?: UpliftItem[] }) {
+  const go = useNavigate();
+  const steps = roadmapSteps(nav, uplift).map((st) => ({
+    ...st,
+    actions: st.actions?.map((a) => (a.external ? a : { ...a, onClick: () => go(a.href) })),
+  }));
   return (
     <section aria-labelledby="nav-path" className="flex flex-col gap-3 rounded-xl border border-hairline bg-card p-4">
       <SectionLabel id="nav-path">{T.pathTitle}</SectionLabel>
-      <CircuitLine steps={steps} />
-      {nav.next_grade && (
-        <p className="text-14">
-          {T.pointsNeeded(nav.next_grade.points_needed)}
-          {nav.next_grade.hints.length > 0 && <span className="text-muted">{`. ${nav.next_grade.hints.join(". ")}`}</span>}
-        </p>
-      )}
-      {cur && (
-        <p className="text-13 text-muted">
-          {cur.needs_confirmation ? T.expired : T.validUntil(dateShort(cur.valid_until))}
-        </p>
+      <Roadmap steps={steps} label={T.roadmapLabel} />
+      {nav.next_grade && nav.next_grade.hints.length > 0 && (
+        <p className="text-14 text-muted">{nav.next_grade.hints.join(". ")}</p>
       )}
       <div className="flex flex-col gap-2">
         <h3 className="text-14 font-semibold">{T.competitionsTitle}</h3>
