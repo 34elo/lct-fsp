@@ -39,6 +39,8 @@ from app.consents.router import router as consents_router
 from app.credentials.router import router as credentials_router
 from app.events_stream import UiHub
 from app.events_stream import router as events_router
+from app.fsp.registry_router import admin_router as fsp_registry_admin_router
+from app.fsp.registry_router import router as fsp_registry_router
 from app.fsp.router import router as fsp_router
 from app.graph.router import router as graph_router
 from app.identity.profile_router import router as profile_router
@@ -121,6 +123,8 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     # <<< block1
     # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
     app.include_router(employer_activity_router)
+    app.include_router(fsp_registry_router)  # реестр ФСП (E39-28)
+    app.include_router(fsp_registry_admin_router)
     app.include_router(analytics_router)
     app.include_router(analytics_internal_router)
     app.include_router(live_runs_admin_router)

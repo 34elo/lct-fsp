@@ -32,7 +32,7 @@ class ConnectorClient:
     async def aclose(self) -> None:
         await self._client.aclose()
 
-    async def _call(self, method: str, path: str, **kw: Any) -> dict[str, Any]:
+    async def _call(self, method: str, path: str, **kw: Any) -> Any:
         try:
             r = await self._client.request(method, path, **kw)
         except httpx.HTTPError as exc:
@@ -47,7 +47,7 @@ class ConnectorClient:
                 str(body.get("code") or "fsp_error"),
                 str(body.get("title") or "Ошибка ФСП"),
             )
-        return r.json()
+        return r.json() if r.content else None  # 204 и пустое тело → None
 
     async def authorize_url(self, state: str, code_challenge: str) -> str:
         data = await self._call(
@@ -87,6 +87,11 @@ class ConnectorClient:
         return await self._call(
             "POST", "/internal/links/verify", json={"candidate_id": str(candidate_id), "code": code}
         )
+
+    # ------------------------------------------------------------ реестр ФСП (E39-28)
+    async def registry(self, method: str, path: str, **kw: Any) -> Any:
+        """`/internal/registry/*`: тела с ПДн (контакты, ФИО) не логируются."""
+        return await self._call(method, f"/internal/registry{path}", **kw)
 
     async def demo_create_result(self) -> dict[str, Any]:
         return await self._call("POST", "/internal/demo/fsp-result")
