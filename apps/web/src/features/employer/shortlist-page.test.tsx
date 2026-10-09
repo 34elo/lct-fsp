@@ -34,7 +34,7 @@ beforeEach(() => {
     "fetch",
     vi.fn(async (url: string, init?: RequestInit) => {
       if (url.endsWith("/auth/refresh")) return res(200, { access_token: "t" });
-      if (url.endsWith("/me")) return res(200, { id: "u1", email: "o@b.ru", role: "employer", consents: ["pd_processing"] });
+      if (url.endsWith("/me")) return res(200, { id: "u1", email: "o@b.ru", role: "employer", consents: ["pd_processing"], company: { id: "co1", name: "Acme", status: "verified", role: "admin" } });
       if (init?.method === "DELETE" && url.includes("/needs/n1/shortlist/")) {
         const id = url.split("/").pop()!;
         removed.push(id);
@@ -133,4 +133,18 @@ test("убрать кандидата из шорт-листа", async () => {
   fireEvent.click(within(rows[0]!).getByRole("button", { name: "Убрать" }));
   await waitFor(() => expect(removed).toEqual(["p1"]));
   await waitFor(() => expect(screen.getAllByTestId("shortlist-row")).toHaveLength(1));
+});
+
+test("работодатель без компании: пустое состояние, запрос шорт-листа не уходит (E39-36)", async () => {
+  const seen: string[] = [];
+  const base = globalThis.fetch;
+  vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = String(input);
+    seen.push(url);
+    if (url.endsWith("/me")) return res(200, { id: "u1", email: "o@b.ru", role: "employer", consents: ["pd_processing"] });
+    return base(input, init);
+  });
+  mount();
+  expect(await screen.findByText(/шорт-лист пуст|пока никого/i)).toBeInTheDocument();
+  expect(seen.some((u) => u.endsWith("/shortlist"))).toBe(false);
 });

@@ -11,6 +11,7 @@ import { useListOffersOffersGet } from "@/api/endpoints/offers/offers";
 import { candidateCardCandidatesPseudoIdCardGet, getCandidateCardCandidatesPseudoIdCardGetQueryKey } from "@/api/endpoints/search/search";
 import type { CandidateCard, OfferForCompany } from "@/api/model";
 import { ApiError } from "@/api/mutator";
+import { useAuth } from "@/shared/lib/auth";
 import { OfferDialog, type DialogMode, type OfferCandidate } from "@/features/offers/OfferDialog";
 import { toMatchCard } from "./match-model";
 import { COMPARE_MAX, COMPARE_MIN, compareRows, interestLabel, interestState, latestOfferByCandidate, nextToInvite, togglePick } from "./shortlist-model";
@@ -175,6 +176,8 @@ function Compare({ cards, offers, onClose }: { cards: CandidateCard[]; offers: M
  */
 export default function ShortlistPage() {
   const qc = useQueryClient();
+  // Без компании шорт-листа нет, а запрос дал бы 404 в консоли нового аккаунта (E39-7).
+  const hasCompany = !!useAuth().me?.company;
   const [target, setTarget] = useState<Target | null>(null);
   const [picked, setPicked] = useState<string[]>([]);
   const [comparing, setComparing] = useState(false);
@@ -182,7 +185,7 @@ export default function ShortlistPage() {
   const [removing, setRemoving] = useState<string | null>(null);
   const removeMut = useShortlistRemoveNeedsNeedIdShortlistPseudoIdDelete();
 
-  const listQ = useShortlistAllShortlistGet({ query: { retry: false } });
+  const listQ = useShortlistAllShortlistGet({ query: { retry: false, enabled: hasCompany } });
   const items = listQ.data?.status === 200 ? listQ.data.data.items : [];
   const ids = items.map((i) => i.pseudo_id);
   const offersQ = useListOffersOffersGet(undefined, { query: { enabled: ids.length > 0 } });
@@ -211,6 +214,7 @@ export default function ShortlistPage() {
     />
   );
 
+  if (!hasCompany) return shell(<>{header()}{emptyState}</>);
   if (listQ.isPending) return shell(<Loading />);
   if (listQ.isError || offersQ.isError || cardsFailed) {
     const err = [listQ.error, offersQ.error, cardQs.find((q) => q.isError)?.error].find((e) => e instanceof ApiError);
