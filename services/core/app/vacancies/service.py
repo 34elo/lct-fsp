@@ -119,6 +119,29 @@ async def list_published(session: AsyncSession) -> list[Vacancy]:
     return list(await session.scalars(select(Vacancy).where(Vacancy.status == "published")))
 
 
+async def companies_searching(session: AsyncSession, role: str, grade: str) -> int:
+    """Компаний с опубликованной вакансией на `role` с `grade` в вилке (E39-16)."""
+    from app.candidates.service import GRADE_ORDER
+
+    if grade not in GRADE_ORDER:
+        return 0
+    i = GRADE_ORDER.index(grade)
+    rows = await session.execute(
+        select(Vacancy.company_id, Vacancy.grade_min, Vacancy.grade_max).where(
+            Vacancy.status == "published", Vacancy.role == role
+        )
+    )
+    return len(
+        {
+            cid
+            for cid, lo, hi in rows
+            if lo in GRADE_ORDER
+            and hi in GRADE_ORDER
+            and GRADE_ORDER.index(lo) <= i <= GRADE_ORDER.index(hi)
+        }
+    )
+
+
 async def known_role(session: AsyncSession, slug: str) -> bool:
     """Роль вакансии — профессия из справочника (`roles.is_profession`) или старый `RoleSlug`."""
     if slug in {r.value for r in RoleSlug}:

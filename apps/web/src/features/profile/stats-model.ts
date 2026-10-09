@@ -4,17 +4,18 @@ import type { ScatterPoint } from "@fsp/ui";
 import type { AttemptOut, StandingPeer } from "@/api/model";
 
 /**
- * Точки категории для ScatterPlot: X — сила 0–100, Y — ожидания (`salary_min`), нормированные по категории в 0–100.
- * Своя точка в `peers` первая (api.md, E35-12a). Без ожиданий — у нижней оси; одинаковые ожидания — посередине.
+ * Точки категории для ScatterPlot (E39-16): X — уровень в тесте θ, нормированный по категории в 0–100;
+ * Y — сила профиля 0–100. Своя точка в `peers` первая (api.md, E35-12a). Без θ у участников X — сила;
+ * одинаковая θ у всех — посередине.
  */
 export function scatter(peers: StandingPeer[], mine?: number | null): { points: ScatterPoint[]; you?: ScatterPoint } {
-  const salaries = peers.map((p) => p.salary_min).filter((s): s is number => s != null);
-  const lo = Math.min(...salaries);
-  const hi = Math.max(...salaries);
-  const y = (s: number | null | undefined) => (s == null ? 0 : hi > lo ? ((s - lo) / (hi - lo)) * 100 : 50);
-  const pts = peers.map((p) => ({ x: p.strength * 100, y: y(p.salary_min) }));
+  const thetas = peers.map((p) => p.theta).filter((t): t is number => t != null);
+  const lo = Math.min(...thetas);
+  const hi = Math.max(...thetas);
+  const x = (p: StandingPeer) => (p.theta == null ? p.strength * 100 : hi > lo ? ((p.theta - lo) / (hi - lo)) * 100 : 50);
+  const pts = peers.map((p) => ({ x: x(p), y: p.strength * 100 }));
   if (pts.length) return { points: pts.slice(1), you: pts[0] };
-  return { points: [], you: mine != null ? { x: mine * 100, y: 0 } : undefined };
+  return { points: [], you: mine != null ? { x: mine * 100, y: mine * 100 } : undefined };
 }
 
 export interface ViewsStats {

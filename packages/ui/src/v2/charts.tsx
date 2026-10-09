@@ -167,9 +167,9 @@ function rank(n: { level: number; state: string }): number {
 /* ---------- ScatterPlot ---------- */
 
 export interface ScatterPoint {
-  /** 0–100 по оси X (сила). */
+  /** 0–100 по оси X. */
   x: number;
-  /** 0–100 по оси Y (ожидания, нормированные). */
+  /** 0–100 по оси Y. */
   y: number;
 }
 
@@ -179,6 +179,7 @@ export function ScatterPlot({
   you,
   threshold,
   yLabel = "ожидания, ₽",
+  xLabel,
   youLabel = "ты",
   label,
   className,
@@ -187,15 +188,18 @@ export function ScatterPlot({
   you?: ScatterPoint;
   threshold?: { x: number; label: string };
   yLabel?: string;
+  /** Подпись оси X; без неё под осью только числа 0–100. */
+  xLabel?: string;
   youLabel?: string;
   label: string;
   className?: string;
 }) {
+  const H = xLabel ? 198 : 180;
   const X = (v: number) => round(30 + (clamp(v) / 100) * 320);
   const Y = (v: number) => round(160 - (clamp(v) / 100) * 140);
   const dots = points.map((p) => `M${X(p.x)} ${Y(p.y)}h0`).join("");
   return (
-    <svg viewBox="0 0 360 180" width="100%" role="img" aria-label={label} fontFamily={MONO} className={cn("max-h-[250px]", className)}>
+    <svg viewBox={`0 0 360 ${H}`} width="100%" role="img" aria-label={label} fontFamily={MONO} className={cn("max-h-[320px]", className)}>
       <path d="M30 160H350M30 160V14" stroke="var(--hairline)" strokeWidth="1" fill="none" />
       {dots && <path d={dots} stroke="var(--brand-mid)" strokeWidth="6" strokeLinecap="round" />}
       {threshold && (
@@ -220,6 +224,11 @@ export function ScatterPlot({
         <text x="186" y="174">50</text>
         <text x="338" y="174">100</text>
         <text x="34" y="12">{yLabel}</text>
+        {xLabel && (
+          <text x="350" y="193" textAnchor="end">
+            {xLabel}
+          </text>
+        )}
       </g>
     </svg>
   );
