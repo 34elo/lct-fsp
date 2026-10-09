@@ -281,6 +281,20 @@ describe("Главная кандидата /me (E38-1)", () => {
     expect(screen.queryByTestId("path-banner")).not.toBeInTheDocument();
   });
 
+  it("новый кандидат без навыков: карточки-подсказки вместо пустого созвездия (E41-3)", async () => {
+    routes["/assessment/history"] = () => res(200, { surveys: [], attempts: [], cooldowns: [], retries: [] });
+    routes["/candidates/me/profile"] = () => res(200, { ...profile, skills: [] });
+    mount();
+    await screen.findByTestId("home-before");
+    const hints = screen.getAllByTestId("home-hint");
+    expect(hints.map((h) => h.textContent)).toEqual([
+      expect.stringContaining("Добавь данные о себе"),
+      expect.stringContaining("Пройди тест"),
+      expect.stringContaining("Привяжи ФСП"),
+    ]);
+    expect(hints.map((h) => h.getAttribute("href"))).toEqual(["/me/profile?tab=data", "/me/assessment", "/me/profile?tab=data"]);
+  });
+
   it("до теста, идёт попытка — «Продолжить тест»", async () => {
     routes["/assessment/history"] = () => res(200, { surveys: [survey], attempts: [{ ...passed, status: "active", finished_at: null }], cooldowns: [], retries: [] });
     mount();

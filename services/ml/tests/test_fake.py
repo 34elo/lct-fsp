@@ -96,8 +96,15 @@ def test_resume_failure_scenario():
     assert out.type == "ml.resume.failed" and out.payload["error"] == "scanned_pdf"
 
 
-def test_resume_has_quotes_for_every_skill():
+def test_resume_without_llm_is_unavailable_not_fixture():
     env, _ = new_command("ml.resume.parse", "core", _commands()["ml.resume.parse"])
+    (out,) = handle(env)
+    assert out.type == "ml.resume.failed" and out.payload["error"] == "llm_unavailable"
+
+
+def test_resume_has_quotes_for_every_skill():
+    p = _commands()["ml.resume.parse"].model_copy(update={"object_key": "r/1.fixture"})
+    env, _ = new_command("ml.resume.parse", "core", p)
     parsed = parse_payload(handle(env)[0]).parsed
     assert parsed.skills and all(s.quote for s in parsed.skills)
 

@@ -1,3 +1,4 @@
+import { Toaster } from "@fsp/ui";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 
@@ -17,6 +18,7 @@ export function Providers({ children, client }: { children: ReactNode; client?: 
       <ThemeProvider>
         <AuthProvider>
           <EventStreamProvider>{children}</EventStreamProvider>
+          <Toaster position="bottom-center" />
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>

@@ -41,6 +41,12 @@ def resume_parse(c: Envelope, p: cmd.MlResumeParse) -> list[Envelope]:
             resume_id=p.resume_id, candidate_id=p.candidate_id, error="scanned_pdf"
         )
         return [_result(c, "ml.resume.failed", r)]
+    if not p.object_key.endswith(".fixture"):
+        # E41-3: без LLM не выдаём выдуманную фикстуру; она только для тестов (`*.fixture`)
+        r = evt.MlResumeResult(
+            resume_id=p.resume_id, candidate_id=p.candidate_id, error="llm_unavailable"
+        )
+        return [_result(c, "ml.resume.failed", r)]
     r = evt.MlResumeResult(
         resume_id=p.resume_id, candidate_id=p.candidate_id, parsed=fake.parsed_resume()
     )
