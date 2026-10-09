@@ -1,0 +1,166 @@
+/* Анимации лендинга v3 (docs/design/v3/landing/spec.html, A1–A10). Цвета только из токенов @fsp/ui.
+   Раскладка и оформление — в классах Tailwind на компонентах; здесь остаётся то, что в Tailwind не выразить:
+   состояния «до/после появления», keyframes и каскад по CSS-переменным. */
+
+.lp {
+  --band: #1b1c21;
+  --ach: #2a2b33;
+  transition:
+    background-color 200ms ease,
+    color 200ms ease;
+}
+.dark .lp {
+  --band: #22232a;
+  --ach: var(--band);
+}
+
+/* A1: прилёт карточек и плашек при загрузке. Класс .go ставит компонент через 150 мс. */
+.lp-fly:not(.go) {
+  opacity: 0;
+  transform: translate(56px, -36px) rotate(-5deg) scale(0.96);
+}
+.lp-fly.go {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 500ms ease-out var(--fd, 0s),
+    transform 800ms cubic-bezier(0.16, 1, 0.3, 1) var(--fd, 0s);
+}
+.lp-fly.lp-tilt.go {
+  transform: rotate(3deg);
+}
+.lp-pop:not(.go) {
+  opacity: 0;
+  transform: scale(0.8);
+}
+.lp-pop.go {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 300ms ease-out var(--fd, 0s),
+    transform 400ms cubic-bezier(0.34, 1.56, 0.64, 1) var(--fd, 0s);
+}
+.lp-dot {
+  animation: lp-pulse 2.4s ease-out infinite;
+}
+@keyframes lp-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--signal) 50%, transparent);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 10px transparent;
+  }
+}
+
+/* A3: появление блоков. Анимация, а не transition: после неё у карточки остаётся свой hover (A9). */
+.lp-rv:not([data-in="true"]) {
+  opacity: 0;
+}
+.lp-rv[data-in="true"] {
+  animation: lp-rise 600ms cubic-bezier(0.2, 0.7, 0.2, 1) var(--d, 0s) backwards;
+}
+@keyframes lp-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+/* A5: шаги выезжают на 8 px каскадом, линия вычерчивается слева направо. Срабатывает при показе панели. */
+.lp-panel:not([hidden]) .lp-step {
+  animation: lp-up 240ms ease-out backwards;
+}
+.lp-panel:not([hidden]) .lp-step:nth-of-type(2) {
+  animation-delay: 60ms;
+}
+.lp-panel:not([hidden]) .lp-step:nth-of-type(3) {
+  animation-delay: 120ms;
+}
+@keyframes lp-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+.lp-panel:not([hidden]) .lp-line {
+  animation: lp-draw 500ms cubic-bezier(0.4, 0, 0.2, 1) backwards;
+}
+@keyframes lp-draw {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* A4: подложка вкладки. */
+.lp-pillbg[data-ready="true"] {
+  transition:
+    transform 280ms cubic-bezier(0.4, 0, 0.2, 1),
+    width 280ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* A6: тики уверенности заливаются по очереди, полоса растёт до значения. Старт вместе с A3 карточки. */
+.lp-tick {
+  background: var(--tint-200);
+}
+.lp-tick-f {
+  transition: background-color 200ms ease-out calc(var(--i) * 30ms);
+}
+[data-in="true"] .lp-tick-f {
+  background: var(--brand);
+}
+.lp-bar > b {
+  width: 0;
+  transition: width 900ms cubic-bezier(0.4, 0, 0.2, 1) 200ms;
+}
+[data-in="true"] .lp-bar > b {
+  width: var(--w);
+}
+
+/* A7: маркер «с ФСП» едет от 38 % к 72 %, заливка шкалы следом. */
+.lp-mk-me {
+  left: 38%;
+  transition: left 900ms cubic-bezier(0.4, 0, 0.2, 1) 300ms;
+}
+.lp-rail-fill {
+  width: 38%;
+  transition: width 900ms cubic-bezier(0.4, 0, 0.2, 1) 300ms;
+}
+[data-in="true"] .lp-mk-me {
+  left: 72%;
+}
+[data-in="true"] .lp-rail-fill {
+  width: 72%;
+}
+
+/* prefers-reduced-motion: всё сразу в итоговом состоянии. */
+@media (prefers-reduced-motion: reduce) {
+  .lp,
+  .lp *,
+  .lp *::before,
+  .lp *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .lp-fly,
+  .lp-pop,
+  .lp-rv {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .lp-fly.lp-tilt {
+    transform: rotate(3deg) !important;
+  }
+  .lp-tick-f {
+    background: var(--brand) !important;
+  }
+  .lp-bar > b {
+    width: var(--w) !important;
+  }
+  .lp-mk-me {
+    left: 72% !important;
+  }
+  .lp-rail-fill {
+    width: 72% !important;
+  }
+}
