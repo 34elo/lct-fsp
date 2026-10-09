@@ -159,6 +159,7 @@ def _ts(d: datetime) -> float:
 
 
 def grades_between(lo: str | None, hi: str | None) -> list[str] | None:
+    """Грейды от `lo` до `hi` включительно для SQL-фильтра; без границ — `None` (фильтра нет)."""
     if lo is None and hi is None:
         return None
     order = candidates.GRADE_ORDER
@@ -168,6 +169,9 @@ def grades_between(lo: str | None, hi: str | None) -> list[str] | None:
 
 
 def trust_of(skills: list[Any]) -> float:
+    """Доверие профиля для сортировки: среднее `TRUST_TOP` лучших подтверждённых навыков (не
+    `claimed_only`).
+    """
     top = sorted((s.confidence for s in skills if not s.claimed_only), reverse=True)[:TRUST_TOP]
     return round(sum(top) / TRUST_TOP, 6)
 

@@ -63,6 +63,7 @@ class SkillReq:
 
 
 def range_too_wide(salary_from: int, salary_to: int, cfg: VacancyConfig | None = None) -> bool:
+    """Вилка слишком широкая: `salary_to / salary_from > salary_range_too_wide_ratio`."""
     if cfg is None:
         cfg = VacancyConfig.load()
     return salary_from > 0 and salary_to / salary_from > cfg.salary_range_too_wide_ratio

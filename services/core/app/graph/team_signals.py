@@ -195,15 +195,18 @@ class TeamSignals:
 
 
 def decay(observed: date, today: date) -> float:
+    """Затухание факта по возрасту: период полураспада `HALF_LIFE_YEARS` (skills.md §8.2)."""
     age_years = max(0, (today - observed).days) / DAYS_IN_YEAR
     return 0.5 ** (age_years / HALF_LIFE_YEARS)
 
 
 def k_level(level: str, cfg: TeamConfig) -> float:
+    """Коэффициент уровня соревнования для командных сигналов (skills.md §8.2)."""
     return cfg.level_k.get(level, min(cfg.level_k.values()))
 
 
 def k_result(place: int | None, participants: int | None, cfg: TeamConfig) -> float:
+    """Коэффициент результата команды по месту и числу участников (skills.md §8.2)."""
     if place is None:
         return cfg.participated_k
     if place <= cfg.prize_places:
@@ -241,6 +244,9 @@ def _r2(x: float) -> float:
 def leadership(
     perfs: Sequence[FspPerformance], repos: Sequence[RepoFact], today: date, cfg: TeamConfig
 ) -> tuple[float, list[TeamFact]]:
+    """L — лидерство: капитанство (уровень, результат, размер команды, затухание) и сопровождение
+    репозиториев с внешними авторами; noisy-OR (skills.md §8.2).
+    """
     parts: list[float] = []
     facts: list[TeamFact] = []
     for p in perfs:
@@ -269,6 +275,9 @@ def leadership(
 def teamwork(
     perfs: Sequence[FspPerformance], repos: Sequence[RepoFact], today: date, cfg: TeamConfig
 ) -> tuple[float, list[TeamFact]]:
+    """T — командная работа: `1 − Π(1 − τ)·(1 − b)` по командным выступлениям, бонус `b` за разных
+    напарников и общий репозиторий (skills.md §8.2).
+    """
     taus: list[float] = []
     facts: list[TeamFact] = []
     mates: set[str] = set()
@@ -295,6 +304,9 @@ def teamwork(
 
 
 def results(perfs: Sequence[FspPerformance], cfg: TeamConfig) -> tuple[float, list[TeamFact]]:
+    """R — результативность: сглаженная доля успешных выступлений `(успехи + 1) / (всего + 3)`
+    (skills.md §8.2).
+    """
     if len(perfs) < cfg.results_min_attempts:
         return 0.0, []
     wins = [p for p in perfs if _is_success(p, cfg)]
@@ -307,6 +319,7 @@ def results(perfs: Sequence[FspPerformance], cfg: TeamConfig) -> tuple[float, li
 
 
 def growth(perfs: Sequence[FspPerformance], cfg: TeamConfig) -> tuple[float, list[TeamFact]]:
+    """G — рост: наклон перцентиля по сезонам, `clip(0.5 + k·slope, 0, 1)` (skills.md §8.2)."""
     pts = [(p.observed_at.year, pc) for p in perfs if (pc := _percentile(p)) is not None]
     if len(pts) < cfg.growth_min_performances or len({x for x, _ in pts}) < cfg.growth_min_seasons:
         return 0.0, []
@@ -327,6 +340,7 @@ def compute_team_signals(
     today: date,
     cfg: TeamConfig | None = None,
 ) -> TeamSignals:
+    """Все сигналы L/T/R/G с фактами-основаниями; в подбор идут через `K_soft` (skills.md §8.3)."""
     cfg = cfg or TeamConfig()
     values: dict[str, float] = {}
     facts: dict[str, list[TeamFact]] = {}
