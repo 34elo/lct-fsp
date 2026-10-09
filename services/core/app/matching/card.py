@@ -1,8 +1,9 @@
 """`CandidateCardFull` (api.md §3): расширенная анонимная карточка для работодателя.
 
 Нет: user_id, контактов (никогда), ссылок на репозитории и анализ кода (пока нет модуля),
-образования. ФИО — только при `visibility.full_name`. Компании в опыте — только при
-`visibility.companies`. Просмотр — в `profile_views`.
+образования. ФИО — после приглашения от этой компании или при `visibility.full_name` (E39-15).
+Компании в опыте — только при `visibility.companies`. Скрытые кандидатом навыки не показываются.
+Просмотр — в `profile_views`.
 """
 
 from __future__ import annotations
@@ -65,6 +66,7 @@ class SkillInfo(BaseModel):
     slug: str
     name: str
     group: str
+    type: str | None = None  # тип навыка (`SkillType`), заполняется в профиле владельца (E39-15)
 
 
 class EvidenceBrief(BaseModel):
@@ -242,9 +244,10 @@ async def build_card(
     ordered = sorted(owned, key=lambda s: (s.claimed_only, -s.confidence, str(s.skill_id)))
     vis = candidates.visibility_of(c)
     show_fsp = vis["fsp"]
+    hidden = candidates.hidden_skills_of(c)
     skills = []
     for s in ordered:
-        if s.skill_id not in briefs:
+        if s.skill_id not in briefs or briefs[s.skill_id][0] in hidden:
             continue
         slug, name, group, status = briefs[s.skill_id]
         skills.append(
@@ -254,7 +257,11 @@ async def build_card(
                 sources=[x for x in s.sources or () if show_fsp or x != "fsp"],
                 claimed_only=s.claimed_only,
                 status="provisional" if status == "provisional" else "active",
-                derived_from=briefs[s.derived_from][0] if s.derived_from in briefs else None,
+                derived_from=(
+                    briefs[s.derived_from][0]
+                    if s.derived_from in briefs and briefs[s.derived_from][0] not in hidden
+                    else None
+                ),
                 top_evidence=[
                     _brief(evidence[uuid.UUID(e)], trust, day)
                     for e in (s.top_evidence or ())[:TOP_EVIDENCE]
@@ -274,7 +281,15 @@ async def build_card(
     ]  # fmt: skip
     return CandidateCardFull(
         **base.model_dump(),
-        full_name=candidates.shown_full_name(c, pii_key) if pii_key else None,
+        full_name=(
+            candidates.shown_full_name(
+                c,
+                pii_key,
+                invited=bool(company_id) and await offers.invited(session, company_id, c.user_id),
+            )
+            if pii_key
+            else None
+        ),
         skills=skills,
         grade_info=_grade_info(c, show_fsp=show_fsp),
         experience=experience,
@@ -425,6 +440,7 @@ async def build_owner_parts(
     day = today or datetime.now(UTC).date()
     owned = (await graph.all_skills_of(session, [c.user_id]))[c.user_id]
     briefs = await taxonomy.skill_briefs(session, [s.skill_id for s in owned])
+    types = await taxonomy.skill_types_of(session, [b[0] for b in briefs.values()])
     ev_ids = [uuid.UUID(e) for s in owned for e in (s.top_evidence or ())[:TOP_EVIDENCE]]
     evidence = {e.id: e for e in await graph.evidence_by_ids(session, ev_ids)}
     skills = []
@@ -434,7 +450,10 @@ async def build_owner_parts(
         slug, name, group, status = briefs[s.skill_id]
         skills.append(
             SkillWithTrust(
-                skill=SkillInfo(slug=slug, name=name, group=group),
+                skill=SkillInfo(
+                    slug=slug, name=name, group=group,
+                    type=types[slug].value if slug in types else None,
+                ),
                 confidence=s.confidence, level=s.level, sources=list(s.sources or ()),
                 claimed_only=s.claimed_only,
                 status="provisional" if status == "provisional" else "active",
