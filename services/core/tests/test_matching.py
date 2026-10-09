@@ -1,6 +1,7 @@
 """Подбор: жёсткие фильтры, скоринг, объяснения — примеры из ml.md §6, matching.md §3–4,
 skills.md §8.3."""
 
+import os
 import uuid
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
@@ -39,6 +40,7 @@ from fsp_contracts.commands import CoreMatchCandidate, CoreMatchVacancy
 from fsp_platform.db import make_engine, make_session_factory, session_scope
 from fsp_platform.outbox import OutboxRecord
 from sqlalchemy import func, select
+from sqlalchemy import text as sa_text
 
 CORE = Path(__file__).resolve().parents[1]
 CFG = MatchConfig.load()
@@ -303,6 +305,7 @@ async def _seed(factory):
                           formats=kw.pop("formats", ["remote"]), grade=kw.pop("grade", "middle"),
                           **kw)  # fmt: skip
             s.add(c)
+            await s.flush()
             s.add(Consent(user_id=uid, type="profile_publication", version="2025-09-01"))
             s.add(Grade(candidate_id=uid, profession="backend", grade="middle", theta=0.5,
                         band_position=0.5, source="seed", confirmed_at=datetime.now(UTC),
@@ -493,3 +496,67 @@ async def test_handlers_chain_and_redelivery(db, factory):
     async with session_scope(factory) as s:
         assert await _rows(s, vid) == {}
     await worker.engine.dispose()
+
+
+async def test_upsert_new_survives_existing_row(factory):
+    """E42-5: строка уже вставлена параллельной доставкой — обновляем, а не падаем на PK."""
+    from app.matching.service import _upsert_new
+
+    vid, ids = await _seed(factory)
+    async with session_scope(factory) as s:
+        results = await match_vacancy_candidates(s, vid, CFG, TRUST, today=TODAY)
+    r = results[0]
+    for _ in range(2):
+        async with session_scope(factory) as s:
+            await _upsert_new(s, vid, r, 3, datetime.now(UTC))
+    async with session_scope(factory) as s:
+        n = await s.scalar(select(func.count()).select_from(Match).where(Match.vacancy_id == vid))
+        assert n == 1
+        assert (await s.get(Match, (vid, r.candidate_id))).vacancy_version == 3
+
+
+async def test_match_candidate_double_delivery_sqlite(factory):
+    vid, ids = await _seed(factory)
+    for _ in range(2):
+        async with session_scope(factory) as s:
+            assert await match_candidate(s, ids["strong"], CFG, TRUST, today=TODAY) == 1
+    async with session_scope(factory) as s:
+        assert set(await _rows(s, vid)) == {ids["strong"]}
+
+
+def _alembic_head(url: str) -> None:
+    import subprocess
+    import sys
+
+    core = Path(__file__).resolve().parents[1]
+    subprocess.run(
+        [sys.executable, "-m", "alembic", "upgrade", "head"],
+        cwd=core, env={**os.environ, "DATABASE_URL": url}, check=True, capture_output=True,
+    )  # fmt: skip
+
+
+@pytest.mark.skipif(
+    not os.environ.get("MATCH_PG_URL"), reason="нужен MATCH_PG_URL (пустой Postgres с pgvector)"
+)
+async def test_match_candidate_parallel_on_postgres():
+    """E42-5: параллельная доставка core.match.candidate не даёт IntegrityError matches_pkey."""
+    import asyncio
+
+    url = os.environ["MATCH_PG_URL"]
+    engine = make_engine(url)
+    async with engine.begin() as conn:  # чистая схема: тест повторяем на одной БД
+        await conn.execute(sa_text("DROP SCHEMA public CASCADE"))
+        await conn.execute(sa_text("CREATE SCHEMA public"))
+    await engine.dispose()
+    _alembic_head(url)
+    pg_factory = make_session_factory(make_engine(url))
+    vid, ids = await _seed(pg_factory)
+
+    async def one():
+        async with session_scope(pg_factory) as s:
+            return await match_candidate(s, ids["strong"], CFG, TRUST, today=TODAY)
+
+    for _ in range(3):
+        assert await asyncio.gather(*(one() for _ in range(4))) == [1, 1, 1, 1]
+    async with session_scope(pg_factory) as s:
+        assert set(await _rows(s, vid)) == {ids["strong"]}

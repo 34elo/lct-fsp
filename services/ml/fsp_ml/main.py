@@ -65,8 +65,7 @@ def build_app(
 
     @app.post("/v1/embeddings")
     async def embeddings(req: EmbeddingsRequest) -> EmbeddingsResponse:
-        if real is None:
-            require_fake()
+        # без настоящей модели — детерминированные запасные векторы (не 503), /healthz: fallback
         if len(req.texts) > settings.embedding_max_texts:
             raise ProblemError(422, "too_many_texts", "Слишком много текстов в одном запросе")
         return await run_in_threadpool(embed, req, real, settings.embedding_dim)
@@ -87,7 +86,7 @@ def build_app(
     @app.get("/healthz")
     async def healthz() -> MlHealth:
         up = "up" if settings.ml_fake and settings.llm_enabled else "down"
-        emb = "up" if (real is not None or settings.ml_fake) else "down"
+        emb = "up" if real is not None else "fallback"
         return MlHealth(
             llm=up, embedder=emb, model=real.model if real else fake.FAKE_MODEL, queue_depth=0
         )

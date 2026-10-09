@@ -64,7 +64,7 @@ export default function Navigator() {
     upData ?? (navData?.uplift.length ? { relevant_total: 0, base: 0, items: navData.uplift, combo: null } : null);
 
   return (
-    <div className={PAGE.narrow}>
+    <div className={PAGE.normal}>
       <header>
         <h1 className="font-mono text-2xl font-semibold">{T.title}</h1>
         <p className="text-14 text-muted">{T.lead}</p>

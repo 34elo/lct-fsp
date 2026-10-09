@@ -8,7 +8,10 @@ import {
   Avatar,
   Button,
   CircuitLine,
-  cn,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
   Markdown,
   MatchWhy,
   OfferCardV2,
@@ -27,12 +30,11 @@ import {
   useAcceptOfferOffersOfferIdAcceptPost,
   useDeclineOfferOffersOfferIdDeclinePost,
   useGetOfferOffersOfferIdGet,
-  useListMessagesOffersOfferIdMessagesGet,
   useMyOffersCandidatesMeOffersGet,
   useRevokeContactsOffersOfferIdContactsRevokePost,
 } from "@/api/endpoints/offers/offers";
 import { DeclineReason } from "@/api/model";
-import { ErrorNote, fieldClass } from "@/features/auth/ui";
+import { ErrorNote } from "@/features/auth/ui";
 import { avatarSrc } from "@/shared/lib/avatar";
 import { FORMAT_LABEL } from "@/features/employer/text";
 import { GRADE_LABEL } from "@/features/profile/text";
@@ -154,8 +156,6 @@ export function CandidateOfferDetail() {
   });
   const [sheet, setSheet] = useState(false);
   const [revokeSheet, setRevokeSheet] = useState(false);
-  // Единственное сообщение кандидата: уходит вместе с «Принять» или как комментарий к отказу.
-  const [reply, setReply] = useState("");
   const revoke = useRevokeContactsOffersOfferIdContactsRevokePost({
     mutation: {
       onSuccess: () => {
@@ -164,14 +164,11 @@ export function CandidateOfferDetail() {
       },
     },
   });
-  const msgs = useListMessagesOffersOfferIdMessagesGet(id, { query: { enabled: !!o, retry: false } });
-  const myReply = (msgs.data?.status === 200 ? msgs.data.data : []).find((m) => m.author_side === "candidate");
   const answerable = !!o && isAwaiting(o.status);
   const accepted = !!o && ["accepted", "interview", "hired", "not_hired"].includes(o.status);
   const why = o ? whyItems(o) : [];
   const hasWhyYou = !!o && whyYouItems(o.why_you).length > 0;
   const err = accept.error;
-  const text = reply.trim() || null;
   const contacts = o?.company_contacts ?? null;
   return (
     <main className={PAGE.normal}>
@@ -223,7 +220,6 @@ export function CandidateOfferDetail() {
                 {o.decline && <p className="text-14 text-muted">{T.yourDecline(DECLINE_LABEL[o.decline.reason] ?? o.decline.reason)}</p>}
                 {o.description && <MessageCard label={T.description} text={o.description} />}
                 {o.message && <MessageCard label={T.fromCompany} text={o.message} testId="offer-message" />}
-                {myReply && <MessageCard label={T.yourReply} text={myReply.text} testId="offer-reply" />}
               </Panel>
 
               {o.company.description && (
@@ -245,20 +241,10 @@ export function CandidateOfferDetail() {
 
               {err && <ErrorNote>{offerErrorText(err)}</ErrorNote>}
               {answerable && (
-                <Panel title={T.replyLabel}>
-                  <label htmlFor="offer-reply-text" className="sr-only">{T.replyLabel}</label>
-                  <textarea
-                    id="offer-reply-text"
-                    value={reply}
-                    onChange={(e) => setReply(e.target.value)}
-                    maxLength={500}
-                    rows={3}
-                    placeholder={T.replyPlaceholder}
-                    className={cn(fieldClass, "h-auto py-2")}
-                  />
-                  <p className="text-12 text-muted">{T.replyOptional}. {T.replyHint}</p>
+                <Panel title={T.answerTitle}>
+                  <p className="text-13 text-muted">{T.answerHint}</p>
                   <div className="sticky bottom-0 -mx-4 grid gap-2 border-t border-hairline bg-page p-4 md:static md:mx-0 md:grid-cols-2 md:border-0 md:bg-transparent md:p-0">
-                    <Button size="lg" loading={accept.isPending} onClick={() => accept.mutate({ offerId: o.id, data: text ? { message: text } : undefined })}>{T.accept}</Button>
+                    <Button size="lg" loading={accept.isPending} onClick={() => accept.mutate({ offerId: o.id })}>{T.accept}</Button>
                     <Button size="lg" variant="outline" onClick={() => setSheet(true)}>{T.decline}</Button>
                   </div>
                 </Panel>
@@ -286,17 +272,17 @@ export function CandidateOfferDetail() {
             </div>
           </div>
 
-          <Sheet open={revokeSheet} onOpenChange={setRevokeSheet}>
-            <SheetContent side="bottom" className="mx-auto max-w-lg">
-              <SheetTitle className="font-mono text-16">{T.revokeTitle}</SheetTitle>
-              <SheetDescription>{T.revokeHint}</SheetDescription>
+          <Dialog open={revokeSheet} onOpenChange={setRevokeSheet}>
+            <DialogContent data-testid="revoke-dialog">
+              <DialogTitle className="font-mono text-16">{T.revokeTitle}</DialogTitle>
+              <DialogDescription>{T.revokeHint}</DialogDescription>
               {revoke.isError && <ErrorNote>{offerErrorText(revoke.error)}</ErrorNote>}
               <div className="mt-3 grid gap-2">
                 <Button size="lg" loading={revoke.isPending} onClick={() => revoke.mutate({ offerId: o.id })}>{T.revokeConfirm}</Button>
                 <Button variant="link" className="mx-auto flex" onClick={() => setRevokeSheet(false)}>{T.cancel}</Button>
               </div>
-            </SheetContent>
-          </Sheet>
+            </DialogContent>
+          </Dialog>
 
           <Sheet open={sheet} onOpenChange={setSheet}>
             <SheetContent side="bottom" className="mx-auto max-w-lg">
@@ -308,7 +294,7 @@ export function CandidateOfferDetail() {
                     <button
                       type="button"
                       disabled={decline.isPending}
-                      onClick={() => decline.mutate({ offerId: o.id, data: { reason: r, comment: text } })}
+                      onClick={() => decline.mutate({ offerId: o.id, data: { reason: r, comment: null } })}
                       className="flex h-14 w-full items-center justify-between text-left text-14 hover:bg-tint-50 disabled:opacity-50"
                     >
                       {DECLINE_LABEL[r]}

@@ -68,7 +68,24 @@ function Before({ p, step, nodes }: { p: CandidateProfile; step: PathStep; nodes
         </div>
       </div>
       <div className="order-2 flex min-h-56 flex-1 items-center border-y border-hairline bg-tint-50 lg:order-none lg:col-span-7 lg:border-y-0 lg:border-l">
-        {nodes.length > 0 && <SkillConstellation nodes={nodes} label={HOME.constellationEmpty} />}
+        {nodes.length > 0 ? (
+          <SkillConstellation nodes={nodes} label={HOME.constellationEmpty} />
+        ) : (
+          <ul className="m-0 flex w-full list-none flex-col gap-3 p-4 lg:p-8" data-testid="home-hints">
+            {[
+              { ...HOME.hints.data, to: "/me/profile?tab=data" },
+              { ...HOME.hints.test, to: step.to },
+              { ...HOME.hints.fsp, to: "/me/profile?tab=data" },
+            ].map((h) => (
+              <li key={h.title}>
+                <Link to={h.to} className="flex flex-col gap-1 rounded-xl border border-hairline bg-card p-4 hover:border-brand" data-testid="home-hint">
+                  <span className="font-semibold">{h.title}</span>
+                  <span className="text-13 text-muted">{h.text}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </Panel>
   );

@@ -49,7 +49,7 @@ function CandidateView({ f }: { f: FormState }) {
         </ul>
       )}
       {lines.length > 0 && (
-        <pre className="overflow-x-auto rounded bg-tint-50 p-2 font-mono text-13">{lines.map((l, i) => `${i + 1}  ${l}`).join("\n")}</pre>
+        <pre className="overflow-x-auto rounded-sm bg-tint-50 p-2 font-mono text-13">{lines.map((l, i) => `${i + 1}  ${l}`).join("\n")}</pre>
       )}
       {f.vars.length > 0 && <p className="text-12 text-muted">{G.varsSample}</p>}
     </div>
