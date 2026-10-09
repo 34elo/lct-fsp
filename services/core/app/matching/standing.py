@@ -14,6 +14,8 @@ from datetime import UTC, datetime
 from fsp_contracts.assessment import (
     CandidateStanding,
     CategoryRef,
+    StandingGap,
+    StandingLeader,
     StandingPart,
     StandingPeer,
     StandingStrength,
@@ -37,6 +39,33 @@ def place(values: list[float], mine: float) -> tuple[int, int]:
     size = max(1, len(values))
     rank = 1 + sum(1 for v in values if v > mine + 1e-9)
     return rank, max(1, min(100, math.ceil(rank / size * 100)))
+
+
+def relative_strength(mine: float, leader: float) -> float:
+    """Сила относительно лидера категории, % (лидер = 100). Нулевой лидер → 100 (все равны)."""
+    if leader <= 1e-9:
+        return 100.0
+    return round(max(0.0, min(100.0, mine / leader * 100)), 1)
+
+
+def gap_to_next_ten(values: list[float], mine: float, top: int) -> StandingGap | None:
+    """Сколько п.п. «от лидера» не хватает до ближайшей границы «десятки» выше своей.
+
+    Граница — наибольшее кратное 10 строго меньше `top` (топ-34 → топ-30); у топ-10 % и выше и у
+    самого лидера её нет. Нужная сила — у кандидата на месте floor(граница · N / 100), не выше 1-го.
+    """
+    target = (top - 1) // 10 * 10
+    ordered = sorted(values, reverse=True)
+    if target < 10 or mine >= ordered[0] - 1e-9:  # выше некуда
+        return None
+    need_rank = max(1, math.floor(target / 100 * len(ordered)))
+    need = ordered[need_rank - 1]
+    return StandingGap(
+        top_percent=target,
+        gap_relative=round(
+            max(0.0, relative_strength(need, ordered[0]) - relative_strength(mine, ordered[0])), 1
+        ),
+    )
 
 
 async def compute(
@@ -71,6 +100,7 @@ async def compute(
         )  # fmt: skip
     values = [r.strength.value for r in scored if r.strength is not None]
     rank, top = place(values, mine.strength.value)
+    leader = max(values)
     others = sorted(
         (r for r in scored if r is not mine and r.strength is not None),
         key=lambda r: str(r.cand.user_id),
@@ -82,7 +112,10 @@ async def compute(
         confirmed_at=cur.confirmed_at,
         strength=StandingStrength(
             value=mine.strength.value, rank=rank, top_percent=top,
+            relative=relative_strength(mine.strength.value, leader),
+            gap_to_next_ten=gap_to_next_ten(values, mine.strength.value, top),
             parts=[StandingPart(**p.model_dump()) for p in explain(mine.strength, cfg)],
         ),
+        leader=StandingLeader(grade=cur.grade),
         category_size=len(scored), peers=peers,
     )  # fmt: skip

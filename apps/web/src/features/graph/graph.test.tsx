@@ -66,7 +66,7 @@ function mount(path = "/me/graph") {
   );
 }
 
-test("раскладка: факты и навыки по колонкам, подсветка путей", () => {
+test("модель списка: факты, навыки, подсветка путей", () => {
   const m = buildModel(graph as never);
   expect(m.facts.map((p) => p.node.id)).toEqual(["f:fsp:91", "f:repo:7"]);
   expect(m.skills).toHaveLength(4);
@@ -76,12 +76,24 @@ test("раскладка: факты и навыки по колонкам, по
   expect(m.highlightedPairs.has("f:repo:7|cand")).toBe(true);
 });
 
-test("граф: схема, рёбра, призрак и список-альтернатива", async () => {
+test("граф: интерактивная схема из @fsp/ui, карточка со ссылкой и список-альтернатива", async () => {
   mount();
-  expect(await screen.findByTestId("graph-svg")).toHaveAccessibleName(/факты слева подтверждают навыки/);
-  expect(screen.getAllByTestId("graph-edge-confirms")).toHaveLength(2);
-  expect(screen.getByTestId("graph-edge-parent")).toBeInTheDocument();
-  expect(screen.getByTestId("graph-edge-adjacent")).toBeInTheDocument();
+  await screen.findByTestId("graph-root");
+  expect(screen.getAllByTestId("egraph-edge-confirms")).toHaveLength(2);
+  expect(screen.getByTestId("egraph-edge-parent")).toBeInTheDocument();
+  expect(screen.getByTestId("egraph-edge-adjacent")).toBeInTheDocument();
+  expect(screen.getByTestId("egraph-legend")).toBeInTheDocument();
+  expect(screen.getByTestId("gi-graph")).toBeInTheDocument();
+  // тап по навыку — карточка со ссылкой «чем подтверждён»
+  fireEvent.pointerDown(screen.getByTestId("egraph-node-s:fastapi").firstElementChild!);
+  fireEvent.pointerUp(screen.getByTestId("egraph-svg"));
+  const card = screen.getByTestId("egraph-card");
+  expect(within(card).getByRole("link", { name: "FastAPI: чем подтверждён" })).toHaveAttribute("href", "/me/skills/fastapi");
+  // фильтр «только подтверждённые» прячет заявленный навык и призрака
+  fireEvent.click(screen.getByRole("switch", { name: "Только подтверждённые" }));
+  expect(screen.queryByTestId("egraph-node-s:redis")).toBeNull();
+  expect(screen.queryByTestId("egraph-node-s:django")).toBeNull();
+  expect(screen.getByTestId("egraph-node-s:python")).toBeInTheDocument();
   const list = screen.getByTestId("graph-list");
   const fast = within(list).getByTestId("graph-skill-fastapi");
   expect(within(fast).getByText(/репозиторий · её кода 82%/)).toBeInTheDocument();

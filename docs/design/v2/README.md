@@ -27,7 +27,7 @@
 | Опрос | `/me/assessment` | `v2_me-assessment__*` | main, cooldown, empty, loading, error | §6.4 | E38-3 (Б1) |
 | Прохождение теста | `/me/assessment/attempts/:id` | `v2_me-assessment-attempt__*` | exact, choice, find_bug, order, sjt, empty, loading, error | §6.5 | E38-4 (Б1) |
 | Результат теста | `/me/assessment/attempts/:id/result` | `v2_me-assessment-result__*` | confirmed, not-confirmed | §6.2 | E38-5 (Б1) |
-| Профиль кандидата | `/me/profile` | `v2_me-profile__*` | main (навыки), fsp, resume, graph, empty, loading, error | §6.7 | E38-6 (Б1) |
+| Профиль кандидата | `/me/profile` | `v2_me-profile__*` | overview, skills, data (резюме и ФСП), graph, empty, loading, error | §6.7 | E38-6, E39-15 (Б1) |
 | Настройки | `/settings` (меню аватара; E39-8) | `v2_me-settings__*` | main, empty, loading, error | §6.8 | E38-7 (Б1) |
 | Подбор работодателя | `/employer` | `v2_employer__*` | first (первый вход), results | §6.3 | E38-8 (Б2) |
 | Категория | `/employer/categories/:profession/:grade` | `v2_employer-categories__*` | main, empty, loading, error | §6.9 | E38-9 (Б2) |

@@ -2,7 +2,7 @@
 """Сила профиля и место в категории кандидата (E35-12a): формула места, права, приватность."""
 
 import pytest
-from app.matching.standing import place
+from app.matching.standing import gap_to_next_ten, place, relative_strength
 from test_offers import (  # noqa: F401  (фикстуры и помощники)
     _candidate,
     _db,
@@ -17,6 +17,18 @@ def test_place_formula():
     assert place([0.9, 0.5, 0.2], 0.9) == (1, 34)
     assert place([0.4, 0.4, 0.4], 0.4) == (1, 34)  # равные делят место
     assert place([0.7], 0.7) == (1, 100)
+
+
+def test_relative_strength_and_gap():
+    assert relative_strength(0.57, 0.75) == 76.0  # 0.57 / 0.75
+    assert relative_strength(0.75, 0.75) == 100.0
+    assert relative_strength(0.0, 0.0) == 100.0
+    vals = [0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.05]
+    # место 5 (топ-50): граница топ-40 -> 4-й по силе (0.6): (0.6 - 0.5)/0.9 = 11.1 п.п.
+    g = gap_to_next_ten(vals, 0.5, 50)
+    assert g is not None and g.top_percent == 40 and g.gap_relative == 11.1
+    assert gap_to_next_ten(vals, 0.9, 10) is None  # топ-10 % — выше некуда
+    assert gap_to_next_ten(vals, 0.8, 20).top_percent == 10
 
 
 def _set_band(c, uid, band):
@@ -58,6 +70,13 @@ def test_rank_within_category(world):
     assert sorted(p["salary_min"] for p in b["peers"]) == [100000, 200000, 300000]
     assert b["strength"]["parts"] and b["strength"]["parts"][0]["code"] == "T"
     assert 0 <= b["strength"]["value"] <= 1
+    assert (
+        got["c"]["strength"]["relative"] == 100.0
+        and got["c"]["strength"]["gap_to_next_ten"] is None
+    )
+    assert 0 < b["strength"]["relative"] < 100
+    assert b["leader"] == {"grade": "middle", "relative": 100.0}
+    assert b["strength"]["gap_to_next_ten"]["top_percent"] == 60
 
 
 def test_other_category_not_counted_and_no_leaks(world):
