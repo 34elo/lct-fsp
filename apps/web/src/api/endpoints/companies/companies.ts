@@ -27,6 +27,11 @@ import type {
   CompanyIn,
   CompanyOut,
   CompanyPatch,
+  CompanyTeamOut,
+  HTTPValidationError,
+  InviteCreated,
+  InviteIn,
+  InvitePreview,
   MemberIn,
   MemberOut,
   ProblemOut
@@ -451,7 +456,152 @@ export const usePatchMyCompanyCompaniesMePatch = <TError = ErrorType<ProblemOut>
       > => {
       return useMutation(getPatchMyCompanyCompaniesMePatchMutationOptions(options), queryClient);
     }
-    export type inviteMemberCompaniesMeMembersPostResponse201 = {
+    export type myTeamCompaniesMeMembersGetResponse200 = {
+  data: CompanyTeamOut
+  status: 200
+}
+
+export type myTeamCompaniesMeMembersGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type myTeamCompaniesMeMembersGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type myTeamCompaniesMeMembersGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type myTeamCompaniesMeMembersGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type myTeamCompaniesMeMembersGetResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type myTeamCompaniesMeMembersGetResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type myTeamCompaniesMeMembersGetResponseSuccess = (myTeamCompaniesMeMembersGetResponse200) & {
+  headers: Headers;
+};
+export type myTeamCompaniesMeMembersGetResponseError = (myTeamCompaniesMeMembersGetResponse401ApplicationProblemJson | myTeamCompaniesMeMembersGetResponse401ApplicationJson | myTeamCompaniesMeMembersGetResponse403ApplicationProblemJson | myTeamCompaniesMeMembersGetResponse403ApplicationJson | myTeamCompaniesMeMembersGetResponse404ApplicationProblemJson | myTeamCompaniesMeMembersGetResponse404ApplicationJson) & {
+  headers: Headers;
+};
+
+export type myTeamCompaniesMeMembersGetResponse = (myTeamCompaniesMeMembersGetResponseSuccess | myTeamCompaniesMeMembersGetResponseError)
+
+export const getMyTeamCompaniesMeMembersGetUrl = () => {
+
+
+
+
+  return `/companies/me/members`
+}
+
+/**
+ * Команда компании: видят все участники, приглашения и управление — только владелец.
+ * @summary My Team
+ */
+export const myTeamCompaniesMeMembersGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<myTeamCompaniesMeMembersGetResponse> => {
+
+  return apiFetch<myTeamCompaniesMeMembersGetResponse>(getMyTeamCompaniesMeMembersGetUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getMyTeamCompaniesMeMembersGetQueryKey = () => {
+    return [
+    `/companies/me/members`
+    ] as const;
+    }
+
+
+export const getMyTeamCompaniesMeMembersGetQueryOptions = <TData = Awaited<ReturnType<typeof myTeamCompaniesMeMembersGet>>, TError = ErrorType<ProblemOut>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myTeamCompaniesMeMembersGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMyTeamCompaniesMeMembersGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof myTeamCompaniesMeMembersGet>>> = ({ signal }) => myTeamCompaniesMeMembersGet({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof myTeamCompaniesMeMembersGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type MyTeamCompaniesMeMembersGetQueryResult = NonNullable<Awaited<ReturnType<typeof myTeamCompaniesMeMembersGet>>>
+export type MyTeamCompaniesMeMembersGetQueryError = ErrorType<ProblemOut>
+
+
+export function useMyTeamCompaniesMeMembersGet<TData = Awaited<ReturnType<typeof myTeamCompaniesMeMembersGet>>, TError = ErrorType<ProblemOut>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof myTeamCompaniesMeMembersGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof myTeamCompaniesMeMembersGet>>,
+          TError,
+          Awaited<ReturnType<typeof myTeamCompaniesMeMembersGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMyTeamCompaniesMeMembersGet<TData = Awaited<ReturnType<typeof myTeamCompaniesMeMembersGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myTeamCompaniesMeMembersGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof myTeamCompaniesMeMembersGet>>,
+          TError,
+          Awaited<ReturnType<typeof myTeamCompaniesMeMembersGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMyTeamCompaniesMeMembersGet<TData = Awaited<ReturnType<typeof myTeamCompaniesMeMembersGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myTeamCompaniesMeMembersGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary My Team
+ */
+
+export function useMyTeamCompaniesMeMembersGet<TData = Awaited<ReturnType<typeof myTeamCompaniesMeMembersGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myTeamCompaniesMeMembersGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMyTeamCompaniesMeMembersGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type inviteMemberCompaniesMeMembersPostResponse201 = {
   data: MemberOut
   status: 201
 }
@@ -581,4 +731,682 @@ export const useInviteMemberCompaniesMeMembersPost = <TError = ErrorType<Problem
         TContext
       > => {
       return useMutation(getInviteMemberCompaniesMeMembersPostMutationOptions(options), queryClient);
+    }
+    export type createInviteCompaniesMeInvitesPostResponse201 = {
+  data: InviteCreated
+  status: 201
+}
+
+export type createInviteCompaniesMeInvitesPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type createInviteCompaniesMeInvitesPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type createInviteCompaniesMeInvitesPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type createInviteCompaniesMeInvitesPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type createInviteCompaniesMeInvitesPostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type createInviteCompaniesMeInvitesPostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type createInviteCompaniesMeInvitesPostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type createInviteCompaniesMeInvitesPostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type createInviteCompaniesMeInvitesPostResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type createInviteCompaniesMeInvitesPostResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type createInviteCompaniesMeInvitesPostResponse429ApplicationProblemJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type createInviteCompaniesMeInvitesPostResponse429ApplicationJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type createInviteCompaniesMeInvitesPostResponseSuccess = (createInviteCompaniesMeInvitesPostResponse201) & {
+  headers: Headers;
+};
+export type createInviteCompaniesMeInvitesPostResponseError = (createInviteCompaniesMeInvitesPostResponse401ApplicationProblemJson | createInviteCompaniesMeInvitesPostResponse401ApplicationJson | createInviteCompaniesMeInvitesPostResponse403ApplicationProblemJson | createInviteCompaniesMeInvitesPostResponse403ApplicationJson | createInviteCompaniesMeInvitesPostResponse404ApplicationProblemJson | createInviteCompaniesMeInvitesPostResponse404ApplicationJson | createInviteCompaniesMeInvitesPostResponse409ApplicationProblemJson | createInviteCompaniesMeInvitesPostResponse409ApplicationJson | createInviteCompaniesMeInvitesPostResponse422ApplicationProblemJson | createInviteCompaniesMeInvitesPostResponse422ApplicationJson | createInviteCompaniesMeInvitesPostResponse429ApplicationProblemJson | createInviteCompaniesMeInvitesPostResponse429ApplicationJson) & {
+  headers: Headers;
+};
+
+export type createInviteCompaniesMeInvitesPostResponse = (createInviteCompaniesMeInvitesPostResponseSuccess | createInviteCompaniesMeInvitesPostResponseError)
+
+export const getCreateInviteCompaniesMeInvitesPostUrl = () => {
+
+
+
+
+  return `/companies/me/invites`
+}
+
+/**
+ * Владелец приглашает HR по email: письмо со ссылкой (SMTP) и та же ссылка в ответе.
+ * @summary Create Invite
+ */
+export const createInviteCompaniesMeInvitesPost = async (inviteIn: InviteIn, options?: Parameters<typeof apiFetch>[1]): Promise<createInviteCompaniesMeInvitesPostResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<createInviteCompaniesMeInvitesPostResponse>(getCreateInviteCompaniesMeInvitesPostUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(inviteIn)
+  }
+);}
+
+
+
+
+
+export const getCreateInviteCompaniesMeInvitesPostMutationKey = () => ['createInviteCompaniesMeInvitesPost'] as const;
+
+export const getCreateInviteCompaniesMeInvitesPostMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createInviteCompaniesMeInvitesPost>>, TError,CreateInviteCompaniesMeInvitesPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createInviteCompaniesMeInvitesPost>>, TError,CreateInviteCompaniesMeInvitesPostMutationVariables, TContext> => {
+
+const mutationKey = getCreateInviteCompaniesMeInvitesPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createInviteCompaniesMeInvitesPost>>, CreateInviteCompaniesMeInvitesPostMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createInviteCompaniesMeInvitesPost(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateInviteCompaniesMeInvitesPostMutationResult = NonNullable<Awaited<ReturnType<typeof createInviteCompaniesMeInvitesPost>>>
+    export type CreateInviteCompaniesMeInvitesPostMutationBody = InviteIn
+    export type CreateInviteCompaniesMeInvitesPostMutationError = ErrorType<ProblemOut>
+    export type CreateInviteCompaniesMeInvitesPostMutationVariables = {data: InviteIn}
+
+    /**
+ * @summary Create Invite
+ */
+export const useCreateInviteCompaniesMeInvitesPost = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createInviteCompaniesMeInvitesPost>>, TError,CreateInviteCompaniesMeInvitesPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createInviteCompaniesMeInvitesPost>>,
+        TError,
+        CreateInviteCompaniesMeInvitesPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateInviteCompaniesMeInvitesPostMutationOptions(options), queryClient);
+    }
+    export type revokeInviteCompaniesMeInvitesInviteIdDeleteResponse204 = {
+  data: void
+  status: 204
+}
+
+export type revokeInviteCompaniesMeInvitesInviteIdDeleteResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type revokeInviteCompaniesMeInvitesInviteIdDeleteResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type revokeInviteCompaniesMeInvitesInviteIdDeleteResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type revokeInviteCompaniesMeInvitesInviteIdDeleteResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type revokeInviteCompaniesMeInvitesInviteIdDeleteResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type revokeInviteCompaniesMeInvitesInviteIdDeleteResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type revokeInviteCompaniesMeInvitesInviteIdDeleteResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type revokeInviteCompaniesMeInvitesInviteIdDeleteResponseSuccess = (revokeInviteCompaniesMeInvitesInviteIdDeleteResponse204) & {
+  headers: Headers;
+};
+export type revokeInviteCompaniesMeInvitesInviteIdDeleteResponseError = (revokeInviteCompaniesMeInvitesInviteIdDeleteResponse401ApplicationProblemJson | revokeInviteCompaniesMeInvitesInviteIdDeleteResponse401ApplicationJson | revokeInviteCompaniesMeInvitesInviteIdDeleteResponse403ApplicationProblemJson | revokeInviteCompaniesMeInvitesInviteIdDeleteResponse403ApplicationJson | revokeInviteCompaniesMeInvitesInviteIdDeleteResponse404ApplicationProblemJson | revokeInviteCompaniesMeInvitesInviteIdDeleteResponse404ApplicationJson | revokeInviteCompaniesMeInvitesInviteIdDeleteResponse422) & {
+  headers: Headers;
+};
+
+export type revokeInviteCompaniesMeInvitesInviteIdDeleteResponse = (revokeInviteCompaniesMeInvitesInviteIdDeleteResponseSuccess | revokeInviteCompaniesMeInvitesInviteIdDeleteResponseError)
+
+export const getRevokeInviteCompaniesMeInvitesInviteIdDeleteUrl = (inviteId: string,) => {
+
+
+
+
+  return `/companies/me/invites/${inviteId}`
+}
+
+/**
+ * @summary Revoke Invite
+ */
+export const revokeInviteCompaniesMeInvitesInviteIdDelete = async (inviteId: string, options?: Parameters<typeof apiFetch>[1]): Promise<revokeInviteCompaniesMeInvitesInviteIdDeleteResponse> => {
+
+  return apiFetch<revokeInviteCompaniesMeInvitesInviteIdDeleteResponse>(getRevokeInviteCompaniesMeInvitesInviteIdDeleteUrl(inviteId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getRevokeInviteCompaniesMeInvitesInviteIdDeleteMutationKey = () => ['revokeInviteCompaniesMeInvitesInviteIdDelete'] as const;
+
+export const getRevokeInviteCompaniesMeInvitesInviteIdDeleteMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof revokeInviteCompaniesMeInvitesInviteIdDelete>>, TError,RevokeInviteCompaniesMeInvitesInviteIdDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof revokeInviteCompaniesMeInvitesInviteIdDelete>>, TError,RevokeInviteCompaniesMeInvitesInviteIdDeleteMutationVariables, TContext> => {
+
+const mutationKey = getRevokeInviteCompaniesMeInvitesInviteIdDeleteMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof revokeInviteCompaniesMeInvitesInviteIdDelete>>, RevokeInviteCompaniesMeInvitesInviteIdDeleteMutationVariables> = (props) => {
+          const {inviteId} = props ?? {};
+
+          return  revokeInviteCompaniesMeInvitesInviteIdDelete(inviteId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RevokeInviteCompaniesMeInvitesInviteIdDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof revokeInviteCompaniesMeInvitesInviteIdDelete>>>
+
+    export type RevokeInviteCompaniesMeInvitesInviteIdDeleteMutationError = ErrorType<ProblemOut | HTTPValidationError>
+    export type RevokeInviteCompaniesMeInvitesInviteIdDeleteMutationVariables = {inviteId: string}
+
+    /**
+ * @summary Revoke Invite
+ */
+export const useRevokeInviteCompaniesMeInvitesInviteIdDelete = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof revokeInviteCompaniesMeInvitesInviteIdDelete>>, TError,RevokeInviteCompaniesMeInvitesInviteIdDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof revokeInviteCompaniesMeInvitesInviteIdDelete>>,
+        TError,
+        RevokeInviteCompaniesMeInvitesInviteIdDeleteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRevokeInviteCompaniesMeInvitesInviteIdDeleteMutationOptions(options), queryClient);
+    }
+    export type removeMemberCompaniesMeMembersUserIdDeleteResponse204 = {
+  data: void
+  status: 204
+}
+
+export type removeMemberCompaniesMeMembersUserIdDeleteResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type removeMemberCompaniesMeMembersUserIdDeleteResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type removeMemberCompaniesMeMembersUserIdDeleteResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type removeMemberCompaniesMeMembersUserIdDeleteResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type removeMemberCompaniesMeMembersUserIdDeleteResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type removeMemberCompaniesMeMembersUserIdDeleteResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type removeMemberCompaniesMeMembersUserIdDeleteResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type removeMemberCompaniesMeMembersUserIdDeleteResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type removeMemberCompaniesMeMembersUserIdDeleteResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type removeMemberCompaniesMeMembersUserIdDeleteResponseSuccess = (removeMemberCompaniesMeMembersUserIdDeleteResponse204) & {
+  headers: Headers;
+};
+export type removeMemberCompaniesMeMembersUserIdDeleteResponseError = (removeMemberCompaniesMeMembersUserIdDeleteResponse401ApplicationProblemJson | removeMemberCompaniesMeMembersUserIdDeleteResponse401ApplicationJson | removeMemberCompaniesMeMembersUserIdDeleteResponse403ApplicationProblemJson | removeMemberCompaniesMeMembersUserIdDeleteResponse403ApplicationJson | removeMemberCompaniesMeMembersUserIdDeleteResponse404ApplicationProblemJson | removeMemberCompaniesMeMembersUserIdDeleteResponse404ApplicationJson | removeMemberCompaniesMeMembersUserIdDeleteResponse409ApplicationProblemJson | removeMemberCompaniesMeMembersUserIdDeleteResponse409ApplicationJson | removeMemberCompaniesMeMembersUserIdDeleteResponse422) & {
+  headers: Headers;
+};
+
+export type removeMemberCompaniesMeMembersUserIdDeleteResponse = (removeMemberCompaniesMeMembersUserIdDeleteResponseSuccess | removeMemberCompaniesMeMembersUserIdDeleteResponseError)
+
+export const getRemoveMemberCompaniesMeMembersUserIdDeleteUrl = (userId: string,) => {
+
+
+
+
+  return `/companies/me/members/${userId}`
+}
+
+/**
+ * @summary Remove Member
+ */
+export const removeMemberCompaniesMeMembersUserIdDelete = async (userId: string, options?: Parameters<typeof apiFetch>[1]): Promise<removeMemberCompaniesMeMembersUserIdDeleteResponse> => {
+
+  return apiFetch<removeMemberCompaniesMeMembersUserIdDeleteResponse>(getRemoveMemberCompaniesMeMembersUserIdDeleteUrl(userId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getRemoveMemberCompaniesMeMembersUserIdDeleteMutationKey = () => ['removeMemberCompaniesMeMembersUserIdDelete'] as const;
+
+export const getRemoveMemberCompaniesMeMembersUserIdDeleteMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeMemberCompaniesMeMembersUserIdDelete>>, TError,RemoveMemberCompaniesMeMembersUserIdDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof removeMemberCompaniesMeMembersUserIdDelete>>, TError,RemoveMemberCompaniesMeMembersUserIdDeleteMutationVariables, TContext> => {
+
+const mutationKey = getRemoveMemberCompaniesMeMembersUserIdDeleteMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removeMemberCompaniesMeMembersUserIdDelete>>, RemoveMemberCompaniesMeMembersUserIdDeleteMutationVariables> = (props) => {
+          const {userId} = props ?? {};
+
+          return  removeMemberCompaniesMeMembersUserIdDelete(userId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RemoveMemberCompaniesMeMembersUserIdDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof removeMemberCompaniesMeMembersUserIdDelete>>>
+
+    export type RemoveMemberCompaniesMeMembersUserIdDeleteMutationError = ErrorType<ProblemOut | HTTPValidationError>
+    export type RemoveMemberCompaniesMeMembersUserIdDeleteMutationVariables = {userId: string}
+
+    /**
+ * @summary Remove Member
+ */
+export const useRemoveMemberCompaniesMeMembersUserIdDelete = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeMemberCompaniesMeMembersUserIdDelete>>, TError,RemoveMemberCompaniesMeMembersUserIdDeleteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof removeMemberCompaniesMeMembersUserIdDelete>>,
+        TError,
+        RemoveMemberCompaniesMeMembersUserIdDeleteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRemoveMemberCompaniesMeMembersUserIdDeleteMutationOptions(options), queryClient);
+    }
+    export type invitePreviewCompanyInvitesTokenGetResponse200 = {
+  data: InvitePreview
+  status: 200
+}
+
+export type invitePreviewCompanyInvitesTokenGetResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type invitePreviewCompanyInvitesTokenGetResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type invitePreviewCompanyInvitesTokenGetResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type invitePreviewCompanyInvitesTokenGetResponseSuccess = (invitePreviewCompanyInvitesTokenGetResponse200) & {
+  headers: Headers;
+};
+export type invitePreviewCompanyInvitesTokenGetResponseError = (invitePreviewCompanyInvitesTokenGetResponse404ApplicationProblemJson | invitePreviewCompanyInvitesTokenGetResponse404ApplicationJson | invitePreviewCompanyInvitesTokenGetResponse422) & {
+  headers: Headers;
+};
+
+export type invitePreviewCompanyInvitesTokenGetResponse = (invitePreviewCompanyInvitesTokenGetResponseSuccess | invitePreviewCompanyInvitesTokenGetResponseError)
+
+export const getInvitePreviewCompanyInvitesTokenGetUrl = (token: string,) => {
+
+
+
+
+  return `/company-invites/${token}`
+}
+
+/**
+ * Без авторизации: кто зовёт и куда; адрес приглашения — замаскирован.
+ * @summary Invite Preview
+ */
+export const invitePreviewCompanyInvitesTokenGet = async (token: string, options?: Parameters<typeof apiFetch>[1]): Promise<invitePreviewCompanyInvitesTokenGetResponse> => {
+
+  return apiFetch<invitePreviewCompanyInvitesTokenGetResponse>(getInvitePreviewCompanyInvitesTokenGetUrl(token),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getInvitePreviewCompanyInvitesTokenGetQueryKey = (token: string,) => {
+    return [
+    `/company-invites/${token}`
+    ] as const;
+    }
+
+
+export const getInvitePreviewCompanyInvitesTokenGetQueryOptions = <TData = Awaited<ReturnType<typeof invitePreviewCompanyInvitesTokenGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(token: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitePreviewCompanyInvitesTokenGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getInvitePreviewCompanyInvitesTokenGetQueryKey(token);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof invitePreviewCompanyInvitesTokenGet>>> = ({ signal }) => invitePreviewCompanyInvitesTokenGet(token, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: token !== null && token !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof invitePreviewCompanyInvitesTokenGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type InvitePreviewCompanyInvitesTokenGetQueryResult = NonNullable<Awaited<ReturnType<typeof invitePreviewCompanyInvitesTokenGet>>>
+export type InvitePreviewCompanyInvitesTokenGetQueryError = ErrorType<ProblemOut | HTTPValidationError>
+
+
+export function useInvitePreviewCompanyInvitesTokenGet<TData = Awaited<ReturnType<typeof invitePreviewCompanyInvitesTokenGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ token: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitePreviewCompanyInvitesTokenGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof invitePreviewCompanyInvitesTokenGet>>,
+          TError,
+          Awaited<ReturnType<typeof invitePreviewCompanyInvitesTokenGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useInvitePreviewCompanyInvitesTokenGet<TData = Awaited<ReturnType<typeof invitePreviewCompanyInvitesTokenGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ token: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitePreviewCompanyInvitesTokenGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof invitePreviewCompanyInvitesTokenGet>>,
+          TError,
+          Awaited<ReturnType<typeof invitePreviewCompanyInvitesTokenGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useInvitePreviewCompanyInvitesTokenGet<TData = Awaited<ReturnType<typeof invitePreviewCompanyInvitesTokenGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ token: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitePreviewCompanyInvitesTokenGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Invite Preview
+ */
+
+export function useInvitePreviewCompanyInvitesTokenGet<TData = Awaited<ReturnType<typeof invitePreviewCompanyInvitesTokenGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ token: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof invitePreviewCompanyInvitesTokenGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getInvitePreviewCompanyInvitesTokenGetQueryOptions(token,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type inviteAcceptCompanyInvitesTokenAcceptPostResponse200 = {
+  data: CompanyOut
+  status: 200
+}
+
+export type inviteAcceptCompanyInvitesTokenAcceptPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type inviteAcceptCompanyInvitesTokenAcceptPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type inviteAcceptCompanyInvitesTokenAcceptPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type inviteAcceptCompanyInvitesTokenAcceptPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type inviteAcceptCompanyInvitesTokenAcceptPostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type inviteAcceptCompanyInvitesTokenAcceptPostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type inviteAcceptCompanyInvitesTokenAcceptPostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type inviteAcceptCompanyInvitesTokenAcceptPostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type inviteAcceptCompanyInvitesTokenAcceptPostResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type inviteAcceptCompanyInvitesTokenAcceptPostResponseSuccess = (inviteAcceptCompanyInvitesTokenAcceptPostResponse200) & {
+  headers: Headers;
+};
+export type inviteAcceptCompanyInvitesTokenAcceptPostResponseError = (inviteAcceptCompanyInvitesTokenAcceptPostResponse401ApplicationProblemJson | inviteAcceptCompanyInvitesTokenAcceptPostResponse401ApplicationJson | inviteAcceptCompanyInvitesTokenAcceptPostResponse403ApplicationProblemJson | inviteAcceptCompanyInvitesTokenAcceptPostResponse403ApplicationJson | inviteAcceptCompanyInvitesTokenAcceptPostResponse404ApplicationProblemJson | inviteAcceptCompanyInvitesTokenAcceptPostResponse404ApplicationJson | inviteAcceptCompanyInvitesTokenAcceptPostResponse409ApplicationProblemJson | inviteAcceptCompanyInvitesTokenAcceptPostResponse409ApplicationJson | inviteAcceptCompanyInvitesTokenAcceptPostResponse422) & {
+  headers: Headers;
+};
+
+export type inviteAcceptCompanyInvitesTokenAcceptPostResponse = (inviteAcceptCompanyInvitesTokenAcceptPostResponseSuccess | inviteAcceptCompanyInvitesTokenAcceptPostResponseError)
+
+export const getInviteAcceptCompanyInvitesTokenAcceptPostUrl = (token: string,) => {
+
+
+
+
+  return `/company-invites/${token}/accept`
+}
+
+/**
+ * @summary Invite Accept
+ */
+export const inviteAcceptCompanyInvitesTokenAcceptPost = async (token: string, options?: Parameters<typeof apiFetch>[1]): Promise<inviteAcceptCompanyInvitesTokenAcceptPostResponse> => {
+
+  return apiFetch<inviteAcceptCompanyInvitesTokenAcceptPostResponse>(getInviteAcceptCompanyInvitesTokenAcceptPostUrl(token),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getInviteAcceptCompanyInvitesTokenAcceptPostMutationKey = () => ['inviteAcceptCompanyInvitesTokenAcceptPost'] as const;
+
+export const getInviteAcceptCompanyInvitesTokenAcceptPostMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inviteAcceptCompanyInvitesTokenAcceptPost>>, TError,InviteAcceptCompanyInvitesTokenAcceptPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof inviteAcceptCompanyInvitesTokenAcceptPost>>, TError,InviteAcceptCompanyInvitesTokenAcceptPostMutationVariables, TContext> => {
+
+const mutationKey = getInviteAcceptCompanyInvitesTokenAcceptPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof inviteAcceptCompanyInvitesTokenAcceptPost>>, InviteAcceptCompanyInvitesTokenAcceptPostMutationVariables> = (props) => {
+          const {token} = props ?? {};
+
+          return  inviteAcceptCompanyInvitesTokenAcceptPost(token,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InviteAcceptCompanyInvitesTokenAcceptPostMutationResult = NonNullable<Awaited<ReturnType<typeof inviteAcceptCompanyInvitesTokenAcceptPost>>>
+
+    export type InviteAcceptCompanyInvitesTokenAcceptPostMutationError = ErrorType<ProblemOut | HTTPValidationError>
+    export type InviteAcceptCompanyInvitesTokenAcceptPostMutationVariables = {token: string}
+
+    /**
+ * @summary Invite Accept
+ */
+export const useInviteAcceptCompanyInvitesTokenAcceptPost = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inviteAcceptCompanyInvitesTokenAcceptPost>>, TError,InviteAcceptCompanyInvitesTokenAcceptPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof inviteAcceptCompanyInvitesTokenAcceptPost>>,
+        TError,
+        InviteAcceptCompanyInvitesTokenAcceptPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getInviteAcceptCompanyInvitesTokenAcceptPostMutationOptions(options), queryClient);
     }

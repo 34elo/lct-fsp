@@ -32,6 +32,7 @@ from app.assessment.tasks_router import employer_router as employer_tasks_router
 # <<< block2
 from app.candidates.router import router as candidates_router
 from app.companies.router import admin_router as admin_companies_router
+from app.companies.router import invites_router as company_invites_router
 from app.companies.router import router as companies_router
 from app.config import Settings
 from app.consents.router import router as consents_router
@@ -40,6 +41,7 @@ from app.events_stream import UiHub
 from app.events_stream import router as events_router
 from app.fsp.router import router as fsp_router
 from app.graph.router import router as graph_router
+from app.identity.profile_router import router as profile_router
 from app.identity.router import router as identity_router
 from app.matching.needs_router import router as needs_router
 from app.matching.router import router as search_router
@@ -129,6 +131,8 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(subscriptions_router)
     app.include_router(views_router)
     app.include_router(credentials_router)
+    app.include_router(profile_router)
+    app.include_router(company_invites_router)
     # <<< block2
 
     @app.get("/readyz", include_in_schema=False)

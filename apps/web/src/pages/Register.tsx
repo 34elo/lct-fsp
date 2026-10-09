@@ -15,8 +15,10 @@ const ROLES: SignupRole[] = ["candidate", "employer"];
 
 export default function Register() {
   const { register, me, status } = useAuth();
-  const from = (useLocation().state as { from?: string } | null)?.from;
-  const [role, setRole] = useState<SignupRole>("candidate");
+  const state = useLocation().state as { from?: string; role?: SignupRole } | null;
+  const from = state?.from;
+  // Приглашение в команду компании (E39-24) открывает регистрацию сразу с ролью работодателя.
+  const [role, setRole] = useState<SignupRole>(state?.role === "employer" ? "employer" : "candidate");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [fresh, setFresh] = useState(false);

@@ -62,3 +62,23 @@ class EmailVerification(Base):
     expires_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True))
     sent_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True))
     attempts: Mapped[int] = mapped_column(default=0, server_default="0")
+
+
+class UserProfile(Base):
+    """Личный профиль пользователя (E39-24): ФИО, должность, описание, аватар в MinIO.
+
+    Нужен прежде всего сотрудникам компании: приглашение кандидату подписано HR.
+    """
+
+    __tablename__ = "user_profiles"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    )
+    full_name: Mapped[str | None] = mapped_column(Text, default=None)
+    position: Mapped[str | None] = mapped_column(Text, default=None)
+    about: Mapped[str | None] = mapped_column(Text, default=None)
+    avatar_key: Mapped[str | None] = mapped_column(Text, default=None)
+    updated_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), default=utcnow, onupdate=utcnow, server_default=sa.func.now()
+    )

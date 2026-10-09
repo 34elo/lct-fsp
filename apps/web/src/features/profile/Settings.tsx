@@ -1,7 +1,7 @@
 import { PAGE } from "@/shared/lib/page";
-import { Avatar, Button, EmptyState, ErrorState, Field, FieldInput, H1, Panel, PanelCap, ScrollTabs, Skeleton, StatusTag, Tabs, TabsContent, TabsTrigger, Textarea, buttonVariants } from "@fsp/ui";
+import { Avatar, Button, EmptyState, ErrorState, Field, FieldInput, H1, MarkdownEditor, Panel, PanelCap, ScrollTabs, Skeleton, StatusTag, Tabs, TabsContent, TabsTrigger, buttonVariants } from "@fsp/ui";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
 import { usePasswordChangeAuthPasswordChangePost } from "@/api/endpoints/auth/auth";
@@ -10,13 +10,20 @@ import {
   useGetProfileCandidatesMeProfileGet,
   usePatchProfileCandidatesMeProfilePatch,
 } from "@/api/endpoints/candidates/candidates";
-import { getGetMyCompanyCompaniesMeGetQueryKey, useGetMyCompanyCompaniesMeGet, usePatchMyCompanyCompaniesMePatch } from "@/api/endpoints/companies/companies";
+import {
+  getGetMyProfileMeProfileGetQueryKey,
+  useDeleteMyAvatarMeAvatarDelete,
+  useGetMyProfileMeProfileGet,
+  usePatchMyProfileMeProfilePatch,
+  usePutMyAvatarMeAvatarPut,
+} from "@/api/endpoints/profile/profile";
 import { ApiError } from "@/api/mutator";
 import { getGetConsentsMeConsentsGetQueryKey, useGetConsentsMeConsentsGet, usePutConsentsMeConsentsPut } from "@/api/endpoints/consents/consents";
 import { useMyLinkMeTelegramLinkPost } from "@/api/endpoints/telegram/telegram";
 import type { ConsentOut } from "@/api/model";
 import { authText } from "@/features/auth/text";
 import { useAuth, type Role } from "@/shared/lib/auth";
+import { avatarSrc } from "@/shared/lib/avatar";
 import { useTheme } from "@/shared/lib/theme";
 import { PrivacySettings, SettingRow } from "./PrivacySettings";
 import { SETTINGS as S } from "./text";
@@ -228,82 +235,155 @@ function CandidateProfileCard({ fullName }: { fullName: string }) {
   );
 }
 
-/** Название и описание компании: правит администратор компании (`PATCH /companies/me`). */
-function EmployerProfileCard() {
-  const qc = useQueryClient();
-  const { me, reloadMe } = useAuth();
+/** Фото профиля: `PUT /me/avatar` (сигнатура проверяется на сервере), `DELETE /me/avatar`. */
+function AvatarPicker({ name, url, onChanged }: { name: string; url?: string | null; onChanged: () => Promise<void> }) {
+  const input = useRef<HTMLInputElement>(null);
+  const put = usePutMyAvatarMeAvatarPut();
+  const del = useDeleteMyAvatarMeAvatarDelete();
+  const [error, setError] = useState<string | null>(null);
+
+  async function upload(file: File | undefined) {
+    if (!file) return;
+    setError(null);
+    try {
+      await put.mutateAsync({ data: { file } });
+      await onChanged();
+    } catch (err) {
+      setError(PROFILE.photoError(err instanceof ApiError ? err.code : undefined));
+    } finally {
+      if (input.current) input.current.value = "";
+    }
+  }
+
+  async function remove() {
+    setError(null);
+    try {
+      await del.mutateAsync();
+      await onChanged();
+    } catch {
+      setError(PROFILE.photoError());
+    }
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-4" data-testid="settings-avatar">
+      <Avatar name={name} src={avatarSrc(url)} size={72} />
+      <div className="flex min-w-0 flex-col gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" variant="outline" loading={put.isPending} onClick={() => input.current?.click()} data-testid="settings-avatar-upload">
+            {url ? PROFILE.photoReplace : PROFILE.photoUpload}
+          </Button>
+          {url && (
+            <Button type="button" variant="ghost" loading={del.isPending} onClick={() => void remove()} data-testid="settings-avatar-remove">
+              {PROFILE.photoRemove}
+            </Button>
+          )}
+        </div>
+        <span className="text-13 text-muted">{PROFILE.photoHint}</span>
+        {error && (
+          <span role="alert" className="text-13 text-error" data-testid="settings-avatar-error">
+            {error}
+          </span>
+        )}
+      </div>
+      <input
+        ref={input}
+        type="file"
+        accept="image/png,image/jpeg,image/webp"
+        className="sr-only"
+        tabIndex={-1}
+        aria-hidden
+        data-testid="settings-avatar-input"
+        onChange={(e) => void upload(e.target.files?.[0])}
+      />
+    </div>
+  );
+}
+
+/** Строка «компания и роль в ней» для сотрудника; правка компании — на её странице (только владелец). */
+function CompanyLine() {
+  const { me } = useAuth();
   const company = me?.company;
-  const q = useGetMyCompanyCompaniesMeGet({ query: { retry: false, enabled: !!company } });
-  const patch = usePatchMyCompanyCompaniesMePatch();
+  if (me?.role !== "employer") return null;
+  return (
+    <div className="flex flex-col gap-1 border-t border-hairline pt-4" data-testid="settings-company">
+      <span className="text-13 text-muted">{PROFILE.companyLine}</span>
+      {company ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-medium">{company.name}</span>
+          <StatusTag state={company.role === "admin" ? "confirmed" : "claimed"} data-testid="settings-company-role">
+            {PROFILE.companyRoles[company.role] ?? company.role}
+          </StatusTag>
+          <Link to="/employer/company" className="text-14 font-medium text-brand-fg underline-offset-2 hover:underline">
+            {PROFILE.companyOpen}
+          </Link>
+        </div>
+      ) : (
+        <p className="text-14 text-muted" data-testid="settings-company-none">
+          {PROFILE.companyNone}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Личный профиль сотрудника компании и админа ФСП (E39-24): ФИО, должность, фото, «О себе».
+ * `GET|PATCH /me/profile`; имя, должность и фото подписывают приглашения кандидатам.
+ */
+function StaffProfileCard() {
+  const qc = useQueryClient();
+  const q = useGetMyProfileMeProfileGet({ query: { retry: false } });
+  const patch = usePatchMyProfileMeProfilePatch();
   const data = q.data?.status === 200 ? q.data.data : null;
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [state, setState] = useState<SaveState>("idle");
+  const [form, setForm] = useState({ full_name: "", position: "", about: "" });
   const [loaded, setLoaded] = useState(false);
+  const [state, setState] = useState<SaveState>("idle");
   if (data && !loaded) {
     setLoaded(true);
-    setName(data.name);
-    setDescription(data.description ?? "");
+    setForm({ full_name: data.full_name ?? "", position: data.position ?? "", about: data.about ?? "" });
   }
-  const canEdit = company?.role === "admin";
-  const invalid = name.trim().length < 2;
+  const name = form.full_name.trim();
+  const invalid = name.length > 120 ? PROFILE.nameTooLong : name.length === 1 ? PROFILE.nameTooShort : undefined;
+  const set = (k: keyof typeof form) => (v: string) => {
+    setForm((f) => ({ ...f, [k]: v }));
+    setState("idle");
+  };
+  const refresh = () => qc.invalidateQueries({ queryKey: getGetMyProfileMeProfileGetQueryKey() });
 
   async function submit(e: FormEvent) {
     e.preventDefault();
     if (invalid) return;
     setState("idle");
     try {
-      const res = await patch.mutateAsync({ data: { name: name.trim(), description: description.trim() || null } });
-      if (res.status !== 200) throw new Error("company");
-      await qc.invalidateQueries({ queryKey: getGetMyCompanyCompaniesMeGetQueryKey() });
-      await reloadMe();
+      await patch.mutateAsync({ data: { full_name: name || null, position: form.position.trim() || null, about: form.about.trim() || null } });
+      await refresh();
       setState("saved");
     } catch {
       setState("error");
     }
   }
 
+  if (q.isPending) return <Skeleton className="h-64" />;
+  if (!data) return <LoadError onRetry={() => void q.refetch()} status={q.error?.status} />;
   return (
     <form onSubmit={(e) => void submit(e)} className="flex flex-col gap-4" data-testid="settings-profile-form">
-      <AccountHead name={company?.name} />
-      {!company ? (
-        <p className="text-14 text-muted" data-testid="settings-company-none">
-          {PROFILE.companyNone}
-        </p>
-      ) : q.isPending ? (
-        <Skeleton className="h-24" />
-      ) : (
-        <>
-          <Field label={PROFILE.company} error={canEdit && invalid ? "Укажите название компании." : undefined}>
-            <FieldInput
-              value={name}
-              disabled={!canEdit}
-              maxLength={200}
-              onChange={(e) => {
-                setName(e.target.value);
-                setState("idle");
-              }}
-              data-testid="settings-company-name"
-            />
-          </Field>
-          <Field label={PROFILE.companyDescription} hint={canEdit ? undefined : PROFILE.companyReadonly}>
-            <Textarea
-              value={description}
-              disabled={!canEdit}
-              maxLength={2000}
-              onChange={(e) => {
-                setDescription(e.target.value);
-                setState("idle");
-              }}
-              data-testid="settings-company-description"
-            />
-          </Field>
-          {canEdit && <SaveRow pending={patch.isPending} saved={state === "saved"} error={state === "error"} disabled={invalid} />}
-          <Link to="/employer/company" className="text-14 font-medium text-brand-fg underline-offset-2 hover:underline">
-            {PROFILE.companyMore}
-          </Link>
-        </>
-      )}
+      <AccountHead name={name} />
+      <p className="text-13 text-muted">{PROFILE.staffHint}</p>
+      <AvatarPicker name={name} url={data.avatar_url} onChanged={refresh} />
+      <div className="grid gap-4 md:grid-cols-2">
+        <Field label={PROFILE.fullName} error={invalid}>
+          <FieldInput value={form.full_name} maxLength={130} autoComplete="name" onChange={(e) => set("full_name")(e.target.value)} data-testid="settings-full-name" />
+        </Field>
+        <Field label={PROFILE.position}>
+          <FieldInput value={form.position} maxLength={120} placeholder={PROFILE.positionPlaceholder} autoComplete="organization-title" onChange={(e) => set("position")(e.target.value)} data-testid="settings-position" />
+        </Field>
+      </div>
+      <Field label={PROFILE.about} hint={PROFILE.aboutHint}>
+        <MarkdownEditor value={form.about} onChange={set("about")} maxLength={2000} rows={5} aria-label={PROFILE.about} data-testid="settings-about" />
+      </Field>
+      <SaveRow pending={patch.isPending} saved={state === "saved"} error={state === "error"} disabled={!!invalid} />
+      <CompanyLine />
     </form>
   );
 }
@@ -330,12 +410,11 @@ function LoadError({ onRetry, status }: { onRetry: () => void; status?: number }
   );
 }
 
-/** Профиль: кандидат правит ФИО, работодатель — компанию, админ видит аккаунт. */
+/** Профиль: кандидат правит ФИО анкеты, сотрудник компании и админ — личный профиль (E39-24). */
 function ProfileTab({ role }: { role: Role }) {
   const pq = useGetProfileCandidatesMeProfileGet({ query: { retry: false, enabled: role === "candidate" } });
   let body: ReactNode;
-  if (role === "employer") body = <EmployerProfileCard />;
-  else if (role !== "candidate") body = <AccountHead />;
+  if (role !== "candidate") body = <StaffProfileCard />;
   else if (pq.isPending) body = <Skeleton className="h-40" />;
   else if (pq.data?.status === 403) body = <ConsentEmpty />;
   else if (pq.data?.status !== 200) body = <LoadError onRetry={() => void pq.refetch()} status={pq.error?.status} />;
@@ -455,7 +534,7 @@ export function tabsFor(role: Role | null): TabId[] {
 /**
  * Настройки `/settings` для всех ролей (E39-8): Профиль, Приватность (кандидат), Уведомления,
  * Согласия, Оформление, Безопасность. Вкладка — в `?tab=`, на 375 px полоса листается пальцем.
- * Аватар без загрузки файла: API хранения нет, показываем инициалы.
+ * Сотрудник компании и админ загружают фото (E39-24), у кандидата — инициалы.
  */
 export default function Settings() {
   const { role } = useAuth();

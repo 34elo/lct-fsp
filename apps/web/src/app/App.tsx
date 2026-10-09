@@ -62,6 +62,7 @@ import CategoryCandidates from "@/features/needs/CategoryCandidates";
 import Subscriptions from "@/features/needs/Subscriptions";
 import { CandidateInterests } from "@/features/offers/CandidateInterests";
 import EmployerMatch from "@/features/employer/Match";
+import InviteAccept from "@/features/employer/InviteAccept";
 // <<< block2 imports
 
 // Разделы по ролям грузятся лениво (frontend.md: «ленивые разделы»).
@@ -183,6 +184,7 @@ export function App() {
           <Route path="/jobs/:id" element={<JobDetail />} />
           <Route path="/terms" element={<Legal />} />
           <Route path="/privacy" element={<Legal />} />
+          <Route path="/invite/company/:token" element={<InviteAccept />} />
           {/* <<< block2 (public) */}
         </Route>
         {guarded("candidate", CandidateLayout)}
