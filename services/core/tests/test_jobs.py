@@ -110,3 +110,49 @@ async def test_company_rating_perfect(session: AsyncSession) -> None:
     # Проверяем, что score высокий
     await session.refresh(company)
     assert company.responsibility_score == 1.0
+
+
+def _jobs_consumer(factory):
+    from fsp_platform.messaging import QUEUES, Consumer
+
+    consumers = {"core.jobs": Consumer(QUEUES["core.jobs"])}
+    jobs.register(consumers, factory)
+    return consumers["core.jobs"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("command", ["offers.expire", "active_status.expire", "company.rating"])
+async def test_cron_command_dispatch_gives_handler_a_session(factory, command) -> None:
+    """E42-4: обработчик вызывается Consumer'ом с одним аргументом (конверт); сессию даёт
+    `idempotent`. Без неё — `TypeError: missing 'session'`, сообщение уходило в dead-letter."""
+    from fsp_contracts.commands import COMMANDS
+    from fsp_contracts.registry import new_command
+
+    envelope, _ = new_command(command, "scheduler", COMMANDS[command].model())
+    consumer = _jobs_consumer(factory)
+    await consumer.dispatch(envelope)
+
+
+@pytest.mark.asyncio
+async def test_expire_command_expires_overdue_via_consumer(factory) -> None:
+    from fsp_contracts.commands import COMMANDS
+    from fsp_contracts.registry import new_command
+    from fsp_platform.db import session_scope
+
+    async with session_scope(factory) as s:
+        company, owner = await make_company(s, name="Expire Co")
+        vacancy = await make_vacancy(s, company)
+        cand = await make_candidate(s)
+        offer = await make_offer(
+            s, vacancy, cand.user_id, owner.id, status="sent",
+            expires_at=datetime.now(UTC) - timedelta(hours=1),
+        )  # fmt: skip
+        offer_id = offer.id
+    envelope, _ = new_command("offers.expire", "scheduler", COMMANDS["offers.expire"].model())
+    consumer = _jobs_consumer(factory)
+    await consumer.dispatch(envelope)
+    await consumer.dispatch(envelope)  # повторная доставка того же сообщения — без эффекта
+    async with session_scope(factory) as s:
+        from app.offers.models import Offer
+
+        assert (await s.get(Offer, offer_id)).status == "expired"
