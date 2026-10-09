@@ -404,7 +404,7 @@ function ConsentEmpty() {
 
 function LoadError({ onRetry, status }: { onRetry: () => void; status?: number }) {
   return (
-    <div className="w-full max-w-2xl" data-testid="settings-error-state">
+    <div className="w-full" data-testid="settings-error-state">
       <ErrorState title={S.loadError} code={status ? S.errorCode(status) : undefined} onRetry={onRetry} />
     </div>
   );
@@ -420,7 +420,7 @@ function ProfileTab({ role }: { role: Role }) {
   else if (pq.data?.status !== 200) body = <LoadError onRetry={() => void pq.refetch()} status={pq.error?.status} />;
   else body = <CandidateProfileCard fullName={pq.data.data.full_name ?? ""} />;
   return (
-    <Panel data-testid="settings-profile" aria-label={PROFILE.title} className="max-w-2xl">
+    <Panel data-testid="settings-profile" aria-label={PROFILE.title}>
       <PanelCap title={PROFILE.title} />
       {body}
     </Panel>
@@ -430,11 +430,11 @@ function ProfileTab({ role }: { role: Role }) {
 /** Приватность кандидата: профиль нужен для текущих значений переключателей. */
 function PrivacyTab() {
   const pq = useGetProfileCandidatesMeProfileGet({ query: { retry: false } });
-  if (pq.isPending) return <Skeleton className="h-64 max-w-2xl" />;
+  if (pq.isPending) return <Skeleton className="h-64" />;
   if (pq.data?.status === 403) return <ConsentEmpty />;
   if (pq.data?.status !== 200) return <LoadError onRetry={() => void pq.refetch()} status={pq.error?.status} />;
   return (
-    <div className="max-w-2xl">
+    <div>
       <PrivacySettings visibility={pq.data.data.visibility} />
     </div>
   );
@@ -443,14 +443,14 @@ function PrivacyTab() {
 /** Вкладки со списком согласий: общий запрос, пустое состояние и ошибка. */
 function ConsentsTab({ role, view }: { role: Role; view: "notifications" | "consents" }) {
   const cq = useGetConsentsMeConsentsGet({ query: { retry: false } });
-  if (cq.isPending) return <Skeleton className="h-48 max-w-2xl" />;
+  if (cq.isPending) return <Skeleton className="h-48" />;
   const items = cq.data?.status === 200 ? (cq.data.data as ConsentOut[]) : null;
   if (!items) return <LoadError onRetry={() => void cq.refetch()} status={cq.error?.status} />;
   if (role === "candidate" && !items.find((c) => c.type === "pd_processing")?.granted) return <ConsentEmpty />;
   const telegram = items.find((c) => c.type === "telegram_notifications");
   // Работодателю нужны согласие на ПДн и Telegram: остальные типы относятся к анкете кандидата.
   const rest = items.filter((c) => c.type !== "telegram_notifications" && (role === "candidate" || c.type === "pd_processing"));
-  return <div className="max-w-2xl">{view === "notifications" ? <NotificationsCard consent={telegram} /> : <ConsentsCard items={rest} />}</div>;
+  return <div>{view === "notifications" ? <NotificationsCard consent={telegram} /> : <ConsentsCard items={rest} />}</div>;
 }
 
 /** Смена пароля: `POST /auth/password/change`. Без пароля (вход через Telegram) — пояснение вместо формы. */
@@ -465,7 +465,7 @@ function SecurityTab() {
 
   if (!me?.email)
     return (
-      <Panel className="max-w-2xl" data-testid="settings-security">
+      <Panel data-testid="settings-security">
         <PanelCap title={T.title} />
         <p className="text-14 text-muted">{T.noPassword}</p>
       </Panel>
@@ -494,7 +494,7 @@ function SecurityTab() {
   }
 
   return (
-    <Panel className="max-w-2xl" data-testid="settings-security" aria-label={T.title}>
+    <Panel data-testid="settings-security" aria-label={T.title}>
       <PanelCap title={T.title} />
       <p className="mb-3 text-13 text-muted">{T.hint}</p>
       <form onSubmit={(e) => void submit(e)} className="flex flex-col gap-4">
@@ -569,7 +569,7 @@ export default function Settings() {
               <ConsentsTab role={role} view="consents" />
             </TabsContent>
             <TabsContent value="appearance">
-              <div className="max-w-2xl">
+              <div>
                 <AppearanceCard />
               </div>
             </TabsContent>

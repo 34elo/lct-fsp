@@ -12,7 +12,7 @@ import { T } from "./text";
 export function Final() {
   return (
     <section className="pt-14 pb-14 min-[861px]:pt-24 min-[861px]:pb-[72px]">
-      <Reveal className="relative mx-4 overflow-hidden rounded-[20px] bg-brand px-5 py-12 text-center text-white min-[861px]:mx-6 min-[861px]:px-6 min-[861px]:py-20">
+      <Reveal className="relative mx-4 overflow-hidden rounded-2xl bg-brand px-5 py-12 text-center text-white min-[861px]:mx-6 min-[861px]:px-6 min-[861px]:py-20">
         <Net white className="opacity-50" />
         <h2 className="relative m-0 font-mono text-[28px] leading-[1.1] font-bold tracking-[-0.02em] min-[861px]:text-[44px]">{T.finalTitle}</h2>
         <CtaPair onBrand className="relative mt-8" />
