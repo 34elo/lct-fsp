@@ -305,6 +305,7 @@ export * from './profileIn';
 export * from './profileInAgeGroup';
 export * from './provisionalOut';
 export * from './publicCompany';
+export * from './publicStatsOut';
 export * from './publicVacancyOut';
 export * from './queueCount';
 export * from './queueCountId';

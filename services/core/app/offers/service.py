@@ -199,6 +199,18 @@ async def open_counts(
     return {cid: n for cid, n in (await session.execute(q)).all()}
 
 
+async def first_invitations(session: AsyncSession) -> tuple[int, dict[uuid.UUID, datetime]]:
+    """Приглашения компаний: сколько всего и `candidate_id → время первого` (счётчики лендинга)."""
+    employer = Offer.initiator == OfferInitiator.employer.value
+    total = await session.scalar(select(func.count()).select_from(Offer).where(employer))
+    rows = await session.execute(
+        select(Offer.candidate_id, func.min(Offer.created_at))
+        .where(employer, Offer.candidate_id.is_not(None))
+        .group_by(Offer.candidate_id)
+    )
+    return int(total or 0), {cid: at for cid, at in rows}
+
+
 def _retry_after(oldest: datetime | None, now: datetime) -> dict[str, str]:
     if oldest is None:
         return {"Retry-After": str(int(WINDOW.total_seconds()))}
