@@ -28,6 +28,7 @@ import Survey from "@/features/assessment/Survey";
 import Attempt from "@/features/assessment/Attempt";
 import Result from "@/features/assessment/Result";
 import History from "@/features/assessment/History";
+import Review from "@/features/assessment/Review";
 import VerifyEmail from "@/features/auth/VerifyEmail";
 import ProfileEdit from "@/features/profile/ProfileEdit";
 import Settings from "@/features/profile/Settings";
@@ -94,6 +95,7 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
             <Route path="/me/assessment/history" element={<History />} />
             <Route path="/me/assessment/attempts/:id" element={<Attempt />} />
             <Route path="/me/assessment/attempts/:id/result" element={<Result />} />
+            <Route path="/me/assessment/attempts/:id/review" element={<Review />} />
             <Route path="/me/profile" element={<Profile />} />
             <Route path="/me/profile/edit" element={<ProfileEdit />} />
             <Route path="/me/stats" element={<Stats />} />

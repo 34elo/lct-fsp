@@ -711,3 +711,68 @@ describe("путь: тест сейчас или позже, результат 
     expect(home).toHaveTextContent("На главную");
   });
 });
+
+describe("разбор теста (E39-10)", () => {
+  const part = { kind: "exact", stem: "Сколько будет 2+2?", options: null, reason: { code: "calc_error", label: "Ошибка в вычислении", detail: null } };
+  const review = {
+    attempt_id: "a1",
+    profession: "backend",
+    items: [
+      { ...part, response_id: "r1", seq: 1, skill: "python", skill_type: "hard", score: 1, time_limit_s: 60, why: "Ответ верный.", yours: "4", correct: "4", reason: { code: "correct", label: "Ответ верный", detail: null } },
+      { ...part, response_id: "r2", seq: 2, skill: "system_design", skill_type: "thinking", score: 0, time_limit_s: 60, why: "Пройдите по шагам.", yours: "5", correct: "4" },
+    ],
+  };
+  const handler = (url: string) => {
+    if (url.endsWith("/attempts/a1/review")) return res(200, review);
+  };
+
+  it("группы по типам, ответы, «что подтянуть»; объяснения скрываются и запоминаются", async () => {
+    localStorage.clear();
+    mount("/me/assessment/attempts/a1/review", handler);
+    expect(await tid("assessment-review-group-hard")).toBeInTheDocument();
+    expect(screen.getByTestId("assessment-review-group-thinking")).toBeInTheDocument();
+    expect(screen.getByTestId("assessment-review-item-2-yours")).toHaveTextContent("5");
+    expect(screen.getByTestId("assessment-review-item-2-correct")).toHaveTextContent("4");
+    expect(screen.getByTestId("assessment-review-item-2")).toHaveAttribute("data-verdict", "bad");
+    expect(screen.getByTestId("assessment-review-weak-system_design")).toBeInTheDocument();
+    expect(screen.queryByTestId("assessment-review-weak-python")).toBeNull();
+    expect(screen.getByTestId("assessment-review-to-growth")).toHaveAttribute("href", "/me/navigator");
+
+    // сворачивание у одного задания
+    fireEvent.click(screen.getByTestId("assessment-review-item-2-toggle"));
+    expect(screen.queryByText("Пройдите по шагам.")).toBeNull();
+    expect(screen.getByTestId("assessment-review-item-1-why")).toBeInTheDocument();
+
+    // общий переключатель скрывает объяснения и помнится
+    fireEvent.click(screen.getByTestId("assessment-review-hide-switch"));
+    expect(screen.queryByTestId("assessment-review-item-1-why")).toBeNull();
+    expect(localStorage.getItem("fsp.assessment.review.hideExplain")).toBe("1");
+    cleanup();
+    mount("/me/assessment/attempts/a1/review", handler);
+    await tid("assessment-review-group-hard");
+    expect(screen.getByTestId("assessment-review-hide-switch")).toHaveAttribute("aria-checked", "true");
+    expect(screen.queryByTestId("assessment-review-item-1-why")).toBeNull();
+    localStorage.clear();
+  });
+
+  it("идущая попытка (409) — «тест ещё идёт», чужая (404) — не найдено", async () => {
+    mount("/me/assessment/attempts/a1/review", (url) => (url.endsWith("/review") ? res(409, { code: "attempt_active", title: "x" }) : undefined));
+    expect(await tid("assessment-review-active")).toBeInTheDocument();
+    cleanup();
+    mount("/me/assessment/attempts/zz/review", () => undefined);
+    expect(await tid("assessment-error")).toBeInTheDocument();
+  });
+
+  it("из результата и истории есть ссылка на разбор", async () => {
+    mount("/me/assessment/attempts/a1/result", (url) => {
+      if (url.endsWith("/attempts/a1")) return res(200, finished);
+      if (url.endsWith("/assessment/history")) return res(200, { surveys: [], attempts: [finished], cooldowns: [], retries: [] });
+    });
+    expect(await tid("assessment-to-review")).toHaveAttribute("href", "/me/assessment/attempts/a1/review");
+    cleanup();
+    mount("/me/assessment/history", (url) => {
+      if (url.endsWith("/assessment/history")) return res(200, { surveys: [], attempts: [finished], cooldowns: [], retries: [] });
+    });
+    expect(await tid("assessment-attempt-review-a1")).toHaveAttribute("href", "/me/assessment/attempts/a1/review");
+  });
+});
