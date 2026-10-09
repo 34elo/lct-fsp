@@ -2,17 +2,18 @@ import { PAGE } from "@/shared/lib/page";
 import { useState } from "react";
 
 import { BlocklistTab, DistinctTab, HintsTab, ProvisionalTab } from "./SkillsLists";
+import { GraphTab } from "./SkillsGraph";
 import { MergesTab, QueueTab } from "./SkillsQueue";
 import { cn } from "@fsp/ui";
 import { SK } from "./text";
 import { AdminPageHeader } from "@/features/admin/PageHeader";
 
-const TABS = ["queue", "merges", "distinct", "blocklist", "provisional", "hints"] as const;
+const TABS = ["graph", "queue", "merges", "distinct", "blocklist", "provisional", "hints"] as const;
 type Tab = (typeof TABS)[number];
 
 /** `/admin/skills` (G3): очередь слияний, «точно разные», стоп-лист, новые навыки, рост графа (E16-7). */
 export default function AdminSkills() {
-  const [tab, setTab] = useState<Tab>("queue");
+  const [tab, setTab] = useState<Tab>("graph");
   return (
     <div data-testid="admin-skills-page" className={PAGE.wide}>
       <AdminPageHeader title={SK.title} tip={SK.lead} />
@@ -31,6 +32,7 @@ export default function AdminSkills() {
           </button>
         ))}
       </div>
+      {tab === "graph" && <GraphTab onOpen={setTab} />}
       {tab === "queue" && <QueueTab />}
       {tab === "merges" && <MergesTab />}
       {tab === "distinct" && <DistinctTab />}
