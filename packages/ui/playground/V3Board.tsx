@@ -10,6 +10,7 @@ import {
   MarkdownEditor,
   MultiSelect,
   NumberInput,
+  Roadmap,
   ProfessionInput,
   SalaryRangeInput,
   ScrollTabs,
@@ -180,6 +181,16 @@ function Controls() {
           <Markdown>{text}</Markdown>
         </Cell>
       </div>
+      <Cell name="Roadmap">
+        <Roadmap
+          steps={[
+            { id: "c", kind: "current", state: "done", eyebrow: "Сейчас", title: "Junior+" },
+            { id: "d", kind: "skill", state: "current", eyebrow: "Навык", title: "Docker", uplift: "+64% вакансий", caption: "Навык, который просит рынок", actions: [{ label: "Пройти задание", href: "#" }, { label: "Соревнование ФСП", href: "#", external: true }] },
+            { id: "t", kind: "test", state: "future", eyebrow: "Тест", title: "Тест на Middle", actions: [{ label: "Пройти тест", href: "#" }] },
+            { id: "g", kind: "goal", state: "future", eyebrow: "Цель", title: "Middle" },
+          ]}
+        />
+      </Cell>
       <Cell name="Скелетоны">
         <div className="grid gap-4 sm:grid-cols-2">
           <SkeletonLine lines={3} />
