@@ -65,7 +65,20 @@ async def get_or_create(session: AsyncSession, user_id: uuid.UUID, secret: str) 
             existing = await session.get(Candidate, user_id)
             if existing is not None:  # параллельный запрос успел раньше
                 return existing
-    raise RuntimeError("pseudonym_exhausted")
+    # 20 коллизий подряд: детерминированный уникальный псевдоним от pseudo_id вместо падения
+    pseudo_id = make_pseudo_id(secret, user_id)
+    cand = Candidate(
+        user_id=user_id,
+        pseudonym=f"Candidate #{pseudo_id[:8]}",
+        pseudo_id=pseudo_id,
+        visibility=dict(DEFAULT_VISIBILITY),
+        formats=[],
+        employment_types=[],
+        stoplist_company_ids=[],
+    )
+    session.add(cand)
+    await session.flush()
+    return cand
 
 
 async def get(session: AsyncSession, user_id: uuid.UUID) -> Candidate | None:
