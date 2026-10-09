@@ -30,7 +30,8 @@ import type {
   NeedCategories,
   NeedCreate,
   NeedOut,
-  ProblemOut
+  ProblemOut,
+  ShortlistOut
 } from '../../model';
 
 import { apiFetch } from '../../mutator';
@@ -513,6 +514,153 @@ export function useCategoryCandidatesCategoriesProfessionGradeCandidatesGet<TDat
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getCategoryCandidatesCategoriesProfessionGradeCandidatesGetQueryOptions(profession,grade,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type shortlistAllShortlistGetResponse200 = {
+  data: ShortlistOut
+  status: 200
+}
+
+export type shortlistAllShortlistGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type shortlistAllShortlistGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type shortlistAllShortlistGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type shortlistAllShortlistGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type shortlistAllShortlistGetResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type shortlistAllShortlistGetResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type shortlistAllShortlistGetResponseSuccess = (shortlistAllShortlistGetResponse200) & {
+  headers: Headers;
+};
+export type shortlistAllShortlistGetResponseError = (shortlistAllShortlistGetResponse401ApplicationProblemJson | shortlistAllShortlistGetResponse401ApplicationJson | shortlistAllShortlistGetResponse403ApplicationProblemJson | shortlistAllShortlistGetResponse403ApplicationJson | shortlistAllShortlistGetResponse404ApplicationProblemJson | shortlistAllShortlistGetResponse404ApplicationJson) & {
+  headers: Headers;
+};
+
+export type shortlistAllShortlistGetResponse = (shortlistAllShortlistGetResponseSuccess | shortlistAllShortlistGetResponseError)
+
+export const getShortlistAllShortlistGetUrl = () => {
+
+
+
+
+  return `/shortlist`
+}
+
+/**
+ * Общий шорт-лист компании (E39-23): отмеченные во всех её потребностях, без повторов.
+ *
+ * Сначала отмеченные в свежих потребностях; запоминать последний запрос в браузере не нужно.
+ * @summary Shortlist All
+ */
+export const shortlistAllShortlistGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<shortlistAllShortlistGetResponse> => {
+
+  return apiFetch<shortlistAllShortlistGetResponse>(getShortlistAllShortlistGetUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getShortlistAllShortlistGetQueryKey = () => {
+    return [
+    `/shortlist`
+    ] as const;
+    }
+
+
+export const getShortlistAllShortlistGetQueryOptions = <TData = Awaited<ReturnType<typeof shortlistAllShortlistGet>>, TError = ErrorType<ProblemOut>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof shortlistAllShortlistGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getShortlistAllShortlistGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof shortlistAllShortlistGet>>> = ({ signal }) => shortlistAllShortlistGet({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof shortlistAllShortlistGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ShortlistAllShortlistGetQueryResult = NonNullable<Awaited<ReturnType<typeof shortlistAllShortlistGet>>>
+export type ShortlistAllShortlistGetQueryError = ErrorType<ProblemOut>
+
+
+export function useShortlistAllShortlistGet<TData = Awaited<ReturnType<typeof shortlistAllShortlistGet>>, TError = ErrorType<ProblemOut>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof shortlistAllShortlistGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof shortlistAllShortlistGet>>,
+          TError,
+          Awaited<ReturnType<typeof shortlistAllShortlistGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useShortlistAllShortlistGet<TData = Awaited<ReturnType<typeof shortlistAllShortlistGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof shortlistAllShortlistGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof shortlistAllShortlistGet>>,
+          TError,
+          Awaited<ReturnType<typeof shortlistAllShortlistGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useShortlistAllShortlistGet<TData = Awaited<ReturnType<typeof shortlistAllShortlistGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof shortlistAllShortlistGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Shortlist All
+ */
+
+export function useShortlistAllShortlistGet<TData = Awaited<ReturnType<typeof shortlistAllShortlistGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof shortlistAllShortlistGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getShortlistAllShortlistGetQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
