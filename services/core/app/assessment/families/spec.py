@@ -161,6 +161,9 @@ def _fmt(v: Any) -> str:
 
 
 def variables(spec: FamilySpec, rng: Random, world: World) -> dict[str, Any]:
+    """Переменные варианта из сида: сущности мира, `params` и `derived` по порядку (assessment.md
+    §4, E30-1).
+    """
     env: dict[str, Any] = {
         "company": world.company,
         "service": world.services[0],
@@ -181,6 +184,9 @@ def variables(spec: FamilySpec, rng: Random, world: World) -> dict[str, Any]:
 
 
 def render(tpl: str, env: dict[str, Any]) -> str:
+    """Подстановка в шаблон: `{{имя}}` — переменная, `{{= выражение}}` — безопасный вычислитель
+    `expr.py`.
+    """
     nums = {k: v for k, v in env.items() if not isinstance(v, str)}
 
     def _e(m: re.Match) -> str:

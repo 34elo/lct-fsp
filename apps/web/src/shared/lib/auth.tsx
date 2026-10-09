@@ -147,6 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
+/** Сессия и действия входа из `AuthProvider`: пользователь, login/register/magic, logout, перезагрузка `/me`. */
 export function useAuth() {
   const v = useContext(Ctx);
   if (!v) throw new Error("useAuth вне AuthProvider");

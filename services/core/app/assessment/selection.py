@@ -43,6 +43,7 @@ class Candidate:
 
 
 def type_shares(grade: TestGrade, cfg: AssessmentConfig) -> dict[str, float]:
+    """Плановые доли типов навыков для грейда из конфига теста (assessment.md §6, шаг «секция»)."""
     return dict(cfg.plan_shares.get(grade.value, {}))
 
 

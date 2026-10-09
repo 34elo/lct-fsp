@@ -102,6 +102,9 @@ async def get_grades_many(
 async def get_grade(
     session: AsyncSession, candidate_id: uuid.UUID, profession: str
 ) -> CandidateGrade | None:
+    """Действующий грейд кандидата по одной профессии или `None` (публичное API блока 1, blocks.md
+    §4.3).
+    """
     row = await session.scalar(
         select(Grade).where(
             Grade.candidate_id == candidate_id, Grade.profession == profession, _active()

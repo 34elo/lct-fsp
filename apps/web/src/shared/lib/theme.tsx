@@ -53,6 +53,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
+/** Текущая тема (светлая или тёмная; по умолчанию — системная) и её смена из `ThemeProvider`. */
 export function useTheme() {
   const v = useContext(Ctx);
   if (!v) throw new Error("useTheme вне ThemeProvider");
