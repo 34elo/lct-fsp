@@ -128,6 +128,7 @@ seed:
 # <<< block1
 # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
 	SEED=$(SEED) uv run python -m tools.seed demo2 --env-file $(ENV_FILE)
+	SEED=$(SEED) uv run python -m tools.seed fsp-registry --env-file $(ENV_FILE)
 # <<< block2
 	$(COMPOSE) up -d --build --no-deps --force-recreate fsp-mock
 seed-fsp-mock:

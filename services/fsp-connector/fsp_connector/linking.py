@@ -1,4 +1,4 @@
-"""Привязка кандидата к участнику ФСП: OAuth, код, ручной ID (fsp.md §4)."""
+"""Привязка кандидата к участнику ФСП: реестр (E39-28), OAuth, код, ручной ID (fsp.md §4)."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ from fsp_connector.models import FspLink, FspLinkConflict
 from fsp_connector.port import FspPort
 from fsp_connector.publisher import publish_linked
 
-Method = Literal["oauth", "code", "manual"]
+Method = Literal["oauth", "code", "manual", "registry"]
 
 
 def pending_key(candidate_id: UUID) -> str:
@@ -70,6 +70,10 @@ class LinkService:
         """Явный ручной ID без проверки (ссылка «нет доступа к почте»)."""
         await self.port.get_participant(participant_id)  # 404, если такого нет
         await self._bind(candidate_id, participant_id, "manual", False)
+
+    async def bind_registry(self, candidate_id: UUID, participant_id: str) -> None:
+        """Реестр (ADR-052): совпали контакты аккаунта или админ принял заявку — подтверждено."""
+        await self._bind(candidate_id, participant_id, "registry", True)
 
     async def verify(self, candidate_id: UUID, code: str) -> bool:
         key = pending_key(candidate_id)

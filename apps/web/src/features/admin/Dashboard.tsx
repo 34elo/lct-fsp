@@ -7,6 +7,7 @@ import { Badge, Card, CardContent, CardHeader, CardTitle, ErrorState, Skeleton }
 
 import { useGetDashboardAdminDashboardGet } from "@/api/endpoints/admin-dashboard/admin-dashboard";
 import type { AppAnalyticsDashboardStage as Stage, Ratio } from "@/api/model";
+import { RegistryEntry } from "@/features/fsp-registry/FspRegistry";
 import { Summary } from "@/features/quality/Quality";
 import { T as QT } from "@/features/quality/text";
 import { cell, T } from "./text";
@@ -80,6 +81,8 @@ export default function Dashboard() {
           ))}
         </div>
       </header>
+
+      <RegistryEntry />
 
       {q.isLoading && <Skeleton className="h-64" />}
       {(q.isError || (q.data && q.data.status !== 200)) && <ErrorState onRetry={() => void q.refetch()} />}

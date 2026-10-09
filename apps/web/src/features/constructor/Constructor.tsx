@@ -14,11 +14,11 @@ import { T } from "./text";
 
 const areaClass = `${fieldClass} h-auto min-h-24 py-2 font-mono text-14`;
 type InProps = React.InputHTMLAttributes<HTMLInputElement>;
-function In({ className, ...p }: InProps) {
+export function In({ className, ...p }: InProps) {
   const fp = useFieldProps();
   return <input {...fp} className={cn(fieldClass, className)} {...p} />;
 }
-function Area(p: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+export function Area(p: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
   const fp = useFieldProps();
   return <textarea {...fp} className={areaClass} {...p} />;
 }
@@ -28,7 +28,7 @@ function Row({ children }: { children: ReactNode }) {
   return <div className="grid gap-3 sm:grid-cols-3">{children}</div>;
 }
 
-function VarEditor({ row, onChange, onRemove }: { row: VarRow; onChange: (r: VarRow) => void; onRemove: () => void }) {
+export function VarEditor({ row, onChange, onRemove }: { row: VarRow; onChange: (r: VarRow) => void; onRemove: () => void }) {
   const set = (p: Partial<VarRow>) => onChange({ ...row, ...p });
   return (
     <div data-testid={sel(`var-${row.id}`)} className="grid gap-2 rounded-lg border border-hairline p-3 sm:grid-cols-[1fr_9rem_2fr_auto] sm:items-end">
@@ -80,7 +80,7 @@ function VarEditor({ row, onChange, onRemove }: { row: VarRow; onChange: (r: Var
   );
 }
 
-function KeyEditor({ f, set }: { f: FormState; set: (p: Partial<FormState>) => void }) {
+export function KeyEditor({ f, set }: { f: FormState; set: (p: Partial<FormState>) => void }) {
   const area = (key: keyof FormState, label: string, testid: string) => (
     <Field label={label}>
       <Area data-testid={testid} value={f[key] as string} onChange={(e) => set({ [key]: e.target.value })} />

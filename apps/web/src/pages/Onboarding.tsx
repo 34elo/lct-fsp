@@ -78,7 +78,7 @@ export default function Onboarding() {
 
           {step.id === "fsp" && (
             <div className="flex flex-col gap-3">
-              <FspLinkPanel next="/onboarding" onLinked={() => finish("fsp", "done")} />
+              <FspLinkPanel onLinked={() => finish("fsp", "done")} />
               <Button variant="ghost" data-testid="onboarding-skip" onClick={() => finish("fsp", "skipped")}>
                 {params.get("fsp") === "linked" ? ONBOARDING.next : ONBOARDING.skip}
               </Button>
