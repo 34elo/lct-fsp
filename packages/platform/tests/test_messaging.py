@@ -141,3 +141,17 @@ async def test_relay_loop_publishes_new_outbox_rows(factory):
         task.cancel()
         with pytest.raises(asyncio.CancelledError):
             await task
+
+
+@pytest.mark.parametrize("attempt,event", [(None, "message_retry"), (3, "message_dead_lettered")])
+async def test_failure_log_carries_traceback(attempt, event):
+    """E42-4: в логе сбоя обработчика есть исключение (traceback), а не только тип ошибки."""
+    from structlog.testing import capture_logs
+
+    exc = TypeError("boom")
+    with capture_logs() as logs:
+        await _retry_or_dead_letter(
+            FakeBroker(), QUEUES["ml.llm"], FakeMessage(attempt), new_envelope("x", "core"), exc
+        )
+    (rec,) = [r for r in logs if r["event"] == event]
+    assert rec["exc_info"] is exc and rec["error"] == "TypeError"
