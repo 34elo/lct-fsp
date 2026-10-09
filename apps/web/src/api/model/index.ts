@@ -333,6 +333,8 @@ export * from './searchRequestSort';
 export * from './searchStatus';
 export * from './searchTuning';
 export * from './sessionTuning';
+export * from './shortlistItem';
+export * from './shortlistOut';
 export * from './similarCard';
 export * from './similarPage';
 export * from './sjtAction';
