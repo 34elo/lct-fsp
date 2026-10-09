@@ -84,6 +84,7 @@ export const ROUTES: RouteDef[] = [
   // >>> block1 (employer)
   { path: "/employer/tasks", title: "Задания компании", section: "employer", owner: "b1", nav: true },
   { path: "/employer/families/new", title: "Конструктор задания", section: "employer", owner: "b1" },
+  { path: "/employer/families/guide", title: "Как сделать задание", section: "employer", owner: "b1" },
   // <<< block1 (employer)
   // >>> block2 (employer)
   { path: "/employer", title: "Подбор", screen: "v2_employer__first, v2_employer__results", section: "employer", owner: "b2", nav: true },
