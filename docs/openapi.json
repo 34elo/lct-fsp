@@ -10646,7 +10646,7 @@
           "assessment"
         ],
         "summary": "Review Attempt",
-        "description": "Разбор теста: условие, ваш и верный ответ, причина. Только завершённая своя попытка.",
+        "description": "Разбор теста: только «что подтянуть» — задания с неполным баллом, ваш ответ и причина; верных ответов и вариантов нет.",
         "operationId": "review_attempt_assessment_attempts__attempt_id__review_get",
         "parameters": [
           {
@@ -30343,20 +30343,6 @@
             "type": "string",
             "title": "Stem"
           },
-          "options": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Options"
-          },
           "yours": {
             "anyOf": [
               {
@@ -30367,17 +30353,6 @@
               }
             ],
             "title": "Yours"
-          },
-          "correct": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Correct"
           },
           "reason": {
             "$ref": "#/components/schemas/ExplainReasonOut"
@@ -30499,20 +30474,6 @@
             "type": "string",
             "title": "Stem"
           },
-          "options": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Options"
-          },
           "yours": {
             "anyOf": [
               {
@@ -30523,17 +30484,6 @@
               }
             ],
             "title": "Yours"
-          },
-          "correct": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Correct"
           },
           "reason": {
             "$ref": "#/components/schemas/ExplainReasonOut"

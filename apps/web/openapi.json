@@ -30380,20 +30380,6 @@
             "type": "string",
             "title": "Stem"
           },
-          "options": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Options"
-          },
           "yours": {
             "anyOf": [
               {
@@ -30404,17 +30390,6 @@
               }
             ],
             "title": "Yours"
-          },
-          "correct": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Correct"
           },
           "reason": {
             "$ref": "#/components/schemas/ExplainReasonOut"
@@ -30536,20 +30511,6 @@
             "type": "string",
             "title": "Stem"
           },
-          "options": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Options"
-          },
           "yours": {
             "anyOf": [
               {
@@ -30560,17 +30521,6 @@
               }
             ],
             "title": "Yours"
-          },
-          "correct": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Correct"
           },
           "reason": {
             "$ref": "#/components/schemas/ExplainReasonOut"
