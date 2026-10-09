@@ -8790,7 +8790,7 @@
           "offers"
         ],
         "summary": "Accept Offer",
-        "description": "Принять; в теле можно оставить один короткий ответ компании (E39-26).",
+        "description": "Принять без текста (E41-4): после принятия стороны видят контакты друг друга.",
         "operationId": "accept_offer_offers__offer_id__accept_post",
         "parameters": [
           {
@@ -8804,23 +8804,6 @@
             }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "anyOf": [
-                  {
-                    "$ref": "#/components/schemas/AcceptIn"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "title": "Body"
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -19683,26 +19666,6 @@
   },
   "components": {
     "schemas": {
-      "AcceptIn": {
-        "properties": {
-          "message": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 500
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Message"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "title": "AcceptIn",
-        "description": "Тело «Принять» (E39-26): один короткий ответ кандидата вместе с принятием."
-      },
       "ActivityCandidate": {
         "properties": {
           "pseudo_id": {

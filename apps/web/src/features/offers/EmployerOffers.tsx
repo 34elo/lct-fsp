@@ -5,7 +5,6 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import {
   useGetOfferOffersOfferIdGet,
-  useListMessagesOffersOfferIdMessagesGet,
   useSetOfferStatusOffersOfferIdStatusPost,
   useWithdrawOfferOffersOfferIdWithdrawPost,
 } from "@/api/endpoints/offers/offers";
@@ -37,8 +36,6 @@ export function EmployerOfferDetail() {
   const err = withdraw.error ?? setStatus.error;
   const [inviteOpen, setInviteOpen] = useState(false);
   const isInterest = !!o && (o.status === "interest" || o.status === "interest_opened");
-  const msgs = useListMessagesOffersOfferIdMessagesGet(id, { query: { enabled: !!o, retry: false } });
-  const candReply = (msgs.data?.status === 200 ? msgs.data.data : []).find((m) => m.author_side === "candidate");
   return (
     <main className={PAGE.normal}>
       <Link to="/employer/offers" className="text-sm font-semibold text-brand-fg hover:underline">← Все приглашения</Link>
@@ -72,7 +69,6 @@ export function EmployerOfferDetail() {
                   </p>
                 )}
                 {o.message && <MessageCard label="Ваше сообщение" text={o.message} testId="offer-message" />}
-                {candReply && <MessageCard label="Ответ кандидата" text={candReply.text} testId="offer-reply" />}
                 <p className="text-xs text-muted">{isInterest ? IT.interestSent : "Отправлен"} {dateOnly(o.created_at)}, ответить можно до {dateOnly(o.expires_at)}.</p>
                 {isInterest && <p role="status" className="rounded-lg bg-tint-50 px-3 py-2 text-sm">{o.status === "interest_opened" ? IT.waitInvite : IT.waitOpen}</p>}
                 {o.decline && (

@@ -69,7 +69,7 @@ describe("навигатор роста", () => {
     ]);
     expect(steps[0].title).toContain("Junior+");
     expect(steps[1].uplift).toBe("+64% вакансий");
-    expect(steps[1].actions?.map((a) => a.href)).toContain("https://fsp.example/reg");
+    expect(steps[1].actions?.map((a) => a.href)).not.toContain("https://fsp.example/reg");
     expect(steps[4].title).toContain("Middle");
   });
 
@@ -80,7 +80,8 @@ describe("навигатор роста", () => {
     expect(within(path).getByText(/Redis/)).toBeInTheDocument();
     expect(screen.getByText("Кубок ФСП", { selector: "b" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Записаться" })).toHaveAttribute("href", "https://fsp.example/reg");
-    expect(within(path).getByRole("link", { name: /Соревнование ФСП: Кубок ФСП/ })).toHaveAttribute("href", "https://fsp.example/reg");
+    expect(screen.getByRole("heading", { name: "Предстоящие события" })).toBeInTheDocument();
+    expect(within(path).queryByRole("link", { name: /Соревнование ФСП/ })).toBeNull();
     expect(within(path).getByRole("link", { name: "Пройти тест" })).toHaveAttribute("href", "/me/assessment?profession=backend&grade=middle");
     await waitFor(() => expect(screen.getByText("+64%")).toBeInTheDocument());
     expect(screen.getByText(/Вместе с Docker \+ Redis: \+86% вакансий/)).toBeInTheDocument();
