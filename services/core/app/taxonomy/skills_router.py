@@ -140,6 +140,29 @@ class HintsOut(BaseModel):
     profession_candidates: list[ProfessionCandidate]
 
 
+class SkillGraphNode(BaseModel):
+    id: str
+    type: str = "skill"
+    label: str
+    skill_type: str | None = None
+    status: str
+
+
+class SkillGraphEdge(BaseModel):
+    from_: str = Field(alias="from")
+    to: str
+    type: str  # adjacent | parent (parent: от дочернего к родителю)
+    weight: float | None = None
+
+    model_config = {"populate_by_name": True}
+
+
+class SkillGraphOut(BaseModel):
+    version: int
+    nodes: list[SkillGraphNode]
+    edges: list[SkillGraphEdge]
+
+
 async def _ver(session: AsyncSession) -> VersionOut:
     return VersionOut(taxonomy_version=await service.get_version(session))
 
@@ -290,6 +313,34 @@ async def remove_blocklist(
 async def list_provisional(_: User = Depends(_admin), session: AsyncSession = Depends(get_session)):
     """Временные навыки с карточками-черновиками ml."""
     return await skills_admin.provisional(session)
+
+
+@router.get("/graph", response_model=SkillGraphOut, responses=problem_responses(401, 403))
+async def get_graph(_: User = Depends(_admin), session: AsyncSession = Depends(get_session)):
+    """Граф навыков справочника для просмотра: узлы и связи «рядом» и «часть»; без данных людей."""
+    snap = await service.build_snapshot(session)
+    return {
+        "version": await service.get_version(session),
+        "nodes": [
+            {
+                "id": x["slug"],
+                "label": x["name"],
+                "skill_type": x["skill_type"],
+                "status": x["status"],
+            }
+            for x in snap["skills"]
+        ],
+        "edges": [
+            *(
+                {"from": r["a"], "to": r["b"], "type": "adjacent", "weight": r["weight"]}
+                for r in snap["adjacent"]
+            ),
+            *(
+                {"from": r["child"], "to": r["parent"], "type": "parent", "weight": r["weight"]}
+                for r in snap["parent"]
+            ),
+        ],
+    }
 
 
 @router.get("/hints", response_model=HintsOut, responses=problem_responses(401, 403))
