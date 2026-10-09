@@ -337,7 +337,8 @@ make compose-config  # вывести итоговый compose-файл
 
 # Тесты и качество
 make test            # pytest + vitest
-make lint            # ruff + eslint
+make lint            # ruff + eslint + проверка ссылок в docs (make docs-links)
+make deadcode        # мёртвый код: knip (фронт) и vulture (Python)
 make eval            # метрики качества теста/подбора
 cd apps/web && pnpm e2e   # Playwright на поднятом стеке с сидом (см. ниже)
 
@@ -471,7 +472,7 @@ docker compose --profile obs up -d
 
 ## Дополнительные ссылки
 
-- [Архитектура развёртывания](../architecture/deployment.md) — топология, Compose-сервисы, переменные
-- [OpenAPI](../openapi.json) — справочник REST API
-- [AsyncAPI](../asyncapi.json) — каталог событий и команд
-- [Вопросы жюри](../notes/qa-2026.md) — критерии оценки, требования к стенду
+- [Архитектура развёртывания](architecture/deployment.md) — топология, Compose-сервисы, переменные
+- [OpenAPI](openapi.json) — справочник REST API
+- [AsyncAPI](asyncapi.json) — каталог событий и команд
+- [Вопросы жюри](notes/qa-2026.md) — критерии оценки, требования к стенду

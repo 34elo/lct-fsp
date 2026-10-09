@@ -20,7 +20,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.candidates.models import Candidate
 from app.graph.fsp_models import FspCompetitionRow, FspResultRow, FspTeamMember, FspTeamRow
-from app.offers.models import Offer
 
 MIN_TEAM = 2
 
@@ -142,13 +141,3 @@ def member_by_pseudo(team: TeamView, pseudo_id: str) -> Candidate:
         if m.candidate.pseudo_id == pseudo_id:
             return m.candidate
     raise ProblemError(404, "candidate_not_found", "Кандидат не найден в этой команде")
-
-
-async def team_offers(session: AsyncSession, company_id: uuid.UUID, tid: uuid.UUID) -> list[Offer]:
-    return list(
-        await session.scalars(
-            select(Offer)
-            .where(Offer.company_id == company_id, Offer.team_offer_id == tid)
-            .order_by(Offer.created_at, Offer.id)
-        )
-    )

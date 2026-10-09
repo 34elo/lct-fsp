@@ -55,10 +55,6 @@ export function dateOnly(iso: string): string {
   return new Date(iso).toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
 }
 
-export function daysLeft(iso: string): number {
-  return Math.max(0, Math.ceil((new Date(iso).getTime() - Date.now()) / 86_400_000));
-}
-
 /** Понятный текст по машинному `code` Problem Details (api.md, приглашения). */
 export function offerErrorText(err: unknown, fallback = "Не удалось выполнить действие. Попробуйте ещё раз."): string {
   if (!(err instanceof ApiError)) return fallback;

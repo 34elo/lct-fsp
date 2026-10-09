@@ -84,10 +84,14 @@ class FspStrengthConfig:
 
 
 def k_level(level: str | None, cfg: FspStrengthConfig) -> float:
+    """Коэффициент уровня соревнования; неизвестный уровень — минимальный (ml.md §3.2)."""
     return cfg.level_k.get(level or "", min(cfg.level_k.values()))
 
 
 def k_result(place: int | None, total: int | None, cfg: FspStrengthConfig) -> float:
+    """Коэффициент результата: призёр, топ-10/25/50 % по месту среди участников, иначе «участие»
+    (ml.md §3.2).
+    """
     if place is None:
         return cfg.participated
     if place <= cfg.prize_places:
@@ -102,6 +106,7 @@ def k_result(place: int | None, total: int | None, cfg: FspStrengthConfig) -> fl
 
 
 def k_stage(stage: str, cfg: FspStrengthConfig) -> float:
+    """Коэффициент этапа (финал или отбор); неизвестный — как отбор (ml.md §3.2)."""
     return cfg.stage_k.get(stage, cfg.stage_k["qualifier"])
 
 
@@ -114,6 +119,9 @@ def result_strength(
     stage: str,
     cfg: FspStrengthConfig,
 ) -> float:
+    """Сила доказательства результата ФСП: `min(0.95, w_rule × k_level × k_result × k_stage)` (ml.md
+    §3.2).
+    """
     s = weight * k_level(level, cfg) * k_result(place, total, cfg) * k_stage(stage, cfg)
     return round(min(cfg.max_strength, s), 6)
 
@@ -159,6 +167,9 @@ def relevance_multiplier(relevance: float | None, cfg: FspStrengthConfig) -> flo
 
 
 def is_relevant(relevance: float | None, cfg: FspStrengthConfig) -> bool | None:
+    """Релевантно ли соревнование профессии (порог `f_relevant_threshold`); `None` — релевантность
+    неизвестна.
+    """
     return None if relevance is None else relevance >= cfg.f_relevant_threshold
 
 
