@@ -79,8 +79,8 @@ describe("routes", () => {
     expect(activeNav(NAV.employer, "/employer/subscriptions")?.label).toBe("Подбор");
     expect(activeNav(NAV.employer, "/employer/vacancies/1/shortlist")?.label).toBe("Вакансии");
     expect(activeNav(NAV.employer, "/employer/families/new")?.label).toBe("Задания");
-    expect(activeNav(NAV.candidate, "/me/tasks")?.label).toBe("Профиль");
-    expect(activeNav(NAV.candidate, "/onboarding")?.label).toBe("Профиль");
+    expect(activeNav(NAV.candidate, "/me/tasks")?.label).toBe("Главная"); // задания — с Главной (E39-15)
+    expect(activeNav(NAV.candidate, "/onboarding")).toBeUndefined(); // онбординга в меню нет (E39-15)
     expect(activeNav(NAV.candidate, "/me/stats")?.label).toBe("Статистика");
     expect(activeNav(NAV.admin, "/federation/moderation")?.label).toBe("Модерация");
   });

@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
 import { App } from "@/app/App";
@@ -38,9 +38,23 @@ const full = {
   ],
   team_signals: [{ signal: "leadership", value: 0.7, label: "strong", facts: [{ fact_id: "f1", title: "Капитан команды, 2026" }] }],
 };
+const parsedResume = {
+  parser_version: "fake",
+  person: { full_name: "Анна Резюмеева", email: "anna@cv.test", phone: null, telegram: null, links: ["https://github.com/anna-cv", "не ссылка"] },
+  experience: [{ company: "Кедр Софт", title: "Backend-разработчик", start: "2022-03", end: null, description: "API", skills: ["python"], is_commercial: true }],
+  education: [{ institution: "МГТУ", degree: "бакалавр", field: "ИВТ", year_end: 2021 }],
+  skills: [
+    { slug: "python", name: "Python" },
+    { slug: "redis", name: "Redis" },
+  ],
+  unknown_skills: [],
+};
 let profile: unknown = full;
 let standing: unknown = null;
 let evidenceStatus = 200;
+let resume: unknown = null;
+type Call = { url: string; method: string; body: unknown };
+let calls: Call[] = [];
 
 class NoES {
   addEventListener() {}
@@ -52,13 +66,26 @@ beforeEach(() => {
   profile = full;
   evidenceStatus = 200;
   standing = null;
+  resume = null;
+  calls = [];
   setAccessToken(null);
   vi.stubGlobal(
     "fetch",
-    vi.fn(async (url: string) => {
+    vi.fn(async (url: string, init?: RequestInit) => {
+      const method = init?.method ?? "GET";
+      const body = typeof init?.body === "string" ? JSON.parse(init.body) : init?.body;
+      if (method !== "GET" && !url.endsWith("/auth/refresh")) calls.push({ url, method, body });
       if (url.endsWith("/auth/refresh")) return res(200, { access_token: "t" });
       if (url.endsWith("/me")) return res(200, { id: "u1", email: "a@b.ru", role: "candidate", consents: ["pd_processing"] });
+      if (url.endsWith("/candidates/me/profile") && method === "PATCH") return res(200, { ...(profile as object), ...(body as object) });
       if (url.endsWith("/candidates/me/profile")) return res(200, profile);
+      if (url.endsWith("/candidates/me/resumes") && method === "POST") {
+        resume = { status: "parsed", parsed: parsedResume };
+        return res(202, { resume_id: "r1", job_id: "j1" });
+      }
+      if (url.endsWith("/candidates/me/resumes/r1/confirm")) return res(200, { status: "confirmed", parsed: parsedResume });
+      if (url.endsWith("/candidates/me/resumes/r1")) return resume ? res(200, resume) : res(404);
+      if (url.endsWith("/candidates/me/fsp")) return res(200, { link: { linked: false, verified: false }, achievements: [], ranks: [], teams: [] });
       if (url.endsWith("/candidates/me/standing")) return standing ? res(200, standing) : res(404);
       if (url.includes("/candidates/me/graph")) return res(200, { nodes: [], edges: [] });
       if (url.endsWith("/candidates/me/skills/python/evidence")) return evidenceStatus === 200 ? res(200, [ev]) : res(404, { code: "skill_not_found" });
@@ -79,100 +106,172 @@ function mount(path: string) {
   );
 }
 
-test("профиль: подтверждено и заявлено раздельно, грейд, разбивка, командные сигналы", async () => {
+test("обзор: грейд и статус, плитки, заявлено и подтверждено, командные сигналы; без онбординга и заданий", async () => {
   mount("/me/profile");
   expect(await screen.findByRole("heading", { name: "Профиль", level: 1 })).toBeInTheDocument();
-  const confirmed = await screen.findByRole("region", { name: "Подтверждено" });
-  const row = within(confirmed).getByRole("link", { name: "Python: чем подтверждён" });
-  expect(row).toHaveAttribute("href", "/me/skills/python");
-  expect(row).toHaveTextContent("●●●○");
-  expect(row).toHaveTextContent("ФСП");
-  const claimed = screen.getByRole("region", { name: "Заявлено" });
-  expect(within(claimed).getByRole("link", { name: "Redis: чем подтверждён" })).toHaveTextContent("заявлено в резюме");
-  expect(within(claimed).getByRole("link", { name: "Redis: чем подтверждён" })).toHaveTextContent("○○○○");
-  const card = screen.getByTestId("profile-status-card");
+  const card = await screen.findByTestId("profile-status-card");
   expect(within(card).getByTestId("profile-grade")).toHaveTextContent("Junior+ · Backend");
   expect(within(card).getByTestId("profile-grade-status")).toHaveTextContent("не подтверждён");
   expect(within(card).getByText(/Предварительно.*уверенность 40%/)).toBeInTheDocument();
   expect(within(card).getByTestId("profile-published")).toHaveTextContent("профиль опубликован");
+  expect(screen.getByTestId("profile-tile-confirmed")).toHaveTextContent("1");
+  expect(screen.getByTestId("profile-tile-claimed")).toHaveTextContent("1");
   expect(screen.queryByRole("region", { name: "Почему такой грейд" })).not.toBeInTheDocument();
   const team = screen.getByRole("region", { name: "Командные сигналы" });
   expect(within(team).getByText("Лидерство")).toBeInTheDocument();
-  expect(within(team).getByText(/сильное подтверждение/)).toBeInTheDocument();
   expect(within(team).getByText("Капитан команды, 2026")).toBeInTheDocument();
   expect(within(team).getByText(/коммуникабельный/)).toBeInTheDocument();
+  expect(screen.getByTestId("profile-tab-overview")).toHaveAttribute("data-state", "active");
+  expect(document.querySelector('a[href="/onboarding"]')).toBeNull();
+  expect(document.querySelector('a[href="/me/tasks"]')).toBeNull();
+  expect(within(screen.getByTestId("profile-strength")).getByRole("link", { name: "добавить: Тест" })).toHaveAttribute("href", "/me/assessment");
 });
 
-test("профиль: подтверждённый тестом грейд и метка «тест 07.10» у навыка", async () => {
-  profile = {
-    ...full,
-    skills: [{ ...full.skills[0], sources: ["test", "fsp"], top_evidence: [{ ...ev, source: "test", observed_at: "2026-10-07" }] }],
-  };
+test("обзор: подтверждённый тестом грейд", async () => {
   standing = { profession: "backend", grade: "junior", mode: "express", confirmed_at: "2026-10-07T10:00:00Z" };
   mount("/me/profile");
   const card = await screen.findByTestId("profile-status-card");
   await waitFor(() => expect(within(card).getByTestId("profile-grade-status")).toHaveTextContent("подтверждён 07.10 · экспресс"));
   expect(within(card).getByTestId("profile-grade")).toHaveTextContent("Junior · Backend");
-  expect(screen.getByRole("link", { name: "Python: чем подтверждён" })).toHaveTextContent("тест 07.10");
 });
 
-test("профиль: вкладки ведут на ФСП, резюме и граф, действие «Добавить доказательство»", async () => {
-  mount("/me/profile");
-  await screen.findByTestId("profile-tabs");
-  const tabs = within(screen.getByTestId("profile-tabs"));
-  expect(tabs.getByRole("link", { name: "Навыки" })).toHaveAttribute("aria-current", "page");
-  expect(tabs.getByRole("link", { name: "ФСП" })).toHaveAttribute("href", "/me/profile?tab=fsp");
-  expect(tabs.getByRole("link", { name: "Резюме" })).toHaveAttribute("href", "/me/profile?tab=resume");
-  expect(tabs.getByRole("link", { name: "Граф" })).toHaveAttribute("href", "/me/profile?tab=graph");
-  expect(screen.getByTestId("profile-add")).toHaveAttribute("href", "/onboarding");
-  expect(screen.getByTestId("profile-pdf")).toBeInTheDocument();
-  expect(screen.getByTestId("profile-edit-link")).toHaveAttribute("href", "/me/profile/edit");
-  expect(within(screen.getByTestId("profile-strength")).getByRole("link", { name: "добавить: Тест" })).toHaveAttribute("href", "/me/assessment");
+test("вкладки «Обзор · Навыки · Данные · Граф» листаются по горизонтали; старая «ФСП» ведёт в «Данные»", async () => {
+  mount("/me/profile?tab=fsp");
+  const tabs = await screen.findByTestId("profile-tabs");
+  expect(within(tabs).getAllByRole("tab").map((t) => t.textContent)).toEqual(["Обзор", "Навыки", "Данные", "Граф"]);
+  expect(tabs.className).toMatch(/overflow-x-auto/);
+  expect(screen.getByTestId("profile-tab-data")).toHaveAttribute("data-state", "active");
+  expect(await screen.findByTestId("profile-data")).toBeInTheDocument();
+  fireEvent.mouseDown(screen.getByTestId("profile-tab-skills"), { button: 0 });
+  expect(await screen.findByTestId("profile-skills")).toBeInTheDocument();
 });
 
-test("профиль: вкладка «ФСП» — достижения, разряд и меню кандидата", async () => {
+const many = Array.from({ length: 20 }, (_, i) => ({
+  skill: { slug: `s${i}`, name: `Навык ${i}`, group: "language", type: i % 2 ? "hard" : "fundamental" },
+  confidence: 0.9 - i * 0.01,
+  level: i < 10 ? 3 : 1,
+  sources: ["test"],
+  claimed_only: i >= 16,
+  status: "active",
+  derived_from: null,
+  top_evidence: [],
+}));
+
+test("навыки: по умолчанию 15, поиск, «подтверждено/заявлено», показать все", async () => {
+  profile = { ...full, skills: many };
+  mount("/me/profile?tab=skills");
+  const list = await screen.findByTestId("profile-skills-list");
+  expect(within(list).getAllByRole("listitem")).toHaveLength(15);
+  expect(screen.getByTestId("profile-skills-count")).toHaveTextContent("Показано 15 из 20");
+  expect(screen.queryByText("Заявлено и подтверждено")).not.toBeInTheDocument(); // блоки грейда — в «Обзоре»
+  fireEvent.click(screen.getByTestId("profile-skills-all"));
+  expect(within(screen.getByTestId("profile-skills-list")).getAllByRole("listitem")).toHaveLength(20);
+  fireEvent.click(screen.getByTestId("profile-skills-state-claimed"));
+  expect(within(screen.getByTestId("profile-skills-list")).getAllByRole("listitem")).toHaveLength(4);
+  fireEvent.click(screen.getByTestId("profile-skills-state-all"));
+  fireEvent.change(screen.getByTestId("profile-skills-search"), { target: { value: "навык 1" } });
+  expect(within(screen.getByTestId("profile-skills-list")).getAllByRole("listitem")).toHaveLength(11); // 1, 10–19
+  fireEvent.change(screen.getByTestId("profile-skills-search"), { target: { value: "нет такого" } });
+  expect(screen.getByText("Ничего не нашлось")).toBeInTheDocument();
+  fireEvent.click(screen.getByTestId("profile-skills-reset"));
+  expect(screen.getByTestId("profile-skills-count")).toHaveTextContent("Показано 20 из 20");
+});
+
+test("навыки: скрытие уходит в PATCH hidden_skills, скрытые видны только по флажку", async () => {
+  profile = { ...full, hidden_skills: ["redis"] };
+  mount("/me/profile?tab=skills");
+  const list = await screen.findByTestId("profile-skills-list");
+  expect(within(list).queryByTestId("profile-skill-redis")).not.toBeInTheDocument();
+  fireEvent.click(screen.getByTestId("profile-skills-show-hidden"));
+  expect(await screen.findByTestId("profile-skill-redis")).toHaveTextContent("скрыт от компаний");
+  fireEvent.click(screen.getByRole("button", { name: "Скрыть Python от компаний" }));
+  await waitFor(() => expect(calls.find((c) => c.method === "PATCH")?.body).toEqual({ hidden_skills: ["python", "redis"] }));
+});
+
+test("данные: ФИО, контакты, опыт, образование, ссылки в одном формате; ФСП отдельной карточкой", async () => {
   profile = {
     ...full,
+    full_name: "Анна Иванова",
+    contacts: { email: "anna@x.test", phone: null, telegram: "@anna_dev" },
+    visibility: { full_name: false },
+    preferences: { city: "Санкт-Петербург", salary_min: 70000, formats: ["remote", "hybrid"], employment_types: [], relocation: false },
+    experience: [{ title: "Backend-разработчик", company: "Кедр Софт", start: "2024-08", end: null, skills: [] }],
+    education: [{ institution: "МГТУ", degree: "бакалавр", field: "ИВТ", year_end: 2021 }],
+    links: ["https://github.com/anna"],
     fsp: {
       verified: true,
       achievements: [{ fact_id: "f1", title: "Финал по продуктовому программированию", level: "national", place: 2, of: 40, year: 2026, team_role: "captain" }],
       ranks: [{ discipline: "product", rank: "rank_2" }],
     },
   };
-  mount("/me/profile?tab=fsp");
-  const fsp = await screen.findByRole("region", { name: "Достижения ФСП" });
+  mount("/me/profile?tab=data");
+  const personal = await screen.findByRole("region", { name: "Личные данные" });
+  expect(within(personal).getByText("Анна Иванова")).toBeInTheDocument();
+  expect(within(personal).getByText(/Компания увидит после приглашения/)).toBeInTheDocument();
+  expect(within(personal).getByText("@anna_dev")).toBeInTheDocument();
+  const exp = screen.getByRole("region", { name: "Опыт" });
+  expect(within(exp).getByText(/Кедр Софт/)).toBeInTheDocument();
+  expect(within(exp).getByText("2024 — по сей день")).toBeInTheDocument();
+  expect(within(screen.getByRole("region", { name: "Образование" })).getByText("МГТУ")).toBeInTheDocument();
+  expect(within(screen.getByRole("region", { name: "Ссылки" })).getByRole("link", { name: "https://github.com/anna" })).toHaveAttribute("rel", expect.stringContaining("noopener"));
+  expect(within(screen.getByRole("region", { name: "Пожелания к работе" })).getByText("удалёнка или гибрид")).toBeInTheDocument();
+  const fsp = screen.getByRole("region", { name: "Достижения ФСП" });
   expect(within(fsp).getByText(/Финал по продуктовому программированию/)).toBeInTheDocument();
-  expect(within(fsp).getByText("привязан")).toBeInTheDocument();
-  expect(within(fsp).getByRole("img", { name: "2 место, медаль" })).toBeInTheDocument();
-  expect(within(fsp).getByText("2 из 40")).toBeInTheDocument();
   expect(within(fsp).getByText("2 разряд · Продуктовое программирование")).toBeInTheDocument();
-  expect(screen.getByTestId("profile-tab-fsp")).toHaveAttribute("aria-current", "page");
-  // Меню (E35-1): шапка (десктоп) и нижняя панель — одни и те же четыре раздела.
-  const [top, bottom] = screen.getAllByRole("navigation", { name: "Разделы" });
-  expect(within(top).getByRole("link", { name: "Приглашения" })).toHaveAttribute("href", "/me/offers");
-  expect(within(top).getByRole("link", { name: "Профиль" })).toHaveAttribute("href", "/me/profile");
-  expect(within(bottom).getByRole("link", { name: "Тест" })).toHaveAttribute("href", "/me/assessment");
 });
 
-test("профиль: вкладка «Резюме» — город, ожидания, формат, опыт", async () => {
-  profile = {
-    ...full,
-    preferences: { city: "Санкт-Петербург", salary_min: 70000, formats: ["remote", "hybrid"], employment_types: [], relocation: false },
-    experience: [{ title: "Backend-разработчик", company: "Кедр Софт", start: "2024-08-01", end: null, skills: [] }],
-  };
-  mount("/me/profile?tab=resume");
-  const card = await screen.findByRole("region", { name: "Резюме" });
-  expect(within(card).getByText("Санкт-Петербург")).toBeInTheDocument();
-  expect(within(card).getByText(/^от 70.000/)).toBeInTheDocument();
-  expect(within(card).getByText("удалёнка или гибрид")).toBeInTheDocument();
-  expect(within(card).getByText("не указан")).toBeInTheDocument();
-  expect(within(screen.getByRole("region", { name: "Опыт" })).getByText(/Кедр Софт/)).toBeInTheDocument();
+test("данные: ручная правка — ФИО, контакты и ссылки уходят одним PATCH", async () => {
+  mount("/me/profile?tab=data");
+  fireEvent.click(await screen.findByTestId("profile-data-edit"));
+  fireEvent.change(screen.getByTestId("profile-data-fullname"), { target: { value: " Пётр Петров " } });
+  fireEvent.change(screen.getByTestId("profile-data-email"), { target: { value: "petr@x.test" } });
+  fireEvent.click(screen.getByTestId("profile-data-link-add"));
+  fireEvent.change(screen.getByTestId("profile-data-link-0"), { target: { value: "github.com/petr" } });
+  fireEvent.click(screen.getByTestId("profile-data-save"));
+  expect(await screen.findByText("Ссылка должна начинаться с http:// или https://")).toBeInTheDocument();
+  expect(calls).toHaveLength(0);
+  fireEvent.change(screen.getByTestId("profile-data-link-0"), { target: { value: "https://github.com/petr" } });
+  fireEvent.click(screen.getByTestId("profile-data-save"));
+  await waitFor(() =>
+    expect(calls[0]?.body).toEqual({ full_name: "Пётр Петров", contacts: { email: "petr@x.test", phone: null, telegram: null }, links: ["https://github.com/petr"] }),
+  );
+  expect(await screen.findByTestId("profile-data-saved")).toHaveTextContent("Данные сохранены.");
+  expect(calls.some((c) => c.url.includes("/confirm"))).toBe(false); // без резюме опыт не подтверждаем
+});
+
+test("данные: «Заполнить из резюме» — разбор сразу виден в полях, сохранение подтверждает резюме", async () => {
+  mount("/me/profile?tab=data");
+  const file = new File(["%PDF-1.4"], "cv.pdf", { type: "application/pdf" });
+  fireEvent.change(await screen.findByTestId("profile-data-file"), { target: { files: [file] } });
+  const draft = await screen.findByTestId("profile-data-draft");
+  expect(draft).toHaveTextContent("Черновик из резюме");
+  expect(draft).toHaveTextContent("навыков: 2");
+  expect(screen.getByTestId("profile-data-fullname")).toHaveValue("Анна Резюмеева");
+  expect(screen.getByTestId("profile-data-email")).toHaveValue("anna@cv.test");
+  expect(screen.getByTestId("profile-data-link-0")).toHaveValue("https://github.com/anna-cv");
+  expect(screen.queryByTestId("profile-data-link-1")).not.toBeInTheDocument(); // «не ссылка» отброшена
+  expect(within(screen.getByTestId("profile-data-exp-0")).getByDisplayValue("Кедр Софт")).toBeInTheDocument();
+  expect(within(screen.getByTestId("profile-data-edu-0")).getByDisplayValue("МГТУ")).toBeInTheDocument();
+  fireEvent.click(screen.getByTestId("profile-data-save"));
+  await waitFor(() => expect(calls.some((c) => c.url.endsWith("/resumes/r1/confirm"))).toBe(true));
+  expect(calls.find((c) => c.method === "PATCH")?.body).toMatchObject({ full_name: "Анна Резюмеева", links: ["https://github.com/anna-cv"] });
+  expect(calls.find((c) => c.url.endsWith("/confirm"))?.body).toMatchObject({
+    edits: { experience: [{ company: "Кедр Софт", start: "2022-03" }], education: [{ institution: "МГТУ" }] },
+  });
+});
+
+test("данные: незаконченный черновик (resume_draft_id) открывается после перезагрузки", async () => {
+  profile = { ...full, resume_draft_id: "r1" };
+  resume = { status: "parsed", parsed: parsedResume };
+  mount("/me/profile?tab=data");
+  expect(await screen.findByTestId("profile-data-draft")).toBeInTheDocument();
+  expect(screen.getByTestId("profile-data-fullname")).toHaveValue("Анна Резюмеева");
 });
 
 test("/me/graph ведёт на вкладку «Граф» профиля", async () => {
   mount("/me/graph");
   expect(await screen.findByTestId("graph-view")).toBeInTheDocument();
-  expect(screen.getByTestId("profile-tab-graph")).toHaveAttribute("aria-current", "page");
+  expect(screen.getByTestId("profile-tab-graph")).toHaveAttribute("data-state", "active");
 });
 
 test("ошибка загрузки профиля: сообщение и повтор", async () => {
@@ -189,11 +288,12 @@ test("ошибка загрузки профиля: сообщение и пов
   expect(screen.queryByTestId("profile-tabs")).not.toBeInTheDocument();
 }, 15000);
 
-test("пустой профиль: «Доказательств пока нет» и одна кнопка", async () => {
+test("пустой профиль: «Доказательств пока нет», одна кнопка, вкладка «Данные» доступна", async () => {
   profile = { ...base, claimed_soft: [], category: null, skills: [], team_signals: [], grade: { grade: null, score: null, confidence: null, preliminary: true, breakdown: [] } };
   mount("/me/profile");
   expect(await screen.findByText("Доказательств пока нет")).toBeInTheDocument();
-  expect(screen.getByTestId("profile-empty-action")).toHaveAttribute("href", "/onboarding");
+  expect(screen.getByTestId("profile-empty-action")).toHaveAttribute("href", "/me/assessment");
+  expect(screen.getByTestId("profile-tab-data")).toBeInTheDocument();
   expect(screen.queryByRole("region", { name: "Почему такой грейд" })).not.toBeInTheDocument();
 });
 
