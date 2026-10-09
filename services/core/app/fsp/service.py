@@ -86,3 +86,9 @@ async def demo_create_result(session: AsyncSession, connector: ConnectorClient) 
 async def demo_reset(session: AsyncSession, connector: ConnectorClient) -> None:
     """Демо-кнопка: очистить результаты ФСП."""
     await connector.demo_reset()
+
+
+async def pending_requests_count(connector: ConnectorClient) -> int:
+    """Число заявок на привязку ФСП, ждущих решения админа (E39-29)."""
+    data = await connector.registry("GET", "/requests", params={"status": "pending"})
+    return len(data or [])
