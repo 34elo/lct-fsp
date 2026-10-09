@@ -74,6 +74,7 @@ import type {
   ResolveComplaintIn,
   RetiredOut,
   SkillCard,
+  SkillGraphOut,
   TwoWorldsAdminDemoTwoWorldsGetParams,
   TwoWorldsOut,
   VersionOut
@@ -4823,6 +4824,141 @@ export function useListProvisionalAdminSkillsProvisionalGet<TData = Awaited<Retu
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getListProvisionalAdminSkillsProvisionalGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type getGraphAdminSkillsGraphGetResponse200 = {
+  data: SkillGraphOut
+  status: 200
+}
+
+export type getGraphAdminSkillsGraphGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type getGraphAdminSkillsGraphGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type getGraphAdminSkillsGraphGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type getGraphAdminSkillsGraphGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type getGraphAdminSkillsGraphGetResponseSuccess = (getGraphAdminSkillsGraphGetResponse200) & {
+  headers: Headers;
+};
+export type getGraphAdminSkillsGraphGetResponseError = (getGraphAdminSkillsGraphGetResponse401ApplicationProblemJson | getGraphAdminSkillsGraphGetResponse401ApplicationJson | getGraphAdminSkillsGraphGetResponse403ApplicationProblemJson | getGraphAdminSkillsGraphGetResponse403ApplicationJson) & {
+  headers: Headers;
+};
+
+export type getGraphAdminSkillsGraphGetResponse = (getGraphAdminSkillsGraphGetResponseSuccess | getGraphAdminSkillsGraphGetResponseError)
+
+export const getGetGraphAdminSkillsGraphGetUrl = () => {
+
+
+
+
+  return `/admin/skills/graph`
+}
+
+/**
+ * Граф навыков справочника для просмотра: узлы и связи «рядом» и «часть»; без данных людей.
+ * @summary Get Graph
+ */
+export const getGraphAdminSkillsGraphGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getGraphAdminSkillsGraphGetResponse> => {
+
+  return apiFetch<getGraphAdminSkillsGraphGetResponse>(getGetGraphAdminSkillsGraphGetUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGraphAdminSkillsGraphGetQueryKey = () => {
+    return [
+    `/admin/skills/graph`
+    ] as const;
+    }
+
+
+export const getGetGraphAdminSkillsGraphGetQueryOptions = <TData = Awaited<ReturnType<typeof getGraphAdminSkillsGraphGet>>, TError = ErrorType<ProblemOut>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGraphAdminSkillsGraphGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGraphAdminSkillsGraphGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGraphAdminSkillsGraphGet>>> = ({ signal }) => getGraphAdminSkillsGraphGet({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGraphAdminSkillsGraphGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetGraphAdminSkillsGraphGetQueryResult = NonNullable<Awaited<ReturnType<typeof getGraphAdminSkillsGraphGet>>>
+export type GetGraphAdminSkillsGraphGetQueryError = ErrorType<ProblemOut>
+
+
+export function useGetGraphAdminSkillsGraphGet<TData = Awaited<ReturnType<typeof getGraphAdminSkillsGraphGet>>, TError = ErrorType<ProblemOut>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGraphAdminSkillsGraphGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getGraphAdminSkillsGraphGet>>,
+          TError,
+          Awaited<ReturnType<typeof getGraphAdminSkillsGraphGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetGraphAdminSkillsGraphGet<TData = Awaited<ReturnType<typeof getGraphAdminSkillsGraphGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGraphAdminSkillsGraphGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getGraphAdminSkillsGraphGet>>,
+          TError,
+          Awaited<ReturnType<typeof getGraphAdminSkillsGraphGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetGraphAdminSkillsGraphGet<TData = Awaited<ReturnType<typeof getGraphAdminSkillsGraphGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGraphAdminSkillsGraphGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Graph
+ */
+
+export function useGetGraphAdminSkillsGraphGet<TData = Awaited<ReturnType<typeof getGraphAdminSkillsGraphGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGraphAdminSkillsGraphGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetGraphAdminSkillsGraphGetQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

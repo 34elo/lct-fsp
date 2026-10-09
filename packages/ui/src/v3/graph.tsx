@@ -76,6 +76,8 @@ export interface EvidenceGraphProps {
   renderSkillAction?: (node: EvidenceGraphNode) => ReactNode;
   /** Начальное значение «только подтверждённые». */
   defaultOnlyConfirmed?: boolean;
+  /** Скрыть переключатель «Только подтверждённые» (граф без фактов-подтверждений, например справочник навыков). */
+  hideConfirmedFilter?: boolean;
   className?: string;
   "data-testid"?: string;
 }
@@ -302,6 +304,7 @@ export function EvidenceGraph({
   typeLabels = SKILL_TYPE_LABEL,
   renderSkillAction,
   defaultOnlyConfirmed = false,
+  hideConfirmedFilter = false,
   className,
   "data-testid": testId = "egraph",
 }: EvidenceGraphProps) {
@@ -493,10 +496,12 @@ export function EvidenceGraph({
         ) : (
           <span />
         )}
-        <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 whitespace-nowrap text-14 text-ink">
-          <Switch checked={onlyConfirmed} onCheckedChange={setOnlyConfirmed} data-testid={`${testId}-confirmed`} aria-label="Только подтверждённые" />
-          Только подтверждённые
-        </label>
+        {!hideConfirmedFilter && (
+          <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 whitespace-nowrap text-14 text-ink">
+            <Switch checked={onlyConfirmed} onCheckedChange={setOnlyConfirmed} data-testid={`${testId}-confirmed`} aria-label="Только подтверждённые" />
+            Только подтверждённые
+          </label>
+        )}
       </div>
 
       <div
