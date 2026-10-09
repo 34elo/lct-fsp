@@ -1,5 +1,5 @@
 import type { SkillWithTrust } from "@/api/model";
-import { dedupeExperience, dedupeSkills, fspResults, groupSkills, radarAxes, yearsLabel } from "./candidate-model";
+import { dedupeExperience, dedupeSkills, filterSkills, fspResults, groupSkills, radarAxes, rankSkills, splitClaimed, yearsLabel } from "./candidate-model";
 
 const sk = (slug: string, group: string, level: number, claimed = false, ev: string[] = []): SkillWithTrust => ({
   skill: { slug, name: slug, group },
@@ -34,4 +34,27 @@ test("повторы в ФСП и опыте убираются", () => {
   const e = { title: "Backend", company: null, months: 20, skills: [] };
   expect(dedupeExperience([e, { ...e }])).toHaveLength(1);
   expect(yearsLabel(20)).toBe("1 г 8 мес");
+});
+
+test("навыки: подтверждённые первыми, разбиение на колонки, поиск и фильтр", () => {
+  const all = [sk("redis", "db", 0, true), sk("python", "language", 3), sk("go", "language", 4), sk("docker", "devops", 1, true)];
+  expect(rankSkills(all).map((s) => s.skill.slug)).toEqual(["go", "python", "docker", "redis"]);
+  const { confirmed, claimed } = splitClaimed(all);
+  expect(confirmed).toHaveLength(2);
+  expect(claimed).toHaveLength(2);
+  const ranked = rankSkills(all);
+  expect(filterSkills(ranked, "", "claimed").map((s) => s.skill.slug)).toEqual(["docker", "redis"]);
+  expect(filterSkills(ranked, " PYT ", "all").map((s) => s.skill.slug)).toEqual(["python"]);
+  expect(filterSkills(ranked, "py", "claimed")).toEqual([]);
+});
+
+test("ФСП: релевантные первыми и с подписью", () => {
+  const base = { level: "national", place: 1, of: 10, year: 2025 };
+  const r = fspResults([
+    { ...base, title: "Другое", relevance: "other" },
+    { ...base, title: "Бэкенд", relevance: "relevant" },
+  ]);
+  expect(r.map((x) => x.discipline)).toEqual(["Бэкенд", "Другое"]);
+  expect(r[0].note).toBe("релевантно профессии");
+  expect(r[1].note).toBe("соревнование другого направления");
 });
