@@ -90,14 +90,6 @@ class DeclineIn(BaseModel):
     comment: str | None = Field(default=None, max_length=1000)
 
 
-class AcceptIn(BaseModel):
-    """Тело «Принять» (E39-26): один короткий ответ кандидата вместе с принятием."""
-
-    model_config = ConfigDict(extra="forbid")
-
-    message: str | None = Field(default=None, max_length=500)
-
-
 class StatusIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -934,15 +926,12 @@ async def answer_offer_task(
     responses=problem_responses(401, 403, 404),
 )
 async def accept_offer(
-    offer_id: uuid.UUID, body: AcceptIn | None = None, user: User = Depends(_candidate),
+    offer_id: uuid.UUID, user: User = Depends(_candidate),
     session: AsyncSession = Depends(get_session),
 ) -> Any:  # fmt: skip
-    """Принять; в теле можно оставить один короткий ответ компании (E39-26)."""
+    """Принять без текста (E41-4): после принятия стороны видят контакты друг друга."""
     offer = await service.get_for_candidate(session, user.id, offer_id, lock=True)
     await service.accept(session, offer)
-    text = (body.message if body else None) or ""
-    if text.strip():
-        await service.add_message(session, offer, side="candidate", user_id=user.id, text=text)
     return await for_candidate(session, offer)
 
 
@@ -956,7 +945,7 @@ async def decline_offer(
     session: AsyncSession = Depends(get_session),
 ) -> Any:  # fmt: skip
     offer = await service.get_for_candidate(session, user.id, offer_id, lock=True)
-    await service.decline(session, offer, body.reason, body.comment)
+    await service.decline(session, offer, body.reason, None)  # E41-4: без текста кандидата
     return await for_candidate(session, offer)
 
 
