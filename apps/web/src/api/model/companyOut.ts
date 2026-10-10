@@ -14,7 +14,7 @@ export interface CompanyOut {
   inn: string | null;
   site: string | null;
   description: string | null;
-  logo_key: string | null;
+  logo_url?: string | null;
   contacts: CompanyOutContacts;
   direction: string | null;
   status: CompanyStatus;

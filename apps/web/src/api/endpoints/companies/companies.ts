@@ -24,6 +24,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  BodyPutCompanyLogoCompaniesMeLogoPut,
   CompanyIn,
   CompanyOut,
   CompanyPatch,
@@ -456,7 +457,414 @@ export const usePatchMyCompanyCompaniesMePatch = <TError = ErrorType<ProblemOut>
       > => {
       return useMutation(getPatchMyCompanyCompaniesMePatchMutationOptions(options), queryClient);
     }
-    export type myTeamCompaniesMeMembersGetResponse200 = {
+    export type putCompanyLogoCompaniesMeLogoPutResponse200 = {
+  data: CompanyOut
+  status: 200
+}
+
+export type putCompanyLogoCompaniesMeLogoPutResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type putCompanyLogoCompaniesMeLogoPutResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type putCompanyLogoCompaniesMeLogoPutResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type putCompanyLogoCompaniesMeLogoPutResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type putCompanyLogoCompaniesMeLogoPutResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type putCompanyLogoCompaniesMeLogoPutResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type putCompanyLogoCompaniesMeLogoPutResponse413ApplicationProblemJson = {
+  data: ProblemOut
+  status: 413
+}
+
+export type putCompanyLogoCompaniesMeLogoPutResponse413ApplicationJson = {
+  data: ProblemOut
+  status: 413
+}
+
+export type putCompanyLogoCompaniesMeLogoPutResponse415ApplicationProblemJson = {
+  data: ProblemOut
+  status: 415
+}
+
+export type putCompanyLogoCompaniesMeLogoPutResponse415ApplicationJson = {
+  data: ProblemOut
+  status: 415
+}
+
+export type putCompanyLogoCompaniesMeLogoPutResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type putCompanyLogoCompaniesMeLogoPutResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type putCompanyLogoCompaniesMeLogoPutResponse429ApplicationProblemJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type putCompanyLogoCompaniesMeLogoPutResponse429ApplicationJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type putCompanyLogoCompaniesMeLogoPutResponseSuccess = (putCompanyLogoCompaniesMeLogoPutResponse200) & {
+  headers: Headers;
+};
+export type putCompanyLogoCompaniesMeLogoPutResponseError = (putCompanyLogoCompaniesMeLogoPutResponse401ApplicationProblemJson | putCompanyLogoCompaniesMeLogoPutResponse401ApplicationJson | putCompanyLogoCompaniesMeLogoPutResponse403ApplicationProblemJson | putCompanyLogoCompaniesMeLogoPutResponse403ApplicationJson | putCompanyLogoCompaniesMeLogoPutResponse404ApplicationProblemJson | putCompanyLogoCompaniesMeLogoPutResponse404ApplicationJson | putCompanyLogoCompaniesMeLogoPutResponse413ApplicationProblemJson | putCompanyLogoCompaniesMeLogoPutResponse413ApplicationJson | putCompanyLogoCompaniesMeLogoPutResponse415ApplicationProblemJson | putCompanyLogoCompaniesMeLogoPutResponse415ApplicationJson | putCompanyLogoCompaniesMeLogoPutResponse422ApplicationProblemJson | putCompanyLogoCompaniesMeLogoPutResponse422ApplicationJson | putCompanyLogoCompaniesMeLogoPutResponse429ApplicationProblemJson | putCompanyLogoCompaniesMeLogoPutResponse429ApplicationJson) & {
+  headers: Headers;
+};
+
+export type putCompanyLogoCompaniesMeLogoPutResponse = (putCompanyLogoCompaniesMeLogoPutResponseSuccess | putCompanyLogoCompaniesMeLogoPutResponseError)
+
+export const getPutCompanyLogoCompaniesMeLogoPutUrl = () => {
+
+
+
+
+  return `/companies/me/logo`
+}
+
+/**
+ * Логотип компании (E41-12): PNG, JPEG или WebP по сигнатуре, до 2 МБ; только владелец.
+ * @summary Put Company Logo
+ */
+export const putCompanyLogoCompaniesMeLogoPut = async (bodyPutCompanyLogoCompaniesMeLogoPut: BodyPutCompanyLogoCompaniesMeLogoPut, options?: Parameters<typeof apiFetch>[1]): Promise<putCompanyLogoCompaniesMeLogoPutResponse> => {
+    const formData = new FormData();
+formData.append(`file`, bodyPutCompanyLogoCompaniesMeLogoPut.file);
+
+  return apiFetch<putCompanyLogoCompaniesMeLogoPutResponse>(getPutCompanyLogoCompaniesMeLogoPutUrl(),
+  {
+    ...options,
+    method: 'PUT'
+    ,
+    body: formData
+  }
+);}
+
+
+
+
+
+export const getPutCompanyLogoCompaniesMeLogoPutMutationKey = () => ['putCompanyLogoCompaniesMeLogoPut'] as const;
+
+export const getPutCompanyLogoCompaniesMeLogoPutMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putCompanyLogoCompaniesMeLogoPut>>, TError,PutCompanyLogoCompaniesMeLogoPutMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof putCompanyLogoCompaniesMeLogoPut>>, TError,PutCompanyLogoCompaniesMeLogoPutMutationVariables, TContext> => {
+
+const mutationKey = getPutCompanyLogoCompaniesMeLogoPutMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putCompanyLogoCompaniesMeLogoPut>>, PutCompanyLogoCompaniesMeLogoPutMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  putCompanyLogoCompaniesMeLogoPut(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutCompanyLogoCompaniesMeLogoPutMutationResult = NonNullable<Awaited<ReturnType<typeof putCompanyLogoCompaniesMeLogoPut>>>
+    export type PutCompanyLogoCompaniesMeLogoPutMutationBody = BodyPutCompanyLogoCompaniesMeLogoPut
+    export type PutCompanyLogoCompaniesMeLogoPutMutationError = ErrorType<ProblemOut>
+    export type PutCompanyLogoCompaniesMeLogoPutMutationVariables = {data: BodyPutCompanyLogoCompaniesMeLogoPut}
+
+    /**
+ * @summary Put Company Logo
+ */
+export const usePutCompanyLogoCompaniesMeLogoPut = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putCompanyLogoCompaniesMeLogoPut>>, TError,PutCompanyLogoCompaniesMeLogoPutMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putCompanyLogoCompaniesMeLogoPut>>,
+        TError,
+        PutCompanyLogoCompaniesMeLogoPutMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPutCompanyLogoCompaniesMeLogoPutMutationOptions(options), queryClient);
+    }
+    export type deleteCompanyLogoCompaniesMeLogoDeleteResponse200 = {
+  data: CompanyOut
+  status: 200
+}
+
+export type deleteCompanyLogoCompaniesMeLogoDeleteResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type deleteCompanyLogoCompaniesMeLogoDeleteResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type deleteCompanyLogoCompaniesMeLogoDeleteResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type deleteCompanyLogoCompaniesMeLogoDeleteResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type deleteCompanyLogoCompaniesMeLogoDeleteResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type deleteCompanyLogoCompaniesMeLogoDeleteResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type deleteCompanyLogoCompaniesMeLogoDeleteResponseSuccess = (deleteCompanyLogoCompaniesMeLogoDeleteResponse200) & {
+  headers: Headers;
+};
+export type deleteCompanyLogoCompaniesMeLogoDeleteResponseError = (deleteCompanyLogoCompaniesMeLogoDeleteResponse401ApplicationProblemJson | deleteCompanyLogoCompaniesMeLogoDeleteResponse401ApplicationJson | deleteCompanyLogoCompaniesMeLogoDeleteResponse403ApplicationProblemJson | deleteCompanyLogoCompaniesMeLogoDeleteResponse403ApplicationJson | deleteCompanyLogoCompaniesMeLogoDeleteResponse404ApplicationProblemJson | deleteCompanyLogoCompaniesMeLogoDeleteResponse404ApplicationJson) & {
+  headers: Headers;
+};
+
+export type deleteCompanyLogoCompaniesMeLogoDeleteResponse = (deleteCompanyLogoCompaniesMeLogoDeleteResponseSuccess | deleteCompanyLogoCompaniesMeLogoDeleteResponseError)
+
+export const getDeleteCompanyLogoCompaniesMeLogoDeleteUrl = () => {
+
+
+
+
+  return `/companies/me/logo`
+}
+
+/**
+ * @summary Delete Company Logo
+ */
+export const deleteCompanyLogoCompaniesMeLogoDelete = async ( options?: Parameters<typeof apiFetch>[1]): Promise<deleteCompanyLogoCompaniesMeLogoDeleteResponse> => {
+
+  return apiFetch<deleteCompanyLogoCompaniesMeLogoDeleteResponse>(getDeleteCompanyLogoCompaniesMeLogoDeleteUrl(),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteCompanyLogoCompaniesMeLogoDeleteMutationKey = () => ['deleteCompanyLogoCompaniesMeLogoDelete'] as const;
+
+export const getDeleteCompanyLogoCompaniesMeLogoDeleteMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCompanyLogoCompaniesMeLogoDelete>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteCompanyLogoCompaniesMeLogoDelete>>, TError,void, TContext> => {
+
+const mutationKey = getDeleteCompanyLogoCompaniesMeLogoDeleteMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteCompanyLogoCompaniesMeLogoDelete>>, void> = () => {
+
+
+          return  deleteCompanyLogoCompaniesMeLogoDelete(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteCompanyLogoCompaniesMeLogoDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof deleteCompanyLogoCompaniesMeLogoDelete>>>
+
+    export type DeleteCompanyLogoCompaniesMeLogoDeleteMutationError = ErrorType<ProblemOut>
+
+
+    /**
+ * @summary Delete Company Logo
+ */
+export const useDeleteCompanyLogoCompaniesMeLogoDelete = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCompanyLogoCompaniesMeLogoDelete>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteCompanyLogoCompaniesMeLogoDelete>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getDeleteCompanyLogoCompaniesMeLogoDeleteMutationOptions(options), queryClient);
+    }
+    export type getCompanyLogoCompaniesCompanyIdLogoGetResponse200 = {
+  data: Blob
+  status: 200
+}
+
+export type getCompanyLogoCompaniesCompanyIdLogoGetResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type getCompanyLogoCompaniesCompanyIdLogoGetResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type getCompanyLogoCompaniesCompanyIdLogoGetResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type getCompanyLogoCompaniesCompanyIdLogoGetResponseSuccess = (getCompanyLogoCompaniesCompanyIdLogoGetResponse200) & {
+  headers: Headers;
+};
+export type getCompanyLogoCompaniesCompanyIdLogoGetResponseError = (getCompanyLogoCompaniesCompanyIdLogoGetResponse404ApplicationProblemJson | getCompanyLogoCompaniesCompanyIdLogoGetResponse404ApplicationJson | getCompanyLogoCompaniesCompanyIdLogoGetResponse422) & {
+  headers: Headers;
+};
+
+export type getCompanyLogoCompaniesCompanyIdLogoGetResponse = (getCompanyLogoCompaniesCompanyIdLogoGetResponseSuccess | getCompanyLogoCompaniesCompanyIdLogoGetResponseError)
+
+export const getGetCompanyLogoCompaniesCompanyIdLogoGetUrl = (companyId: string,) => {
+
+
+
+
+  return `/companies/${companyId}/logo`
+}
+
+/**
+ * Без авторизации: `<img>` не несёт токен, логотип компании публичен.
+ * @summary Get Company Logo
+ */
+export const getCompanyLogoCompaniesCompanyIdLogoGet = async (companyId: string, options?: Parameters<typeof apiFetch>[1]): Promise<getCompanyLogoCompaniesCompanyIdLogoGetResponse> => {
+
+  return apiFetch<getCompanyLogoCompaniesCompanyIdLogoGetResponse>(getGetCompanyLogoCompaniesCompanyIdLogoGetUrl(companyId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCompanyLogoCompaniesCompanyIdLogoGetQueryKey = (companyId: string,) => {
+    return [
+    `/companies/${companyId}/logo`
+    ] as const;
+    }
+
+
+export const getGetCompanyLogoCompaniesCompanyIdLogoGetQueryOptions = <TData = Awaited<ReturnType<typeof getCompanyLogoCompaniesCompanyIdLogoGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(companyId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCompanyLogoCompaniesCompanyIdLogoGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCompanyLogoCompaniesCompanyIdLogoGetQueryKey(companyId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCompanyLogoCompaniesCompanyIdLogoGet>>> = ({ signal }) => getCompanyLogoCompaniesCompanyIdLogoGet(companyId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: companyId !== null && companyId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCompanyLogoCompaniesCompanyIdLogoGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetCompanyLogoCompaniesCompanyIdLogoGetQueryResult = NonNullable<Awaited<ReturnType<typeof getCompanyLogoCompaniesCompanyIdLogoGet>>>
+export type GetCompanyLogoCompaniesCompanyIdLogoGetQueryError = ErrorType<ProblemOut | HTTPValidationError>
+
+
+export function useGetCompanyLogoCompaniesCompanyIdLogoGet<TData = Awaited<ReturnType<typeof getCompanyLogoCompaniesCompanyIdLogoGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ companyId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCompanyLogoCompaniesCompanyIdLogoGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCompanyLogoCompaniesCompanyIdLogoGet>>,
+          TError,
+          Awaited<ReturnType<typeof getCompanyLogoCompaniesCompanyIdLogoGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCompanyLogoCompaniesCompanyIdLogoGet<TData = Awaited<ReturnType<typeof getCompanyLogoCompaniesCompanyIdLogoGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ companyId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCompanyLogoCompaniesCompanyIdLogoGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCompanyLogoCompaniesCompanyIdLogoGet>>,
+          TError,
+          Awaited<ReturnType<typeof getCompanyLogoCompaniesCompanyIdLogoGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCompanyLogoCompaniesCompanyIdLogoGet<TData = Awaited<ReturnType<typeof getCompanyLogoCompaniesCompanyIdLogoGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ companyId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCompanyLogoCompaniesCompanyIdLogoGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Company Logo
+ */
+
+export function useGetCompanyLogoCompaniesCompanyIdLogoGet<TData = Awaited<ReturnType<typeof getCompanyLogoCompaniesCompanyIdLogoGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ companyId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCompanyLogoCompaniesCompanyIdLogoGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetCompanyLogoCompaniesCompanyIdLogoGetQueryOptions(companyId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type myTeamCompaniesMeMembersGetResponse200 = {
   data: CompanyTeamOut
   status: 200
 }

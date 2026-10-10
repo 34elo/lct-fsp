@@ -1,16 +1,18 @@
 import { PAGE } from "@/shared/lib/page";
 import { useEffect, useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
-import { Avatar, Button, ErrorState, Field, FieldInput, H1, Markdown, MarkdownEditor, Panel, PanelCap, Skeleton, StatusTag, cn } from "@fsp/ui";
+import { Avatar, Button, ErrorState, Field, FieldInput, H1, Markdown, MarkdownEditor, Panel, PanelCap, ScrollTabs, Skeleton, StatusTag, Tabs, TabsContent, TabsTrigger, cn } from "@fsp/ui";
 import {
   getGetMyCompanyCompaniesMeGetQueryKey,
   getMyTeamCompaniesMeMembersGetQueryKey,
   useCreateInviteCompaniesMeInvitesPost,
+  useDeleteCompanyLogoCompaniesMeLogoDelete,
   useGetMyCompanyCompaniesMeGet,
   useMyTeamCompaniesMeMembersGet,
   usePatchMyCompanyCompaniesMePatch,
+  usePutCompanyLogoCompaniesMeLogoPut,
   useRegisterCompanyCompaniesPost,
   useRemoveMemberCompaniesMeMembersUserIdDelete,
   useRevokeInviteCompaniesMeInvitesInviteIdDelete,
@@ -19,6 +21,7 @@ import type { CompanyMemberOut, CompanyOut } from "@/api/model";
 import { ApiError } from "@/api/mutator";
 import { ErrorNote } from "@/features/auth/ui";
 import { dateOnly } from "@/features/offers/text";
+import { ImagePicker } from "@/shared/ImagePicker";
 import { useAuth } from "@/shared/lib/auth";
 import { avatarSrc } from "@/shared/lib/avatar";
 import { COMPANY as T, COMPANY_STATUS_HINT, COMPANY_STATUS_LABEL, vacancyErrorText } from "./text";
@@ -105,6 +108,40 @@ function CompanyForm({ company, onDone }: { company: CompanyOut | null; onDone: 
           {company ? T.save : T.register}
         </Button>
       </form>
+    </Panel>
+  );
+}
+
+/** Логотип компании: владелец загружает (`PUT|DELETE /companies/me/logo`), HR видит. Без файла — буквы на цвете. */
+function LogoBlock({ company, owner, onChanged }: { company: CompanyOut; owner: boolean; onChanged: () => void }) {
+  const put = usePutCompanyLogoCompaniesMeLogoPut();
+  const del = useDeleteCompanyLogoCompaniesMeLogoDelete();
+  if (!owner) {
+    return (
+      <Panel className="flex items-center gap-3" data-testid="company-logo">
+        <Avatar name={company.name} src={avatarSrc(company.logo_url)} size={56} className="rounded-xl" />
+        <span className="font-medium">{company.name}</span>
+      </Panel>
+    );
+  }
+  return (
+    <Panel aria-label={T.logo.title}>
+      <PanelCap title={T.logo.title} />
+      <ImagePicker
+        testId="company-logo"
+        name={company.name}
+        src={avatarSrc(company.logo_url)}
+        size={72}
+        text={T.logo}
+        onUpload={async (file) => {
+          await put.mutateAsync({ data: { file } });
+          onChanged();
+        }}
+        onRemove={async () => {
+          await del.mutateAsync();
+          onChanged();
+        }}
+      />
     </Panel>
   );
 }
@@ -297,6 +334,9 @@ export default function Company() {
     void reloadMe();
   };
 
+  const [params, setParams] = useSearchParams();
+  const tab = params.get("tab") === "team" ? "team" : "info";
+
   return (
     <main className={PAGE.narrow} data-testid="company-page">
       <H1 className="text-[22px] leading-[1.2] md:text-[26px]">{T.title}</H1>
@@ -309,14 +349,29 @@ export default function Company() {
         </>
       )}
       {company && (
-        <>
-          <StatusPanel status={company.status} />
-          {owner ? <CompanyForm company={company} onDone={onDone} /> : <CompanyView company={company} />}
-          <TeamPanel />
-          <Link to="/employer/tasks" className="inline-flex min-h-11 items-center self-start text-14 font-semibold text-brand-fg hover:underline">
-            {T.tasks}
-          </Link>
-        </>
+        <Tabs value={tab} onValueChange={(v) => setParams(v === "team" ? { tab: v } : {}, { replace: true })}>
+          <ScrollTabs aria-label={T.title}>
+            <TabsTrigger value="info" data-testid="company-tab-info">
+              {T.tabs.info}
+            </TabsTrigger>
+            <TabsTrigger value="team" data-testid="company-tab-team">
+              {T.tabs.team}
+            </TabsTrigger>
+          </ScrollTabs>
+          <div className="flex flex-col gap-4 pt-4">
+            <TabsContent value="info" className="flex flex-col gap-4">
+              <StatusPanel status={company.status} />
+              <LogoBlock company={company} owner={owner} onChanged={onDone} />
+              {owner ? <CompanyForm company={company} onDone={onDone} /> : <CompanyView company={company} />}
+              <Link to="/employer/tasks" className="inline-flex min-h-11 items-center self-start text-14 font-semibold text-brand-fg hover:underline">
+                {T.tasks}
+              </Link>
+            </TabsContent>
+            <TabsContent value="team">
+              <TeamPanel />
+            </TabsContent>
+          </div>
+        </Tabs>
       )}
     </main>
   );

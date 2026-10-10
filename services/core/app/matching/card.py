@@ -120,6 +120,7 @@ class ExperienceBrief(BaseModel):
 
 class CandidateCardFull(search.CandidateCard):
     full_name: str | None = None  # только при visibility.full_name (ADR-027); контактов нет никогда
+    avatar_url: str | None = None  # E41-12: только после приглашения от этой компании
     skills: list[SkillWithTrust]
     grade_info: GradeInfo
     experience: list[ExperienceBrief]
@@ -215,6 +216,7 @@ async def build_card(
     today: date | None = None,
     responsibility_score: float | None = None,
     pii_key: str | None = None,
+    avatar_secret: str | None = None,
 ) -> CandidateCardFull:
     day = today or datetime.now(UTC).date()
     owned = (await graph.all_skills_of(session, [c.user_id]))[c.user_id]
@@ -279,17 +281,12 @@ async def build_card(
         )
         for e in await resumes.experience_for_profile(session, c.user_id)
     ]  # fmt: skip
+    invited = bool(company_id) and await offers.invited(session, company_id, c.user_id)
     return CandidateCardFull(
         **base.model_dump(),
-        full_name=(
-            candidates.shown_full_name(
-                c,
-                pii_key,
-                invited=bool(company_id) and await offers.invited(session, company_id, c.user_id),
-            )
-            if pii_key
-            else None
-        ),
+        full_name=candidates.shown_full_name(c, pii_key, invited=invited) if pii_key else None,
+        # E41-12: аватар только после приглашения (`visibility.full_name` его не открывает)
+        avatar_url=candidates.avatar_url(c, avatar_secret) if invited and avatar_secret else None,
         skills=skills,
         grade_info=_grade_info(c, show_fsp=show_fsp),
         experience=experience,

@@ -1,4 +1,4 @@
-import { Fragment, type ReactNode } from "react";
+import { Fragment, useState, type ReactNode } from "react";
 
 import { cn } from "../lib/cn";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "../primitives/overlay";
@@ -48,11 +48,12 @@ export function BrandMark({ src = "/brand/logo_02.svg", text = "ФСП", classNa
   );
 }
 
-/** Аватар `.av`: квадрат 32 px с буквой. В тёмной теме — brand. */
-export function AvatarButtonFace({ letter }: { letter: string }) {
+/** Аватар `.av`: квадрат 32 px с буквой или картинкой (`src`). В тёмной теме буква на brand. */
+export function AvatarButtonFace({ letter, src }: { letter: string; src?: string | null }) {
+  const [broken, setBroken] = useState(false);
   return (
-    <span aria-hidden className="grid size-8 flex-none place-items-center rounded-lg bg-ink font-mono text-12 font-bold text-on-brand dark:bg-brand">
-      {letter.slice(0, 1).toUpperCase() || "?"}
+    <span aria-hidden className="grid size-8 flex-none place-items-center overflow-hidden rounded-lg bg-ink font-mono text-12 font-bold text-on-brand dark:bg-brand">
+      {src && !broken ? <img src={src} alt="" className="size-full object-cover" onError={() => setBroken(true)} /> : letter.slice(0, 1).toUpperCase() || "?"}
     </span>
   );
 }
@@ -73,11 +74,14 @@ export interface AccountMenuItem {
 /** Меню аватара: «Настройки», «Тема · светлая», разделитель, «Выйти». Пункты передаёт приложение. */
 export function AccountMenu({
   letter,
+  src,
   items,
   label = "Меню аккаунта",
   className,
 }: {
   letter: string;
+  /** Картинка вместо буквы (аватар или логотип компании). */
+  src?: string | null;
   items: AccountMenuItem[];
   label?: string;
   className?: string;
@@ -86,7 +90,7 @@ export function AccountMenu({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button type="button" aria-label={label} className={cn("grid min-h-11 min-w-11 place-items-center rounded-lg sm:min-h-9 sm:min-w-9", className)}>
-          <AvatarButtonFace letter={letter} />
+          <AvatarButtonFace letter={letter} src={src} />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-52 rounded-xl p-1.5 shadow-menu">

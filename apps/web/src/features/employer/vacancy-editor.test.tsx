@@ -17,7 +17,7 @@ beforeEach(() => {
     vi.fn(async (url: string, init?: RequestInit) => {
       if (url.endsWith("/auth/refresh")) return res(200, { access_token: "t" });
       if (url.endsWith("/auth/me") || (url.endsWith("/me") && !url.includes("/companies"))) return res(200, { id: "u1", email: "o@b.ru", role: "employer", consents: ["pd_processing"] });
-      if (url.includes("/companies/me")) return res(200, { id: "c1", name: "Acme", inn: null, site: null, description: null, logo_key: null, status: "pending", responsibility_score: null, created_at: "2026-10-01T00:00:00Z", my_role: "admin" });
+      if (url.includes("/companies/me")) return res(200, { id: "c1", name: "Acme", inn: null, site: null, description: null, logo_url: null, status: "pending", responsibility_score: null, created_at: "2026-10-01T00:00:00Z", my_role: "admin" });
       if (url.includes("/taxonomy")) return res(200, { skills: [{ slug: "python", name: "Python", kind: "hard" }] });
       if (url.includes("/vacancies") && init?.method === "POST") {
         posts.push({ url, body: JSON.parse(String(init.body)) });

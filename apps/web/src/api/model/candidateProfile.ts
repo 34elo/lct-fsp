@@ -47,4 +47,5 @@ export interface CandidateProfile {
   links?: string[];
   hidden_skills?: string[];
   resume_draft_id?: string | null;
+  avatar_url?: string | null;
 }
