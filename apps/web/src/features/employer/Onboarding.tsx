@@ -29,8 +29,18 @@ export function EmployerOnboarding({ onSkip, onDone }: { onSkip: () => void; onD
 
   return (
     <div className={`${PAGE.narrow} gap-6`} data-testid="employer-onboarding">
-      <header className="flex flex-col gap-1">
+      <header className="flex items-start justify-between gap-3">
         <h1 className="text-24 font-bold">{T.title}</h1>
+        {/* Закрыть = больше не показывать: выбор помнится (localStorage), вернуть — в «Настройках». */}
+        <button
+          type="button"
+          onClick={onSkip}
+          aria-label={T.close}
+          data-testid="onboarding-close"
+          className="inline-flex size-11 shrink-0 items-center justify-center rounded-md text-20 text-muted hover:bg-tint-50 hover:text-ink"
+        >
+          ×
+        </button>
       </header>
       <FlowSteps current={step} steps={T.steps} label={T.stepsLabel} />
       {step === 1 && <CompanyStep onSaved={() => reloadMe().then(() => setStep(2))} />}
@@ -44,9 +54,14 @@ export function EmployerOnboarding({ onSkip, onDone }: { onSkip: () => void; onD
         />
       )}
       {step === 3 && <HowStep onDone={() => onDone(needId)} />}
-      <button type="button" onClick={onSkip} data-testid="onboarding-skip" className="inline-flex min-h-11 items-center self-start text-14 font-semibold text-muted hover:text-ink hover:underline">
-        {step === 1 ? T.skipAll : T.skip}
-      </button>
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
+        <button type="button" onClick={onSkip} data-testid="onboarding-skip" className="inline-flex min-h-11 items-center self-start text-14 font-semibold text-muted hover:text-ink hover:underline">
+          {step === 1 ? T.skipAll : T.skip}
+        </button>
+        <button type="button" onClick={onSkip} data-testid="onboarding-dismiss" className="inline-flex min-h-11 items-center self-start text-14 font-semibold text-muted hover:text-ink hover:underline">
+          {T.dismiss}
+        </button>
+      </div>
     </div>
   );
 }

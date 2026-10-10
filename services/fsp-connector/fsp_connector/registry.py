@@ -53,6 +53,7 @@ from fsp_connector.models import (
     RegistryResult,
 )
 from fsp_connector.port import FspPort
+from fsp_connector.registry_import import parse_import_text, plan_and_apply
 
 log = structlog.get_logger()
 
@@ -333,6 +334,42 @@ class RegistryService:
         errors = sorted(parsed.errors, key=lambda e: e["line"])
         log.info("fsp_registry_import", created=created, updated=updated, errors=len(errors))
         return {"created": created, "updated": updated, "errors": errors}
+
+    async def import_results(
+        self,
+        text: str,
+        *,
+        commit: bool,
+        skip_errors: bool = False,
+        create_events: Iterable[str] = (),
+        default_discipline: str = "algorithmic",
+        default_level: str = "regional",
+    ) -> dict[str, Any]:
+        """E43-4: результаты списком. dry-run — превью построчно, commit — запись и пересчёт."""
+        lines = parse_import_text(text)
+        if not lines:
+            raise ProblemError(422, "empty_file", "В файле нет строк с данными")
+        async with session_scope(self.sessions) as s:
+            out = await plan_and_apply(
+                s,
+                lines,
+                commit=commit,
+                skip_errors=skip_errors,
+                create_events=set(create_events),
+                default_discipline=default_discipline,
+                default_level=default_level,
+            )
+        if commit:
+            await self._resync(
+                out.affected
+            )  # fsp.results.imported через outbox, как при ручном вводе
+            log.info("fsp_registry_results_import", **out.summary)
+        return {
+            "committed": commit,
+            "summary": out.summary,
+            "new_events": out.new_events,
+            "lines": out.lines,
+        }
 
     # ---------------------------------------------------------------- результаты
     async def list_results(

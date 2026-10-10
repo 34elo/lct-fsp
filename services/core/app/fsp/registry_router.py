@@ -149,6 +149,62 @@ class RegistryResultIdOut(BaseModel):
     id: int
 
 
+class ResultsImportIn(BaseModel):
+    """E43-4: `commit=false` — превью (dry-run), `true` — запись; повтор идемпотентен."""
+
+    csv: str = Field(min_length=1, max_length=1_000_000)
+    commit: bool = False
+    skip_errors: bool = Field(
+        default=False, description="Записать годные строки, ошибочные пропустить"
+    )
+    create_events: list[str] = Field(
+        default_factory=list,
+        max_length=1000,
+        description="Ключи новых мероприятий из превью, создание которых подтверждено",
+    )
+    default_discipline: FspDiscipline = FspDiscipline.algorithmic
+    default_level: FspLevel = FspLevel.regional
+
+
+class ResultsImportLine(BaseModel):
+    line: int
+    participant: str
+    participant_id: str | None = None
+    participant_name: str | None = None
+    event: str
+    date: str | None = None
+    result: str | None = None
+    status: Literal["ok", "error"]
+    action: Literal["create", "update", "unchanged"] | None = None
+    error: str | None = Field(default=None, description="Машинный код ошибки строки")
+    new_event_key: str | None = None
+
+
+class ResultsImportNewEvent(BaseModel):
+    key: str
+    title: str
+    date: Date
+    discipline: FspDiscipline
+    level: FspLevel
+    rows: int
+    confirmed: bool = False
+
+
+class ResultsImportSummary(BaseModel):
+    total: int
+    errors: int
+    created: int
+    updated: int
+    unchanged: int
+
+
+class ResultsImportOut(BaseModel):
+    committed: bool
+    summary: ResultsImportSummary
+    new_events: list[ResultsImportNewEvent]
+    lines: list[ResultsImportLine]
+
+
 # ------------------------------------------------------------------------------ кандидат
 async def _ensure_candidate(request: Request, session: AsyncSession, user: User):
     return await candidates.get_or_create(
@@ -353,6 +409,24 @@ async def registry_delete_result(
 ):
     await connector.registry("DELETE", f"/results/{result_id}")
     return Response(status_code=204)
+
+
+@admin_router.post(
+    "/registry/import",
+    response_model=ResultsImportOut,
+    responses=problem_responses(401, 403, 422, 503),
+)
+async def registry_import_results(
+    body: ResultsImportIn,
+    _: User = Depends(_admin),
+    connector: ConnectorClient = Depends(get_connector),
+):
+    """Результаты списком (E43-4): CSV `участник;мероприятие;дата;результат`, до 1000 строк.
+
+    Без `commit` — превью с построчной проверкой. С `commit` — запись и пересчёт профилей
+    затронутых кандидатов (outbox). Новые мероприятия создаются только по `create_events`.
+    """
+    return await connector.registry("POST", "/results/import", json=body.model_dump(mode="json"))
 
 
 @admin_router.get(

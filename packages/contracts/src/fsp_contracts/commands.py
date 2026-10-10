@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 
 from fsp_contracts.enums import TeamSignalKind
 from fsp_contracts.ml import (
+    FamilyKind,
     InterviewAnswer,
     KitGap,
     KitSkill,
@@ -87,6 +88,22 @@ class MlQuestionsGenerate(BaseModel):
     difficulty: int | None = Field(default=None, ge=1, le=5)
 
 
+class MlFamiliesGenerate(BaseModel):
+    """E43-9: заказ админа на LLM-задания (навык × `kind` × уровень, до 10 штук).
+
+    Низший приоритет `ml.llm`: не мешает разбору резюме и остальным задачам GPU. Ответ —
+    `ml.families.started`, затем `ml.families.generated` (assessment.md §7).
+    """
+
+    order_id: UUID
+    skill: str = Field(min_length=1, max_length=80)  # slug из справочника
+    skill_type: str = Field(default="", max_length=40)  # SkillType навыка (подсказка генератору)
+    kind: FamilyKind
+    level: int = Field(ge=1, le=5)
+    n: int = Field(ge=1, le=10)
+    domain: str | None = Field(default=None, max_length=40)
+
+
 # --- ml.code ---
 
 
@@ -151,6 +168,7 @@ COMMANDS: dict[str, CommandSpec] = {
     "ml.skills.resolve": CommandSpec(_LLM, MlSkillsResolve, 3, "ml"),
     "ml.matches.explain": CommandSpec(_LLM, MlMatchesExplain, 2, "ml"),
     "ml.questions.generate": CommandSpec(_LLM, MlQuestionsGenerate, 1, "ml"),
+    "ml.families.generate": CommandSpec(_LLM, MlFamiliesGenerate, 0, "ml"),  # E43-9, фон
     "ml.code.analyze": CommandSpec("ml.code", MlCodeAnalyze, consumer="ml"),
     "fsp.sync": CommandSpec("fsp.sync", FspSync, consumer="fsp-connector"),
     "fsp.sync_all": CommandSpec("fsp.sync", FspSyncAll, consumer="fsp-connector"),

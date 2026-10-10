@@ -61,6 +61,8 @@ ml-worker ─────► │ ui.user.<user_id> (прогресс задач)
 | `ml.interview_kit.generated` | ml | `{kit_id, vacancy_id, vacancy_version, candidate_id, profile_version, questions[], error?}` |
 | `ml.skills.resolved` | ml | `{request_id, taxonomy_version, items[]}` (ответ на `ml.skills.resolve`) |
 | `ml.questions.generated` | ml | `{skill_slug, questions[]}` — черновики, `status=draft` |
+| `ml.families.started` | ml | `{order_id}` — ml-worker-llm взял заказ заданий (E43-9), заказ → `running` |
+| `ml.families.generated` | ml | `{order_id, specs[], model, error?}` — формы конструктора от генератора; core (`core.ingest`, inbox `assessment.family_order_generated`) проверяет их как `llm_bank` и пишет `families` (`draft`, `source = llm`), заказ → `done`/`failed`; заказ в финальном статусе не меняется |
 
 ### 2.2. Очереди
 
@@ -72,7 +74,7 @@ ml-worker ─────► │ ui.user.<user_id> (прогресс задач)
 | `core.match` | core-worker | команды `core.match.vacancy`, `core.match.candidate` | 4 | Пропуск устаревших версий |
 | `core.jobs` | core-worker | cron-команды и фоновые задачи (удаление, `recompute_all`) | 2 | — |
 | `core.analytics` | core-worker | все `events.#` | 20 | Доменные события → `analytics_events` ([metrics.md](metrics.md)) |
-| **`ml.llm`** | ml-worker-llm | `ml.resume.parse` (приоритет 9), `ml.interview.grade` (8), `ml.interview.generate` (7), `ml.interview_kit.generate` (5), `ml.skills.resolve` (3), `ml.matches.explain` (2), `ml.questions.generate` (1) | **1** | `x-max-priority: 10`. Одна GPU: строго одна задача за раз, срочное первым |
+| **`ml.llm`** | ml-worker-llm | `ml.resume.parse` (приоритет 9), `ml.interview.grade` (8), `ml.interview.generate` (7), `ml.interview_kit.generate` (5), `ml.skills.resolve` (3), `ml.matches.explain` (2), `ml.questions.generate` (1), `ml.families.generate` (0, E43-9 — заказ заданий из админки, фон) | **1** | `x-max-priority: 10`. Одна GPU: строго одна задача за раз, срочное первым |
 | `ml.code` | ml-worker-code | `ml.code.analyze` | 2 | CPU и сеть, GPU не нужен |
 | `fsp.sync` | fsp-connector | `fsp.sync {candidate_id, reason, since?}`, `fsp.sync_all` | 4 | Ретраи с паузой (внешний API) |
 | `bot.telegram` | bot | `notify.telegram {chat_id, template, data, buttons, edit_of?}` | 10 | Отправка с учётом лимитов Telegram |

@@ -176,6 +176,8 @@ async def login(
     issued = await service.issue_tokens(
         session, request.app.state.settings.jwt_secret, user, request.headers.get("user-agent")
     )
+    # E43-3: refresh-токен должен быть в БД до того, как клиент получит ответ (см. password_initial)
+    await session.commit()
     return tokens_out(request, response, issued)
 
 
@@ -294,6 +296,10 @@ async def password_initial(
     """
     await limiter.check(f"password_initial:{user.id}", 5, 3600)
     await service.set_initial_password(session, user, body.new_password)
+    # E43-3: get_session закрывается ПОСЛЕ отправки ответа (FastAPI ≥ 0.118, scope="request").
+    # Фронт сразу после 204 читает /me и входит новым паролем — без явного commit он мог застать
+    # старый хеш и must_change_password=true. Фиксируем до ответа.
+    await session.commit()
     return Response(status_code=204)
 
 

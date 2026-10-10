@@ -66,6 +66,16 @@ def _connector(request: httpx.Request) -> httpx.Response:
         return httpx.Response(200, json=[])
     if p == "/internal/registry/participants/import":
         return httpx.Response(200, json={"created": 1, "updated": 0, "errors": []})
+    if p == "/internal/registry/results/import":
+        return httpx.Response(
+            200,
+            json={
+                "committed": body["commit"],
+                "summary": {"total": 0, "errors": 0, "created": 0, "updated": 0, "unchanged": 0},
+                "new_events": [],
+                "lines": [],
+            },  # fmt: skip
+        )
     if p.startswith("/internal/registry/results/"):
         return httpx.Response(204)
     if p == "/internal/registry/results" and m == "PUT":
@@ -152,6 +162,7 @@ ADMIN_CALLS = [
     ("post", "/admin/fsp/participants/import", {"csv": "ФИО,email\nА Б,a@b.ru"}),
     ("put", "/admin/fsp/results", {"participant_id": "r-1", "event_id": "e-1", "place": 1}),
     ("delete", "/admin/fsp/results/7", None),
+    ("post", "/admin/fsp/registry/import", {"csv": "a;b;2026-01-01;1", "commit": False}),
     ("get", "/admin/fsp/requests", None),
     ("post", f"/admin/fsp/requests/{REQ_ID}/accept", {"participant_id": "r-1"}),
 ]  # fmt: skip
@@ -182,3 +193,12 @@ def test_admin_flow(c):
     q = c.get("/admin/fsp/participants", params={"q": "Иван"}, headers=h)
     assert q.status_code == 200
     assert [x for x in CALLS if x[1].endswith("/participants")][-1][3]["q"] == "Иван"
+
+
+def test_registry_import_passes_options_to_connector(c):
+    h = _admin(c)
+    body = {"csv": "x;y;2026-01-01;1", "commit": True, "skip_errors": True, "create_events": ["k"]}
+    r = c.post("/admin/fsp/registry/import", json=body, headers=h)
+    assert r.status_code == 200 and r.json()["committed"] is True
+    sent = [x for x in CALLS if x[1] == "/internal/registry/results/import"][-1][2]
+    assert sent["skip_errors"] is True and sent["create_events"] == ["k"]

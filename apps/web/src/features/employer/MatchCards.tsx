@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
-import { Bookmark, Button, Chips, EmptyState, ErrorState, GradeTag, H2, Lbl, MatchRingV2, PanelCap, SkillTag, cn } from "@fsp/ui";
+import { Bookmark, Button, Chips, EmptyState, ErrorState, GradeTag, H2, Lbl, MatchRingV2, PanelCap, SkillTag, cardInteractive, cn } from "@fsp/ui";
 
 import { searchCandidatesSearchCandidatesPost } from "@/api/endpoints/search/search";
 import { useShortlistAddNeedsNeedIdShortlistPseudoIdPost, useShortlistRemoveNeedsNeedIdShortlistPseudoIdDelete } from "@/api/endpoints/needs/needs";
@@ -61,7 +61,7 @@ export function CandidateTile({ card, profession, shortlist }: { card: Candidate
   const d = toMatchCard(card, profession);
   const on = shortlist.ids.has(card.pseudo_id);
   return (
-    <article aria-label={d.pseudonym} className="relative flex w-full min-w-0 flex-col gap-3 rounded-xl border border-hairline bg-card p-4 hover:border-brand-mid">
+    <article aria-label={d.pseudonym} className={cn("relative flex w-full min-w-0 flex-col gap-3 rounded-xl border border-hairline bg-card p-4", cardInteractive)}>
       <div className="flex items-center gap-3">
         <MatchRingV2 value={d.match} size={48} />
         <div className="flex min-w-0 flex-1 flex-col gap-1">
