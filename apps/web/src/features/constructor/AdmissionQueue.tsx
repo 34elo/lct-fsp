@@ -128,7 +128,7 @@ function Card1({
   );
 
   return (
-    <Card data-testid={sel(`card-${f.id}`)} data-status={f.status} data-grade={f.grade}>
+    <Card className="h-full" data-testid={sel(`card-${f.id}`)} data-status={f.status} data-grade={f.grade}>
       <CardContent className="flex h-full flex-col gap-3">
         <div className="flex flex-wrap items-center gap-1.5" data-testid={sel(`cell-${f.id}`)}>
           <Badge>{professions.length > 0 ? professions.join(" · ") : T.queue.noProfession}</Badge>
@@ -344,7 +344,7 @@ export default function AdmissionQueue() {
       {shown.length > 0 && (
         <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3" data-testid={sel("list")}>
           {shown.map((f) => (
-            <li key={f.id} className="min-w-0">
+            <li key={f.id} className="flex min-w-0">
               <Card1
                 f={f}
                 err={err?.id === f.id && !pending ? err.text : null}

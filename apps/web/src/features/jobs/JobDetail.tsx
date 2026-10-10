@@ -3,7 +3,8 @@ import { useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { Button, cn, ErrorState, formatRubRange, SectionLabel, Skeleton, SkillChip } from "@fsp/ui";
+import { Avatar, Button, cn, ErrorState, formatRubRange, SectionLabel, Skeleton, SkillChip } from "@fsp/ui";
+import { avatarSrc } from "@/shared/lib/avatar";
 
 import { useGetPublicVacancyVacanciesPublicVacancyIdGet } from "@/api/endpoints/vacancies/vacancies";
 import { useApplyToVacancyVacanciesVacancyIdApplyPost } from "@/api/endpoints/vacancies/vacancies";
@@ -112,11 +113,14 @@ export default function JobDetail() {
       {q.isError && <ErrorState title={T.notFound} onRetry={() => void q.refetch()} />}
       {v && (
         <>
-          <header className="flex flex-col gap-1">
-            <h1 className="break-words font-mono text-24 font-semibold">{v.title}</h1>
-            <p className="text-13 text-muted">
-              {[v.company.name, v.city, v.formats.map((f) => FORMAT_LABEL[f] ?? f).join(", ").toLowerCase(), T.employment[v.employment_type]].filter(Boolean).join(" · ")}
-            </p>
+          <header className="flex items-start gap-3">
+            <Avatar name={v.company.name} src={avatarSrc(v.company.logo_url)} size={52} className="rounded-xl" />
+            <div className="flex min-w-0 flex-col gap-1">
+              <h1 className="break-words font-mono text-24 font-semibold">{v.title}</h1>
+              <p className="text-13 text-muted">
+                {[v.company.name, v.city, v.formats.map((f) => FORMAT_LABEL[f] ?? f).join(", ").toLowerCase(), T.employment[v.employment_type]].filter(Boolean).join(" · ")}
+              </p>
+            </div>
           </header>
           <div>
             <SectionLabel>{T.range}</SectionLabel>

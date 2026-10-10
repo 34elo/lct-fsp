@@ -3,8 +3,10 @@
 Путь задания: форма → проверка схемы → ключ (автора или черновик LLM) → автопроверка на сидах →
 строка `families` (`source = spec`, `draft`) → дальше жизненный цикл E22-9 (`lifecycle.py`):
 - задание админа (без компании) после автопроверки сразу идёт в `pilot`;
-- задание компании остаётся `draft` и работает только в её регулярных заданиях (E25-1); в общий
-  банк (`pilot`) его переводит админ (`POST /admin/families/{id}/pilot`);
+- задание компании остаётся `draft` и в очередь допуска админа не попадает (E41-14, ADR-027):
+  автор сохраняет черновик (`spec.ready = false`), кнопка «Готово» (`set_ready`) открывает его для
+  приглашений и регулярных заданий своей компании; в общий банк (`pilot`) его по желанию
+  переводит админ (`POST /admin/families/{id}/pilot`);
 - `open` в θ не идёт и в банк не попадает никогда — только регулярные задания.
 
 Ключ от LLM (`key_status = draft`) в оценку не идёт: `pilot → active` требует утверждённого
@@ -260,4 +262,26 @@ async def to_bank(
     if row.status == "pilot":
         return row
     await lifecycle.set_status(session, row, "pilot", cfg, reason="admin", actor_id=admin_id)
+    return row
+
+
+async def set_ready(
+    session: AsyncSession, row: FamilyRow, ready: bool, actor_id: uuid.UUID
+) -> FamilyRow:
+    """«Готово» / «В черновик» для задания компании (E41-14): без допуска админа (ADR-027).
+
+    Ключ из черновика LLM автор подтверждает этим же действием: «Готово» = «ключ проверил».
+    """
+    if row.company_id is None:
+        raise ProblemError(409, "not_company_family", "«Готово» есть только у заданий компании")
+    data = dict(row.spec or {})
+    if ready:
+        if not data.get("autocheck", {}).get("ok"):
+            raise ProblemError(409, "autocheck_failed", "Задание не прошло автопроверку")
+        if row.key_status != "approved":
+            await approve_key(session, row.id, actor_id, "llm")
+            data = dict(row.spec or {})
+    data["ready"] = ready
+    row.spec = data
+    await session.flush()
     return row

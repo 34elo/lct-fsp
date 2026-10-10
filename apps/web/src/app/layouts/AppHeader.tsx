@@ -4,6 +4,7 @@ import { AccountMenu, AppBar, BrandMark, Moon, Sun, type ShellLinkProps } from "
 
 import type { NavItem } from "@/app/routes";
 import { useAuth } from "@/shared/lib/auth";
+import { avatarSrc } from "@/shared/lib/avatar";
 import { useTheme, type ThemeMode } from "@/shared/lib/theme";
 import { ROLE_LABEL, activeNav, initials } from "./shell-meta";
 
@@ -40,6 +41,7 @@ function UserMenu() {
   return (
     <AccountMenu
       letter={initials(me.email ?? name)}
+      src={avatarSrc(me.avatar_url ?? me.company?.logo_url)}
       label={`Меню аккаунта: ${name}, ${ROLE_LABEL[me.role] ?? me.role}`}
       items={[
         { label: "Настройки", onSelect: () => navigate("/settings"), active: pathname === "/settings" },

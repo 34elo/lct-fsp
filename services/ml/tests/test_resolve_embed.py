@@ -82,12 +82,12 @@ def test_embeddings_fake_shape_and_determinism():
     assert math.isclose(sum(x * x for x in r1["vectors"][0]), 1.0, abs_tol=1e-3)
 
 
-def test_embeddings_limit_and_unavailable():
+def test_embeddings_limit_and_fallback():
     c = _client()
     r = c.post("/v1/embeddings", json={"texts": ["x"] * 129, "kind": "passage"})
     assert r.status_code == 422
     r = _client(fake_mode=False).post("/v1/embeddings", json={"texts": ["x"], "kind": "query"})
-    assert r.status_code == 503
+    assert r.status_code == 200  # запасные векторы вместо 503 (E42-2)
 
 
 class _Stub:

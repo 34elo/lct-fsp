@@ -1,7 +1,8 @@
 import { PAGE } from "@/shared/lib/page";
 
 import { Gi, Gloss } from "@/shared/Gloss";
-import { buttonVariants, Chips, CircuitLine, cn, ConstellationAvatar, type ConstellationNode, dotsText, ErrorState, formatRub, formatRubRangeShort, GradeTag, H1, H2, Lbl, ListRow, MetricTile, Num, Panel, PanelCap, Skeleton, SkillConstellation, SkillTag, StatusTag } from "@fsp/ui";
+import { Avatar, buttonVariants, Chips, CircuitLine, cn, ConstellationAvatar, type ConstellationNode, dotsText, ErrorState, EvidenceGraph, formatRub, formatRubRangeShort, GradeTag, H1, H2, Lbl, ListRow, MetricTile, Num, Panel, PanelCap, Skeleton, SkillConstellation, SkillTag, StatusTag } from "@fsp/ui";
+import { avatarSrc } from "@/shared/lib/avatar";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 
@@ -9,8 +10,12 @@ import { useHistoryAssessmentHistoryGet, useMyTasksAssessmentTasksGet } from "@/
 import { useGetProfileCandidatesMeProfileGet, useMyViewsCandidatesMeViewsGet } from "@/api/endpoints/candidates/candidates";
 import { useMyInterestsCandidatesMeInterestsGet, useMyOffersCandidatesMeOffersGet } from "@/api/endpoints/offers/offers";
 import { useMyNavigatorCandidatesMeNavigatorGet, useMyStandingCandidatesMeStandingGet } from "@/api/endpoints/search/search";
+import { useMyGraphCandidatesMeGraphGet } from "@/api/endpoints/graph/graph";
 import { useGetProfessionsTaxonomyProfessionsGet } from "@/api/endpoints/taxonomy/taxonomy";
+import { MyGraphCandidatesMeGraphGetDepth, MyGraphCandidatesMeGraphGetSkills } from "@/api/model";
 import type { CandidateProfile, CandidateStanding, HistoryOut, InterestsSummary, NavigatorOut, OfferForCandidate } from "@/api/model";
+import { slugOf } from "@/features/graph/layout";
+import { T as GRAPH_T } from "@/features/graph/text";
 import { isFuture, pathStep, type PathStep } from "@/features/assessment/model";
 import { GRADE } from "@/features/assessment/text";
 import { dateOnly } from "@/features/offers/text";
@@ -68,7 +73,24 @@ function Before({ p, step, nodes }: { p: CandidateProfile; step: PathStep; nodes
         </div>
       </div>
       <div className="order-2 flex min-h-56 flex-1 items-center border-y border-hairline bg-tint-50 lg:order-none lg:col-span-7 lg:border-y-0 lg:border-l">
-        {nodes.length > 0 && <SkillConstellation nodes={nodes} label={HOME.constellationEmpty} />}
+        {nodes.length > 0 ? (
+          <SkillConstellation nodes={nodes} label={HOME.constellationEmpty} />
+        ) : (
+          <ul className="m-0 flex w-full list-none flex-col gap-3 p-4 lg:p-8" data-testid="home-hints">
+            {[
+              { ...HOME.hints.data, to: "/me/profile?tab=data" },
+              { ...HOME.hints.test, to: step.to },
+              { ...HOME.hints.fsp, to: "/me/profile?tab=data" },
+            ].map((h) => (
+              <li key={h.title}>
+                <Link to={h.to} className="flex flex-col gap-1 rounded-xl border border-hairline bg-card p-4 hover:border-brand" data-testid="home-hint">
+                  <span className="font-semibold">{h.title}</span>
+                  <span className="text-13 text-muted">{h.text}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </Panel>
   );
@@ -193,21 +215,26 @@ function NextStepCard({ p, standing, interests, navigator, history }: { p: Candi
   );
 }
 
-function ConstellationCard({ nodes }: { nodes: ConstellationNode[] }) {
-  if (!nodes.length) return null;
+/** «Граф навыков»: тот же `EvidenceGraph`, что в профиле, в компактном режиме (E41-8). Нет данных — блока нет. */
+function GraphCard() {
+  const q = useMyGraphCandidatesMeGraphGet({ skills: MyGraphCandidatesMeGraphGetSkills.top, depth: MyGraphCandidatesMeGraphGetDepth.facts }, { query: { retry: false } });
+  if (q.isPending) return <Skeleton className="order-3 h-[320px] lg:order-none" data-testid="home-graph-loading" />;
+  const graph = q.data?.status === 200 ? q.data.data : undefined;
+  if (!graph || graph.nodes.filter((n) => n.type !== "candidate").length === 0) return null;
   return (
     <Panel className="order-3 lg:order-none" data-testid="home-constellation" aria-label={HOME.constellation}>
-      <PanelCap
-        title={<Gloss k="graph"><H2>{HOME.constellation}</H2></Gloss>}
-        aside={
-          <Chips className="hidden md:flex">
-            <SkillTag name={HOME.legend.confirmed} />
-            <SkillTag name={HOME.legend.claimed} state="claimed" />
-            <SkillTag name={HOME.legend.adjacent} state="ghost" />
-          </Chips>
-        }
+      <PanelCap title={<Gloss k="graph"><H2>{HOME.constellation}</H2></Gloss>} />
+      <EvidenceGraph
+        data={graph}
+        compact
+        title={null}
+        info={null}
+        renderSkillAction={(n) => (
+          <Link to={`/me/skills/${slugOf(n.id)}`} className="inline-flex min-h-11 items-center text-13 font-semibold text-brand-fg" aria-label={`${n.label}: ${GRAPH_T.skillLink}`}>
+            {GRAPH_T.skillLink}
+          </Link>
+        )}
       />
-      <SkillConstellation nodes={nodes} />
     </Panel>
   );
 }
@@ -228,6 +255,7 @@ function Interests({ interests, offers }: { interests?: InterestsSummary; offers
               to={o.status === "interest" || o.status === "interest_opened" ? "/me/offers?show=interests" : `/me/offers/${o.id}`}
               className="flex min-h-11 flex-wrap items-center gap-x-3 gap-y-1 border-b border-hairline py-3 last:border-b-0 hover:text-brand-fg"
             >
+              <Avatar name={o.company.name} src={avatarSrc(o.company.logo_url)} size={28} className="rounded-lg" />
               <span className="min-w-0 flex-1 truncate font-medium">{o.company.name}</span>
               <StatusBadge status={o.status} />
               <Num className="text-13 text-muted">{formatRubRangeShort(o.salary_from, o.salary_to)}</Num>
@@ -310,23 +338,22 @@ function After(props: {
   views?: ViewsStats;
   profTitle: (s: string) => string;
 }) {
-  const { p, navigator } = props;
-  const nodes = constellationNodes(p.skills ?? [], { adjacent: (navigator?.skill_gaps ?? []).map((g) => g.name) });
+  const { p } = props;
   return (
     <div className="flex flex-col gap-4 lg:grid lg:grid-cols-12 lg:items-start" data-testid="home-after">
       <div className="contents lg:col-span-3 lg:flex lg:flex-col lg:gap-4">
         <ProfileCard {...props} />
         <SkillsCard p={p} className="order-5 lg:order-none" />
-        <FspCard p={p} />
       </div>
       <div className="contents lg:col-span-6 lg:flex lg:flex-col lg:gap-4">
         <NextStepCard {...props} />
-        <ConstellationCard nodes={nodes} />
+        <GraphCard />
         <Interests interests={props.interests} offers={props.offers} />
         <RegularTasks />
       </div>
       <div className="contents lg:col-span-3 lg:flex lg:flex-col lg:gap-4">
         <Tiles standing={props.standing} interests={props.interests} profTitle={props.profTitle} />
+        <FspCard p={p} className="order-5 hidden lg:order-none lg:block" />
         <StatsLink views={props.views} />
       </div>
     </div>

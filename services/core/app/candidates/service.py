@@ -65,7 +65,20 @@ async def get_or_create(session: AsyncSession, user_id: uuid.UUID, secret: str) 
             existing = await session.get(Candidate, user_id)
             if existing is not None:  # параллельный запрос успел раньше
                 return existing
-    raise RuntimeError("pseudonym_exhausted")
+    # 20 коллизий подряд: детерминированный уникальный псевдоним от pseudo_id вместо падения
+    pseudo_id = make_pseudo_id(secret, user_id)
+    cand = Candidate(
+        user_id=user_id,
+        pseudonym=f"Candidate #{pseudo_id[:8]}",
+        pseudo_id=pseudo_id,
+        visibility=dict(DEFAULT_VISIBILITY),
+        formats=[],
+        employment_types=[],
+        stoplist_company_ids=[],
+    )
+    session.add(cand)
+    await session.flush()
+    return cand
 
 
 async def get(session: AsyncSession, user_id: uuid.UUID) -> Candidate | None:
@@ -118,6 +131,58 @@ def shown_full_name(cand: Candidate, key: str, *, invited: bool = False) -> str 
     return full_name_of(cand, key) if invited or visibility_of(cand)["full_name"] else None
 
 
+def _avatar_sig(cand: Candidate, secret: str) -> str:
+    msg = f"avatar:{cand.pseudo_id}:{cand.avatar_key}".encode()
+    return hmac.new(secret.encode(), msg, hashlib.sha256).hexdigest()[:32]
+
+
+def avatar_url(cand: Candidate, secret: str) -> str | None:
+    """Адрес аватара с подписью (E41-12): `<img>` не несёт токен, а доступ ограничен тем, кому
+    сервер отдал ссылку (владелец; работодатель — после приглашения, как ФИО). Смена файла
+    меняет подпись и версию — старые ссылки перестают работать."""
+    if not cand.avatar_key:
+        return None
+    version = cand.avatar_key.rsplit("/", 1)[-1].split(".", 1)[0]
+    return f"/candidates/{cand.pseudo_id}/avatar?v={version}&sig={_avatar_sig(cand, secret)}"
+
+
+def avatar_sig_ok(cand: Candidate, secret: str, sig: str) -> bool:
+    return bool(cand.avatar_key) and hmac.compare_digest(_avatar_sig(cand, secret), sig)
+
+
+async def by_pseudo_id(session: AsyncSession, pseudo_id: str) -> Candidate | None:
+    return await session.scalar(
+        sa.select(Candidate).where(Candidate.pseudo_id == pseudo_id, Candidate.deleted_at.is_(None))
+    )
+
+
+async def set_avatar(session: AsyncSession, storage, cand: Candidate, data: bytes) -> Candidate:
+    from app.identity import profile
+
+    ext = profile.check_image(data)
+    key = profile.image_key(f"candidate-avatars/{cand.user_id}", data, ext)
+    await storage.put(key, data, profile.content_type(key))
+    old, cand.avatar_key = cand.avatar_key, key
+    await session.flush()
+    if old and old != key:
+        try:
+            await storage.delete(old)
+        except Exception:  # старый файл не мешает: ссылка уже другая
+            pass
+    return cand
+
+
+async def clear_avatar(session: AsyncSession, storage, cand: Candidate) -> Candidate:
+    old, cand.avatar_key = cand.avatar_key, None
+    await session.flush()
+    if old:
+        try:
+            await storage.delete(old)
+        except Exception:
+            pass
+    return cand
+
+
 def links_of(cand: Candidate, key: str) -> list[str]:
     """Ссылки владельца (E39-15): расшифрованный список; нечитаемое — пустой список."""
     raw = pii.decrypt_text(key, cand.links_enc)
@@ -158,7 +223,14 @@ async def update_profile(
     if "hidden_skills" in changes:
         cand.hidden_skills = sorted({str(x) for x in changes["hidden_skills"] or []}) or None
     if "desired_roles" in changes:
-        cand.desired_roles = list(dict.fromkeys(str(r) for r in changes["desired_roles"] or []))
+        roles = list(dict.fromkeys(str(r) for r in changes["desired_roles"] or []))
+        known = {p.slug for p in await taxonomy.list_professions(session, include_hidden=True)}
+        if unknown := [r for r in roles if r not in known]:
+            errors = [
+                {"field": "desired_roles", "message": f"{r}: нет в справочнике"} for r in unknown
+            ]
+            raise ProblemError(422, "validation_error", "Неизвестная профессия", errors=errors)
+        cand.desired_roles = roles
     if "experience_months" in changes:
         recompute |= cand.experience_months != changes["experience_months"]
         cand.experience_months = changes["experience_months"]
@@ -517,6 +589,7 @@ async def erase(session: AsyncSession, storage, user) -> Candidate:
     if cand is None or cand.deleted_at is not None:
         raise ProblemError(404, "candidate_not_found", "Профиль не найден")
     cid = cand.user_id
+    await clear_avatar(session, storage, cand)
     await resumes.erase_candidate(session, storage, cid)
     await assessment.erase_candidate(session, cid)
     await graph.erase_candidate(session, cid)

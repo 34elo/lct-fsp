@@ -96,8 +96,15 @@ def test_resume_failure_scenario():
     assert out.type == "ml.resume.failed" and out.payload["error"] == "scanned_pdf"
 
 
-def test_resume_has_quotes_for_every_skill():
+def test_resume_without_llm_is_unavailable_not_fixture():
     env, _ = new_command("ml.resume.parse", "core", _commands()["ml.resume.parse"])
+    (out,) = handle(env)
+    assert out.type == "ml.resume.failed" and out.payload["error"] == "llm_unavailable"
+
+
+def test_resume_has_quotes_for_every_skill():
+    p = _commands()["ml.resume.parse"].model_copy(update={"object_key": "r/1.fixture"})
+    env, _ = new_command("ml.resume.parse", "core", p)
     parsed = parse_payload(handle(env)[0]).parsed
     assert parsed.skills and all(s.quote for s in parsed.skills)
 
@@ -155,7 +162,10 @@ def test_api_validation_error_is_problem(client):
     assert r.status_code == 422 and r.json()["code"] == "validation_error"
 
 
-def test_api_without_fake_is_503():
-    c = TestClient(build_app(Settings(ml_fake=False)))
+def test_embeddings_without_model_use_fallback_not_503():
+    c = TestClient(build_app(Settings(ml_fake=False, llm_enabled=True)))
     r = c.post("/v1/embeddings", json={"texts": ["a"], "kind": "query"})
-    assert r.status_code == 503 and r.json()["code"] == "ml_unavailable"
+    assert r.status_code == 200 and r.json()["dim"] == 1024
+    again = c.post("/v1/embeddings", json={"texts": ["a"], "kind": "query"}).json()
+    assert again["vectors"] == r.json()["vectors"]  # детерминированно
+    assert c.get("/healthz").json()["embedder"] == "fallback"

@@ -275,9 +275,7 @@ def _review_part(item: Item, answer: Any, score: float | None, rt_ms: int | None
     return {
         "kind": item.kind.value,
         "stem": item.stem,
-        "options": item.options,
         "yours": _fmt(item, answer),
-        "correct": _fmt(item, item.key),
         "reason": {"code": reason.code, "label": REASONS[reason.code], "detail": reason.detail},
     }
 
@@ -285,9 +283,10 @@ def _review_part(item: Item, answer: Any, score: float | None, rt_ms: int | None
 async def review_attempt(
     session: AsyncSession, candidate_id: Any, attempt_id: Any
 ) -> dict[str, Any]:
-    """Разбор завершённой попытки (E39-10): условие, ответы, причина по каждому заданию.
+    """Разбор завершённой попытки (E41-5): «что подтянуть» — только задания, где набрано не всё.
 
-    Ключи отдаём только после завершения: у идущей попытки — 409, чужая — 404.
+    Верных ответов и вариантов в ответе нет совсем (задания остаются честными для всех): условие,
+    ответ кандидата и причина по правилам. У идущей попытки — 409, чужая — 404.
     """
     att = await attempts._own_attempt(session, candidate_id, attempt_id)
     if att.status == "active":
@@ -305,6 +304,8 @@ async def review_attempt(
     ).scalars()
     out: list[dict[str, Any]] = []
     for resp in rows:
+        if (resp.score or 0.0) >= 1.0:
+            continue
         fam = await attempts._family(session, resp.family_id)
         item = attempts.build_item(fam, resp.seed, att.plan.get("domain"))
         part = _review_part(item, resp.answer, resp.score, resp.rt_ms)
@@ -322,7 +323,7 @@ async def review_attempt(
                 )
                 for i, st in enumerate(item.steps)
             ]
-            part["yours"] = part["correct"] = None
+            part["yours"] = None
         out.append(
             {
                 **part,

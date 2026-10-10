@@ -92,3 +92,14 @@ def test_top_evidence_strongest_first_max_three():
     items = [ev("github", 0.5), ev("resume", 0.3), ev("fsp", 0.9), ev("test", 0.6)]
     t = combine(items, TODAY, CFG)
     assert t.top_evidence == [items[2].id, items[3].id, items[0].id]
+
+
+def test_single_test_never_reaches_level_4():
+    """E41-5: один тест (даже полный балл) — не выше ●●●○; ●●●● только со вторым источником."""
+    from app.assessment.config import load_config
+
+    cap = load_config().evidence_max_strength
+    assert cap == CFG.level_min[4] - 0.05
+    one = combine([ev("test", cap)], TODAY, CFG)
+    assert one.level == 3
+    assert combine([ev("test", cap), ev("fsp", 0.5)], TODAY, CFG).level == 4

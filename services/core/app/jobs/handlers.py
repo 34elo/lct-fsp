@@ -10,7 +10,7 @@ from datetime import UTC, datetime
 
 import structlog
 from fsp_contracts import Envelope
-from fsp_platform.messaging import Consumer
+from fsp_platform.messaging import Consumer, idempotent
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -93,6 +93,7 @@ def register(
     """Регистрирует обработчики cron-команд в очереди `core.jobs`."""
 
     @consumers["core.jobs"].on("offers.expire")
+    @idempotent(session_factory, "jobs.offers_expire")
     async def on_offers_expire(envelope: Envelope, session: AsyncSession) -> None:
         """Периодическое истечение офферов (каждые 5 минут, messaging.md §4)."""
         # CoreJob.model_validate(envelope.payload)  # пусто, но валидируем
@@ -101,12 +102,14 @@ def register(
         await subscriptions.flush_due(session, needs_cfg.NeedsConfig.load())
 
     @consumers["core.jobs"].on("active_status.expire")
+    @idempotent(session_factory, "jobs.active_status_expire")
     async def on_active_status_expire(envelope: Envelope, session: AsyncSession) -> None:
         """Сброс статуса 'активно ищу' по истечении периода (каждый час)."""
         # CoreJob.model_validate(envelope.payload)  # пусто
         await _expire_active_status(session)
 
     @consumers["core.jobs"].on("company.rating")
+    @idempotent(session_factory, "jobs.company_rating")
     async def on_company_rating(envelope: Envelope, session: AsyncSession) -> None:
         """Пересчёт ответственности компаний (каждый час)."""
         # CoreJob.model_validate(envelope.payload)  # пусто

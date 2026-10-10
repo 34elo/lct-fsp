@@ -4,6 +4,9 @@ import { cooldownDate, errorView } from "./text";
 import { ApiError } from "@/api/mutator";
 import {
   groupByType,
+  hasDiagram,
+  isRichStem,
+  splitStem,
   loadHideExplain,
   saveHideExplain,
   verdict,
@@ -225,5 +228,18 @@ describe("разбор теста (E39-10)", () => {
     expect(loadHideExplain()).toBe(true);
     saveHideExplain(false);
     expect(loadHideExplain()).toBe(false);
+  });
+});
+
+describe("схемы в условии (E41-9)", () => {
+  const fence = "```";
+  const stem = `Что делает сервис?\n\n${fence}mermaid\nflowchart LR\n A --> B\n${fence}`;
+  it("блок mermaid делает условие Markdown-ным и не режется на код", () => {
+    expect(hasDiagram(stem)).toBe(true);
+    expect(isRichStem(stem)).toBe(true);
+    expect(splitStem(stem)).toEqual({ prose: stem, code: null });
+  });
+  it("обычный блок кода — не схема", () => {
+    expect(hasDiagram(`Запрос:\n\n${fence}sql\nSELECT 1;\n${fence}`)).toBe(false);
   });
 });

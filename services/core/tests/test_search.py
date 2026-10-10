@@ -405,8 +405,9 @@ def test_card_full_is_anonymous_and_logs_view(c, market):
     body = r.json()
     assert set(body) == CARD_FIELDS | {
         "skills", "grade_info", "experience", "offers_from_you", "claimed_vs_confirmed",
-        "full_name",
+        "full_name", "avatar_url",
     }  # fmt: skip
+    assert body["avatar_url"] is None
     assert body["pseudonym"] == "Backend #40" and body["offers_from_you"] == []
     assert [s["skill"]["slug"] for s in body["skills"]] == ["python", "fastapi"]
     assert body["skills"][1]["claimed_only"] is False or body["skills"][1]["level"] == 1

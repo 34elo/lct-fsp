@@ -9,6 +9,8 @@ import { authText } from "@/features/auth/text";
 import { ErrorNote } from "@/features/auth/ui";
 
 const t = authText.consents;
+/** E41-3: анализ кода в разработке — согласие не показываем. */
+export const HIDDEN_CONSENTS = new Set(["code_analysis"]);
 
 /**
  * Согласия при входе (E39-6): по умолчанию только обязательные; необязательные выдаются в настройках
@@ -27,7 +29,10 @@ export function ConsentsForm({
   const list = useGetConsentsMeConsentsGet();
   const save = usePutConsentsMeConsentsPut();
   const all = list.data?.data as ConsentOut[] | undefined;
-  const items = useMemo(() => all && (requiredOnly ? all.filter((c) => c.required) : all), [all, requiredOnly]);
+  const items = useMemo(
+    () => all && all.filter((c) => !HIDDEN_CONSENTS.has(c.type) && (!requiredOnly || c.required)),
+    [all, requiredOnly],
+  );
   const [checked, setChecked] = useState<Record<string, boolean>>({});
   const [error, setError] = useState<string | null>(null);
 

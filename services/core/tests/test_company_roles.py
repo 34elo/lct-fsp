@@ -300,3 +300,29 @@ def test_offer_signed_by_hr(c):
     assert "email" not in sender
     assert items[0]["company"]["description"] == "Мы **делаем** продукт"
     assert c.get(sender["avatar_url"]).status_code == 200
+
+
+def test_company_logo_owner_only_and_public(c):
+    owner = _owner(c)
+    hr = _hr(c, owner)
+    files = {"file": ("l.png", PNG, "image/png")}
+    assert c.put("/companies/me/logo", files=files, headers=hr).status_code == 403  # HR не правит
+    cand = _user(c, "k@x.io", role="candidate")
+    assert c.put("/companies/me/logo", files=files, headers=cand).status_code == 403
+    r = c.put("/companies/me/logo", files=files, headers=owner)
+    assert r.status_code == 200, r.text
+    url = r.json()["logo_url"]
+    assert url.startswith("/companies/") and "?v=" in url and "logo_key" not in r.json()
+    img = c.get(url)  # без авторизации
+    assert img.status_code == 200 and img.content == PNG
+    fake = {"file": ("a.png", b"GIF89a....", "image/png")}
+    assert c.put("/companies/me/logo", files=fake, headers=owner).status_code == 415
+    jpg = b"\xff\xd8\xff\xe0" + b"\x01" * 32
+    r = c.put("/companies/me/logo", files={"file": ("p.jpg", jpg, "image/jpeg")}, headers=owner)
+    assert len(c.storage.files) == 1 and r.json()["logo_url"] != url
+    assert c.get("/companies/me", headers=hr).json()["logo_url"] == r.json()["logo_url"]
+    assert c.get("/me", headers=owner).json()["company"]["logo_url"] == r.json()["logo_url"]
+    assert c.delete("/companies/me/logo", headers=owner).json()["logo_url"] is None
+    assert c.storage.files == {}
+    assert c.get(url.split("?")[0]).status_code == 404
+    assert c.get(f"/companies/{uuid.uuid4()}/logo").status_code == 404

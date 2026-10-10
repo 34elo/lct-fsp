@@ -24,11 +24,15 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AccessLogEntry,
+  BodyPutCompanyLogoCompaniesMeLogoPut,
   CompanyIn,
   CompanyOut,
   CompanyPatch,
   CompanyTeamOut,
   HTTPValidationError,
+  HrAccessCard,
+  HrIn,
   InviteCreated,
   InviteIn,
   InvitePreview,
@@ -456,7 +460,414 @@ export const usePatchMyCompanyCompaniesMePatch = <TError = ErrorType<ProblemOut>
       > => {
       return useMutation(getPatchMyCompanyCompaniesMePatchMutationOptions(options), queryClient);
     }
-    export type myTeamCompaniesMeMembersGetResponse200 = {
+    export type putCompanyLogoCompaniesMeLogoPutResponse200 = {
+  data: CompanyOut
+  status: 200
+}
+
+export type putCompanyLogoCompaniesMeLogoPutResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type putCompanyLogoCompaniesMeLogoPutResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type putCompanyLogoCompaniesMeLogoPutResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type putCompanyLogoCompaniesMeLogoPutResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type putCompanyLogoCompaniesMeLogoPutResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type putCompanyLogoCompaniesMeLogoPutResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type putCompanyLogoCompaniesMeLogoPutResponse413ApplicationProblemJson = {
+  data: ProblemOut
+  status: 413
+}
+
+export type putCompanyLogoCompaniesMeLogoPutResponse413ApplicationJson = {
+  data: ProblemOut
+  status: 413
+}
+
+export type putCompanyLogoCompaniesMeLogoPutResponse415ApplicationProblemJson = {
+  data: ProblemOut
+  status: 415
+}
+
+export type putCompanyLogoCompaniesMeLogoPutResponse415ApplicationJson = {
+  data: ProblemOut
+  status: 415
+}
+
+export type putCompanyLogoCompaniesMeLogoPutResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type putCompanyLogoCompaniesMeLogoPutResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type putCompanyLogoCompaniesMeLogoPutResponse429ApplicationProblemJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type putCompanyLogoCompaniesMeLogoPutResponse429ApplicationJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type putCompanyLogoCompaniesMeLogoPutResponseSuccess = (putCompanyLogoCompaniesMeLogoPutResponse200) & {
+  headers: Headers;
+};
+export type putCompanyLogoCompaniesMeLogoPutResponseError = (putCompanyLogoCompaniesMeLogoPutResponse401ApplicationProblemJson | putCompanyLogoCompaniesMeLogoPutResponse401ApplicationJson | putCompanyLogoCompaniesMeLogoPutResponse403ApplicationProblemJson | putCompanyLogoCompaniesMeLogoPutResponse403ApplicationJson | putCompanyLogoCompaniesMeLogoPutResponse404ApplicationProblemJson | putCompanyLogoCompaniesMeLogoPutResponse404ApplicationJson | putCompanyLogoCompaniesMeLogoPutResponse413ApplicationProblemJson | putCompanyLogoCompaniesMeLogoPutResponse413ApplicationJson | putCompanyLogoCompaniesMeLogoPutResponse415ApplicationProblemJson | putCompanyLogoCompaniesMeLogoPutResponse415ApplicationJson | putCompanyLogoCompaniesMeLogoPutResponse422ApplicationProblemJson | putCompanyLogoCompaniesMeLogoPutResponse422ApplicationJson | putCompanyLogoCompaniesMeLogoPutResponse429ApplicationProblemJson | putCompanyLogoCompaniesMeLogoPutResponse429ApplicationJson) & {
+  headers: Headers;
+};
+
+export type putCompanyLogoCompaniesMeLogoPutResponse = (putCompanyLogoCompaniesMeLogoPutResponseSuccess | putCompanyLogoCompaniesMeLogoPutResponseError)
+
+export const getPutCompanyLogoCompaniesMeLogoPutUrl = () => {
+
+
+
+
+  return `/companies/me/logo`
+}
+
+/**
+ * Логотип компании (E41-12): PNG, JPEG или WebP по сигнатуре, до 2 МБ; только владелец.
+ * @summary Put Company Logo
+ */
+export const putCompanyLogoCompaniesMeLogoPut = async (bodyPutCompanyLogoCompaniesMeLogoPut: BodyPutCompanyLogoCompaniesMeLogoPut, options?: Parameters<typeof apiFetch>[1]): Promise<putCompanyLogoCompaniesMeLogoPutResponse> => {
+    const formData = new FormData();
+formData.append(`file`, bodyPutCompanyLogoCompaniesMeLogoPut.file);
+
+  return apiFetch<putCompanyLogoCompaniesMeLogoPutResponse>(getPutCompanyLogoCompaniesMeLogoPutUrl(),
+  {
+    ...options,
+    method: 'PUT'
+    ,
+    body: formData
+  }
+);}
+
+
+
+
+
+export const getPutCompanyLogoCompaniesMeLogoPutMutationKey = () => ['putCompanyLogoCompaniesMeLogoPut'] as const;
+
+export const getPutCompanyLogoCompaniesMeLogoPutMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putCompanyLogoCompaniesMeLogoPut>>, TError,PutCompanyLogoCompaniesMeLogoPutMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof putCompanyLogoCompaniesMeLogoPut>>, TError,PutCompanyLogoCompaniesMeLogoPutMutationVariables, TContext> => {
+
+const mutationKey = getPutCompanyLogoCompaniesMeLogoPutMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putCompanyLogoCompaniesMeLogoPut>>, PutCompanyLogoCompaniesMeLogoPutMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  putCompanyLogoCompaniesMeLogoPut(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutCompanyLogoCompaniesMeLogoPutMutationResult = NonNullable<Awaited<ReturnType<typeof putCompanyLogoCompaniesMeLogoPut>>>
+    export type PutCompanyLogoCompaniesMeLogoPutMutationBody = BodyPutCompanyLogoCompaniesMeLogoPut
+    export type PutCompanyLogoCompaniesMeLogoPutMutationError = ErrorType<ProblemOut>
+    export type PutCompanyLogoCompaniesMeLogoPutMutationVariables = {data: BodyPutCompanyLogoCompaniesMeLogoPut}
+
+    /**
+ * @summary Put Company Logo
+ */
+export const usePutCompanyLogoCompaniesMeLogoPut = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putCompanyLogoCompaniesMeLogoPut>>, TError,PutCompanyLogoCompaniesMeLogoPutMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putCompanyLogoCompaniesMeLogoPut>>,
+        TError,
+        PutCompanyLogoCompaniesMeLogoPutMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPutCompanyLogoCompaniesMeLogoPutMutationOptions(options), queryClient);
+    }
+    export type deleteCompanyLogoCompaniesMeLogoDeleteResponse200 = {
+  data: CompanyOut
+  status: 200
+}
+
+export type deleteCompanyLogoCompaniesMeLogoDeleteResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type deleteCompanyLogoCompaniesMeLogoDeleteResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type deleteCompanyLogoCompaniesMeLogoDeleteResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type deleteCompanyLogoCompaniesMeLogoDeleteResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type deleteCompanyLogoCompaniesMeLogoDeleteResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type deleteCompanyLogoCompaniesMeLogoDeleteResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type deleteCompanyLogoCompaniesMeLogoDeleteResponseSuccess = (deleteCompanyLogoCompaniesMeLogoDeleteResponse200) & {
+  headers: Headers;
+};
+export type deleteCompanyLogoCompaniesMeLogoDeleteResponseError = (deleteCompanyLogoCompaniesMeLogoDeleteResponse401ApplicationProblemJson | deleteCompanyLogoCompaniesMeLogoDeleteResponse401ApplicationJson | deleteCompanyLogoCompaniesMeLogoDeleteResponse403ApplicationProblemJson | deleteCompanyLogoCompaniesMeLogoDeleteResponse403ApplicationJson | deleteCompanyLogoCompaniesMeLogoDeleteResponse404ApplicationProblemJson | deleteCompanyLogoCompaniesMeLogoDeleteResponse404ApplicationJson) & {
+  headers: Headers;
+};
+
+export type deleteCompanyLogoCompaniesMeLogoDeleteResponse = (deleteCompanyLogoCompaniesMeLogoDeleteResponseSuccess | deleteCompanyLogoCompaniesMeLogoDeleteResponseError)
+
+export const getDeleteCompanyLogoCompaniesMeLogoDeleteUrl = () => {
+
+
+
+
+  return `/companies/me/logo`
+}
+
+/**
+ * @summary Delete Company Logo
+ */
+export const deleteCompanyLogoCompaniesMeLogoDelete = async ( options?: Parameters<typeof apiFetch>[1]): Promise<deleteCompanyLogoCompaniesMeLogoDeleteResponse> => {
+
+  return apiFetch<deleteCompanyLogoCompaniesMeLogoDeleteResponse>(getDeleteCompanyLogoCompaniesMeLogoDeleteUrl(),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteCompanyLogoCompaniesMeLogoDeleteMutationKey = () => ['deleteCompanyLogoCompaniesMeLogoDelete'] as const;
+
+export const getDeleteCompanyLogoCompaniesMeLogoDeleteMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCompanyLogoCompaniesMeLogoDelete>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteCompanyLogoCompaniesMeLogoDelete>>, TError,void, TContext> => {
+
+const mutationKey = getDeleteCompanyLogoCompaniesMeLogoDeleteMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteCompanyLogoCompaniesMeLogoDelete>>, void> = () => {
+
+
+          return  deleteCompanyLogoCompaniesMeLogoDelete(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteCompanyLogoCompaniesMeLogoDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof deleteCompanyLogoCompaniesMeLogoDelete>>>
+
+    export type DeleteCompanyLogoCompaniesMeLogoDeleteMutationError = ErrorType<ProblemOut>
+
+
+    /**
+ * @summary Delete Company Logo
+ */
+export const useDeleteCompanyLogoCompaniesMeLogoDelete = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCompanyLogoCompaniesMeLogoDelete>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteCompanyLogoCompaniesMeLogoDelete>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getDeleteCompanyLogoCompaniesMeLogoDeleteMutationOptions(options), queryClient);
+    }
+    export type getCompanyLogoCompaniesCompanyIdLogoGetResponse200 = {
+  data: Blob
+  status: 200
+}
+
+export type getCompanyLogoCompaniesCompanyIdLogoGetResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type getCompanyLogoCompaniesCompanyIdLogoGetResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type getCompanyLogoCompaniesCompanyIdLogoGetResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type getCompanyLogoCompaniesCompanyIdLogoGetResponseSuccess = (getCompanyLogoCompaniesCompanyIdLogoGetResponse200) & {
+  headers: Headers;
+};
+export type getCompanyLogoCompaniesCompanyIdLogoGetResponseError = (getCompanyLogoCompaniesCompanyIdLogoGetResponse404ApplicationProblemJson | getCompanyLogoCompaniesCompanyIdLogoGetResponse404ApplicationJson | getCompanyLogoCompaniesCompanyIdLogoGetResponse422) & {
+  headers: Headers;
+};
+
+export type getCompanyLogoCompaniesCompanyIdLogoGetResponse = (getCompanyLogoCompaniesCompanyIdLogoGetResponseSuccess | getCompanyLogoCompaniesCompanyIdLogoGetResponseError)
+
+export const getGetCompanyLogoCompaniesCompanyIdLogoGetUrl = (companyId: string,) => {
+
+
+
+
+  return `/companies/${companyId}/logo`
+}
+
+/**
+ * Без авторизации: `<img>` не несёт токен, логотип компании публичен.
+ * @summary Get Company Logo
+ */
+export const getCompanyLogoCompaniesCompanyIdLogoGet = async (companyId: string, options?: Parameters<typeof apiFetch>[1]): Promise<getCompanyLogoCompaniesCompanyIdLogoGetResponse> => {
+
+  return apiFetch<getCompanyLogoCompaniesCompanyIdLogoGetResponse>(getGetCompanyLogoCompaniesCompanyIdLogoGetUrl(companyId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCompanyLogoCompaniesCompanyIdLogoGetQueryKey = (companyId: string,) => {
+    return [
+    `/companies/${companyId}/logo`
+    ] as const;
+    }
+
+
+export const getGetCompanyLogoCompaniesCompanyIdLogoGetQueryOptions = <TData = Awaited<ReturnType<typeof getCompanyLogoCompaniesCompanyIdLogoGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(companyId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCompanyLogoCompaniesCompanyIdLogoGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCompanyLogoCompaniesCompanyIdLogoGetQueryKey(companyId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCompanyLogoCompaniesCompanyIdLogoGet>>> = ({ signal }) => getCompanyLogoCompaniesCompanyIdLogoGet(companyId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: companyId !== null && companyId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCompanyLogoCompaniesCompanyIdLogoGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetCompanyLogoCompaniesCompanyIdLogoGetQueryResult = NonNullable<Awaited<ReturnType<typeof getCompanyLogoCompaniesCompanyIdLogoGet>>>
+export type GetCompanyLogoCompaniesCompanyIdLogoGetQueryError = ErrorType<ProblemOut | HTTPValidationError>
+
+
+export function useGetCompanyLogoCompaniesCompanyIdLogoGet<TData = Awaited<ReturnType<typeof getCompanyLogoCompaniesCompanyIdLogoGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ companyId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCompanyLogoCompaniesCompanyIdLogoGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCompanyLogoCompaniesCompanyIdLogoGet>>,
+          TError,
+          Awaited<ReturnType<typeof getCompanyLogoCompaniesCompanyIdLogoGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCompanyLogoCompaniesCompanyIdLogoGet<TData = Awaited<ReturnType<typeof getCompanyLogoCompaniesCompanyIdLogoGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ companyId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCompanyLogoCompaniesCompanyIdLogoGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCompanyLogoCompaniesCompanyIdLogoGet>>,
+          TError,
+          Awaited<ReturnType<typeof getCompanyLogoCompaniesCompanyIdLogoGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCompanyLogoCompaniesCompanyIdLogoGet<TData = Awaited<ReturnType<typeof getCompanyLogoCompaniesCompanyIdLogoGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ companyId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCompanyLogoCompaniesCompanyIdLogoGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Company Logo
+ */
+
+export function useGetCompanyLogoCompaniesCompanyIdLogoGet<TData = Awaited<ReturnType<typeof getCompanyLogoCompaniesCompanyIdLogoGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ companyId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCompanyLogoCompaniesCompanyIdLogoGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetCompanyLogoCompaniesCompanyIdLogoGetQueryOptions(companyId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type myTeamCompaniesMeMembersGetResponse200 = {
   data: CompanyTeamOut
   status: 200
 }
@@ -816,6 +1227,7 @@ export const getCreateInviteCompaniesMeInvitesPostUrl = () => {
 
 /**
  * Владелец приглашает HR по email: письмо со ссылкой (SMTP) и та же ссылка в ответе.
+ * @deprecated
  * @summary Create Invite
  */
 export const createInviteCompaniesMeInvitesPost = async (inviteIn: InviteIn, options?: Parameters<typeof apiFetch>[1]): Promise<createInviteCompaniesMeInvitesPostResponse> => {
@@ -882,6 +1294,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type CreateInviteCompaniesMeInvitesPostMutationVariables = {data: InviteIn}
 
     /**
+ * @deprecated
  * @summary Create Invite
  */
 export const useCreateInviteCompaniesMeInvitesPost = <TError = ErrorType<ProblemOut>,
@@ -1084,6 +1497,7 @@ export const getRemoveMemberCompaniesMeMembersUserIdDeleteUrl = (userId: string,
 }
 
 /**
+ * Отозвать доступ HR: убрать из команды, закрыть сессии; аккаунт от владельца выключается.
  * @summary Remove Member
  */
 export const removeMemberCompaniesMeMembersUserIdDelete = async (userId: string, options?: Parameters<typeof apiFetch>[1]): Promise<removeMemberCompaniesMeMembersUserIdDeleteResponse> => {
@@ -1148,7 +1562,457 @@ export const useRemoveMemberCompaniesMeMembersUserIdDelete = <TError = ErrorType
       > => {
       return useMutation(getRemoveMemberCompaniesMeMembersUserIdDeleteMutationOptions(options), queryClient);
     }
-    export type invitePreviewCompanyInvitesTokenGetResponse200 = {
+    export type createHrCompaniesMeHrPostResponse201 = {
+  data: HrAccessCard
+  status: 201
+}
+
+export type createHrCompaniesMeHrPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type createHrCompaniesMeHrPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type createHrCompaniesMeHrPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type createHrCompaniesMeHrPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type createHrCompaniesMeHrPostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type createHrCompaniesMeHrPostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type createHrCompaniesMeHrPostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type createHrCompaniesMeHrPostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type createHrCompaniesMeHrPostResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type createHrCompaniesMeHrPostResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type createHrCompaniesMeHrPostResponse429ApplicationProblemJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type createHrCompaniesMeHrPostResponse429ApplicationJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type createHrCompaniesMeHrPostResponseSuccess = (createHrCompaniesMeHrPostResponse201) & {
+  headers: Headers;
+};
+export type createHrCompaniesMeHrPostResponseError = (createHrCompaniesMeHrPostResponse401ApplicationProblemJson | createHrCompaniesMeHrPostResponse401ApplicationJson | createHrCompaniesMeHrPostResponse403ApplicationProblemJson | createHrCompaniesMeHrPostResponse403ApplicationJson | createHrCompaniesMeHrPostResponse404ApplicationProblemJson | createHrCompaniesMeHrPostResponse404ApplicationJson | createHrCompaniesMeHrPostResponse409ApplicationProblemJson | createHrCompaniesMeHrPostResponse409ApplicationJson | createHrCompaniesMeHrPostResponse422ApplicationProblemJson | createHrCompaniesMeHrPostResponse422ApplicationJson | createHrCompaniesMeHrPostResponse429ApplicationProblemJson | createHrCompaniesMeHrPostResponse429ApplicationJson) & {
+  headers: Headers;
+};
+
+export type createHrCompaniesMeHrPostResponse = (createHrCompaniesMeHrPostResponseSuccess | createHrCompaniesMeHrPostResponseError)
+
+export const getCreateHrCompaniesMeHrPostUrl = () => {
+
+
+
+
+  return `/companies/me/hr`
+}
+
+/**
+ * Владелец создаёт аккаунт HR сразу; логин и временный пароль (72 ч) — в ответе один раз.
+ * @summary Create Hr
+ */
+export const createHrCompaniesMeHrPost = async (hrIn: HrIn, options?: Parameters<typeof apiFetch>[1]): Promise<createHrCompaniesMeHrPostResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<createHrCompaniesMeHrPostResponse>(getCreateHrCompaniesMeHrPostUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(hrIn)
+  }
+);}
+
+
+
+
+
+export const getCreateHrCompaniesMeHrPostMutationKey = () => ['createHrCompaniesMeHrPost'] as const;
+
+export const getCreateHrCompaniesMeHrPostMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createHrCompaniesMeHrPost>>, TError,CreateHrCompaniesMeHrPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createHrCompaniesMeHrPost>>, TError,CreateHrCompaniesMeHrPostMutationVariables, TContext> => {
+
+const mutationKey = getCreateHrCompaniesMeHrPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createHrCompaniesMeHrPost>>, CreateHrCompaniesMeHrPostMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createHrCompaniesMeHrPost(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateHrCompaniesMeHrPostMutationResult = NonNullable<Awaited<ReturnType<typeof createHrCompaniesMeHrPost>>>
+    export type CreateHrCompaniesMeHrPostMutationBody = HrIn
+    export type CreateHrCompaniesMeHrPostMutationError = ErrorType<ProblemOut>
+    export type CreateHrCompaniesMeHrPostMutationVariables = {data: HrIn}
+
+    /**
+ * @summary Create Hr
+ */
+export const useCreateHrCompaniesMeHrPost = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createHrCompaniesMeHrPost>>, TError,CreateHrCompaniesMeHrPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createHrCompaniesMeHrPost>>,
+        TError,
+        CreateHrCompaniesMeHrPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateHrCompaniesMeHrPostMutationOptions(options), queryClient);
+    }
+    export type resetHrPasswordCompaniesMeMembersUserIdPasswordPostResponse200 = {
+  data: HrAccessCard
+  status: 200
+}
+
+export type resetHrPasswordCompaniesMeMembersUserIdPasswordPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type resetHrPasswordCompaniesMeMembersUserIdPasswordPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type resetHrPasswordCompaniesMeMembersUserIdPasswordPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type resetHrPasswordCompaniesMeMembersUserIdPasswordPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type resetHrPasswordCompaniesMeMembersUserIdPasswordPostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type resetHrPasswordCompaniesMeMembersUserIdPasswordPostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type resetHrPasswordCompaniesMeMembersUserIdPasswordPostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type resetHrPasswordCompaniesMeMembersUserIdPasswordPostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type resetHrPasswordCompaniesMeMembersUserIdPasswordPostResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type resetHrPasswordCompaniesMeMembersUserIdPasswordPostResponse429ApplicationProblemJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type resetHrPasswordCompaniesMeMembersUserIdPasswordPostResponse429ApplicationJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type resetHrPasswordCompaniesMeMembersUserIdPasswordPostResponseSuccess = (resetHrPasswordCompaniesMeMembersUserIdPasswordPostResponse200) & {
+  headers: Headers;
+};
+export type resetHrPasswordCompaniesMeMembersUserIdPasswordPostResponseError = (resetHrPasswordCompaniesMeMembersUserIdPasswordPostResponse401ApplicationProblemJson | resetHrPasswordCompaniesMeMembersUserIdPasswordPostResponse401ApplicationJson | resetHrPasswordCompaniesMeMembersUserIdPasswordPostResponse403ApplicationProblemJson | resetHrPasswordCompaniesMeMembersUserIdPasswordPostResponse403ApplicationJson | resetHrPasswordCompaniesMeMembersUserIdPasswordPostResponse404ApplicationProblemJson | resetHrPasswordCompaniesMeMembersUserIdPasswordPostResponse404ApplicationJson | resetHrPasswordCompaniesMeMembersUserIdPasswordPostResponse409ApplicationProblemJson | resetHrPasswordCompaniesMeMembersUserIdPasswordPostResponse409ApplicationJson | resetHrPasswordCompaniesMeMembersUserIdPasswordPostResponse422 | resetHrPasswordCompaniesMeMembersUserIdPasswordPostResponse429ApplicationProblemJson | resetHrPasswordCompaniesMeMembersUserIdPasswordPostResponse429ApplicationJson) & {
+  headers: Headers;
+};
+
+export type resetHrPasswordCompaniesMeMembersUserIdPasswordPostResponse = (resetHrPasswordCompaniesMeMembersUserIdPasswordPostResponseSuccess | resetHrPasswordCompaniesMeMembersUserIdPasswordPostResponseError)
+
+export const getResetHrPasswordCompaniesMeMembersUserIdPasswordPostUrl = (userId: string,) => {
+
+
+
+
+  return `/companies/me/members/${userId}/password`
+}
+
+/**
+ * Выдать HR новый временный пароль: прежний и все сессии HR сразу недействительны.
+ * @summary Reset Hr Password
+ */
+export const resetHrPasswordCompaniesMeMembersUserIdPasswordPost = async (userId: string, options?: Parameters<typeof apiFetch>[1]): Promise<resetHrPasswordCompaniesMeMembersUserIdPasswordPostResponse> => {
+
+  return apiFetch<resetHrPasswordCompaniesMeMembersUserIdPasswordPostResponse>(getResetHrPasswordCompaniesMeMembersUserIdPasswordPostUrl(userId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getResetHrPasswordCompaniesMeMembersUserIdPasswordPostMutationKey = () => ['resetHrPasswordCompaniesMeMembersUserIdPasswordPost'] as const;
+
+export const getResetHrPasswordCompaniesMeMembersUserIdPasswordPostMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resetHrPasswordCompaniesMeMembersUserIdPasswordPost>>, TError,ResetHrPasswordCompaniesMeMembersUserIdPasswordPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof resetHrPasswordCompaniesMeMembersUserIdPasswordPost>>, TError,ResetHrPasswordCompaniesMeMembersUserIdPasswordPostMutationVariables, TContext> => {
+
+const mutationKey = getResetHrPasswordCompaniesMeMembersUserIdPasswordPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof resetHrPasswordCompaniesMeMembersUserIdPasswordPost>>, ResetHrPasswordCompaniesMeMembersUserIdPasswordPostMutationVariables> = (props) => {
+          const {userId} = props ?? {};
+
+          return  resetHrPasswordCompaniesMeMembersUserIdPasswordPost(userId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ResetHrPasswordCompaniesMeMembersUserIdPasswordPostMutationResult = NonNullable<Awaited<ReturnType<typeof resetHrPasswordCompaniesMeMembersUserIdPasswordPost>>>
+
+    export type ResetHrPasswordCompaniesMeMembersUserIdPasswordPostMutationError = ErrorType<ProblemOut | HTTPValidationError>
+    export type ResetHrPasswordCompaniesMeMembersUserIdPasswordPostMutationVariables = {userId: string}
+
+    /**
+ * @summary Reset Hr Password
+ */
+export const useResetHrPasswordCompaniesMeMembersUserIdPasswordPost = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resetHrPasswordCompaniesMeMembersUserIdPasswordPost>>, TError,ResetHrPasswordCompaniesMeMembersUserIdPasswordPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof resetHrPasswordCompaniesMeMembersUserIdPasswordPost>>,
+        TError,
+        ResetHrPasswordCompaniesMeMembersUserIdPasswordPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getResetHrPasswordCompaniesMeMembersUserIdPasswordPostMutationOptions(options), queryClient);
+    }
+    export type accessLogCompaniesMeAccessLogGetResponse200 = {
+  data: AccessLogEntry[]
+  status: 200
+}
+
+export type accessLogCompaniesMeAccessLogGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type accessLogCompaniesMeAccessLogGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type accessLogCompaniesMeAccessLogGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type accessLogCompaniesMeAccessLogGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type accessLogCompaniesMeAccessLogGetResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type accessLogCompaniesMeAccessLogGetResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type accessLogCompaniesMeAccessLogGetResponseSuccess = (accessLogCompaniesMeAccessLogGetResponse200) & {
+  headers: Headers;
+};
+export type accessLogCompaniesMeAccessLogGetResponseError = (accessLogCompaniesMeAccessLogGetResponse401ApplicationProblemJson | accessLogCompaniesMeAccessLogGetResponse401ApplicationJson | accessLogCompaniesMeAccessLogGetResponse403ApplicationProblemJson | accessLogCompaniesMeAccessLogGetResponse403ApplicationJson | accessLogCompaniesMeAccessLogGetResponse404ApplicationProblemJson | accessLogCompaniesMeAccessLogGetResponse404ApplicationJson) & {
+  headers: Headers;
+};
+
+export type accessLogCompaniesMeAccessLogGetResponse = (accessLogCompaniesMeAccessLogGetResponseSuccess | accessLogCompaniesMeAccessLogGetResponseError)
+
+export const getAccessLogCompaniesMeAccessLogGetUrl = () => {
+
+
+
+
+  return `/companies/me/access-log`
+}
+
+/**
+ * Журнал доступа HR (кто, кого, когда) — только владельцу, последние 50 записей.
+ * @summary Access Log
+ */
+export const accessLogCompaniesMeAccessLogGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<accessLogCompaniesMeAccessLogGetResponse> => {
+
+  return apiFetch<accessLogCompaniesMeAccessLogGetResponse>(getAccessLogCompaniesMeAccessLogGetUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getAccessLogCompaniesMeAccessLogGetQueryKey = () => {
+    return [
+    `/companies/me/access-log`
+    ] as const;
+    }
+
+
+export const getAccessLogCompaniesMeAccessLogGetQueryOptions = <TData = Awaited<ReturnType<typeof accessLogCompaniesMeAccessLogGet>>, TError = ErrorType<ProblemOut>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessLogCompaniesMeAccessLogGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAccessLogCompaniesMeAccessLogGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof accessLogCompaniesMeAccessLogGet>>> = ({ signal }) => accessLogCompaniesMeAccessLogGet({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof accessLogCompaniesMeAccessLogGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AccessLogCompaniesMeAccessLogGetQueryResult = NonNullable<Awaited<ReturnType<typeof accessLogCompaniesMeAccessLogGet>>>
+export type AccessLogCompaniesMeAccessLogGetQueryError = ErrorType<ProblemOut>
+
+
+export function useAccessLogCompaniesMeAccessLogGet<TData = Awaited<ReturnType<typeof accessLogCompaniesMeAccessLogGet>>, TError = ErrorType<ProblemOut>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessLogCompaniesMeAccessLogGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof accessLogCompaniesMeAccessLogGet>>,
+          TError,
+          Awaited<ReturnType<typeof accessLogCompaniesMeAccessLogGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAccessLogCompaniesMeAccessLogGet<TData = Awaited<ReturnType<typeof accessLogCompaniesMeAccessLogGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessLogCompaniesMeAccessLogGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof accessLogCompaniesMeAccessLogGet>>,
+          TError,
+          Awaited<ReturnType<typeof accessLogCompaniesMeAccessLogGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAccessLogCompaniesMeAccessLogGet<TData = Awaited<ReturnType<typeof accessLogCompaniesMeAccessLogGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessLogCompaniesMeAccessLogGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Access Log
+ */
+
+export function useAccessLogCompaniesMeAccessLogGet<TData = Awaited<ReturnType<typeof accessLogCompaniesMeAccessLogGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accessLogCompaniesMeAccessLogGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAccessLogCompaniesMeAccessLogGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type invitePreviewCompanyInvitesTokenGetResponse200 = {
   data: InvitePreview
   status: 200
 }

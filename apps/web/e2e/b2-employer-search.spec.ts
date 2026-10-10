@@ -43,3 +43,23 @@ test("b2: запрос «python django middle» → чипсы → катего�
   const after = await top.getByRole("article").count();
   expect(after).toBeLessThanOrEqual(before);
 });
+
+/** E41-11: переключатель «Категории / Кандидаты», фильтры свёрнуты, «В шорт-лист» на карточке. */
+test("b2: режим «Кандидаты» → фильтр навыка → «В шорт-лист»", async ({ page }) => {
+  await loginAs(page, "olga");
+  await page.goto("/employer?skill=python&grade=middle");
+  await expect(page.getByTestId("match-categories")).toBeVisible();
+  await expect(page.getByTestId("filter-fsp")).toHaveCount(0); // блоки фильтров закрыты
+
+  await page.getByRole("radio", { name: "Кандидаты" }).click();
+  await expect(page).toHaveURL(/view=candidates/);
+  const list = page.getByTestId("match-candidates");
+  const first = list.getByRole("article").first();
+  await expect(first).toBeVisible();
+
+  await page.getByTestId("match-filters").getByRole("button", { name: /^Навыки/ }).click();
+  await expect(page.getByTestId("filter-skills")).toBeVisible();
+
+  await first.getByRole("button", { name: "В шорт-лист" }).click();
+  await expect(first.getByRole("button", { name: "В шорт-листе" })).toBeVisible();
+});
