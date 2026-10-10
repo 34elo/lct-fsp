@@ -5,6 +5,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Button,
   buttonVariants,
+  cardInteractive,
   cn,
   EmptyState,
   ErrorState,
@@ -132,7 +133,8 @@ function CategoryTile({ c, on, onSelect }: { c: NeedCategory; on: boolean; onSel
       aria-pressed={on}
       onClick={onSelect}
       className={cn(
-        "flex w-72 shrink-0 flex-col gap-3 rounded-xl border p-4 text-left hover:border-brand-mid focus-visible:outline-2 focus-visible:outline-brand md:w-full",
+        "flex w-72 shrink-0 flex-col gap-3 rounded-xl border p-4 text-left md:w-full",
+        cardInteractive,
         on ? "border-brand bg-tint-50" : "border-hairline bg-card",
       )}
     >
