@@ -369,6 +369,7 @@ export * from './resumeOut';
 export * from './resumeOutStatus';
 export * from './resumePerson';
 export * from './resumeSkill';
+export * from './resumeSkillSource';
 export * from './resumeSoftSkill';
 export * from './retiredOut';
 export * from './retryOut';
