@@ -74,7 +74,8 @@ export const Dialog = RDialog.Root;
 export const DialogTrigger = RDialog.Trigger;
 export const DialogClose = RDialog.Close;
 
-const overlay = "fixed inset-0 z-50 bg-ink/40";
+/** Подложка модалок и шторок: полупрозрачная тёмная с размытием (токен `scrim`, обе темы). */
+const overlay = "fixed inset-0 z-50 bg-scrim backdrop-blur-sm";
 const closeBtn =
   "absolute right-2 top-2 inline-flex size-11 items-center justify-center rounded-md text-muted hover:bg-tint-50 hover:text-ink";
 

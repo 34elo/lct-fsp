@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 
-import { Card, CardContent, CardHeader, CardTitle, ErrorState, Skeleton, cn } from "@fsp/ui";
+import { Card, CardContent, CardHeader, CardTitle, ErrorState, Skeleton, cardInteractive, cn } from "@fsp/ui";
 
 import { useGetSummaryAdminSummaryGet } from "@/api/endpoints/admin-dashboard/admin-dashboard";
 import type { QueueCount } from "@/api/model";
@@ -19,7 +19,8 @@ function QueueTile({ q }: { q: QueueCount }) {
         data-testid={`queue-${q.id}`}
         aria-label={`${meta.title}: ${q.count ?? H.unknown}. ${H.open}`}
         className={cn(
-          "flex h-full flex-col gap-1 rounded-xl border p-3 transition-colors sm:min-h-24 sm:p-4 hover:border-brand focus-visible:outline-2 focus-visible:outline-brand",
+          "flex h-full flex-col gap-1 rounded-xl border p-3 sm:min-h-24 sm:p-4",
+          cardInteractive,
           waiting ? "border-tint-200 bg-tint-100" : "border-hairline bg-card",
         )}
       >

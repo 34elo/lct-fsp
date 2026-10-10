@@ -24,6 +24,7 @@ import { getGetConsentsMeConsentsGetQueryKey, useGetConsentsMeConsentsGet, usePu
 import { useMyLinkMeTelegramLinkPost } from "@/api/endpoints/telegram/telegram";
 import type { ConsentOut } from "@/api/model";
 import { authText } from "@/features/auth/text";
+import { onboardingSkipped, setOnboardingSkipped } from "@/features/employer/match-model";
 import { ImagePicker, type ImagePickerText } from "@/shared/ImagePicker";
 import { useAuth, type Role } from "@/shared/lib/auth";
 import { avatarSrc } from "@/shared/lib/avatar";
@@ -305,6 +306,7 @@ function CandidateAvatarPicker({ name, url, onChanged }: { name: string; url?: s
 function CompanyLine() {
   const { me } = useAuth();
   const company = me?.company;
+  const [wizardHidden, setWizardHidden] = useState(() => onboardingSkipped());
   if (me?.role !== "employer") return null;
   return (
     <div className="flex flex-col gap-1 border-t border-hairline pt-4" data-testid="settings-company">
@@ -323,6 +325,19 @@ function CompanyLine() {
         <p className="text-14 text-muted" data-testid="settings-company-none">
           {PROFILE.companyNone}
         </p>
+      )}
+      {!company && wizardHidden && (
+        <Button
+          variant="outline"
+          className="self-start"
+          data-testid="settings-onboarding-show"
+          onClick={() => {
+            setOnboardingSkipped(false);
+            setWizardHidden(false);
+          }}
+        >
+          Показать вводный онбординг
+        </Button>
       )}
     </div>
   );

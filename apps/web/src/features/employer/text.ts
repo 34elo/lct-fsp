@@ -379,6 +379,8 @@ export const ONBOARDING_TEXT = {
   steps: ["Компания", "Кого ищете", "Как это работает"] as const,
   skip: "Пропустить",
   skipAll: "Пропустить настройку",
+  dismiss: "Больше не показывать",
+  close: "Закрыть",
   next: "Дальше",
   company: {
     title: "Расскажите о компании",
