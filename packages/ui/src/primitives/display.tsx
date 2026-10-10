@@ -7,8 +7,12 @@ import { cn } from "../lib/cn";
 import { Button } from "./button";
 
 /* ---------- Card ---------- */
-export function Card({ className, ...p }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("rounded-xl border border-hairline bg-card shadow-xs", className)} {...p} />;
+/** Единый hover кликабельной карточки: подъём тени и рамка акцента, без сдвига вёрстки. */
+export const cardInteractive =
+  "cursor-pointer transition-[box-shadow,border-color,transform] duration-150 hover:-translate-y-px hover:border-brand hover:shadow-card focus-visible:outline-2 focus-visible:outline-brand";
+
+export function Card({ className, interactive, ...p }: HTMLAttributes<HTMLDivElement> & { interactive?: boolean }) {
+  return <div className={cn("rounded-xl border border-hairline bg-card shadow-xs", interactive && cardInteractive, className)} {...p} />;
 }
 export function CardHeader({ className, ...p }: HTMLAttributes<HTMLDivElement>) {
   return <div className={cn("flex flex-col gap-1 p-5 pb-0", className)} {...p} />;

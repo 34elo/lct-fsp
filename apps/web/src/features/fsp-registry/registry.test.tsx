@@ -39,6 +39,16 @@ beforeEach(() => {
       if (path.endsWith("/admin/fsp/requests")) return res(200, url.includes("status=accepted") ? [] : [REQ]);
       if (path.endsWith("/accept")) return res(200, { ...REQ, status: "accepted", participant_id: "r-1" });
       if (path.endsWith("/reject")) return res(200, { ...REQ, status: "rejected", reason: "Нет в протоколах" });
+      if (path.endsWith("/admin/fsp/registry/import")) {
+        const b = calls.at(-1)?.body as { commit: boolean };
+        const line = (n: number, status: "ok" | "error") => ({ line: n, participant: "p", event: "Кубок", status, action: status === "ok" ? "create" : null, error: status === "error" ? "participant_not_found" : null });
+        return res(200, {
+          committed: b.commit,
+          summary: { total: 2, errors: 1, created: 1, updated: 0, unchanged: 0 },
+          new_events: [],
+          lines: [line(2, "ok"), line(3, "error")],
+        });
+      }
       if (path.endsWith("/admin/fsp/participants/import"))
         return res(200, { created: 2, updated: 1, errors: [{ line: 4, reason: "bad_email" }] });
       if (path.endsWith("/admin/fsp/participants") && method === "POST") return res(201, { id: "r-9", full_name: "Иванова Мария", linked: false });
@@ -139,4 +149,22 @@ test("мероприятия: «Импорт CSV» создаёт и прави�
   expect(await screen.findByText("Добавлено: 1, обновлено: 1.")).toBeInTheDocument();
   expect(screen.getByText(/строка 4: неизвестная дисциплина/)).toBeInTheDocument();
   expect(calls.find((c) => c.method === "POST" && c.url.endsWith("/admin/fsp/events"))?.body).toEqual({ title: "Новый кубок", discipline: "product", level: "national", date: "2026-06-01" });
+});
+
+test("результаты: «Добавить списком» — превью с ошибками, импорт только после пропуска ошибок (E43-4)", async () => {
+  mount("/federation/registry?tab=results");
+  fireEvent.click(await screen.findByRole("button", { name: "Добавить списком" }));
+  fireEvent.change(await screen.findByLabelText("Или вставьте текст из таблицы"), { target: { value: "p;Кубок;2026-05-01;1\nx;Кубок;2026-05-01;2" } });
+  fireEvent.click(screen.getByRole("button", { name: "Проверить" }));
+  expect(await screen.findByText(/с ошибками: 1/)).toBeInTheDocument();
+  expect(screen.getByText("участника нет в реестре")).toBeInTheDocument();
+  const commit = screen.getByRole("button", { name: "Добавить (1)" });
+  expect(commit).toBeDisabled();
+  fireEvent.click(screen.getByLabelText(/Пропустить строки с ошибками/));
+  expect(commit).toBeEnabled();
+  fireEvent.click(commit);
+  expect(await screen.findByText(/Готово\. Добавлено: 1/)).toBeInTheDocument();
+  const sent = calls.filter((c) => c.url.endsWith("/registry/import")).map((c) => c.body);
+  expect(sent[0]).toMatchObject({ commit: false });
+  expect(sent[1]).toMatchObject({ commit: true, skip_errors: true });
 });
