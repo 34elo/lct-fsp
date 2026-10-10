@@ -166,7 +166,10 @@ def test_task_in_invitation_from_interest(world, bank):
     assert c.get(f"/offers/{o['id']}/task", headers=ch).json()["can_answer"] is True
 
 
-def test_bank_unavailable_does_not_break_offer_without_task(c):
+def test_bank_unavailable_does_not_break_offer_without_task(c, monkeypatch):
+    from app.assessment import service as assessment
+
+    monkeypatch.delattr(assessment, "invite_task_describe")  # банк Б1 «ещё не отдал» функции
     e = _employer(c, "e@x.ru")
     vid = _vacancy(c, e)
     ch, pid, uid = _candidate(c, "c@x.ru", 1)

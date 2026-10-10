@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { Badge, Button, Card, CardContent, cn, EmptyState, ErrorState, Field, Skeleton, useFieldProps } from "@fsp/ui";
+import { Badge, Button, Dialog, DialogContent, DialogTitle, EmptyState, ErrorState, Field, Skeleton, useFieldProps } from "@fsp/ui";
 
 import {
   getListCardsAdminSkillCardsGetQueryKey,
@@ -48,11 +48,11 @@ function CardEditor({ data, onSaved }: { data: CardOut; onSaved: (msg: string) =
   };
 
   return (
-    <Card data-testid={sel("editor")}>
-      <CardContent>
+    <div data-testid={sel("editor")}>
+      <div>
         <form noValidate onSubmit={submit} className="flex flex-col gap-5">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-16 font-semibold break-all">{T.card.editTitle(data.skill)}</h2>
+          <div className="flex flex-wrap items-center justify-between gap-2 pr-10">
+            <DialogTitle className="break-all">{T.card.editTitle(data.skill)}</DialogTitle>
             <div className="flex flex-wrap items-center gap-2">
               <Badge data-testid={sel("type")}>{T.skillType[data.card.type] ?? data.card.type}</Badge>
               <Badge variant="muted" data-testid={sel("source")} data-source={data.source}>
@@ -136,8 +136,8 @@ function CardEditor({ data, onSaved }: { data: CardOut; onSaved: (msg: string) =
             <Button type="submit" disabled={put.isPending} data-testid={sel("save")}>{T.save}</Button>
           </div>
         </form>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
@@ -161,39 +161,41 @@ export function CardsTab() {
       {q.isLoading && <Skeleton className="h-32" />}
       {(q.isError || (q.data && q.data.status !== 200)) && <ErrorState description={T.loadError} onRetry={() => void q.refetch()} />}
       {items && items.length === 0 && <EmptyState title={T.card.empty} description={T.card.emptyText} />}
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-        {items && items.length > 0 && (
-          <ul className="flex flex-col gap-2" data-testid={sel("list")}>
-            {items.map((c) => (
-              <li key={c.skill}>
-                <Card className={cn(openSlug === c.skill && "border-brand")}>
-                  <CardContent className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="font-mono text-14 font-semibold break-all" data-testid={sel(`slug-${c.skill}`)}>{c.skill}</p>
-                      <p className="text-13 text-muted" data-testid={sel(`meta-${c.skill}`)}>
-                        {[T.skillType[c.type] ?? c.type, T.card.source[c.source] ?? c.source, T.card.version(c.version)].join(" · ")}
-                      </p>
-                    </div>
-                    <Button type="button" size="sm" variant="outline" data-testid={sel(`open-${c.skill}`)} onClick={() => { setOpenSlug(c.skill); setNotice(""); }}>
-                      {T.open}
-                    </Button>
-                  </CardContent>
-                </Card>
-              </li>
-            ))}
-          </ul>
-        )}
-        {openSlug && (
-          <CardLoader
-            key={openSlug}
-            slug={openSlug}
-            onSaved={(msg) => {
-              setOpenSlug(null);
-              setNotice(msg);
-            }}
-          />
-        )}
-      </div>
+      <p className="text-13 text-muted" data-testid={sel("growth")}>{T.card.growth}</p>
+      {items && items.length > 0 && (
+        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" data-testid={sel("list")}>
+          {items.map((c) => (
+            <li key={c.skill}>
+              <button
+                type="button"
+                data-testid={sel(`open-${c.skill}`)}
+                aria-label={`${c.skill}. ${T.open}`}
+                onClick={() => { setOpenSlug(c.skill); setNotice(""); }}
+                className="flex h-full min-h-24 w-full flex-col items-start gap-1 rounded-xl border border-hairline bg-card p-4 text-left transition-colors hover:border-brand focus-visible:outline-2 focus-visible:outline-brand"
+              >
+                <span className="break-all font-mono text-14 font-semibold" data-testid={sel(`slug-${c.skill}`)}>{c.skill}</span>
+                <span className="text-13 text-muted" data-testid={sel(`meta-${c.skill}`)}>
+                  {[T.skillType[c.type] ?? c.type, T.card.source[c.source] ?? c.source, T.card.version(c.version)].join(" · ")}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <Dialog open={openSlug !== null} onOpenChange={(o) => !o && setOpenSlug(null)}>
+        <DialogContent className="max-h-[90dvh] max-w-3xl overflow-y-auto" aria-describedby={undefined}>
+          {openSlug && (
+            <CardLoader
+              key={openSlug}
+              slug={openSlug}
+              onSaved={(msg) => {
+                setOpenSlug(null);
+                setNotice(msg);
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

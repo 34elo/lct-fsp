@@ -1,13 +1,15 @@
 import { PAGE } from "@/shared/lib/page";
 import { Avatar, Button, EmptyState, ErrorState, Field, FieldInput, H1, MarkdownEditor, Panel, PanelCap, ScrollTabs, Skeleton, StatusTag, Tabs, TabsContent, TabsTrigger, buttonVariants } from "@fsp/ui";
 import { useQueryClient } from "@tanstack/react-query";
-import { useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
 import { usePasswordChangeAuthPasswordChangePost } from "@/api/endpoints/auth/auth";
 import {
   getGetProfileCandidatesMeProfileGetQueryKey,
+  useDeleteAvatarCandidatesMeAvatarDelete,
   useGetProfileCandidatesMeProfileGet,
+  usePutAvatarCandidatesMeAvatarPut,
   usePatchProfileCandidatesMeProfilePatch,
 } from "@/api/endpoints/candidates/candidates";
 import {
@@ -22,6 +24,7 @@ import { getGetConsentsMeConsentsGetQueryKey, useGetConsentsMeConsentsGet, usePu
 import { useMyLinkMeTelegramLinkPost } from "@/api/endpoints/telegram/telegram";
 import type { ConsentOut } from "@/api/model";
 import { authText } from "@/features/auth/text";
+import { ImagePicker, type ImagePickerText } from "@/shared/ImagePicker";
 import { useAuth, type Role } from "@/shared/lib/auth";
 import { avatarSrc } from "@/shared/lib/avatar";
 import { useTheme } from "@/shared/lib/theme";
@@ -156,7 +159,7 @@ function AppearanceCard() {
 
 const PROFILE = S.profile;
 
-/** Строка «аватар + почта + роль». Загрузки фото нет (нет API), поэтому только инициалы. */
+/** Строка «аватар + почта + роль»: инициалы; фото — в блоке загрузки ниже. */
 function AccountHead({ name }: { name?: string | null }) {
   const { me } = useAuth();
   return (
@@ -193,8 +196,9 @@ const SaveRow = ({ pending, saved, error, disabled }: { pending: boolean; saved:
 type SaveState = "idle" | "saved" | "error";
 
 /** ФИО кандидата: `PATCH /candidates/me/profile {full_name}`; пустое значение очищает. */
-function CandidateProfileCard({ fullName }: { fullName: string }) {
+function CandidateProfileCard({ fullName, avatarUrl }: { fullName: string; avatarUrl?: string | null }) {
   const qc = useQueryClient();
+  const { reloadMe } = useAuth();
   const patch = usePatchProfileCandidatesMeProfilePatch();
   const [value, setValue] = useState(fullName);
   const [state, setState] = useState<SaveState>("idle");
@@ -218,6 +222,14 @@ function CandidateProfileCard({ fullName }: { fullName: string }) {
   return (
     <form onSubmit={(e) => void submit(e)} className="flex flex-col gap-4" data-testid="settings-profile-form">
       <AccountHead name={trimmed} />
+      <CandidateAvatarPicker
+        name={trimmed}
+        url={avatarUrl}
+        onChanged={async () => {
+          await qc.invalidateQueries({ queryKey: getGetProfileCandidatesMeProfileGetQueryKey() });
+          await reloadMe();
+        }}
+      />
       <Field label={PROFILE.fullName} hint={PROFILE.fullNameHint} error={invalid}>
         <FieldInput
           value={value}
@@ -235,66 +247,55 @@ function CandidateProfileCard({ fullName }: { fullName: string }) {
   );
 }
 
-/** Фото профиля: `PUT /me/avatar` (сигнатура проверяется на сервере), `DELETE /me/avatar`. */
+const PHOTO_TEXT: ImagePickerText = {
+  upload: PROFILE.photoUpload,
+  replace: PROFILE.photoReplace,
+  remove: PROFILE.photoRemove,
+  hint: PROFILE.photoHint,
+  error: PROFILE.photoError,
+};
+
+/** Фото сотрудника: `PUT|DELETE /me/avatar` (E39-24); сервер проверяет сигнатуру файла. */
 function AvatarPicker({ name, url, onChanged }: { name: string; url?: string | null; onChanged: () => Promise<void> }) {
-  const input = useRef<HTMLInputElement>(null);
   const put = usePutMyAvatarMeAvatarPut();
   const del = useDeleteMyAvatarMeAvatarDelete();
-  const [error, setError] = useState<string | null>(null);
-
-  async function upload(file: File | undefined) {
-    if (!file) return;
-    setError(null);
-    try {
-      await put.mutateAsync({ data: { file } });
-      await onChanged();
-    } catch (err) {
-      setError(PROFILE.photoError(err instanceof ApiError ? err.code : undefined));
-    } finally {
-      if (input.current) input.current.value = "";
-    }
-  }
-
-  async function remove() {
-    setError(null);
-    try {
-      await del.mutateAsync();
-      await onChanged();
-    } catch {
-      setError(PROFILE.photoError());
-    }
-  }
-
   return (
-    <div className="flex flex-wrap items-center gap-4" data-testid="settings-avatar">
-      <Avatar name={name} src={avatarSrc(url)} size={72} />
-      <div className="flex min-w-0 flex-col gap-2">
-        <div className="flex flex-wrap gap-2">
-          <Button type="button" variant="outline" loading={put.isPending} onClick={() => input.current?.click()} data-testid="settings-avatar-upload">
-            {url ? PROFILE.photoReplace : PROFILE.photoUpload}
-          </Button>
-          {url && (
-            <Button type="button" variant="ghost" loading={del.isPending} onClick={() => void remove()} data-testid="settings-avatar-remove">
-              {PROFILE.photoRemove}
-            </Button>
-          )}
-        </div>
-        <span className="text-13 text-muted">{PROFILE.photoHint}</span>
-        {error && (
-          <span role="alert" className="text-13 text-error" data-testid="settings-avatar-error">
-            {error}
-          </span>
-        )}
-      </div>
-      <input
-        ref={input}
-        type="file"
-        accept="image/png,image/jpeg,image/webp"
-        className="sr-only"
-        tabIndex={-1}
-        aria-hidden
-        data-testid="settings-avatar-input"
-        onChange={(e) => void upload(e.target.files?.[0])}
+    <ImagePicker
+      testId="settings-avatar"
+      name={name}
+      src={avatarSrc(url)}
+      text={PHOTO_TEXT}
+      onUpload={async (file) => {
+        await put.mutateAsync({ data: { file } });
+        await onChanged();
+      }}
+      onRemove={async () => {
+        await del.mutateAsync();
+        await onChanged();
+      }}
+    />
+  );
+}
+
+/** Фото кандидата: `PUT|DELETE /candidates/me/avatar` (E41-12). Работодатель видит его после приглашения. */
+function CandidateAvatarPicker({ name, url, onChanged }: { name: string; url?: string | null; onChanged: () => Promise<void> }) {
+  const put = usePutAvatarCandidatesMeAvatarPut();
+  const del = useDeleteAvatarCandidatesMeAvatarDelete();
+  return (
+    <div className="flex flex-col gap-1">
+      <ImagePicker
+        testId="settings-avatar"
+        name={name}
+        src={avatarSrc(url)}
+        text={{ ...PHOTO_TEXT, hint: `${PHOTO_TEXT.hint} ${PROFILE.photoCandidateHint}` }}
+        onUpload={async (file) => {
+          await put.mutateAsync({ data: { file } });
+          await onChanged();
+        }}
+        onRemove={async () => {
+          await del.mutateAsync();
+          await onChanged();
+        }}
       />
     </div>
   );
@@ -349,7 +350,11 @@ function StaffProfileCard() {
     setForm((f) => ({ ...f, [k]: v }));
     setState("idle");
   };
-  const refresh = () => qc.invalidateQueries({ queryKey: getGetMyProfileMeProfileGetQueryKey() });
+  const { reloadMe } = useAuth();
+  const refresh = async () => {
+    await qc.invalidateQueries({ queryKey: getGetMyProfileMeProfileGetQueryKey() });
+    await reloadMe();
+  };
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -418,7 +423,7 @@ function ProfileTab({ role }: { role: Role }) {
   else if (pq.isPending) body = <Skeleton className="h-40" />;
   else if (pq.data?.status === 403) body = <ConsentEmpty />;
   else if (pq.data?.status !== 200) body = <LoadError onRetry={() => void pq.refetch()} status={pq.error?.status} />;
-  else body = <CandidateProfileCard fullName={pq.data.data.full_name ?? ""} />;
+  else body = <CandidateProfileCard fullName={pq.data.data.full_name ?? ""} avatarUrl={pq.data.data.avatar_url} />;
   return (
     <Panel data-testid="settings-profile" aria-label={PROFILE.title}>
       <PanelCap title={PROFILE.title} />

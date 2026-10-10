@@ -20,16 +20,13 @@ const OUT = process.env.ADMIN_AUDIT_OUT ?? "../../reports/admin-audit.json";
 
 const ROUTES = [
   "/federation",
-  "/federation/requests",
   "/federation/moderation",
   "/federation/registry",
   "/federation/funnel",
   "/admin/families",
   "/admin/professions",
   "/admin/skills",
-  "/admin/quality",
-  "/admin/quality/fairness",
-  "/admin/quality/runs",
+  "/federation/analytics",
   "/admin/demo/two-worlds",
   "/admin/demo/llm-exam",
   "/admin/demo/new-profession",

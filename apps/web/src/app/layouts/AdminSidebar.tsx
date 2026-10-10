@@ -1,7 +1,7 @@
 import { Fragment, useLayoutEffect, useRef } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 
-import { Briefcase, ClipboardList, Filter, Gauge, Handshake, LayoutDashboard, Logo, Network, ShieldCheck, SlidersHorizontal, type LucideIcon, cn } from "@fsp/ui";
+import { Briefcase, ClipboardList, Filter, Gauge, LayoutDashboard, Logo, Network, ShieldCheck, SlidersHorizontal, type LucideIcon, cn } from "@fsp/ui";
 
 import { ADMIN_GROUPS, type NavItem } from "@/app/routes";
 import { activeNav } from "./shell-meta";
@@ -19,14 +19,13 @@ export function groupNav(nav: NavItem[]): { id: string; label?: string; items: N
 /** Иконки пунктов админки (E41-2): по пути пункта, без изменения маршрутов. */
 const ADMIN_ICONS: Record<string, LucideIcon> = {
   "/federation": LayoutDashboard,
-  "/federation/requests": Handshake,
   "/admin/families": SlidersHorizontal,
   "/federation/moderation": ShieldCheck,
   "/federation/registry": ClipboardList,
   "/admin/professions": Briefcase,
   "/admin/skills": Network,
   "/federation/funnel": Filter,
-  "/admin/quality": Gauge,
+  "/federation/analytics": Gauge,
 };
 
 const itemClass = (on: boolean) =>

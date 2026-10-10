@@ -413,4 +413,32 @@ async def count_families(session: AsyncSession, status: str) -> int:
     """Число семейств в статусе — счётчик очереди допуска на главной админки (E39-29)."""
     from app.assessment.models import FamilyRow
 
-    return int(await session.scalar(select(func.count()).where(FamilyRow.status == status)) or 0)
+    return int(
+        await session.scalar(
+            select(func.count()).where(FamilyRow.status == status, FamilyRow.company_id.is_(None))
+        )
+        or 0
+    )
+
+
+# --- задание в приглашении (заявка З-2-02, E33-3, E41-14) ---------------------------------------
+
+
+async def invite_task_describe(session, family_id, *, company_id, user_id):
+    from app.assessment import invite_bank
+
+    return await invite_bank.describe(session, family_id, company_id=company_id, user_id=user_id)
+
+
+async def invite_task_item(session, family_id, *, candidate_id, offer_id):
+    from app.assessment import invite_bank
+
+    return await invite_bank.item(session, family_id, candidate_id=candidate_id, offer_id=offer_id)
+
+
+async def invite_task_submit(session, family_id, *, candidate_id, offer_id, answer):
+    from app.assessment import invite_bank
+
+    return await invite_bank.submit(
+        session, family_id, candidate_id=candidate_id, offer_id=offer_id, answer=answer
+    )
