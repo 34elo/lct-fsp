@@ -1,5 +1,7 @@
 // Иконки для каркаса приложения: web не зависит от lucide напрямую.
 export {
+  ArrowLeft,
+  Bookmark,
   Briefcase,
   Building2,
   ChevronDown,
@@ -12,6 +14,7 @@ export {
   LogOut,
   Moon,
   Network,
+  Plus,
   Search,
   ShieldCheck,
   SlidersHorizontal,

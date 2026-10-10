@@ -1,9 +1,27 @@
 import { PAGE } from "@/shared/lib/page";
 import { useMemo, useState, type FormEvent } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { Button, Combobox, EmptyState, cn, ErrorState, NumberInput, SectionLabel, Select, Skeleton, formatRub } from "@fsp/ui";
+import {
+  ArrowLeft,
+  Button,
+  buttonVariants,
+  Combobox,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  EmptyState,
+  cn,
+  ErrorState,
+  NumberInput,
+  Plus,
+  ProfessionInput,
+  Select,
+  Skeleton,
+  formatRub,
+} from "@fsp/ui";
 
 import {
   getListSubscriptionsSubscriptionsGetQueryKey,
@@ -16,7 +34,8 @@ import { TestGrade, type SkillMin, type SubscriptionOut } from "@/api/model";
 import { ApiError } from "@/api/mutator";
 import { ErrorNote } from "@/features/auth/ui";
 import { FORMAT_LABEL } from "@/features/employer/text";
-import { GRADE_LABEL, ROLE_LABEL, roleLabel } from "@/features/profile/text";
+import { GRADE_LABEL, roleLabel } from "@/features/profile/text";
+import { suggestProfessions } from "@/shared/lib/skills";
 import { parseRub } from "@/features/offers/offer-model";
 import { SUB_TEXT as T } from "./text";
 
@@ -48,7 +67,8 @@ export default function Subscriptions() {
   const skillName = (slug: string) => skills.find((s) => s.slug === slug)?.name ?? slug;
 
   const initialGrade = params.get("grade");
-  const [profession, setProfession] = useState(params.get("profession") ?? "backend");
+  const [open, setOpen] = useState(params.has("profession"));
+  const [profession, setProfession] = useState<string | null>(params.get("profession") ?? null);
   const [grades, setGrades] = useState<string[]>(initialGrade && initialGrade in TestGrade ? [initialGrade] : []);
   const [formats, setFormats] = useState<string[]>([]);
   const [salary, setSalary] = useState("");
@@ -62,6 +82,7 @@ export default function Subscriptions() {
     mutation: {
       onSuccess: () => {
         refresh();
+        setOpen(false);
         setPicked([]);
         setSalary("");
       },
@@ -77,7 +98,7 @@ export default function Subscriptions() {
   };
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    if (create.isPending) return;
+    if (create.isPending || !profession) return;
     create.mutate({
       data: {
         profession,
@@ -93,22 +114,70 @@ export default function Subscriptions() {
   const chip = "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-hairline bg-card px-3 text-14 has-[:checked]:border-brand has-[:checked]:bg-tint-50";
 
   return (
-    <main className={cn(PAGE.normal, "lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]")}>
-      <header className="grid gap-1 lg:col-span-2">
-        <h1 className="font-mono text-24 font-semibold">{T.title}</h1>
-        <p className="text-14 text-muted">{T.lead}</p>
+    <main className={PAGE.normal}>
+      <header className="grid gap-2">
+        <Link to="/employer" className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "w-fit -ml-2")} data-testid="subs-back">
+          <ArrowLeft aria-hidden className="size-4" />
+          {T.back}
+        </Link>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="grid gap-1">
+            <h1 className="font-mono text-24 font-semibold">{T.title}</h1>
+            <p className="text-14 text-muted">{T.lead}</p>
+          </div>
+          <Button onClick={() => setOpen(true)} data-testid="subs-add">
+            <Plus aria-hidden className="size-4" />
+            {T.add}
+          </Button>
+        </div>
       </header>
 
-      <form onSubmit={submit} aria-label={T.new} className="grid content-start gap-4 rounded-xl border border-hairline bg-card p-4 md:p-5">
-        <h2 className="font-mono text-17 font-semibold">{T.new}</h2>
+      <section aria-label={T.mine} className="grid content-start gap-3">
+        {list.isPending && <Skeleton role="status" aria-label="Загрузка" className="h-24" />}
+        {list.isError && <ErrorState title={T.loadError} onRetry={() => void list.refetch()} />}
+        {list.isSuccess && subs.length === 0 && (
+          <EmptyState
+            title={T.empty}
+            description={T.emptyHint}
+            action={
+              <Button onClick={() => setOpen(true)}>
+                <Plus aria-hidden className="size-4" />
+                {T.add}
+              </Button>
+            }
+          />
+        )}
+        {remove.isError && <ErrorNote>{errorText(remove.error)}</ErrorNote>}
+        <ul aria-label={T.mine} className="m-0 grid list-none gap-3 p-0 sm:grid-cols-2 xl:grid-cols-3">
+          {subs.map((s) => (
+            <li key={s.id} className="flex min-w-0 flex-col justify-between gap-3 rounded-xl border border-hairline bg-card p-4">
+              <div className="grid min-w-0 gap-1.5">
+                <h3 className="font-mono text-16 font-semibold">{roleLabel(s.profession)}</h3>
+                <p className="break-words text-13 text-muted">{describe(s, skillName)}</p>
+              </div>
+              <Button variant="outline" size="sm" className="w-fit" aria-label={T.removeLabel(roleLabel(s.profession))} loading={remove.isPending && remove.variables?.subscriptionId === s.id} onClick={() => remove.mutate({ subscriptionId: s.id })}>
+                {T.remove}
+              </Button>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-h-[90dvh] max-w-lg overflow-y-auto">
+          <DialogTitle>{T.new}</DialogTitle>
+          <DialogDescription>{T.modalLead}</DialogDescription>
+      <form onSubmit={submit} aria-label={T.new} className="mt-4 grid content-start gap-4">
         <div className="grid gap-1 text-sm font-semibold">
           <span>{T.profession}</span>
-          <Select
+          <ProfessionInput
             aria-label={T.profession}
             value={profession}
-            onChange={(v) => v && setProfession(v)}
-            options={Object.entries(ROLE_LABEL).map(([k, v]) => ({ value: k, label: v }))}
-            className="font-normal"
+            onChange={setProfession}
+            professions={[]}
+            suggest={suggestProfessions}
+            placeholder={T.professionPlaceholder}
+            data-testid="sub-profession"
           />
         </div>
         <fieldset className="grid gap-2">
@@ -194,29 +263,10 @@ export default function Subscriptions() {
           {T.onlyConfirmed}
         </label>
         {create.isError && <ErrorNote>{errorText(create.error)}</ErrorNote>}
-        <Button type="submit" size="lg" loading={create.isPending}>{create.isPending ? T.saving : T.submit}</Button>
+        <Button type="submit" size="lg" loading={create.isPending} disabled={!profession}>{create.isPending ? T.saving : T.submit}</Button>
       </form>
-
-      <section aria-label={T.mine} className="grid content-start gap-3">
-        <SectionLabel>{T.mine}</SectionLabel>
-        {list.isPending && <Skeleton role="status" aria-label="Загрузка" className="h-24" />}
-        {list.isError && <ErrorState title={T.loadError} onRetry={() => void list.refetch()} />}
-        {list.isSuccess && subs.length === 0 && <EmptyState title={T.empty} description={T.emptyHint} />}
-        {remove.isError && <ErrorNote>{errorText(remove.error)}</ErrorNote>}
-        <ul className="grid gap-3">
-          {subs.map((s) => (
-            <li key={s.id} className="flex items-start justify-between gap-3 rounded-xl border border-hairline bg-card p-4">
-              <div className="grid min-w-0 gap-1">
-                <h3 className="font-mono text-16 font-semibold">{roleLabel(s.profession)}</h3>
-                <p className="break-words text-13 text-muted">{describe(s, skillName)}</p>
-              </div>
-              <Button variant="outline" size="sm" aria-label={T.removeLabel(roleLabel(s.profession))} loading={remove.isPending && remove.variables?.subscriptionId === s.id} onClick={() => remove.mutate({ subscriptionId: s.id })}>
-                {T.remove}
-              </Button>
-            </li>
-          ))}
-        </ul>
-      </section>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }
