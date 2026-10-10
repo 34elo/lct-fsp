@@ -102,6 +102,7 @@ def test_command_spec_and_llm_priorities():
         "ml.skills.resolve": 3,
         "ml.matches.explain": 2,
         "ml.questions.generate": 1,
+        "ml.families.generate": 0,
     }
     assert COMMANDS["notify.telegram"].queue == "bot.telegram"
     assert COMMANDS["fsp.sync"].queue == "fsp.sync"

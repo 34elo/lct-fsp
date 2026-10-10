@@ -64,6 +64,9 @@ def _commands() -> dict[str, object]:
             items=[MatchToExplain(candidate_id=U(), profile_version=1, score=0.8, explanation=[])],
         ),
         "ml.questions.generate": cmd.MlQuestionsGenerate(skill_slug="python", count=4),
+        "ml.families.generate": cmd.MlFamiliesGenerate(
+            order_id=U(), skill="python", kind="choice", level=3, n=7
+        ),
         "ml.code.analyze": cmd.MlCodeAnalyze(
             analysis_id=U(), candidate_id=U(), github_login="demo"
         ),
