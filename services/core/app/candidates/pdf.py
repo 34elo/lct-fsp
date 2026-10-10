@@ -1,6 +1,7 @@
-"""E20-6: PDF-профиль кандидата (HTML → WeasyPrint). Только владелец, контакты — свои.
+"""E20-6, E41-13: PDF-резюме кандидата (HTML → WeasyPrint). Только владелец, контакты — свои.
 
 Строится из уже собранных данных (`CandidateProfile` + грейды теста); ПДн в логи не пишем.
+Объяснения «из чего сложился грейд» в резюме нет.
 """
 
 from __future__ import annotations
@@ -12,38 +13,35 @@ from typing import Any
 
 from fsp_contracts.assessment import CandidateGrade
 
-DOTS_MAX = 4
 GRADE_TITLES = {
     "intern": "Intern", "junior": "Junior", "junior_plus": "Junior+", "middle": "Middle",
     "middle_plus": "Middle+", "senior": "Senior", "lead": "Lead",
 }  # fmt: skip
-SOURCE_TITLES = {
-    "self": "заявлено", "resume": "резюме", "github": "код", "test": "тест",
-    "ai_interview": "интервью", "fsp": "ФСП", "codeforces": "Codeforces",
+FORMAT_TITLES = {"office": "офис", "hybrid": "гибрид", "remote": "удалённо"}
+TYPE_TITLES = {
+    "hard": "Хард-скиллы", "fundamental": "Фундамент", "thinking": "Инженерное мышление",
+    "business": "Бизнес и домен", "soft": "Софт-скиллы", "experience": "Опыт и инструменты",
 }  # fmt: skip
+TYPE_ORDER = list(TYPE_TITLES)
 
 # ruff: noqa: E501
+# Две краски: графит и один тёплый акцент (хвойный зелёный), без синего.
 CSS = """
-@page { size: A4; margin: 16mm 14mm; @bottom-right { content: counter(page) " / " counter(pages);
-  font-size: 8pt; color: #6b6b7b; } }
-body { font-family: "DejaVu Sans", "Liberation Sans", sans-serif; font-size: 9.5pt; color: #1b1b25; }
-h1 { font-size: 20pt; margin: 0; color: #201880; }
-h2 { font-size: 12pt; color: #402FFF; border-bottom: 1.5pt solid #A9A1FF; padding-bottom: 2pt;
-  margin: 16pt 0 6pt; }
-.head { border-left: 5pt solid #402FFF; padding-left: 10pt; margin-bottom: 8pt; }
-img.photo { float: right; width: 26mm; height: 26mm; object-fit: cover; border-radius: 3mm; }
-.muted { color: #6b6b7b; font-size: 8.5pt; }
-table { width: 100%; border-collapse: collapse; }
-td, th { text-align: left; padding: 3pt 4pt; border-bottom: .5pt solid #e1e0f0; vertical-align: top; }
-th { font-size: 8pt; color: #6b6b7b; font-weight: normal; }
-.dots { color: #402FFF; letter-spacing: 1pt; white-space: nowrap; }
-.tag { background: #eeecff; color: #201880; padding: 1pt 5pt; border-radius: 6pt; font-size: 8.5pt; }
+@page { size: A4; margin: 15mm 16mm; @bottom-right { content: counter(page) " / " counter(pages);
+  font-size: 8pt; color: #7a7a72; } }
+body { font-family: "DejaVu Sans", "Liberation Sans", sans-serif; font-size: 9.5pt; color: #222; line-height: 1.35; }
+h1 { font-size: 21pt; margin: 0 0 2pt; color: #222; font-weight: bold; }
+h2 { font-size: 10.5pt; color: #2f5d50; text-transform: uppercase; letter-spacing: .6pt;
+  border-bottom: 1pt solid #2f5d50; padding-bottom: 2pt; margin: 13pt 0 6pt; }
+.role { font-size: 12pt; color: #2f5d50; margin-bottom: 4pt; }
+img.photo { float: right; width: 28mm; height: 28mm; object-fit: cover; margin-left: 8mm; }
+.muted { color: #6b6b64; font-size: 8.5pt; }
+.line { margin: 1pt 0; }
+.item { margin: 0 0 6pt; page-break-inside: avoid; }
+.item .t { font-weight: bold; }
+.item .when { float: right; color: #6b6b64; font-size: 8.5pt; }
+.grp { margin: 0 0 3pt; }
 """
-
-
-def dots(level: int) -> str:
-    n = max(0, min(DOTS_MAX, int(level)))
-    return "●" * n + "○" * (DOTS_MAX - n)
 
 
 def _e(v: Any) -> str:
@@ -54,10 +52,8 @@ def _date(dt: datetime) -> str:
     return dt.astimezone(UTC).strftime("%d.%m.%Y")
 
 
-def _table(head: list[str], rows: list[list[str]]) -> str:
-    th = "".join(f"<th>{h}</th>" for h in head)
-    body = "".join("<tr>" + "".join(f"<td>{c}</td>" for c in r) + "</tr>" for r in rows)
-    return f"<table><tr>{th}</tr>{body}</table>"
+def _section(title: str, body: str) -> str:
+    return f"<h2>{title}</h2>{body}"
 
 
 def build_html(
@@ -66,9 +62,10 @@ def build_html(
     now: datetime | None = None,
     photo: tuple[bytes, str] | None = None,
 ) -> str:
-    """`profile` — `CandidateProfile` из router; все значения экранируются.
+    """Резюме владельца (E41-13): шапка, контакты, навыки по типам, опыт, образование, ФСП, ссылки.
 
-    `photo` — (байты, ключ файла) аватара владельца (E41-12); вшивается как data-URI."""
+    `profile` — `CandidateProfile`; все значения экранируются. `photo` — (байты, ключ файла)
+    аватара (E41-12), вшивается как data-URI. `grades` — подтверждённые грейды теста."""
     now = now or datetime.now(UTC)
     p = profile
     out: list[str] = []
@@ -78,92 +75,125 @@ def build_html(
         )
         b64 = base64.b64encode(photo[0]).decode()
         out.append(f'<img class="photo" alt="" src="data:{mime};base64,{b64}">')
+
+    name = getattr(p, "full_name", None) or p.pseudonym
+    out.append(f"<h1>{_e(name)}</h1>")
     cat = p.category
-    role = _e(cat.primary_role) if cat and cat.primary_role else "категория не определена"
     g = p.grade
-    grade_txt = GRADE_TITLES.get(g.grade or "", g.grade or "—")
-    if g.grade and g.preliminary:
-        grade_txt += " (предварительно)"
-    out.append(
-        f'<div class="head"><h1>{_e(p.pseudonym)}</h1>'
-        f"<div>{role} · грейд {_e(grade_txt)}</div>"
-        f'<div class="muted">ФСП Карьера · профиль v{p.profile_version} · {_date(now)}</div></div>'
-    )
-    if p.contacts and any([p.contacts.email, p.contacts.phone, p.contacts.telegram]):
+    role = _e(cat.primary_role) if cat and cat.primary_role else ""
+    if g.grade:
+        grade_txt = GRADE_TITLES.get(g.grade, g.grade) + (
+            " (предварительно)" if g.preliminary else ""
+        )
+        role = f"{role} · {_e(grade_txt)}" if role else _e(grade_txt)
+    if role:
+        out.append(f'<div class="role">{role}</div>')
+
+    if p.contacts:
         parts = [p.contacts.email, p.contacts.phone, p.contacts.telegram]
-        out.append(f'<div class="muted">Контакты: {_e(" · ".join(x for x in parts if x))}</div>')
-    facts = []
-    if p.experience_months is not None:
-        facts.append(f"Стаж: {p.experience_months // 12} г. {p.experience_months % 12} мес.")
+        if any(parts):
+            out.append(f'<div class="line">{_e(" · ".join(x for x in parts if x))}</div>')
+    desired = getattr(p, "desired_roles", None) or []
+    if desired:
+        out.append(f'<div class="line">Желаемая роль: {_e(", ".join(desired))}</div>')
+    where = []
     if p.preferences.city:
-        facts.append(f"Город: {_e(p.preferences.city)}")
+        where.append(_e(p.preferences.city))
+    fmts = [
+        FORMAT_TITLES.get(str(getattr(f, "value", f)), str(f))
+        for f in getattr(p.preferences, "formats", None) or []
+    ]
+    if fmts:
+        where.append("формат: " + _e(", ".join(fmts)))
+    if getattr(p.preferences, "relocation", False):
+        where.append("готов к переезду")
     if p.preferences.salary_min:
-        facts.append(f"От {p.preferences.salary_min:,} ₽/мес".replace(",", " "))
-    if facts:
-        out.append(f"<p>{' · '.join(facts)}</p>")
-
-    if g.grade and g.breakdown:
-        out.append("<h2>Грейд: из чего сложился</h2>")
+        where.append(f"от {p.preferences.salary_min:,} ₽/мес".replace(",", " "))
+    if where:
+        out.append(f'<div class="line">{" · ".join(where)}</div>')
+    if p.experience_months is not None:
         out.append(
-            _table(["Сигнал", "Баллы"], [[_e(b.label), f"{b.points:+.1f}"] for b in g.breakdown])
+            f'<div class="line muted">Стаж: {p.experience_months // 12} г. {p.experience_months % 12} мес.</div>'
         )
 
-    if grades:
-        out.append("<h2>Результаты теста</h2>")
+    # Навыки списком, группы по типу
+    by_type: dict[str, list[str]] = {}
+    for s in p.skills:
+        by_type.setdefault(getattr(s.skill, "type", None) or "hard", []).append(_e(s.skill.name))
+    soft = by_type.setdefault("soft", [])
+    soft += [x for x in (_e(v) for v in (p.claimed_soft or [])) if x not in soft]
+    if any(by_type.values()):
+        order = TYPE_ORDER + [t for t in by_type if t not in TYPE_ORDER]
         rows = [
-            [_e(x.profession), _e(GRADE_TITLES.get(x.grade, x.grade)),
-             "требует подтверждения" if x.needs_confirmation else "подтверждён",
-             _date(x.confirmed_at), _date(x.valid_until)]
-            for x in sorted(grades, key=lambda x: x.profession)
-        ]  # fmt: skip
-        out.append(_table(["Профессия", "Грейд", "Статус", "Пройден", "Действует до"], rows))
-
-    out.append("<h2>Навыки и доверие</h2>")
-    if p.skills:
-        rows = []
-        for s in p.skills:
-            src = ", ".join(SOURCE_TITLES.get(x, x) for x in s.sources) or "—"
-            if s.claimed_only:
-                src = "только заявлено"
-            rows.append([_e(s.skill.name), f'<span class="dots">{dots(s.level)}</span>', _e(src)])
-        out.append(_table(["Навык", "Доверие", "Источники"], rows))
-    else:
-        out.append('<p class="muted">Навыки пока не подтверждены.</p>')
-
-    if p.fsp:
-        out.append("<h2>ФСП</h2>")
-        rows = [
-            [_e(a.title), _e(a.level), f"{a.place} из {a.of}" if a.place and a.of else _e(a.place or "—"),
-             str(a.year)]
-            for a in p.fsp.achievements
-        ]  # fmt: skip
-        if rows:
-            out.append(_table(["Событие", "Уровень", "Место", "Год"], rows))
-        if p.fsp.ranks:
-            ranks = " ".join(
-                f'<span class="tag">{_e(r.discipline)}: {_e(r.rank)}</span>' for r in p.fsp.ranks
-            )
-            out.append(f"<p>Разряды: {ranks}</p>")
-        out.append(
-            f'<p class="muted">{"Данные подтверждены ФСП" if p.fsp.verified else "Не подтверждено ФСП"}</p>'
-        )
+            f'<div class="grp"><b>{_e(TYPE_TITLES.get(t, t))}:</b> {", ".join(by_type[t])}</div>'
+            for t in order
+            if by_type.get(t)
+        ]
+        out.append(_section("Навыки", "".join(rows)))
 
     if p.experience:
-        out.append("<h2>Опыт</h2>")
+        items = []
+        for x in p.experience:
+            title = _e(x.title or "—") + (f", {_e(x.company)}" if x.company else "")
+            when = f"{_e(x.start or '')} — {_e(x.end or 'н. в.')}"
+            sk = f'<div class="muted">{_e(", ".join(x.skills))}</div>' if x.skills else ""
+            items.append(
+                f'<div class="item"><span class="when">{when}</span><span class="t">{title}</span>{sk}</div>'
+            )
+        out.append(_section("Опыт", "".join(items)))
+
+    education = getattr(p, "education", None) or []
+    if education:
+        items = []
+        for ed in education:
+            spec = ", ".join(x for x in (ed.degree, ed.field) if x)
+            year = f'<span class="when">{ed.year_end}</span>' if ed.year_end else ""
+            sub = f'<div class="muted">{_e(spec)}</div>' if spec else ""
+            items.append(
+                f'<div class="item">{year}<span class="t">{_e(ed.institution or "—")}</span>{sub}</div>'
+            )
+        out.append(_section("Образование", "".join(items)))
+
+    if p.fsp:
+        items = []
+        for a in p.fsp.achievements:
+            place = (
+                f"{a.place} место из {a.of}"
+                if a.place and a.of
+                else (f"{a.place} место" if a.place else "")
+            )
+            sub = " · ".join(x for x in (_e(a.level), place) if x)
+            items.append(
+                f'<div class="item"><span class="when">{a.year}</span><span class="t">{_e(a.title)}</span>'
+                f'<div class="muted">{sub}</div></div>'
+            )
+        if p.fsp.ranks:
+            ranks = "; ".join(f"{_e(r.discipline)}: {_e(r.rank)}" for r in p.fsp.ranks)
+            items.append(f'<div class="line">Разряды: {ranks}</div>')
+        if items:
+            note = (
+                '<div class="muted">Подтверждено Федерацией спортивного программирования</div>'
+                if p.fsp.verified
+                else ""
+            )
+            out.append(_section("Достижения ФСП", "".join(items) + note))
+
+    if grades:
         rows = [
-            [_e(x.title or "—"), _e(x.company or "—") if p.visibility.companies else "—",
-             f"{_e(x.start or '')} — {_e(x.end or 'н. в.')}", _e(", ".join(x.skills))]
-            for x in p.experience
-        ]  # fmt: skip
-        out.append(_table(["Роль", "Компания", "Период", "Навыки"], rows))
+            f'<div class="line">{_e(x.profession)} — {_e(GRADE_TITLES.get(x.grade, x.grade))}'
+            f' <span class="muted">(тест от {_date(x.confirmed_at)})</span></div>'
+            for x in sorted(grades, key=lambda x: x.profession)
+        ]
+        out.append(_section("Оценка на платформе", "".join(rows)))
 
-    if p.claimed_soft:
-        tags = " ".join(f'<span class="tag">{_e(x)}</span>' for x in p.claimed_soft)
-        out.append(f"<h2>Мягкие навыки (заявлено)</h2><p>{tags}</p>")
+    links = getattr(p, "links", None) or []
+    if links:
+        out.append(_section("Ссылки", "".join(f'<div class="line">{_e(u)}</div>' for u in links)))
 
+    out.append(f'<p class="muted" style="margin-top:14pt">ФСП Карьера · {_date(now)}</p>')
     return (
         '<!doctype html><html lang="ru"><head><meta charset="utf-8">'
-        f"<title>Профиль {_e(p.pseudonym)}</title><style>{CSS}</style></head>"
+        f"<title>Резюме {_e(name)}</title><style>{CSS}</style></head>"
         f"<body>{''.join(out)}</body></html>"
     )
 
