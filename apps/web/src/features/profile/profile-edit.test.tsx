@@ -35,6 +35,13 @@ const taxonomy = {
   ],
 };
 
+const allProfessions = [
+  { slug: "backend", title: "Backend-разработчик" },
+  { slug: "designer", title: "Дизайнер" },
+  { slug: "product", title: "Продакт-менеджер" },
+];
+const suggestUrls: string[] = [];
+
 class FakeES {
   addEventListener() {}
   close() {}
@@ -48,6 +55,12 @@ function install(patch: () => Response = () => json(200, profile)) {
       if (url.endsWith("/auth/refresh")) return json(200, { access_token: "t" });
       if (url.endsWith("/me")) return json(200, { id: "u1", email: "a@b.ru", role: "candidate", email_verified: true, consents: ["pd_processing"] });
       if (url.endsWith("/taxonomy")) return json(200, taxonomy);
+      if (url.endsWith("/taxonomy/professions")) return json(200, { professions: allProfessions, skill_types: [], grades: [] });
+      if (url.includes("/taxonomy/professions/suggest")) return json(200, allProfessions.map((p) => ({ slug: p.slug, title: p.title, score: 1 })));
+      if (url.includes("/taxonomy/skills/suggest")) {
+        suggestUrls.push(url);
+        return json(200, taxonomy.skills.filter((s) => s.kind === "soft").map((s) => ({ slug: s.slug, name: s.name, provisional: false, score: 1 })));
+      }
       if (url.endsWith("/candidates/me/visibility") && init?.method === "PATCH") {
         bodies.push(JSON.parse(String(init.body)));
         return json(200, profile);
@@ -84,7 +97,7 @@ test("форма подставляет данные профиля и отпр�
   mount();
   expect(await screen.findByTestId("profile-edit-email")).toHaveValue("me@x.ru");
   expect(screen.getByTestId("profile-edit-months")).toHaveValue("24");
-  expect(screen.getByTestId("profile-edit-role-backend")).toHaveAttribute("aria-pressed", "true");
+  expect(await screen.findByText("Backend-разработчик")).toBeInTheDocument();
   fireEvent.change(screen.getByTestId("profile-edit-phone"), { target: { value: "+7 900 123-45-67" } });
   fireEvent.click(screen.getByTestId("profile-edit-save"));
   expect(await screen.findByTestId("profile-edit-saved")).toBeInTheDocument();
@@ -100,7 +113,9 @@ test("добавление навыка в стек и софт-качества
   mount();
   fireEvent.change(await screen.findByTestId("profile-edit-stack-search"), { target: { value: "red" } });
   fireEvent.click(await screen.findByTestId("profile-edit-stack-add-redis"));
-  fireEvent.click(screen.getByTestId("profile-edit-soft-teamwork"));
+  fireEvent.click(screen.getByTestId("profile-edit-soft-input"));
+  fireEvent.click(await screen.findByRole("option", { name: /Работа в команде/ }));
+  expect(suggestUrls.some((u) => u.includes("kind=soft"))).toBe(true);
   fireEvent.click(screen.getByTestId("profile-edit-save"));
   await screen.findByTestId("profile-edit-saved");
   const b = bodies[0] as { stack: { slug: string }[]; soft_skills: string[] };
@@ -136,12 +151,23 @@ test("422 unknown_skill показывается по-русски", async () =>
   expect(await screen.findByTestId("profile-edit-error")).toHaveTextContent("нет в справочнике");
 });
 
-test("не более 5 желаемых ролей", async () => {
+test("желаемые роли выбираются из профессий системы, в PATCH уходит slug", async () => {
+  const bodies = install();
+  mount();
+  fireEvent.click(await screen.findByTestId("profile-edit-roles-input"));
+  fireEvent.click(await screen.findByRole("option", { name: /Дизайнер/ }));
+  fireEvent.click(screen.getByTestId("profile-edit-save"));
+  await screen.findByTestId("profile-edit-saved");
+  expect((bodies[0] as { desired_roles: string[] }).desired_roles).toEqual(["backend", "designer"]);
+});
+
+test("личное качество не из списка добавить нельзя", async () => {
   install();
   mount();
-  await screen.findByTestId("profile-edit-roles");
-  for (const r of ["frontend", "fullstack", "ml", "qa", "devops"]) fireEvent.click(screen.getByTestId(`profile-edit-role-${r}`));
-  expect(screen.getByTestId("profile-edit-role-devops")).toHaveAttribute("aria-pressed", "false");
+  const input = await screen.findByTestId("profile-edit-soft-input");
+  fireEvent.click(input);
+  fireEvent.change(input, { target: { value: "выдуманное" } });
+  expect(screen.queryByRole("option", { name: /Добавить/ })).toBeNull();
 });
 
 test("validateContacts", () => {

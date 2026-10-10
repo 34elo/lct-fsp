@@ -171,7 +171,14 @@ async def update_profile(
     if "hidden_skills" in changes:
         cand.hidden_skills = sorted({str(x) for x in changes["hidden_skills"] or []}) or None
     if "desired_roles" in changes:
-        cand.desired_roles = list(dict.fromkeys(str(r) for r in changes["desired_roles"] or []))
+        roles = list(dict.fromkeys(str(r) for r in changes["desired_roles"] or []))
+        known = {p.slug for p in await taxonomy.list_professions(session, include_hidden=True)}
+        if unknown := [r for r in roles if r not in known]:
+            errors = [
+                {"field": "desired_roles", "message": f"{r}: нет в справочнике"} for r in unknown
+            ]
+            raise ProblemError(422, "validation_error", "Неизвестная профессия", errors=errors)
+        cand.desired_roles = roles
     if "experience_months" in changes:
         recompute |= cand.experience_months != changes["experience_months"]
         cand.experience_months = changes["experience_months"]
