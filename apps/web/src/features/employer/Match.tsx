@@ -5,10 +5,6 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Button,
   buttonVariants,
-  Chips,
-  GradeTag,
-  MatchRingV2,
-  SkillTag,
   cn,
   EmptyState,
   ErrorState,
@@ -21,6 +17,7 @@ import {
   MeterBar,
   Panel,
   PanelCap,
+  SegmentedControl,
   Sheet,
   SheetContent,
   SheetTitle,
@@ -56,8 +53,8 @@ import {
   setOnboardingSkipped,
   subscriptionTerms,
   subscriptionTitle,
-  toMatchCard,
 } from "./match-model";
+import { CandidateGrid, CandidateList, useShortlist, type ShortlistApi } from "./MatchCards";
 import { MatchFilters } from "./MatchFilters";
 import { EmployerOnboarding } from "./Onboarding";
 import { EMPTY_CRITERIA, criteriaKey, criteriaParams, filterCount, hasSubject, isEmpty, mergeFilters, parseCriteria, toNeedFilters, type Criteria } from "./query-model";
@@ -124,25 +121,37 @@ function Conditions({ c, onChange }: { c: Criteria; onChange: (next: Criteria) =
   );
 }
 
-/** Плитка категории: название, «37 чел · 220 000 · 24 % ФСП», совпадение с запросом. Клик выбирает категорию. */
+/** Плитка категории (E41-11): профессия, грейд, вилка, совпадение, 3 навыка; подробности — «Почему эти категории». */
 function CategoryTile({ c, on, onSelect }: { c: NeedCategory; on: boolean; onSelect: () => void }) {
   const s = categoryStats(c);
   const affinity = Math.round(c.affinity * 100);
+  const skills = (c.matched_skills ?? []).slice(0, 3);
   return (
     <button
       type="button"
       aria-pressed={on}
       onClick={onSelect}
       className={cn(
-        "grid w-64 shrink-0 grid-cols-[minmax(0,1fr)_56px] items-center gap-x-3 gap-y-1 rounded-lg border px-3 py-2.5 text-left hover:border-brand-mid focus-visible:outline-2 focus-visible:outline-brand md:w-full",
+        "flex w-72 shrink-0 flex-col gap-3 rounded-xl border p-4 text-left hover:border-brand-mid focus-visible:outline-2 focus-visible:outline-brand md:w-full",
         on ? "border-brand bg-tint-50" : "border-hairline bg-card",
       )}
     >
-      <b className={cn("truncate font-mono text-14 font-semibold", c.candidates === 0 && !on && "text-muted")}>{categoryTitle(c)}</b>
-      <MeterBar value={affinity} label={T.affinity(affinity)} className="row-span-2" />
-      <span className="num truncate text-12 text-muted">
+      <span className="grid grid-cols-[minmax(0,1fr)_64px] items-center gap-x-3">
+        <b className={cn("truncate font-mono text-16 font-semibold", c.candidates === 0 && !on && "text-muted")}>{categoryTitle(c)}</b>
+        <MeterBar value={affinity} label={T.affinity(affinity)} />
+      </span>
+      <span className="num text-14 text-muted">
         <span className="text-ink">{s.people}</span> {T.peopleShort} · <span className="text-ink">{s.median}</span> · <span className="text-ink">{s.fsp}</span> {T.fsp}
       </span>
+      {skills.length > 0 && (
+        <span className="flex flex-wrap gap-1.5">
+          {skills.map((k) => (
+            <span key={k} className="rounded-md border border-tint-200 bg-tint-50 px-2 py-0.5 font-mono text-12 text-chip-fg">
+              {k}
+            </span>
+          ))}
+        </span>
+      )}
     </button>
   );
 }
@@ -192,7 +201,7 @@ function Categories({ cats, selected, onSelect, grades }: { cats: NeedCategory[]
         }
         aside={<Lbl>{F.categoriesCount(cats.length)}</Lbl>}
       />
-      <ul className="-mx-1 m-0 flex list-none gap-2 overflow-x-auto px-1 pb-1 md:grid md:grid-cols-2 md:overflow-visible 2xl:grid-cols-3">
+      <ul className="-mx-1 m-0 flex list-none gap-2 overflow-x-auto px-1 pb-1 md:grid md:grid-cols-2 md:overflow-visible">
         {shown.map((c) => (
           <li key={catKey(c)} className="flex">
             <CategoryTile c={c} on={catKey(c) === selected} onSelect={() => onSelect(c)} />
@@ -234,40 +243,8 @@ function CardsSkeleton() {
   );
 }
 
-/** Небольшая карточка кандидата: совпадение, псевдоним, грейд, ожидания, топ-3 навыка; вся карточка ведёт в профиль. */
-function CompactCard({ card, profession }: { card: CandidateCard; profession: string }) {
-  const d = toMatchCard(card, profession);
-  return (
-    <Link
-      to={`/employer/candidates/${card.pseudo_id}?source=match`}
-      aria-label={`${d.pseudonym}: ${F.open.toLowerCase()} профиль`}
-      className="flex w-full min-w-0 rounded-xl border border-hairline bg-card text-ink hover:border-brand-mid focus-visible:outline-2 focus-visible:outline-brand"
-    >
-      <article aria-label={d.pseudonym} className="flex w-full min-w-0 flex-col gap-2.5 p-3">
-        <div className="flex items-center gap-3">
-          <MatchRingV2 value={d.match} size={40} />
-          <div className="flex min-w-0 flex-1 flex-col gap-1">
-            <b className="truncate font-mono text-14 font-semibold">{d.pseudonym}</b>
-            <span className="flex flex-wrap items-center gap-1.5">
-              <GradeTag claimed={!d.confirmed}>{d.grade}</GradeTag>
-            </span>
-          </div>
-          {d.salary && <span className="num shrink-0 text-14 whitespace-nowrap">{d.salary}</span>}
-        </div>
-        {d.skills.length > 0 && (
-          <Chips>
-            {d.skills.map((s) => (
-              <SkillTag key={s.name} name={s.name} level={s.level} state={s.claimed ? "claimed" : "confirmed"} />
-            ))}
-          </Chips>
-        )}
-      </article>
-    </Link>
-  );
-}
-
 /** Компактная подборка выбранной категории: грейд, топ-3 навыка, совпадение, ожидания; «Все N» — в категорию. */
-function Candidates({ needId, category }: { needId: string; category: NeedCategory }) {
+function Candidates({ needId, category, shortlist }: { needId: string; category: NeedCategory; shortlist: ShortlistApi }) {
   const q = useCategoryCandidatesCategoriesProfessionGradeCandidatesGet(
     category.profession,
     category.grade,
@@ -277,6 +254,10 @@ function Candidates({ needId, category }: { needId: string; category: NeedCatego
   const page = q.data?.status === 200 ? q.data.data : undefined;
   const total = page?.total ?? category.candidates;
   const href = `/employer/categories/${category.profession}/${category.grade}?need_id=${needId}`;
+  const { seed } = shortlist;
+  useEffect(() => {
+    if (page) seed(page.items.filter((c: CandidateCard) => c.is_shortlisted).map((c: CandidateCard) => c.pseudo_id));
+  }, [page, seed]);
   let body: ReactNode;
   if (category.candidates === 0 || (page && page.items.length === 0))
     body = (
@@ -294,13 +275,7 @@ function Candidates({ needId, category }: { needId: string; category: NeedCatego
   else if (!page) body = <CardsSkeleton />;
   else
     body = (
-      <ul aria-label={F.candidates} className="m-0 grid list-none gap-3 p-0 sm:grid-cols-2 2xl:grid-cols-3" data-testid="match-top">
-        {page.items.map((c: CandidateCard) => (
-          <li key={c.pseudo_id} className="flex min-w-0">
-            <CompactCard card={c} profession={category.profession} />
-          </li>
-        ))}
-      </ul>
+      <CandidateGrid items={page.items} profession={() => category.profession} shortlist={shortlist} label={F.candidates} />
     );
   return (
     <section aria-label={F.candidates} className="flex flex-col gap-3">
@@ -486,9 +461,11 @@ function Match({ hasCompany, companyId, onSetup }: { hasCompany: boolean; compan
   const key = criteriaKey(criteria);
   const needId = params.get("need");
   const subject = hasSubject(criteria);
+  const view: "categories" | "candidates" = params.get("view") === "candidates" ? "candidates" : "categories";
+  const viewExtra = view === "candidates" ? { view } : {};
 
   const [labels, setLabels] = useState<Record<string, string>>({});
-  const { nameOf } = useSkillSource(criteria.profession ?? undefined);
+  const { nameOf, suggest } = useSkillSource(criteria.profession ?? undefined);
   const profsQ = useSuggestProfessionsTaxonomyProfessionsSuggestGet({ q: "", limit: 50 }, { query: { staleTime: 5 * 60_000 } });
   const professions = useMemo(() => (profsQ.data?.status === 200 ? profsQ.data.data.map((p) => ({ slug: p.slug, title: p.title })) : []), [profsQ.data]);
 
@@ -496,6 +473,20 @@ function Match({ hasCompany, companyId, onSetup }: { hasCompany: boolean; compan
   const cats = useMemo(() => (catsQ.data?.status === 200 ? catsQ.data.data.categories : []), [catsQ.data]);
   const lost = catsQ.isError && catsQ.error instanceof ApiError && catsQ.error.status === 404;
   const selected = pickCategory(cats, params.get("cat"));
+  const shortlist = useShortlist(needId);
+  const { seed: seedShortlist } = shortlist;
+  const serverShortlist = catsQ.data?.status === 200 ? catsQ.data.data.shortlist : undefined;
+  useEffect(() => {
+    if (serverShortlist) seedShortlist(serverShortlist);
+  }, [serverShortlist, seedShortlist]);
+
+  const setView = (v: string) => {
+    const next = new URLSearchParams(params);
+    next.delete("cat");
+    if (v === "candidates") next.set("view", v);
+    else next.delete("view");
+    setParams(next);
+  };
 
   const skillName = useCallback((s: string) => labels[s] ?? nameOf(s), [labels, nameOf]);
   const professionName = useCallback(
@@ -504,7 +495,7 @@ function Match({ hasCompany, companyId, onSetup }: { hasCompany: boolean; compan
   );
 
   /** Новые условия — новая ссылка: потребность и выбранная категория сбрасываются. */
-  const update = useCallback((next: Criteria) => setParams(criteriaParams(next)), [setParams]);
+  const update = useCallback((next: Criteria) => setParams(criteriaParams(next, viewExtra)), [setParams, view]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Вход без условий: восстанавливаем последний запрос этого браузера (или условия запроса из `?need=`).
   const restored = useRef(false);
@@ -516,6 +507,7 @@ function Match({ hasCompany, companyId, onSetup }: { hasCompany: boolean; compan
     if (!last || (needId && needId !== last.id)) return;
     const next = new URLSearchParams(last.qs ?? "");
     next.set("need", last.id);
+    if (view === "candidates") next.set("view", view);
     const cat = params.get("cat");
     if (cat) next.set("cat", cat);
     setParams(next, { replace: true });
@@ -525,7 +517,7 @@ function Match({ hasCompany, companyId, onSetup }: { hasCompany: boolean; compan
   useEffect(() => {
     if (!lost) return;
     if (loadLastNeed(companyId)?.id === needId) saveLastNeed(null);
-    setParams(criteriaParams(criteria), { replace: true });
+    setParams(criteriaParams(criteria, viewExtra), { replace: true });
   }, [lost]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Условия без потребности → POST /needs (с задержкой: фильтры меняются подряд) → `?need=` в ту же ссылку.
@@ -546,7 +538,7 @@ function Match({ hasCompany, companyId, onSetup }: { hasCompany: boolean; compan
               (prev) => {
                 const cur = parseCriteria(prev);
                 if (criteriaKey(cur) !== key || prev.get("need")) return prev;
-                return criteriaParams(cur, { need: id });
+                return criteriaParams(cur, { need: id, ...viewExtra });
               },
               { replace: true },
             );
@@ -596,7 +588,7 @@ function Match({ hasCompany, companyId, onSetup }: { hasCompany: boolean; compan
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const reset = () => update({ ...EMPTY_CRITERIA, skills: criteria.skills, profession: criteria.profession });
-  const filters = (className?: string) => <MatchFilters c={criteria} onChange={update} onReset={reset} professions={professions} className={className} />;
+  const filters = (className?: string) => <MatchFilters c={criteria} onChange={update} onReset={reset} professions={professions} skillSuggest={suggest} skillName={skillName} className={className} />;
   const nFilters = filterCount(criteria);
 
   let center: ReactNode;
@@ -616,14 +608,15 @@ function Match({ hasCompany, companyId, onSetup }: { hasCompany: boolean; compan
   else if (!needId && !subject) center = <EmptyState title={F.needSubject} description={F.queryHint} />;
   else if (createError === F.failed) center = <ErrorState title={F.failed} onRetry={() => setAttempt((a) => a + 1)} />;
   else if (createError) center = <EmptyState title={createError} description={F.queryHint} />;
-  else if (!needId || catsQ.isPending || lost) center = <CardsSkeleton />;
+  else if (!needId || (view === "categories" && catsQ.isPending) || lost) center = <CardsSkeleton />;
+  else if (view === "candidates") center = <CandidateList filters={toNeedFilters(criteria)} filtersKey={key} shortlist={shortlist} />;
   else if (catsQ.isError) center = <ErrorState title={T.categoriesLoadFailed} onRetry={() => void catsQ.refetch()} />;
   else if (cats.length === 0) center = <EmptyState title={F.noCategories} description={F.noCategoriesHint} />;
   else
     center = (
       <>
         <Categories cats={cats} selected={selected ? catKey(selected) : null} onSelect={select} grades={criteria.grades} />
-        {selected && <Candidates key={`${needId}:${catKey(selected)}`} needId={needId} category={selected} />}
+        {selected && <Candidates key={`${needId}:${catKey(selected)}`} needId={needId} category={selected} shortlist={shortlist} />}
       </>
     );
 
@@ -649,6 +642,25 @@ function Match({ hasCompany, companyId, onSetup }: { hasCompany: boolean; compan
         <p role="status" className="rounded-lg bg-warning-bg px-3 py-2 text-13 text-warning-fg" data-testid="match-parse-msg">
           {parseMsg}
         </p>
+      )}
+
+      {hasCompany && (
+        <div className="flex flex-wrap items-center gap-3">
+          <SegmentedControl
+            label={F.viewLabel}
+            value={view}
+            onValueChange={setView}
+            options={[
+              { value: "categories", label: F.viewCategories },
+              { value: "candidates", label: F.viewCandidates },
+            ]}
+          />
+          {shortlist.failed && (
+            <p role="alert" className="text-13 text-error">
+              {F.shortlistFailed}
+            </p>
+          )}
+        </div>
       )}
 
       <div className={cn("grid items-start gap-4", hasCompany ? "lg:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[260px_minmax(0,1fr)_280px]" : "md:grid-cols-[minmax(0,1fr)_280px]")}>

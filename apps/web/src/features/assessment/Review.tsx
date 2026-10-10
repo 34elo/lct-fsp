@@ -5,7 +5,7 @@ import { Link, useParams } from "react-router-dom";
 import { useReviewAttemptAssessmentAttemptsAttemptIdReviewGet } from "@/api/endpoints/assessment/assessment";
 import type { ReviewItemOut, ReviewPartOut } from "@/api/model";
 import { ApiError } from "@/api/mutator";
-import { groupByType, loadHideExplain, parseListing, saveHideExplain, splitStem, verdict, weakSkills } from "./model";
+import { groupByType, hasDiagram, loadHideExplain, parseListing, saveHideExplain, splitStem, verdict, weakSkills } from "./model";
 import { T } from "./text";
 import { LoadError, Page, retryServerOnly } from "./ui";
 
@@ -64,7 +64,7 @@ function Why({ item, hidden, testId }: { item: ReviewItemOut; hidden: boolean; t
             <span className="text-13 text-muted">{R.why}</span>
             <b className="font-semibold">{item.reason.label}</b>
           </p>
-          <p>{item.why}</p>
+          {hasDiagram(item.why) ? <Markdown>{item.why}</Markdown> : <p>{item.why}</p>}
           {item.steps?.map((s, i) => (
             <p key={i} className="text-13 text-muted">
               <b>{R.step(i + 1)}:</b> {s.reason.label}
