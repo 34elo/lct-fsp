@@ -73,6 +73,8 @@ import type {
   RemoveBlocklistAdminSkillsBlocklistDeleteParams,
   RemoveDistinctAdminSkillsDistinctDeleteParams,
   ResolveComplaintIn,
+  ResultsImportIn,
+  ResultsImportOut,
   RetiredOut,
   SkillCard,
   SkillGraphOut,
@@ -7123,6 +7125,151 @@ export const useRegistryDeleteResultAdminFspResultsResultIdDelete = <TError = Er
         TContext
       > => {
       return useMutation(getRegistryDeleteResultAdminFspResultsResultIdDeleteMutationOptions(options), queryClient);
+    }
+    export type registryImportResultsAdminFspRegistryImportPostResponse200 = {
+  data: ResultsImportOut
+  status: 200
+}
+
+export type registryImportResultsAdminFspRegistryImportPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type registryImportResultsAdminFspRegistryImportPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type registryImportResultsAdminFspRegistryImportPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type registryImportResultsAdminFspRegistryImportPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type registryImportResultsAdminFspRegistryImportPostResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type registryImportResultsAdminFspRegistryImportPostResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type registryImportResultsAdminFspRegistryImportPostResponse503ApplicationProblemJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type registryImportResultsAdminFspRegistryImportPostResponse503ApplicationJson = {
+  data: ProblemOut
+  status: 503
+}
+
+export type registryImportResultsAdminFspRegistryImportPostResponseSuccess = (registryImportResultsAdminFspRegistryImportPostResponse200) & {
+  headers: Headers;
+};
+export type registryImportResultsAdminFspRegistryImportPostResponseError = (registryImportResultsAdminFspRegistryImportPostResponse401ApplicationProblemJson | registryImportResultsAdminFspRegistryImportPostResponse401ApplicationJson | registryImportResultsAdminFspRegistryImportPostResponse403ApplicationProblemJson | registryImportResultsAdminFspRegistryImportPostResponse403ApplicationJson | registryImportResultsAdminFspRegistryImportPostResponse422ApplicationProblemJson | registryImportResultsAdminFspRegistryImportPostResponse422ApplicationJson | registryImportResultsAdminFspRegistryImportPostResponse503ApplicationProblemJson | registryImportResultsAdminFspRegistryImportPostResponse503ApplicationJson) & {
+  headers: Headers;
+};
+
+export type registryImportResultsAdminFspRegistryImportPostResponse = (registryImportResultsAdminFspRegistryImportPostResponseSuccess | registryImportResultsAdminFspRegistryImportPostResponseError)
+
+export const getRegistryImportResultsAdminFspRegistryImportPostUrl = () => {
+
+
+
+
+  return `/admin/fsp/registry/import`
+}
+
+/**
+ * Результаты списком (E43-4): CSV `участник;мероприятие;дата;результат`, до 1000 строк.
+ *
+ * Без `commit` — превью с построчной проверкой. С `commit` — запись и пересчёт профилей
+ * затронутых кандидатов (outbox). Новые мероприятия создаются только по `create_events`.
+ * @summary Registry Import Results
+ */
+export const registryImportResultsAdminFspRegistryImportPost = async (resultsImportIn: ResultsImportIn, options?: Parameters<typeof apiFetch>[1]): Promise<registryImportResultsAdminFspRegistryImportPostResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<registryImportResultsAdminFspRegistryImportPostResponse>(getRegistryImportResultsAdminFspRegistryImportPostUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(resultsImportIn)
+  }
+);}
+
+
+
+
+
+export const getRegistryImportResultsAdminFspRegistryImportPostMutationKey = () => ['registryImportResultsAdminFspRegistryImportPost'] as const;
+
+export const getRegistryImportResultsAdminFspRegistryImportPostMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registryImportResultsAdminFspRegistryImportPost>>, TError,RegistryImportResultsAdminFspRegistryImportPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof registryImportResultsAdminFspRegistryImportPost>>, TError,RegistryImportResultsAdminFspRegistryImportPostMutationVariables, TContext> => {
+
+const mutationKey = getRegistryImportResultsAdminFspRegistryImportPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof registryImportResultsAdminFspRegistryImportPost>>, RegistryImportResultsAdminFspRegistryImportPostMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  registryImportResultsAdminFspRegistryImportPost(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RegistryImportResultsAdminFspRegistryImportPostMutationResult = NonNullable<Awaited<ReturnType<typeof registryImportResultsAdminFspRegistryImportPost>>>
+    export type RegistryImportResultsAdminFspRegistryImportPostMutationBody = ResultsImportIn
+    export type RegistryImportResultsAdminFspRegistryImportPostMutationError = ErrorType<ProblemOut>
+    export type RegistryImportResultsAdminFspRegistryImportPostMutationVariables = {data: ResultsImportIn}
+
+    /**
+ * @summary Registry Import Results
+ */
+export const useRegistryImportResultsAdminFspRegistryImportPost = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registryImportResultsAdminFspRegistryImportPost>>, TError,RegistryImportResultsAdminFspRegistryImportPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof registryImportResultsAdminFspRegistryImportPost>>,
+        TError,
+        RegistryImportResultsAdminFspRegistryImportPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRegistryImportResultsAdminFspRegistryImportPostMutationOptions(options), queryClient);
     }
     export type registryRequestsAdminFspRequestsGetResponse200 = {
   data: AdminFspRequestOut[]

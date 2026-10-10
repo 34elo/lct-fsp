@@ -1,11 +1,11 @@
-import { useId, useState, type ReactNode } from "react";
+import { useEffect, useId, useState, type ReactNode } from "react";
 
 import { Checkbox, ChevronDown, Combobox, ProfessionInput, SalaryRangeInput, SegmentedControl, SkillInput, cn, type ProfessionOption, type SkillSource } from "@fsp/ui";
 
 import { GRADE_LABEL } from "@/features/profile/text";
 import { Gi } from "@/shared/Gloss";
 import { suggestProfessions } from "@/shared/lib/skills";
-import { FORMATS, TEST_GRADES, gradeSpan, type Criteria } from "./query-model";
+import { FORMATS, TEST_GRADES, filterCount, gradeSpan, type Criteria } from "./query-model";
 import { FORMAT_LABEL, FIND_TEXT as T } from "./text";
 
 const TRUST_OPTIONS = [
@@ -31,7 +31,11 @@ const CITIES = ["Москва", "Санкт-Петербург", "Новосиб
 
 /** Блок фильтров: по умолчанию свёрнут (E41-11); содержимое монтируется при раскрытии. */
 function Group({ title, tip, count, children }: { title: string; tip?: ReactNode; count?: number; children: ReactNode }) {
-  const [open, setOpen] = useState(false);
+  // Заполненный блок раскрыт сам: видно, что уже задано (E43-2).
+  const [open, setOpen] = useState(!!count);
+  useEffect(() => {
+    if (count) setOpen(true);
+  }, [count]);
   const id = useId();
   return (
     <section className="border-t border-hairline pt-3 first:border-t-0 first:pt-0" aria-label={title}>
@@ -100,7 +104,10 @@ export function MatchFilters({
   return (
     <section aria-label={T.filters} className={cn("grid gap-5", className)} data-testid="match-filters">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-16 font-semibold">{T.filters}</h2>
+        <h2 className="text-16 font-semibold">
+          {T.filters}
+          {filterCount(c) > 0 && <span className="num ml-2 font-mono text-14 text-brand-fg">· {filterCount(c)}</span>}
+        </h2>
         <button type="button" onClick={onReset} className="min-h-8 rounded-md px-1 text-14 font-medium text-brand-fg hover:underline focus-visible:outline-2 focus-visible:outline-brand">
           {T.reset}
         </button>

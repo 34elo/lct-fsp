@@ -56,7 +56,7 @@ export default function Onboarding() {
 
         <div
           data-testid={`onboarding-step-${step.id}`}
-          className="flex min-w-0 flex-col gap-4 rounded-2xl border border-hairline bg-card p-4 md:p-6"
+          className="flex min-w-0 flex-col gap-4 rounded-xl border border-hairline bg-card p-4 md:p-6"
         >
           <header className="flex flex-col gap-1">
             <SectionLabel>

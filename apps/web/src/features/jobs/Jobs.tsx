@@ -43,7 +43,7 @@ export function gradeSpan(v: Pick<PublicVacancyOut, "grade_min" | "grade_max">):
 export function JobCard({ v, search = "" }: { v: PublicVacancyOut; search?: string }) {
   const place = [v.company.name, v.city, v.formats.map((f) => FORMAT_LABEL[f] ?? f).join(", ").toLowerCase()].filter(Boolean).join(" · ");
   return (
-    <li className="flex flex-col gap-3 rounded-2xl border border-hairline bg-card p-4 md:p-5">
+    <li className="flex flex-col gap-3 rounded-xl border border-hairline bg-card p-4 md:p-5">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="flex min-w-0 items-start gap-3">
           <Avatar name={v.company.name} src={avatarSrc(v.company.logo_url)} size={44} className="rounded-xl" />

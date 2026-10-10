@@ -33,7 +33,7 @@ function TaskCard({ t }: { t: CandidateTaskOut }) {
   const [, setParams] = useSearchParams();
   const s = candStatus(t);
   return (
-    <li data-testid="tasks-card" className="flex flex-col gap-2 rounded-2xl border border-hairline bg-card p-4">
+    <li data-testid="tasks-card" className="flex flex-col gap-2 rounded-xl border border-hairline bg-card p-4">
       <div className="flex items-start justify-between gap-2">
         <span className="rounded-full border border-hairline px-2.5 py-0.5 text-12 font-semibold text-muted" data-testid="tasks-status">{statusText(t)}</span>
         {t.answer_until && <span className="text-12 text-muted">{T.until(dateOnly(t.answer_until))}</span>}
@@ -74,7 +74,7 @@ function Detail({ id, onBack }: { id: string; onBack: () => void }) {
   return (
     <section className="flex flex-col gap-4" data-testid="tasks-detail">
       {back}
-      <div className="flex flex-col gap-2 rounded-2xl border border-hairline bg-card p-4">
+      <div className="flex flex-col gap-2 rounded-xl border border-hairline bg-card p-4">
         <p className="font-mono text-12 text-muted">{T.round(d.round)}</p>
         <h1 className="break-words font-mono text-20 font-semibold">{d.title}</h1>
         <p className="text-13 text-muted">
