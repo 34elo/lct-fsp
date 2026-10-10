@@ -17,7 +17,7 @@ ssh root@2.26.52.44 'cd /etc/caddy && cp -p fsp.caddy fsp.caddy.bak-$(date +%Y%m
 
 Если `validate` упал — вернуть копию: `cp -p $(ls -t /etc/caddy/fsp.caddy.bak-* | head -1) /etc/caddy/fsp.caddy`.
 
-Проверка: `curl -sI https://dashboard.fsp.patissons.tech/api/v1/healthz` → 200, `curl -sI https://fsp.patissons.tech` → 308 на dashboard, `curl -sI https://mock.fsp.patissons.tech` → ответ мока.
+Проверка: `curl -sI https://dashboard.fsp.patissons.tech/api/v1/healthz` → 200, `curl -sI https://fsp.patissons.tech` → лендинг (200); `curl -sI https://fsp.patissons.tech/me` → 302 на dashboard, `curl -sI https://mock.fsp.patissons.tech` → ответ мока.
 
 ## Ретранслятор Telegram
 

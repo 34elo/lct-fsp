@@ -1,6 +1,7 @@
 import { buttonVariants, cn, Logo, Moon, Sun } from "@fsp/ui";
 import { Link } from "react-router-dom";
 
+import { AppLink } from "@/shared/lib/appUrl";
 import { useTheme } from "@/shared/lib/theme";
 import { Wrap } from "./parts";
 import { onAnchorClick } from "./motion";
@@ -41,9 +42,9 @@ export function Header() {
           >
             <Icon className="size-5" aria-hidden />
           </button>
-          <Link to="/login" className={cn(buttonVariants({ variant: "outline" }), "h-10 rounded-lg px-[18px] text-14 dark:hover:bg-tint-100")}>
+          <AppLink to="/login" className={cn(buttonVariants({ variant: "outline" }), "h-10 rounded-lg px-[18px] text-14 dark:hover:bg-tint-100")}>
             {T.login}
-          </Link>
+          </AppLink>
         </div>
       </Wrap>
     </header>

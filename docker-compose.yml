@@ -192,6 +192,7 @@ services:
       dockerfile: apps/web/Dockerfile
       args:
         VITE_JURY_MODE: ${VITE_JURY_MODE:-false}  # кнопки входа жюри и панель «что попробовать»
+        VITE_APP_URL: ${VITE_APP_URL:-}  # кабинет на dashboard.; пусто — один origin (E41-7)
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
       interval: 10s
