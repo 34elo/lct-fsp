@@ -161,6 +161,9 @@ test("joint: регистрация → опрос и тест → катего�
     await loginAs(anya, "anya");
     await anya.goto("/jobs");
     await expect(anya.getByRole("heading", { name: "Вакансии с открытой вилкой" })).toBeVisible();
+    // E41-10: вакансии внутри кабинета — то же меню; поиск закреплён при прокрутке
+    await expect(anya.getByRole("navigation", { name: "Разделы" }).first()).toBeVisible();
+    await expect(anya.getByRole("search")).toHaveCSS("position", "sticky");
     // В списке десятки вакансий (выдача постраничная): ищем нужную по названию.
     await anya.getByRole("searchbox", { name: "Поиск по названию" }).fill("в команду API");
     const card = anya.locator("article, li").filter({ hasText: VACANCY_TITLE }).first();

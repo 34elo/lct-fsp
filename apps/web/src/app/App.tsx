@@ -71,6 +71,7 @@ import InviteAccept from "@/features/employer/InviteAccept";
 
 // Разделы по ролям грузятся лениво (frontend.md: «ленивые разделы»).
 const PublicLayout = lazy(() => import("@/app/layouts/PublicLayout"));
+const JobsLayout = lazy(() => import("@/app/layouts/JobsLayout"));
 const CandidateLayout = lazy(() => import("@/app/layouts/CandidateLayout"));
 const EmployerLayout = lazy(() => import("@/app/layouts/EmployerLayout"));
 const AdminLayout = lazy(() => import("@/app/layouts/AdminLayout"));
@@ -188,12 +189,14 @@ export function App() {
           {/* >>> block2 (public) */}
           <Route path="/" element={<Landing />} />
           <Route path="/run/:token" element={<RunPage />} />
-          <Route path="/jobs" element={<Jobs />} />
-          <Route path="/jobs/:id" element={<JobDetail />} />
           <Route path="/terms" element={<Legal />} />
           <Route path="/privacy" element={<Legal />} />
           <Route path="/invite/company/:token" element={<InviteAccept />} />
           {/* <<< block2 (public) */}
+        </Route>
+        <Route element={<JobsLayout />}>
+          <Route path="/jobs" element={<Jobs />} />
+          <Route path="/jobs/:id" element={<JobDetail />} />
         </Route>
         {guarded("candidate", CandidateLayout)}
         {guarded("employer", EmployerLayout)}
