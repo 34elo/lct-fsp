@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 
 import { Net } from "./Hero";
 import { JuryEntry } from "./JuryEntry";
+import { appIsExternal, appUrl } from "@/shared/lib/appUrl";
 import { juryEnabled } from "./jury";
 import { onAnchorClick, Reveal } from "./motion";
 import { CtaPair, Wrap } from "./parts";
@@ -27,10 +28,12 @@ const footLink = "transition-colors duration-150 hover:text-ink";
 /** Подвал: Условия, Политика ПДн, Контакты (T5). «Демо для жюри» (T6) и вход жюри — только при `VITE_JURY_MODE`. */
 export function Footer() {
   const jury = juryEnabled();
+  // Лендинг на корневом домене: сессия жюри живёт на кабинете, поэтому вход жюри — на dashboard., а здесь только ссылка.
+  const external = appIsExternal();
   return (
     <footer className="pt-12 pb-10">
       <Wrap className="flex flex-col items-start justify-between gap-6 min-[861px]:flex-row min-[861px]:items-center min-[861px]:flex-wrap">
-        {jury && (
+        {jury && !external && (
           <div id="jury" tabIndex={-1} className="w-full scroll-mt-20 outline-none">
             <JuryEntry />
           </div>
@@ -58,7 +61,7 @@ export function Footer() {
           </nav>
         </div>
         {jury && (
-          <a href="#jury" onClick={onAnchorClick("jury")} className="text-12 text-muted underline underline-offset-[3px] opacity-80 hover:text-ink">
+          <a href={external ? appUrl("/#jury") : "#jury"} onClick={external ? undefined : onAnchorClick("jury")} className="text-12 text-muted underline underline-offset-[3px] opacity-80 hover:text-ink">
             {T.demo}
           </a>
         )}

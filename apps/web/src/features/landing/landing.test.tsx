@@ -193,3 +193,28 @@ describe("JuryPanel", () => {
     expect(screen.getAllByRole("listitem")).toHaveLength(5);
   });
 });
+
+describe("Лендинг на корневом домене (E41-7)", () => {
+  it("кнопки ведут на кабинет, когда VITE_APP_URL указывает на другой origin", () => {
+    vi.stubEnv("VITE_APP_URL", "https://dashboard.fsp.example");
+    renderLanding();
+    expect(screen.getByRole("link", { name: "Войти" })).toHaveAttribute("href", "https://dashboard.fsp.example/login");
+    const cand = screen.getAllByRole("link", { name: /Пройти тест/ })[0];
+    expect(cand).toHaveAttribute("href", "https://dashboard.fsp.example/register?role=candidate");
+    const emp = screen.getAllByRole("link", { name: /Ищу сотрудников/ })[0];
+    expect(emp).toHaveAttribute("href", "https://dashboard.fsp.example/register?role=employer");
+  });
+
+  it("без VITE_APP_URL ссылки остаются внутри приложения", () => {
+    renderLanding();
+    expect(screen.getByRole("link", { name: "Войти" })).toHaveAttribute("href", "/login");
+  });
+
+  it("вход жюри на корневом домене заменён ссылкой на кабинет", () => {
+    vi.stubEnv("VITE_JURY_MODE", "true");
+    vi.stubEnv("VITE_APP_URL", "https://dashboard.fsp.example");
+    renderLanding();
+    expect(screen.queryByTestId("jury-entry")).toBeNull();
+    expect(screen.getByRole("link", { name: "Демо для жюри" })).toHaveAttribute("href", "https://dashboard.fsp.example/#jury");
+  });
+});

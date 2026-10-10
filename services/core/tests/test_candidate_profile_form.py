@@ -10,7 +10,7 @@ from app.graph.models import Evidence
 from app.graph.recompute import recompute_profile
 from app.graph.trust import TrustConfig
 from app.main import build_app
-from app.taxonomy.models import Skill
+from app.taxonomy.models import Role, Skill
 from fastapi.testclient import TestClient
 from fsp_platform.db import make_engine, make_session_factory, session_scope
 from fsp_platform.outbox import OutboxRecord
@@ -30,6 +30,8 @@ def c(db_path):
         async with session_scope(factory) as s:
             for slug, kind in [("python", "hard"), ("docker", "hard"), ("teamwork", "soft")]:
                 s.add(Skill(slug=slug, name=slug.title(), kind=kind, source="core"))
+            for slug in ["backend", "devops", "qa", "ai_engineer", "product"]:
+                s.add(Role(slug=slug, name=slug.title(), is_profession=True))
 
     asyncio.run(seed())
     with TestClient(app) as client:
@@ -148,6 +150,7 @@ def test_validation_errors(c):
     assert _patch(c, h, {"contacts": {"email": "bad"}}).status_code == 422
     assert _patch(c, h, {"experience_months": -1}).status_code == 422
     assert _patch(c, h, {"desired_roles": ["wizard"]}).status_code == 422
+    assert _patch(c, h, {"desired_roles": ["ai_engineer", "product"]}).status_code == 200  # E41-6
     assert _patch(c, h, {"unknown": 1}).status_code == 422
 
 

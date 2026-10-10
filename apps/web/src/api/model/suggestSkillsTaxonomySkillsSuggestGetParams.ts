@@ -16,4 +16,5 @@ q?: string;
  */
 limit?: number;
 profession?: string | null;
+kind?: string | null;
 };

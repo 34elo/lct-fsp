@@ -1053,7 +1053,7 @@ export const getReviewAttemptAssessmentAttemptsAttemptIdReviewGetUrl = (attemptI
 }
 
 /**
- * Разбор теста: условие, ваш и верный ответ, причина. Только завершённая своя попытка.
+ * Разбор теста (E41-5): только «что подтянуть», без верных ответов и вариантов.
  * @summary Review Attempt
  */
 export const reviewAttemptAssessmentAttemptsAttemptIdReviewGet = async (attemptId: string, options?: Parameters<typeof apiFetch>[1]): Promise<reviewAttemptAssessmentAttemptsAttemptIdReviewGetResponse> => {

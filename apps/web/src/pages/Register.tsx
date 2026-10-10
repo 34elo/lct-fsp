@@ -18,7 +18,9 @@ export default function Register() {
   const state = useLocation().state as { from?: string; role?: SignupRole } | null;
   const from = state?.from;
   // Приглашение в команду компании (E39-24) открывает регистрацию сразу с ролью работодателя.
-  const [role, setRole] = useState<SignupRole>(state?.role === "employer" ? "employer" : "candidate");
+  const [role, setRole] = useState<SignupRole>(
+    state?.role === "employer" || new URLSearchParams(window.location.search).get("role") === "employer" ? "employer" : "candidate",
+  );
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [fresh, setFresh] = useState(false);

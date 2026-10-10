@@ -171,7 +171,8 @@ class ProfileIn(BaseModel):
     full_name: str | None = Field(default=None, max_length=120)  # null или пусто очищает
     stack: list[StackItem] | None = Field(default=None, max_length=60)  # полный список
     experience_months: int | None = Field(default=None, ge=0, le=720)
-    desired_roles: list[RoleSlug] | None = Field(default=None, max_length=5)
+    # профессии системы (E41-6)
+    desired_roles: list[Slug] | None = Field(default=None, max_length=5)
     soft_skills: list[str] | None = Field(default=None, max_length=30)  # slug
     age_group: Literal["adult", "minor"] | None = None
     parent_consent: bool | None = None  # true — родитель согласен; false — отзыв
