@@ -1,7 +1,7 @@
 import { buttonVariants, cn } from "@fsp/ui";
 import type { HTMLAttributes, ReactNode } from "react";
-import { Link } from "react-router-dom";
 
+import { AppLink } from "@/shared/lib/appUrl";
 import { T } from "./text";
 
 /* Общие кирпичи лендинга: контейнер макета (1280 px, поле 24 / 16), заголовки блоков, кнопки призыва.
@@ -47,7 +47,7 @@ const cta = "group h-[52px] gap-2 rounded-lg px-[26px] text-16 whitespace-nowrap
 export function CtaPair({ onBrand, className }: { onBrand?: boolean; className?: string }) {
   return (
     <div className={cn("flex flex-col flex-wrap gap-3 min-[861px]:flex-row", onBrand && "justify-center", className)}>
-      <Link
+      <AppLink
         to="/register"
         state={{ role: "candidate" }}
         className={cn(
@@ -61,8 +61,8 @@ export function CtaPair({ onBrand, className }: { onBrand?: boolean; className?:
         <span aria-hidden="true" className="transition-transform duration-150 ease-out group-hover:translate-x-[3px]">
           →
         </span>
-      </Link>
-      <Link
+      </AppLink>
+      <AppLink
         to="/register"
         state={{ role: "employer" }}
         className={cn(
@@ -73,7 +73,7 @@ export function CtaPair({ onBrand, className }: { onBrand?: boolean; className?:
         )}
       >
         {T.ctaEmployer}
-      </Link>
+      </AppLink>
     </div>
   );
 }

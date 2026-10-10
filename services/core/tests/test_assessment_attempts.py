@@ -234,7 +234,7 @@ async def test_foreign_attempt_is_404(api, factory, taxonomy_loaded):
 
 async def test_attempt_checks(api, taxonomy_loaded, monkeypatch):
     h = register(api)
-    assert _start(api, h, profession="designer").json()["code"] == "unknown_profession"
+    assert _start(api, h, profession="ghost_role").json()["code"] == "unknown_profession"
     # все профессии открыты (E39-6): тест по профессии с тонким банком («бета») начинается
     other = register(api)
     beta = _start(api, other, profession="mobile")

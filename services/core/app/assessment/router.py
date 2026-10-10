@@ -276,9 +276,7 @@ async def explain_answer(
 class ReviewPartOut(BaseModel):
     kind: str
     stem: str
-    options: list[str] | None = None
     yours: str | None = None  # ответ кандидата текстом; `None` — ответа нет
-    correct: str | None = None
     reason: ExplainReasonOut
 
 
@@ -311,7 +309,7 @@ async def review_attempt(
     user: User = Depends(_candidate),
     session: AsyncSession = Depends(get_session),
 ):
-    """Разбор теста: условие, ваш и верный ответ, причина. Только завершённая своя попытка."""
+    """Разбор теста (E41-5): только «что подтянуть», без верных ответов и вариантов."""
     return await explain.review_attempt(session, user.id, attempt_id)
 
 

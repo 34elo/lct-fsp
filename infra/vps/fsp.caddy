@@ -43,17 +43,12 @@ http://100.66.64.126:28443 {
 	}
 }
 
-# Корень — на кабинет (лендинг там же, `/`)
-fsp.patissons.tech {
-	import fsp_security
-	redir https://dashboard.fsp.patissons.tech{uri} permanent
-}
-
-dashboard.fsp.patissons.tech, api.fsp.patissons.tech, mock.fsp.patissons.tech {
+fsp.patissons.tech, dashboard.fsp.patissons.tech, api.fsp.patissons.tech, mock.fsp.patissons.tech {
 	import fsp_security
 	request_body {
 		max_size 25MB
 	}
+	# корень (лендинг) проксируется на gateway: он сам отдаёт публичные маршруты и 302 на dashboard. (E41-7)
 	import fsp_upstream
 	log {
 		output file /var/log/caddy/fsp.log {

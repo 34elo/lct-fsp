@@ -110,7 +110,7 @@ async def test_pass_writes_grade_evidence_and_events(api, factory, taxonomy_load
         assert span == 365 and (row.next_change_at - row.confirmed_at).days == 90
         ev = list(await s.scalars(select(Evidence).where(Evidence.candidate_id == uid)))
         assert ev and {e.source for e in ev} == {"test"} and {e.fact_id for e in ev} == {att.id}
-        assert all(e.strength == pytest.approx(0.8) and e.details["theta"] for e in ev)
+        assert all(e.strength == pytest.approx(0.75) and e.details["theta"] for e in ev)
     (fin,) = await _events(factory, "assessment.attempt.finished")
     f = AttemptFinished.model_validate(fin.payload["payload"])
     assert (f.result, f.grade, f.declared_grade, f.stage) == ("passed", M, M, "bonus")

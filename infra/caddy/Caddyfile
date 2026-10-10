@@ -74,6 +74,29 @@ http://s3.fsp.patissons.tech {
 	reverse_proxy minio:9000
 }
 
+# Корневой домен — лендинг (E41-7). SPA отдаём только на публичных маршрутах и их статике,
+# остальное — 302 на кабинет. API нужен публичным страницам (вакансии, цифры лендинга).
 http://fsp.patissons.tech {
-	redir http://dashboard.fsp.patissons.tech{uri} permanent
+	import api_routes
+	@public {
+		path / /jobs /jobs/* /terms /privacy
+	}
+	# статика сборки: /assets/* и файлы с расширением (иконки, манифест)
+	@static {
+		path_regexp static ^/assets/|\.[A-Za-z0-9]+$
+	}
+	handle @public {
+		reverse_proxy web:8080
+	}
+	handle @static {
+		reverse_proxy web:8080
+	}
+	# за VPS схема приходит в X-Forwarded-Proto: редирект не должен понижать https до http
+	@https header X-Forwarded-Proto https
+	handle @https {
+		redir https://dashboard.fsp.patissons.tech{uri} 302
+	}
+	handle {
+		redir http://dashboard.fsp.patissons.tech{uri} 302
+	}
 }
