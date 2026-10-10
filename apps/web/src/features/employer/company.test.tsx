@@ -18,7 +18,7 @@ const company = (role: string) => ({
   inn: "7707083893",
   site: null,
   description: "## О нас\n\n- **Python**",
-  logo_key: null,
+  logo_url: null,
   contacts: null,
   direction: null,
   status: "verified",
@@ -47,7 +47,7 @@ function install(opts: Opts = {}) {
     "fetch",
     vi.fn(async (url: string, init?: RequestInit) => {
       const method = init?.method ?? "GET";
-      calls.push({ method, url, body: init?.body ? JSON.parse(String(init.body)) : undefined });
+      calls.push({ method, url, body: typeof init?.body === "string" ? JSON.parse(init.body) : undefined });
       if (url.endsWith("/auth/refresh")) return opts.me === "anon" ? json(401, { code: "unauthorized" }) : json(200, { access_token: "t" });
       if (url.endsWith("/api/v1/me"))
         return json(200, {
@@ -71,6 +71,7 @@ function install(opts: Opts = {}) {
       if (url.endsWith("/companies/me/members")) return json(200, team(joined ? "member" : role));
       if (url.endsWith("/companies/me/invites") && method === "POST") return json(201, { id: "i2", email: "z@x.io", created_at: "2026-10-01T00:00:00Z", expires_at: "2026-10-08T00:00:00Z", url: "http://web/invite/company/tok" });
       if (url.includes("/companies/me/invites/") && method === "DELETE") return new Response(null, { status: 204 });
+      if (url.endsWith("/companies/me/logo") && method === "PUT") return json(200, { ...company(role), logo_url: "/companies/c1/logo?v=abc" });
       if (url.endsWith("/companies/me") && method === "PATCH") return json(200, company(role));
       if (url.endsWith("/companies/me")) return json(200, company(joined ? "member" : role));
       if (url.endsWith("/me/consents")) return json(200, []);
@@ -99,12 +100,19 @@ afterEach(() => vi.unstubAllGlobals());
 test("владелец: правит компанию с Markdown-описанием, видит приглашения и зовёт HR", async () => {
   const calls = install({ role: "admin" });
   mount("/employer/company");
+  expect(await screen.findByTestId("company-tab-info")).toHaveAttribute("aria-selected", "true");
+  expect(screen.queryByTestId("company-team")).toBeNull(); // команда — на своей вкладке
   const desc = await screen.findByTestId("company-description");
   await waitFor(() => expect(desc).toHaveValue("## О нас\n\n- **Python**"));
   fireEvent.change(desc, { target: { value: "**Новое** описание" } });
   fireEvent.submit(screen.getByTestId("company-form"));
   await waitFor(() => expect(calls.find((c) => c.method === "PATCH")?.body).toMatchObject({ name: "Ромашка", description: "**Новое** описание" }));
 
+});
+
+test("владелец: во вкладке «Команда» видит приглашения и зовёт HR", async () => {
+  const calls = install({ role: "admin" });
+  mount("/employer/company?tab=team");
   expect(await screen.findAllByTestId("company-member")).toHaveLength(2);
   expect(screen.getByTestId("company-invite")).toHaveTextContent("next@x.io");
   expect(screen.getAllByTestId("company-member-remove")).toHaveLength(1); // владельца убрать нельзя
@@ -124,6 +132,12 @@ test("HR: компания только для чтения, описание о
   const view = screen.getByTestId("company-description-view");
   expect(view.querySelector("h4")).toHaveTextContent("О нас"); // ## → h4 внутри страницы
   expect(view.querySelector("strong")).toHaveTextContent("Python");
+  expect(screen.queryByTestId("company-logo-upload")).toBeNull(); // логотип грузит только владелец
+});
+
+test("HR: во вкладке «Команда» видит людей без управления", async () => {
+  install({ role: "member" });
+  mount("/employer/company?tab=team");
   expect(await screen.findAllByTestId("company-member")).toHaveLength(2);
   expect(screen.queryByTestId("company-invite-form")).toBeNull();
   expect(screen.queryByTestId("company-member-remove")).toBeNull();
@@ -161,4 +175,14 @@ test("приглашение: неверная или истёкшая ссыл�
   install({ me: "anon", preview: 404 });
   mount("/invite/company/bad");
   expect(await screen.findByTestId("invite-invalid")).toHaveTextContent("Приглашение не найдено");
+});
+
+test("владелец: загружает логотип и убирает его", async () => {
+  const calls = install({ role: "admin" });
+  mount("/employer/company");
+  const input = (await screen.findByTestId("company-logo-input")) as HTMLInputElement;
+  expect(screen.queryByTestId("company-logo-remove")).toBeNull(); // файла ещё нет
+  const file = new File([new Uint8Array([137, 80, 78, 71])], "logo.png", { type: "image/png" });
+  fireEvent.change(input, { target: { files: [file] } });
+  await waitFor(() => expect(calls.some((c) => c.method === "PUT" && c.url.endsWith("/companies/me/logo"))).toBe(true));
 });

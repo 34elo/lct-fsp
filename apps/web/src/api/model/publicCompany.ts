@@ -11,4 +11,5 @@ export interface PublicCompany {
   verified: boolean;
   responsibility_score?: number | null;
   demo?: boolean;
+  logo_url?: string | null;
 }

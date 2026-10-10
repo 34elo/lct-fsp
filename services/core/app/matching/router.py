@@ -238,6 +238,7 @@ async def candidate_card(
         company_id=company.id,
         responsibility_score=company.responsibility_score,
         pii_key=request.app.state.settings.pii_key,
+        avatar_secret=request.app.state.settings.jwt_secret,
     )
     await views.record(
         session, candidate_id=cand.user_id, company_id=company.id, viewer_user_id=user.id,

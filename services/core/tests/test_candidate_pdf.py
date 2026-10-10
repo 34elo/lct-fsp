@@ -41,3 +41,6 @@ def test_html_escapes_user_text():
     assert "<b>x</b>" not in html and "&lt;b&gt;" in html and "&lt;i&gt;" in html
     assert "Пайтон" in html and "●●○○" in html and "тест" in html
     assert pdf.dots(3) == "●●●○" and pdf.dots(9) == "●●●●"
+    with_photo = pdf.build_html(p, [], photo=(b"\x89PNG\r\n\x1a\n", "candidate-avatars/u/a.png"))
+    assert 'class="photo"' in with_photo and "data:image/png;base64," in with_photo
+    assert 'class="photo"' not in html  # без аватара блока нет

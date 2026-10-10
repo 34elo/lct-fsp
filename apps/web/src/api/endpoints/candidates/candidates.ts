@@ -24,12 +24,14 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  BodyPutAvatarCandidatesMeAvatarPut,
   CandidateProfile,
   CategoryExplanation,
   DeleteIn,
   DisputeIn,
   DisputeOut,
   EvidenceBrief,
+  GetAvatarCandidatesPseudoIdAvatarGetParams,
   HTTPValidationError,
   MyViewsCandidatesMeViewsGet200,
   PreferencesIn,
@@ -326,6 +328,264 @@ export const usePatchProfileCandidatesMeProfilePatch = <TError = ErrorType<Probl
         TContext
       > => {
       return useMutation(getPatchProfileCandidatesMeProfilePatchMutationOptions(options), queryClient);
+    }
+    export type putAvatarCandidatesMeAvatarPutResponse200 = {
+  data: CandidateProfile
+  status: 200
+}
+
+export type putAvatarCandidatesMeAvatarPutResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type putAvatarCandidatesMeAvatarPutResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type putAvatarCandidatesMeAvatarPutResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type putAvatarCandidatesMeAvatarPutResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type putAvatarCandidatesMeAvatarPutResponse413ApplicationProblemJson = {
+  data: ProblemOut
+  status: 413
+}
+
+export type putAvatarCandidatesMeAvatarPutResponse413ApplicationJson = {
+  data: ProblemOut
+  status: 413
+}
+
+export type putAvatarCandidatesMeAvatarPutResponse415ApplicationProblemJson = {
+  data: ProblemOut
+  status: 415
+}
+
+export type putAvatarCandidatesMeAvatarPutResponse415ApplicationJson = {
+  data: ProblemOut
+  status: 415
+}
+
+export type putAvatarCandidatesMeAvatarPutResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type putAvatarCandidatesMeAvatarPutResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type putAvatarCandidatesMeAvatarPutResponse429ApplicationProblemJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type putAvatarCandidatesMeAvatarPutResponse429ApplicationJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type putAvatarCandidatesMeAvatarPutResponseSuccess = (putAvatarCandidatesMeAvatarPutResponse200) & {
+  headers: Headers;
+};
+export type putAvatarCandidatesMeAvatarPutResponseError = (putAvatarCandidatesMeAvatarPutResponse401ApplicationProblemJson | putAvatarCandidatesMeAvatarPutResponse401ApplicationJson | putAvatarCandidatesMeAvatarPutResponse403ApplicationProblemJson | putAvatarCandidatesMeAvatarPutResponse403ApplicationJson | putAvatarCandidatesMeAvatarPutResponse413ApplicationProblemJson | putAvatarCandidatesMeAvatarPutResponse413ApplicationJson | putAvatarCandidatesMeAvatarPutResponse415ApplicationProblemJson | putAvatarCandidatesMeAvatarPutResponse415ApplicationJson | putAvatarCandidatesMeAvatarPutResponse422ApplicationProblemJson | putAvatarCandidatesMeAvatarPutResponse422ApplicationJson | putAvatarCandidatesMeAvatarPutResponse429ApplicationProblemJson | putAvatarCandidatesMeAvatarPutResponse429ApplicationJson) & {
+  headers: Headers;
+};
+
+export type putAvatarCandidatesMeAvatarPutResponse = (putAvatarCandidatesMeAvatarPutResponseSuccess | putAvatarCandidatesMeAvatarPutResponseError)
+
+export const getPutAvatarCandidatesMeAvatarPutUrl = () => {
+
+
+
+
+  return `/candidates/me/avatar`
+}
+
+/**
+ * Аватар кандидата (E41-12): PNG, JPEG или WebP по сигнатуре, до 2 МБ. Работодатель видит
+ * его только после приглашения, как ФИО; в анонимную карточку он не попадает.
+ * @summary Put Avatar
+ */
+export const putAvatarCandidatesMeAvatarPut = async (bodyPutAvatarCandidatesMeAvatarPut: BodyPutAvatarCandidatesMeAvatarPut, options?: Parameters<typeof apiFetch>[1]): Promise<putAvatarCandidatesMeAvatarPutResponse> => {
+    const formData = new FormData();
+formData.append(`file`, bodyPutAvatarCandidatesMeAvatarPut.file);
+
+  return apiFetch<putAvatarCandidatesMeAvatarPutResponse>(getPutAvatarCandidatesMeAvatarPutUrl(),
+  {
+    ...options,
+    method: 'PUT'
+    ,
+    body: formData
+  }
+);}
+
+
+
+
+
+export const getPutAvatarCandidatesMeAvatarPutMutationKey = () => ['putAvatarCandidatesMeAvatarPut'] as const;
+
+export const getPutAvatarCandidatesMeAvatarPutMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putAvatarCandidatesMeAvatarPut>>, TError,PutAvatarCandidatesMeAvatarPutMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof putAvatarCandidatesMeAvatarPut>>, TError,PutAvatarCandidatesMeAvatarPutMutationVariables, TContext> => {
+
+const mutationKey = getPutAvatarCandidatesMeAvatarPutMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putAvatarCandidatesMeAvatarPut>>, PutAvatarCandidatesMeAvatarPutMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  putAvatarCandidatesMeAvatarPut(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutAvatarCandidatesMeAvatarPutMutationResult = NonNullable<Awaited<ReturnType<typeof putAvatarCandidatesMeAvatarPut>>>
+    export type PutAvatarCandidatesMeAvatarPutMutationBody = BodyPutAvatarCandidatesMeAvatarPut
+    export type PutAvatarCandidatesMeAvatarPutMutationError = ErrorType<ProblemOut>
+    export type PutAvatarCandidatesMeAvatarPutMutationVariables = {data: BodyPutAvatarCandidatesMeAvatarPut}
+
+    /**
+ * @summary Put Avatar
+ */
+export const usePutAvatarCandidatesMeAvatarPut = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putAvatarCandidatesMeAvatarPut>>, TError,PutAvatarCandidatesMeAvatarPutMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putAvatarCandidatesMeAvatarPut>>,
+        TError,
+        PutAvatarCandidatesMeAvatarPutMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPutAvatarCandidatesMeAvatarPutMutationOptions(options), queryClient);
+    }
+    export type deleteAvatarCandidatesMeAvatarDeleteResponse200 = {
+  data: CandidateProfile
+  status: 200
+}
+
+export type deleteAvatarCandidatesMeAvatarDeleteResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type deleteAvatarCandidatesMeAvatarDeleteResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type deleteAvatarCandidatesMeAvatarDeleteResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type deleteAvatarCandidatesMeAvatarDeleteResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type deleteAvatarCandidatesMeAvatarDeleteResponseSuccess = (deleteAvatarCandidatesMeAvatarDeleteResponse200) & {
+  headers: Headers;
+};
+export type deleteAvatarCandidatesMeAvatarDeleteResponseError = (deleteAvatarCandidatesMeAvatarDeleteResponse401ApplicationProblemJson | deleteAvatarCandidatesMeAvatarDeleteResponse401ApplicationJson | deleteAvatarCandidatesMeAvatarDeleteResponse403ApplicationProblemJson | deleteAvatarCandidatesMeAvatarDeleteResponse403ApplicationJson) & {
+  headers: Headers;
+};
+
+export type deleteAvatarCandidatesMeAvatarDeleteResponse = (deleteAvatarCandidatesMeAvatarDeleteResponseSuccess | deleteAvatarCandidatesMeAvatarDeleteResponseError)
+
+export const getDeleteAvatarCandidatesMeAvatarDeleteUrl = () => {
+
+
+
+
+  return `/candidates/me/avatar`
+}
+
+/**
+ * @summary Delete Avatar
+ */
+export const deleteAvatarCandidatesMeAvatarDelete = async ( options?: Parameters<typeof apiFetch>[1]): Promise<deleteAvatarCandidatesMeAvatarDeleteResponse> => {
+
+  return apiFetch<deleteAvatarCandidatesMeAvatarDeleteResponse>(getDeleteAvatarCandidatesMeAvatarDeleteUrl(),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteAvatarCandidatesMeAvatarDeleteMutationKey = () => ['deleteAvatarCandidatesMeAvatarDelete'] as const;
+
+export const getDeleteAvatarCandidatesMeAvatarDeleteMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAvatarCandidatesMeAvatarDelete>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteAvatarCandidatesMeAvatarDelete>>, TError,void, TContext> => {
+
+const mutationKey = getDeleteAvatarCandidatesMeAvatarDeleteMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteAvatarCandidatesMeAvatarDelete>>, void> = () => {
+
+
+          return  deleteAvatarCandidatesMeAvatarDelete(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteAvatarCandidatesMeAvatarDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof deleteAvatarCandidatesMeAvatarDelete>>>
+
+    export type DeleteAvatarCandidatesMeAvatarDeleteMutationError = ErrorType<ProblemOut>
+
+
+    /**
+ * @summary Delete Avatar
+ */
+export const useDeleteAvatarCandidatesMeAvatarDelete = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAvatarCandidatesMeAvatarDelete>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteAvatarCandidatesMeAvatarDelete>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getDeleteAvatarCandidatesMeAvatarDeleteMutationOptions(options), queryClient);
     }
     export type profilePdfCandidatesMeProfilePdfGetResponse200 = {
   data: Blob
@@ -1555,3 +1815,149 @@ export const useDeleteMeCandidatesMeDelete = <TError = ErrorType<ProblemOut | HT
       > => {
       return useMutation(getDeleteMeCandidatesMeDeleteMutationOptions(options), queryClient);
     }
+    export type getAvatarCandidatesPseudoIdAvatarGetResponse200 = {
+  data: Blob
+  status: 200
+}
+
+export type getAvatarCandidatesPseudoIdAvatarGetResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type getAvatarCandidatesPseudoIdAvatarGetResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type getAvatarCandidatesPseudoIdAvatarGetResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type getAvatarCandidatesPseudoIdAvatarGetResponseSuccess = (getAvatarCandidatesPseudoIdAvatarGetResponse200) & {
+  headers: Headers;
+};
+export type getAvatarCandidatesPseudoIdAvatarGetResponseError = (getAvatarCandidatesPseudoIdAvatarGetResponse404ApplicationProblemJson | getAvatarCandidatesPseudoIdAvatarGetResponse404ApplicationJson | getAvatarCandidatesPseudoIdAvatarGetResponse422) & {
+  headers: Headers;
+};
+
+export type getAvatarCandidatesPseudoIdAvatarGetResponse = (getAvatarCandidatesPseudoIdAvatarGetResponseSuccess | getAvatarCandidatesPseudoIdAvatarGetResponseError)
+
+export const getGetAvatarCandidatesPseudoIdAvatarGetUrl = (pseudoId: string,
+    params: GetAvatarCandidatesPseudoIdAvatarGetParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/candidates/${pseudoId}/avatar?${stringifiedParams}` : `/candidates/${pseudoId}/avatar`
+}
+
+/**
+ * Без токена, но с подписью из адреса: её выдаёт сервер владельцу и работодателю после
+ * приглашения. Нет кандидата, файла или подпись не сходится — одинаковый 404.
+ * @summary Get Avatar
+ */
+export const getAvatarCandidatesPseudoIdAvatarGet = async (pseudoId: string,
+    params: GetAvatarCandidatesPseudoIdAvatarGetParams, options?: Parameters<typeof apiFetch>[1]): Promise<getAvatarCandidatesPseudoIdAvatarGetResponse> => {
+
+  return apiFetch<getAvatarCandidatesPseudoIdAvatarGetResponse>(getGetAvatarCandidatesPseudoIdAvatarGetUrl(pseudoId,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAvatarCandidatesPseudoIdAvatarGetQueryKey = (pseudoId: string,
+    params?: GetAvatarCandidatesPseudoIdAvatarGetParams,) => {
+    return [
+    `/candidates/${pseudoId}/avatar`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetAvatarCandidatesPseudoIdAvatarGetQueryOptions = <TData = Awaited<ReturnType<typeof getAvatarCandidatesPseudoIdAvatarGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(pseudoId: string,
+    params: GetAvatarCandidatesPseudoIdAvatarGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAvatarCandidatesPseudoIdAvatarGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAvatarCandidatesPseudoIdAvatarGetQueryKey(pseudoId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAvatarCandidatesPseudoIdAvatarGet>>> = ({ signal }) => getAvatarCandidatesPseudoIdAvatarGet(pseudoId,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: pseudoId !== null && pseudoId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAvatarCandidatesPseudoIdAvatarGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetAvatarCandidatesPseudoIdAvatarGetQueryResult = NonNullable<Awaited<ReturnType<typeof getAvatarCandidatesPseudoIdAvatarGet>>>
+export type GetAvatarCandidatesPseudoIdAvatarGetQueryError = ErrorType<ProblemOut | HTTPValidationError>
+
+
+export function useGetAvatarCandidatesPseudoIdAvatarGet<TData = Awaited<ReturnType<typeof getAvatarCandidatesPseudoIdAvatarGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ pseudoId: string,
+    params: GetAvatarCandidatesPseudoIdAvatarGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAvatarCandidatesPseudoIdAvatarGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAvatarCandidatesPseudoIdAvatarGet>>,
+          TError,
+          Awaited<ReturnType<typeof getAvatarCandidatesPseudoIdAvatarGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAvatarCandidatesPseudoIdAvatarGet<TData = Awaited<ReturnType<typeof getAvatarCandidatesPseudoIdAvatarGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ pseudoId: string,
+    params: GetAvatarCandidatesPseudoIdAvatarGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAvatarCandidatesPseudoIdAvatarGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAvatarCandidatesPseudoIdAvatarGet>>,
+          TError,
+          Awaited<ReturnType<typeof getAvatarCandidatesPseudoIdAvatarGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAvatarCandidatesPseudoIdAvatarGet<TData = Awaited<ReturnType<typeof getAvatarCandidatesPseudoIdAvatarGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ pseudoId: string,
+    params: GetAvatarCandidatesPseudoIdAvatarGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAvatarCandidatesPseudoIdAvatarGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Avatar
+ */
+
+export function useGetAvatarCandidatesPseudoIdAvatarGet<TData = Awaited<ReturnType<typeof getAvatarCandidatesPseudoIdAvatarGet>>, TError = ErrorType<ProblemOut | HTTPValidationError>>(
+ pseudoId: string,
+    params: GetAvatarCandidatesPseudoIdAvatarGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAvatarCandidatesPseudoIdAvatarGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetAvatarCandidatesPseudoIdAvatarGetQueryOptions(pseudoId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+

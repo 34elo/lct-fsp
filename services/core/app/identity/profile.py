@@ -46,6 +46,22 @@ def avatar_url(user_id: uuid.UUID, key: str | None) -> str | None:
     return f"/users/{user_id}/avatar?v={version}"
 
 
+def check_image(data: bytes) -> str:
+    """Расширение проверенной картинки или ошибка 422/413/415 (аватары и логотипы, E41-12)."""
+    if not data:
+        raise ProblemError(422, "empty_file", "Пустой файл")
+    if len(data) > AVATAR_MAX_BYTES:
+        raise ProblemError(413, "file_too_large", "Файл больше 2 МБ")
+    ext = sniff_image(data)
+    if ext is None:
+        raise ProblemError(415, "unsupported_file_type", "Нужна картинка PNG, JPEG или WebP")
+    return ext
+
+
+def image_key(prefix: str, data: bytes, ext: str) -> str:
+    return f"{prefix}/{hashlib.sha256(data).hexdigest()[:16]}.{ext}"
+
+
 async def get(session: AsyncSession, user_id: uuid.UUID) -> UserProfile | None:
     return await session.get(UserProfile, user_id)
 
@@ -77,16 +93,10 @@ async def update(session: AsyncSession, user_id: uuid.UUID, changes: dict) -> Us
 async def set_avatar(
     session: AsyncSession, storage: ObjectStorage, user_id: uuid.UUID, data: bytes
 ) -> UserProfile:
-    if not data:
-        raise ProblemError(422, "empty_file", "Пустой файл")
-    if len(data) > AVATAR_MAX_BYTES:
-        raise ProblemError(413, "file_too_large", "Файл больше 2 МБ")
-    ext = sniff_image(data)
-    if ext is None:
-        raise ProblemError(415, "unsupported_file_type", "Нужна картинка PNG, JPEG или WebP")
+    ext = check_image(data)
     row = await get_or_create(session, user_id)
     old = row.avatar_key
-    key = f"avatars/{user_id}/{hashlib.sha256(data).hexdigest()[:16]}.{ext}"
+    key = image_key(f"avatars/{user_id}", data, ext)
     await storage.put(key, data, _TYPES[ext])
     row.avatar_key = key
     await session.flush()

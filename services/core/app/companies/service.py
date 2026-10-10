@@ -77,6 +77,39 @@ async def update_company(session: AsyncSession, company: Company, changes: dict)
     return company
 
 
+def logo_url(company: Company) -> str | None:
+    """Путь относительно API; `v` меняется с файлом. Логотип компании публичный (E41-12)."""
+    if not company.logo_key:
+        return None
+    version = company.logo_key.rsplit("/", 1)[-1].split(".", 1)[0]
+    return f"/companies/{company.id}/logo?v={version}"
+
+
+async def set_logo(session: AsyncSession, storage, company: Company, data: bytes) -> Company:
+    ext = profile.check_image(data)
+    key = profile.image_key(f"logos/{company.id}", data, ext)
+    await storage.put(key, data, profile.content_type(key))
+    old, company.logo_key = company.logo_key, key
+    await session.flush()
+    if old and old != key:
+        try:
+            await storage.delete(old)
+        except Exception:  # старый файл не мешает: ссылка уже другая
+            pass
+    return company
+
+
+async def clear_logo(session: AsyncSession, storage, company: Company) -> Company:
+    old, company.logo_key = company.logo_key, None
+    await session.flush()
+    if old:
+        try:
+            await storage.delete(old)
+        except Exception:
+            pass
+    return company
+
+
 async def add_member(
     session: AsyncSession, company: Company, email: str, role: CompanyMemberRole
 ) -> CompanyMember:
