@@ -14,4 +14,7 @@ export interface CompanyMemberOut {
   position?: string | null;
   avatar_url?: string | null;
   is_me?: boolean;
+  managed?: boolean;
+  must_change_password?: boolean;
+  temp_password_expires_at?: string | null;
 }

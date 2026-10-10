@@ -45,6 +45,7 @@ import DemoNewProfession from "@/features/demo/NewProfession";
 import DemoTwoWorlds from "@/features/demo/TwoWorlds";
 // <<< block1 imports
 // >>> block2 imports
+import PasswordSetup from "@/features/auth/PasswordSetup";
 import Landing from "@/features/landing/Landing";
 import Legal from "@/features/landing/Legal";
 import FederationDashboard from "@/features/admin/Dashboard";
@@ -177,6 +178,7 @@ export function App() {
           <Route path="/verify-email" element={<VerifyEmail />} />
           {/* <<< block1 (auth) */}
           {/* >>> block2 (auth) */}
+          <Route path="/password/new" element={<PasswordSetup />} />
           {/* <<< block2 (auth) */}
           {/* >>> block1 (public) */}
           {/* <<< block1 (public) */}

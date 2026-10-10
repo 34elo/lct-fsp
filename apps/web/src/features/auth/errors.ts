@@ -13,6 +13,8 @@ export function authErrorText(err: unknown, fallback: string, opts: { credential
       return "Слишком много попыток. Подождите минуту";
     case "invalid_magic_token":
       return "Ссылка недействительна или уже использована";
+    case "temp_password_expired":
+      return "Временный пароль истёк. Попросите владельца компании выдать новый";
   }
   if (err.status === 429) return "Слишком много попыток. Подождите минуту";
   // 401 без кода на регистрации (например, из /me после неё) — не «неверный пароль» (E35-7a).

@@ -31,13 +31,24 @@ const company = (role: string) => ({
 const team = (role: string) => ({
   members: [
     { user_id: "u1", role: "admin", email: "owner@x.io", full_name: "Олег", position: "CEO", avatar_url: null, is_me: role === "admin" },
-    { user_id: "u2", role: "member", email: "hr@x.io", full_name: "Анна", position: "HR", avatar_url: "/users/u2/avatar?v=1", is_me: role === "member" },
+    {
+      user_id: "u2",
+      role: "member",
+      email: "hr@x.io",
+      full_name: "Анна",
+      position: "HR",
+      avatar_url: "/users/u2/avatar?v=1",
+      is_me: role === "member",
+      managed: role === "admin",
+      must_change_password: role === "admin",
+      temp_password_expires_at: role === "admin" ? "2026-10-13T09:00:00Z" : null,
+    },
   ],
-  invites: role === "admin" ? [{ id: "i1", email: "next@x.io", created_at: "2026-10-01T00:00:00Z", expires_at: "2026-10-08T00:00:00Z" }] : [],
+  invites: [],
   can_manage: role === "admin",
 });
 
-type Opts = { role?: string; me?: "anon" | "employer" | "candidate"; preview?: number; acceptCode?: string };
+type Opts = { role?: string; me?: "anon" | "employer" | "candidate"; preview?: number; acceptCode?: string; hrCode?: string };
 
 function install(opts: Opts = {}) {
   const role = opts.role ?? "admin";
@@ -69,8 +80,15 @@ function install(opts: Opts = {}) {
           ? json(404, { code: "invite_not_found", title: "x", status: 404 })
           : json(200, { company_name: "Ромашка", company_verified: true, inviter_name: "Олег", email_masked: "h***@x.io", expires_at: "2026-10-08T00:00:00Z" });
       if (url.endsWith("/companies/me/members")) return json(200, team(joined ? "member" : role));
-      if (url.endsWith("/companies/me/invites") && method === "POST") return json(201, { id: "i2", email: "z@x.io", created_at: "2026-10-01T00:00:00Z", expires_at: "2026-10-08T00:00:00Z", url: "http://web/invite/company/tok" });
-      if (url.includes("/companies/me/invites/") && method === "DELETE") return new Response(null, { status: 204 });
+      if (url.endsWith("/companies/me/hr") && method === "POST")
+        return opts.hrCode
+          ? json(409, { code: opts.hrCode, title: "x", status: 409 })
+          : json(201, { user_id: "u3", email: "zoya@x.io", full_name: "Зоя", login_url: "https://career.example.ru/login", temp_password: "abcd-EFGH-2345", expires_at: "2026-10-13T09:00:00Z" });
+      if (url.endsWith("/companies/me/members/u2/password") && method === "POST")
+        return json(200, { user_id: "u2", email: "hr@x.io", full_name: "Анна", login_url: "https://career.example.ru/login", temp_password: "wxyz-WXYZ-6789", expires_at: "2026-10-13T09:00:00Z" });
+      if (url.includes("/companies/me/members/") && method === "DELETE") return new Response(null, { status: 204 });
+      if (url.endsWith("/companies/me/access-log"))
+        return json(200, [{ id: "l1", action: "created", created_at: "2026-10-10T09:00:00Z", actor_name: "Олег", target_email: "hr@x.io", target_name: "Анна" }]);
       if (url.endsWith("/companies/me/logo") && method === "PUT") return json(200, { ...company(role), logo_url: "/companies/c1/logo?v=abc" });
       if (url.endsWith("/companies/me") && method === "PATCH") return json(200, company(role));
       if (url.endsWith("/companies/me")) return json(200, company(joined ? "member" : role));
@@ -97,7 +115,7 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllGlobals());
 
-test("владелец: правит компанию с Markdown-описанием, видит приглашения и зовёт HR", async () => {
+test("владелец: правит компанию с Markdown-описанием", async () => {
   const calls = install({ role: "admin" });
   mount("/employer/company");
   expect(await screen.findByTestId("company-tab-info")).toHaveAttribute("aria-selected", "true");
@@ -110,18 +128,53 @@ test("владелец: правит компанию с Markdown-описани
 
 });
 
-test("владелец: во вкладке «Команда» видит приглашения и зовёт HR", async () => {
+test("владелец: создаёт доступ HR без почты и копирует логин с временным паролем", async () => {
   const calls = install({ role: "admin" });
+  const writeText = vi.fn(async () => undefined);
+  vi.stubGlobal("navigator", { ...navigator, clipboard: { writeText } });
   mount("/employer/company?tab=team");
   expect(await screen.findAllByTestId("company-member")).toHaveLength(2);
-  expect(screen.getByTestId("company-invite")).toHaveTextContent("next@x.io");
-  expect(screen.getAllByTestId("company-member-remove")).toHaveLength(1); // владельца убрать нельзя
-  fireEvent.change(screen.getByTestId("company-invite-email"), { target: { value: "z@x.io" } });
-  fireEvent.submit(screen.getByTestId("company-invite-form"));
-  expect(await screen.findByTestId("company-invite-link")).toHaveTextContent("http://web/invite/company/tok");
-  expect(calls.find((c) => c.url.endsWith("/companies/me/invites"))?.body).toEqual({ email: "z@x.io" });
-  fireEvent.click(screen.getByTestId("company-invite-revoke"));
-  await waitFor(() => expect(calls.some((c) => c.method === "DELETE" && c.url.endsWith("/companies/me/invites/i1"))).toBe(true));
+  expect(screen.queryByTestId("company-invite-form")).toBeNull(); // приглашений по почте больше нет
+  expect(screen.getByTestId("company-member-pending")).toHaveTextContent("Ещё не вошёл");
+  expect(await screen.findByTestId("company-access-log")).toHaveTextContent("Олег выдал(а) доступ: Анна");
+  fireEvent.change(screen.getByTestId("company-hr-name"), { target: { value: "Зоя" } });
+  fireEvent.change(screen.getByTestId("company-hr-email"), { target: { value: "zoya@x.io" } });
+  fireEvent.submit(screen.getByTestId("company-hr-form"));
+  const card = await screen.findByTestId("company-access-card");
+  expect(calls.find((c) => c.url.endsWith("/companies/me/hr"))?.body).toEqual({ email: "zoya@x.io", full_name: "Зоя" });
+  expect(screen.getByTestId("company-access-url")).toHaveTextContent("https://career.example.ru/login");
+  expect(screen.getByTestId("company-access-password")).toHaveTextContent("abcd-EFGH-2345");
+  fireEvent.click(screen.getByTestId("company-access-copy"));
+  await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
+  const shared = (writeText.mock.calls[0] as unknown as [string])[0];
+  expect(shared).toContain("«Ромашка»");
+  expect(shared).toContain("https://career.example.ru/login");
+  expect(shared).toContain("zoya@x.io");
+  expect(shared).toContain("abcd-EFGH-2345");
+  // карточка закрывается — пароль больше не показывается
+  fireEvent.click(screen.getByTestId("company-access-close"));
+  expect(card).not.toBeInTheDocument();
+});
+
+test("владелец: выдаёт HR новый пароль и отзывает доступ", async () => {
+  const calls = install({ role: "admin" });
+  vi.stubGlobal("confirm", () => true);
+  mount("/employer/company?tab=team");
+  expect(await screen.findAllByTestId("company-member-remove")).toHaveLength(1); // владельца убрать нельзя
+  fireEvent.click(screen.getByTestId("company-member-reset"));
+  expect(await screen.findByTestId("company-access-password")).toHaveTextContent("wxyz-WXYZ-6789");
+  fireEvent.click(screen.getByTestId("company-member-remove"));
+  await waitFor(() => expect(calls.some((c) => c.method === "DELETE" && c.url.endsWith("/companies/me/members/u2"))).toBe(true));
+});
+
+test("владелец: email кандидата — понятная ошибка", async () => {
+  install({ role: "admin", hrCode: "email_is_candidate" });
+  mount("/employer/company?tab=team");
+  fireEvent.change(await screen.findByTestId("company-hr-name"), { target: { value: "Иван" } });
+  fireEvent.change(screen.getByTestId("company-hr-email"), { target: { value: "cand@x.io" } });
+  fireEvent.submit(screen.getByTestId("company-hr-form"));
+  expect(await screen.findByTestId("company-team-error")).toHaveTextContent("зарегистрирован как кандидат");
+  expect(screen.queryByTestId("company-access-card")).toBeNull();
 });
 
 test("HR: компания только для чтения, описание отрисовано Markdown, без управления командой", async () => {
@@ -139,8 +192,10 @@ test("HR: во вкладке «Команда» видит людей без у
   install({ role: "member" });
   mount("/employer/company?tab=team");
   expect(await screen.findAllByTestId("company-member")).toHaveLength(2);
-  expect(screen.queryByTestId("company-invite-form")).toBeNull();
+  expect(screen.queryByTestId("company-hr-form")).toBeNull();
   expect(screen.queryByTestId("company-member-remove")).toBeNull();
+  expect(screen.queryByTestId("company-member-reset")).toBeNull();
+  expect(screen.queryByTestId("company-access-log")).toBeNull();
 });
 
 test("приглашение: аноним видит компанию и кнопки входа и регистрации", async () => {
