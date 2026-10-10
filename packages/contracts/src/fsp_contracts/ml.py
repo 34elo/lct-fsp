@@ -52,6 +52,7 @@ class ResumeSkill(BaseModel):
     quote: str  # дословная цитата из текста; без неё навык отбрасывается
     method: str  # alias | fuzzy | new | …
     confidence: float = Field(ge=0, le=1)
+    source: Literal["llm", "rules"] = "llm"  # E43-8: rules — запасной правиловый путь
 
 
 class ResumeSoftSkill(BaseModel):

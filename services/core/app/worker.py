@@ -23,6 +23,8 @@ from fsp_platform.messaging import (
 from fsp_platform.outbox import OutboxRelay
 
 from app.analytics import handlers as analytics_handlers
+from app.assessment import orders as family_orders
+from app.assessment.config import load_config as load_assessment_config
 from app.config import Settings
 from app.graph import fsp_links
 from app.graph import handlers as graph_handlers
@@ -89,6 +91,11 @@ class Worker:
         )
         # >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
         profession_suggest.register(self.consumers, self.session_factory)
+        family_orders.register(  # E43-9: заказ заданий из админки
+            self.consumers,
+            self.session_factory,
+            load_assessment_config(self.settings.scoring_config_path or None),
+        )
         # <<< block1
         # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
         fsp_links.register(self.consumers, self.session_factory)

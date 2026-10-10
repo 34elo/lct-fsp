@@ -32,6 +32,7 @@ import {
 } from "@/api/endpoints/admin/admin";
 import type { AdminFamilyOut, KeyApproveInSource } from "@/api/model";
 import { ApiError } from "@/api/mutator";
+import { GenerateButton, OrdersPanel } from "./FamilyOrders";
 import { admissionReasons } from "./model";
 import { T } from "./text";
 import { AdminPageHeader } from "@/features/admin/PageHeader";
@@ -293,7 +294,9 @@ export default function AdmissionQueue() {
 
   return (
     <div data-testid={sel("page")} className={PAGE.wide}>
-      <AdminPageHeader title={T.queue.title} tip={T.queue.lead} />
+      <AdminPageHeader title={T.queue.title} tip={T.queue.lead}>
+        <GenerateButton />
+      </AdminPageHeader>
       <Tabs
         value={status}
         onValueChange={(v) => {
@@ -313,6 +316,13 @@ export default function AdmissionQueue() {
       <p className="max-w-3xl text-14 text-muted" data-testid={sel("status-help")}>
         {T.queue.statusHelp[status]}
       </p>
+      <OrdersPanel
+        onDrafts={() => {
+          setStatus("draft");
+          setProfession("");
+          setErr(null);
+        }}
+      />
 
       {professions.length > 1 && (
         <div role="group" aria-label={T.queue.filterLabel} className="flex flex-wrap gap-1.5" data-testid={sel("filter")}>

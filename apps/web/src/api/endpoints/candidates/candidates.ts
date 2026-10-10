@@ -33,10 +33,10 @@ import type {
   EvidenceBrief,
   GetAvatarCandidatesPseudoIdAvatarGetParams,
   HTTPValidationError,
-  MyViewsCandidatesMeViewsGet200,
   PreferencesIn,
   ProblemOut,
   ProfileIn,
+  ProfileViewsStats,
   StoplistIO,
   VisibilityIn
 } from '../../model';
@@ -1266,7 +1266,7 @@ export const usePutStoplistCandidatesMeStoplistPut = <TError = ErrorType<Problem
       return useMutation(getPutStoplistCandidatesMeStoplistPutMutationOptions(options), queryClient);
     }
     export type myViewsCandidatesMeViewsGetResponse200 = {
-  data: MyViewsCandidatesMeViewsGet200
+  data: ProfileViewsStats
   status: 200
 }
 
@@ -1308,7 +1308,8 @@ export const getMyViewsCandidatesMeViewsGetUrl = () => {
 }
 
 /**
- * «Вас смотрели N компаний» — только агрегаты, без названий (security.md §3).
+ * «Вас смотрели N компаний» — только агрегаты, без названий (security.md §3). Шкала 30 дней
+ * полная; `visible` — видна ли карточка работодателям (тест + согласие на публикацию).
  * @summary My Views
  */
 export const myViewsCandidatesMeViewsGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<myViewsCandidatesMeViewsGetResponse> => {
