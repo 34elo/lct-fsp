@@ -2,7 +2,7 @@ import { useMemo, useState, type FormEvent } from "react";
 import { Gloss } from "@/shared/Gloss";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { Badge, Button, Combobox, Dialog, DialogContent, DialogTitle, EmptyState, ErrorState, Field, Skeleton, useFieldProps } from "@fsp/ui";
+import { Badge, Button, Combobox, Dialog, DialogContent, DialogTitle, EmptyState, ErrorState, Field, Skeleton, cardInteractive, cn, useFieldProps } from "@fsp/ui";
 
 import {
   getListProfessionsAdminProfessionsGetQueryKey,
@@ -185,7 +185,7 @@ export function ProfessionsTab() {
                 data-testid={sel(`edit-${p.slug}`)}
                 aria-label={`${p.title}. ${T.prof.edit}`}
                 onClick={() => { setEditing(p.slug); setNotice(""); }}
-                className="flex h-full min-h-28 w-full flex-col items-start gap-2 rounded-xl border border-hairline bg-card p-4 text-left transition-colors hover:border-brand focus-visible:outline-2 focus-visible:outline-brand"
+                className={cn("flex h-full min-h-28 w-full flex-col items-start gap-2 rounded-xl border border-hairline bg-card p-4 text-left", cardInteractive)}
               >
                 <span className="text-16 font-semibold" data-testid={sel(`title-${p.slug}`)}>{p.title}</span>
                 <span className="break-all font-mono text-12 text-muted">{p.slug}</span>

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
 import { App } from "@/app/App";
@@ -114,4 +114,22 @@ test("компания есть, активности нет: лента и по
   const subs = await screen.findByTestId("match-subscriptions-empty");
   expect(within(subs).getByRole("link", { name: "Подписаться на категорию" })).toBeInTheDocument();
   expect(screen.queryByTestId("employer-onboarding")).toBeNull();
+});
+
+test("крестик закрывает онбординг, и после перезагрузки он не появляется", async () => {
+  mount("/employer");
+  fireEvent.click(await screen.findByTestId("onboarding-close"));
+  expect(await screen.findByText("Сначала расскажите о компании")).toBeInTheDocument();
+
+  cleanup();
+  mount("/employer");
+  expect(await screen.findByText("Сначала расскажите о компании")).toBeInTheDocument();
+  expect(screen.queryByTestId("employer-onboarding")).toBeNull();
+});
+
+test("«Больше не показывать» закрывает онбординг так же", async () => {
+  mount("/employer");
+  fireEvent.click(await screen.findByTestId("onboarding-dismiss"));
+  expect(await screen.findByText("Сначала расскажите о компании")).toBeInTheDocument();
+  expect(localStorage.getItem("fsp.employer.onboardingSkipped")).toBe("1");
 });

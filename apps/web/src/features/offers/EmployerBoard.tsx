@@ -3,7 +3,7 @@ import { Gloss } from "@/shared/Gloss";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 
-import { buttonVariants, cn, EmptyState, ErrorState, formatRubRangeShort, GradeTag, H1, Lbl, Num, Panel, Skeleton, StatusBadge, type OfferStatus } from "@fsp/ui";
+import { buttonVariants, cardInteractive, cn, EmptyState, ErrorState, formatRubRangeShort, GradeTag, H1, Lbl, Num, Panel, Skeleton, StatusBadge, type OfferStatus } from "@fsp/ui";
 
 import { useListOffersOffersGet } from "@/api/endpoints/offers/offers";
 import type { OfferForCompany } from "@/api/model";
@@ -99,7 +99,7 @@ function OffersTable({ offers }: { offers: OfferForCompany[] }) {
       <ul className="m-0 grid list-none gap-2 p-2 md:hidden">
         {offers.map((o) => (
           <li key={o.id}>
-            <Link to={`/employer/offers/${o.id}`} aria-label={`${o.candidate ? displayPseudonym(o.candidate.pseudonym, o.candidate.primary_role) : T.deleted}, ${T.open}`} className="grid gap-2 rounded-xl border border-hairline bg-card p-3 shadow-xs hover:border-brand-mid">
+            <Link to={`/employer/offers/${o.id}`} aria-label={`${o.candidate ? displayPseudonym(o.candidate.pseudonym, o.candidate.primary_role) : T.deleted}, ${T.open}`} className={cn("grid gap-2 rounded-xl border border-hairline bg-card p-3 shadow-xs", cardInteractive)}>
               <span className="flex items-center justify-between gap-2"><Name o={o} /><StatusBadge status={o.status as OfferStatus} /></span>
               <span className="flex items-center justify-between gap-2"><Num className="text-14">{salary(o)}</Num><span className="text-12 text-muted">{note(o)}</span></span>
             </Link>
