@@ -25,6 +25,8 @@ import type { ListPublicVacanciesVacanciesPublicGetParams, PublicVacancyOut } fr
 import { fieldClass } from "@/features/auth/ui";
 import { FORMAT_LABEL } from "@/features/employer/text";
 import { GRADE_LABEL, roleLabel } from "@/features/profile/text";
+import { useAuth } from "@/shared/lib/auth";
+import { PAGE as PAGE_WIDTH } from "@/shared/lib/page";
 import { suggestProfessions, useSkillSource } from "@/shared/lib/skills";
 import { JOBS_TEXT as T } from "./text";
 
@@ -174,6 +176,9 @@ type Params = ListPublicVacanciesVacanciesPublicGetParams;
 
 /** Публичные вакансии (J1): поиск сверху, фильтры сбоку (на телефоне — шторка), состояние в URL. */
 export default function Jobs() {
+  const { status, role } = useAuth();
+  // В кабинете кандидата шапка закреплена (56 px) — поиск и фильтры прижимаются под ней (E41-10).
+  const inCabinet = status === "authenticated" && role === "candidate";
   const [sp, setSp] = useSearchParams();
   const loc = useLocation();
   const f = useMemo(() => readFilters(sp), [sp]);
@@ -199,13 +204,14 @@ export default function Jobs() {
   const query = useListPublicVacanciesVacanciesPublicGet(params);
   const list = query.data?.status === 200 ? query.data.data : [];
   return (
-    <div className="flex flex-col gap-5">
+    <div className={inCabinet ? PAGE_WIDTH.normal : "flex flex-col gap-5"}>
       <header className="flex flex-col gap-2">
         <p className="font-mono text-12 uppercase tracking-wide text-brand-fg">{T.eyebrow}</p>
         <h1 className="font-mono text-28 font-semibold">{T.title}</h1>
         <p className="max-w-2xl text-14 text-muted">{T.lead}</p>
       </header>
-      <form role="search" onSubmit={(e) => e.preventDefault()} className="flex gap-2">
+      <form role="search" onSubmit={(e) => e.preventDefault()} className={`sticky z-10 -mx-1 flex gap-2 bg-page px-1 py-2 ${inCabinet ? "top-14" : "top-0"}`}
+      >
         <input
           type="search"
           value={f.q}
@@ -235,8 +241,8 @@ export default function Jobs() {
           </SheetContent>
         </Sheet>
       </form>
-      <div className="grid gap-5 lg:grid-cols-[260px_minmax(0,1fr)]">
-        <aside aria-label={T.filtersTitle} className="hidden content-start gap-3 lg:grid">
+      <div className="grid items-start gap-5 lg:grid-cols-[260px_minmax(0,1fr)]">
+        <aside aria-label={T.filtersTitle} className={`sticky hidden max-h-[calc(100dvh-8rem)] content-start gap-3 overflow-y-auto lg:grid ${inCabinet ? "top-[7rem]" : "top-[4.25rem]"}`}>
           <FilterFields f={f} set={set} />
           {active > 0 && (
             <Button type="button" variant="outline" onClick={reset}>
