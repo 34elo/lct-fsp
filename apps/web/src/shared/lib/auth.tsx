@@ -70,8 +70,12 @@ export function needsConsent(me: MeOut): boolean {
   return me.role !== "fsp_admin" && !me.consents.includes("pd_processing");
 }
 
-/** Куда вести вошедшего: на согласия, если их нет, иначе туда, откуда пришёл, или домой. */
+/** Вход временным паролем HR (E41-16): до смены пароля другие экраны закрыты. */
+export const PASSWORD_SETUP_PATH = "/password/new";
+
+/** Куда вести вошедшего: сменить временный пароль, на согласия, туда, откуда пришёл, или домой. */
 export function postAuthPath(me: MeOut, from?: string): string {
+  if (me.must_change_password) return PASSWORD_SETUP_PATH;
   if (needsConsent(me)) return "/consents";
   return from ?? HOME_BY_ROLE[me.role as Role] ?? "/";
 }

@@ -15,6 +15,7 @@ import { useGetTaxonomyTaxonomyGet } from "@/api/endpoints/taxonomy/taxonomy";
 import type { ProfessionOut } from "@/api/model";
 import { fieldClass } from "@/features/auth/ui";
 import { buildWeights, nextId, problemText, professionErrors, weightRows, type WeightRow } from "./model";
+import { ProfessionSuggestions } from "./Suggestions";
 import { T } from "./text";
 
 const sel = (s: string) => `admin-prof-${s}`;
@@ -161,6 +162,7 @@ export function ProfessionsTab() {
 
   return (
     <div className="flex flex-col gap-4" data-testid={sel("tab")}>
+      <ProfessionSuggestions onDone={(msg) => { setEditing(null); setNotice(msg); }} />
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-18 font-semibold">
           <Gloss k="category">{T.prof.listTitle}</Gloss>

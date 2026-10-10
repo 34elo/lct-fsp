@@ -20,7 +20,7 @@ from app.consents.deps import require_consent
 from app.deps import get_limiter, get_redis, get_session
 from app.fsp import service
 from app.fsp.client import ConnectorClient
-from app.identity.deps import _bearer, get_current_user, require_roles
+from app.identity.deps import _bearer, get_current_user, get_user_pending_password, require_roles
 from app.identity.models import User
 from app.matching import card
 from app.openapi_errors import problem_responses
@@ -78,7 +78,7 @@ async def fsp_start(
         if redirect:
             return RedirectResponse("/login?fsp=need_login", status_code=302)
         raise ProblemError(401, "unauthorized", "Войдите, чтобы привязать ФСП")
-    user = await get_current_user(request, session)
+    user = await get_current_user(await get_user_pending_password(request, session))
     if user.role != "candidate":
         raise ProblemError(403, "forbidden", "Недостаточно прав")
     await _ensure_candidate(request, session, user)

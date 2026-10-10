@@ -439,3 +439,20 @@ async def test_seed_families_idempotent(factory):
     async with session_scope(factory) as s:
         n = await s.scalar(select(func.count()).select_from(FamilyRow))
     assert n == len(plan())
+
+
+async def test_seed_profession_suggestion_idempotent(factory):
+    """E41-17: одно демо-предложение «Разработчик 1С», не покрытое профессиями."""
+    from app.taxonomy import profession_suggest
+
+    from tools.seed.professions import seed_profession_suggestion
+
+    await _load_taxonomy(factory)
+    assert await seed_profession_suggestion(factory) == {"profession_suggestion": 1}
+    assert await seed_profession_suggestion(factory) == {"profession_suggestion": 1}
+    from fsp_platform.db import session_scope
+
+    async with session_scope(factory) as s:
+        (row,) = await profession_suggest.list_open(s)
+    assert row.title == "Разработчик 1С" and row.source == "seed"
+    assert row.nearest_overlap <= profession_suggest.MAX_OVERLAP

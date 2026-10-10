@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, Request, Response, UploadFile
@@ -231,6 +231,11 @@ class CompanyMemberOut(BaseModel):
     position: str | None = None
     avatar_url: str | None = None
     is_me: bool = False
+    # E41-16 (только владельцу): аккаунт создан владельцем — ему можно выдать новый пароль;
+    # HR ещё не сменил временный пароль и до какого времени тот действует
+    managed: bool = False
+    must_change_password: bool = False
+    temp_password_expires_at: datetime | None = None
 
 
 class InviteOut(BaseModel):
@@ -289,6 +294,9 @@ async def my_team(user: User = Depends(_employer), session: AsyncSession = Depen
                 user_id=m.user_id, role=CompanyMemberRole(m.role), email=m.email,
                 full_name=m.full_name, position=m.position, avatar_url=m.avatar_url,
                 is_me=m.user_id == user.id,
+                managed=m.managed if owner else False,
+                must_change_password=m.must_change_password if owner else False,
+                temp_password_expires_at=m.temp_password_expires_at if owner else None,
             )
             for m in members
         ],
@@ -303,6 +311,7 @@ async def my_team(user: User = Depends(_employer), session: AsyncSession = Depen
     "/companies/me/invites",
     response_model=InviteCreated,
     status_code=201,
+    deprecated=True,  # E41-16: интерфейс выдаёт доступ HR через `/companies/me/hr`
     responses=problem_responses(401, 403, 404, 409, 422, 429),
 )
 async def create_invite(
@@ -357,9 +366,109 @@ async def remove_member(
     user: User = Depends(_employer),
     session: AsyncSession = Depends(get_session),
 ):
+    """Отозвать доступ HR: убрать из команды, закрыть сессии; аккаунт от владельца выключается."""
     company, _ = await service.require_company(session, user.id, admin=True)
-    await service.remove_member(session, company.id, user_id)
+    await service.remove_member(session, company.id, user_id, user)
     return Response(status_code=204)
+
+
+# --- E41-16: доступ HR без почты — карточка доступа с временным паролем ---
+
+HR_ACCESS_LIMIT = 20  # создание и сброс пароля HR: в час на компанию
+
+
+class HrIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    email: str = Field(min_length=3, max_length=254, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+    full_name: str = Field(min_length=2, max_length=120)
+
+
+class HrAccessCard(BaseModel):
+    """Показывается владельцу один раз: временный пароль в БД — только хешем."""
+
+    user_id: UUID
+    email: str
+    full_name: str | None
+    login_url: str  # `WEB_BASE_URL` + `/login`
+    temp_password: str
+    expires_at: datetime
+
+
+class AccessLogEntry(BaseModel):
+    id: UUID
+    action: Literal["created", "password_reset", "revoked"]
+    created_at: datetime
+    actor_name: str | None
+    target_email: str | None
+    target_name: str | None
+
+
+def _card(request: Request, access: service.HrAccess) -> HrAccessCard:
+    base = request.app.state.settings.web_base_url.rstrip("/")
+    return HrAccessCard(
+        user_id=access.user.id,
+        email=access.user.email or "",
+        full_name=access.full_name,
+        login_url=f"{base}/login",
+        temp_password=access.temp_password,
+        expires_at=access.expires_at,
+    )
+
+
+_NO_STORE = {"Cache-Control": "no-store"}
+
+
+@router.post(
+    "/companies/me/hr",
+    response_model=HrAccessCard,
+    status_code=201,
+    responses=problem_responses(401, 403, 404, 409, 422, 429),
+)
+async def create_hr(
+    body: HrIn,
+    request: Request,
+    response: Response,
+    user: User = Depends(_employer),
+    session: AsyncSession = Depends(get_session),
+):
+    """Владелец создаёт аккаунт HR сразу; логин и временный пароль (72 ч) — в ответе один раз."""
+    company, _ = await service.require_company(session, user.id, admin=True)
+    await request.app.state.limiter.check(f"company_hr:{company.id}", HR_ACCESS_LIMIT, 3600)
+    access = await service.create_hr(session, company, user, body.email, body.full_name)
+    response.headers.update(_NO_STORE)
+    return _card(request, access)
+
+
+@router.post(
+    "/companies/me/members/{user_id}/password",
+    response_model=HrAccessCard,
+    responses=problem_responses(401, 403, 404, 409, 429),
+)
+async def reset_hr_password(
+    user_id: UUID,
+    request: Request,
+    response: Response,
+    user: User = Depends(_employer),
+    session: AsyncSession = Depends(get_session),
+):
+    """Выдать HR новый временный пароль: прежний и все сессии HR сразу недействительны."""
+    company, _ = await service.require_company(session, user.id, admin=True)
+    await request.app.state.limiter.check(f"company_hr:{company.id}", HR_ACCESS_LIMIT, 3600)
+    access = await service.reset_hr_password(session, company, user, user_id)
+    response.headers.update(_NO_STORE)
+    return _card(request, access)
+
+
+@router.get(
+    "/companies/me/access-log",
+    response_model=list[AccessLogEntry],
+    responses=problem_responses(401, 403, 404),
+)
+async def access_log(user: User = Depends(_employer), session: AsyncSession = Depends(get_session)):
+    """Журнал доступа HR (кто, кого, когда) — только владельцу, последние 50 записей."""
+    company, _ = await service.require_company(session, user.id, admin=True)
+    return [AccessLogEntry(**vars(e)) for e in await service.access_log(session, company.id)]
 
 
 @invites_router.get("/{token}", response_model=InvitePreview, responses=problem_responses(404))

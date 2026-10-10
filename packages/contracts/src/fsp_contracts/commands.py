@@ -169,6 +169,7 @@ COMMANDS: dict[str, CommandSpec] = {
             "cleanup",
             "recompute_all",
             "candidate.delete",
+            "taxonomy.professions.suggest",  # E41-17: раз в неделю, предложения новых профессий
         )
     },
 }
