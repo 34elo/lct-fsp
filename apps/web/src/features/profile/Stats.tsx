@@ -13,7 +13,7 @@ import type { AttemptOut, CandidateStanding, InterestsSummary } from "@/api/mode
 import { GRADE } from "@/features/assessment/text";
 import { FspCard } from "./Home";
 import { dayMonth, nextStep } from "./home-model";
-import { finishedAttempts, parseViews, scatter, viewsSeries, type ViewsStats } from "./stats-model";
+import { NO_VIEWS, finishedAttempts, parseViews, scatter, viewsSeries, type ViewsStats } from "./stats-model";
 import { HOME, STATS, roleLabel } from "./text";
 
 const PENDING = new Set(["interest", "interest_opened"]);
@@ -120,7 +120,9 @@ function ViewsCard({ views }: { views: ViewsStats }) {
     <Panel className="flex flex-col gap-2.5" data-testid="stats-views" aria-label={STATS.heatmap}>
       <PanelCap title={STATS.heatmap} className="mb-0" />
       <ActivityHeatmap values={series} cell={14} label={STATS.heatmapLabel(views.total)} />
-      <Num className="text-12">{STATS.heatmapCaption(views.companies)}</Num>
+      <Num className="text-12" data-testid="stats-views-caption">
+        {views.total > 0 ? STATS.heatmapCaption(views.companies) : views.visible ? STATS.heatmapEmpty : STATS.heatmapHidden}
+      </Num>
     </Panel>
   );
 }
@@ -175,8 +177,8 @@ export default function Stats() {
   const pq = useGetProfileCandidatesMeProfileGet();
   const sq = useMyStandingCandidatesMeStandingGet({ query: { refetchOnMount: "always", retry: false } });
   const hq = useHistoryAssessmentHistoryGet({ query: { retry: false } });
-  const vq = useMyViewsCandidatesMeViewsGet({ query: { retry: false } });
-  const iq = useMyInterestsCandidatesMeInterestsGet({ query: { retry: false } });
+  const vq = useMyViewsCandidatesMeViewsGet({ query: { retry: false, refetchOnMount: "always" } });
+  const iq = useMyInterestsCandidatesMeInterestsGet({ query: { retry: false, refetchOnMount: "always" } });
   const nq = useMyNavigatorCandidatesMeNavigatorGet({ query: { retry: false } });
   const tq = useGetProfessionsTaxonomyProfessionsGet();
 
@@ -255,7 +257,7 @@ export default function Stats() {
       <PartsCard standing={standing} />
       <div className="flex flex-col gap-4 lg:grid lg:grid-cols-12 lg:items-start">
         <div className="flex flex-col gap-4 lg:col-span-7">
-          {views && <ViewsCard views={views} />}
+          <ViewsCard views={views ?? NO_VIEWS} />
         </div>
         <div className="flex flex-col gap-4 lg:col-span-5">
           <FspCard p={p} className="" testId="stats-fsp" />
