@@ -126,10 +126,25 @@ def parser_version(model: str) -> str:
     return f"resume-{PROMPT_VERSION}:{model}"
 
 
+def _require_all(node: object) -> None:
+    """Все поля объектов схемы — обязательные: иначе строгая грамматика llama.cpp позволяет модели
+    пропустить `person`, `experience`, `skills` и вернуть почти пустой ответ (E43-8)."""
+    if isinstance(node, dict):
+        props = node.get("properties")
+        if isinstance(props, dict):
+            node["required"] = list(props)
+        for v in node.values():
+            _require_all(v)
+    elif isinstance(node, list):
+        for v in node:
+            _require_all(v)
+
+
 async def extract_llm(llm: LlmClient, text: str) -> LlmResume:
     """Одна генерация по схеме; при невалидном ответе — один повтор с ошибкой (ml.md §1.3)."""
     messages = build_messages(text)
     schema = LlmResume.model_json_schema()
+    _require_all(schema)
     last_error = ""
     for attempt in range(2):
         data = await llm.complete_json(messages, schema, schema_name="resume", temperature=0.1)
