@@ -297,13 +297,7 @@ export function RankedCandidateCard({
           </StatusTag>
         )}
       </div>
-      <div className="flex min-w-0 flex-col gap-2.5">
-        {(c.salary || c.place) && (
-          <div className="flex flex-col gap-0.5">
-            {c.salary && <span className="num text-xl leading-[1.1]">{c.salary}</span>}
-            {c.place && <span className="text-12 text-muted">{c.place}</span>}
-          </div>
-        )}
+      <div className="flex min-w-0 flex-col gap-2.5 overflow-hidden">
         {c.skills.length > 0 && (
           <Chips>
             {c.skills.map((s) => (
@@ -312,6 +306,12 @@ export function RankedCandidateCard({
           </Chips>
         )}
         {c.fsp && <CheckItem>{c.fsp}</CheckItem>}
+        {(c.salary || c.place) && (
+          <div className="flex flex-col gap-0.5">
+            {c.salary && <span className="num text-xl leading-[1.1]">{c.salary}</span>}
+            {c.place && <span className="text-12 text-muted">{c.place}</span>}
+          </div>
+        )}
       </div>
       <div className="flex min-w-0 flex-col gap-1.5">
         {c.reasons.map((r) => (
