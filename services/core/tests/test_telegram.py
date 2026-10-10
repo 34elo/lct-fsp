@@ -268,3 +268,42 @@ def test_me_telegram_link_requires_auth_and_bot_name(ctx):
     h, _ = reg(c)
     c.app.state.settings.tg_bot_username = ""
     assert c.post("/me/telegram/link", headers=h).status_code == 503
+
+
+def test_link_without_prior_start_creates_account_and_status(ctx):
+    """E43-7: бот не вызывает /start — привязка сама создаёт запись Telegram."""
+    c, engine = ctx
+    h, site_id = reg(c)
+    assert c.get("/internal/tg/linked", params={"tg_user_id": 777}, headers=SVC).json() == {
+        "linked": False
+    }
+    t = c.post("/me/telegram/link", headers=h).json()["deep_link"].split("start=link_")[1]
+    r = c.post(
+        "/internal/tg/link",
+        json={"tg_user_id": 777, "token": t, "chat_id": 555, "username": "ann"},
+        headers=SVC,
+    )
+    assert r.status_code == 200 and r.json()["user_id"] == site_id
+    assert c.get("/internal/tg/linked", params={"tg_user_id": 777}, headers=SVC).json() == {
+        "linked": True
+    }
+    assert c.get("/me", headers=h).json()["telegram_linked"] is True
+    with Session(engine) as s:
+        acc = s.scalar(select(TelegramAccount))
+        assert acc.chat_id == 555 and acc.username == "ann"
+    # другой Telegram к аккаунту, у которого Telegram уже есть
+    t2 = c.post("/me/telegram/link", headers=h).json()["deep_link"].split("start=link_")[1]
+    r = c.post("/internal/tg/link", json={"tg_user_id": 888, "token": t2}, headers=SVC)
+    assert r.status_code == 409 and r.json()["code"] == "telegram_already_linked"
+    assert (
+        c.get("/internal/tg/linked", params={"tg_user_id": 1}, headers=SVC).json()["linked"]
+        is False
+    )
+    assert c.get("/internal/tg/linked", params={"tg_user_id": 1}).status_code == 401
+
+
+def test_status_of_bot_stub_is_not_linked(ctx):
+    c, _ = ctx
+    start(c)  # заготовка старого /start: без email и пароля
+    r = c.get("/internal/tg/linked", params={"tg_user_id": 777}, headers=SVC)
+    assert r.json() == {"linked": False}

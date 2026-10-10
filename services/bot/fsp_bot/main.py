@@ -66,7 +66,7 @@ async def main() -> None:
     broker = make_broker(settings.rabbitmq_url)
     build_consumer(sender).attach(broker)
     dp = Dispatcher(storage=storage)
-    dp.include_router(build_router(core))
+    dp.include_router(build_router(core, web_base_url=settings.web_base_url))
     await broker.connect()
     await declare_topology(broker)
     await broker.start()

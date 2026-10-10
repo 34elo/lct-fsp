@@ -1128,6 +1128,65 @@
         }
       }
     },
+    "/internal/tg/linked": {
+      "get": {
+        "tags": [
+          "internal"
+        ],
+        "summary": "Tg Linked",
+        "description": "Привязан ли Telegram к аккаунту сайта. Ничего не создаёт (E43-7: бот не регистрирует).",
+        "operationId": "tg_linked_internal_tg_linked_get",
+        "parameters": [
+          {
+            "name": "tg_user_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Tg User Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgLinkedOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/internal/auth/magic-link": {
       "post": {
         "tags": [
@@ -36133,6 +36192,19 @@
         ],
         "title": "TgFspVerifyIn"
       },
+      "TgLinkedOut": {
+        "properties": {
+          "linked": {
+            "type": "boolean",
+            "title": "Linked"
+          }
+        },
+        "type": "object",
+        "required": [
+          "linked"
+        ],
+        "title": "TgLinkedOut"
+      },
       "TgOfferOut": {
         "properties": {
           "offer_id": {
@@ -38413,6 +38485,29 @@
             "maxLength": 256,
             "minLength": 1,
             "title": "Token"
+          },
+          "chat_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chat Id"
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username"
           }
         },
         "type": "object",

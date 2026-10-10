@@ -78,6 +78,18 @@ async def account_of_user(session: AsyncSession, user_id: uuid.UUID) -> Telegram
     return await session.get(TelegramAccount, user_id)
 
 
+async def is_linked_tg(session: AsyncSession, tg_user_id: int) -> bool:
+    """Telegram привязан к аккаунту сайта (у пользователя есть email или пароль)."""
+    acc = await account_by_tg(session, tg_user_id)
+    user = await session.get(User, acc.user_id) if acc else None
+    return (
+        user is not None
+        and user.is_active
+        and user.deleted_at is None
+        and (user.email is not None or user.password_hash is not None)
+    )
+
+
 async def is_linked(session: AsyncSession, user_id: uuid.UUID) -> bool:
     return await account_of_user(session, user_id) is not None
 
@@ -199,9 +211,16 @@ async def create_link_deep_link(redis: Redis, bot_username: str, user_id: uuid.U
 
 
 async def link_by_token(
-    session: AsyncSession, redis: Redis, tg_user_id: int, token: str
+    session: AsyncSession,
+    redis: Redis,
+    tg_user_id: int,
+    token: str,
+    *,
+    chat_id: int | None = None,
+    username: str | None = None,
 ) -> TelegramAccount:
-    """Привязка Telegram к аккаунту с сайта. Заготовка бота (создана /start без email и пароля)
+    """Привязка Telegram к аккаунту с сайта. Бот сам аккаунты не создаёт (E43-7): нет записи
+    о `tg_user_id` — привязываем новую. Заготовка старого `/start` (без email и пароля)
     сливается в аккаунт сайта: согласия переносятся, заготовка деактивируется."""
     target_id = await _consume(redis, "tglink", token)
     if target_id is None:
@@ -209,7 +228,19 @@ async def link_by_token(
     target = await _active_user(session, target_id)
     acc = await account_by_tg(session, tg_user_id)
     if acc is None:
-        raise ProblemError(404, "telegram_unknown", "Сначала нажмите /start")
+        if await account_of_user(session, target.id) is not None:
+            raise ProblemError(
+                409, "telegram_already_linked", "К аккаунту уже привязан другой Telegram"
+            )
+        new = TelegramAccount(
+            user_id=target.id,
+            tg_user_id=tg_user_id,
+            chat_id=chat_id or tg_user_id,  # в личном чате chat_id = id пользователя
+            username=username,
+        )
+        session.add(new)
+        await session.flush()
+        return new
     if acc.user_id == target.id:
         return acc  # повтор безвреден
     if await account_of_user(session, target.id) is not None:

@@ -32,9 +32,9 @@ ACCOUNT_BUTTONS = (BTN_FSP, BTN_CATEGORY, BTN_STATUS, BTN_SETTINGS)
 
 CORE_DOWN = "Сервис временно недоступен, попробуй чуть позже."
 ERRORS = {
-    "telegram_unknown": "Сначала нажми /start.",
+    "telegram_unknown": "Telegram не привязан: зарегистрируйся на сайте и привяжи его в профиле.",
     "forbidden": "Это доступно кандидатам.",
-    "consent_required": "Сначала нужно согласие на обработку данных: /start",
+    "consent_required": "Нужно согласие на обработку данных: дай его в профиле на сайте.",
     "fsp_not_found": "Участник с такими данными в ФСП не найден.",
     "fsp_already_linked": "Этот участник ФСП уже привязан к другому аккаунту.",
     "candidate_already_linked": "К твоему аккаунту уже привязан другой участник ФСП.",
