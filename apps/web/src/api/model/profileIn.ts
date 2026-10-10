@@ -6,7 +6,6 @@
  */
 import type { ContactsIO } from './contactsIO';
 import type { ProfileInAgeGroup } from './profileInAgeGroup';
-import type { RoleSlug } from './roleSlug';
 import type { StackItem } from './stackItem';
 
 /**
@@ -17,7 +16,7 @@ export interface ProfileIn {
   full_name?: string | null;
   stack?: StackItem[] | null;
   experience_months?: number | null;
-  desired_roles?: RoleSlug[] | null;
+  desired_roles?: string[] | null;
   soft_skills?: string[] | null;
   age_group?: ProfileInAgeGroup;
   parent_consent?: boolean | null;

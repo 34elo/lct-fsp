@@ -162,7 +162,8 @@ async def test_list_professions(factory):
     async with session_scope(factory) as s:
         profs = {p.slug: p for p in await tax.list_professions(s)}
     # все профессии открыты (E39-6, отменяет скрытие E36-2)
-    assert set(profs) == {"backend", "frontend", "ai_engineer", "mobile", "ml", "devops", "qa"}
+    assert {"backend", "frontend", "ai_engineer", "mobile", "ml", "devops", "qa"} <= set(profs)
+    assert len(profs) == 15  # E41-6: профессией стали и остальные роли справочника
     async with session_scope(factory) as s:
         await s.execute(update(Role).where(Role.slug == "ml").values(is_active=False))
     async with session_scope(factory) as s:
@@ -198,7 +199,12 @@ async def test_professions_endpoint(factory, db_url):
     body = r.json()
     # все профессии открыты (E39-6); тонкий банк — «бета», у ядра MVP банк полный
     profs = {p["slug"]: p for p in body["professions"]}
-    assert set(profs) == {"ai_engineer", "backend", "devops", "frontend", "ml", "mobile", "qa"}
+    # E41-6: в выборе направления все профессии справочника, а не часть из них
+    import yaml
+
+    roles = yaml.safe_load((CORE.parents[1] / "data" / "taxonomy" / "roles.yaml").read_text("utf8"))
+    assert set(profs) == {r["slug"] for r in roles["roles"]}
+    assert {"fullstack", "data_engineer", "product", "designer"} <= set(profs)
     assert all(p["active"] for p in profs.values())
     assert not any(profs[s]["beta"] for s in ("backend", "frontend", "ai_engineer"))
     assert profs["mobile"]["beta"]

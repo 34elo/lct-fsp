@@ -5,7 +5,6 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export * from './acceptIn';
 export * from './activityCandidate';
 export * from './activityEvent';
 export * from './activityFeed';
