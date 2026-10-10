@@ -2,6 +2,7 @@
 
 На N сидах (по умолчанию 1000) для каждого кодового семейства (assessment.md §4):
 - генерация без ошибок, `kind` совпадает, публичная часть и ключ сериализуются в JSON;
+- блоки ```mermaid в условии и вариантах валидны (`mermaid.py`, E41-9);
 - ключ, пришедший как ответ через JSON, даёт балл 1;
 - ключ однозначен: варианты различны, неверные варианты ≠ ключу, порядок — перестановка;
 - ответ решателя = исполнению (`meta["exec"]`);
@@ -43,6 +44,7 @@ from fsp_contracts.assessment import SkillType, TestGrade
 from app.assessment.config import load_config
 from app.assessment.families import REGISTRY
 from app.assessment.families.base import SCORERS, Family, Item, Kind, score_exact
+from app.assessment.families.mermaid import check_text as check_mermaid
 from app.assessment.selection import GRADE_LEVEL
 from app.assessment.world import World
 
@@ -110,6 +112,7 @@ def check_item(fam: Family, item: Item) -> list[str]:
         errs.append("open не идёт в θ: кодовым семействам недоступен")
     if not item.stem.strip() or item.time_limit_s <= 0:
         errs.append("пустое условие или лимит времени")
+    errs += check_mermaid(chr(10).join([item.stem, *(item.options or [])]))
     try:
         json.dumps(item.public(), ensure_ascii=False)
         key = json.loads(json.dumps(item.key))
