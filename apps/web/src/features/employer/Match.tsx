@@ -11,7 +11,6 @@ import {
   ErrorState,
   FeedEvent,
   FeedList,
-  formatRub,
   H2,
   Lbl,
   ListRow,
@@ -26,7 +25,6 @@ import {
   Skeleton,
   SlidersHorizontal,
   StatusTag,
-  X,
 } from "@fsp/ui";
 
 import { useEmployerActivityEmployerActivityGet } from "@/api/endpoints/employer/employer";
@@ -61,66 +59,10 @@ import { EmployerOnboarding } from "./Onboarding";
 import { EMPTY_CRITERIA, criteriaKey, criteriaParams, filterCount, hasSubject, isEmpty, mergeFilters, parseCriteria, toNeedFilters, type Criteria } from "./query-model";
 import { TagQuery } from "./TagQuery";
 import { chipText } from "./search-model";
-import { FEED_TEXT, FIND_TEXT as F, FORMAT_LABEL, MATCH_TEXT as T } from "./text";
+import { FEED_TEXT, FIND_TEXT as F, MATCH_TEXT as T } from "./text";
 
 const PAGE_SIZE = 12;
 const FEED_LIMIT = 8;
-
-type Condition = { key: string; label: string; drop: Criteria };
-
-/** Включённые фильтры панели: подпись и как снять — для строки «Условия». */
-function conditions(c: Criteria): Condition[] {
-  const out: Condition[] = [];
-  if (c.grades.length) {
-    const first = GRADE_LABEL[c.grades[0]!] ?? c.grades[0]!;
-    const last = GRADE_LABEL[c.grades[c.grades.length - 1]!] ?? "";
-    out.push({ key: "grade", label: c.grades.length > 1 ? `${first}–${last}` : first, drop: { ...c, grades: [] } });
-  }
-  if (c.confirmed) out.push({ key: "confirmed", label: F.confirmed, drop: { ...c, confirmed: false } });
-  if (c.trust !== null) out.push({ key: "trust", label: `${F.trust} ${"●".repeat(c.trust)}${"○".repeat(4 - c.trust)}`, drop: { ...c, trust: null } });
-  if (c.fsp) out.push({ key: "fsp", label: F.fspOnly, drop: { ...c, fsp: false } });
-  for (const city of c.cities) out.push({ key: `city:${city}`, label: city, drop: { ...c, cities: c.cities.filter((x) => x !== city) } });
-  if (c.relocation) out.push({ key: "reloc", label: F.relocation, drop: { ...c, relocation: false } });
-  if (c.salaryFrom !== null || c.salaryTo !== null) {
-    const label = [c.salaryFrom !== null ? `от ${formatRub(c.salaryFrom)}` : null, c.salaryTo !== null ? `до ${formatRub(c.salaryTo)}` : null].filter(Boolean).join(" ");
-    out.push({ key: "salary", label, drop: { ...c, salaryFrom: null, salaryTo: null } });
-  }
-  for (const f of c.formats) out.push({ key: `format:${f}`, label: FORMAT_LABEL[f] ?? f, drop: { ...c, formats: c.formats.filter((x) => x !== f) } });
-  return out;
-}
-
-/** «Условия»: включённые фильтры чипсами с крестиком и «Сбросить всё» (навыки и профессия остаются). */
-function Conditions({ c, onChange }: { c: Criteria; onChange: (next: Criteria) => void }) {
-  const items = conditions(c);
-  if (items.length === 0) return null;
-  return (
-    <div className="flex flex-wrap items-center gap-2" data-testid="match-chips">
-      <Lbl className="mr-1">{F.active}</Lbl>
-      <ul aria-label={F.active} className="m-0 flex min-w-0 list-none flex-wrap gap-2 p-0">
-        {items.map((x) => (
-          <li key={x.key} className="inline-flex h-7 max-w-full items-center gap-1 rounded-md border border-tint-200 bg-tint-50 pl-2 pr-0.5 font-mono text-12 font-medium text-chip-fg">
-            <span className="truncate">{x.label}</span>
-            <button
-              type="button"
-              onClick={() => onChange(x.drop)}
-              aria-label={`Убрать условие «${x.label}»`}
-              className="inline-flex size-6 items-center justify-center rounded-sm text-muted hover:bg-tint-100 hover:text-ink focus-visible:outline-2 focus-visible:outline-brand"
-            >
-              <X aria-hidden className="size-3.5" />
-            </button>
-          </li>
-        ))}
-      </ul>
-      <button
-        type="button"
-        onClick={() => onChange({ ...EMPTY_CRITERIA, skills: c.skills, profession: c.profession })}
-        className="min-h-8 rounded-md px-1 text-13 font-medium text-brand-fg hover:underline focus-visible:outline-2 focus-visible:outline-brand"
-      >
-        {F.resetAll}
-      </button>
-    </div>
-  );
-}
 
 /** Плитка категории (E41-11): профессия, грейд, вилка, совпадение, 3 навыка; подробности — «Почему эти категории». */
 function CategoryTile({ c, on, onSelect }: { c: NeedCategory; on: boolean; onSelect: () => void }) {
@@ -463,8 +405,9 @@ function Match({ hasCompany, companyId, onSetup }: { hasCompany: boolean; compan
   const key = criteriaKey(criteria);
   const needId = params.get("need");
   const subject = hasSubject(criteria);
-  const view: "categories" | "candidates" = params.get("view") === "candidates" ? "candidates" : "categories";
-  const viewExtra = view === "candidates" ? { view } : {};
+  // По умолчанию — «Кандидаты» (E43-2); категории — по `view=categories`.
+  const view: "categories" | "candidates" = params.get("view") === "categories" ? "categories" : "candidates";
+  const viewExtra = view === "categories" ? { view } : {};
 
   const [labels, setLabels] = useState<Record<string, string>>({});
   const { nameOf, suggest } = useSkillSource(criteria.profession ?? undefined);
@@ -485,7 +428,7 @@ function Match({ hasCompany, companyId, onSetup }: { hasCompany: boolean; compan
   const setView = (v: string) => {
     const next = new URLSearchParams(params);
     next.delete("cat");
-    if (v === "candidates") next.set("view", v);
+    if (v === "categories") next.set("view", v);
     else next.delete("view");
     setParams(next);
   };
@@ -497,7 +440,11 @@ function Match({ hasCompany, companyId, onSetup }: { hasCompany: boolean; compan
   );
 
   /** Новые условия — новая ссылка: потребность и выбранная категория сбрасываются. */
-  const update = useCallback((next: Criteria) => setParams(criteriaParams(next, viewExtra)), [setParams, view]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Вид («Категории»/«Кандидаты») берём из текущей ссылки, а не из замыкания: фоновые правки не должны его сбрасывать.
+  const update = useCallback(
+    (next: Criteria) => setParams((prev) => criteriaParams(next, prev.get("view") === "categories" ? { view: "categories" } : {})),
+    [setParams],
+  );
 
   // Вход без условий: восстанавливаем последний запрос этого браузера (или условия запроса из `?need=`).
   const restored = useRef(false);
@@ -509,7 +456,7 @@ function Match({ hasCompany, companyId, onSetup }: { hasCompany: boolean; compan
     if (!last || (needId && needId !== last.id)) return;
     const next = new URLSearchParams(last.qs ?? "");
     next.set("need", last.id);
-    if (view === "candidates") next.set("view", view);
+    if (view === "categories") next.set("view", view);
     const cat = params.get("cat");
     if (cat) next.set("cat", cat);
     setParams(next, { replace: true });
@@ -540,7 +487,7 @@ function Match({ hasCompany, companyId, onSetup }: { hasCompany: boolean; compan
               (prev) => {
                 const cur = parseCriteria(prev);
                 if (criteriaKey(cur) !== key || prev.get("need")) return prev;
-                return criteriaParams(cur, { need: id, ...viewExtra });
+                return criteriaParams(cur, { need: id, view: prev.get("view") === "categories" ? "categories" : null });
               },
               { replace: true },
             );
@@ -685,7 +632,6 @@ function Match({ hasCompany, companyId, onSetup }: { hasCompany: boolean; compan
               </Sheet>
             </div>
           )}
-          {hasCompany && <Conditions c={criteria} onChange={update} />}
           {center}
         </div>
         <div className="flex min-w-0 flex-col gap-4 lg:col-start-2 xl:col-start-auto">
