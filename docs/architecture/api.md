@@ -38,7 +38,7 @@
 | `GET /auth/fsp/start` | P/C | Редирект на OAuth ФСП (мок). Для вошедшего кандидата это привязка, иначе вход |
 | `GET /auth/fsp/callback` | P/C | Обмен кода → `fsp_links` → `fsp_sync` |
 | `POST /auth/password/change` | U | E39-8. `{current_password, new_password(8..128)}` → 204. Неверный текущий или нет пароля (вход через Telegram) → 403 `wrong_password`; короткий новый → 422; 5 в час (429). Все остальные сессии (refresh-семьи) закрываются, текущая остаётся |
-| `POST /auth/password/initial` | U | E41-16. Первая смена временного пароля HR: `{new_password(8..128)}` → 204, без текущего пароля. Не требуется — 409 `password_change_not_required`; срок вышел — 403 `temp_password_expired`; совпадает с временным — 422 `same_password`; 5 в час (429). Сессии остаются |
+| `POST /auth/password/initial` | U | E41-16. Первая смена временного пароля HR: `{new_password(8..128)}` → 204, без текущего пароля. Не требуется — 409 `password_change_not_required`; срок вышел — 403 `temp_password_expired`; совпадает с временным — 422 `same_password`; 5 в час (429). Сессии остаются; смена фиксируется в БД до отправки ответа (E43-3) |
 | `GET /me` | любая | `{user, role, candidate?, company?, consents, telegram_linked}` |
 | `GET /me/consents`, `PUT /me/consents` | любая | Список и выдача/отзыв согласий |
 | `POST /me/credentials` | кандидат | Выпустить Open Badge `{profession?}` на действующую категорию. `201 {id, profession, grade, url, issued_at, valid_until, revoked_at, credential}`; тот же грейд повторно — тот же бейдж, новый грейд — старый отзывается (`superseded`). `404 grade_not_found`, `409 publication_required` (нет `public_profile` или согласия `profile_publication`) |

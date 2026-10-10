@@ -236,3 +236,83 @@ def test_rate_limit(c):
         _create_hr(c, owner, f"hr{i}@x.io")
     r = c.post("/companies/me/hr", json={"email": "z@x.io", "full_name": "Зоя"}, headers=owner)
     assert r.status_code == 429
+
+
+def test_e43_3_full_flow_temp_change_login_refresh(c):
+    """E43-3: временный пароль → смена → вход новым 200, старым 401; refresh работает."""
+    owner = _owner(c)
+    temp = _create_hr(c, owner, "hr3@x.io")["temp_password"]
+    r = _login(c, "hr3@x.io", temp)
+    assert r.status_code == 200
+    hr = _h(r.json()["access_token"])
+    rt = r.cookies.get("rt")
+    assert (
+        c.post(
+            "/auth/password/initial", json={"new_password": "brand-new-pass"}, headers=hr
+        ).status_code
+        == 204
+    )
+    # та же сессия: флаг снят, refresh отдаёт пользователя без must_change_password
+    assert c.get("/me", headers=hr).json()["must_change_password"] is False
+    c.cookies.clear()
+    c.cookies.set("rt", rt)
+    r = c.post("/auth/refresh")
+    assert r.status_code == 200 and r.json()["user"]["must_change_password"] is False
+    # вход новым паролем (в любом регистре email) — 200 и сразу без флага; временным — 401
+    r = _login(c, "HR3@x.io", "brand-new-pass")
+    assert r.status_code == 200 and r.json()["user"]["must_change_password"] is False
+    assert c.get("/companies/me", headers=_h(r.json()["access_token"])).status_code == 200
+    r = _login(c, "hr3@x.io", temp)
+    assert r.status_code == 401 and r.json()["code"] == "invalid_credentials"
+
+
+def test_e43_3_initial_password_committed_before_response(c):
+    """Смена пароля попадает в БД до отправки 204: клиент сразу читает /me и входит новым."""
+    owner = _owner(c)
+    temp = _create_hr(c, owner, "hr4@x.io")["temp_password"]
+    hr = _h(_login(c, "hr4@x.io", temp).json()["access_token"])
+    seen: list[int] = []
+
+    async def drive():
+        body = b'{"new_password": "brand-new-pass"}'
+        headers = [
+            (b"content-type", b"application/json"),
+            (b"content-length", str(len(body)).encode()),
+            (b"authorization", hr["Authorization"].encode()),
+            (b"host", b"testserver"),
+        ]
+        scope = {
+            "type": "http",
+            "asgi": {"version": "3.0"},
+            "http_version": "1.1",
+            "method": "POST",
+            "scheme": "http",
+            "path": "/auth/password/initial",
+            "raw_path": b"/auth/password/initial",
+            "query_string": b"",
+            "headers": headers,
+            "client": ("127.0.0.1", 1),
+            "server": ("testserver", 80),
+            "root_path": "",
+        }
+        sent = False
+
+        async def receive():
+            nonlocal sent
+            if sent:
+                return {"type": "http.disconnect"}
+            sent = True
+            return {"type": "http.request", "body": body, "more_body": False}
+
+        async def send(msg):
+            if msg["type"] == "http.response.start":
+                # в этот момент клиент уже мог бы получить ответ: смотрим состояние БД
+                seen.append(
+                    _db(c, "select must_change_password from users where email='hr4@x.io'")[0][0]
+                )
+                seen.append(msg["status"])
+
+        await c.app(scope, receive, send)
+
+    c.portal.call(drive)
+    assert seen == [0, 204]
