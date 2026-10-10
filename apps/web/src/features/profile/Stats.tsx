@@ -1,6 +1,6 @@
 import { PAGE } from "@/shared/lib/page";
 import { Gi, Gloss } from "@/shared/Gloss";
-import { ActivityHeatmap, buttonVariants, Chips, cn, ConstellationAvatar, EmptyState, ErrorState, formatRub, formatRubRangeShort, GradeTag, H1, H2, Lbl, MetricTile, Num, Panel, PanelCap, ScatterPlot, Skeleton, SkillTag, StatusTag } from "@fsp/ui";
+import { ActivityHeatmap, buttonVariants, cn, EmptyState, ErrorState, formatRubRangeShort, GradeTag, H1, H2, Lbl, MetricTile, Num, Panel, PanelCap, ScatterPlot, Skeleton, StatusTag } from "@fsp/ui";
 import { useMemo, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 
@@ -9,11 +9,10 @@ import { useGetProfileCandidatesMeProfileGet, useMyViewsCandidatesMeViewsGet } f
 import { useMyInterestsCandidatesMeInterestsGet } from "@/api/endpoints/offers/offers";
 import { useMyNavigatorCandidatesMeNavigatorGet, useMyStandingCandidatesMeStandingGet } from "@/api/endpoints/search/search";
 import { useGetProfessionsTaxonomyProfessionsGet } from "@/api/endpoints/taxonomy/taxonomy";
-import type { AttemptOut, CandidateProfile, CandidateStanding, InterestsSummary } from "@/api/model";
+import type { AttemptOut, CandidateStanding, InterestsSummary } from "@/api/model";
 import { GRADE } from "@/features/assessment/text";
-import { displayPseudonym } from "@/shared/lib/pseudonym";
 import { FspCard } from "./Home";
-import { dayMonth, nextStep, sortSkills } from "./home-model";
+import { dayMonth, nextStep } from "./home-model";
 import { finishedAttempts, parseViews, scatter, viewsSeries, type ViewsStats } from "./stats-model";
 import { HOME, STATS, roleLabel } from "./text";
 
@@ -102,7 +101,7 @@ function CategoryCard({ standing }: { standing: CandidateStanding }) {
   return (
     <section className="flex flex-col gap-2.5" data-testid="stats-category" aria-label={STATS.catTitle}>
       <H2>{STATS.catTitle}</H2>
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 lg:gap-4">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 lg:grid-cols-1 lg:gap-4">
         <MetricTile label={STATS.catCandidates} info={<Gi k="peers" />} value={c.candidates} />
         <MetricTile
           label={STATS.catForks}
@@ -122,43 +121,6 @@ function ViewsCard({ views }: { views: ViewsStats }) {
       <PanelCap title={STATS.heatmap} className="mb-0" />
       <ActivityHeatmap values={series} cell={14} label={STATS.heatmapLabel(views.total)} />
       <Num className="text-12">{STATS.heatmapCaption(views.companies)}</Num>
-    </Panel>
-  );
-}
-
-/** Превью анонимной карточки: что видит работодатель до принятия приглашения. */
-function SeenAs({ p, standing, prof }: { p: CandidateProfile; standing: CandidateStanding; prof: string }) {
-  const skills = sortSkills(p.skills ?? []).slice(0, 3);
-  const top = skills.find((s) => !s.claimed_only)?.skill.name;
-  return (
-    <Panel className="flex flex-col gap-2.5" data-testid="stats-seen-as" aria-label={STATS.seenAs}>
-      <PanelCap title={STATS.seenAs} className="mb-0" />
-      <div className="flex items-center gap-3">
-        <span className="grid size-11 flex-none place-items-center overflow-hidden rounded-lg border border-tint-200 bg-tint-50">
-          <ConstellationAvatar seed={p.pseudonym} size={36} />
-        </span>
-        <div className="flex min-w-0 flex-col items-start gap-1">
-          <span className="break-words font-mono text-14 font-semibold">{displayPseudonym(p.pseudonym, prof)}</span>
-          {p.fsp?.verified && <StatusTag>{STATS.fspConfirmed}</StatusTag>}
-        </div>
-      </div>
-      {standing.grade && (
-        <Chips>
-          <GradeTag>{[gradeLabel(standing.grade), prof, top].filter(Boolean).join(" · ")}</GradeTag>
-        </Chips>
-      )}
-      {skills.length > 0 && (
-        <Chips>
-          {skills.map((s) => (
-            <SkillTag key={s.skill.slug} name={s.skill.name} level={s.claimed_only ? 0 : Math.round(s.level)} state={s.claimed_only ? "claimed" : "confirmed"} />
-          ))}
-        </Chips>
-      )}
-      {p.preferences.salary_min != null && (
-        <p className="text-13 text-muted">
-          {HOME.expectations} <Num className="text-ink">{HOME.salaryFrom(formatRub(p.preferences.salary_min))}</Num>
-        </p>
-      )}
     </Panel>
   );
 }
@@ -206,7 +168,7 @@ function StatsSkeleton() {
 
 /**
  * Статистика кандидата `/me/stats` (E38-2, макеты v2_me-stats__*, бриф §6.1): плитки «Сила», «Место», «Интересы», «Смотрели»;
- * «Где ты среди своих» и просмотры профиля слева, «Как тебя видят», ФСП и история тестов справа.
+ * «Где ты среди своих» (2/3) и «Твоя категория в цифрах» рядом; просмотры профиля слева, ФСП и история тестов справа.
  * Без действующего грейда — пустое состояние с одной кнопкой «Пройти тест».
  */
 export default function Stats() {
@@ -284,15 +246,18 @@ export default function Stats() {
   return page(
     <div className="flex flex-col gap-4" data-testid="stats-main">
       <Tiles standing={standing} interests={interests} views={views} />
-      <PeersCard standing={standing} category={[prof, gradeLabel(standing.grade)].filter(Boolean).join(" ")} />
-      <CategoryCard standing={standing} />
+      <div className="flex flex-col gap-4 lg:grid lg:grid-cols-3 lg:items-start">
+        <div className="lg:col-span-2">
+          <PeersCard standing={standing} category={[prof, gradeLabel(standing.grade)].filter(Boolean).join(" ")} />
+        </div>
+        <CategoryCard standing={standing} />
+      </div>
       <PartsCard standing={standing} />
       <div className="flex flex-col gap-4 lg:grid lg:grid-cols-12 lg:items-start">
         <div className="flex flex-col gap-4 lg:col-span-7">
           {views && <ViewsCard views={views} />}
         </div>
         <div className="flex flex-col gap-4 lg:col-span-5">
-          <SeenAs p={p} standing={standing} prof={prof} />
           <FspCard p={p} className="" testId="stats-fsp" />
           <HistoryCard attempts={attempts} profTitle={profTitle} />
         </div>
