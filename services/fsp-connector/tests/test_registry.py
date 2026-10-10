@@ -310,3 +310,133 @@ def test_api_requires_service_token_and_works(client):
     rej = c.post(f"/internal/registry/requests/{uuid4()}/reject", json={"reason": "нет"}, headers=H)
     assert rej.status_code == 404
     assert c.delete(f"/internal/registry/results/{res.json()['id']}", headers=H).status_code == 204
+
+
+# ------------------------------------------------------------------ E43-4: результаты списком
+def _results_file() -> str:
+    """50 строк данных: 47 годных (в т.ч. 2 новых мероприятия) и 3 с ошибками."""
+    rows = ["участник;мероприятие;дата;результат"]
+    for i in range(47):
+        rows.append(
+            f"p{i}@x.ru;"
+            + ("Кубок Весны;2026-04-01" if i % 2 else "Кубок Осени;01.10.2026")
+            + f";{i + 1}"
+        )
+    rows.append("нет-такого@x.ru;Кубок Весны;2026-04-01;1")  # участник не найден
+    rows.append("p1@x.ru;Кубок Весны;31.31.2026;1")  # формат даты
+    rows.append("p2@x.ru;Кубок Весны;2026-04-01;первое")  # результат
+    return "\n".join(rows)
+
+
+async def _seed_p(factory, n=47):
+    await upsert_demo(
+        factory,
+        events=[],
+        participants=[
+            {"id": f"r-p{i}", "full_name": f"Тестов {i}", "email": f"p{i}@x.ru"} for i in range(n)
+        ],
+        results=[],
+    )
+
+
+async def test_results_import_preview_commit_and_repeat(env):
+    reg, factory, _ = env
+    await _seed_p(factory)
+    text = _results_file()
+    assert text.count("\n") == 50
+
+    prev = await reg.import_results(text, commit=False)
+    assert prev["summary"] == {
+        "total": 50,
+        "errors": 3,
+        "created": 47,
+        "updated": 0,
+        "unchanged": 0,
+    }
+    assert {ln["error"] for ln in prev["lines"] if ln["status"] == "error"} == {
+        "participant_not_found", "bad_date", "bad_result"
+    }  # fmt: skip
+    assert len(prev["new_events"]) == 2 and not any(e["confirmed"] for e in prev["new_events"])
+    assert await reg.list_results(None, None) == []  # превью ничего не пишет
+
+    with pytest.raises(Exception) as exc:
+        await reg.import_results(text, commit=True, skip_errors=False)
+    assert getattr(exc.value, "code", "") == "has_errors"
+
+    keys = [e["key"] for e in prev["new_events"]]
+    # без подтверждения новых мероприятий строки пропускаются
+    none = await reg.import_results(text, commit=True, skip_errors=True)
+    assert none["summary"]["created"] == 0
+    assert await reg.list_events() == []
+
+    done = await reg.import_results(text, commit=True, skip_errors=True, create_events=keys)
+    assert done["summary"]["created"] == 47 and done["summary"]["errors"] == 3
+    assert len(await reg.list_results(None, None)) == 47
+    assert len(await reg.list_events()) == 2
+
+    again = await reg.import_results(text, commit=True, skip_errors=True, create_events=keys)
+    assert again["summary"] == {
+        "total": 50,
+        "errors": 3,
+        "created": 0,
+        "updated": 0,
+        "unchanged": 47,
+    }
+    assert len(await reg.list_results(None, None)) == 47 and len(await reg.list_events()) == 2
+
+    changed = text.replace("p0@x.ru;Кубок Осени;01.10.2026;1", "p0@x.ru;Кубок Осени;01.10.2026;7")
+    upd = await reg.import_results(changed, commit=True, skip_errors=True)
+    assert upd["summary"]["updated"] == 1 and upd["summary"]["unchanged"] == 46
+
+
+async def test_results_import_recomputes_linked_profile_via_outbox(env):
+    reg, factory, _ = env
+    await _demo(factory)
+    cid = uuid4()
+    await reg.match(cid, ["jury-candidate@demo.fsp.test"], [])
+    before = len(await _events(factory, "fsp.results.imported"))
+    text = (
+        "участник;мероприятие;дата;результат\n"
+        "jury-candidate@demo.fsp.test;Новый Кубок;2026-07-01;3\n"
+    )
+    prev = await reg.import_results(text, commit=False)
+    assert len(await _events(factory, "fsp.results.imported")) == before  # dry-run без событий
+    await reg.import_results(text, commit=True, create_events=[prev["new_events"][0]["key"]])
+    imported = await _events(factory, "fsp.results.imported")
+    assert len(imported) == before + 1
+    assert len(imported[-1].payload["results"]) == 2
+    await reg.import_results(text, commit=True)  # повтор: ничего не изменилось — событий нет
+    assert len(await _events(factory, "fsp.results.imported")) == before + 1
+
+
+async def test_results_import_lookup_duplicates_and_limits(env):
+    reg, factory, _ = env
+    await _demo(factory)
+    text = (
+        "Жюри Кандидат;Кубок (вымышленный);01.05.2026;участие\n"  # без заголовка, ФИО, по дате
+        "r-ph;Кубок (вымышленный);;3 место\n"  # по ID, дата необязательна для известного
+        "r-ph;Кубок (вымышленный);2026-05-01;4\n"  # дубль в файле
+        "Волкова Анна;Неизвестный турнир;;1\n"  # новое мероприятие без даты
+        "Волкова Анна;Неизвестный турнир;2026-08-01;1\n"
+    )
+    out = await reg.import_results(text, commit=False, default_discipline="product")
+    st = [(ln["line"], ln["status"], ln["error"]) for ln in out["lines"]]
+    assert st == [
+        (1, "ok", None), (2, "ok", None), (3, "error", "duplicate"),
+        (4, "error", "no_date"), (5, "ok", None),
+    ]  # fmt: skip
+    assert out["new_events"][0]["discipline"] == "product" and out["new_events"][0]["rows"] == 1
+    # вставка из таблицы (TAB)
+    tabs = "участник\tмероприятие\tдата\tрезультат\nr-ph\tКубок (вымышленный)\t\t2\n"
+    assert (await reg.import_results(tabs, commit=False))["summary"]["created"] == 0
+    assert (await reg.import_results(tabs, commit=False))["summary"]["updated"] == 1
+    with pytest.raises(Exception) as exc:
+        await reg.import_results("\n".join(f"r-ph;Кубок;;{i}" for i in range(1001)), commit=False)
+    assert getattr(exc.value, "code", "") == "too_many_rows"
+
+
+def test_results_import_api_requires_token(client):
+    body = {"csv": "r-x;Кубок;2026-01-01;1"}
+    assert client.post("/internal/registry/results/import", json=body).status_code == 401
+    r = client.post("/internal/registry/results/import", json=body, headers=H)
+    assert r.status_code == 200 and r.json()["summary"]["errors"] == 1
