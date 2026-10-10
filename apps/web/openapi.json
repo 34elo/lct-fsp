@@ -1128,6 +1128,65 @@
         }
       }
     },
+    "/internal/tg/linked": {
+      "get": {
+        "tags": [
+          "internal"
+        ],
+        "summary": "Tg Linked",
+        "description": "Привязан ли Telegram к аккаунту сайта. Ничего не создаёт (E43-7: бот не регистрирует).",
+        "operationId": "tg_linked_internal_tg_linked_get",
+        "parameters": [
+          {
+            "name": "tg_user_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Tg User Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgLinkedOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/internal/auth/magic-link": {
       "post": {
         "tags": [
@@ -2912,7 +2971,7 @@
           "candidates"
         ],
         "summary": "My Views",
-        "description": "«Вас смотрели N компаний» — только агрегаты, без названий (security.md §3).",
+        "description": "«Вас смотрели N компаний» — только агрегаты, без названий (security.md §3). Шкала 30 дней\nполная; `visible` — видна ли карточка работодателям (тест + согласие на публикацию).",
         "operationId": "my_views_candidates_me_views_get",
         "responses": {
           "200": {
@@ -2920,9 +2979,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response My Views Candidates Me Views Get"
+                  "$ref": "#/components/schemas/ProfileViewsStats"
                 }
               }
             }
@@ -12546,6 +12603,148 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/assessment/generate": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Family Orders",
+        "description": "Последние заказы со статусом и счётчиком, сколько заказов осталось на сегодня.",
+        "operationId": "family_orders_admin_assessment_generate_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FamilyOrdersOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Generate Families",
+        "description": "Заказ: навык × `kind` × уровень × до 10 заданий → очередь `ml.llm` (низкий приоритет).\n\nРезультат — черновики в «Допуске заданий» (`draft`, `source = llm`). Такой же заказ в работе —\nвозвращается он (`duplicate = true`); сверх дневного лимита — `429 daily_limit`.",
+        "operationId": "generate_families_admin_assessment_generate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FamilyOrderIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FamilyOrderOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Слишком много запросов",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
                 }
               }
             }
@@ -25844,6 +26043,165 @@
         "title": "FamilyExampleOut",
         "description": "Сгенерированный вариант задания и ответ решателя (ключ) — для карточки допуска."
       },
+      "FamilyOrderIn": {
+        "properties": {
+          "skill": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Skill"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "exact",
+              "estimate",
+              "choice",
+              "find_bug",
+              "order",
+              "sjt",
+              "open"
+            ],
+            "title": "Kind"
+          },
+          "level": {
+            "type": "integer",
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Level"
+          },
+          "count": {
+            "type": "integer",
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "skill",
+          "kind",
+          "level",
+          "count"
+        ],
+        "title": "FamilyOrderIn"
+      },
+      "FamilyOrderOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "skill": {
+            "type": "string",
+            "title": "Skill"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "level": {
+            "type": "integer",
+            "title": "Level"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "done",
+              "failed"
+            ],
+            "title": "Status"
+          },
+          "created": {
+            "type": "integer",
+            "title": "Created",
+            "default": 0
+          },
+          "rejected": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Rejected"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "duplicate": {
+            "type": "boolean",
+            "title": "Duplicate",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "skill",
+          "kind",
+          "level",
+          "count",
+          "status",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "FamilyOrderOut"
+      },
+      "FamilyOrdersOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/FamilyOrderOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "used_today": {
+            "type": "integer",
+            "title": "Used Today"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "max_count": {
+            "type": "integer",
+            "title": "Max Count",
+            "default": 10
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "used_today",
+          "limit"
+        ],
+        "title": "FamilyOrdersOut"
+      },
       "FamilyOut": {
         "properties": {
           "id": {
@@ -30883,6 +31241,58 @@
         "title": "ProfileIn",
         "description": "`PATCH /candidates/me/profile`: частичное обновление ручной формы (E20-4)."
       },
+      "ProfileViewDay": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "date"
+        ],
+        "title": "ProfileViewDay"
+      },
+      "ProfileViewsStats": {
+        "properties": {
+          "total_30d": {
+            "type": "integer",
+            "title": "Total 30D",
+            "default": 0
+          },
+          "companies_30d": {
+            "type": "integer",
+            "title": "Companies 30D",
+            "default": 0
+          },
+          "window_days": {
+            "type": "integer",
+            "title": "Window Days",
+            "default": 30
+          },
+          "visible": {
+            "type": "boolean",
+            "title": "Visible",
+            "default": false
+          },
+          "by_day": {
+            "items": {
+              "$ref": "#/components/schemas/ProfileViewDay"
+            },
+            "type": "array",
+            "title": "By Day"
+          }
+        },
+        "type": "object",
+        "title": "ProfileViewsStats",
+        "description": "`GET /candidates/me/views` (E43-5): просмотры карточки за 30 дней, без названий компаний.\n\n`by_day` — полная шкала: ровно `window_days` дней по возрастанию, последний — сегодня (UTC),\nдни без просмотров с нулём. `visible` — карточка вообще попадает работодателям (действующий\nгрейд из теста и согласие `profile_publication`); при `false` нули объясняются этим."
+      },
       "ProvisionalOut": {
         "properties": {
           "slug": {
@@ -32410,6 +32820,15 @@
             "maximum": 1.0,
             "minimum": 0.0,
             "title": "Confidence"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "llm",
+              "rules"
+            ],
+            "title": "Source",
+            "default": "llm"
           }
         },
         "type": "object",
@@ -36083,6 +36502,19 @@
         ],
         "title": "TgFspVerifyIn"
       },
+      "TgLinkedOut": {
+        "properties": {
+          "linked": {
+            "type": "boolean",
+            "title": "Linked"
+          }
+        },
+        "type": "object",
+        "required": [
+          "linked"
+        ],
+        "title": "TgLinkedOut"
+      },
       "TgOfferOut": {
         "properties": {
           "offer_id": {
@@ -38363,6 +38795,29 @@
             "maxLength": 256,
             "minLength": 1,
             "title": "Token"
+          },
+          "chat_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chat Id"
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username"
           }
         },
         "type": "object",

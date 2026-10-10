@@ -206,3 +206,34 @@ class TaskSubmission(Base):
     __table_args__ = (
         sa.UniqueConstraint("task_id", "candidate_id", "round", name="uq_task_submissions_round"),
     )
+
+
+class FamilyOrder(Base):
+    """Заказ админа на LLM-задания (E43-9): навык × `kind` × уровень × `count` → черновики.
+
+    `status`: `queued` (команда в outbox) → `running` (ml-worker взял) → `done` | `failed`.
+    `created` — сколько черновиков легло в `families`, `rejected` — отбраковка по причинам.
+    """
+
+    __tablename__ = "family_orders"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    skill: Mapped[str] = mapped_column(Text)
+    kind: Mapped[str] = mapped_column(Text)
+    level: Mapped[int] = mapped_column(sa.SmallInteger)
+    count: Mapped[int] = mapped_column(sa.SmallInteger)
+    status: Mapped[str] = mapped_column(Text, default="queued", server_default="queued")
+    created: Mapped[int] = mapped_column(default=0, server_default="0")
+    rejected: Mapped[dict] = mapped_column(sa.JSON, default=dict)
+    slugs: Mapped[list] = mapped_column(sa.JSON, default=list)
+    model: Mapped[str | None] = mapped_column(Text, default=None)
+    error: Mapped[str | None] = mapped_column(Text, default=None)
+    requested_by: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), default=None
+    )
+    created_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+    __table_args__ = (sa.Index("ix_family_orders_created", "created_at"),)

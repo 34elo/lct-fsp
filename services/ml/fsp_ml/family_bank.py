@@ -185,6 +185,14 @@ def fake_generate(req: FamilyGenerateRequest) -> FamilyGenerateResponse:
     return FamilyGenerateResponse(specs=specs, model=FAKE_MODEL)
 
 
+def fake_variant(spec: dict[str, Any], i: int) -> dict[str, Any]:
+    """Заглушка заказа из админки (E43-9): `i`-я форма отличается текстом условия, иначе одинаковые
+    заготовки `choice`/`order`/… схлопнулись бы в core как дубли (отпечаток без `title`)."""
+    if i == 0:
+        return spec
+    return {**spec, "stem": f"{spec['stem']} (вариант {i + 1})"}
+
+
 def fake_solve(req: FamilySolveRequest) -> FamilySolveAnswer:
     """Детерминированный «кандидат наугад»: ai_solvable на заглушке ≈ уровень угадывания."""
     rng = _rng(req.model_dump_json())
