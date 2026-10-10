@@ -157,7 +157,7 @@ describe("модель Статистики (E38-2)", () => {
 });
 
 describe("Статистика /me/stats (E38-2)", () => {
-  it("основное: плитки, «Где ты среди своих», просмотры, «Как тебя видят», ФСП, история", async () => {
+  it("основное: плитки, «Где ты среди своих», просмотры, ФСП, история", async () => {
     mount();
     const main = await screen.findByTestId("stats-main");
     expect(screen.getByRole("heading", { level: 1, name: "Статистика" })).toBeInTheDocument();
@@ -193,12 +193,9 @@ describe("Статистика /me/stats (E38-2)", () => {
     expect(within(views).getByRole("img", { name: /7 за 30 дней/ })).toBeInTheDocument();
     expect(views).toHaveTextContent("3 компании смотрели за 30 дней");
 
-    const seen = screen.getByTestId("stats-seen-as");
-    expect(seen).toHaveTextContent("Backend #4821");
-    expect(seen).toHaveTextContent("подтверждён ФСП");
-    expect(seen).toHaveTextContent("Junior · Backend · Python");
-    expect(within(seen).getByText("Git").closest("[data-state]")).toHaveAttribute("data-state", "claimed");
-    expect(seen).toHaveTextContent("от 70 000");
+    // E41-8: блока «Как тебя видят» нет; «Где ты среди своих» и «Твоя категория в цифрах» — рядом.
+    expect(screen.queryByTestId("stats-seen-as")).not.toBeInTheDocument();
+    expect(peers.parentElement?.nextElementSibling).toBe(cat);
 
     expect(screen.getByTestId("stats-fsp")).toHaveTextContent("Всероссийский финал");
 

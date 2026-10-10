@@ -121,6 +121,12 @@ describe("модель графа", () => {
       expect(sy).toBeGreaterThanOrEqual(31);
       expect(sy).toBeLessThanOrEqual(449);
     }
+    // E41-8: подписи справа от узлов тоже помещаются в окно.
+    const narrow = fitView(l.nodes, 360, 320, 16, 72);
+    for (const n of l.nodes) {
+      expect(labelBox(n, narrow.k).x1 + narrow.x).toBeLessThanOrEqual(360 - 15);
+      expect(n.x * narrow.k + narrow.x).toBeGreaterThanOrEqual(15);
+    }
     const z = zoomAt({ x: 10, y: 20, k: 1 }, 2, 100, 100);
     expect(z.k).toBe(2);
     expect((100 - z.x) / z.k).toBeCloseTo(90); // точка под курсором осталась на месте
@@ -229,5 +235,25 @@ describe("EvidenceGraph", () => {
     render(<EvidenceGraph data={d} />);
     expect(nodeIds().length).toBe(d.nodes.length);
     expect(layoutMs).toBeLessThan(1500);
+  });
+});
+
+describe("EvidenceGraph: сетка и компактный режим (E41-8)", () => {
+  it("фоновая сетка есть всегда и двигается вместе с графом", () => {
+    render(<EvidenceGraph data={data} />);
+    const grid = screen.getByTestId("egraph-grid");
+    const pattern = document.querySelector("pattern");
+    expect(grid.getAttribute("fill")).toBe(`url(#${pattern?.id})`);
+    const before = pattern?.getAttribute("patternTransform");
+    fireEvent.click(screen.getByLabelText("Приблизить"));
+    expect(document.querySelector("pattern")?.getAttribute("patternTransform")).not.toBe(before);
+  });
+
+  it("compact: без фильтров и счётчика, холст и легенда на месте", () => {
+    render(<EvidenceGraph data={data} compact title={null} info={null} />);
+    expect(screen.queryByTestId("egraph-filters")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("egraph-count")).not.toBeInTheDocument();
+    expect(screen.getByTestId("egraph-svg")).toBeInTheDocument();
+    expect(screen.getByTestId("egraph-legend")).toBeInTheDocument();
   });
 });

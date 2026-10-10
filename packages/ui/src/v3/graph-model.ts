@@ -365,8 +365,16 @@ export function fitView(nodes: readonly LaidNode[], w: number, h: number, pad = 
     y1 = Math.max(y1, n.y + n.r);
   }
   const room = Math.min(labelRoom, w / 4);
-  const k = clampK(Math.min((w - 2 * pad - room) / Math.max(1, x1 - x0), (h - 2 * pad) / Math.max(1, y1 - y0), 1.6));
-  return { k, x: (w - room) / 2 - ((x0 + x1) / 2) * k, y: h / 2 - ((y0 + y1) / 2) * k };
+  let k = clampK(Math.min((w - 2 * pad - room) / Math.max(1, x1 - x0), (h - 2 * pad) / Math.max(1, y1 - y0), 1.6));
+  // Подписи лежат справа от узла и бывают длиннее запаса `room`: сжимаем, пока самая правая не уместится в окно.
+  const contentW = (kk: number) => Math.max(x1 * kk, ...nodes.map((n) => labelBox(n, kk).x1)) - x0 * kk;
+  for (let i = 0; i < 6 && k > MIN_K; i++) {
+    const need = contentW(k);
+    if (need <= w - 2 * pad) break;
+    k = clampK(k * ((w - 2 * pad) / need));
+  }
+  // Горизонтально центрируем содержимое вместе с подписями.
+  return { k, x: (w - contentW(k)) / 2 - x0 * k, y: h / 2 - ((y0 + y1) / 2) * k };
 }
 
 export const clampK = (k: number) => Math.max(MIN_K, Math.min(MAX_K, k));

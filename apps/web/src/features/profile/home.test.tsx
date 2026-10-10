@@ -108,6 +108,15 @@ beforeEach(() => {
     "/candidates/me/navigator": () => res(200, navigator),
     "/candidates/me/views": () => res(200, { total_30d: 5, companies_30d: 2, by_day: [{ date: "2026-10-07", count: 5 }] }),
     "/taxonomy/professions": () => res(200, { professions: [{ slug: "backend", title: "Backend" }] }),
+    "/candidates/me/graph": () =>
+      res(200, {
+        nodes: [
+          { id: "cand", type: "candidate", label: "Backend #4821" },
+          { id: "f:test:1", type: "test", label: "Тест Backend Junior", verified: true },
+          { id: "s:python", type: "skill", label: "Python", level: 3, confidence: 0.7, skill_type: "hard" },
+        ],
+        edges: [{ from: "f:test:1", to: "s:python", type: "confirms", strength: 0.6 }],
+      }),
   };
   vi.stubGlobal(
     "fetch",
@@ -182,7 +191,7 @@ describe("модель Главной (E38-1)", () => {
 });
 
 describe("Главная кандидата /me (E38-1)", () => {
-  it("после теста: профиль, навыки, ФСП, следующий шаг, созвездие, интересы, плитки", async () => {
+  it("после теста: профиль, навыки, ФСП, следующий шаг, граф навыков, интересы, плитки", async () => {
     mount();
     const after = await screen.findByTestId("home-after");
     expect(screen.getByRole("heading", { level: 1, name: "Главная" })).toBeInTheDocument();
@@ -198,7 +207,10 @@ describe("Главная кандидата /me (E38-1)", () => {
     expect(skills).toHaveTextContent("Python");
     expect(within(skills).getAllByText("тест")).toHaveLength(2);
     expect(within(skills).getByText("заявлен").closest("[data-state]")).toHaveAttribute("data-state", "claimed");
-    expect(screen.getByTestId("home-fsp")).toHaveTextContent("Всероссийский финал");
+    // Достижения ФСП — в правой колонке под плитками.
+    const fsp = screen.getByTestId("home-fsp");
+    expect(fsp).toHaveTextContent("Всероссийский финал");
+    expect(screen.getByTestId("home-tiles").nextElementSibling).toBe(fsp);
 
     const next = await screen.findByTestId("home-next");
     expect(await within(next).findByText(/Тест на Middle/)).toBeInTheDocument();
@@ -207,7 +219,12 @@ describe("Главная кандидата /me (E38-1)", () => {
     expect(action).toHaveTextContent("Ответить на интерес");
     expect(action).toHaveAttribute("href", "/me/offers?show=interests");
 
-    expect(screen.getByRole("img", { name: /Созвездие навыков: Python, SQL, Git, Docker/ })).toBeInTheDocument();
+    // E41-8: вместо созвездия — компактный EvidenceGraph с фоновой сеткой, без фильтров.
+    const graph = await screen.findByTestId("egraph");
+    expect(screen.getByTestId("home-constellation")).toHaveTextContent("Граф навыков");
+    expect(within(graph).getByTestId("egraph-grid")).toBeInTheDocument();
+    expect(within(graph).queryByTestId("egraph-filters")).not.toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: /Созвездие навыков/ })).not.toBeInTheDocument();
 
     const ints = screen.getByTestId("home-interests");
     expect(within(ints).getAllByTestId("home-invite")).toHaveLength(3);
