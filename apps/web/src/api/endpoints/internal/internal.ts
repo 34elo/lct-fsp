@@ -45,6 +45,8 @@ import type {
   TgFspLinkOut,
   TgFspOut,
   TgFspVerifyIn,
+  TgLinkedInternalTgLinkedGetParams,
+  TgLinkedOut,
   TgOfferOut,
   TgOffersInternalTgOffersGetParams,
   TgProfileInternalTgProfileGetParams,
@@ -401,7 +403,134 @@ export const useTgLinkInternalTgLinkPost = <TError = ErrorType<HTTPValidationErr
       > => {
       return useMutation(getTgLinkInternalTgLinkPostMutationOptions(options), queryClient);
     }
-    export type magicLinkInternalAuthMagicLinkPostResponse200 = {
+    export type tgLinkedInternalTgLinkedGetResponse200 = {
+  data: TgLinkedOut
+  status: 200
+}
+
+export type tgLinkedInternalTgLinkedGetResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type tgLinkedInternalTgLinkedGetResponseSuccess = (tgLinkedInternalTgLinkedGetResponse200) & {
+  headers: Headers;
+};
+export type tgLinkedInternalTgLinkedGetResponseError = (tgLinkedInternalTgLinkedGetResponse422) & {
+  headers: Headers;
+};
+
+export type tgLinkedInternalTgLinkedGetResponse = (tgLinkedInternalTgLinkedGetResponseSuccess | tgLinkedInternalTgLinkedGetResponseError)
+
+export const getTgLinkedInternalTgLinkedGetUrl = (params: TgLinkedInternalTgLinkedGetParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/internal/tg/linked?${stringifiedParams}` : `/internal/tg/linked`
+}
+
+/**
+ * Привязан ли Telegram к аккаунту сайта. Ничего не создаёт (E43-7: бот не регистрирует).
+ * @summary Tg Linked
+ */
+export const tgLinkedInternalTgLinkedGet = async (params: TgLinkedInternalTgLinkedGetParams, options?: Parameters<typeof apiFetch>[1]): Promise<tgLinkedInternalTgLinkedGetResponse> => {
+
+  return apiFetch<tgLinkedInternalTgLinkedGetResponse>(getTgLinkedInternalTgLinkedGetUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getTgLinkedInternalTgLinkedGetQueryKey = (params?: TgLinkedInternalTgLinkedGetParams,) => {
+    return [
+    `/internal/tg/linked`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getTgLinkedInternalTgLinkedGetQueryOptions = <TData = Awaited<ReturnType<typeof tgLinkedInternalTgLinkedGet>>, TError = ErrorType<HTTPValidationError>>(params: TgLinkedInternalTgLinkedGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof tgLinkedInternalTgLinkedGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTgLinkedInternalTgLinkedGetQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof tgLinkedInternalTgLinkedGet>>> = ({ signal }) => tgLinkedInternalTgLinkedGet(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof tgLinkedInternalTgLinkedGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TgLinkedInternalTgLinkedGetQueryResult = NonNullable<Awaited<ReturnType<typeof tgLinkedInternalTgLinkedGet>>>
+export type TgLinkedInternalTgLinkedGetQueryError = ErrorType<HTTPValidationError>
+
+
+export function useTgLinkedInternalTgLinkedGet<TData = Awaited<ReturnType<typeof tgLinkedInternalTgLinkedGet>>, TError = ErrorType<HTTPValidationError>>(
+ params: TgLinkedInternalTgLinkedGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof tgLinkedInternalTgLinkedGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof tgLinkedInternalTgLinkedGet>>,
+          TError,
+          Awaited<ReturnType<typeof tgLinkedInternalTgLinkedGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTgLinkedInternalTgLinkedGet<TData = Awaited<ReturnType<typeof tgLinkedInternalTgLinkedGet>>, TError = ErrorType<HTTPValidationError>>(
+ params: TgLinkedInternalTgLinkedGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof tgLinkedInternalTgLinkedGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof tgLinkedInternalTgLinkedGet>>,
+          TError,
+          Awaited<ReturnType<typeof tgLinkedInternalTgLinkedGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTgLinkedInternalTgLinkedGet<TData = Awaited<ReturnType<typeof tgLinkedInternalTgLinkedGet>>, TError = ErrorType<HTTPValidationError>>(
+ params: TgLinkedInternalTgLinkedGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof tgLinkedInternalTgLinkedGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Tg Linked
+ */
+
+export function useTgLinkedInternalTgLinkedGet<TData = Awaited<ReturnType<typeof tgLinkedInternalTgLinkedGet>>, TError = ErrorType<HTTPValidationError>>(
+ params: TgLinkedInternalTgLinkedGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof tgLinkedInternalTgLinkedGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTgLinkedInternalTgLinkedGetQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type magicLinkInternalAuthMagicLinkPostResponse200 = {
   data: MagicLinkOut
   status: 200
 }

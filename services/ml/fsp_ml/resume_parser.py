@@ -51,6 +51,9 @@ MENTION_THRESHOLD = 80.0  # навык должен быть упомянут в
 CONFIDENCE = {"alias": 0.95, "fuzzy": 0.85}
 DROP_WARNINGS = ("quote_not_found:", "skill_not_in_quote:")  # навык отброшен
 DECLARED_DROP_WARNINGS = ("soft_dropped:", "grade_dropped:", "role_dropped:")  # E20-5
+# E43-8: запасной путь — LLM вернул мало навыков, добавляем найденное правилами
+FALLBACK_MIN_SKILLS = 3
+FALLBACK_MIN_CHARS = 1000
 
 Progress = Callable[[str, int, str], Awaitable[None]]
 
@@ -473,6 +476,50 @@ async def _noop(stage: str, pct: int, message: str) -> None:
     return None
 
 
+def needs_rules_fallback(skills_found: int, text_len: int) -> bool:
+    """LLM вернул 0 навыков (при любом тексте) или меньше порога при длинном тексте (E43-8)."""
+    if skills_found == 0:
+        return text_len > 0
+    return skills_found < FALLBACK_MIN_SKILLS and text_len > FALLBACK_MIN_CHARS
+
+
+def merge_rules_fallback(
+    parsed: ParsedResume, text: str, index: TaxonomyIndex | None, today: date
+) -> tuple[ParsedResume, int]:
+    """Дополнить навыки результата LLM правиловыми (`source: rules`). Цитата обязательна.
+
+    Правиловые навыки проходят ту же `assemble` (цитата найдена в тексте, навык упомянут в ней).
+    Навыки LLM не меняются; опыт, образование и контакты остаются от LLM. Возвращает
+    (результат, число добавленных навыков).
+    """
+    if index is None:
+        return parsed, 0
+    rules = assemble(text, extract_rules(text, index), index, version=RULES_VERSION, today=today)
+    have = {s.slug for s in parsed.skills}
+    added = [
+        s.model_copy(update={"source": "rules"})
+        for s in rules.skills
+        if s.slug not in have and s.quote.strip()
+    ]
+    if not added:
+        return parsed, 0
+    known_unknown = {normalize(u) for u in parsed.unknown_skills}
+    unknown = [*parsed.unknown_skills]
+    for u in rules.unknown_skills:
+        if normalize(u) not in known_unknown:
+            unknown.append(u)
+    return (
+        parsed.model_copy(
+            update={
+                "skills": [*parsed.skills, *added],
+                "unknown_skills": unknown,
+                "warnings": [*parsed.warnings, f"llm_fallback_rules:{len(added)}"],
+            }
+        ),
+        len(added),
+    )
+
+
 async def parse_resume(
     data: bytes,
     *,
@@ -492,25 +539,40 @@ async def parse_resume(
         text = text[:MAX_TEXT_CHARS]
         warnings.append("text_truncated")
     await report("llm", 30, "Разбираем опыт и навыки")
+    llm_skills = 0
     if llm is None:
         llm_out = extract_rules(text, index)
         version = RULES_VERSION
         warnings.append("rules_mode")
     else:
         llm_out = await extract_llm(llm, text)
+        llm_skills = len(llm_out.skills)
         version = parser_version(model)
     await report("verify", 85, "Проверяем навыки по тексту")
     parsed = assemble(text, llm_out, index, version=version, today=today, warnings=warnings)
-    # без ПДн: только размеры и счётчики
+    fallback_added = 0
+    if llm is not None and needs_rules_fallback(len(parsed.skills), len(text)):
+        parsed, fallback_added = merge_rules_fallback(parsed, text, index, today)
+    dropped = sum(w.startswith(DROP_WARNINGS) for w in parsed.warnings)
+    # без ПДн: только размеры, счётчики и версии
     log.info(
         "resume_parsed",
+        prompt_version=PROMPT_VERSION if llm is not None else None,
+        parser_version=parsed.parser_version,
         chars=len(text),
+        llm_skills=llm_skills,
         skills=len(parsed.skills),
         unknown=len(parsed.unknown_skills),
-        dropped=sum(w.startswith(DROP_WARNINGS) for w in parsed.warnings),
+        experience=len(parsed.experience),
+        education=len(parsed.education),
+        dropped=dropped,
+        dropped_share=round(dropped / llm_skills, 3) if llm_skills else None,
+        fallback_rules=fallback_added,
         declared_dropped=sum(w.startswith(DECLARED_DROP_WARNINGS) for w in parsed.warnings),
         seconds=round(time.monotonic() - t0, 2),
     )
+    if llm is not None and llm_skills == 0:
+        log.warning("resume_llm_empty_skills", chars=len(text), prompt_version=PROMPT_VERSION)
     await report("done", 100, "Готово")
     return parsed
 

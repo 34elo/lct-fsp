@@ -5,4 +5,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type MyViewsCandidatesMeViewsGet200 = { [key: string]: unknown };
+export interface ProfileViewDay {
+  date: string;
+  count?: number;
+}

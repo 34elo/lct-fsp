@@ -12,4 +12,6 @@ export interface AppTelegramRouterLinkIn {
      * @maxLength 256
      */
   token: string;
+  chat_id?: number | null;
+  username?: string | null;
 }

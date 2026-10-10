@@ -42,6 +42,9 @@ import type {
   DistinctIn,
   DistinctPair,
   DistinctSaved,
+  FamilyOrderIn,
+  FamilyOrderOut,
+  FamilyOrdersOut,
   FspRequestAcceptIn,
   FspRequestRejectIn,
   HTTPValidationError,
@@ -1630,6 +1633,286 @@ export const useToPilotAdminFamiliesFamilyIdPilotPost = <TError = ErrorType<Prob
         TContext
       > => {
       return useMutation(getToPilotAdminFamiliesFamilyIdPilotPostMutationOptions(options), queryClient);
+    }
+    export type familyOrdersAdminAssessmentGenerateGetResponse200 = {
+  data: FamilyOrdersOut
+  status: 200
+}
+
+export type familyOrdersAdminAssessmentGenerateGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type familyOrdersAdminAssessmentGenerateGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type familyOrdersAdminAssessmentGenerateGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type familyOrdersAdminAssessmentGenerateGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type familyOrdersAdminAssessmentGenerateGetResponseSuccess = (familyOrdersAdminAssessmentGenerateGetResponse200) & {
+  headers: Headers;
+};
+export type familyOrdersAdminAssessmentGenerateGetResponseError = (familyOrdersAdminAssessmentGenerateGetResponse401ApplicationProblemJson | familyOrdersAdminAssessmentGenerateGetResponse401ApplicationJson | familyOrdersAdminAssessmentGenerateGetResponse403ApplicationProblemJson | familyOrdersAdminAssessmentGenerateGetResponse403ApplicationJson) & {
+  headers: Headers;
+};
+
+export type familyOrdersAdminAssessmentGenerateGetResponse = (familyOrdersAdminAssessmentGenerateGetResponseSuccess | familyOrdersAdminAssessmentGenerateGetResponseError)
+
+export const getFamilyOrdersAdminAssessmentGenerateGetUrl = () => {
+
+
+
+
+  return `/admin/assessment/generate`
+}
+
+/**
+ * Последние заказы со статусом и счётчиком, сколько заказов осталось на сегодня.
+ * @summary Family Orders
+ */
+export const familyOrdersAdminAssessmentGenerateGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<familyOrdersAdminAssessmentGenerateGetResponse> => {
+
+  return apiFetch<familyOrdersAdminAssessmentGenerateGetResponse>(getFamilyOrdersAdminAssessmentGenerateGetUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getFamilyOrdersAdminAssessmentGenerateGetQueryKey = () => {
+    return [
+    `/admin/assessment/generate`
+    ] as const;
+    }
+
+
+export const getFamilyOrdersAdminAssessmentGenerateGetQueryOptions = <TData = Awaited<ReturnType<typeof familyOrdersAdminAssessmentGenerateGet>>, TError = ErrorType<ProblemOut>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof familyOrdersAdminAssessmentGenerateGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getFamilyOrdersAdminAssessmentGenerateGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof familyOrdersAdminAssessmentGenerateGet>>> = ({ signal }) => familyOrdersAdminAssessmentGenerateGet({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof familyOrdersAdminAssessmentGenerateGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type FamilyOrdersAdminAssessmentGenerateGetQueryResult = NonNullable<Awaited<ReturnType<typeof familyOrdersAdminAssessmentGenerateGet>>>
+export type FamilyOrdersAdminAssessmentGenerateGetQueryError = ErrorType<ProblemOut>
+
+
+export function useFamilyOrdersAdminAssessmentGenerateGet<TData = Awaited<ReturnType<typeof familyOrdersAdminAssessmentGenerateGet>>, TError = ErrorType<ProblemOut>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof familyOrdersAdminAssessmentGenerateGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof familyOrdersAdminAssessmentGenerateGet>>,
+          TError,
+          Awaited<ReturnType<typeof familyOrdersAdminAssessmentGenerateGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useFamilyOrdersAdminAssessmentGenerateGet<TData = Awaited<ReturnType<typeof familyOrdersAdminAssessmentGenerateGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof familyOrdersAdminAssessmentGenerateGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof familyOrdersAdminAssessmentGenerateGet>>,
+          TError,
+          Awaited<ReturnType<typeof familyOrdersAdminAssessmentGenerateGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useFamilyOrdersAdminAssessmentGenerateGet<TData = Awaited<ReturnType<typeof familyOrdersAdminAssessmentGenerateGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof familyOrdersAdminAssessmentGenerateGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Family Orders
+ */
+
+export function useFamilyOrdersAdminAssessmentGenerateGet<TData = Awaited<ReturnType<typeof familyOrdersAdminAssessmentGenerateGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof familyOrdersAdminAssessmentGenerateGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getFamilyOrdersAdminAssessmentGenerateGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type generateFamiliesAdminAssessmentGeneratePostResponse202 = {
+  data: FamilyOrderOut
+  status: 202
+}
+
+export type generateFamiliesAdminAssessmentGeneratePostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type generateFamiliesAdminAssessmentGeneratePostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type generateFamiliesAdminAssessmentGeneratePostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type generateFamiliesAdminAssessmentGeneratePostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type generateFamiliesAdminAssessmentGeneratePostResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type generateFamiliesAdminAssessmentGeneratePostResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type generateFamiliesAdminAssessmentGeneratePostResponse429ApplicationProblemJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type generateFamiliesAdminAssessmentGeneratePostResponse429ApplicationJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type generateFamiliesAdminAssessmentGeneratePostResponseSuccess = (generateFamiliesAdminAssessmentGeneratePostResponse202) & {
+  headers: Headers;
+};
+export type generateFamiliesAdminAssessmentGeneratePostResponseError = (generateFamiliesAdminAssessmentGeneratePostResponse401ApplicationProblemJson | generateFamiliesAdminAssessmentGeneratePostResponse401ApplicationJson | generateFamiliesAdminAssessmentGeneratePostResponse403ApplicationProblemJson | generateFamiliesAdminAssessmentGeneratePostResponse403ApplicationJson | generateFamiliesAdminAssessmentGeneratePostResponse422ApplicationProblemJson | generateFamiliesAdminAssessmentGeneratePostResponse422ApplicationJson | generateFamiliesAdminAssessmentGeneratePostResponse429ApplicationProblemJson | generateFamiliesAdminAssessmentGeneratePostResponse429ApplicationJson) & {
+  headers: Headers;
+};
+
+export type generateFamiliesAdminAssessmentGeneratePostResponse = (generateFamiliesAdminAssessmentGeneratePostResponseSuccess | generateFamiliesAdminAssessmentGeneratePostResponseError)
+
+export const getGenerateFamiliesAdminAssessmentGeneratePostUrl = () => {
+
+
+
+
+  return `/admin/assessment/generate`
+}
+
+/**
+ * Заказ: навык × `kind` × уровень × до 10 заданий → очередь `ml.llm` (низкий приоритет).
+ *
+ * Результат — черновики в «Допуске заданий» (`draft`, `source = llm`). Такой же заказ в работе —
+ * возвращается он (`duplicate = true`); сверх дневного лимита — `429 daily_limit`.
+ * @summary Generate Families
+ */
+export const generateFamiliesAdminAssessmentGeneratePost = async (familyOrderIn: FamilyOrderIn, options?: Parameters<typeof apiFetch>[1]): Promise<generateFamiliesAdminAssessmentGeneratePostResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<generateFamiliesAdminAssessmentGeneratePostResponse>(getGenerateFamiliesAdminAssessmentGeneratePostUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(familyOrderIn)
+  }
+);}
+
+
+
+
+
+export const getGenerateFamiliesAdminAssessmentGeneratePostMutationKey = () => ['generateFamiliesAdminAssessmentGeneratePost'] as const;
+
+export const getGenerateFamiliesAdminAssessmentGeneratePostMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateFamiliesAdminAssessmentGeneratePost>>, TError,GenerateFamiliesAdminAssessmentGeneratePostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof generateFamiliesAdminAssessmentGeneratePost>>, TError,GenerateFamiliesAdminAssessmentGeneratePostMutationVariables, TContext> => {
+
+const mutationKey = getGenerateFamiliesAdminAssessmentGeneratePostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof generateFamiliesAdminAssessmentGeneratePost>>, GenerateFamiliesAdminAssessmentGeneratePostMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  generateFamiliesAdminAssessmentGeneratePost(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GenerateFamiliesAdminAssessmentGeneratePostMutationResult = NonNullable<Awaited<ReturnType<typeof generateFamiliesAdminAssessmentGeneratePost>>>
+    export type GenerateFamiliesAdminAssessmentGeneratePostMutationBody = FamilyOrderIn
+    export type GenerateFamiliesAdminAssessmentGeneratePostMutationError = ErrorType<ProblemOut>
+    export type GenerateFamiliesAdminAssessmentGeneratePostMutationVariables = {data: FamilyOrderIn}
+
+    /**
+ * @summary Generate Families
+ */
+export const useGenerateFamiliesAdminAssessmentGeneratePost = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateFamiliesAdminAssessmentGeneratePost>>, TError,GenerateFamiliesAdminAssessmentGeneratePostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof generateFamiliesAdminAssessmentGeneratePost>>,
+        TError,
+        GenerateFamiliesAdminAssessmentGeneratePostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getGenerateFamiliesAdminAssessmentGeneratePostMutationOptions(options), queryClient);
     }
     export type twoWorldsAdminDemoTwoWorldsGetResponse200 = {
   data: TwoWorldsOut

@@ -12610,6 +12610,148 @@
         }
       }
     },
+    "/admin/assessment/generate": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Family Orders",
+        "description": "Последние заказы со статусом и счётчиком, сколько заказов осталось на сегодня.",
+        "operationId": "family_orders_admin_assessment_generate_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FamilyOrdersOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Generate Families",
+        "description": "Заказ: навык × `kind` × уровень × до 10 заданий → очередь `ml.llm` (низкий приоритет).\n\nРезультат — черновики в «Допуске заданий» (`draft`, `source = llm`). Такой же заказ в работе —\nвозвращается он (`duplicate = true`); сверх дневного лимита — `429 daily_limit`.",
+        "operationId": "generate_families_admin_assessment_generate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FamilyOrderIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FamilyOrderOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Слишком много запросов",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/admin/demo/two-worlds": {
       "get": {
         "tags": [
@@ -25901,6 +26043,165 @@
         "title": "FamilyExampleOut",
         "description": "Сгенерированный вариант задания и ответ решателя (ключ) — для карточки допуска."
       },
+      "FamilyOrderIn": {
+        "properties": {
+          "skill": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Skill"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "exact",
+              "estimate",
+              "choice",
+              "find_bug",
+              "order",
+              "sjt",
+              "open"
+            ],
+            "title": "Kind"
+          },
+          "level": {
+            "type": "integer",
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Level"
+          },
+          "count": {
+            "type": "integer",
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "skill",
+          "kind",
+          "level",
+          "count"
+        ],
+        "title": "FamilyOrderIn"
+      },
+      "FamilyOrderOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "skill": {
+            "type": "string",
+            "title": "Skill"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "level": {
+            "type": "integer",
+            "title": "Level"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "done",
+              "failed"
+            ],
+            "title": "Status"
+          },
+          "created": {
+            "type": "integer",
+            "title": "Created",
+            "default": 0
+          },
+          "rejected": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Rejected"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "duplicate": {
+            "type": "boolean",
+            "title": "Duplicate",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "skill",
+          "kind",
+          "level",
+          "count",
+          "status",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "FamilyOrderOut"
+      },
+      "FamilyOrdersOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/FamilyOrderOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "used_today": {
+            "type": "integer",
+            "title": "Used Today"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "max_count": {
+            "type": "integer",
+            "title": "Max Count",
+            "default": 10
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "used_today",
+          "limit"
+        ],
+        "title": "FamilyOrdersOut"
+      },
       "FamilyOut": {
         "properties": {
           "id": {
@@ -32519,6 +32820,15 @@
             "maximum": 1.0,
             "minimum": 0.0,
             "title": "Confidence"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "llm",
+              "rules"
+            ],
+            "title": "Source",
+            "default": "llm"
           }
         },
         "type": "object",
