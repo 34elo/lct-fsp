@@ -1,7 +1,7 @@
 import { CodeLines, Input, Lbl, Markdown, OptionRow } from "@fsp/ui";
 import { useState } from "react";
 
-import { hasTable, move, moveTo, parseListing, splitStem, toggleLine, type AnswerValue, type TestItem } from "./model";
+import { isRichStem, move, moveTo, parseListing, splitStem, toggleLine, type AnswerValue, type TestItem } from "./model";
 import { T } from "./text";
 
 /**
@@ -11,7 +11,7 @@ import { T } from "./text";
 const Stem = ({ children }: { children: string }) => {
   const n = children.length;
   const size = n <= 140 ? "text-16 leading-[1.4] md:text-20" : n <= 320 ? "text-16 leading-[1.45]" : "text-14 leading-[1.5] md:text-16";
-  if (hasTable(children)) {
+  if (isRichStem(children)) {
     return (
       <Markdown className={`${size} font-normal`} data-testid="assessment-stem">
         {children}
