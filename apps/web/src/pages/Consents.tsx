@@ -4,7 +4,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { ConsentsForm } from "@/features/auth/ConsentsForm";
 import { authText } from "@/features/auth/text";
 import { AuthCard } from "@/features/auth/ui";
-import { HOME_BY_ROLE, needsConsent, useAuth } from "@/shared/lib/auth";
+import { HOME_BY_ROLE, PASSWORD_SETUP_PATH, needsConsent, useAuth } from "@/shared/lib/auth";
 
 /** Шаг «Согласия» после регистрации или входа, если обязательное согласие ещё не выдано. */
 export default function Consents() {
@@ -18,6 +18,7 @@ export default function Consents() {
       </AuthCard>
     );
   if (status === "anonymous" || !me) return <Navigate to="/login" replace />;
+  if (me.must_change_password) return <Navigate to={PASSWORD_SETUP_PATH} replace state={{ from }} />;
   // Обязательное согласие выдано (в том числе только что): уходим дальше.
   const home = from ?? HOME_BY_ROLE[me.role as keyof typeof HOME_BY_ROLE] ?? "/";
   if (!needsConsent(me)) return <Navigate to={home} replace />;

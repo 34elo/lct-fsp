@@ -100,6 +100,13 @@ async def authenticate(session: AsyncSession, email: str, password: str) -> User
         ok = False
     if not ok or user is None or not user.is_active or user.deleted_at is not None:
         raise ProblemError(401, "invalid_credentials", "Неверный email или пароль")
+    if temp_password_expired(user):
+        raise ProblemError(
+            401,
+            "temp_password_expired",
+            "Временный пароль истёк",
+            "Попросите владельца компании выдать новый пароль",
+        )
     return user
 
 
@@ -301,6 +308,76 @@ async def change_password(
     await session.flush()
 
 
+# --- E41-16: временный пароль HR, который выдаёт владелец компании ---
+
+TEMP_PASSWORD_TTL = timedelta(hours=72)
+# без похожих символов (0/O, 1/l/I): пароль переписывают из мессенджера руками
+_TEMP_ALPHABET = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+
+
+def generate_temp_password() -> str:
+    """Криптостойкий временный пароль: 3 группы по 4 символа (~68 бит), `secrets`."""
+    groups = ("".join(secrets.choice(_TEMP_ALPHABET) for _ in range(4)) for _ in range(3))
+    return "-".join(groups)
+
+
+def temp_password_expired(user: User, now: datetime | None = None) -> bool:
+    """Пользователь ещё не сменил временный пароль, а срок его действия вышел."""
+    if not user.must_change_password or user.temp_password_expires_at is None:
+        return False
+    return _aware(user.temp_password_expires_at) <= (now or datetime.now(UTC))
+
+
+async def revoke_sessions(session: AsyncSession, user_id: uuid.UUID) -> None:
+    """Закрыть все сессии пользователя: все refresh-токены отозваны."""
+    await session.execute(
+        update(RefreshToken)
+        .where(RefreshToken.user_id == user_id, RefreshToken.revoked_at.is_(None))
+        .values(revoked_at=datetime.now(UTC))
+    )
+
+
+async def set_temp_password(
+    session: AsyncSession, user: User, *, now: datetime | None = None
+) -> tuple[str, datetime]:
+    """Новый временный пароль: в БД только argon2-хеш, прежний пароль и сессии гаснут сразу.
+
+    Возвращает пароль в открытом виде — вызывающий показывает его владельцу один раз
+    и нигде не сохраняет и не логирует.
+    """
+    now = now or datetime.now(UTC)
+    raw = generate_temp_password()
+    user.password_hash = _hasher.hash(raw)
+    user.must_change_password = True
+    user.temp_password_expires_at = now + TEMP_PASSWORD_TTL
+    await revoke_sessions(session, user.id)
+    await session.flush()
+    return raw, user.temp_password_expires_at
+
+
+async def set_initial_password(session: AsyncSession, user: User, new: str) -> None:
+    """Первая смена временного пароля (вход уже выполнен им). Сессии остаются.
+
+    Не требуется — `409 password_change_not_required`; срок вышел — `403 temp_password_expired`;
+    новый совпадает с временным — `422 same_password`.
+    """
+    if not user.must_change_password:
+        raise ProblemError(409, "password_change_not_required", "Пароль уже задан")
+    if temp_password_expired(user):
+        raise ProblemError(
+            403,
+            "temp_password_expired",
+            "Временный пароль истёк",
+            "Попросите владельца компании выдать новый пароль",
+        )
+    if password_matches(user, new):
+        raise ProblemError(422, "same_password", "Новый пароль совпадает с временным")
+    user.password_hash = _hasher.hash(new)
+    user.must_change_password = False
+    user.temp_password_expires_at = None
+    await session.flush()
+
+
 async def erase_user(session: AsyncSession, user: User) -> None:
     """Удаление профиля (F13): обезличить учётную запись, закрыть сессии и коды."""
     await session.execute(delete(RefreshToken).where(RefreshToken.user_id == user.id))
@@ -308,6 +385,8 @@ async def erase_user(session: AsyncSession, user: User) -> None:
     user.email = None
     user.password_hash = None
     user.email_verified_at = None
+    user.must_change_password = False
+    user.temp_password_expires_at = None
     user.is_active = False
     user.deleted_at = utcnow()
     await session.flush()

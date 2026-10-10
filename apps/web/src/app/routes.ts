@@ -38,6 +38,7 @@ export const ROUTES: RouteDef[] = [
   { path: "/verify-email", title: "Подтверждение email", section: "auth", owner: "b1" },
   // <<< block1 (auth)
   // >>> block2 (auth)
+  { path: "/password/new", title: "Новый пароль", section: "auth", owner: "b2" },
   // <<< block2 (auth)
 
   { path: "/onboarding", title: "Онбординг", screen: "M1", section: "candidate", owner: "b1" },
