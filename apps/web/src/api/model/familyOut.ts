@@ -20,6 +20,7 @@ export interface FamilyOut {
   skill_type: string;
   level: number;
   status: string;
+  ready?: boolean;
   key_status: string;
   company_id?: string | null;
   form: FamilyOutForm;

@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 import { Badge, Button, Card, CardContent, cn, Combobox, Field, Select, useFieldProps } from "@fsp/ui";
 
-import { useCreateFamilyFamiliesPost } from "@/api/endpoints/assessment/assessment";
+import { useCreateFamilyFamiliesPost, useSetReadyFamiliesFamilyIdReadyPut } from "@/api/endpoints/assessment/assessment";
 import { useGetTaxonomyTaxonomyGet } from "@/api/endpoints/taxonomy/taxonomy";
 import type { FamilyOut } from "@/api/model";
 import { fieldClass } from "@/features/auth/ui";
@@ -149,7 +149,9 @@ export function FamilyPreview({ family }: { family: FamilyOut | null }) {
       </p>
       <div className="flex flex-wrap items-center gap-2 text-13">
         <span className="text-muted">{T.preview.status}</span>
-        <Badge variant="warning" data-testid={sel("status")}>{T.status[family.status] ?? family.status}</Badge>
+        <Badge variant={family.ready ? "success" : "warning"} data-testid={sel("status")}>
+          {family.company_id ? (family.ready ? T.preview.ready : T.status.draft) : (T.status[family.status] ?? family.status)}
+        </Badge>
         <span className="text-muted">{T.preview.keyStatus}</span>
         <Badge variant={family.key_status === "approved" ? "success" : "warning"} data-testid={sel("key-status")}>
           {T.keyStatus[family.key_status] ?? family.key_status}
@@ -190,6 +192,26 @@ export function FamilyPreview({ family }: { family: FamilyOut | null }) {
           );
         })}
       </ol>
+    </div>
+  );
+}
+
+/** «Готово» для задания компании: открывает его для приглашений без допуска админа (E41-14). */
+export function ReadyAction({ family, onChange }: { family: FamilyOut; onChange: (f: FamilyOut) => void }) {
+  const mark = useSetReadyFamiliesFamilyIdReadyPut({
+    mutation: { onSuccess: (res) => { if (res.status === 200) onChange(res.data); } },
+  });
+  if (!family.company_id) return null;
+  return (
+    <div className="flex flex-col gap-2">
+      {family.ready ? (
+        <p role="status" className="text-14 text-success" data-testid={sel("ready-note")}>{T.preview.readyNote}</p>
+      ) : (
+        <Button type="button" loading={mark.isPending} onClick={() => mark.mutate({ familyId: family.id, data: { ready: true } })} data-testid={sel("ready")}>
+          {T.preview.markReady}
+        </Button>
+      )}
+      {mark.isError && <p role="alert" className="text-14 text-error">{T.preview.readyError}</p>}
     </div>
   );
 }
@@ -362,6 +384,7 @@ export default function Constructor() {
             <CardContent className="flex flex-col gap-3">
               <h2 className="text-16 font-semibold">{T.preview.title}</h2>
               <FamilyPreview family={created} />
+              {created && role === "employer" && <ReadyAction family={created} onChange={setCreated} />}
               {created && role === "employer" && (
                 <Link to="/employer/tasks" className="text-14 font-semibold text-brand-deep dark:text-brand-mid underline">
                   {T.preview.toTasks}

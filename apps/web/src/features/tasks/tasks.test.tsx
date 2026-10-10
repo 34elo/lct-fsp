@@ -12,6 +12,8 @@ const base = { profession: "backend", grade: "middle", round: 2, answer_until: f
 let list: unknown[] = [];
 let listFail = false;
 let role = "candidate";
+const fam = { kind: "exact", skill: "sql", level: 3, status: "draft", company_id: "c1" };
+let fams: Record<string, unknown>[] = [];
 const calls: string[] = [];
 
 const exact = { id: "t1", title: "Запросов за период", kind: "exact", submitted: false, ...base };
@@ -27,6 +29,10 @@ beforeEach(() => {
   calls.length = 0;
   list = [exact];
   listFail = false;
+  fams = [
+    { ...fam, id: "f-r", title: "Готовое задание", ready: true },
+    { ...fam, id: "f-d", title: "Задание в работе", ready: false },
+  ];
   vi.stubGlobal("EventSource", class { addEventListener() {} close() {} });
   vi.stubGlobal(
     "fetch",
@@ -39,6 +45,12 @@ beforeEach(() => {
       }
       if (url.includes("/assessment/tasks/t1")) return res(200, detail);
       if (url.includes("/assessment/tasks")) return listFail ? res(500, { code: "x" }) : res(200, list);
+      if (url.includes("/families/f-d/ready")) {
+        calls.push(`ready:${String(init?.body)}`);
+        fams = fams.map((f) => (f.id === "f-d" ? { ...f, ready: true } : f));
+        return res(200, fams.find((f) => f.id === "f-d"));
+      }
+      if (url.endsWith("/families")) return res(200, fams);
       if (url.includes("/employer/tasks/e1/submissions/s1/score")) {
         calls.push(String(init?.body));
         return res(200, subs[0]);
@@ -122,5 +134,18 @@ test("работодатель: ответы, оценка рубрикой, «�
   await waitFor(() => expect(calls).toContain(JSON.stringify({ marks: [true, false] })));
   fireEvent.click(screen.getByTestId("tasks-publish"));
   await waitFor(() => expect(calls).toContain("publish"));
+  role = "candidate";
+});
+
+test("работодатель: вкладки «Готовые» и «Черновики», «Готово» переносит задание", async () => {
+  role = "employer";
+  mount("/employer/tasks");
+  expect(await screen.findByText("Задание в работе")).toBeInTheDocument(); // есть черновик — он открыт первым
+  expect(screen.queryByText("Готовое задание")).not.toBeInTheDocument();
+  fireEvent.click(screen.getByTestId("tasks-family-ready"));
+  await waitFor(() => expect(calls).toContain(`ready:${JSON.stringify({ ready: true })}`));
+  fireEvent.click(screen.getByTestId("tasks-fam-tab-ready"));
+  expect(await screen.findByText("Задание в работе")).toBeInTheDocument();
+  expect(screen.getByText("Готовое задание")).toBeInTheDocument();
   role = "candidate";
 });

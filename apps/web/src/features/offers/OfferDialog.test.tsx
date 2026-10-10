@@ -31,7 +31,7 @@ beforeEach(() => {
       if (url.endsWith("/auth/refresh")) return res(200, { access_token: "t" });
       if (url.endsWith("/me")) return res(200, { id: "u1", email: "o@b.ru", role: "employer", consents: ["pd_processing"] });
       if (url.includes("/vacancies")) return res(200, [vac]);
-      if (url.includes("/employer/tasks")) return res(200, [{ id: "t1", family_id: "f1", title: "Мини-задание: REST-клиент", profession: "backend", grade: "middle", kind: "regular", period_days: 7, status: "published", round: 1 }]);
+      if (url.includes("/families")) return res(200, [{ id: "f1", title: "Мини-задание: REST-клиент", kind: "exact", skill: "sql", level: 3, status: "draft", ready: true, company_id: "c1" }, { id: "f2", title: "Черновик", kind: "exact", skill: "sql", level: 3, status: "draft", ready: false, company_id: "c1" }]);
       if (url.includes("/candidates/p1/card")) return res(200, card);
       if (url.includes("/offers/salary-hint")) {
         return res(200, { candidate_min: 230000, below_candidate_min: false, category_median: 275000, p_accept: 0.7, acceptance_hint: "high", range_too_wide: false, message: "" });
