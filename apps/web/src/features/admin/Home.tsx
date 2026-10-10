@@ -94,7 +94,7 @@ export default function Home() {
               {H.analytics.funnel}
             </Link>{" "}
             {H.analytics.and}{" "}
-            <Link to="/admin/quality" className="font-semibold text-brand-deep underline dark:text-brand-mid">
+            <Link to="/federation/analytics" className="font-semibold text-brand-deep underline dark:text-brand-mid">
               {H.analytics.quality}
             </Link>
             .

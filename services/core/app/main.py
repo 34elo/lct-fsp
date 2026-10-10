@@ -30,6 +30,7 @@ from app.assessment.tasks_router import employer_router as employer_tasks_router
 # <<< block1
 # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
 # <<< block2
+from app.candidates.router import public_router as candidates_public_router
 from app.candidates.router import router as candidates_router
 from app.companies.router import admin_router as admin_companies_router
 from app.companies.router import invites_router as company_invites_router
@@ -102,6 +103,7 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(telegram_router)
     app.include_router(telegram_internal_router)
     app.include_router(candidates_router)
+    app.include_router(candidates_public_router)
     app.include_router(fsp_router)
     app.include_router(resumes_router)
     app.include_router(taxonomy_router)

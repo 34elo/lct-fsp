@@ -2,7 +2,7 @@ import { useMemo, useState, type FormEvent } from "react";
 import { Gloss } from "@/shared/Gloss";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { Badge, Button, Card, CardContent, cn, Combobox, EmptyState, ErrorState, Field, Skeleton, useFieldProps } from "@fsp/ui";
+import { Badge, Button, Combobox, Dialog, DialogContent, DialogTitle, EmptyState, ErrorState, Field, Skeleton, useFieldProps } from "@fsp/ui";
 
 import {
   getListProfessionsAdminProfessionsGetQueryKey,
@@ -67,10 +67,10 @@ function Editor({ prof, skills, onDone }: { prof: ProfessionOut | null; skills: 
   };
 
   return (
-    <Card data-testid={sel("editor")}>
-      <CardContent>
+    <div data-testid={sel("editor")}>
+      <div>
         <form noValidate onSubmit={submit} className="flex flex-col gap-4">
-          <h2 className="text-16 font-semibold break-all">{prof ? T.prof.editTitle(prof.slug) : T.prof.createTitle}</h2>
+          <DialogTitle className="break-all pr-10">{prof ? T.prof.editTitle(prof.slug) : T.prof.createTitle}</DialogTitle>
           {creating && (
             <Field label={T.prof.slug} hint={T.prof.slugHint} error={errs.slug}>
               <In data-testid={sel("slug")} value={slug} onChange={(e) => setSlug(e.target.value)} />
@@ -145,8 +145,8 @@ function Editor({ prof, skills, onDone }: { prof: ProfessionOut | null; skills: 
             </div>
           </div>
         </form>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
@@ -173,42 +173,44 @@ export function ProfessionsTab() {
       {q.isLoading && <Skeleton className="h-32" />}
       {(q.isError || (q.data && q.data.status !== 200)) && <ErrorState description={T.loadError} onRetry={() => void q.refetch()} />}
       {items && items.length === 0 && <EmptyState title={T.prof.empty} description={T.prof.emptyText} />}
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-        {items && items.length > 0 && (
-          <ul className="flex flex-col gap-2" data-testid={sel("list")}>
-            {items.map((p) => (
-              <li key={p.slug}>
-                <Card className={cn(editing === p.slug && "border-brand")}>
-                  <CardContent className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-14 font-semibold" data-testid={sel(`title-${p.slug}`)}>{p.title}</p>
-                      <p className="font-mono text-13 text-muted break-all">{p.slug}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {p.active === false && <Badge variant="muted" data-testid={sel(`hidden-${p.slug}`)}>{T.prof.hidden}</Badge>}
-                      <Badge>{T.prof.skillsCount(Object.keys(p.skill_weights).length)}</Badge>
-                      <Button type="button" size="sm" variant="outline" data-testid={sel(`edit-${p.slug}`)} onClick={() => { setEditing(p.slug); setNotice(""); }}>
-                        {T.prof.edit}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </li>
-            ))}
-          </ul>
-        )}
-        {editing && (editing === "new" || current) && (
-          <Editor
-            key={editing}
-            prof={current}
-            skills={skills}
-            onDone={(msg) => {
-              setEditing(null);
-              setNotice(msg);
-            }}
-          />
-        )}
-      </div>
+      <p className="text-13 text-muted" data-testid={sel("growth")}>{T.prof.growth}</p>
+      {items && items.length > 0 && (
+        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" data-testid={sel("list")}>
+          {items.map((p) => (
+            <li key={p.slug}>
+              <button
+                type="button"
+                data-testid={sel(`edit-${p.slug}`)}
+                aria-label={`${p.title}. ${T.prof.edit}`}
+                onClick={() => { setEditing(p.slug); setNotice(""); }}
+                className="flex h-full min-h-28 w-full flex-col items-start gap-2 rounded-xl border border-hairline bg-card p-4 text-left transition-colors hover:border-brand focus-visible:outline-2 focus-visible:outline-brand"
+              >
+                <span className="text-16 font-semibold" data-testid={sel(`title-${p.slug}`)}>{p.title}</span>
+                <span className="break-all font-mono text-12 text-muted">{p.slug}</span>
+                <span className="mt-auto flex flex-wrap gap-1">
+                  {p.active === false && <Badge variant="muted" data-testid={sel(`hidden-${p.slug}`)}>{T.prof.hidden}</Badge>}
+                  <Badge>{T.prof.skillsCount(Object.keys(p.skill_weights).length)}</Badge>
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <Dialog open={editing !== null && (editing === "new" || current !== null)} onOpenChange={(o) => !o && setEditing(null)}>
+        <DialogContent className="max-h-[90dvh] max-w-2xl overflow-y-auto" aria-describedby={undefined}>
+          {editing && (editing === "new" || current) && (
+            <Editor
+              key={editing}
+              prof={current}
+              skills={skills}
+              onDone={(msg) => {
+                setEditing(null);
+                setNotice(msg);
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

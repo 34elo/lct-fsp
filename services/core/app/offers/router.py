@@ -358,6 +358,7 @@ async def for_candidate(session: AsyncSession, o: Offer) -> OfferForCandidate:
     c = await companies.get_company(session, o.company_id)
     brief = CompanyBrief(
         id=c.id, name=c.name, responsibility_score=c.responsibility_score,
+        logo_url=companies.logo_url(c),
         verified=companies.badge_visible(c),
         reliability=await why.company_reliability(session, c.id, c.responsibility_score),
         description=c.description,

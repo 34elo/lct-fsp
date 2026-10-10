@@ -133,6 +133,7 @@ CREATE TABLE candidates (
   full_name_enc      bytea,                           -- ПДн шифруются Fernet
   contacts_enc       bytea,                           -- {email, phone, telegram}
   full_name_enc      bytea,                           -- ФИО, Fernet; работодателю после приглашения от его компании или при visibility.full_name (E36-5, E39-15)
+  avatar_key         text,                            -- аватар в MinIO: candidate-avatars/{user_id}/{sha256[:16]}.{png|jpg|webp}; работодателю после приглашения (E41-12)
   links_enc          bytea,                           -- ссылки кандидата (JSON-список), Fernet; только владельцу (E39-15, миграция b1_16)
   hidden_skills      text[],                          -- slug навыков, скрытых от работодателя; подбор не меняют (E39-15, b1_16)
   age_group          text,                            -- adult | minor (15–17 лет), E32-5b; дата рождения не хранится
@@ -455,7 +456,8 @@ CREATE TABLE interview_sessions (
 
 ```sql
 CREATE TABLE companies (
-  id uuid PRIMARY KEY, name text NOT NULL, inn text, site text, description text, logo_key text,
+  id uuid PRIMARY KEY, name text NOT NULL, inn text, site text, description text,
+  logo_key text,                                                -- логотип в MinIO: logos/{company_id}/{sha256[:16]}.{png|jpg|webp}; публичен (E41-12)
   contacts json,                                                -- {name, email, phone, telegram}
   direction text,                                               -- направление деятельности
   show_verified_badge bool NOT NULL DEFAULT true,               -- добровольная метка «компания проверена» (E32-5a)

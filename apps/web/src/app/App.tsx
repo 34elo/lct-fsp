@@ -51,10 +51,7 @@ import FederationDashboard from "@/features/admin/Dashboard";
 import AdminHome from "@/features/admin/Home";
 import FederationModeration from "@/features/admin/Moderation";
 import FspRegistry from "@/features/fsp-registry/FspRegistry";
-import FspRequests from "@/features/fsp-registry/Requests";
-import Quality from "@/features/quality/Quality";
-import Fairness from "@/features/quality/Fairness";
-import Runs from "@/features/quality/Runs";
+import AdminAnalytics from "@/features/admin/Analytics";
 import Navigator from "@/features/navigator/Navigator";
 import Jobs from "@/features/jobs/Jobs";
 import JobDetail from "@/features/jobs/JobDetail";
@@ -155,12 +152,9 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
             {/* >>> block2 (admin) */}
             <Route path="/federation" element={<AdminHome />} />
             <Route path="/federation/funnel" element={<FederationDashboard />} />
-            <Route path="/federation/requests" element={<FspRequests />} />
             <Route path="/federation/moderation" element={<FederationModeration />} />
             <Route path="/federation/registry" element={<FspRegistry />} />
-            <Route path="/admin/quality" element={<Quality />} />
-            <Route path="/admin/quality/fairness" element={<Fairness />} />
-            <Route path="/admin/quality/runs" element={<Runs />} />
+            <Route path="/federation/analytics" element={<AdminAnalytics />} />
             {/* <<< block2 (admin) */}
           </>
         )}

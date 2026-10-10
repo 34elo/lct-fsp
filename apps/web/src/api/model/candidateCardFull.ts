@@ -37,6 +37,7 @@ export interface CandidateCardFull {
   is_shortlisted?: boolean;
   interested_you?: boolean;
   full_name?: string | null;
+  avatar_url?: string | null;
   skills: SkillWithTrust[];
   grade_info: GradeInfo;
   experience: ExperienceBrief[];

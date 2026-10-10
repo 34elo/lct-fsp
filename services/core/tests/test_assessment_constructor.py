@@ -416,3 +416,84 @@ def test_admission_helpers():
     assert admission.answer_text(item) == "y"
     assert admission.answer_text(Item(kind=Kind.find_bug, stem="q", key=[2, 5])) == "строки 2, 5"
     assert admission.answer_text(Item(kind=Kind.exact, stem="q", key=42)) == "42"
+
+
+# --- E41-14: «Готово» без допуска админа, задание в приглашении ------------------------------
+
+
+async def test_company_family_ready_without_admin(api, factory, taxonomy_loaded):
+    from app.assessment import invite_bank
+
+    emp, adm = _employer(api), _admin(api)
+    fam = api.post("/families", json=SPECS["exact"], headers=emp).json()
+    assert fam["status"] == "draft" and fam["ready"] is False
+    # не в очереди допуска админа
+    queue = api.get("/admin/families?status=draft", headers=adm).json()
+    assert fam["id"] not in {f["id"] for f in queue}
+
+    async with session_scope(factory) as s:  # черновик нельзя прикрепить к приглашению
+        row = await s.get(FamilyRow, uuid.UUID(fam["id"]))
+        with pytest.raises(Exception, match="Готово"):
+            await invite_bank.describe(s, row.id, company_id=row.company_id, user_id=row.author_id)
+
+    r = api.put(f"/families/{fam['id']}/ready", json={"ready": True}, headers=emp)
+    assert r.status_code == 200 and r.json()["ready"] is True and r.json()["status"] == "draft"
+    assert api.get(f"/families/{fam['id']}", headers=emp).json()["ready"] is True
+
+    async with session_scope(factory) as s:
+        row = await s.get(FamilyRow, uuid.UUID(fam["id"]))
+        info = await invite_bank.describe(
+            s, row.id, company_id=row.company_id, user_id=row.author_id
+        )
+        assert info.kind == "exact" and info.minutes >= 1
+        cand = uuid.uuid4()
+        it = await invite_bank.item(s, row.id, candidate_id=cand, offer_id=uuid.uuid4())
+        assert "key" not in it
+        # чужая компания: 404
+        with pytest.raises(Exception, match="не найдено"):
+            await invite_bank.describe(s, row.id, company_id=uuid.uuid4(), user_id=uuid.uuid4())
+
+    # чужой и кандидат
+    other = _employer(api, inn="7736050003")
+    assert (
+        api.put(f"/families/{fam['id']}/ready", json={"ready": False}, headers=other).status_code
+        == 404
+    )
+    back = api.put(f"/families/{fam['id']}/ready", json={"ready": False}, headers=emp)
+    assert back.json()["ready"] is False
+
+
+async def test_admin_family_ready_is_bank_status(api, taxonomy_loaded):
+    adm = _admin(api)
+    fam = api.post("/families", json=SPECS["exact"], headers=adm).json()
+    assert fam["ready"] is True  # pilot
+    assert (
+        api.put(f"/families/{fam['id']}/ready", json={"ready": True}, headers=adm).status_code
+        == 409
+    )
+
+
+async def test_invite_submit_writes_task_evidence_once(api, factory, taxonomy_loaded):
+    from app.assessment import invite_bank
+    from app.assessment.attempts import build_item, item_seed
+    from app.graph.models import Evidence
+
+    emp = _employer(api)
+    fam = api.post("/families", json=SPECS["exact"], headers=emp).json()
+    api.put(f"/families/{fam['id']}/ready", json={"ready": True}, headers=emp)
+    cand, offer = uuid.uuid4(), uuid.uuid4()
+    async with session_scope(factory) as s:
+        row = await s.get(FamilyRow, uuid.UUID(fam["id"]))
+        key = build_item(family_of(row), item_seed(cand, offer, row.id), None).key
+        for _ in range(2):  # повтор не плодит доказательств
+            score = await invite_bank.submit(
+                s, row.id, candidate_id=cand, offer_id=offer, answer=str(key)
+            )
+            assert score == 1.0
+        ev = list(await s.scalars(select(Evidence).where(Evidence.candidate_id == cand)))
+        assert len(ev) == 1 and ev[0].source == "task" and ev[0].fact_id == offer
+        assert ev[0].fact_type == "invite_task" and 0 < ev[0].strength <= 0.5
+        wrong = await invite_bank.submit(
+            s, row.id, candidate_id=cand, offer_id=uuid.uuid4(), answer="-1"
+        )
+        assert wrong == 0.0

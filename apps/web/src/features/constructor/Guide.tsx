@@ -7,7 +7,7 @@ import { useCreateFamilyFamiliesPost } from "@/api/endpoints/assessment/assessme
 import { useGetTaxonomyTaxonomyGet } from "@/api/endpoints/taxonomy/taxonomy";
 import type { FamilyOut } from "@/api/model";
 import { PAGE } from "@/shared/lib/page";
-import { Area, FamilyPreview, In, KeyEditor, VarEditor } from "./Constructor";
+import { Area, FamilyPreview, In, KeyEditor, ReadyAction, VarEditor } from "./Constructor";
 import { FIELD_STEP, GUIDE_STEPS, TEMPLATES, sampleStem, stepErrors } from "./guide-model";
 import { G } from "./guide-text";
 import { KINDS, buildSpec, emptyVar, initialForm, localErrors, problemView, type FormState, type ProblemView } from "./model";
@@ -316,7 +316,14 @@ export default function Guide() {
           <Card>
             <CardContent className="flex flex-col gap-3">
               <h2 className="text-16 font-semibold">{T.preview.title}</h2>
-              {created ? <FamilyPreview family={created} /> : <CandidateView f={f} />}
+              {created ? (
+                <>
+                  <FamilyPreview family={created} />
+                  <ReadyAction family={created} onChange={setCreated} />
+                </>
+              ) : (
+                <CandidateView f={f} />
+              )}
             </CardContent>
           </Card>
         </aside>

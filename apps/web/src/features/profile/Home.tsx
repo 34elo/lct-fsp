@@ -1,7 +1,8 @@
 import { PAGE } from "@/shared/lib/page";
 
 import { Gi, Gloss } from "@/shared/Gloss";
-import { buttonVariants, Chips, CircuitLine, cn, ConstellationAvatar, type ConstellationNode, dotsText, ErrorState, EvidenceGraph, formatRub, formatRubRangeShort, GradeTag, H1, H2, Lbl, ListRow, MetricTile, Num, Panel, PanelCap, Skeleton, SkillConstellation, SkillTag, StatusTag } from "@fsp/ui";
+import { Avatar, buttonVariants, Chips, CircuitLine, cn, ConstellationAvatar, type ConstellationNode, dotsText, ErrorState, EvidenceGraph, formatRub, formatRubRangeShort, GradeTag, H1, H2, Lbl, ListRow, MetricTile, Num, Panel, PanelCap, Skeleton, SkillConstellation, SkillTag, StatusTag } from "@fsp/ui";
+import { avatarSrc } from "@/shared/lib/avatar";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 
@@ -254,6 +255,7 @@ function Interests({ interests, offers }: { interests?: InterestsSummary; offers
               to={o.status === "interest" || o.status === "interest_opened" ? "/me/offers?show=interests" : `/me/offers/${o.id}`}
               className="flex min-h-11 flex-wrap items-center gap-x-3 gap-y-1 border-b border-hairline py-3 last:border-b-0 hover:text-brand-fg"
             >
+              <Avatar name={o.company.name} src={avatarSrc(o.company.logo_url)} size={28} className="rounded-lg" />
               <span className="min-w-0 flex-1 truncate font-medium">{o.company.name}</span>
               <StatusBadge status={o.status} />
               <Num className="text-13 text-muted">{formatRubRangeShort(o.salary_from, o.salary_to)}</Num>
