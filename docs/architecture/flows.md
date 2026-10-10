@@ -6,7 +6,7 @@
 
 ## F1. Вход и регистрация
 
-Способы: email и пароль; Telegram (бот `/start` или Telegram Login Widget на сайте); одноразовая ссылка из бота; «Войти через ФСП» (F3).
+Способы: email и пароль; Telegram (Telegram Login Widget на сайте; бот только привязывается к готовому аккаунту, E43-7); одноразовая ссылка из бота; «Войти через ФСП» (F3).
 
 ```mermaid
 sequenceDiagram
@@ -15,13 +15,11 @@ sequenceDiagram
   participant API as core-api
   participant R as Redis
   participant W as web
-  U->>B: /start
-  B->>API: POST /internal/tg/start {tg_user_id, chat_id, username}
-  API->>API: найти или создать users(candidate) + telegram_accounts
-  API-->>B: {user_id, missing_consents}
-  B->>U: как это работает + согласия
-  U->>B: Согласен
-  B->>API: POST /internal/tg/consents
+  U->>B: /start link_<token> (из профиля на сайте)
+  B->>API: POST /internal/tg/link {tg_user_id, token, chat_id, username}
+  API-->>B: {user_id} | 410 link_token_invalid | 409
+  B->>U: «Telegram привязан» | «Ссылка устарела» | «уже привязан»
+  Note over B,U: /start без кода у непривязанного: «Зарегистрируйся на сайте» (E43-7)
   U->>B: Открыть платформу
   B->>API: POST /internal/auth/magic-link {tg_user_id, redirect}
   API->>R: SET s:magic:{token} EX 300

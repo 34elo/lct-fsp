@@ -37,7 +37,10 @@ class CoreClient:
         await self._http.aclose()
 
     async def request(self, method: str, path: str, **kwargs: Any) -> Any:
-        resp = await self._http.request(method, path, **kwargs)
+        try:
+            resp = await self._http.request(method, path, **kwargs)
+        except httpx.HTTPError as exc:  # таймаут, обрыв: отвечаем «недоступен»
+            raise CoreError(503, "core_unreachable", type(exc).__name__) from exc
         if resp.is_success:
             return resp.json() if resp.content else None
         try:
@@ -46,26 +49,16 @@ class CoreClient:
             body = {}
         raise CoreError(resp.status_code, body.get("code", "core_error"), body.get("detail", ""))
 
-    async def start(
-        self, tg_user_id: int, chat_id: int, username: str | None, start_param: str | None
+    async def is_linked(self, tg_user_id: int) -> bool:
+        """Привязан ли Telegram к аккаунту сайта (ничего не создаёт)."""
+        data = await self.request("GET", "/internal/tg/linked", params={"tg_user_id": tg_user_id})
+        return bool(data["linked"])
+
+    async def link(
+        self, tg_user_id: int, token: str, chat_id: int | None = None, username: str | None = None
     ) -> dict:
-        body = {
-            "tg_user_id": tg_user_id,
-            "chat_id": chat_id,
-            "username": username,
-            "start_param": start_param,
-        }
-        return await self.request("POST", "/internal/tg/start", json=body)
-
-    async def consents(self, tg_user_id: int, types: list[str]) -> None:
-        await self.request(
-            "POST", "/internal/tg/consents", json={"tg_user_id": tg_user_id, "types": types}
-        )
-
-    async def link(self, tg_user_id: int, token: str) -> dict:
-        return await self.request(
-            "POST", "/internal/tg/link", json={"tg_user_id": tg_user_id, "token": token}
-        )
+        body = {"tg_user_id": tg_user_id, "token": token, "chat_id": chat_id, "username": username}
+        return await self.request("POST", "/internal/tg/link", json=body)
 
     async def magic_link(self, tg_user_id: int, redirect: str = "/") -> str:
         """Одноразовая ссылка для входа на сайт (кнопка «Открыть на сайте»)."""

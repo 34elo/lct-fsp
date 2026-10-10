@@ -6,7 +6,7 @@ from typing import Annotated, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, Query, Request, Response, UploadFile
-from fsp_contracts.assessment import ClaimedVsConfirmed
+from fsp_contracts.assessment import ClaimedVsConfirmed, ProfileViewsStats
 from fsp_contracts.enums import (
     ConsentType,
     EmploymentType,
@@ -33,6 +33,7 @@ from app.identity import service as identity
 from app.identity.deps import get_user_even_deleted, require_roles
 from app.identity.models import User
 from app.matching import card
+from app.matching.service import visible_ids
 from app.openapi_errors import problem_responses
 from app.resumes import service as resumes
 from app.taxonomy.service import SkillGraphCache
@@ -448,12 +449,14 @@ async def put_stoplist(
     return StoplistIO(company_ids=[UUID(c) for c in cand.stoplist_company_ids])
 
 
-@router.get("/views", responses=problem_responses(401, 403))
+@router.get("/views", response_model=ProfileViewsStats, responses=problem_responses(401, 403))
 async def my_views(
     user: User = Depends(owner), session: AsyncSession = Depends(get_session)
 ) -> dict:
-    """«Вас смотрели N компаний» — только агрегаты, без названий (security.md §3)."""
-    return await views.stats(session, user.id)
+    """«Вас смотрели N компаний» — только агрегаты, без названий (security.md §3). Шкала 30 дней
+    полная; `visible` — видна ли карточка работодателям (тест + согласие на публикацию)."""
+    visible = user.id in await visible_ids(session, [user.id])
+    return await views.stats(session, user.id, visible=visible)
 
 
 class CategoryRole(BaseModel):

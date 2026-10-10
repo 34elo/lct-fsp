@@ -221,6 +221,19 @@ def extra_ok(
     return True
 
 
+def _has_direction(cand: Any, grades: list[Any], wanted: set[str]) -> bool:
+    """Кандидат работает в одном из направлений: `primary_role` анкеты или действующий грейд
+    теста по профессии (E43-6: второе направление не прячется за `primary_role`)."""
+    return cand.primary_role in wanted or any(g.profession in wanted for g in grades)
+
+
+def _direction_of(cand: Any, grades: list[Any], wanted: list[str]) -> Any | None:
+    """Грейд запрошенного направления для карточки: `primary_role` приоритетнее, иначе первый."""
+    mine = [g for g in grades if g.profession in wanted]
+    mine.sort(key=lambda g: (g.profession != cand.primary_role, wanted.index(g.profession)))
+    return mine[0] if mine else None
+
+
 def encode_cursor(sort: Sort, key: float, pseudo_id: str) -> str:
     raw = json.dumps([sort, round(key, 6), pseudo_id], separators=(",", ":"))
     return base64.urlsafe_b64encode(raw.encode()).decode().rstrip("=")
@@ -323,6 +336,7 @@ def _card(
     categories: list[CategoryRef] | None = None,
     strength_view: StrengthView | None = None,
     interested_you: bool = False,
+    direction: Any | None = None,
 ) -> CandidateCard:
     vis = candidates.visibility_of(c)  # ADR-027: что кандидат открыл работодателю
     hidden = candidates.hidden_skills_of(c)  # E39-15: скрытые кандидатом навыки не показываем
@@ -345,9 +359,11 @@ def _card(
         pseudo_id=c.pseudo_id,
         pseudonym=c.pseudonym,
         avatar_seed=hashlib.sha1(c.pseudo_id.encode()).hexdigest()[:12],
-        primary_role=c.primary_role,
-        grade=c.grade,
-        grade_preliminary=c.grade_confidence is None or c.grade_confidence < 0.5,
+        primary_role=direction.profession if direction else c.primary_role,
+        grade=direction.grade if direction else c.grade,
+        grade_preliminary=(direction.needs_confirmation or direction.low_confidence)
+        if direction
+        else c.grade_confidence is None or c.grade_confidence < 0.5,
         primary_stack=[x for x in c.primary_stack or () if x not in hidden],
         top_skills=top,
         fsp_highlights=highlights if vis["fsp"] else [],
@@ -614,11 +630,12 @@ async def search_candidates(
     day = today or datetime.now(UTC).date()
     f = filters
     pool = await only_visible(session, await candidates.search_pool(
-        session, company_id=company_id, roles=[str(r) for r in f.roles] if f.roles else None,
+        session, company_id=company_id,
         salary_max=f.salary_max,
         formats=[str(x) for x in f.formats] if f.formats else None,
         employment_types=[str(x) for x in f.employment_types] if f.employment_types else None,
         cities=f.cities, relocation_ok=f.relocation_ok, active_only=bool(f.active_only),
+        require_role=False,
     ))  # fmt: skip
     if category is not None:
         members = set(
@@ -639,13 +656,16 @@ async def search_candidates(
     disc = await graph.fsp_disciplines_of(session, ids) if f.fsp_only or f.fsp_disciplines else {}
     cand_grades = (
         await assessment.get_grades_many(session, ids)
-        if f.professions or f.only_confirmed or f.grade_min or f.grade_max
+        if f.professions or f.only_confirmed or f.grade_min or f.grade_max or f.roles
         else {}
     )
     prof_of_cat = category.profession if category is not None else None
 
     rows: list[Row] = []
+    wanted_roles = {str(r) for r in f.roles or ()}
     for c in pool:
+        if wanted_roles and not _has_direction(c, cand_grades.get(c.user_id, []), wanted_roles):
+            continue
         held = {s.skill_id: s for s in owned[c.user_id]}
         if any(
             sid is None or sid not in held or held[sid].level < floor
@@ -730,7 +750,16 @@ async def search_candidates(
     highlights = await _fsp_highlights(
         session, page_ids, trust, day, {r.cand.user_id: r.cand.primary_role for r in page}
     )
-    cats = await categories_of(session, page_ids)
+    page_grades = await assessment.get_grades_many(session, page_ids)
+    cats = {
+        cid: [CategoryRef(profession=g.profession, grade=g.grade) for g in gs]
+        for cid, gs in page_grades.items()
+    }
+    asked = (
+        [category.profession]
+        if category is not None
+        else [str(p) for p in f.professions or ()] or [str(r) for r in f.roles or ()]
+    )  # карточка показывает запрошенное направление (один псевдоним, разные профессии)
     items = [
         _card(
             r.cand,
@@ -742,6 +771,7 @@ async def search_candidates(
             cats.get(r.cand.user_id, []),
             _strength_view(r),
             r.interest_boost > 1.0,
+            _direction_of(r.cand, page_grades.get(r.cand.user_id, []), asked) if asked else None,
         ).model_dump(mode="json")
         for r in page
     ]

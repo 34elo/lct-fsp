@@ -120,6 +120,8 @@ async def tg_consents(body: ConsentsIn, session: AsyncSession = Depends(get_sess
 class LinkIn(BaseModel):
     tg_user_id: int
     token: str = Field(min_length=1, max_length=256)
+    chat_id: int | None = None  # для нового аккаунта; по умолчанию = tg_user_id
+    username: str | None = Field(default=None, max_length=64)
 
 
 class LinkOut(BaseModel):
@@ -135,8 +137,20 @@ async def tg_link(
     limiter: RateLimiter = Depends(get_limiter),
 ):
     await limiter.check(f"tglink:tg:{body.tg_user_id}", 10, 60)
-    acc = await service.link_by_token(session, redis, body.tg_user_id, body.token)
+    acc = await service.link_by_token(
+        session, redis, body.tg_user_id, body.token, chat_id=body.chat_id, username=body.username
+    )
     return LinkOut(user_id=acc.user_id)
+
+
+class TgLinkedOut(BaseModel):
+    linked: bool
+
+
+@internal.get("/tg/linked", response_model=TgLinkedOut, dependencies=[Depends(require_bot)])
+async def tg_linked(tg_user_id: int, session: AsyncSession = Depends(get_session)):
+    """Привязан ли Telegram к аккаунту сайта. Ничего не создаёт (E43-7: бот не регистрирует)."""
+    return TgLinkedOut(linked=await service.is_linked_tg(session, tg_user_id))
 
 
 class MagicLinkIn(BaseModel):
