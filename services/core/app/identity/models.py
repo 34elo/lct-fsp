@@ -36,6 +36,13 @@ class User(Base):
     )
     # E40-1: демо-данные (seed, жюри): не в статистике, сбрасываются `demo-reset`
     is_demo: Mapped[bool] = mapped_column(default=False, server_default=sa.false())
+    # E41-16: аккаунт HR, созданный владельцем компании, входит временным паролем и обязан
+    # сменить его до любого другого действия; временный пароль живёт 72 ч
+    must_change_password: Mapped[bool] = mapped_column(default=False, server_default=sa.false())
+    temp_password_expires_at: Mapped[datetime | None] = mapped_column(
+        sa.DateTime(timezone=True), default=None
+    )
+    managed_by_company_id: Mapped[uuid.UUID | None] = mapped_column(default=None)
 
 
 class RefreshToken(Base):

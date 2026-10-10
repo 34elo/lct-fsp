@@ -32,6 +32,7 @@ SCHEDULE: dict[str, int] = {
     "candidate_links.refresh": 10 * 60,
     "cleanup": 24 * 60 * 60,
     # >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
+    "taxonomy.professions.suggest": 7 * 24 * 60 * 60,  # E41-17
     # <<< block1
     # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
     # <<< block2

@@ -10,4 +10,5 @@ export interface UserOut {
   email: string | null;
   role: string;
   email_verified?: boolean;
+  must_change_password?: boolean;
 }

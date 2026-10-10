@@ -982,6 +982,9 @@
         },
         "core_jobs__candidate_delete": {
           "$ref": "#/components/messages/core_jobs__candidate_delete"
+        },
+        "core_jobs__taxonomy_professions_suggest": {
+          "$ref": "#/components/messages/core_jobs__taxonomy_professions_suggest"
         }
       },
       "bindings": {
@@ -1779,6 +1782,17 @@
       "messages": [
         {
           "$ref": "#/channels/core_jobs/messages/core_jobs__candidate_delete"
+        }
+      ]
+    },
+    "receive_core_jobs__taxonomy_professions_suggest": {
+      "action": "receive",
+      "channel": {
+        "$ref": "#/channels/core_jobs"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/core_jobs/messages/core_jobs__taxonomy_professions_suggest"
         }
       ]
     },
@@ -3300,6 +3314,29 @@
               "properties": {
                 "type": {
                   "const": "candidate.delete"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/CoreJob"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "core_jobs__taxonomy_professions_suggest": {
+        "name": "taxonomy.professions.suggest",
+        "title": "taxonomy.professions.suggest",
+        "summary": "Команда для core",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "taxonomy.professions.suggest"
                 },
                 "payload": {
                   "$ref": "#/components/schemas/CoreJob"

@@ -55,6 +55,7 @@ import type {
   ProfessionIn,
   ProfessionOut,
   ProfessionPatch,
+  ProfessionSuggestionOut,
   ProvisionalOut,
   QueueItem,
   RegistryEventIn,
@@ -75,6 +76,8 @@ import type {
   RetiredOut,
   SkillCard,
   SkillGraphOut,
+  SuggestionAccept,
+  SuggestionAccepted,
   TwoWorldsAdminDemoTwoWorldsGetParams,
   TwoWorldsOut,
   VersionOut
@@ -3045,6 +3048,428 @@ export const usePutCardAdminSkillCardsSlugPut = <TError = ErrorType<ProblemOut>,
         TContext
       > => {
       return useMutation(getPutCardAdminSkillCardsSlugPutMutationOptions(options), queryClient);
+    }
+    export type listProfessionSuggestionsAdminProfessionSuggestionsGetResponse200 = {
+  data: ProfessionSuggestionOut[]
+  status: 200
+}
+
+export type listProfessionSuggestionsAdminProfessionSuggestionsGetResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type listProfessionSuggestionsAdminProfessionSuggestionsGetResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type listProfessionSuggestionsAdminProfessionSuggestionsGetResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type listProfessionSuggestionsAdminProfessionSuggestionsGetResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type listProfessionSuggestionsAdminProfessionSuggestionsGetResponseSuccess = (listProfessionSuggestionsAdminProfessionSuggestionsGetResponse200) & {
+  headers: Headers;
+};
+export type listProfessionSuggestionsAdminProfessionSuggestionsGetResponseError = (listProfessionSuggestionsAdminProfessionSuggestionsGetResponse401ApplicationProblemJson | listProfessionSuggestionsAdminProfessionSuggestionsGetResponse401ApplicationJson | listProfessionSuggestionsAdminProfessionSuggestionsGetResponse403ApplicationProblemJson | listProfessionSuggestionsAdminProfessionSuggestionsGetResponse403ApplicationJson) & {
+  headers: Headers;
+};
+
+export type listProfessionSuggestionsAdminProfessionSuggestionsGetResponse = (listProfessionSuggestionsAdminProfessionSuggestionsGetResponseSuccess | listProfessionSuggestionsAdminProfessionSuggestionsGetResponseError)
+
+export const getListProfessionSuggestionsAdminProfessionSuggestionsGetUrl = () => {
+
+
+
+
+  return `/admin/profession-suggestions`
+}
+
+/**
+ * Открытые предложения «Новая профессия?» (еженедельный майнинг вакансий и запросов).
+ * @summary List Profession Suggestions
+ */
+export const listProfessionSuggestionsAdminProfessionSuggestionsGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<listProfessionSuggestionsAdminProfessionSuggestionsGetResponse> => {
+
+  return apiFetch<listProfessionSuggestionsAdminProfessionSuggestionsGetResponse>(getListProfessionSuggestionsAdminProfessionSuggestionsGetUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListProfessionSuggestionsAdminProfessionSuggestionsGetQueryKey = () => {
+    return [
+    `/admin/profession-suggestions`
+    ] as const;
+    }
+
+
+export const getListProfessionSuggestionsAdminProfessionSuggestionsGetQueryOptions = <TData = Awaited<ReturnType<typeof listProfessionSuggestionsAdminProfessionSuggestionsGet>>, TError = ErrorType<ProblemOut>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProfessionSuggestionsAdminProfessionSuggestionsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListProfessionSuggestionsAdminProfessionSuggestionsGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listProfessionSuggestionsAdminProfessionSuggestionsGet>>> = ({ signal }) => listProfessionSuggestionsAdminProfessionSuggestionsGet({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listProfessionSuggestionsAdminProfessionSuggestionsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListProfessionSuggestionsAdminProfessionSuggestionsGetQueryResult = NonNullable<Awaited<ReturnType<typeof listProfessionSuggestionsAdminProfessionSuggestionsGet>>>
+export type ListProfessionSuggestionsAdminProfessionSuggestionsGetQueryError = ErrorType<ProblemOut>
+
+
+export function useListProfessionSuggestionsAdminProfessionSuggestionsGet<TData = Awaited<ReturnType<typeof listProfessionSuggestionsAdminProfessionSuggestionsGet>>, TError = ErrorType<ProblemOut>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProfessionSuggestionsAdminProfessionSuggestionsGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProfessionSuggestionsAdminProfessionSuggestionsGet>>,
+          TError,
+          Awaited<ReturnType<typeof listProfessionSuggestionsAdminProfessionSuggestionsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListProfessionSuggestionsAdminProfessionSuggestionsGet<TData = Awaited<ReturnType<typeof listProfessionSuggestionsAdminProfessionSuggestionsGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProfessionSuggestionsAdminProfessionSuggestionsGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProfessionSuggestionsAdminProfessionSuggestionsGet>>,
+          TError,
+          Awaited<ReturnType<typeof listProfessionSuggestionsAdminProfessionSuggestionsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListProfessionSuggestionsAdminProfessionSuggestionsGet<TData = Awaited<ReturnType<typeof listProfessionSuggestionsAdminProfessionSuggestionsGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProfessionSuggestionsAdminProfessionSuggestionsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Profession Suggestions
+ */
+
+export function useListProfessionSuggestionsAdminProfessionSuggestionsGet<TData = Awaited<ReturnType<typeof listProfessionSuggestionsAdminProfessionSuggestionsGet>>, TError = ErrorType<ProblemOut>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProfessionSuggestionsAdminProfessionSuggestionsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListProfessionSuggestionsAdminProfessionSuggestionsGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostResponse201 = {
+  data: SuggestionAccepted
+  status: 201
+}
+
+export type acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostResponseSuccess = (acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostResponse201) & {
+  headers: Headers;
+};
+export type acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostResponseError = (acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostResponse401ApplicationProblemJson | acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostResponse401ApplicationJson | acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostResponse403ApplicationProblemJson | acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostResponse403ApplicationJson | acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostResponse404ApplicationProblemJson | acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostResponse404ApplicationJson | acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostResponse409ApplicationProblemJson | acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostResponse409ApplicationJson | acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostResponse422ApplicationProblemJson | acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostResponse422ApplicationJson) & {
+  headers: Headers;
+};
+
+export type acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostResponse = (acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostResponseSuccess | acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostResponseError)
+
+export const getAcceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostUrl = (suggestionId: string,) => {
+
+
+
+
+  return `/admin/profession-suggestions/${suggestionId}/accept`
+}
+
+/**
+ * «Создать» одной кнопкой: профессия с профилем навыков (ядро + недостающие типы навыков
+ * ближайшей профессии, по которым есть семейства).
+ * @summary Accept Profession Suggestion
+ */
+export const acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPost = async (suggestionId: string,
+    suggestionAcceptNull?: SuggestionAccept | null, options?: Parameters<typeof apiFetch>[1]): Promise<acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostResponse>(getAcceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostUrl(suggestionId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(suggestionAcceptNull)
+  }
+);}
+
+
+
+
+
+export const getAcceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostMutationKey = () => ['acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPost'] as const;
+
+export const getAcceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPost>>, TError,AcceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPost>>, TError,AcceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostMutationVariables, TContext> => {
+
+const mutationKey = getAcceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPost>>, AcceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostMutationVariables> = (props) => {
+          const {suggestionId,data} = props ?? {};
+
+          return  acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPost(suggestionId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AcceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostMutationResult = NonNullable<Awaited<ReturnType<typeof acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPost>>>
+    export type AcceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostMutationBody = SuggestionAccept | null | undefined
+    export type AcceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostMutationError = ErrorType<ProblemOut>
+    export type AcceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostMutationVariables = {suggestionId: string;data?: SuggestionAccept | null}
+
+    /**
+ * @summary Accept Profession Suggestion
+ */
+export const useAcceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPost = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPost>>, TError,AcceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof acceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPost>>,
+        TError,
+        AcceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAcceptProfessionSuggestionAdminProfessionSuggestionsSuggestionIdAcceptPostMutationOptions(options), queryClient);
+    }
+    export type rejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostResponse200 = {
+  data: ProfessionSuggestionOut
+  status: 200
+}
+
+export type rejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type rejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type rejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type rejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type rejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type rejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type rejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type rejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type rejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type rejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostResponseSuccess = (rejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostResponse200) & {
+  headers: Headers;
+};
+export type rejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostResponseError = (rejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostResponse401ApplicationProblemJson | rejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostResponse401ApplicationJson | rejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostResponse403ApplicationProblemJson | rejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostResponse403ApplicationJson | rejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostResponse404ApplicationProblemJson | rejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostResponse404ApplicationJson | rejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostResponse409ApplicationProblemJson | rejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostResponse409ApplicationJson | rejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostResponse422) & {
+  headers: Headers;
+};
+
+export type rejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostResponse = (rejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostResponseSuccess | rejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostResponseError)
+
+export const getRejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostUrl = (suggestionId: string,) => {
+
+
+
+
+  return `/admin/profession-suggestions/${suggestionId}/reject`
+}
+
+/**
+ * «Отклонить»: решение запоминается, похожий кластер больше не предлагается.
+ * @summary Reject Profession Suggestion
+ */
+export const rejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPost = async (suggestionId: string, options?: Parameters<typeof apiFetch>[1]): Promise<rejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostResponse> => {
+
+  return apiFetch<rejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostResponse>(getRejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostUrl(suggestionId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getRejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostMutationKey = () => ['rejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPost'] as const;
+
+export const getRejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPost>>, TError,RejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof rejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPost>>, TError,RejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostMutationVariables, TContext> => {
+
+const mutationKey = getRejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof rejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPost>>, RejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostMutationVariables> = (props) => {
+          const {suggestionId} = props ?? {};
+
+          return  rejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPost(suggestionId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostMutationResult = NonNullable<Awaited<ReturnType<typeof rejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPost>>>
+
+    export type RejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostMutationError = ErrorType<ProblemOut | HTTPValidationError>
+    export type RejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostMutationVariables = {suggestionId: string}
+
+    /**
+ * @summary Reject Profession Suggestion
+ */
+export const useRejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPost = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPost>>, TError,RejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof rejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPost>>,
+        TError,
+        RejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRejectProfessionSuggestionAdminProfessionSuggestionsSuggestionIdRejectPostMutationOptions(options), queryClient);
     }
     export type getQueueAdminSkillsQueueGetResponse200 = {
   data: QueueItem[]

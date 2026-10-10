@@ -186,3 +186,37 @@ class SkillMerge(Base):
         sa.DateTime(timezone=True), default=utcnow, server_default=sa.func.now()
     )
     reverted_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), default=None)
+
+
+class ProfessionSuggestion(Base):
+    """Предложение новой профессии (E41-17, skills.md §5.1): кластер навыков вакансий и запросов.
+
+    `key` — отсортированные slug'и ядра через запятую. Отклонённые и принятые строки остаются:
+    по ним майнинг узнаёт похожий кластер (Жаккар ≥ 0.6) и не предлагает его снова.
+    """
+
+    __tablename__ = "profession_suggestions"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    key: Mapped[str] = mapped_column(Text, unique=True)
+    title: Mapped[str] = mapped_column(Text)
+    skills: Mapped[list] = mapped_column(sa.JSON)  # slug'и ядра, по убыванию частоты
+    weights: Mapped[dict] = mapped_column(sa.JSON)  # slug → доля корзин кластера с навыком
+    support_vacancies: Mapped[int] = mapped_column(default=0, server_default="0")
+    support_needs: Mapped[int] = mapped_column(default=0, server_default="0")
+    nearest_profession: Mapped[str | None] = mapped_column(Text, default=None)
+    nearest_overlap: Mapped[float] = mapped_column(sa.Float, default=0.0, server_default="0")
+    examples: Mapped[list] = mapped_column(sa.JSON, default=list)  # [{vacancy_id, title}]
+    source: Mapped[str] = mapped_column(Text, default="mining", server_default="mining")  # | seed
+    status: Mapped[str] = mapped_column(Text, default="open", server_default="open")
+    profession: Mapped[str | None] = mapped_column(Text, default=None)  # созданная профессия
+    decided_by: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), default=None
+    )
+    decided_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), default=None)
+    created_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), default=utcnow, server_default=sa.func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), default=utcnow, onupdate=utcnow, server_default=sa.func.now()
+    )

@@ -5,7 +5,8 @@ fsp-mock  — записать JSON с данными fsp-mock (FSP_MOCK_DATA=<�
 core      — наполнить БД core через его сервисные слои (DATABASE_URL, справочник навыков загружен)
 all       — fsp-mock + core
 demo2     — демо-данные v2 (E34-1, demo_v2.py): герои, компании, офферы, задания; после grades
-families  — демо-очередь допуска заданий (E39-31): профессия × грейд, идемпотентно
+families  — демо-очередь допуска заданий (E39-31): профессия × грейд, и предложение новой
+            профессии «Разработчик 1С» (E41-17); идемпотентно
 grades    — seed-грейды (таблица grades, блок 1); после core, идемпотентно
 fsp-registry — демо-реестр ФСП в БД fsp-connector (FSP_CONNECTOR_DATABASE_URL; E39-28)
 """
@@ -115,10 +116,12 @@ async def seed_families_cmd() -> dict:
     from fsp_platform.db import make_engine, make_session_factory
 
     from .families import seed_families
+    from .professions import seed_profession_suggestion
 
     engine = make_engine(Settings().database_url)
     try:
-        return await seed_families(make_session_factory(engine))
+        factory = make_session_factory(engine)
+        return await seed_families(factory) | await seed_profession_suggestion(factory)
     finally:
         await engine.dispose()
 

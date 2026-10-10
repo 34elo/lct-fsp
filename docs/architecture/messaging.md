@@ -148,6 +148,7 @@ core.ingest: resumes.parsed → ui.user.<id> «вот что я понял»
 | `company.rating` | 1 ч |
 | `candidate_links.refresh` | 10 мин, если были импорты |
 | `cleanup` | сутки |
+| `taxonomy.professions.suggest` | неделя: предложения новых профессий (E41-17, [skills.md §5.1](skills.md#51-предложения-новых-профессий)) |
 
 ## 5. Redis: что в нём осталось
 

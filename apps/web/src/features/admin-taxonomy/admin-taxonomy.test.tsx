@@ -14,6 +14,14 @@ let professions: Record<string, unknown>[];
 let postReply: () => Response;
 let putReply: () => Response;
 let cardSource = "file";
+let suggestions: Record<string, unknown>[];
+let acceptReply: () => Response;
+const suggestion = () => ({
+  id: "s1", title: "Разработчик 1С", support_vacancies: 7, support_needs: 3, status: "open", created_at: "2026-10-10T00:00:00Z",
+  skills: [{ slug: "1c", name: "1С", type: "hard", share: 1 }, { slug: "mssql", name: "Microsoft SQL Server", type: "hard", share: 0.8 }],
+  nearest: { slug: "backend", title: "Бэкенд", overlap: 0.25 },
+  examples: [{ vacancy_id: null, title: "Программист 1С (учёт и склад)" }],
+});
 
 const card = () => ({
   schema_version: 1, skill: "sql", type: "hard", summary: "Пишет запросы и понимает индексы.",
@@ -29,6 +37,8 @@ const card = () => ({
 beforeEach(() => {
   calls.length = 0;
   cardSource = "file";
+  suggestions = [];
+  acceptReply = () => res(201, { suggestion: { ...suggestion(), status: "created", profession: "p_1c_mssql" }, profession: { ...professions[0], slug: "p_1c_mssql", title: "Разработчик 1С" } });
   professions = [{ slug: "backend", title: "Бэкенд", skill_weights: { sql: 0.8, python: 0.6 }, skill_types: {} }];
   postReply = () => res(201, { ...professions[0], slug: "qa", title: "QA" });
   putReply = () => res(200, { skill: "sql", source: "admin", version: 3, card: card(), taxonomy_version: 9 });
@@ -42,6 +52,9 @@ beforeEach(() => {
       if (url.endsWith("/auth/refresh")) return res(200, { access_token: "t" });
       if (url.endsWith("/auth/me") || url.endsWith("/me")) return res(200, { id: "u1", email: "a@b.ru", role: "fsp_admin", consents: ["pd_processing"] });
       if (url.includes("/taxonomy")) return res(200, { skills: [{ slug: "sql", name: "SQL", kind: "hard" }, { slug: "python", name: "Python", kind: "hard" }] });
+      if (url.endsWith("/admin/profession-suggestions/s1/accept")) return acceptReply();
+      if (url.endsWith("/admin/profession-suggestions/s1/reject")) return res(200, { ...suggestion(), status: "rejected" });
+      if (url.endsWith("/admin/profession-suggestions")) return res(200, suggestions);
       if (url.endsWith("/admin/professions") && method === "POST") return postReply();
       if (url.includes("/admin/professions/backend") && method === "PATCH") return res(200, professions[0]);
       if (url.includes("/admin/professions/backend") && method === "DELETE") return res(200, { slug: "backend", taxonomy_version: 5 });
@@ -155,6 +168,39 @@ describe("E13-4a профессии", () => {
     expect(calls.some((c) => c.method === "DELETE")).toBe(false);
     fireEvent.click(screen.getByTestId("admin-prof-retire-yes"));
     await waitFor(() => expect(calls.some((c) => c.method === "DELETE" && c.url.endsWith("/admin/professions/backend"))).toBe(true));
+  });
+});
+
+describe("E41-17 предложения новых профессий", () => {
+  test("нет предложений — короткая строка, без кнопок", async () => {
+    mount();
+    expect(await screen.findByTestId("admin-sugg-empty")).toBeInTheDocument();
+    expect(screen.queryByTestId("admin-sugg-create")).toBeNull();
+  });
+
+  test("карточка: название, ядро, ближайшая профессия, примеры; «Создать» одним кликом", async () => {
+    suggestions = [suggestion()];
+    mount();
+    const card = await screen.findByTestId("admin-sugg-card-s1");
+    expect(within(card).getByText("Разработчик 1С")).toBeInTheDocument();
+    expect(within(card).getByText("Microsoft SQL Server")).toBeInTheDocument();
+    expect(within(card).getByTestId("admin-sugg-nearest")).toHaveTextContent("Бэкенд — общих навыков 25 %");
+    expect(within(card).getByText("Программист 1С (учёт и склад)")).toBeInTheDocument();
+    suggestions = [];
+    fireEvent.click(within(card).getByTestId("admin-sugg-create"));
+    expect(await screen.findByTestId("admin-prof-notice")).toHaveTextContent("Профессия «Разработчик 1С» создана");
+    expect(calls.filter((c) => c.method === "POST" && c.url.endsWith("/s1/accept"))).toHaveLength(1);
+  });
+
+  test("«Отклонить» — запрос и сообщение; ошибка решения показана по-русски", async () => {
+    suggestions = [suggestion()];
+    acceptReply = () => problem(409, "suggestion_decided");
+    mount();
+    const card = await screen.findByTestId("admin-sugg-card-s1");
+    fireEvent.click(within(card).getByTestId("admin-sugg-create"));
+    expect(await within(card).findByTestId("admin-sugg-error")).toHaveTextContent("уже приняли решение");
+    fireEvent.click(within(card).getByTestId("admin-sugg-reject"));
+    expect(await screen.findByTestId("admin-prof-notice")).toHaveTextContent("отклонено");
   });
 });
 
