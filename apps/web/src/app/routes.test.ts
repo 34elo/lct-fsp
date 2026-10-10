@@ -81,9 +81,9 @@ describe("routes", () => {
       expect(n, g).toBeLessThanOrEqual(4);
     }
     const by = (g: string) => rest.filter((n) => n.group === g).map((n) => n.label);
-    expect(by("queues")).toEqual(["Заявки ФСП", "Допуск заданий", "Модерация"]);
+    expect(by("queues")).toEqual(["Допуск заданий", "Модерация"]);
     expect(by("refs")).toEqual(["Реестр ФСП", "Профессии", "Граф навыков"]);
-    expect(by("analytics")).toEqual(["Воронка", "Качество"]);
+    expect(by("analytics")).toEqual(["Воронка", "Аналитика"]);
   });
 
   it("подсветка пункта меню по самому длинному префиксу", () => {
@@ -105,7 +105,7 @@ describe("routes", () => {
     expect(activeNav(NAV.admin, "/federation/moderation")?.label).toBe("Модерация");
     expect(activeNav(NAV.admin, "/federation")?.label).toBe("Главная");
     expect(activeNav(NAV.admin, "/federation/registry")?.label).toBe("Реестр ФСП");
-    expect(activeNav(NAV.admin, "/federation/requests")?.label).toBe("Заявки ФСП");
-    expect(activeNav(NAV.admin, "/admin/quality/runs")?.label).toBe("Качество");
+    expect(activeNav(NAV.admin, "/federation/analytics")?.label).toBe("Аналитика");
+    expect(NAV.admin.some((n) => /Качество|Заявки/.test(n.label))).toBe(false); // E41-15: «Качество» и «Заявки» ушли из меню
   });
 });
