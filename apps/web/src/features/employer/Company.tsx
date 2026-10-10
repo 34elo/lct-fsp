@@ -3,7 +3,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
 
-import { Avatar, Button, ErrorState, Field, FieldInput, H1, Markdown, MarkdownEditor, Panel, PanelCap, ScrollTabs, Skeleton, StatusTag, Tabs, TabsContent, TabsTrigger, cn } from "@fsp/ui";
+import { Avatar, Button, Dialog, DialogContent, DialogDescription, DialogTitle, ErrorState, Field, FieldInput, H1, Markdown, MarkdownEditor, Panel, PanelCap, ScrollTabs, Skeleton, StatusTag, Tabs, TabsContent, TabsTrigger, cn } from "@fsp/ui";
 import {
   getGetMyCompanyCompaniesMeGetQueryKey,
   getAccessLogCompaniesMeAccessLogGetQueryKey,
@@ -235,28 +235,64 @@ function AccessCard({ card, companyName, onClose }: { card: HrAccessCard; compan
   }
 
   return (
-    <div role="status" className="flex flex-col gap-3 rounded-lg bg-tint-50 p-3" data-testid="company-access-card">
-      <span className="text-14 font-semibold">{T.hr.cardTitle(card.full_name || card.email)}</span>
-      <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-14">
-        <dt className="text-muted">{T.hr.loginUrl}</dt>
-        <dd className="break-all" data-testid="company-access-url">{card.login_url}</dd>
-        <dt className="text-muted">{T.hr.login}</dt>
-        <dd className="break-all">{card.email}</dd>
-        <dt className="text-muted">{T.hr.password}</dt>
-        <dd className="break-all font-mono" data-testid="company-access-password">{card.temp_password}</dd>
-        <dt className="text-muted">{T.hr.until}</dt>
-        <dd>{until}</dd>
-      </dl>
-      <p className="text-13 text-muted">{T.hr.once}</p>
-      <div className="flex flex-wrap gap-2">
-        <Button type="button" onClick={() => void copy()} data-testid="company-access-copy">
-          {copied ? T.copied : T.hr.copy}
-        </Button>
-        <Button type="button" variant="outline" onClick={onClose} data-testid="company-access-close">
-          {T.hr.done}
-        </Button>
-      </div>
-    </div>
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      {/* Пароль виден один раз: случайный клик мимо окна его не закрывает */}
+      <DialogContent
+        role="alertdialog"
+        aria-describedby="company-access-once"
+        onInteractOutside={(e) => e.preventDefault()}
+        className="flex max-h-[90dvh] flex-col gap-3 overflow-y-auto"
+        data-testid="company-access-card"
+      >
+        <DialogTitle>{T.hr.cardTitle(card.full_name || card.email)}</DialogTitle>
+        <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-14">
+          <dt className="text-muted">{T.hr.loginUrl}</dt>
+          <dd className="break-all" data-testid="company-access-url">{card.login_url}</dd>
+          <dt className="text-muted">{T.hr.login}</dt>
+          <dd className="break-all" data-testid="company-access-login">{card.email}</dd>
+          <dt className="text-muted">{T.hr.password}</dt>
+          <dd className="break-all font-mono" data-testid="company-access-password">{card.temp_password}</dd>
+          <dt className="text-muted">{T.hr.until}</dt>
+          <dd>{until}</dd>
+        </dl>
+        <p id="company-access-once" className="rounded-md bg-warning-bg p-2 text-13 text-warning-fg" data-testid="company-access-once">
+          {T.hr.once}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" onClick={() => void copy()} data-testid="company-access-copy">
+            {copied ? T.copied : T.hr.copy}
+          </Button>
+          <Button type="button" variant="outline" onClick={onClose} data-testid="company-access-close">
+            {T.hr.done}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/** Подтверждение выдачи нового пароля или отзыва доступа (вместо `window.confirm`). */
+function ConfirmModal({ ask, onCancel, onConfirm }: { ask: { kind: "reset" | "remove"; m: CompanyMemberOut } | null; onCancel: () => void; onConfirm: () => void }) {
+  const who = ask ? ask.m.full_name || ask.m.email || T.noName : "";
+  return (
+    <Dialog open={ask !== null} onOpenChange={(o) => !o && onCancel()}>
+      <DialogContent aria-describedby="company-confirm-text" data-testid="company-confirm">
+        {ask && (
+          <>
+            <DialogTitle>{ask.kind === "reset" ? T.hr.resetTitle : T.hr.revokeTitle}</DialogTitle>
+            <DialogDescription id="company-confirm-text">{ask.kind === "reset" ? T.hr.resetConfirm(who) : T.hr.revokeConfirm(who)}</DialogDescription>
+            <div className="mt-4 flex flex-wrap justify-end gap-2">
+              <Button type="button" variant="outline" onClick={onCancel} data-testid="company-confirm-cancel">
+                {T.hr.cancel}
+              </Button>
+              <Button type="button" onClick={onConfirm} data-testid="company-confirm-ok">
+                {ask.kind === "reset" ? T.hr.resetOk : T.hr.revokeOk}
+              </Button>
+            </div>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -292,6 +328,7 @@ function TeamPanel({ companyName }: { companyName: string }) {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [card, setCard] = useState<HrAccessCard | null>(null);
+  const [ask, setAsk] = useState<{ kind: "reset" | "remove"; m: CompanyMemberOut } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fail = (e: unknown) => setError(T.actionError(errCode(e) ?? (e instanceof ApiError && e.status === 429 ? "rate_limited" : undefined)));
   const show = (res: { status: number; data: unknown }) => {
@@ -321,17 +358,18 @@ function TeamPanel({ companyName }: { companyName: string }) {
     create.mutate({ data: { email: email.trim(), full_name: name.trim() } });
   }
 
-  function onReset(m: CompanyMemberOut) {
-    if (!window.confirm(T.hr.resetConfirm(m.full_name || m.email || T.noName))) return;
-    setError(null);
-    setCard(null);
-    reset.mutate({ userId: m.user_id });
-  }
+  const onReset = (m: CompanyMemberOut) => setAsk({ kind: "reset", m });
+  const onRemove = (m: CompanyMemberOut) => setAsk({ kind: "remove", m });
 
-  function onRemove(m: CompanyMemberOut) {
-    if (!window.confirm(T.hr.revokeConfirm(m.full_name || m.email || T.noName))) return;
+  function confirmAsk() {
+    if (!ask) return;
+    const { kind, m } = ask;
+    setAsk(null);
     setError(null);
-    remove.mutate({ userId: m.user_id });
+    if (kind === "reset") {
+      setCard(null);
+      reset.mutate({ userId: m.user_id });
+    } else remove.mutate({ userId: m.user_id });
   }
 
   const busyOf = (id: string) => (remove.isPending && remove.variables?.userId === id ? "remove" : reset.isPending && reset.variables?.userId === id ? "reset" : null);
@@ -350,6 +388,7 @@ function TeamPanel({ companyName }: { companyName: string }) {
             ))}
           </ul>
           {card && <AccessCard card={card} companyName={companyName} onClose={() => setCard(null)} />}
+          <ConfirmModal ask={ask} onCancel={() => setAsk(null)} onConfirm={confirmAsk} />
           {team.can_manage && (
             <form onSubmit={submit} noValidate className="flex flex-col gap-2 border-t border-hairline pt-4" data-testid="company-hr-form">
               <span className="text-14 font-semibold">{T.hr.title}</span>
