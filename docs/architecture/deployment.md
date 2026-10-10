@@ -42,8 +42,8 @@ flowchart LR
 
 | Домен | Куда (через gateway) | Зачем |
 |---|---|---|
-| `fsp.patissons.tech` | редирект на `dashboard.fsp…` | Короткий адрес |
-| `dashboard.fsp.patissons.tech` | `web` (SPA) | Весь интерфейс: лендинг, кандидат, работодатель, админка ФСП (`/federation`, `/admin`) |
+| `fsp.patissons.tech` | `web` (SPA) только на публичных маршрутах `/`, `/jobs`, `/terms`, `/privacy` (+ статика и API), остальное — 302 на `dashboard.` | Лендинг (E41-7); кнопки ведут на `VITE_APP_URL` |
+| `dashboard.fsp.patissons.tech` | `web` (SPA) | Кабинет: вход, кандидат, работодатель, админка ФСП (`/federation`, `/admin`) |
 | `api.fsp.patissons.tech` | `core-api` (+ `/integrations/fsp/*` → `fsp-connector`) | REST, SSE, Swagger `/api/docs`, AsyncAPI, бейджи, OG |
 | `mock.fsp.patissons.tech` | `fsp-mock` | Страница «Войти через ФСП» открывается в браузере пользователя |
 | `s3.fsp.patissons.tech` | `minio` (S3 API, только GET по presigned-ссылкам) | Скачивание PDF и файлов |
@@ -51,21 +51,18 @@ flowchart LR
 Отдельный поддомен под админку не нужен: это разделы SPA. RabbitMQ UI (`:28672`) и Grafana (`:28300`) доступны только из Tailscale-сети команды, наружу не публикуются.
 
 **Следствия для кода:**
-- SPA и API на разных поддоменах одного сайта. CORS разрешает только `https://dashboard.fsp.patissons.tech`, с credentials.
+- SPA и API на разных поддоменах одного сайта. CORS разрешает `https://dashboard.fsp.patissons.tech` и корневой `https://fsp.patissons.tech` (публичные страницы), с credentials.
 - Refresh-cookie: `Domain=api.fsp.patissons.tech`, `SameSite=Lax`, `Secure`.
 - SSE — `EventSource(..., {withCredentials: true})`.
 - `VITE_API_URL=https://api.fsp.patissons.tech`.
+- `VITE_APP_URL=https://dashboard.fsp.patissons.tech` — build-arg `web`: адрес кабинета для кнопок лендинга на корневом домене (пусто — один origin).
 - Telegram Login Widget: в @BotFather → `/setdomain` → `dashboard.fsp.patissons.tech`.
 - OAuth мока: `redirect_uri = https://api.fsp.patissons.tech/api/v1/auth/fsp/callback`.
 
 ### Caddy на VPS (`/etc/caddy/fsp.caddy`)
 
 ```caddyfile
-fsp.patissons.tech {
-	redir https://dashboard.fsp.patissons.tech{uri}
-}
-
-dashboard.fsp.patissons.tech, mock.fsp.patissons.tech, s3.fsp.patissons.tech {
+dashboard.fsp.patissons.tech, fsp.patissons.tech, mock.fsp.patissons.tech, s3.fsp.patissons.tech {
 	encode zstd gzip
 	reverse_proxy 100.78.22.33:28080
 	log {

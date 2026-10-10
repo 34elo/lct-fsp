@@ -184,14 +184,19 @@ async def suggest_skills(
     q: str = Query(default="", max_length=100),
     limit: int = Query(default=10, ge=1, le=50),
     profession: str | None = Query(default=None, max_length=32),
+    kind: str | None = Query(default=None, max_length=16, pattern="^(soft|hard|domain)$"),
     session: AsyncSession = Depends(get_session),
     redis: Redis = Depends(get_redis),
 ) -> list[dict[str, Any]]:
-    """Подсказки навыков: синонимы, префикс, опечатки; частые выше, `provisional` помечен."""
+    """Подсказки навыков: синонимы, префикс, опечатки; частые выше, `provisional` помечен.
+
+    `kind=soft` — только софт-навыки (поле «Личные качества», E41-6).
+    """
     version = await service.get_version(session)
-    key = f"c:tax:suggest:s:{version}:{_sha(suggest.norm_alias(q), str(limit), profession or '')}"
+    sig = _sha(suggest.norm_alias(q), str(limit), profession or "", kind or "")
+    key = f"c:tax:suggest:s:{version}:{sig}"
     return await _suggest_cached(
-        redis, key, lambda: suggest.suggest_skills(session, q, limit, profession)
+        redis, key, lambda: suggest.suggest_skills(session, q, limit, profession, kind)
     )
 
 
