@@ -53,6 +53,8 @@ class Settings(BaseServiceSettings):
     pii_key: str = "ZGV2LW9ubHktcGlpLWtleS0wMTIzNDU2Nzg5YWJjZGU="
     # E30-1: черновик ключа задания конструктора через ml-api; таймаут синхронного запроса
     assessment_key_draft_timeout_seconds: float = 30.0
+    # E43-9: заказы LLM-заданий из админки в сутки (UTC), на всю платформу
+    family_orders_per_day: int = 20
     # <<< block1
     # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
     # демо-кнопки для ФСП (E13-3): создание результатов и сброс

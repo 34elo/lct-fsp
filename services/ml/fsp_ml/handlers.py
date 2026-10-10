@@ -15,9 +15,11 @@ import structlog
 from fsp_contracts import Envelope, new_event, parse_payload
 from fsp_contracts import commands as cmd
 from fsp_contracts import events as evt
+from fsp_contracts.assessment import FamilyOrderGenerated, FamilyOrderStarted
+from fsp_contracts.ml import FamilyGenerateRequest, FamilyGenerateResponse
 from pydantic import BaseModel
 
-from fsp_ml import fake, resume_parser
+from fsp_ml import fake, family_bank, resume_parser
 from fsp_ml.llm import LlmClient, LlmError
 from fsp_ml.resume_parser import Progress
 from fsp_ml.resume_text import ResumeFileError
@@ -121,6 +123,73 @@ def questions_generate(c: Envelope, p: cmd.MlQuestionsGenerate) -> list[Envelope
     return [_result(c, "ml.questions.generated", r)]
 
 
+FAMILY_CHUNK = 5  # генератор отдаёт до 5 форм за вызов (FamilyGenerateRequest.n)
+
+
+def _family_chunks(p: cmd.MlFamiliesGenerate) -> list[FamilyGenerateRequest]:
+    """Заказ до 10 заданий → вызовы генератора по `FAMILY_CHUNK` (по одному за раз, одна GPU)."""
+    out, left = [], p.n
+    while left > 0:
+        n = min(FAMILY_CHUNK, left)
+        out.append(
+            FamilyGenerateRequest(
+                skill=p.skill,
+                skill_type=p.skill_type,
+                kind=p.kind,
+                level=p.level,
+                domain=p.domain,
+                n=n,
+            )
+        )
+        left -= n
+    return out
+
+
+def families_started(c: Envelope, p: cmd.MlFamiliesGenerate) -> Envelope:
+    return _result(c, "ml.families.started", FamilyOrderStarted(order_id=p.order_id))
+
+
+def _families_done(
+    c: Envelope, p: cmd.MlFamiliesGenerate, specs: list[dict], model: str, error: str | None
+) -> Envelope:
+    r = FamilyOrderGenerated(order_id=p.order_id, specs=specs[: p.n], model=model, error=error)
+    return _result(c, "ml.families.generated", r)
+
+
+def families_generate(c: Envelope, p: cmd.MlFamiliesGenerate) -> list[Envelope]:
+    """`ml.families.generate` на заглушке (`ML_FAKE=true`): формы `family_bank.fake_generate`."""
+    specs: list[dict] = []
+    for i, req in enumerate(_family_chunks(p)):
+        for j, spec in enumerate(family_bank.fake_generate(req).specs):
+            specs.append(family_bank.fake_variant(spec, i * FAMILY_CHUNK + j))
+    return [families_started(c, p), _families_done(c, p, specs, family_bank.FAKE_MODEL, None)]
+
+
+async def families_generate_llm(
+    c: Envelope,
+    p: cmd.MlFamiliesGenerate,
+    *,
+    generate: Callable[[FamilyGenerateRequest], Awaitable[FamilyGenerateResponse]] | None,
+) -> Envelope:
+    """`ml.families.generate` через LLM (E43-9). Нет модели или ошибка — `error`, без ретраев:
+    заказ можно повторить кнопкой, а GPU не тратится на повторы фоновой задачи."""
+    if generate is None:
+        return _families_done(c, p, [], "", "llm_disabled")
+    specs: list[dict] = []
+    model = ""
+    for req in _family_chunks(p):
+        try:
+            res = await generate(req)
+        except LlmError as e:
+            log.warning("family_order_llm_failed", order_id=str(p.order_id), code=e.code)
+            if not specs:
+                return _families_done(c, p, [], model, e.code)
+            break  # часть уже есть — отдаём её
+        specs += res.specs
+        model = res.model
+    return _families_done(c, p, specs, model, None)
+
+
 Handler = Callable[[Envelope, BaseModel], list[Envelope]]
 
 HANDLERS: dict[str, Callable] = {
@@ -131,6 +200,7 @@ HANDLERS: dict[str, Callable] = {
     "ml.skills.resolve": skills_resolve,
     "ml.matches.explain": matches_explain,
     "ml.questions.generate": questions_generate,
+    "ml.families.generate": families_generate,
     "ml.code.analyze": code_analyze,
 }
 

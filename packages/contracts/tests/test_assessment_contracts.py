@@ -377,3 +377,28 @@ def test_candidate_standing_defaults_and_bounds():
         StandingStrength(value=0.5, rank=0, top_percent=10)
     with pytest.raises(ValidationError):
         StandingStrength(value=0.5, rank=1, top_percent=101)
+
+
+def test_family_order_contracts():
+    """E43-9: заказ заданий из админки — команда низкого приоритета и два события ml."""
+    from fsp_contracts import new_command
+    from fsp_contracts.assessment import FamilyOrderGenerated, FamilyOrderStarted
+    from fsp_contracts.commands import COMMANDS, MlFamiliesGenerate
+
+    oid = uuid4()
+    body = {"order_id": str(oid), "skill": "python", "kind": "exact", "level": 3, "n": 10}
+    cmd = MlFamiliesGenerate.model_validate(body)
+    env, spec = new_command("ml.families.generate", "core", cmd)
+    assert spec.queue == "ml.llm" and spec.priority == 0
+    assert min(s.priority or 0 for s in COMMANDS.values() if s.queue == "ml.llm") == 0
+    assert parse_payload(env) == cmd
+    with pytest.raises(ValidationError):
+        MlFamiliesGenerate.model_validate({**body, "n": 11})
+    assert ASSESSMENT_EVENTS["ml.families.started"] is FamilyOrderStarted
+    assert ASSESSMENT_EVENTS["ml.families.generated"] is FamilyOrderGenerated
+    assert EVENT_PRODUCERS["ml.families.generated"] == "ml"
+    done = FamilyOrderGenerated(order_id=oid, specs=[{"title": "x"}], model="m")
+    env = new_event("ml.families.generated", "ml", done)
+    assert parse_payload(env) == done
+    failed = FamilyOrderGenerated.model_validate({"order_id": str(oid), "error": "llm_disabled"})
+    assert failed.specs == [] and failed.error == "llm_disabled"
