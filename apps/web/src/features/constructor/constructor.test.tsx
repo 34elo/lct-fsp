@@ -29,7 +29,7 @@ beforeEach(() => {
   createReply = () =>
     res(201, {
       id: "f9", slug: "c-1", title: "Запросы", kind: "exact", source: "spec", skill: "system_design", skill_type: "hard", level: 3,
-      status: "draft", key_status: "approved", form: {}, author_form: {}, key_draft: null, autocheck: { ok: true, seeds: 200 },
+      status: "draft", ready: false, company_id: "c1", key_status: "approved", form: {}, author_form: {}, key_draft: null, autocheck: { ok: true, seeds: 200 },
       examples: [{ kind: "exact", stem: "Сервис «Заказы» получает 60 запросов", options: [], key: 36000 }],
     });
   setAccessToken(null);
@@ -43,6 +43,8 @@ beforeEach(() => {
       if (url.endsWith("/auth/me") || (url.endsWith("/me") && !url.includes("/companies"))) return res(200, { id: "u1", email: "o@b.ru", role, consents: ["pd_processing"] });
       if (url.includes("/taxonomy")) return res(200, { skills: [{ slug: "system_design", name: "Проектирование систем", kind: "hard" }] });
       if (url.endsWith("/families") && method === "POST") return createReply();
+      if (url.endsWith("/families/f9/ready"))
+        return res(200, { id: "f9", slug: "c-1", title: "Запросы", kind: "exact", source: "spec", skill: "system_design", skill_type: "hard", level: 3, status: "draft", ready: true, company_id: "c1", key_status: "approved", form: {}, author_form: {}, key_draft: null, autocheck: { ok: true, seeds: 200 }, examples: [] });
       if (url.includes("/admin/families/f1/key")) return res(200, family({ key_status: "approved" }));
       if (url.includes("/admin/families/f1/approve")) return res(409, { code: "thresholds_not_met", status: 409, title: "x", type: "x" });
       if (url.includes("/admin/families/f1/pilot")) return res(200, family({ status: "pilot" }));
@@ -119,6 +121,16 @@ describe("K1 конструктор", () => {
     expect(screen.getByTestId("constructor-example-0")).toHaveTextContent("36000");
     const post = calls.find((c) => c.method === "POST" && c.url.endsWith("/families"));
     expect(post?.body).toMatchObject({ kind: "exact", skill: "system_design", level: 3, answer: "rps" });
+  });
+
+  test("E41-14: черновик → «Готово» без админа", async () => {
+    await fill();
+    fireEvent.click(screen.getByTestId("constructor-save"));
+    expect(await screen.findByTestId("constructor-status")).toHaveTextContent("черновик");
+    fireEvent.click(await screen.findByTestId("constructor-ready"));
+    expect(await screen.findByTestId("constructor-ready-note")).toHaveTextContent("можно прикрепить к приглашению");
+    expect(screen.getByTestId("constructor-status")).toHaveTextContent("готово");
+    expect(calls.some((c) => c.method === "PUT" && c.url.endsWith("/families/f9/ready") && (c.body as { ready?: boolean })?.ready === true)).toBe(true);
   });
 
   test("пустая форма: локальные ошибки, запроса нет", async () => {

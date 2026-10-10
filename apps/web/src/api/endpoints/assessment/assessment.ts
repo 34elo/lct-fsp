@@ -43,6 +43,7 @@ import type {
   PlanPreviewIn,
   PlanPreviewOut,
   ProblemOut,
+  ReadyIn,
   ReviewOut,
   SubmissionOut,
   SurveyIn,
@@ -2112,7 +2113,155 @@ export function useGetFamilyFamiliesFamilyIdGet<TData = Awaited<ReturnType<typeo
 
 
 
-export type listTasksEmployerTasksGetResponse200 = {
+export type setReadyFamiliesFamilyIdReadyPutResponse200 = {
+  data: FamilyOut
+  status: 200
+}
+
+export type setReadyFamiliesFamilyIdReadyPutResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type setReadyFamiliesFamilyIdReadyPutResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type setReadyFamiliesFamilyIdReadyPutResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type setReadyFamiliesFamilyIdReadyPutResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type setReadyFamiliesFamilyIdReadyPutResponse404ApplicationProblemJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type setReadyFamiliesFamilyIdReadyPutResponse404ApplicationJson = {
+  data: ProblemOut
+  status: 404
+}
+
+export type setReadyFamiliesFamilyIdReadyPutResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type setReadyFamiliesFamilyIdReadyPutResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type setReadyFamiliesFamilyIdReadyPutResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+
+export type setReadyFamiliesFamilyIdReadyPutResponseSuccess = (setReadyFamiliesFamilyIdReadyPutResponse200) & {
+  headers: Headers;
+};
+export type setReadyFamiliesFamilyIdReadyPutResponseError = (setReadyFamiliesFamilyIdReadyPutResponse401ApplicationProblemJson | setReadyFamiliesFamilyIdReadyPutResponse401ApplicationJson | setReadyFamiliesFamilyIdReadyPutResponse403ApplicationProblemJson | setReadyFamiliesFamilyIdReadyPutResponse403ApplicationJson | setReadyFamiliesFamilyIdReadyPutResponse404ApplicationProblemJson | setReadyFamiliesFamilyIdReadyPutResponse404ApplicationJson | setReadyFamiliesFamilyIdReadyPutResponse409ApplicationProblemJson | setReadyFamiliesFamilyIdReadyPutResponse409ApplicationJson | setReadyFamiliesFamilyIdReadyPutResponse422) & {
+  headers: Headers;
+};
+
+export type setReadyFamiliesFamilyIdReadyPutResponse = (setReadyFamiliesFamilyIdReadyPutResponseSuccess | setReadyFamiliesFamilyIdReadyPutResponseError)
+
+export const getSetReadyFamiliesFamilyIdReadyPutUrl = (familyId: string,) => {
+
+
+
+
+  return `/families/${familyId}/ready`
+}
+
+/**
+ * «Готово» (задание доступно для приглашений компании) или возврат в черновик (E41-14).
+ * @summary Set Ready
+ */
+export const setReadyFamiliesFamilyIdReadyPut = async (familyId: string,
+    readyIn: ReadyIn, options?: Parameters<typeof apiFetch>[1]): Promise<setReadyFamiliesFamilyIdReadyPutResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<setReadyFamiliesFamilyIdReadyPutResponse>(getSetReadyFamiliesFamilyIdReadyPutUrl(familyId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(readyIn)
+  }
+);}
+
+
+
+
+
+export const getSetReadyFamiliesFamilyIdReadyPutMutationKey = () => ['setReadyFamiliesFamilyIdReadyPut'] as const;
+
+export const getSetReadyFamiliesFamilyIdReadyPutMutationOptions = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setReadyFamiliesFamilyIdReadyPut>>, TError,SetReadyFamiliesFamilyIdReadyPutMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setReadyFamiliesFamilyIdReadyPut>>, TError,SetReadyFamiliesFamilyIdReadyPutMutationVariables, TContext> => {
+
+const mutationKey = getSetReadyFamiliesFamilyIdReadyPutMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setReadyFamiliesFamilyIdReadyPut>>, SetReadyFamiliesFamilyIdReadyPutMutationVariables> = (props) => {
+          const {familyId,data} = props ?? {};
+
+          return  setReadyFamiliesFamilyIdReadyPut(familyId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetReadyFamiliesFamilyIdReadyPutMutationResult = NonNullable<Awaited<ReturnType<typeof setReadyFamiliesFamilyIdReadyPut>>>
+    export type SetReadyFamiliesFamilyIdReadyPutMutationBody = ReadyIn
+    export type SetReadyFamiliesFamilyIdReadyPutMutationError = ErrorType<ProblemOut | HTTPValidationError>
+    export type SetReadyFamiliesFamilyIdReadyPutMutationVariables = {familyId: string;data: ReadyIn}
+
+    /**
+ * @summary Set Ready
+ */
+export const useSetReadyFamiliesFamilyIdReadyPut = <TError = ErrorType<ProblemOut | HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setReadyFamiliesFamilyIdReadyPut>>, TError,SetReadyFamiliesFamilyIdReadyPutMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof setReadyFamiliesFamilyIdReadyPut>>,
+        TError,
+        SetReadyFamiliesFamilyIdReadyPutMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSetReadyFamiliesFamilyIdReadyPutMutationOptions(options), queryClient);
+    }
+    export type listTasksEmployerTasksGetResponse200 = {
   data: AppAssessmentTasksRouterTaskOut[]
   status: 200
 }

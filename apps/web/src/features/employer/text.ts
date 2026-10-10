@@ -85,6 +85,7 @@ export const SOURCE_SHORT: Record<string, string> = {
   resume: "Резюме",
   self: "Заявлено",
   ai_interview: "Интервью",
+  task: "Задание работодателя",
   codeforces: "Codeforces",
 };
 

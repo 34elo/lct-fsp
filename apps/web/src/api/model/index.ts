@@ -316,6 +316,7 @@ export * from './queueCount';
 export * from './queueCountId';
 export * from './queueItem';
 export * from './ratio';
+export * from './readyIn';
 export * from './reasonShare';
 export * from './registerIn';
 export * from './registerInRole';

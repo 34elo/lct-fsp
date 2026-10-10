@@ -3,7 +3,7 @@ import { type AcceptanceLevel, AcceptanceMeter, Button, cn, Dialog, DialogConten
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import { useListTasksEmployerTasksGet } from "@/api/endpoints/assessment/assessment";
+import { useListFamiliesFamiliesGet } from "@/api/endpoints/assessment/assessment";
 import { useCreateInterestInterestsPost, useCreateOfferOffersPost, useInviteFromInterestInterestsOfferIdInvitePost, useSalaryHintOffersSalaryHintPost } from "@/api/endpoints/offers/offers";
 import { useListVacanciesVacanciesGet } from "@/api/endpoints/vacancies/vacancies";
 import { ContactMethod, SalaryBasis, type OfferForCompany } from "@/api/model";
@@ -96,11 +96,9 @@ function OfferForm({ candidate, vacancyId: initialVacancy, alreadyOffered, onClo
   const published = useMemo(() => (vq.data?.status === 200 ? vq.data.data : []).filter((v) => v.status === "published"), [vq.data]);
   const invite = mode === "invite";
   const isInterest = mode === "interest";
-  const tq = useListTasksEmployerTasksGet({ query: { enabled: !isInterest, retry: false } });
-  const tasks = useMemo(() => {
-    const seen = new Set<string>();
-    return (tq.data?.status === 200 ? tq.data.data : []).filter((t) => (seen.has(t.family_id) ? false : (seen.add(t.family_id), true)));
-  }, [tq.data]);
+  // Задания конструктора со статусом «Готово» (E41-14): допуск админа не нужен.
+  const tq = useListFamiliesFamiliesGet({ query: { enabled: !isInterest, retry: false } });
+  const tasks = useMemo(() => (tq.data?.status === 200 ? tq.data.data : []).filter((f) => f.ready), [tq.data]);
   const [vacancyId, setVacancyId] = useState(invite ? (interest?.vacancy?.id ?? "") : initialVacancy);
   const vacancy = published.find((v) => v.id === vacancyId);
   const [title, setTitle] = useState(invite ? (interest?.title ?? "") : "");
@@ -308,7 +306,7 @@ function OfferForm({ candidate, vacancyId: initialVacancy, alreadyOffered, onClo
             aria-label={T.task}
             value={familyId}
             onChange={(v) => setFamilyId(v ?? "")}
-            options={[{ value: "", label: T.noTask }, ...tasks.map((t) => ({ value: t.family_id, label: t.title }))]}
+            options={[{ value: "", label: T.noTask }, ...tasks.map((t) => ({ value: t.id, label: t.title }))]}
           />
           {tq.isError && <span className="text-xs text-muted">{T.tasksFail}</span>}
           <Link to="/employer/families/guide" className="text-xs text-brand-deep underline dark:text-brand-mid" data-testid="offer-task-howto">{T.howTo}</Link>

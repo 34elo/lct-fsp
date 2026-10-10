@@ -7,15 +7,18 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button, EmptyState, ErrorState, Skeleton, buttonVariants } from "@fsp/ui";
 
 import {
+  getListFamiliesFamiliesGetQueryKey,
   getListSubmissionsEmployerTasksTaskIdSubmissionsGetQueryKey,
   getListTasksEmployerTasksGetQueryKey,
   useCloseTaskEmployerTasksTaskIdClosePost,
+  useListFamiliesFamiliesGet,
   useListSubmissionsEmployerTasksTaskIdSubmissionsGet,
   useListTasksEmployerTasksGet,
+  useSetReadyFamiliesFamilyIdReadyPut,
   usePublishTaskEmployerTasksTaskIdPublishPost,
   useScoreSubmissionEmployerTasksTaskIdSubmissionsSubmissionIdScorePut,
 } from "@/api/endpoints/assessment/assessment";
-import type { AppAssessmentTasksRouterTaskOut as TaskOut, SubmissionOut } from "@/api/model";
+import type { AppAssessmentTasksRouterTaskOut as TaskOut, FamilyOut, SubmissionOut } from "@/api/model";
 import { ErrorNote } from "@/features/auth/ui";
 import { GRADE_LABEL, roleLabel } from "@/features/profile/text";
 import { pct } from "./model";
@@ -121,10 +124,81 @@ function TaskRow({ t }: { t: TaskOut }) {
   );
 }
 
+type FamTab = "ready" | "draft";
+
+function FamilyCard({ f }: { f: FamilyOut }) {
+  const qc = useQueryClient();
+  const set = useSetReadyFamiliesFamilyIdReadyPut({
+    mutation: { onSuccess: () => void qc.invalidateQueries({ queryKey: getListFamiliesFamiliesGetQueryKey() }) },
+  });
+  return (
+    <li data-testid="tasks-family" className="flex flex-col gap-3 rounded-2xl border border-hairline bg-card p-4">
+      <div className="min-w-0">
+        <h3 className="break-words font-mono text-16 font-semibold">{f.title}</h3>
+        <p className="text-13 text-muted">
+          {T.kinds[f.kind] ?? f.kind} · {f.skill} · {T.famLevel(f.level)}
+        </p>
+      </div>
+      <p className="text-13 text-muted">{f.ready ? T.famReadyHint : T.famDraftHint}</p>
+      {set.isError && <ErrorNote>{T.famActionError}</ErrorNote>}
+      {f.company_id && (
+        <div className="flex flex-wrap gap-2">
+          {f.ready ? (
+            <Button size="sm" variant="outline" loading={set.isPending} onClick={() => set.mutate({ familyId: f.id, data: { ready: false } })} data-testid="tasks-family-draft">
+              {T.famToDraft}
+            </Button>
+          ) : (
+            <Button size="sm" loading={set.isPending} onClick={() => set.mutate({ familyId: f.id, data: { ready: true } })} data-testid="tasks-family-ready">
+              {T.famReady}
+            </Button>
+          )}
+        </div>
+      )}
+    </li>
+  );
+}
+
+/** Задания конструктора: вкладки «Готовые» и «Черновики» (E41-14). */
+function Families() {
+  const q = useListFamiliesFamiliesGet({ query: { retry: false } });
+  const fams = (q.data?.status === 200 ? q.data.data : []) as FamilyOut[];
+  const [picked, setPicked] = useState<FamTab | null>(null);
+  const tab: FamTab = picked ?? (fams.some((f) => !f.ready) ? "draft" : "ready");
+  if (q.isPending) return <Skeleton role="status" aria-label="Загрузка" className="h-24" />;
+  if (q.isError) return <ErrorState title={T.famLoadError} onRetry={() => void q.refetch()} />;
+  if (fams.length === 0) return null; // пусто — общий EmptyState страницы
+  const shown = fams.filter((f) => (tab === "ready") === f.ready);
+  return (
+    <section className="grid gap-3" data-testid="tasks-families">
+      <div role="group" aria-label={T.famTabsLabel} className="flex gap-2">
+        {(["ready", "draft"] as FamTab[]).map((k) => (
+          <button
+            key={k}
+            type="button"
+            aria-pressed={tab === k}
+            data-testid={`tasks-fam-tab-${k}`}
+            onClick={() => setPicked(k)}
+            className={`h-9 rounded-lg border px-3 font-mono text-13 ${tab === k ? "border-brand bg-tint-50 text-brand-fg" : "border-hairline text-muted hover:bg-tint-50"}`}
+          >
+            {T.famTabs[k]} ({fams.filter((f) => (k === "ready") === f.ready).length})
+          </button>
+        ))}
+      </div>
+      {shown.length === 0 ? (
+        <p className="text-14 text-muted">{tab === "ready" ? T.famEmptyReady : T.famEmptyDraft}</p>
+      ) : (
+        <ul className="grid gap-3 md:grid-cols-2">{shown.map((f) => <FamilyCard key={f.id} f={f} />)}</ul>
+      )}
+    </section>
+  );
+}
+
 /** Задания компании (Z1, работодатель): статусы, ответы, оценка рубрикой, «Пригласить». */
 export default function EmployerTasks() {
   const q = useListTasksEmployerTasksGet();
   const all = (q.data?.status === 200 ? q.data.data : []) as TaskOut[];
+  const fq = useListFamiliesFamiliesGet({ query: { retry: false } });
+  const noFamilies = !fq.isPending && !(fq.data?.status === 200 && fq.data.data.length > 0);
   return (
     <main className={PAGE.normal} data-testid="tasks-employer-page">
       <header className="flex flex-wrap items-start justify-between gap-2">
@@ -139,10 +213,17 @@ export default function EmployerTasks() {
           <Link to="/employer/families/new" className={buttonVariants({ variant: "outline" })}>{T.toConstructor}</Link>
         </div>
       </header>
-      {q.isPending && <Skeleton role="status" aria-label="Загрузка" className="h-48" />}
+      <Families />
       {q.isError && <ErrorState title={T.empLoadError} onRetry={() => void q.refetch()} />}
-      {q.isSuccess && all.length === 0 && <EmptyState title={T.empEmpty} description={T.empEmptyHint} action={<Link to="/employer/families/guide" className={buttonVariants()} data-testid="tasks-empty-guide">{T.howTo}</Link>} />}
-      {all.length > 0 && <ul className="grid gap-3">{all.map((t) => <TaskRow key={t.id} t={t} />)}</ul>}
+      {q.isSuccess && all.length === 0 && noFamilies && (
+        <EmptyState title={T.empEmpty} description={T.empEmptyHint} action={<Link to="/employer/families/guide" className={buttonVariants()} data-testid="tasks-empty-guide">{T.howTo}</Link>} />
+      )}
+      {all.length > 0 && (
+        <section className="grid gap-3">
+          <h2 className="font-mono text-18 font-semibold">{T.mailingTitle}</h2>
+          <ul className="grid gap-3">{all.map((t) => <TaskRow key={t.id} t={t} />)}</ul>
+        </section>
+      )}
     </main>
   );
 }
