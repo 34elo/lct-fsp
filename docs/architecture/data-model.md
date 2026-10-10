@@ -87,7 +87,11 @@ CREATE TABLE users (
   created_at    timestamptz NOT NULL DEFAULT now(),
   deleted_at    timestamptz,
   email_verified_at timestamptz,                  -- v2, миграция s0_02 (blocks.md §4.6)
-  is_demo       boolean NOT NULL DEFAULT false    -- E40-1 (b2_17): демо-аккаунт `*@demo.fsp.test` (seed, жюри)
+  is_demo       boolean NOT NULL DEFAULT false,   -- E40-1 (b2_17): демо-аккаунт `*@demo.fsp.test` (seed, жюри)
+  -- E41-16 (b2_19): аккаунт HR, созданный владельцем компании (временный пароль, смена при первом входе)
+  must_change_password     boolean NOT NULL DEFAULT false, -- до смены доступны только /me и /auth/*
+  temp_password_expires_at timestamptz,                    -- временный пароль живёт 72 ч
+  managed_by_company_id    uuid                             -- компания, владелец которой создал аккаунт (без FK)
 );
 -- E40-1: is_demo есть у users, companies, vacancies, offers (частичный индекс WHERE is_demo).
 -- Компания — демо, если создана демо-пользователем; вакансия — если компания демо; приглашение —
@@ -365,6 +369,27 @@ CREATE TABLE discipline_skill_rules (
 );
 CREATE UNIQUE INDEX ON discipline_skill_rules (discipline, skill_id, coalesce(track, ''));
 CREATE TABLE scoring_config (key text PRIMARY KEY, value jsonb NOT NULL, version int NOT NULL, updated_at timestamptz);
+-- Предложения новых профессий (E41-17, миграция b1_17; skills.md §5.1)
+CREATE TABLE profession_suggestions (
+  id                 uuid PRIMARY KEY,
+  key                text NOT NULL UNIQUE,      -- отсортированные slug'и ядра через запятую
+  title              text NOT NULL,             -- название-кандидат (частое название вакансий кластера)
+  skills             jsonb NOT NULL,            -- ядро: slug'и по убыванию частоты
+  weights            jsonb NOT NULL,            -- slug → доля корзин кластера с навыком
+  support_vacancies  int NOT NULL DEFAULT 0,
+  support_needs      int NOT NULL DEFAULT 0,
+  nearest_profession text,                      -- ближайшая профессия и доля ядра в её навыках
+  nearest_overlap    real NOT NULL DEFAULT 0,
+  examples           jsonb NOT NULL,            -- [{vacancy_id, title}], до 3
+  source             text NOT NULL DEFAULT 'mining',  -- mining | seed
+  status             text NOT NULL DEFAULT 'open',    -- open | created | rejected (решение запоминается)
+  profession         text,                      -- slug созданной профессии
+  decided_by         uuid REFERENCES users(id) ON DELETE SET NULL,
+  decided_at         timestamptz,
+  created_at         timestamptz NOT NULL DEFAULT now(),
+  updated_at         timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX ix_profession_suggestions_status ON profession_suggestions (status);
 ```
 
 Ядро графа навыков на старте — YAML в `data/taxonomy/*.yaml` (ревью в git), собирается из тегов Stack Overflow, карты пакетов и русских названий. `make taxonomy-load` загружает его в БД. Дальше граф растёт через конвейер ([skills.md](skills.md)), правки идут через админку, есть экспорт в YAML.
@@ -473,6 +498,14 @@ CREATE TABLE company_invites (
   revoked_at timestamptz
 );
 CREATE INDEX ix_company_invites_company_id ON company_invites (company_id);
+-- E41-16 (b2_19): журнал доступа HR — кто (actor), кого (target), что и когда; паролей нет
+CREATE TABLE company_access_log (
+  id uuid PRIMARY KEY, company_id uuid NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  actor_id uuid REFERENCES users(id) ON DELETE SET NULL, target_user_id uuid REFERENCES users(id) ON DELETE SET NULL,
+  target_email text, action text NOT NULL,                     -- created | password_reset | revoked
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX ix_company_access_log_company_id ON company_access_log (company_id);
 -- E39-24: личный профиль сотрудника компании или админа ФСП (подпись приглашения кандидату)
 CREATE TABLE user_profiles (
   user_id uuid PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
