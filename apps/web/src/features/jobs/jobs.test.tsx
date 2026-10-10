@@ -128,3 +128,18 @@ test("карточка несуществующей вакансии: понят
   mount("/jobs/zzz");
   expect(await screen.findByText(/не найдена/)).toBeInTheDocument();
 });
+
+test("/jobs для кандидата открывается в кабинете: меню «Разделы» с активной «Вакансии»", async () => {
+  role = "candidate";
+  mount("/jobs");
+  expect(await screen.findByText("Python-разработчик (API)")).toBeInTheDocument();
+  expect((await screen.findAllByRole("navigation", { name: "Разделы" }))[0]).toHaveTextContent("Приглашения");
+  expect(screen.getAllByRole("link", { name: "Вакансии" })[0]).toHaveAttribute("aria-current", "page");
+});
+
+test("/jobs без входа: публичная раскладка без меню кабинета", async () => {
+  role = null;
+  mount("/jobs");
+  expect(await screen.findByText("Python-разработчик (API)")).toBeInTheDocument();
+  expect(screen.queryByRole("navigation", { name: "Разделы" })).toBeNull();
+});
