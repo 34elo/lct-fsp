@@ -14598,6 +14598,120 @@
         }
       }
     },
+    "/families/{family_id}/ready": {
+      "put": {
+        "tags": [
+          "assessment"
+        ],
+        "summary": "Set Ready",
+        "description": "«Готово» (задание доступно для приглашений компании) или возврат в черновик (E41-14).",
+        "operationId": "set_ready_families__family_id__ready_put",
+        "parameters": [
+          {
+            "name": "family_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Family Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReadyIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FamilyOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Конфликт (в том числе cooldown)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/employer/tasks": {
       "get": {
         "tags": [
@@ -24808,6 +24922,11 @@
             "type": "string",
             "title": "Status"
           },
+          "ready": {
+            "type": "boolean",
+            "title": "Ready",
+            "default": false
+          },
           "key_status": {
             "type": "string",
             "title": "Key Status"
@@ -30011,6 +30130,17 @@
         ],
         "title": "Ratio",
         "description": "Доля: числитель `count` (уникальные люди) и `pct` от знаменателя `of`."
+      },
+      "ReadyIn": {
+        "properties": {
+          "ready": {
+            "type": "boolean",
+            "title": "Ready",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "ReadyIn"
       },
       "ReasonShare": {
         "properties": {
