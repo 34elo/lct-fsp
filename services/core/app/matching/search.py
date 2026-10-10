@@ -34,6 +34,7 @@ from app.graph.fsp_strength import (
     is_relevant,
 )
 from app.graph.trust import EvidenceView, TrustConfig, effective_strength
+from app.matching.needs import need_grades
 from app.matching.p_accept import PAcceptConfig, hint, mutual, p_accept
 from app.matching.rerank import RerankConfig, mmr, multiplier
 from app.matching.scoring import MatchConfig, MatchResult, score_candidate
@@ -158,16 +159,6 @@ def _ts(d: datetime) -> float:
     return (d if d.tzinfo else d.replace(tzinfo=UTC)).timestamp()
 
 
-def grades_between(lo: str | None, hi: str | None) -> list[str] | None:
-    """Грейды от `lo` до `hi` включительно для SQL-фильтра; без границ — `None` (фильтра нет)."""
-    if lo is None and hi is None:
-        return None
-    order = candidates.GRADE_ORDER
-    i = order.index(lo) if lo else 0
-    j = order.index(hi) if hi else len(order) - 1
-    return list(order[i : j + 1])
-
-
 def trust_of(skills: list[Any]) -> float:
     """Доверие профиля для сортировки: среднее `TRUST_TOP` лучших подтверждённых навыков (не
     `claimed_only`).
@@ -215,9 +206,14 @@ def extra_ok(
         mine = [held[i] for i in nice_ids if i in held] if nice_ids else list(held.values())
         if not any(s.level >= floor for s in mine):
             return False
-    if f.professions or f.only_confirmed:
+    # Грейд в фильтре — тестовый (junior/middle/senior) и относится к категориям, а не к анкете:
+    # кандидат проходит, если действующий грейд одной из профессий попадает в диапазон.
+    test_grades = need_grades(f) if (f.grade_min or f.grade_max) else None
+    if f.professions or f.only_confirmed or test_grades is not None:
         profs = {profession} if profession else set(f.professions or ())
         gs = [g for g in grades if not profs or g.profession in profs]
+        if test_grades is not None:
+            gs = [g for g in gs if g.grade in test_grades]
         if f.only_confirmed:
             gs = [g for g in gs if not (g.needs_confirmation or g.low_confidence)]
         if not gs:
@@ -619,7 +615,7 @@ async def search_candidates(
     f = filters
     pool = await only_visible(session, await candidates.search_pool(
         session, company_id=company_id, roles=[str(r) for r in f.roles] if f.roles else None,
-        grades=grades_between(f.grade_min, f.grade_max), salary_max=f.salary_max,
+        salary_max=f.salary_max,
         formats=[str(x) for x in f.formats] if f.formats else None,
         employment_types=[str(x) for x in f.employment_types] if f.employment_types else None,
         cities=f.cities, relocation_ok=f.relocation_ok, active_only=bool(f.active_only),
@@ -642,7 +638,9 @@ async def search_candidates(
     nice_ids = [by_slug[s] for s in f.skills_nice or () if s in by_slug]
     disc = await graph.fsp_disciplines_of(session, ids) if f.fsp_only or f.fsp_disciplines else {}
     cand_grades = (
-        await assessment.get_grades_many(session, ids) if f.professions or f.only_confirmed else {}
+        await assessment.get_grades_many(session, ids)
+        if f.professions or f.only_confirmed or f.grade_min or f.grade_max
+        else {}
     )
     prof_of_cat = category.profession if category is not None else None
 
