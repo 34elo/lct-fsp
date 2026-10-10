@@ -33,6 +33,7 @@ import type {
   MagicIn,
   MeOut,
   PasswordChangeIn,
+  PasswordInitialIn,
   ProblemOut,
   RegisterIn,
   VerifyIn
@@ -1202,6 +1203,161 @@ export const usePasswordChangeAuthPasswordChangePost = <TError = ErrorType<Probl
         TContext
       > => {
       return useMutation(getPasswordChangeAuthPasswordChangePostMutationOptions(options), queryClient);
+    }
+    export type passwordInitialAuthPasswordInitialPostResponse204 = {
+  data: void
+  status: 204
+}
+
+export type passwordInitialAuthPasswordInitialPostResponse401ApplicationProblemJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type passwordInitialAuthPasswordInitialPostResponse401ApplicationJson = {
+  data: ProblemOut
+  status: 401
+}
+
+export type passwordInitialAuthPasswordInitialPostResponse403ApplicationProblemJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type passwordInitialAuthPasswordInitialPostResponse403ApplicationJson = {
+  data: ProblemOut
+  status: 403
+}
+
+export type passwordInitialAuthPasswordInitialPostResponse409ApplicationProblemJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type passwordInitialAuthPasswordInitialPostResponse409ApplicationJson = {
+  data: ProblemOut
+  status: 409
+}
+
+export type passwordInitialAuthPasswordInitialPostResponse422ApplicationProblemJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type passwordInitialAuthPasswordInitialPostResponse422ApplicationJson = {
+  data: ProblemOut
+  status: 422
+}
+
+export type passwordInitialAuthPasswordInitialPostResponse429ApplicationProblemJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type passwordInitialAuthPasswordInitialPostResponse429ApplicationJson = {
+  data: ProblemOut
+  status: 429
+}
+
+export type passwordInitialAuthPasswordInitialPostResponseSuccess = (passwordInitialAuthPasswordInitialPostResponse204) & {
+  headers: Headers;
+};
+export type passwordInitialAuthPasswordInitialPostResponseError = (passwordInitialAuthPasswordInitialPostResponse401ApplicationProblemJson | passwordInitialAuthPasswordInitialPostResponse401ApplicationJson | passwordInitialAuthPasswordInitialPostResponse403ApplicationProblemJson | passwordInitialAuthPasswordInitialPostResponse403ApplicationJson | passwordInitialAuthPasswordInitialPostResponse409ApplicationProblemJson | passwordInitialAuthPasswordInitialPostResponse409ApplicationJson | passwordInitialAuthPasswordInitialPostResponse422ApplicationProblemJson | passwordInitialAuthPasswordInitialPostResponse422ApplicationJson | passwordInitialAuthPasswordInitialPostResponse429ApplicationProblemJson | passwordInitialAuthPasswordInitialPostResponse429ApplicationJson) & {
+  headers: Headers;
+};
+
+export type passwordInitialAuthPasswordInitialPostResponse = (passwordInitialAuthPasswordInitialPostResponseSuccess | passwordInitialAuthPasswordInitialPostResponseError)
+
+export const getPasswordInitialAuthPasswordInitialPostUrl = () => {
+
+
+
+
+  return `/auth/password/initial`
+}
+
+/**
+ * Первая смена временного пароля HR (E41-16): без текущего пароля, вход уже выполнен им.
+ *
+ * Не требуется — 409 `password_change_not_required`; срок вышел — 403 `temp_password_expired`;
+ * совпадает с временным — 422 `same_password`; 5 в час (429).
+ * @summary Password Initial
+ */
+export const passwordInitialAuthPasswordInitialPost = async (passwordInitialIn: PasswordInitialIn, options?: Parameters<typeof apiFetch>[1]): Promise<passwordInitialAuthPasswordInitialPostResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<passwordInitialAuthPasswordInitialPostResponse>(getPasswordInitialAuthPasswordInitialPostUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(passwordInitialIn)
+  }
+);}
+
+
+
+
+
+export const getPasswordInitialAuthPasswordInitialPostMutationKey = () => ['passwordInitialAuthPasswordInitialPost'] as const;
+
+export const getPasswordInitialAuthPasswordInitialPostMutationOptions = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof passwordInitialAuthPasswordInitialPost>>, TError,PasswordInitialAuthPasswordInitialPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof passwordInitialAuthPasswordInitialPost>>, TError,PasswordInitialAuthPasswordInitialPostMutationVariables, TContext> => {
+
+const mutationKey = getPasswordInitialAuthPasswordInitialPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof passwordInitialAuthPasswordInitialPost>>, PasswordInitialAuthPasswordInitialPostMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  passwordInitialAuthPasswordInitialPost(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PasswordInitialAuthPasswordInitialPostMutationResult = NonNullable<Awaited<ReturnType<typeof passwordInitialAuthPasswordInitialPost>>>
+    export type PasswordInitialAuthPasswordInitialPostMutationBody = PasswordInitialIn
+    export type PasswordInitialAuthPasswordInitialPostMutationError = ErrorType<ProblemOut>
+    export type PasswordInitialAuthPasswordInitialPostMutationVariables = {data: PasswordInitialIn}
+
+    /**
+ * @summary Password Initial
+ */
+export const usePasswordInitialAuthPasswordInitialPost = <TError = ErrorType<ProblemOut>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof passwordInitialAuthPasswordInitialPost>>, TError,PasswordInitialAuthPasswordInitialPostMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof passwordInitialAuthPasswordInitialPost>>,
+        TError,
+        PasswordInitialAuthPasswordInitialPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPasswordInitialAuthPasswordInitialPostMutationOptions(options), queryClient);
     }
     export type meMeGetResponse200 = {
   data: MeOut

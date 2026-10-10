@@ -14,7 +14,7 @@ from app.companies import service as companies
 from app.consents import service as consents
 from app.deps import get_limiter, get_session
 from app.identity import profile, service
-from app.identity.deps import get_current_user
+from app.identity.deps import get_current_user, get_user_pending_password
 from app.identity.mailer import SmtpMailer
 from app.identity.models import User
 from app.openapi_errors import problem_responses
@@ -40,11 +40,17 @@ class UserOut(BaseModel):
     email: str | None
     role: str
     email_verified: bool = False
+    # E41-16: вход временным паролем — до смены доступны только `/me` и `/auth/password/initial`
+    must_change_password: bool = False
 
     @classmethod
     def of(cls, u: User) -> UserOut:
         return cls(
-            id=u.id, email=u.email, role=u.role, email_verified=u.email_verified_at is not None
+            id=u.id,
+            email=u.email,
+            role=u.role,
+            email_verified=u.email_verified_at is not None,
+            must_change_password=bool(u.must_change_password),
         )
 
 
@@ -268,6 +274,29 @@ async def password_change(
     return Response(status_code=204)
 
 
+class PasswordInitialIn(BaseModel):
+    new_password: str = Field(min_length=8, max_length=128)
+
+
+@router.post(
+    "/auth/password/initial", status_code=204, responses=problem_responses(401, 403, 409, 422, 429)
+)
+async def password_initial(
+    body: PasswordInitialIn,
+    user: User = Depends(get_user_pending_password),
+    session: AsyncSession = Depends(get_session),
+    limiter: RateLimiter = Depends(get_limiter),
+):
+    """Первая смена временного пароля HR (E41-16): без текущего пароля, вход уже выполнен им.
+
+    Не требуется — 409 `password_change_not_required`; срок вышел — 403 `temp_password_expired`;
+    совпадает с временным — 422 `same_password`; 5 в час (429).
+    """
+    await limiter.check(f"password_initial:{user.id}", 5, 3600)
+    await service.set_initial_password(session, user, body.new_password)
+    return Response(status_code=204)
+
+
 class MeCompany(BaseModel):
     id: UUID
     name: str
@@ -286,7 +315,7 @@ class MeOut(UserOut):
 @router.get("/me", response_model=MeOut, responses=problem_responses(401))
 async def me(
     request: Request,
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_user_pending_password),
     session: AsyncSession = Depends(get_session),
 ):
     """consents — действующие типы; company — E6-1; candidate — E3-1."""

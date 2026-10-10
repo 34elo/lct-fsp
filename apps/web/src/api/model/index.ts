@@ -5,6 +5,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './accessLogEntry';
+export * from './accessLogEntryAction';
 export * from './activityCandidate';
 export * from './activityEvent';
 export * from './activityFeed';
@@ -203,6 +205,8 @@ export * from './highlight';
 export * from './hint';
 export * from './hintsOut';
 export * from './historyOut';
+export * from './hrAccessCard';
+export * from './hrIn';
 export * from './hTTPValidationError';
 export * from './interestMetrics';
 export * from './interestsSummary';
@@ -284,6 +288,7 @@ export * from './parsedResume';
 export * from './parsedResumeEdits';
 export * from './parseRequest';
 export * from './passwordChangeIn';
+export * from './passwordInitialIn';
 export * from './planExampleOut';
 export * from './planExampleOutSteps';
 export * from './planPreviewIn';

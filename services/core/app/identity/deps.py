@@ -36,10 +36,27 @@ async def _user_by_token(request: Request, session: AsyncSession) -> User:
     return user
 
 
-async def get_current_user(request: Request, session: AsyncSession = Depends(get_session)) -> User:
+async def get_user_pending_password(
+    request: Request, session: AsyncSession = Depends(get_session)
+) -> User:
+    """Вошедший пользователь, в том числе ещё не сменивший временный пароль (E41-16).
+
+    Только для `/me` и `/auth/password/initial`; остальные эндпоинты — `get_current_user`.
+    """
     user = await _user_by_token(request, session)
     if not user.is_active or user.deleted_at is not None:
         raise ProblemError(401, "unauthorized", "Нужна авторизация")
+    return user
+
+
+async def get_current_user(
+    user: User = Depends(get_user_pending_password),
+) -> User:
+    """Вошедший пользователь; временный пароль не сменён — `403 password_change_required`."""
+    if user.must_change_password:
+        raise ProblemError(
+            403, "password_change_required", "Смените временный пароль", "Задайте свой пароль"
+        )
     return user
 
 

@@ -74,3 +74,29 @@ class CompanyInvite(Base):
         ForeignKey("users.id", ondelete="SET NULL"), default=None
     )
     revoked_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), default=None)
+
+
+class CompanyAccessLog(Base):
+    """Журнал доступа HR (E41-16): кто (`actor_id`), кого (`target_*`), что и когда.
+
+    `action`: `created` — владелец создал аккаунт HR, `password_reset` — выдал новый временный
+    пароль, `revoked` — отозвал доступ. Пароли в журнал не пишутся.
+    """
+
+    __tablename__ = "company_access_log"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    company_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("companies.id", ondelete="CASCADE"), index=True
+    )
+    actor_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), default=None
+    )
+    target_user_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), default=None
+    )
+    target_email: Mapped[str | None] = mapped_column(Text, default=None)
+    action: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), default=utcnow, server_default=sa.func.now()
+    )
