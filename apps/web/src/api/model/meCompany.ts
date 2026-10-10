@@ -10,4 +10,5 @@ export interface MeCompany {
   name: string;
   status: string;
   role: string;
+  logo_url?: string | null;
 }

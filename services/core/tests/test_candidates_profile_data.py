@@ -141,3 +141,74 @@ def test_hidden_skill_not_shown_to_employer(c, market):
     item = next(i for i in _search(c, market).json()["items"] if i["pseudo_id"] == "pid0071")
     assert [s["slug"] for s in item["top_skills"]] == ["python"]
     assert item["primary_stack"] == ["python"]
+
+
+class _Storage:
+    def __init__(self):
+        self.files: dict[str, bytes] = {}
+
+    async def ensure_bucket(self):
+        return None
+
+    async def put(self, key, data, content_type="application/octet-stream"):
+        self.files[key] = data
+
+    async def get(self, key):
+        return self.files[key]
+
+    async def delete(self, key):
+        self.files.pop(key, None)
+
+
+PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 64
+
+
+def test_candidate_avatar_hidden_until_invitation(c, market):
+    """E41-12: аватар работодателю — только после приглашения; подпись в адресе, чужой 404."""
+    c.app.state.storage = _Storage()
+    h, uid = _owner(c, "ava@x.ru")
+    with sqlite3.connect(c.db) as con:
+        con.execute(
+            "update candidates set pseudo_id='pid0080', pseudonym='Backend #80',"
+            " primary_role='backend', grade='middle', search_status='open',"
+            " primary_stack='[\"python\"]' where user_id=?",
+            (uid,),
+        )
+        con.execute(
+            "insert into consents (user_id, type, version, granted_at) values (?,?,?,?)",
+            (uid, "profile_publication", "2025-09-01", NOW),
+        )
+        ts._grade(con, uid, "backend", ts.TEST_GRADE["middle"])
+    # проверка по сигнатуре, а не по имени и типу
+    bad = {"file": ("a.png", b"<svg onload=alert(1)>", "image/png")}
+    assert c.put("/candidates/me/avatar", files=bad, headers=h).status_code == 415
+    big = {"file": ("b.png", PNG + b"\x00" * (2 * 1024 * 1024), "image/png")}
+    assert c.put("/candidates/me/avatar", files=big, headers=h).status_code == 413
+    r = c.put("/candidates/me/avatar", files={"file": ("a.png", PNG, "image/png")}, headers=h)
+    assert r.status_code == 200, r.text
+    url = r.json()["avatar_url"]
+    assert url.startswith("/candidates/pid0080/avatar?v=") and "&sig=" in url
+    assert c.get(url).content == PNG
+    assert c.get(url.split("&sig=")[0] + "&sig=" + "0" * 32).status_code == 404
+    assert c.get("/candidates/pid0080/avatar?sig=x").status_code == 404
+    assert c.get("/me", headers=h).json()["avatar_url"] == url
+
+    # работодатель: до приглашения аватара нет (ни в карточке, ни в выдаче)
+    assert _card(c, market, "pid0080").json()["avatar_url"] is None
+    item = [i for i in _search(c, market).json()["items"] if i["pseudo_id"] == "pid0080"]
+    assert not item or "avatar_url" not in item[0]
+    _offer(c, market, uid, interest_only=True)
+    assert _card(c, market, "pid0080").json()["avatar_url"] is None
+    _offer(c, market, uid)
+    shown = _card(c, market, "pid0080").json()["avatar_url"]
+    assert shown == url and c.get(shown).status_code == 200
+    other = ts._employer(c, "other2@x.ru", name="Other Co")  # другая компания не видит
+    assert _card(c, other, "pid0080").json()["avatar_url"] is None
+
+    # замена: старая ссылка перестаёт работать, файл один
+    jpg = b"\xff\xd8\xff\xe0" + b"\x01" * 32
+    r2 = c.put("/candidates/me/avatar", files={"file": ("p.jpg", jpg, "image/jpeg")}, headers=h)
+    assert r2.json()["avatar_url"] != url and len(c.app.state.storage.files) == 1
+    assert c.get(url).status_code == 404
+    assert c.delete("/candidates/me/avatar", headers=h).json()["avatar_url"] is None
+    assert c.app.state.storage.files == {}

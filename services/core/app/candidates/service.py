@@ -131,6 +131,58 @@ def shown_full_name(cand: Candidate, key: str, *, invited: bool = False) -> str 
     return full_name_of(cand, key) if invited or visibility_of(cand)["full_name"] else None
 
 
+def _avatar_sig(cand: Candidate, secret: str) -> str:
+    msg = f"avatar:{cand.pseudo_id}:{cand.avatar_key}".encode()
+    return hmac.new(secret.encode(), msg, hashlib.sha256).hexdigest()[:32]
+
+
+def avatar_url(cand: Candidate, secret: str) -> str | None:
+    """Адрес аватара с подписью (E41-12): `<img>` не несёт токен, а доступ ограничен тем, кому
+    сервер отдал ссылку (владелец; работодатель — после приглашения, как ФИО). Смена файла
+    меняет подпись и версию — старые ссылки перестают работать."""
+    if not cand.avatar_key:
+        return None
+    version = cand.avatar_key.rsplit("/", 1)[-1].split(".", 1)[0]
+    return f"/candidates/{cand.pseudo_id}/avatar?v={version}&sig={_avatar_sig(cand, secret)}"
+
+
+def avatar_sig_ok(cand: Candidate, secret: str, sig: str) -> bool:
+    return bool(cand.avatar_key) and hmac.compare_digest(_avatar_sig(cand, secret), sig)
+
+
+async def by_pseudo_id(session: AsyncSession, pseudo_id: str) -> Candidate | None:
+    return await session.scalar(
+        sa.select(Candidate).where(Candidate.pseudo_id == pseudo_id, Candidate.deleted_at.is_(None))
+    )
+
+
+async def set_avatar(session: AsyncSession, storage, cand: Candidate, data: bytes) -> Candidate:
+    from app.identity import profile
+
+    ext = profile.check_image(data)
+    key = profile.image_key(f"candidate-avatars/{cand.user_id}", data, ext)
+    await storage.put(key, data, profile.content_type(key))
+    old, cand.avatar_key = cand.avatar_key, key
+    await session.flush()
+    if old and old != key:
+        try:
+            await storage.delete(old)
+        except Exception:  # старый файл не мешает: ссылка уже другая
+            pass
+    return cand
+
+
+async def clear_avatar(session: AsyncSession, storage, cand: Candidate) -> Candidate:
+    old, cand.avatar_key = cand.avatar_key, None
+    await session.flush()
+    if old:
+        try:
+            await storage.delete(old)
+        except Exception:
+            pass
+    return cand
+
+
 def links_of(cand: Candidate, key: str) -> list[str]:
     """Ссылки владельца (E39-15): расшифрованный список; нечитаемое — пустой список."""
     raw = pii.decrypt_text(key, cand.links_enc)
@@ -537,6 +589,7 @@ async def erase(session: AsyncSession, storage, user) -> Candidate:
     if cand is None or cand.deleted_at is not None:
         raise ProblemError(404, "candidate_not_found", "Профиль не найден")
     cid = cand.user_id
+    await clear_avatar(session, storage, cand)
     await resumes.erase_candidate(session, storage, cid)
     await assessment.erase_candidate(session, cid)
     await graph.erase_candidate(session, cid)

@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 
 import {
+  Avatar,
   Button,
   EmptyState,
   ErrorState,
@@ -18,6 +19,7 @@ import {
   formatRubRange,
   type SkillValue,
 } from "@fsp/ui";
+import { avatarSrc } from "@/shared/lib/avatar";
 
 import { useGetProfessionsTaxonomyProfessionsGet } from "@/api/endpoints/taxonomy/taxonomy";
 import { useListPublicVacanciesVacanciesPublicGet } from "@/api/endpoints/vacancies/vacancies";
@@ -43,13 +45,16 @@ export function JobCard({ v, search = "" }: { v: PublicVacancyOut; search?: stri
   return (
     <li className="flex flex-col gap-3 rounded-2xl border border-hairline bg-card p-4 md:p-5">
       <div className="flex flex-wrap items-start justify-between gap-2">
-        <div className="min-w-0">
-          <h2 className="break-words font-mono text-18 font-semibold">{v.title}</h2>
-          <p className="text-13 text-muted">
-            {place}
-            {v.company.verified && <span className="ml-2 text-success">{T.verified}</span>}
-            {v.company.demo && <span className="ml-2 text-muted" data-testid="company-demo">{T.demo}</span>}
-          </p>
+        <div className="flex min-w-0 items-start gap-3">
+          <Avatar name={v.company.name} src={avatarSrc(v.company.logo_url)} size={44} className="rounded-xl" />
+          <div className="min-w-0">
+            <h2 className="break-words font-mono text-18 font-semibold">{v.title}</h2>
+            <p className="text-13 text-muted">
+              {place}
+              {v.company.verified && <span className="ml-2 text-success">{T.verified}</span>}
+              {v.company.demo && <span className="ml-2 text-muted" data-testid="company-demo">{T.demo}</span>}
+            </p>
+          </div>
         </div>
       </div>
       <p className="font-mono text-22 font-semibold text-brand-deep dark:text-brand-mid">{formatRubRange(v.salary_from, v.salary_to)}</p>

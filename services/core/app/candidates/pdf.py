@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import base64
 from datetime import UTC, datetime
 from html import escape
 from typing import Any
@@ -30,6 +31,7 @@ h1 { font-size: 20pt; margin: 0; color: #201880; }
 h2 { font-size: 12pt; color: #402FFF; border-bottom: 1.5pt solid #A9A1FF; padding-bottom: 2pt;
   margin: 16pt 0 6pt; }
 .head { border-left: 5pt solid #402FFF; padding-left: 10pt; margin-bottom: 8pt; }
+img.photo { float: right; width: 26mm; height: 26mm; object-fit: cover; border-radius: 3mm; }
 .muted { color: #6b6b7b; font-size: 8.5pt; }
 table { width: 100%; border-collapse: collapse; }
 td, th { text-align: left; padding: 3pt 4pt; border-bottom: .5pt solid #e1e0f0; vertical-align: top; }
@@ -58,11 +60,24 @@ def _table(head: list[str], rows: list[list[str]]) -> str:
     return f"<table><tr>{th}</tr>{body}</table>"
 
 
-def build_html(profile: Any, grades: list[CandidateGrade], now: datetime | None = None) -> str:
-    """`profile` — `CandidateProfile` из router; все значения экранируются."""
+def build_html(
+    profile: Any,
+    grades: list[CandidateGrade],
+    now: datetime | None = None,
+    photo: tuple[bytes, str] | None = None,
+) -> str:
+    """`profile` — `CandidateProfile` из router; все значения экранируются.
+
+    `photo` — (байты, ключ файла) аватара владельца (E41-12); вшивается как data-URI."""
     now = now or datetime.now(UTC)
     p = profile
     out: list[str] = []
+    if photo:
+        mime = {"png": "image/png", "jpg": "image/jpeg", "webp": "image/webp"}.get(
+            photo[1].rsplit(".", 1)[-1], "image/png"
+        )
+        b64 = base64.b64encode(photo[0]).decode()
+        out.append(f'<img class="photo" alt="" src="data:{mime};base64,{b64}">')
     cat = p.category
     role = _e(cat.primary_role) if cat and cat.primary_role else "категория не определена"
     g = p.grade

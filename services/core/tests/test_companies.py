@@ -56,6 +56,7 @@ def test_register_company_pending_and_me(c):
         "name": "Acme Labs",
         "status": "pending",
         "role": "admin",
+        "logo_url": None,
     }
     assert c.post("/companies", json={"name": "Other"}, headers=h).status_code == 409
 

@@ -113,6 +113,8 @@ class Candidate(Base):
     contacts_enc: Mapped[bytes | None] = mapped_column(sa.LargeBinary, default=None)
     # ФИО (E36-5): шифруется как контакты; работодателю — только при `visibility.full_name`
     full_name_enc: Mapped[bytes | None] = mapped_column(sa.LargeBinary, default=None)
+    # E41-12: аватар в MinIO; работодатель видит его только после приглашения
+    avatar_key: Mapped[str | None] = mapped_column(Text, default=None)
     desired_roles: Mapped[list[str] | None] = mapped_column(TextArray, default=None)
     # E39-15: slug навыков, скрытых кандидатом от работодателя (карточка, выдача); подбор не меняют
     hidden_skills: Mapped[list[str] | None] = mapped_column(TextArray, default=None)

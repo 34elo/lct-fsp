@@ -1,6 +1,7 @@
 import { PAGE } from "@/shared/lib/page";
 import { Gloss } from "@/shared/Gloss";
 import {
+  Avatar,
   buttonVariants,
   Button,
   Chips,
@@ -28,6 +29,7 @@ import {
   Tag,
   type WhyItem,
 } from "@fsp/ui";
+import { avatarSrc } from "@/shared/lib/avatar";
 import { useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 
@@ -317,7 +319,7 @@ function Body({ c, vacancyId, needId }: { c: CandidateCardFull; vacancyId: strin
   return (
     <div className="flex flex-col gap-4">
       <Panel aria-label={T.header} className="flex flex-wrap items-center gap-4">
-        <ConstellationAvatar seed={c.avatar_seed} size={72} />
+        {c.avatar_url ? <Avatar name={c.full_name ?? c.pseudonym} src={avatarSrc(c.avatar_url)} size={72} /> : <ConstellationAvatar seed={c.avatar_seed} size={72} />}
         <div className="flex min-w-[200px] flex-1 flex-col gap-2">
           <div className="flex flex-wrap items-center gap-2.5">
             <H1 className="break-words text-[28px]">{displayPseudonym(c.pseudonym, c.primary_role)}</H1>
