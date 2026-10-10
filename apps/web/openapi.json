@@ -13391,6 +13391,292 @@
         }
       }
     },
+    "/admin/profession-suggestions": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "List Profession Suggestions",
+        "description": "Открытые предложения «Новая профессия?» (еженедельный майнинг вакансий и запросов).",
+        "operationId": "list_profession_suggestions_admin_profession_suggestions_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProfessionSuggestionOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Profession Suggestions Admin Profession Suggestions Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/profession-suggestions/{suggestion_id}/accept": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Accept Profession Suggestion",
+        "description": "«Создать» одной кнопкой: профессия с профилем навыков (ядро + недостающие типы навыков\nближайшей профессии, по которым есть семейства).",
+        "operationId": "accept_profession_suggestion_admin_profession_suggestions__suggestion_id__accept_post",
+        "parameters": [
+          {
+            "name": "suggestion_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Suggestion Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/SuggestionAccept"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuggestionAccepted"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Конфликт (в том числе cooldown)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/profession-suggestions/{suggestion_id}/reject": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Reject Profession Suggestion",
+        "description": "«Отклонить»: решение запоминается, похожий кластер больше не предлагается.",
+        "operationId": "reject_profession_suggestion_admin_profession_suggestions__suggestion_id__reject_post",
+        "parameters": [
+          {
+            "name": "suggestion_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Suggestion Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfessionSuggestionOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено (в том числе чужой ресурс)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Конфликт (в том числе cooldown)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/admin/skills/queue": {
       "get": {
         "tags": [
@@ -28261,6 +28547,29 @@
         ],
         "title": "NavigatorOut"
       },
+      "NearestProfession": {
+        "properties": {
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "overlap": {
+            "type": "number",
+            "title": "Overlap"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slug",
+          "title",
+          "overlap"
+        ],
+        "title": "NearestProfession"
+      },
       "NeedCategories": {
         "properties": {
           "need_id": {
@@ -30217,6 +30526,88 @@
         ],
         "title": "ProfessionSuggestion",
         "description": "Подсказка профессии `GET /taxonomy/professions/suggest` (E39-3)."
+      },
+      "ProfessionSuggestionOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "skills": {
+            "items": {
+              "$ref": "#/components/schemas/SuggestionSkill"
+            },
+            "type": "array",
+            "title": "Skills"
+          },
+          "support_vacancies": {
+            "type": "integer",
+            "title": "Support Vacancies"
+          },
+          "support_needs": {
+            "type": "integer",
+            "title": "Support Needs"
+          },
+          "nearest": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NearestProfession"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "examples": {
+            "items": {
+              "$ref": "#/components/schemas/SuggestionExample"
+            },
+            "type": "array",
+            "title": "Examples"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "created",
+              "rejected"
+            ],
+            "title": "Status"
+          },
+          "profession": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profession"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "skills",
+          "support_vacancies",
+          "support_needs",
+          "examples",
+          "status",
+          "created_at"
+        ],
+        "title": "ProfessionSuggestionOut"
       },
       "ProfessionsOut": {
         "properties": {
@@ -34283,6 +34674,112 @@
           "created_at"
         ],
         "title": "SubscriptionOut"
+      },
+      "SuggestionAccept": {
+        "properties": {
+          "slug": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]{1,31}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slug"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "type": "object",
+        "title": "SuggestionAccept"
+      },
+      "SuggestionAccepted": {
+        "properties": {
+          "suggestion": {
+            "$ref": "#/components/schemas/ProfessionSuggestionOut"
+          },
+          "profession": {
+            "$ref": "#/components/schemas/ProfessionOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "suggestion",
+          "profession"
+        ],
+        "title": "SuggestionAccepted"
+      },
+      "SuggestionExample": {
+        "properties": {
+          "vacancy_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vacancy Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "title": "SuggestionExample"
+      },
+      "SuggestionSkill": {
+        "properties": {
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type"
+          },
+          "share": {
+            "type": "number",
+            "title": "Share"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slug",
+          "name",
+          "share"
+        ],
+        "title": "SuggestionSkill"
       },
       "SurveyIn": {
         "properties": {
