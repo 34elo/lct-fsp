@@ -260,6 +260,9 @@ def test_grades_plan_distribution_and_coverage(plan):
     assert flags == round(n * 0.05)
     assert g["hero-anya"][0]["grade"] == "junior" and g["hero-dima"][0]["grade"] == "middle"
     assert plan_grades(build_plan(seed=8, anchor=ANCHOR)) != g
+    # E43-6: есть кандидаты с двумя разными направлениями
+    dual = [es for es in g.values() if len({e["profession"] for e in es}) >= 2]
+    assert dual and all(len({e["profession"] for e in es}) == len(es) for es in g.values())
 
 
 async def test_seed_grades_core_and_idempotent(factory):
