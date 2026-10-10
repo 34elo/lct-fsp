@@ -137,7 +137,7 @@ CREATE TABLE candidates (
   hidden_skills      text[],                          -- slug навыков, скрытых от работодателя; подбор не меняют (E39-15, b1_16)
   age_group          text,                            -- adult | minor (15–17 лет), E32-5b; дата рождения не хранится
   parent_consent_at  timestamptz,                     -- согласие родителя на ПДн несовершеннолетнего; без него minor не публикуется
-  desired_roles      text[],                          -- желаемые роли из ручной формы (E20-4), RoleSlug
+  desired_roles      text[],                          -- желаемые роли из ручной формы (E20-4): slug профессий системы (E41-6)
   city               text,
   relocation         boolean DEFAULT false,
   search_status      text NOT NULL DEFAULT 'open',    -- search_status

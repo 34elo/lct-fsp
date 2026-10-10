@@ -4034,7 +4034,7 @@
           "taxonomy"
         ],
         "summary": "Suggest Skills",
-        "description": "Подсказки навыков: синонимы, префикс, опечатки; частые выше, `provisional` помечен.",
+        "description": "Подсказки навыков: синонимы, префикс, опечатки; частые выше, `provisional` помечен.\n\n`kind=soft` — только софт-навыки (поле «Личные качества», E41-6).",
         "operationId": "suggest_skills_taxonomy_skills_suggest_get",
         "parameters": [
           {
@@ -4075,6 +4075,24 @@
                 }
               ],
               "title": "Profession"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 16,
+                  "pattern": "^(soft|hard|domain)$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
             }
           }
         ],
@@ -10646,7 +10664,7 @@
           "assessment"
         ],
         "summary": "Review Attempt",
-        "description": "Разбор теста: только «что подтянуть» — задания с неполным баллом, ваш ответ и причина; верных ответов и вариантов нет.",
+        "description": "Разбор теста (E41-5): только «что подтянуть», без верных ответов и вариантов.",
         "operationId": "review_attempt_assessment_attempts__attempt_id__review_get",
         "parameters": [
           {
@@ -28932,7 +28950,9 @@
             "anyOf": [
               {
                 "items": {
-                  "$ref": "#/components/schemas/RoleSlug"
+                  "type": "string",
+                  "maxLength": 100,
+                  "minLength": 1
                 },
                 "type": "array",
                 "maxItems": 5

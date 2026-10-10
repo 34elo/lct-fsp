@@ -498,6 +498,8 @@ export const getSuggestSkillsTaxonomySkillsSuggestGetUrl = (params?: SuggestSkil
 
 /**
  * Подсказки навыков: синонимы, префикс, опечатки; частые выше, `provisional` помечен.
+ *
+ * `kind=soft` — только софт-навыки (поле «Личные качества», E41-6).
  * @summary Suggest Skills
  */
 export const suggestSkillsTaxonomySkillsSuggestGet = async (params?: SuggestSkillsTaxonomySkillsSuggestGetParams, options?: Parameters<typeof apiFetch>[1]): Promise<suggestSkillsTaxonomySkillsSuggestGetResponse> => {
