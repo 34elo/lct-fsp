@@ -478,14 +478,20 @@ async def search_pool(
     cities: list[str] | None = None,
     relocation_ok: bool | None = None,
     active_only: bool = False,
+    require_role: bool = True,
 ) -> list[Candidate]:
-    """Каталог: видимые анкеты по фильтрам анкеты (скаляры — SQL, массивы — в памяти)."""
+    """Каталог: видимые анкеты по фильтрам анкеты (скаляры — SQL, массивы — в памяти).
+
+    `require_role=False` — не скрывать анкеты без `primary_role` (видимость тогда определяет
+    грейд из теста: у прошедшего тест роль в анкете может быть ещё не вычислена, E43-6).
+    """
     stmt = select(Candidate).where(
         Candidate.deleted_at.is_(None),
         Candidate.search_status != "dnd",
         _PUBLISHABLE,
-        Candidate.primary_role.is_not(None),
     )
+    if require_role:
+        stmt = stmt.where(Candidate.primary_role.is_not(None))
     if roles:
         stmt = stmt.where(Candidate.primary_role.in_(roles))
     if grades is not None:
