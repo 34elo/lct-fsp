@@ -329,11 +329,6 @@ function Body({ c, vacancyId, needId }: { c: CandidateCardFull; vacancyId: strin
           </div>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-13 text-muted">
             {c.full_name && <span className="text-ink">{c.full_name}</span>}
-            {c.salary_min && (
-              <span>
-                {T.expectations} <Num className="text-ink">от {formatRub(c.salary_min)}</Num>
-              </span>
-            )}
             {where.map((w) => (
               <span key={w}>{w}</span>
             ))}
@@ -428,23 +423,6 @@ function Body({ c, vacancyId, needId }: { c: CandidateCardFull; vacancyId: strin
             )}
             <p className="text-12 text-muted">{T.contacts}</p>
           </Panel>
-          {hasMarket && (
-            <Panel aria-label={T.market} className="flex flex-col gap-2">
-              <Lbl>{T.market}</Lbl>
-              {c.salary_min && (
-                <ListRow className="py-1.5">
-                  <span className="text-muted">{T.candidateWants}</span>
-                  <Num className="ml-auto">от {formatRub(c.salary_min)}</Num>
-                </ListRow>
-              )}
-              {median ? (
-                <ListRow className="py-1.5">
-                  <span className="text-muted">{T.median}</span>
-                  <Num className="ml-auto">{formatRub(median)}</Num>
-                </ListRow>
-              ) : null}
-            </Panel>
-          )}
           {items.length > 0 && (
             <Panel aria-label={T.why}>
               <PanelCap title={T.why} />
@@ -453,6 +431,23 @@ function Body({ c, vacancyId, needId }: { c: CandidateCardFull; vacancyId: strin
           )}
         </aside>
       </div>
+      {hasMarket && (
+        <Panel aria-label={T.market} className="flex flex-col gap-2">
+          <Lbl>{T.market}</Lbl>
+          {c.salary_min && (
+            <ListRow className="py-1.5">
+              <span className="text-muted">{T.candidateWants}</span>
+              <Num className="ml-auto">от {formatRub(c.salary_min)}</Num>
+            </ListRow>
+          )}
+          {median ? (
+            <ListRow className="py-1.5">
+              <span className="text-muted">{T.median}</span>
+              <Num className="ml-auto">{formatRub(median)}</Num>
+            </ListRow>
+          ) : null}
+        </Panel>
+      )}
     </div>
   );
 }

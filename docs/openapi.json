@@ -17831,6 +17831,98 @@
         }
       }
     },
+    "/admin/fsp/registry/import": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Registry Import Results",
+        "description": "Результаты списком (E43-4): CSV `участник;мероприятие;дата;результат`, до 1000 строк.\n\nБез `commit` — превью с построчной проверкой. С `commit` — запись и пересчёт профилей\nзатронутых кандидатов (outbox). Новые мероприятия создаются только по `create_events`.",
+        "operationId": "registry_import_results_admin_fsp_registry_import_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResultsImportIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultsImportOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет авторизации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав (в том числе consent_required, email_not_verified)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Зависимость недоступна",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/admin/fsp/requests": {
       "get": {
         "tags": [
@@ -31711,6 +31803,273 @@
           "time_to_answer"
         ],
         "title": "ResponseMetrics"
+      },
+      "ResultsImportIn": {
+        "properties": {
+          "csv": {
+            "type": "string",
+            "maxLength": 1000000,
+            "minLength": 1,
+            "title": "Csv"
+          },
+          "commit": {
+            "type": "boolean",
+            "title": "Commit",
+            "default": false
+          },
+          "skip_errors": {
+            "type": "boolean",
+            "title": "Skip Errors",
+            "description": "Записать годные строки, ошибочные пропустить",
+            "default": false
+          },
+          "create_events": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 1000,
+            "title": "Create Events",
+            "description": "Ключи новых мероприятий из превью, создание которых подтверждено"
+          },
+          "default_discipline": {
+            "$ref": "#/components/schemas/FspDiscipline",
+            "default": "algorithmic"
+          },
+          "default_level": {
+            "$ref": "#/components/schemas/FspLevel",
+            "default": "regional"
+          }
+        },
+        "type": "object",
+        "required": [
+          "csv"
+        ],
+        "title": "ResultsImportIn",
+        "description": "E43-4: `commit=false` — превью (dry-run), `true` — запись; повтор идемпотентен."
+      },
+      "ResultsImportLine": {
+        "properties": {
+          "line": {
+            "type": "integer",
+            "title": "Line"
+          },
+          "participant": {
+            "type": "string",
+            "title": "Participant"
+          },
+          "participant_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Participant Id"
+          },
+          "participant_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Participant Name"
+          },
+          "event": {
+            "type": "string",
+            "title": "Event"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "error"
+            ],
+            "title": "Status"
+          },
+          "action": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "create",
+                  "update",
+                  "unchanged"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Action"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error",
+            "description": "Машинный код ошибки строки"
+          },
+          "new_event_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Event Key"
+          }
+        },
+        "type": "object",
+        "required": [
+          "line",
+          "participant",
+          "event",
+          "status"
+        ],
+        "title": "ResultsImportLine"
+      },
+      "ResultsImportNewEvent": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "discipline": {
+            "$ref": "#/components/schemas/FspDiscipline"
+          },
+          "level": {
+            "$ref": "#/components/schemas/FspLevel"
+          },
+          "rows": {
+            "type": "integer",
+            "title": "Rows"
+          },
+          "confirmed": {
+            "type": "boolean",
+            "title": "Confirmed",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "title",
+          "date",
+          "discipline",
+          "level",
+          "rows"
+        ],
+        "title": "ResultsImportNewEvent"
+      },
+      "ResultsImportOut": {
+        "properties": {
+          "committed": {
+            "type": "boolean",
+            "title": "Committed"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/ResultsImportSummary"
+          },
+          "new_events": {
+            "items": {
+              "$ref": "#/components/schemas/ResultsImportNewEvent"
+            },
+            "type": "array",
+            "title": "New Events"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/ResultsImportLine"
+            },
+            "type": "array",
+            "title": "Lines"
+          }
+        },
+        "type": "object",
+        "required": [
+          "committed",
+          "summary",
+          "new_events",
+          "lines"
+        ],
+        "title": "ResultsImportOut"
+      },
+      "ResultsImportSummary": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "errors": {
+            "type": "integer",
+            "title": "Errors"
+          },
+          "created": {
+            "type": "integer",
+            "title": "Created"
+          },
+          "updated": {
+            "type": "integer",
+            "title": "Updated"
+          },
+          "unchanged": {
+            "type": "integer",
+            "title": "Unchanged"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "errors",
+          "created",
+          "updated",
+          "unchanged"
+        ],
+        "title": "ResultsImportSummary"
       },
       "ResumeAccepted": {
         "properties": {

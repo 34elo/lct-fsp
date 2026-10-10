@@ -34,7 +34,6 @@ import {
   registryParticipantsAdminFspParticipantsGet,
   registryUpdateEventAdminFspEventsEventIdPatch,
   registryCreateEventAdminFspEventsPost,
-  registryUpsertResultAdminFspResultsPut,
   useRegistryAcceptRequestAdminFspRequestsRequestIdAcceptPost,
   useRegistryCreateEventAdminFspEventsPost,
   useRegistryCreateParticipantAdminFspParticipantsPost,
@@ -53,6 +52,7 @@ import { ApiError } from "@/api/mutator";
 import { AdminPageHeader } from "@/features/admin/PageHeader";
 import { PAGE } from "@/shared/lib/page";
 
+import { BulkResults } from "./BulkResults";
 import { dropHeader, parseCsv } from "./csv";
 import { DISCIPLINE, LEVEL, R } from "./text";
 
@@ -368,42 +368,8 @@ async function importEvents(rows: string[][]): Promise<Report> {
   return rep;
 }
 
-/** Импорт результатов: «участник (ФИО, email или телефон); мероприятие; место; команда». */
-async function importResults(rows: string[][]): Promise<Report> {
-  const known = await registryEventsAdminFspEventsGet();
-  const events = known.status === 200 ? known.data : [];
-  const rep: Report = { created: 0, updated: 0, errors: [] };
-  const data = dropHeader(rows, (r) => (r[2] ?? "") === "" || /^\d+$/.test(r[2] ?? ""));
-  const offset = rows.length - data.length;
-  for (const [i, r] of data.entries()) {
-    const line = i + 1 + offset;
-    const [who = "", eventTitle = "", placeRaw = "", team = ""] = r;
-    const event = events.find((e) => lc(e.title) === lc(eventTitle));
-    const place = placeRaw.trim() === "" ? null : Number(placeRaw);
-    if (!who.trim()) rep.errors.push({ line, reason: "no_participant" });
-    else if (!event) rep.errors.push({ line, reason: "no_event" });
-    else if (place !== null && !(Number.isInteger(place) && place >= 1 && place <= 100000)) rep.errors.push({ line, reason: "bad_place" });
-    else {
-      try {
-        const found = await registryParticipantsAdminFspParticipantsGet({ q: who.trim(), limit: 5 });
-        const list = found.status === 200 ? found.data : [];
-        const exact = list.filter((p) => [p.full_name, p.email, p.phone, p.id].some((x) => x && lc(x) === lc(who)));
-        const pick = list.length === 1 ? list[0] : exact.length === 1 ? exact[0] : null;
-        if (!pick) rep.errors.push({ line, reason: list.length === 0 ? "no_participant" : "ambiguous_participant" });
-        else {
-          await registryUpsertResultAdminFspResultsPut({ event_id: event.id, participant_id: pick.id, place, team: team.trim() || null });
-          rep.created++;
-        }
-      } catch {
-        rep.errors.push({ line, reason: "failed" });
-      }
-    }
-  }
-  return rep;
-}
-
 /** «Импорт CSV»: только выбор файла, формат подсказан рядом с кнопкой. */
-function ImportButton({ tab, onReport }: { tab: "events" | "participants" | "results"; onReport: (r: Report | null, err?: string) => void }) {
+function ImportButton({ tab, onReport }: { tab: "events" | "participants"; onReport: (r: Report | null, err?: string) => void }) {
   const refresh = useRefresh();
   const importParticipants = useRegistryImportParticipantsAdminFspParticipantsImportPost();
   const [busy, setBusy] = useState(false);
@@ -418,8 +384,7 @@ function ImportButton({ tab, onReport }: { tab: "events" | "participants" | "res
       const text = await f.text();
       let rep: Report;
       if (tab === "participants") rep = (await importParticipants.mutateAsync({ data: { csv: text } })).data as CsvImportOut;
-      else if (tab === "events") rep = await importEvents(parseCsv(text));
-      else rep = await importResults(parseCsv(text));
+      else rep = await importEvents(parseCsv(text));
       onReport(rep);
       await refresh();
     } catch {
@@ -728,6 +693,7 @@ export default function FspRegistry() {
   const [dlg, setDlg] = useState<Dlg>(null);
   const [report, setReport] = useState<Report | null>(null);
   const [reportErr, setReportErr] = useState<string | null>(null);
+  const refreshAll = useRefresh();
   const pending = useRegistryRequestsAdminFspRequestsGet({ status: "pending" }, { query: { retry: false } });
   const waiting = pending.data?.status === 200 ? pending.data.data.length : undefined;
 
@@ -745,7 +711,8 @@ export default function FspRegistry() {
     <div className={PAGE.wide}>
       <AdminPageHeader title={R.title} tip={R.lead}>
         <div className="flex flex-wrap items-center gap-2">
-          {tab !== "requests" && <ImportButton tab={tab} onReport={onReport} />}
+          {(tab === "events" || tab === "participants") && <ImportButton tab={tab} onReport={onReport} />}
+          {tab === "results" && <BulkResults onImported={refreshAll} />}
           <Button onClick={() => setDlg({ kind: createKind })}>{R.create.button}</Button>
         </div>
       </AdminPageHeader>
