@@ -12,7 +12,7 @@
 - `config.yaml` — объёмы, тестовый пароль демо-аккаунтов, вымышленные компании.
 - `heroes/*.yaml` — Аня, Дима, Ольга (ручные фикстуры).
 - `plan.py` — чистый план (без БД); `loader.py` — запись через сервисы core; `__main__.py` — CLI.
-- `families.py` — демо-очередь допуска заданий (E39-31): 7 профессий × 3 грейда = 21 семейство-спецификация (pilot, draft, quarantine; часть не проходит пороги), команда `python -m tools.seed families` (в `make seed`), идемпотентно.
+- `families.py` — демо-очередь допуска заданий (E39-31): 7 профессий × 3 грейда = 21 семейство-спецификация (pilot, draft, quarantine; часть не проходит пороги), команда `python -m tools.seed families` (в `make seed`), идемпотентно; там же `professions.py` — демо-предложение новой профессии «Разработчик 1С» (E41-17).
 - `grades.py` — seed-грейды блока 1 (`make seed` вызывает `python -m tools.seed grades`): 6 профессий × 3 грейда через `assessment.seed_grade`, идемпотентно.
 - `jury.py` — аккаунты жюри (E32-4b): `jury-candidate@` (без грейда) и `jury-hr@demo.fsp.test` (проверенная компания «Жюри Демо»); создаются в конце `make seed`, идемпотентно. Кнопки лендинга (`VITE_JURY_MODE=true`, `JuryEntry.tsx`) с E40-1 входят не в них, а в свою песочницу (`POST /auth/jury`, `services/core/app/demo/service.py`): кандидат попадает на `/me/assessment?mode=express`, работодатель — на `/employer/search`.
 - `demo_v2.yaml` + `demo_v2.py` — демо v2 (E34-1): герои Борис/Вика/Глеб/Мира/Тимур с историей теста (через `grading.on_finished`), 3 компании и вакансии, офферы и отклики, регулярные задания; команда `python -m tools.seed demo2` (в `make seed`).

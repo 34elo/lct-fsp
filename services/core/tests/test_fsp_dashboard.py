@@ -98,3 +98,17 @@ def test_no_pii_or_actor_in_response(api):
     r = api.get("/admin/dashboard", headers=h)
     assert act(3) not in r.text and "actor" not in r.text
     assert api.get("/admin/dashboard?days=0", headers=h).status_code == 422
+
+
+def test_counters_and_daily_series(api):
+    h = admin(api)
+    ev = [("signup_completed", act(i), {"channel": "web"}) for i in range(6)]
+    ev += [("interest_shown", act(100 + i), {}) for i in range(2)]
+    push(api, ev)
+    body = api.get("/admin/dashboard", headers=h).json()
+    cnt = {c["id"]: c for c in body["counters"]}
+    assert cnt["registrations"]["count"] == 6
+    assert cnt["interests"]["hidden"] and cnt["interests"]["count"] is None
+    assert len(body["daily"]) == body["days"] + 1
+    today = body["daily"][-1]["values"]
+    assert today["registrations"] == 6 and today["interests"] is None

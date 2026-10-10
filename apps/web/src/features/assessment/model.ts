@@ -85,8 +85,18 @@ export function hasTable(stem: string): boolean {
   return /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/m.test(stem);
 }
 
+/** В условии есть блок ```mermaid (E41-9): такое условие тоже показываем Markdown-ом целиком, схема рисуется картинкой. */
+export function hasDiagram(stem: string): boolean {
+  return /^\s*```\s*mermaid(\s|$)/m.test(stem);
+}
+
+/** Условие нужно показывать Markdown-ом: таблица или схема. */
+export function isRichStem(stem: string): boolean {
+  return hasTable(stem) || hasDiagram(stem);
+}
+
 export function splitStem(stem: string): { prose: string; code: string | null } {
-  if (hasTable(stem)) return { prose: stem, code: null };
+  if (isRichStem(stem)) return { prose: stem, code: null };
   const at = stem.indexOf("\n\n");
   if (at < 0) return { prose: stem, code: null };
   return { prose: stem.slice(0, at).trim(), code: stem.slice(at + 2).trim() || null };

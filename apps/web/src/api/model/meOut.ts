@@ -11,7 +11,9 @@ export interface MeOut {
   email: string | null;
   role: string;
   email_verified?: boolean;
+  must_change_password?: boolean;
   consents: string[];
+  avatar_url?: string | null;
   telegram_linked?: boolean;
   company?: MeCompany | null;
 }

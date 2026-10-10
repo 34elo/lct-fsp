@@ -103,7 +103,6 @@ test("E38-13: воронка, таблица предложений, после�
   const base = f.getMockImplementation()!;
   f.mockImplementation(async (url: string, init?: RequestInit) => {
     if (url.endsWith("/offers") && init?.method !== "POST") return res(200, list);
-    if (/\/offers\/4\/messages/.test(url)) return res(200, [{ id: "m1", author_side: "candidate", text: "Вилка подходит", created_at: "2026-10-04T10:00:00Z" }]);
     return base(url, init);
   });
   mount("/employer/offers");
@@ -111,7 +110,7 @@ test("E38-13: воронка, таблица предложений, после�
   expect(rows).toHaveLength(4);
   expect(within(screen.getByRole("region", { name: "Воронка" })).getByText("интерес").previousElementSibling).toHaveTextContent("2");
   expect(screen.getByRole("heading", { name: "Предложения" })).toBeInTheDocument();
-  expect(await screen.findByText("Вилка подходит")).toBeInTheDocument();
+  expect(await screen.findByText("Контакты открыты")).toBeInTheDocument();
   expect(screen.getByRole("link", { name: "Открыть" })).toHaveAttribute("href", "/employer/offers/4");
   const resp = screen.getByRole("region", { name: "Отклики на вакансии" });
   expect(within(resp).getByText("Backend #5")).toBeInTheDocument();
@@ -209,6 +208,7 @@ test("E32-7: после отзыва кнопки нет, показана по�
   mount("/me/offers/o2");
   expect(await screen.findByText(/Вы отозвали доступ к контактам/)).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Отозвать доступ к контактам" })).toBeNull();
+  expect(screen.queryByTestId("offer-reply")).toBeNull();
   expect(screen.queryByRole("region", { name: "Переписка" })).toBeNull();
 });
 
@@ -285,13 +285,13 @@ test("E39-24: без подписи блока отправителя нет", a
   expect(screen.queryByTestId("offer-sender")).toBeNull();
 });
 
-test("E39-26: кандидат отвечает одним сообщением вместе с «Принять»; кнопок переписки нет", async () => {
+test("E41-4: «Принять» уходит без текста; поля ответа и кнопок переписки нет", async () => {
   stubCandidate([candOffer("o1", "sent", { message: "Рады пригласить", task: { title: "Мини-кейс", minutes: 15, deadline_at: "2026-10-12T10:00:00Z" } })]);
   const f = globalThis.fetch as unknown as ReturnType<typeof vi.fn>;
   const base = f.getMockImplementation()!;
   f.mockImplementation(async (url: string, init?: RequestInit) => {
     if (/\/offers\/o1\/accept$/.test(url)) {
-      calls.push({ url, headers: new Headers(init?.headers), body: JSON.parse(String(init?.body)) });
+      calls.push({ url, headers: new Headers(init?.headers), body: init?.body ? JSON.parse(String(init.body)) : null });
       return res(200, candOffer("o1", "accepted"));
     }
     return base(url, init);
@@ -300,10 +300,10 @@ test("E39-26: кандидат отвечает одним сообщением 
   expect(await screen.findByTestId("offer-message")).toHaveTextContent("Рады пригласить");
   expect(screen.getByTestId("offer-task")).toHaveTextContent("Мини-кейс");
   expect(screen.queryByRole("button", { name: "Задать вопрос" })).toBeNull();
-  fireEvent.change(screen.getByRole("textbox", { name: "Ваш ответ компании" }), { target: { value: "  Готов обсудить  " } });
+  expect(screen.queryByRole("textbox")).toBeNull();
   fireEvent.click(screen.getByRole("button", { name: "Принять" }));
   await waitFor(() => expect(calls).toHaveLength(1));
-  expect(calls[0].body).toEqual({ message: "Готов обсудить" });
+  expect(calls[0].body).toBeNull();
 });
 
 test("E39-26: после принятия кандидат видит контакты компании и кнопку «Написать в Telegram»", async () => {
@@ -315,7 +315,7 @@ test("E39-26: после принятия кандидат видит конта
   expect(within(box).getByRole("link", { name: "Написать в Telegram" })).toHaveAttribute("href", "https://t.me/north_hr");
 });
 
-test("E39-26: работодатель видит ответ кандидата и его контакты после принятия", async () => {
+test("E41-4: работодатель видит контакты кандидата после принятия, ответа кандидата нет", async () => {
   const f = globalThis.fetch as unknown as ReturnType<typeof vi.fn>;
   const base = f.getMockImplementation()!;
   const offer = {
@@ -324,16 +324,15 @@ test("E39-26: работодатель видит ответ кандидата 
     contacts: { name: "Candidate #1", email: "c@x.ru", phone: "+7 911 111-11-11", telegram: "@cand_1" },
   };
   f.mockImplementation(async (url: string, init?: RequestInit) => {
-    if (/\/offers\/e1\/messages$/.test(url)) return res(200, [{ id: "m1", author_side: "candidate", text: "Готов обсудить", created_at: "2026-10-03T10:00:00Z" }]);
     if (/\/offers\/e1\/events$/.test(url)) return res(200, []);
     if (/\/offers\/e1$/.test(url)) return res(200, offer);
     return base(url, init);
   });
   mount("/employer/offers/e1");
-  expect(await screen.findByTestId("offer-reply")).toHaveTextContent("Готов обсудить");
-  expect(screen.getByTestId("offer-message")).toHaveTextContent("Здравствуйте");
+  expect(await screen.findByTestId("offer-message")).toHaveTextContent("Здравствуйте");
   const box = screen.getByTestId("candidate-contacts");
   expect(within(box).getByText("c@x.ru")).toBeInTheDocument();
   expect(within(box).getByRole("link", { name: "Написать в Telegram" })).toHaveAttribute("href", "https://t.me/cand_1");
+  expect(screen.queryByTestId("offer-reply")).toBeNull();
   expect(screen.queryByRole("region", { name: "Переписка" })).toBeNull();
 });

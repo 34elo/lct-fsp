@@ -174,5 +174,17 @@ async def test_review_hidden_while_active_and_own_only(api, factory, taxonomy_lo
     body = r.json()
     assert [i["response_id"] for i in body["items"]] == ids
     first = body["items"][0]
-    assert first["why"] and first["correct"] is not None or first["steps"]
+    assert first["why"]
+    # E41-5: ни верных ответов, ни вариантов — ни в ответе, ни в шагах цепочки
+    for it in body["items"]:
+        assert "correct" not in it and "options" not in it
+        for st in it["steps"] or []:
+            assert "correct" not in st and "options" not in st
     assert first["reason"]["code"] != "correct" and first["skill_type"]
+
+
+def test_review_part_has_no_key_or_options():
+    item = _item(Kind.choice, 1, options=["секретный A", "секретный B"])
+    part = explain._review_part(item, 0, 0.0, 5000)
+    assert set(part) == {"kind", "stem", "yours", "reason"}
+    assert part["yours"] == "секретный A" and "секретный B" not in str(part)

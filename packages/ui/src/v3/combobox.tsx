@@ -78,7 +78,7 @@ export function ValueChip({ option, onRemove, disabled }: { option: ComboOption;
       data-new={option.isNew || undefined}
     >
       <span className="truncate">{option.label}</span>
-      {option.isNew && <span className="rounded-xs bg-tint-100 px-1 text-11 text-brand-fg">новый</span>}
+      {option.isNew && <span className="rounded-sm bg-tint-100 px-1 text-11 text-brand-fg">новый</span>}
       {onRemove && !disabled && (
         <button
           type="button"
@@ -87,7 +87,7 @@ export function ValueChip({ option, onRemove, disabled }: { option: ComboOption;
           aria-label={`Убрать ${option.label}`}
           onMouseDown={(e) => e.preventDefault()}
           onClick={onRemove}
-          className="-mr-1 inline-flex size-5 items-center justify-center rounded-xs text-muted hover:bg-tint-100 hover:text-ink"
+          className="-mr-1 inline-flex size-5 items-center justify-center rounded-sm text-muted hover:bg-tint-100 hover:text-ink"
         >
           <X className="size-3" aria-hidden />
         </button>
@@ -377,7 +377,7 @@ export function Combobox(props: ComboboxProps) {
               aria-label="Очистить"
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => (props as ComboboxSingleProps).onChange(null, null)}
-              className="inline-flex size-6 shrink-0 items-center justify-center rounded-xs text-muted hover:text-ink"
+              className="inline-flex size-6 shrink-0 items-center justify-center rounded-sm text-muted hover:text-ink"
             >
               <X className="size-3.5" aria-hidden />
             </button>
@@ -425,7 +425,7 @@ export function Combobox(props: ComboboxProps) {
                     ) : (
                       <>
                         <span className="min-w-0 flex-1 truncate">{o.label}</span>
-                        {o.isNew && <span className="rounded-xs bg-tint-100 px-1 font-mono text-11 text-brand-fg">новый</span>}
+                        {o.isNew && <span className="rounded-sm bg-tint-100 px-1 font-mono text-11 text-brand-fg">новый</span>}
                         {o.hint && <span className="shrink-0 font-mono text-12 text-muted">{o.hint}</span>}
                       </>
                     )}

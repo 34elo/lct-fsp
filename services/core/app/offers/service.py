@@ -851,6 +851,11 @@ async def add_message(
 ) -> OfferMessage:  # fmt: skip
     """Сообщение от стороны оффера; пока оффер не закрыт (отказ, отзыв, срок, итог) — можно."""
     now = now or datetime.now(UTC)
+    if side == "candidate":  # E41-4: кандидат текстом не отвечает, после принятия — контакты
+        raise ProblemError(
+            403, "candidate_message_disabled",
+            "Кандидат отвечает без текста: после принятия открываются контакты",
+        )  # fmt: skip
     text = text.strip()
     if not text:
         raise ProblemError(422, "empty_message", "Пустое сообщение")

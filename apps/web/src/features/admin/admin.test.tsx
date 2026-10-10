@@ -73,7 +73,7 @@ test("главная: счётчики «Что требует вас» из API
   mount(<Home />);
   const fsp = await screen.findByTestId("queue-fsp_requests");
   expect(fsp).toHaveTextContent("3");
-  expect(fsp).toHaveAttribute("href", "/federation/requests");
+  expect(fsp).toHaveAttribute("href", "/federation/registry?tab=requests");
   expect(screen.getByTestId("queue-families")).toHaveAttribute("href", "/admin/families");
   expect(screen.getByTestId("queue-complaints")).toHaveAttribute("href", "/federation/moderation?tab=complaints");
   expect(screen.getByTestId("queue-companies")).toHaveTextContent("2");

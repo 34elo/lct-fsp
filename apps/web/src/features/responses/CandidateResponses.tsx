@@ -3,7 +3,8 @@ import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { Button, EmptyState, ErrorState, Skeleton, formatRubRange } from "@fsp/ui";
+import { Avatar, Button, EmptyState, ErrorState, Skeleton, formatRubRange } from "@fsp/ui";
+import { avatarSrc } from "@/shared/lib/avatar";
 
 import { useMyApplicationsCandidatesMeApplicationsGet, useWithdrawApplicationCandidatesMeApplicationsOfferIdWithdrawPost } from "@/api/endpoints/offers/offers";
 import type { OfferForCandidate } from "@/api/model";
@@ -38,9 +39,12 @@ function ResponseCard({ o }: { o: OfferForCandidate }) {
   return (
     <li className="flex flex-col gap-3 rounded-2xl border border-hairline bg-card p-4">
       <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <h2 className="break-words font-mono text-16 font-semibold">{o.company.name}</h2>
-          <p className="text-13 text-muted">{o.vacancy?.title ?? o.title}</p>
+        <div className="flex min-w-0 items-start gap-3">
+          <Avatar name={o.company.name} src={avatarSrc(o.company.logo_url)} size={40} className="rounded-xl" />
+          <div className="min-w-0">
+            <h2 className="break-words font-mono text-16 font-semibold">{o.company.name}</h2>
+            <p className="text-13 text-muted">{o.vacancy?.title ?? o.title}</p>
+          </div>
         </div>
         <span className="whitespace-nowrap rounded-full border border-hairline px-2.5 py-0.5 text-12 font-semibold text-muted">{T.statusShort[o.status] ?? o.status}</span>
       </div>

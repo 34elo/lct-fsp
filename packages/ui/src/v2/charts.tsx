@@ -267,7 +267,7 @@ export function ActivityHeatmap({
     >
       {values.map((v, i) => {
         const lvl = heatLevel(v, max);
-        return <i key={i} data-level={lvl} className={cn("block rounded-[2px]", HEAT[lvl])} />;
+        return <i key={i} data-level={lvl} className={cn("block rounded-sm", HEAT[lvl])} />;
       })}
     </div>
   );

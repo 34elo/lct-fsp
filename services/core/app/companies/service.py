@@ -13,8 +13,9 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.companies.models import Company, CompanyInvite, CompanyMember
+from app.companies.models import Company, CompanyAccessLog, CompanyInvite, CompanyMember
 from app.identity import profile
+from app.identity import service as identity
 from app.identity.models import User, UserProfile
 from app.identity.service import hash_token, normalize_email
 
@@ -74,6 +75,39 @@ async def update_company(session: AsyncSession, company: Company, changes: dict)
     for key, value in changes.items():
         setattr(company, key, value)
     await session.flush()
+    return company
+
+
+def logo_url(company: Company) -> str | None:
+    """Путь относительно API; `v` меняется с файлом. Логотип компании публичный (E41-12)."""
+    if not company.logo_key:
+        return None
+    version = company.logo_key.rsplit("/", 1)[-1].split(".", 1)[0]
+    return f"/companies/{company.id}/logo?v={version}"
+
+
+async def set_logo(session: AsyncSession, storage, company: Company, data: bytes) -> Company:
+    ext = profile.check_image(data)
+    key = profile.image_key(f"logos/{company.id}", data, ext)
+    await storage.put(key, data, profile.content_type(key))
+    old, company.logo_key = company.logo_key, key
+    await session.flush()
+    if old and old != key:
+        try:
+            await storage.delete(old)
+        except Exception:  # старый файл не мешает: ссылка уже другая
+            pass
+    return company
+
+
+async def clear_logo(session: AsyncSession, storage, company: Company) -> Company:
+    old, company.logo_key = company.logo_key, None
+    await session.flush()
+    if old:
+        try:
+            await storage.delete(old)
+        except Exception:
+            pass
     return company
 
 
@@ -184,6 +218,9 @@ class MemberView:
     full_name: str | None
     position: str | None
     avatar_url: str | None
+    managed: bool = False  # E41-16: аккаунт создан владельцем этой компании
+    must_change_password: bool = False  # HR ещё не сменил временный пароль
+    temp_password_expires_at: datetime | None = None
 
 
 async def list_members(session: AsyncSession, company_id: uuid.UUID) -> list[MemberView]:
@@ -204,6 +241,9 @@ async def list_members(session: AsyncSession, company_id: uuid.UUID) -> list[Mem
             full_name=p.full_name if p else None,
             position=p.position if p else None,
             avatar_url=profile.avatar_url(m.user_id, p.avatar_key if p else None),
+            managed=u.managed_by_company_id == company_id,
+            must_change_password=bool(u.must_change_password),
+            temp_password_expires_at=u.temp_password_expires_at if u.must_change_password else None,
         )
         for m, u, p in rows
     ]
@@ -300,12 +340,192 @@ async def accept_invite(session: AsyncSession, user: User, token: str) -> Compan
     return company
 
 
-async def remove_member(session: AsyncSession, company_id: uuid.UUID, user_id: uuid.UUID) -> None:
-    """Убрать HR из команды. Чужой участник — 404; владельца убрать нельзя — 409."""
+async def remove_member(
+    session: AsyncSession, company_id: uuid.UUID, user_id: uuid.UUID, actor: User | None = None
+) -> None:
+    """Отозвать доступ HR (E41-16): убрать из команды и закрыть все его сессии.
+
+    Аккаунт, созданный владельцем этой компании, ещё и выключается — войти им больше нельзя.
+    Чужой участник — 404; владельца убрать нельзя — 409.
+    """
     member = await session.get(CompanyMember, (company_id, user_id))
     if member is None:
         raise ProblemError(404, "member_not_found", "Участник не найден")
     if member.role == CompanyMemberRole.admin.value:
         raise ProblemError(409, "owner_cannot_be_removed", "Владельца нельзя убрать из компании")
+    target = await session.get(User, user_id)
     await session.delete(member)
+    await identity.revoke_sessions(session, user_id)
+    if target is not None and target.managed_by_company_id == company_id:
+        target.is_active = False
+        target.must_change_password = False
+        target.temp_password_expires_at = None
+    _log(session, company_id, actor, target, "revoked")
     await session.flush()
+
+
+# --- E41-16: доступ HR без почты — владелец создаёт аккаунт и передаёт временный пароль ---
+
+ACCESS_LOG_LIMIT = 50
+
+
+def _log(
+    session: AsyncSession,
+    company_id: uuid.UUID,
+    actor: User | None,
+    target: User | None,
+    action: str,
+) -> None:
+    session.add(
+        CompanyAccessLog(
+            company_id=company_id,
+            actor_id=actor.id if actor else None,
+            target_user_id=target.id if target else None,
+            target_email=target.email if target else None,
+            action=action,
+        )
+    )
+
+
+@dataclass(frozen=True)
+class HrAccess:
+    """Карточка доступа: пароль в открытом виде живёт только в этом ответе владельцу."""
+
+    user: User
+    full_name: str | None
+    temp_password: str
+    expires_at: datetime
+
+
+async def _set_name(session: AsyncSession, user_id: uuid.UUID, full_name: str) -> None:
+    row = await session.get(UserProfile, user_id)
+    if row is None:
+        session.add(UserProfile(user_id=user_id, full_name=full_name))
+    else:
+        row.full_name = full_name
+
+
+async def create_hr(
+    session: AsyncSession, company: Company, owner: User, email: str, full_name: str
+) -> HrAccess:
+    """Владелец создаёт аккаунт HR сразу, без письма: роль `employer`, участник `member`.
+
+    Email занят кандидатом — `409 email_is_candidate`; другим аккаунтом — `409 email_taken`;
+    уже в команде — `409 already_member`. Аккаунт, которому эта же компания раньше отозвала
+    доступ, включается снова с новым временным паролем.
+    """
+    email = normalize_email(email)
+    full_name = full_name.strip()
+    user = await session.scalar(select(User).where(User.email == email))
+    if user is not None:
+        if user.role == "candidate":
+            raise ProblemError(
+                409,
+                "email_is_candidate",
+                "Этот email зарегистрирован как кандидат",
+                "Укажите рабочий email сотрудника",
+            )
+        member = await membership(session, user.id)
+        if member is not None and member.company_id == company.id:
+            raise ProblemError(409, "already_member", "Этот человек уже в команде")
+        if user.managed_by_company_id != company.id or member is not None or user.is_active:
+            raise ProblemError(409, "email_taken", "Этот email уже зарегистрирован")
+        user.is_active = True  # прежний HR этой компании, доступ которому отозвали
+    else:
+        user = User(
+            email=email,
+            role="employer",
+            is_demo=bool(company.is_demo),
+            managed_by_company_id=company.id,
+            # адрес подтверждает владелец компании: письма HR не получает (E41-16)
+            email_verified_at=datetime.now(UTC),
+        )
+        session.add(user)
+        try:
+            await session.flush()
+        except IntegrityError as exc:  # параллельная регистрация на тот же email
+            raise ProblemError(409, "email_taken", "Этот email уже зарегистрирован") from exc
+    session.add(
+        CompanyMember(company_id=company.id, user_id=user.id, role=CompanyMemberRole.member.value)
+    )
+    await _set_name(session, user.id, full_name)
+    raw, expires = await identity.set_temp_password(session, user)
+    _log(session, company.id, owner, user, "created")
+    await session.flush()
+    return HrAccess(user=user, full_name=full_name, temp_password=raw, expires_at=expires)
+
+
+async def reset_hr_password(
+    session: AsyncSession, company: Company, owner: User, user_id: uuid.UUID
+) -> HrAccess:
+    """Новый временный пароль HR: старый и все сессии HR гаснут сразу.
+
+    Не участник этой компании — 404; владелец или аккаунт, созданный самим HR, — 409.
+    """
+    member = await session.get(CompanyMember, (company.id, user_id))
+    if member is None:
+        raise ProblemError(404, "member_not_found", "Участник не найден")
+    user = await session.get(User, user_id)
+    if (
+        user is None
+        or member.role == CompanyMemberRole.admin.value
+        or user.managed_by_company_id != company.id
+    ):
+        raise ProblemError(
+            409,
+            "not_managed",
+            "Пароль этого аккаунта меняет только его владелец",
+            "Сотрудник сам меняет пароль в настройках",
+        )
+    raw, expires = await identity.set_temp_password(session, user)
+    _log(session, company.id, owner, user, "password_reset")
+    await session.flush()
+    p = await session.get(UserProfile, user_id)
+    return HrAccess(
+        user=user, full_name=p.full_name if p else None, temp_password=raw, expires_at=expires
+    )
+
+
+@dataclass(frozen=True)
+class AccessLogView:
+    id: uuid.UUID
+    action: str
+    created_at: datetime
+    actor_name: str | None
+    target_email: str | None
+    target_name: str | None
+
+
+async def access_log(session: AsyncSession, company_id: uuid.UUID) -> list[AccessLogView]:
+    """Последние записи журнала доступа компании, новые первыми."""
+    rows = list(
+        await session.scalars(
+            select(CompanyAccessLog)
+            .where(CompanyAccessLog.company_id == company_id)
+            .order_by(CompanyAccessLog.created_at.desc(), CompanyAccessLog.id)
+            .limit(ACCESS_LOG_LIMIT)
+        )
+    )
+    ids = {i for r in rows for i in (r.actor_id, r.target_user_id) if i is not None}
+    names: dict[uuid.UUID, str | None] = {}
+    emails: dict[uuid.UUID, str | None] = {}
+    if ids:
+        pairs = await session.execute(
+            select(User, UserProfile)
+            .outerjoin(UserProfile, UserProfile.user_id == User.id)
+            .where(User.id.in_(ids))
+        )
+        for u, p in pairs.all():
+            names[u.id] = p.full_name if p else None
+            emails[u.id] = u.email
+    return [
+        AccessLogView(
+            id=r.id,
+            action=r.action,
+            created_at=r.created_at,
+            actor_name=(names.get(r.actor_id) or emails.get(r.actor_id)) if r.actor_id else None,
+            target_email=r.target_email,
+            target_name=names.get(r.target_user_id) if r.target_user_id else None,
+        )
+        for r in rows
+    ]

@@ -63,15 +63,17 @@ class _Hit:
 
 
 async def suggest_skills(
-    session: AsyncSession, q: str, limit: int = 10, profession: str | None = None
+    session: AsyncSession,
+    q: str,
+    limit: int = 10,
+    profession: str | None = None,
+    kind: str | None = None,
 ) -> list[SkillSuggestion]:
     nq = norm_alias(q)
-    skills = {
-        s.id: s
-        for s in await session.scalars(
-            select(Skill).where(Skill.status.in_(("active", "provisional")))
-        )
-    }
+    query = select(Skill).where(Skill.status.in_(("active", "provisional")))
+    if kind:  # E41-6: только навыки заданного вида (например, soft для «Личных качеств»)
+        query = query.where(Skill.kind == kind)
+    skills = {s.id: s for s in await session.scalars(query)}
     forms: dict[uuid.UUID, list[str]] = {}
     for a in await session.scalars(select(SkillAlias)):
         if a.skill_id in skills:

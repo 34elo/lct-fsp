@@ -45,16 +45,14 @@ import DemoNewProfession from "@/features/demo/NewProfession";
 import DemoTwoWorlds from "@/features/demo/TwoWorlds";
 // <<< block1 imports
 // >>> block2 imports
+import PasswordSetup from "@/features/auth/PasswordSetup";
 import Landing from "@/features/landing/Landing";
 import Legal from "@/features/landing/Legal";
 import FederationDashboard from "@/features/admin/Dashboard";
 import AdminHome from "@/features/admin/Home";
 import FederationModeration from "@/features/admin/Moderation";
 import FspRegistry from "@/features/fsp-registry/FspRegistry";
-import FspRequests from "@/features/fsp-registry/Requests";
-import Quality from "@/features/quality/Quality";
-import Fairness from "@/features/quality/Fairness";
-import Runs from "@/features/quality/Runs";
+import AdminAnalytics from "@/features/admin/Analytics";
 import Navigator from "@/features/navigator/Navigator";
 import Jobs from "@/features/jobs/Jobs";
 import JobDetail from "@/features/jobs/JobDetail";
@@ -71,6 +69,7 @@ import InviteAccept from "@/features/employer/InviteAccept";
 
 // Разделы по ролям грузятся лениво (frontend.md: «ленивые разделы»).
 const PublicLayout = lazy(() => import("@/app/layouts/PublicLayout"));
+const JobsLayout = lazy(() => import("@/app/layouts/JobsLayout"));
 const CandidateLayout = lazy(() => import("@/app/layouts/CandidateLayout"));
 const EmployerLayout = lazy(() => import("@/app/layouts/EmployerLayout"));
 const AdminLayout = lazy(() => import("@/app/layouts/AdminLayout"));
@@ -154,12 +153,9 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
             {/* >>> block2 (admin) */}
             <Route path="/federation" element={<AdminHome />} />
             <Route path="/federation/funnel" element={<FederationDashboard />} />
-            <Route path="/federation/requests" element={<FspRequests />} />
             <Route path="/federation/moderation" element={<FederationModeration />} />
             <Route path="/federation/registry" element={<FspRegistry />} />
-            <Route path="/admin/quality" element={<Quality />} />
-            <Route path="/admin/quality/fairness" element={<Fairness />} />
-            <Route path="/admin/quality/runs" element={<Runs />} />
+            <Route path="/federation/analytics" element={<AdminAnalytics />} />
             {/* <<< block2 (admin) */}
           </>
         )}
@@ -182,18 +178,21 @@ export function App() {
           <Route path="/verify-email" element={<VerifyEmail />} />
           {/* <<< block1 (auth) */}
           {/* >>> block2 (auth) */}
+          <Route path="/password/new" element={<PasswordSetup />} />
           {/* <<< block2 (auth) */}
           {/* >>> block1 (public) */}
           {/* <<< block1 (public) */}
           {/* >>> block2 (public) */}
           <Route path="/" element={<Landing />} />
           <Route path="/run/:token" element={<RunPage />} />
-          <Route path="/jobs" element={<Jobs />} />
-          <Route path="/jobs/:id" element={<JobDetail />} />
           <Route path="/terms" element={<Legal />} />
           <Route path="/privacy" element={<Legal />} />
           <Route path="/invite/company/:token" element={<InviteAccept />} />
           {/* <<< block2 (public) */}
+        </Route>
+        <Route element={<JobsLayout />}>
+          <Route path="/jobs" element={<Jobs />} />
+          <Route path="/jobs/:id" element={<JobDetail />} />
         </Route>
         {guarded("candidate", CandidateLayout)}
         {guarded("employer", EmployerLayout)}

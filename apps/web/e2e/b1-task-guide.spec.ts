@@ -17,3 +17,23 @@ test("b1: задание по шаблону Backend создаётся за 5 �
   await page.getByTestId("guide-save").click();
   await expect(page.getByTestId("constructor-preview")).toBeVisible();
 });
+
+/** E41-14: задание компании — черновик → «Готово» → вкладка «Готовые»; допуск админа не нужен. */
+test("b1: задание работодателя — черновик, «Готово», вкладка «Готовые»", async ({ page }) => {
+  await loginAs(page, "olga");
+
+  await page.goto("/employer/tasks");
+  await page.getByTestId("tasks-howto").click();
+  await page.getByTestId("guide-tpl-backend").click();
+  for (let i = 2; i <= 5; i++) await page.getByTestId("guide-next").click();
+  await page.getByTestId("guide-save").click();
+  await expect(page.getByTestId("constructor-status")).toContainText("черновик");
+
+  await page.getByTestId("constructor-ready").click();
+  await expect(page.getByTestId("constructor-ready-note")).toBeVisible();
+
+  await page.goto("/employer/tasks");
+  await page.getByTestId("tasks-fam-tab-ready").click();
+  await expect(page.getByTestId("tasks-family").first()).toBeVisible();
+  // в приглашении готовое задание доступно в списке «Задание»; дальше путь — b2-employer-search
+});

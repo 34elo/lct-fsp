@@ -93,7 +93,7 @@ export function OptionRow({
       aria-pressed={kind === "choice" ? undefined : !!selected}
       data-kind={kind}
       className={cn(
-        "flex min-h-12 w-full items-center gap-3 rounded-[10px] border border-hairline bg-card px-3.5 py-3 text-left text-ink",
+        "flex min-h-12 w-full items-center gap-3 rounded-lg border border-hairline bg-card px-3.5 py-3 text-left text-ink",
         "hover:border-brand-mid",
         selected && "border-brand bg-tint-50 shadow-[0_0_0_1px_var(--brand)]",
         dragging && "border-brand shadow-[0_8px_20px_var(--code-sel)]",

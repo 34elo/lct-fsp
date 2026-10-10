@@ -240,10 +240,10 @@ async def _retry_or_dead_letter(
     attempt = int(message.headers.get(RETRY_HEADER, 0) or 0)
     fields = dict(queue=spec.name, type=envelope.type, attempt=attempt, error=type(exc).__name__)
     if attempt >= len(spec.retry_delays):
-        log.error("message_dead_lettered", **fields)
+        log.error("message_dead_lettered", exc_info=exc, **fields)
         await message.nack(requeue=False)
         return
-    log.warning("message_retry", **fields)
+    log.warning("message_retry", exc_info=exc, **fields)
     raw = message.raw_message
     try:
         await broker.publish(

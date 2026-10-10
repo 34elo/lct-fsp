@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Annotated, Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Request, Response
+from fastapi import APIRouter, Depends, File, Query, Request, Response, UploadFile
 from fsp_contracts.assessment import ClaimedVsConfirmed
 from fsp_contracts.enums import (
     ConsentType,
@@ -28,6 +28,7 @@ from app.consents.deps import require_consent
 from app.deps import get_limiter, get_session, get_storage
 from app.graph.category import load_category
 from app.graph.trust import TrustConfig
+from app.identity import profile as user_profile
 from app.identity import service as identity
 from app.identity.deps import get_user_even_deleted, require_roles
 from app.identity.models import User
@@ -38,6 +39,7 @@ from app.taxonomy.service import SkillGraphCache
 from app.views import service as views
 
 router = APIRouter(prefix="/candidates/me", tags=["candidates"])
+public_router = APIRouter(prefix="/candidates", tags=["candidates"])
 
 _TRUST = TrustConfig.load()
 _GRAPH = SkillGraphCache()
@@ -117,6 +119,7 @@ class CandidateProfile(BaseModel):
     links: list[str] = []
     hidden_skills: list[str] = []
     resume_draft_id: UUID | None = None
+    avatar_url: str | None = None  # E41-12: только владельцу; подпись в адресе
 
 
 class PreferencesIn(BaseModel):
@@ -171,7 +174,8 @@ class ProfileIn(BaseModel):
     full_name: str | None = Field(default=None, max_length=120)  # null или пусто очищает
     stack: list[StackItem] | None = Field(default=None, max_length=60)  # полный список
     experience_months: int | None = Field(default=None, ge=0, le=720)
-    desired_roles: list[RoleSlug] | None = Field(default=None, max_length=5)
+    # профессии системы (E41-6)
+    desired_roles: list[Slug] | None = Field(default=None, max_length=5)
     soft_skills: list[str] | None = Field(default=None, max_length=30)  # slug
     age_group: Literal["adult", "minor"] | None = None
     parent_consent: bool | None = None  # true — родитель согласен; false — отзыв
@@ -222,6 +226,7 @@ async def profile_out(session: AsyncSession, c: Candidate, settings: Settings) -
         links=service.links_of(c, settings.pii_key),
         hidden_skills=sorted(service.hidden_skills_of(c)),
         resume_draft_id=await resumes.draft_id_for_profile(session, c.user_id),
+        avatar_url=service.avatar_url(c, settings.jwt_secret),
     )
 
 
@@ -242,6 +247,74 @@ async def get_profile(
     )
 
 
+AVATAR_LIMIT = 20  # загрузок в час
+AVATAR_WINDOW = 3600
+
+
+@router.put(
+    "/avatar",
+    response_model=CandidateProfile,
+    responses=problem_responses(401, 403, 413, 415, 422, 429),
+)
+async def put_avatar(
+    request: Request,
+    file: Annotated[UploadFile, File()],
+    user: User = Depends(owner),
+    session: AsyncSession = Depends(get_session),
+    limiter=Depends(get_limiter),
+):
+    """Аватар кандидата (E41-12): PNG, JPEG или WebP по сигнатуре, до 2 МБ. Работодатель видит
+    его только после приглашения, как ФИО; в анонимную карточку он не попадает."""
+    await limiter.check(f"avatar:{user.id}", AVATAR_LIMIT, AVATAR_WINDOW)
+    data = await file.read(user_profile.AVATAR_MAX_BYTES + 1)
+    storage = get_storage(request)
+    if not getattr(request.app.state, "bucket_ready", False):
+        await storage.ensure_bucket()
+        request.app.state.bucket_ready = True
+    cand = await _cand(request, session, user)
+    await service.set_avatar(session, storage, cand, data)
+    return await profile_out(session, cand, request.app.state.settings)
+
+
+@router.delete("/avatar", response_model=CandidateProfile, responses=problem_responses(401, 403))
+async def delete_avatar(
+    request: Request,
+    user: User = Depends(owner),
+    session: AsyncSession = Depends(get_session),
+):
+    cand = await _cand(request, session, user)
+    await service.clear_avatar(session, get_storage(request), cand)
+    return await profile_out(session, cand, request.app.state.settings)
+
+
+@public_router.get(
+    "/{pseudo_id}/avatar",
+    response_class=Response,
+    responses={200: {"content": {"image/*": {}}}, **problem_responses(404)},
+)
+async def get_avatar(
+    pseudo_id: str,
+    request: Request,
+    sig: str = Query(max_length=64),
+    session: AsyncSession = Depends(get_session),
+):
+    """Без токена, но с подписью из адреса: её выдаёт сервер владельцу и работодателю после
+    приглашения. Нет кандидата, файла или подпись не сходится — одинаковый 404."""
+    cand = await service.by_pseudo_id(session, pseudo_id)
+    secret = request.app.state.settings.jwt_secret
+    if cand is None or not service.avatar_sig_ok(cand, secret, sig):
+        raise ProblemError(404, "avatar_not_found", "Аватар не найден")
+    try:
+        data = await get_storage(request).get(cand.avatar_key)
+    except Exception as exc:
+        raise ProblemError(404, "avatar_not_found", "Аватар не найден") from exc
+    return Response(
+        content=data,
+        media_type=user_profile.content_type(cand.avatar_key),
+        headers={"Cache-Control": "private, max-age=3600", "X-Content-Type-Options": "nosniff"},
+    )
+
+
 @router.get(
     "/profile.pdf",
     response_class=Response,
@@ -256,7 +329,13 @@ async def profile_pdf(
     cand = await _cand(request, session, user)
     profile = await profile_out(session, cand, request.app.state.settings)
     grades = await assessment.get_grades(session, cand.user_id)
-    html = pdf.build_html(profile, grades)
+    photo = None
+    if cand.avatar_key:
+        try:
+            photo = (await get_storage(request).get(cand.avatar_key), cand.avatar_key)
+        except Exception:  # файл пропал из хранилища: резюме без фото
+            photo = None
+    html = pdf.build_html(profile, grades, photo=photo)
     data = await asyncio.to_thread(pdf.render_pdf, html)
     return Response(
         data,

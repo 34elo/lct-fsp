@@ -33,9 +33,9 @@ const STATIC: Record<Role, string[]> = {
     "/employer/tasks", "/employer/families/guide", "/employer/families/new", "/employer/subscriptions", "/settings",
   ],
   admin: [
-    "/federation", "/federation/requests", "/federation/moderation", "/federation/registry", "/federation/funnel",
-    "/admin/families", "/admin/professions", "/admin/skills", "/admin/quality", "/admin/quality/fairness",
-    "/admin/quality/runs", "/admin/demo/two-worlds", "/admin/demo/llm-exam", "/admin/demo/new-profession", "/settings",
+    "/federation", "/federation/moderation", "/federation/registry", "/federation/funnel",
+    "/admin/families", "/admin/professions", "/admin/skills", "/federation/analytics",
+    "/admin/demo/two-worlds", "/admin/demo/llm-exam", "/admin/demo/new-profession", "/settings",
   ],
 };
 /** Страницы с id: находим первую ссылку такого вида на уже открытых страницах. */

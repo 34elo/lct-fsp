@@ -1,24 +1,28 @@
 import { PAGE } from "@/shared/lib/page";
 import { useEffect, useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
-import { Avatar, Button, ErrorState, Field, FieldInput, H1, Markdown, MarkdownEditor, Panel, PanelCap, Skeleton, StatusTag, cn } from "@fsp/ui";
+import { Avatar, Button, ErrorState, Field, FieldInput, H1, Markdown, MarkdownEditor, Panel, PanelCap, ScrollTabs, Skeleton, StatusTag, Tabs, TabsContent, TabsTrigger, cn } from "@fsp/ui";
 import {
   getGetMyCompanyCompaniesMeGetQueryKey,
+  getAccessLogCompaniesMeAccessLogGetQueryKey,
   getMyTeamCompaniesMeMembersGetQueryKey,
-  useCreateInviteCompaniesMeInvitesPost,
+  useAccessLogCompaniesMeAccessLogGet,
+  useCreateHrCompaniesMeHrPost,
+  useDeleteCompanyLogoCompaniesMeLogoDelete,
   useGetMyCompanyCompaniesMeGet,
   useMyTeamCompaniesMeMembersGet,
   usePatchMyCompanyCompaniesMePatch,
+  usePutCompanyLogoCompaniesMeLogoPut,
   useRegisterCompanyCompaniesPost,
   useRemoveMemberCompaniesMeMembersUserIdDelete,
-  useRevokeInviteCompaniesMeInvitesInviteIdDelete,
+  useResetHrPasswordCompaniesMeMembersUserIdPasswordPost,
 } from "@/api/endpoints/companies/companies";
-import type { CompanyMemberOut, CompanyOut } from "@/api/model";
+import type { CompanyMemberOut, CompanyOut, HrAccessCard } from "@/api/model";
 import { ApiError } from "@/api/mutator";
 import { ErrorNote } from "@/features/auth/ui";
-import { dateOnly } from "@/features/offers/text";
+import { ImagePicker } from "@/shared/ImagePicker";
 import { useAuth } from "@/shared/lib/auth";
 import { avatarSrc } from "@/shared/lib/avatar";
 import { COMPANY as T, COMPANY_STATUS_HINT, COMPANY_STATUS_LABEL, vacancyErrorText } from "./text";
@@ -109,6 +113,40 @@ function CompanyForm({ company, onDone }: { company: CompanyOut | null; onDone: 
   );
 }
 
+/** Логотип компании: владелец загружает (`PUT|DELETE /companies/me/logo`), HR видит. Без файла — буквы на цвете. */
+function LogoBlock({ company, owner, onChanged }: { company: CompanyOut; owner: boolean; onChanged: () => void }) {
+  const put = usePutCompanyLogoCompaniesMeLogoPut();
+  const del = useDeleteCompanyLogoCompaniesMeLogoDelete();
+  if (!owner) {
+    return (
+      <Panel className="flex items-center gap-3" data-testid="company-logo">
+        <Avatar name={company.name} src={avatarSrc(company.logo_url)} size={56} className="rounded-xl" />
+        <span className="font-medium">{company.name}</span>
+      </Panel>
+    );
+  }
+  return (
+    <Panel aria-label={T.logo.title}>
+      <PanelCap title={T.logo.title} />
+      <ImagePicker
+        testId="company-logo"
+        name={company.name}
+        src={avatarSrc(company.logo_url)}
+        size={72}
+        text={T.logo}
+        onUpload={async (file) => {
+          await put.mutateAsync({ data: { file } });
+          onChanged();
+        }}
+        onRemove={async () => {
+          await del.mutateAsync();
+          onChanged();
+        }}
+      />
+    </Panel>
+  );
+}
+
 /** Компания глазами HR: только чтение, описание отрисовано Markdown. */
 function CompanyView({ company }: { company: CompanyOut }) {
   return (
@@ -144,10 +182,11 @@ function CompanyView({ company }: { company: CompanyOut }) {
   );
 }
 
-function MemberRow({ m, canManage, onRemove, busy }: { m: CompanyMemberOut; canManage: boolean; onRemove: (m: CompanyMemberOut) => void; busy: boolean }) {
+function MemberRow({ m, canManage, onRemove, onReset, busy }: { m: CompanyMemberOut; canManage: boolean; onRemove: (m: CompanyMemberOut) => void; onReset: (m: CompanyMemberOut) => void; busy: "remove" | "reset" | null }) {
   const name = m.full_name || m.email || T.noName;
+  const hr = canManage && m.role !== "admin";
   return (
-    <li className="flex min-h-14 items-center gap-3 border-t border-hairline py-2.5 first:border-t-0" data-testid="company-member">
+    <li className="flex min-h-14 flex-wrap items-center gap-3 border-t border-hairline py-2.5 first:border-t-0" data-testid="company-member">
       <Avatar name={m.full_name || m.email} src={avatarSrc(m.avatar_url)} size={40} />
       <div className="flex min-w-0 flex-1 flex-col">
         <span className="truncate font-medium">
@@ -155,66 +194,147 @@ function MemberRow({ m, canManage, onRemove, busy }: { m: CompanyMemberOut; canM
           {m.is_me && <span className="text-muted"> · {T.you}</span>}
         </span>
         <span className="truncate text-13 text-muted">{[m.position, m.full_name ? m.email : null].filter(Boolean).join(" · ")}</span>
+        {hr && m.must_change_password && m.temp_password_expires_at && (
+          <span className="text-13 text-muted" data-testid="company-member-pending">
+            {T.hr.pending(dateTime(m.temp_password_expires_at))}
+          </span>
+        )}
       </div>
       <StatusTag state={m.role === "admin" ? "confirmed" : "claimed"}>{T.roles[m.role] ?? m.role}</StatusTag>
-      {canManage && m.role !== "admin" && (
-        <Button variant="ghost" size="sm" loading={busy} onClick={() => onRemove(m)} data-testid="company-member-remove">
-          {T.remove}
-        </Button>
+      {hr && (
+        <div className="flex w-full flex-wrap gap-1 md:w-auto">
+          {m.managed && (
+            <Button variant="ghost" size="sm" loading={busy === "reset"} onClick={() => onReset(m)} data-testid="company-member-reset">
+              {T.hr.reset}
+            </Button>
+          )}
+          <Button variant="ghost" size="sm" loading={busy === "remove"} onClick={() => onRemove(m)} data-testid="company-member-remove">
+            {T.hr.revoke}
+          </Button>
+        </div>
       )}
     </li>
   );
 }
 
-/** Команда: участники (видят все), приглашения и управление — только владелец. */
-function TeamPanel() {
+const dateTime = (iso: string) => new Date(iso).toLocaleString("ru-RU", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
+
+/** Карточка доступа HR: показывается владельцу один раз, пароль больше нигде не хранится. */
+function AccessCard({ card, companyName, onClose }: { card: HrAccessCard; companyName: string; onClose: () => void }) {
+  const [copied, setCopied] = useState(false);
+  const until = dateTime(card.expires_at);
+  const text = T.hr.shareText({ company: companyName, url: card.login_url, login: card.email, password: card.temp_password, until });
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+    } catch {
+      /* буфер недоступен: данные видны и выделяются */
+    }
+  }
+
+  return (
+    <div role="status" className="flex flex-col gap-3 rounded-lg bg-tint-50 p-3" data-testid="company-access-card">
+      <span className="text-14 font-semibold">{T.hr.cardTitle(card.full_name || card.email)}</span>
+      <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-14">
+        <dt className="text-muted">{T.hr.loginUrl}</dt>
+        <dd className="break-all" data-testid="company-access-url">{card.login_url}</dd>
+        <dt className="text-muted">{T.hr.login}</dt>
+        <dd className="break-all">{card.email}</dd>
+        <dt className="text-muted">{T.hr.password}</dt>
+        <dd className="break-all font-mono" data-testid="company-access-password">{card.temp_password}</dd>
+        <dt className="text-muted">{T.hr.until}</dt>
+        <dd>{until}</dd>
+      </dl>
+      <p className="text-13 text-muted">{T.hr.once}</p>
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" onClick={() => void copy()} data-testid="company-access-copy">
+          {copied ? T.copied : T.hr.copy}
+        </Button>
+        <Button type="button" variant="outline" onClick={onClose} data-testid="company-access-close">
+          {T.hr.done}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/** Журнал доступа HR: кто, кого и когда добавил, сбросил пароль или отозвал (только владельцу). */
+function AccessLog() {
+  const q = useAccessLogCompaniesMeAccessLogGet({ query: { retry: false } });
+  const items = q.data?.status === 200 ? q.data.data : [];
+  if (items.length === 0) return null;
+  return (
+    <details className="border-t border-hairline pt-3" data-testid="company-access-log">
+      <summary className="min-h-11 cursor-pointer text-14 font-semibold">{T.hr.log}</summary>
+      <ul className="flex flex-col">
+        {items.map((e) => (
+          <li key={e.id} className="flex flex-wrap gap-x-2 border-t border-hairline py-2 text-13 first:border-t-0" data-testid="company-access-log-item">
+            <span className="text-muted">{dateTime(e.created_at)}</span>
+            <span>{T.hr.logLine(e.action, e.actor_name || T.noName, e.target_name || e.target_email || T.noName)}</span>
+          </li>
+        ))}
+      </ul>
+    </details>
+  );
+}
+
+/** Команда: участники (видят все); доступ HR — логин и временный пароль от владельца (E41-16). */
+function TeamPanel({ companyName }: { companyName: string }) {
   const qc = useQueryClient();
   const q = useMyTeamCompaniesMeMembersGet({ query: { retry: false } });
   const team = q.data?.status === 200 ? q.data.data : null;
-  const refresh = () => void qc.invalidateQueries({ queryKey: getMyTeamCompaniesMeMembersGetQueryKey() });
+  const refresh = () => {
+    void qc.invalidateQueries({ queryKey: getMyTeamCompaniesMeMembersGetQueryKey() });
+    void qc.invalidateQueries({ queryKey: getAccessLogCompaniesMeAccessLogGetQueryKey() });
+  };
   const [email, setEmail] = useState("");
-  const [link, setLink] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [name, setName] = useState("");
+  const [card, setCard] = useState<HrAccessCard | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const fail = (e: unknown) => setError(T.actionError(errCode(e)));
-  const invite = useCreateInviteCompaniesMeInvitesPost({
+  const fail = (e: unknown) => setError(T.actionError(errCode(e) ?? (e instanceof ApiError && e.status === 429 ? "rate_limited" : undefined)));
+  const show = (res: { status: number; data: unknown }) => {
+    if (res.status === 200 || res.status === 201) setCard(res.data as HrAccessCard);
+    refresh();
+  };
+  const create = useCreateHrCompaniesMeHrPost({
     mutation: {
       onSuccess: (res) => {
-        if (res.status === 201) setLink(res.data.url);
+        show(res);
         setEmail("");
-        refresh();
+        setName("");
       },
       onError: fail,
     },
   });
-  const revoke = useRevokeInviteCompaniesMeInvitesInviteIdDelete({ mutation: { onSuccess: refresh, onError: fail } });
+  const reset = useResetHrPasswordCompaniesMeMembersUserIdPasswordPost({ mutation: { onSuccess: show, onError: fail } });
   const remove = useRemoveMemberCompaniesMeMembersUserIdDelete({ mutation: { onSuccess: refresh, onError: fail } });
   const emailOk = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim());
+  const nameOk = name.trim().length >= 2;
 
   function submit(e: FormEvent) {
     e.preventDefault();
-    if (!emailOk) return;
+    if (!emailOk || !nameOk) return;
     setError(null);
-    setLink(null);
-    setCopied(false);
-    invite.mutate({ data: { email: email.trim() } });
+    setCard(null);
+    create.mutate({ data: { email: email.trim(), full_name: name.trim() } });
   }
 
-  async function copy() {
-    if (!link) return;
-    try {
-      await navigator.clipboard.writeText(link);
-      setCopied(true);
-    } catch {
-      /* буфер недоступен: ссылка видна и выделяется */
-    }
+  function onReset(m: CompanyMemberOut) {
+    if (!window.confirm(T.hr.resetConfirm(m.full_name || m.email || T.noName))) return;
+    setError(null);
+    setCard(null);
+    reset.mutate({ userId: m.user_id });
   }
 
   function onRemove(m: CompanyMemberOut) {
-    if (!window.confirm(T.removeConfirm(m.full_name || m.email || T.noName))) return;
+    if (!window.confirm(T.hr.revokeConfirm(m.full_name || m.email || T.noName))) return;
     setError(null);
     remove.mutate({ userId: m.user_id });
   }
+
+  const busyOf = (id: string) => (remove.isPending && remove.variables?.userId === id ? "remove" : reset.isPending && reset.variables?.userId === id ? "reset" : null);
 
   return (
     <Panel aria-label={T.team} data-testid="company-team">
@@ -226,45 +346,25 @@ function TeamPanel() {
         <div className="flex flex-col gap-4">
           <ul className="flex flex-col">
             {team.members.map((m) => (
-              <MemberRow key={m.user_id} m={m} canManage={team.can_manage} onRemove={onRemove} busy={remove.isPending && remove.variables?.userId === m.user_id} />
+              <MemberRow key={m.user_id} m={m} canManage={team.can_manage} onRemove={onRemove} onReset={onReset} busy={busyOf(m.user_id)} />
             ))}
           </ul>
-          {team.can_manage && team.invites.length > 0 && (
-            <div className="flex flex-col gap-1" data-testid="company-invites">
-              <span className="text-13 font-semibold text-muted">{T.pending}</span>
-              <ul className="flex flex-col">
-                {team.invites.map((i) => (
-                  <li key={i.id} className="flex min-h-11 flex-wrap items-center gap-2 border-t border-hairline py-2 first:border-t-0" data-testid="company-invite">
-                    <span className="min-w-0 flex-1 truncate">{i.email}</span>
-                    <span className="text-13 text-muted">{T.until(dateOnly(i.expires_at))}</span>
-                    <Button variant="ghost" size="sm" loading={revoke.isPending && revoke.variables?.inviteId === i.id} onClick={() => revoke.mutate({ inviteId: i.id })} data-testid="company-invite-revoke">
-                      {T.revoke}
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+          {card && <AccessCard card={card} companyName={companyName} onClose={() => setCard(null)} />}
           {team.can_manage && (
-            <form onSubmit={submit} noValidate className="flex flex-col gap-2 border-t border-hairline pt-4" data-testid="company-invite-form">
-              <span className="text-14 font-semibold">{T.inviteTitle}</span>
+            <form onSubmit={submit} noValidate className="flex flex-col gap-2 border-t border-hairline pt-4" data-testid="company-hr-form">
+              <span className="text-14 font-semibold">{T.hr.title}</span>
+              <p className="text-13 text-muted">{T.hr.hint}</p>
               <div className="flex flex-col gap-2 md:flex-row md:items-start">
-                <Field label={T.inviteEmail} hint={T.inviteHint} className="md:flex-1">
-                  <FieldInput type="email" autoComplete="off" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={254} placeholder="hr@company.ru" data-testid="company-invite-email" />
+                <Field label={T.hr.name} className="md:flex-1">
+                  <FieldInput autoComplete="off" value={name} onChange={(e) => setName(e.target.value)} maxLength={120} placeholder="Анна Смирнова" data-testid="company-hr-name" />
                 </Field>
-                <Button type="submit" className="md:mt-7" disabled={!emailOk} loading={invite.isPending} data-testid="company-invite-submit">
-                  {T.inviteSubmit}
+                <Field label={T.hr.email} className="md:flex-1">
+                  <FieldInput type="email" autoComplete="off" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={254} placeholder="hr@company.ru" data-testid="company-hr-email" />
+                </Field>
+                <Button type="submit" className="md:mt-7" disabled={!emailOk || !nameOk} loading={create.isPending} data-testid="company-hr-submit">
+                  {T.hr.submit}
                 </Button>
               </div>
-              {link && (
-                <div role="status" className="flex flex-col gap-2 rounded-lg bg-tint-50 p-3" data-testid="company-invite-link">
-                  <span className="text-13">{T.inviteCreated}</span>
-                  <code className="break-all font-mono text-12">{link}</code>
-                  <Button type="button" variant="outline" size="sm" className="self-start" onClick={() => void copy()}>
-                    {copied ? T.copied : T.copy}
-                  </Button>
-                </div>
-              )}
             </form>
           )}
           {error && (
@@ -272,6 +372,7 @@ function TeamPanel() {
               {error}
             </p>
           )}
+          {team.can_manage && <AccessLog />}
           <Link to="/settings?tab=profile" className="text-14 font-medium text-brand-fg underline-offset-2 hover:underline">
             {T.profileLink}
           </Link>
@@ -297,6 +398,9 @@ export default function Company() {
     void reloadMe();
   };
 
+  const [params, setParams] = useSearchParams();
+  const tab = params.get("tab") === "team" ? "team" : "info";
+
   return (
     <main className={PAGE.narrow} data-testid="company-page">
       <H1 className="text-[22px] leading-[1.2] md:text-[26px]">{T.title}</H1>
@@ -309,14 +413,29 @@ export default function Company() {
         </>
       )}
       {company && (
-        <>
-          <StatusPanel status={company.status} />
-          {owner ? <CompanyForm company={company} onDone={onDone} /> : <CompanyView company={company} />}
-          <TeamPanel />
-          <Link to="/employer/tasks" className="inline-flex min-h-11 items-center self-start text-14 font-semibold text-brand-fg hover:underline">
-            {T.tasks}
-          </Link>
-        </>
+        <Tabs value={tab} onValueChange={(v) => setParams(v === "team" ? { tab: v } : {}, { replace: true })}>
+          <ScrollTabs aria-label={T.title}>
+            <TabsTrigger value="info" data-testid="company-tab-info">
+              {T.tabs.info}
+            </TabsTrigger>
+            <TabsTrigger value="team" data-testid="company-tab-team">
+              {T.tabs.team}
+            </TabsTrigger>
+          </ScrollTabs>
+          <div className="flex flex-col gap-4 pt-4">
+            <TabsContent value="info" className="flex flex-col gap-4">
+              <StatusPanel status={company.status} />
+              <LogoBlock company={company} owner={owner} onChanged={onDone} />
+              {owner ? <CompanyForm company={company} onDone={onDone} /> : <CompanyView company={company} />}
+              <Link to="/employer/tasks" className="inline-flex min-h-11 items-center self-start text-14 font-semibold text-brand-fg hover:underline">
+                {T.tasks}
+              </Link>
+            </TabsContent>
+            <TabsContent value="team">
+              <TeamPanel companyName={company.name} />
+            </TabsContent>
+          </div>
+        </Tabs>
       )}
     </main>
   );

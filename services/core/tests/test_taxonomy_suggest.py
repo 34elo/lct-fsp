@@ -92,6 +92,14 @@ def test_profession_boosts_own_skills(client):
     assert plain != scoped
 
 
+def test_kind_soft_only_soft_skills(client):
+    # E41-6: «Личные качества» — подсказки только из софт-навыков
+    soft = _slugs(client, "", kind="soft", limit=50)
+    assert "teamwork" in soft and "python" not in soft
+    assert _slugs(client, "pyth", kind="soft") == []
+    assert client.get("/taxonomy/skills/suggest", params={"kind": "x"}).status_code == 422
+
+
 def test_public_and_cached(client):
     # без токена доступно (как /taxonomy)
     r = client.get("/taxonomy/professions/suggest", params={"q": "бэк"})

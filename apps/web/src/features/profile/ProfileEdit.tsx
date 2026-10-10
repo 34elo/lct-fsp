@@ -1,5 +1,5 @@
 import { PAGE } from "@/shared/lib/page";
-import { Badge, Button, Card, cn, ErrorState, Field, FieldInput, Skeleton } from "@fsp/ui";
+import { Badge, Button, Card, cn, Combobox, ErrorState, Field, FieldInput, Skeleton, SkillInput } from "@fsp/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
@@ -9,11 +9,11 @@ import {
   useGetProfileCandidatesMeProfileGet,
   usePatchProfileCandidatesMeProfilePatch,
 } from "@/api/endpoints/candidates/candidates";
-import { useGetTaxonomyTaxonomyGet } from "@/api/endpoints/taxonomy/taxonomy";
+import { useGetProfessionsTaxonomyProfessionsGet, useGetTaxonomyTaxonomyGet } from "@/api/endpoints/taxonomy/taxonomy";
 import type { CandidateProfile, ProfileIn, StackItem } from "@/api/model";
-import { RoleSlug } from "@/api/model";
 import { ApiError } from "@/api/mutator";
 import { ErrorNote } from "@/features/auth/ui";
+import { suggestProfessions, suggestSoftSkills } from "@/shared/lib/skills";
 import { editText as E, roleLabel } from "@/features/profile/text";
 
 interface TaxSkill {
@@ -22,7 +22,6 @@ interface TaxSkill {
   kind?: string;
 }
 
-const ROLES = Object.values(RoleSlug) as string[];
 const MAX_ROLES = 5;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -64,6 +63,8 @@ function Chip({ on, children, ...p }: { on: boolean; children: React.ReactNode }
 }
 
 function Form({ p, skills }: { p: CandidateProfile; skills: TaxSkill[] }) {
+  const profs = useGetProfessionsTaxonomyProfessionsGet();
+  const roleTitles = useMemo(() => new Map((profs.data?.status === 200 ? profs.data.data.professions : []).map((x) => [x.slug, x.title])), [profs.data]);
   const qc = useQueryClient();
   const patch = usePatchProfileCandidatesMeProfilePatch();
 
@@ -112,7 +113,6 @@ function Form({ p, skills }: { p: CandidateProfile; skills: TaxSkill[] }) {
     setStack(next);
     setStackTouched(true);
   };
-  const toggle = (list: string[], v: string, max = 99) => (list.includes(v) ? list.filter((x) => x !== v) : list.length >= max ? list : [...list, v]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -167,13 +167,18 @@ function Form({ p, skills }: { p: CandidateProfile; skills: TaxSkill[] }) {
       <Card className="flex flex-col gap-3 p-5" data-testid="profile-edit-roles">
         <h2 className="font-mono text-17 font-semibold">{E.rolesTitle}</h2>
         <p className="text-13 text-muted">{E.rolesHint}</p>
-        <div className="flex flex-wrap gap-2">
-          {ROLES.map((r) => (
-            <Chip key={r} on={roles.includes(r)} onClick={() => setRoles((l) => toggle(l, r, MAX_ROLES))} data-testid={`profile-edit-role-${r}`}>
-              {roleLabel(r)}
-            </Chip>
-          ))}
-        </div>
+        <Combobox
+          multiple
+          value={roles}
+          selectedOptions={roles.map((r) => ({ value: r, label: roleTitles.get(r) ?? roleLabel(r) }))}
+          onChange={(v) => setRoles(v)}
+          loadOptions={async (q, signal) => (await suggestProfessions(q, signal)).map((x) => ({ value: x.slug, label: x.title }))}
+          max={MAX_ROLES}
+          placeholder={E.rolesPlaceholder}
+          emptyText={E.rolesEmpty}
+          aria-label={E.rolesTitle}
+          data-testid="profile-edit-roles-input"
+        />
       </Card>
 
       <Card className="flex flex-col gap-3 p-5" data-testid="profile-edit-stack">
@@ -229,27 +234,23 @@ function Form({ p, skills }: { p: CandidateProfile; skills: TaxSkill[] }) {
         )}
       </Card>
 
-      {softAll.length > 0 && (
-        <Card className="flex flex-col gap-3 p-5" data-testid="profile-edit-soft">
-          <h2 className="font-mono text-17 font-semibold">{E.softTitle}</h2>
-          <p className="text-13 text-muted">{E.softHint}</p>
-          <div className="flex flex-wrap gap-2">
-            {softAll.map((s) => (
-              <Chip
-                key={s.slug}
-                on={soft.includes(s.slug)}
-                data-testid={`profile-edit-soft-${s.slug}`}
-                onClick={() => {
-                  setSoftTouched(true);
-                  setSoft((l) => toggle(l, s.slug));
-                }}
-              >
-                {s.name}
-              </Chip>
-            ))}
-          </div>
-        </Card>
-      )}
+      <Card className="flex flex-col gap-3 p-5" data-testid="profile-edit-soft">
+        <h2 className="font-mono text-17 font-semibold">{E.softTitle}</h2>
+        <p className="text-13 text-muted">{E.softHint}</p>
+        <SkillInput
+          allowNew={false}
+          value={soft.map((s) => ({ value: s, label: nameOf.get(s) ?? s }))}
+          onChange={(v) => {
+            setSoftTouched(true);
+            setSoft(v.map((x) => x.value));
+          }}
+          suggest={suggestSoftSkills}
+          max={30}
+          placeholder={E.softPlaceholder}
+          aria-label={E.softTitle}
+          data-testid="profile-edit-soft-input"
+        />
+      </Card>
 
       <Card className="flex flex-col gap-3 p-5" data-testid="profile-edit-age">
         <h2 className="font-mono text-17 font-semibold">{E.ageTitle}</h2>

@@ -72,6 +72,10 @@ function install(opts: { pd?: boolean; consentsStatus?: number; telegramLinked?:
         staff = { ...staff, avatar_url: "/users/u1/avatar?v=abc" };
         return json(200, staff);
       }
+      if (url.endsWith("/candidates/me/avatar") && init?.method === "PUT") {
+        avatars.push(init.body);
+        return json(200, { ...profile, avatar_url: "/candidates/pid1/avatar?v=a&sig=s" });
+      }
       if (url.endsWith("/auth/password/change")) {
         passwords.push(JSON.parse(String(init?.body)));
         return opts.passwordStatus && opts.passwordStatus !== 204 ? json(opts.passwordStatus, { code: "wrong_password", title: "x", status: opts.passwordStatus }) : new Response(null, { status: 204 });
@@ -245,6 +249,17 @@ test("работодатель: фото уходит в PUT /me/avatar, поя�
   await waitFor(() => expect(avatars).toHaveLength(1));
   expect(avatars[0]).toBeInstanceOf(FormData);
   expect(await screen.findByTestId("settings-avatar-remove")).toBeInTheDocument();
+});
+
+test("кандидат: фото уходит в PUT /candidates/me/avatar, с подсказкой про приглашение", async () => {
+  const { avatars } = install({ role: "candidate" });
+  mount();
+  const input = await screen.findByTestId("settings-avatar-input");
+  expect(screen.getByTestId("settings-avatar")).toHaveTextContent("после того, как пригласит вас");
+  const file = new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47])], "a.png", { type: "image/png" });
+  fireEvent.change(input, { target: { files: [file] } });
+  await waitFor(() => expect(avatars).toHaveLength(1));
+  expect(avatars[0]).toBeInstanceOf(FormData);
 });
 
 test("админ ФСП: профиль, оформление и безопасность", async () => {

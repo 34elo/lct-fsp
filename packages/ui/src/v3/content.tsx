@@ -1,11 +1,12 @@
 import { Info } from "lucide-react";
 import { Popover as RPopover, Tabs as RTabs } from "radix-ui";
-import { useEffect, useId, useLayoutEffect, useRef, useState, type ComponentProps, type PointerEvent, type ReactNode } from "react";
+import { Children, isValidElement, useEffect, useId, useLayoutEffect, useRef, useState, type ComponentProps, type PointerEvent, type ReactNode } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { cn } from "../lib/cn";
 import { SegmentedControl } from "../primitives/overlay";
+import { Diagram } from "./diagram";
 
 /* ---------- InfoTip ---------- */
 
@@ -130,8 +131,15 @@ const md: Components = {
   li: (p) => <li className="my-0.5" {...rest(p)} />,
   blockquote: (p) => <blockquote className="my-2 border-l-2 border-tint-200 pl-3 text-muted" {...rest(p)} />,
   hr: () => <hr className="my-3 border-hairline" />,
-  pre: (p) => <pre className="my-2 overflow-x-auto rounded-lg bg-tint-50 p-3 font-mono text-13 leading-relaxed [&_code]:bg-transparent [&_code]:p-0" {...rest(p)} />,
-  code: (p) => <code {...rest(p)} className={cn("rounded-xs bg-tint-50 px-1 py-0.5 font-mono text-[0.92em]", p.className)} />,
+  pre: (p) => {
+    // Блок ```mermaid → схема (E41-9); остальные блоки кода — как раньше.
+    const child = Children.toArray(p.children)[0];
+    if (isValidElement<{ className?: string; children?: ReactNode }>(child) && (child.props.className ?? "").split(" ").includes("language-mermaid")) {
+      return <Diagram code={String(child.props.children ?? "").trim()} />;
+    }
+    return <pre className="my-2 overflow-x-auto rounded-lg bg-tint-50 p-3 font-mono text-13 leading-relaxed [&_code]:bg-transparent [&_code]:p-0" {...rest(p)} />;
+  },
+  code: (p) => <code {...rest(p)} className={cn("rounded-sm bg-tint-50 px-1 py-0.5 font-mono text-[0.92em]", p.className)} />,
   table: (p) => (
     <div className="my-2 w-full overflow-x-auto rounded-lg border border-hairline">
       <table className="w-full border-collapse text-13" {...rest(p)} />
