@@ -1,6 +1,6 @@
-import { useId, type ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
 
-import { Checkbox, Combobox, ProfessionInput, SalaryRangeInput, SectionLabel, SegmentedControl, Separator, cn, type ProfessionOption } from "@fsp/ui";
+import { Checkbox, ChevronDown, Combobox, ProfessionInput, SalaryRangeInput, SegmentedControl, SkillInput, cn, type ProfessionOption, type SkillSource } from "@fsp/ui";
 
 import { GRADE_LABEL } from "@/features/profile/text";
 import { Gi } from "@/shared/Gloss";
@@ -29,15 +29,34 @@ const CITIES = ["Москва", "Санкт-Петербург", "Новосиб
   label: c,
 }));
 
-function Group({ title, tip, children }: { title: string; tip?: ReactNode; children: ReactNode }) {
+/** Блок фильтров: по умолчанию свёрнут (E41-11); содержимое монтируется при раскрытии. */
+function Group({ title, tip, count, children }: { title: string; tip?: ReactNode; count?: number; children: ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const id = useId();
   return (
-    <fieldset className="grid gap-2.5">
-      <legend className="mb-2.5 flex items-center gap-1">
-        <SectionLabel>{title}</SectionLabel>
+    <section className="border-t border-hairline pt-3 first:border-t-0 first:pt-0" aria-label={title}>
+      <div className="flex items-center gap-1">
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-controls={id}
+          onClick={() => setOpen((v) => !v)}
+          className="flex min-h-9 flex-1 items-center justify-between gap-2 rounded-md text-left focus-visible:outline-2 focus-visible:outline-brand"
+        >
+          <span className="flex items-center gap-2 font-mono text-12 font-semibold uppercase tracking-wide text-muted">
+            {title}
+            {count ? <span className="num rounded-full bg-brand px-1.5 text-11 text-on-brand">{count}</span> : null}
+          </span>
+          <ChevronDown aria-hidden className={cn("size-4 text-muted transition-transform", open && "rotate-180")} />
+        </button>
         {tip}
-      </legend>
-      {children}
-    </fieldset>
+      </div>
+      {open && (
+        <div id={id} className="mt-2.5 grid gap-2.5">
+          {children}
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -64,12 +83,17 @@ export function MatchFilters({
   onChange,
   onReset,
   professions,
+  skillSuggest,
+  skillName,
   className,
 }: {
   c: Criteria;
   onChange: (next: Criteria) => void;
   onReset: () => void;
   professions: ProfessionOption[];
+  /** Подсказки навыков и подписи выбранных (фильтр «Навыки»). */
+  skillSuggest?: SkillSource;
+  skillName?: (slug: string) => string;
   className?: string;
 }) {
   const set = <K extends keyof Criteria>(k: K, v: Criteria[K]) => onChange({ ...c, [k]: v });
@@ -82,7 +106,21 @@ export function MatchFilters({
         </button>
       </div>
 
-      <Group title={T.profession}>
+      {skillSuggest && (
+        <Group title={T.skills} count={c.skills.length}>
+          <SkillInput
+            aria-label={T.skillsAdd}
+            placeholder={T.skillsPlaceholder}
+            allowNew={false}
+            suggest={skillSuggest}
+            value={c.skills.map((x) => ({ value: x, label: skillName?.(x) ?? x }))}
+            onChange={(v) => set("skills", v.map((x) => x.value))}
+            data-testid="filter-skills"
+          />
+        </Group>
+      )}
+
+      <Group title={T.profession} count={c.profession ? 1 : 0}>
         <ProfessionInput
           value={c.profession}
           onChange={(v) => set("profession", v)}
@@ -95,8 +133,7 @@ export function MatchFilters({
         />
       </Group>
 
-      <Separator />
-      <Group title={T.grade} tip={<Gi k="grade" />}>
+      <Group title={T.grade} tip={<Gi k="grade" />} count={c.grades.length + (c.confirmed ? 1 : 0)}>
         <div className="flex flex-wrap gap-2" role="group" aria-label={T.grade}>
           {TEST_GRADES.map((g) => {
             const on = c.grades.includes(g);
@@ -124,8 +161,7 @@ export function MatchFilters({
         <p className="-mt-1 pl-8 text-12 text-muted">{T.confirmedHint}</p>
       </Group>
 
-      <Separator />
-      <Group title={T.trust} tip={<Gi k="trust" />}>
+      <Group title={T.trust} tip={<Gi k="trust" />} count={c.trust !== null ? 1 : 0}>
         <SegmentedControl
           label={T.trust}
           value={c.trust === null ? "any" : String(c.trust)}
@@ -136,15 +172,13 @@ export function MatchFilters({
         <p className="text-12 text-muted">{T.trustHint}</p>
       </Group>
 
-      <Separator />
-      <Group title={T.fsp}>
+      <Group title={T.fsp} count={c.fsp ? 1 : 0}>
         <Check checked={c.fsp} onChange={(v) => set("fsp", v)} testId="filter-fsp">
           {T.fspOnly}
         </Check>
       </Group>
 
-      <Separator />
-      <Group title={T.region}>
+      <Group title={T.region} count={c.cities.length + (c.relocation ? 1 : 0)}>
         <Combobox
           multiple
           creatable
@@ -162,8 +196,7 @@ export function MatchFilters({
         </Check>
       </Group>
 
-      <Separator />
-      <Group title={T.salary}>
+      <Group title={T.salary} count={c.salaryFrom !== null || c.salaryTo !== null ? 1 : 0}>
         <SalaryRangeInput
           value={{ from: c.salaryFrom, to: c.salaryTo }}
           onChange={(v) => onChange({ ...c, salaryFrom: v.from || null, salaryTo: v.to })}
@@ -174,8 +207,7 @@ export function MatchFilters({
         />
       </Group>
 
-      <Separator />
-      <Group title={T.format}>
+      <Group title={T.format} count={c.formats.length}>
         {FORMATS.map((k) => (
           <Check key={k} checked={c.formats.includes(k)} onChange={(on) => set("formats", toggle(c.formats, k, on))}>
             {FORMAT_LABEL[k]}

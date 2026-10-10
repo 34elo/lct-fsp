@@ -66,6 +66,8 @@ beforeEach(() => {
         return res(200, { items: cards, next_cursor: null, total: 5, session_id: "s1" });
       }
       if (url.includes("/categories/backend/junior/candidates")) return res(200, { items: cards.slice(0, 2), next_cursor: null, total: 2, session_id: "s2" });
+      if (url.includes("/needs/n1/shortlist/") || url.includes("/needs/n2/shortlist/")) return res(200, { shortlist: [] });
+      if (url.includes("/search/candidates")) return res(200, { items: cards.slice(0, 3), next_cursor: null, total: 3, session_id: "s9" });
       if (url.includes("/search/parse")) return res(200, parsed);
       if (url.includes("/taxonomy/skills/suggest")) return res(200, [{ slug: "python", name: "Python", provisional: false }]);
       if (url.includes("/taxonomy/professions/suggest")) return res(200, [{ slug: "backend", title: "Backend" }, { slug: "ai_engineer", title: "AI Engineer" }]);
@@ -132,8 +134,8 @@ test("«python django middle» → чипсы → категории с объя
 
   const top = await screen.findByTestId("match-top");
   expect(within(top).getAllByRole("article")).toHaveLength(5);
-  const first = within(top).getByRole("link", { name: "Backend #1001: открыть профиль" });
-  expect(first).toHaveAttribute("href", "/employer/candidates/p1?source=match");
+  const first = within(top).getByRole("article", { name: "Backend #1001" });
+  expect(within(first).getByRole("link", { name: "Backend #1001: открыть профиль" })).toHaveAttribute("href", "/employer/candidates/p1?source=match");
   // компактная карточка: совпадение (без вакансии — rank), грейд, ожидания, топ-3 навыка
   expect(first).toHaveTextContent("Middle");
   expect(first).toHaveTextContent("от 200");
@@ -152,7 +154,10 @@ test("фильтр сужает выдачу: «Есть результаты Ф
   expect(within(await screen.findByTestId("match-top")).getAllByRole("article")).toHaveLength(5);
   expect(posts()).toHaveLength(0); // потребность уже в ссылке
 
-  fireEvent.click(within(screen.getAllByTestId("match-filters")[0]!).getByRole("checkbox", { name: "Есть результаты ФСП" }));
+  const panel = within(screen.getAllByTestId("match-filters")[0]!);
+  expect(panel.queryByRole("checkbox", { name: "Есть результаты ФСП" })).not.toBeInTheDocument(); // блоки закрыты
+  fireEvent.click(panel.getByRole("button", { name: /^ФСП/ }));
+  fireEvent.click(panel.getByRole("checkbox", { name: "Есть результаты ФСП" }));
   expect(await screen.findByText("1 человек", undefined, { timeout: 3000 })).toBeInTheDocument();
   expect(posts().at(-1)!.filters).toMatchObject({ skills_must: [{ slug: "python" }], fsp_only: true });
   expect(within(await screen.findByTestId("match-top")).getAllByRole("article")).toHaveLength(1);
@@ -200,4 +205,36 @@ test("запомненный запрос пропал — потребност�
   // Цепочка: восстановление → 404 → новая потребность (с задержкой) → категории → кандидаты.
   expect(await screen.findByText("1 человек", undefined, { timeout: 4000 })).toBeInTheDocument();
   expect(location).toBe("/employer?skill=python&fsp=1&need=n2");
+});
+
+test("переключатель «Кандидаты»: список по запросу, фильтр навыка, «В шорт-лист»", async () => {
+  mount("/employer?skill=python&need=n1");
+  expect(await screen.findByTestId("match-categories")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("radio", { name: "Кандидаты" }));
+  const list = await screen.findByTestId("match-candidates");
+  expect(location).toContain("view=candidates");
+  expect(await within(list).findAllByRole("article")).toHaveLength(3);
+  expect(calls.find((c) => c.url.includes("/search/candidates"))?.body).toMatchObject({ filters: { skills_must: [{ slug: "python" }] } });
+
+  // фильтр по навыкам — в панели, блок раскрывается по клику
+  const panel = within(screen.getAllByTestId("match-filters")[0]!);
+  fireEvent.click(panel.getByRole("button", { name: /^Навыки/ }));
+  expect(panel.getByRole("combobox", { name: "Добавить навык" })).toBeInTheDocument();
+
+  const card = within(list).getByRole("article", { name: "Backend #1001" });
+  const btn = within(card).getByRole("button", { name: "В шорт-лист" });
+  fireEvent.click(btn);
+  expect(await within(card).findByRole("button", { name: "В шорт-листе" })).toHaveAttribute("aria-pressed", "true");
+  expect(calls.some((c) => c.method === "POST" && c.url.includes("/needs/n1/shortlist/p1"))).toBe(true);
+});
+
+test("подписки: «Назад» в подбор, добавление — модалка с профессией и грейдом", async () => {
+  mount("/employer/subscriptions");
+  expect(await screen.findByTestId("subs-back")).toHaveAttribute("href", "/employer");
+  expect(await screen.findByText("Подписок пока нет")).toBeInTheDocument();
+  fireEvent.click(screen.getByTestId("subs-add"));
+  const dialog = await screen.findByRole("dialog");
+  expect(within(dialog).getByText("Новая подписка")).toBeInTheDocument();
+  expect(within(dialog).getByRole("button", { name: "Подписаться" })).toBeDisabled(); // профессия не выбрана
+  expect(within(dialog).getByRole("button", { name: "Закрыть" })).toBeInTheDocument();
 });
