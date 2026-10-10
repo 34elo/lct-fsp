@@ -14,7 +14,7 @@ from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.assessment import constructor, key_draft
+from app.assessment import constructor, invite_bank, key_draft
 from app.assessment.attempts import family_of
 from app.assessment.config import load_config
 from app.assessment.families.spec import FamilySpec
@@ -39,6 +39,7 @@ class FamilyOut(BaseModel):
     skill_type: str
     level: int
     status: str
+    ready: bool = False  # «Готово»: можно прикреплять к приглашению (банк — pilot/active)
     key_status: str  # draft — ключ из черновика LLM, ждёт админа
     company_id: uuid.UUID | None = None
     form: dict[str, Any]  # действующая спецификация (с ключом)
@@ -66,6 +67,7 @@ def family_out(row: FamilyRow, *, with_examples: bool = True) -> FamilyOut:
         skill_type=row.skill_type,
         level=row.level,
         status=row.status,
+        ready=invite_bank.is_ready(row),
         key_status=row.key_status,
         company_id=row.company_id,
         form=form,
@@ -136,4 +138,32 @@ async def get_family(
         company_id=found[0].id if found else None,
         admin=user.role == "fsp_admin",
     )
+    return family_out(row)
+
+
+class ReadyIn(BaseModel):
+    ready: bool = True
+
+
+@router.put(
+    "/{family_id}/ready",
+    response_model=FamilyOut,
+    responses=problem_responses(401, 403, 404, 409),
+)
+async def set_ready(
+    family_id: uuid.UUID,
+    body: ReadyIn,
+    user: User = Depends(_author),
+    session: AsyncSession = Depends(get_session),
+):
+    """«Готово» (задание доступно для приглашений компании) или возврат в черновик (E41-14)."""
+    found = await companies.my_company(session, user.id) if user.role == "employer" else None
+    row = await constructor.get_visible(
+        session,
+        family_id,
+        user_id=user.id,
+        company_id=found[0].id if found else None,
+        admin=user.role == "fsp_admin",
+    )
+    row = await constructor.set_ready(session, row, body.ready, user.id)
     return family_out(row)

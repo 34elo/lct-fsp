@@ -12,6 +12,7 @@ export interface MeOut {
   role: string;
   email_verified?: boolean;
   consents: string[];
+  avatar_url?: string | null;
   telegram_linked?: boolean;
   company?: MeCompany | null;
 }

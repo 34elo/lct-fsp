@@ -350,7 +350,9 @@ async def queue(
     """Очередь допуска: семейства статуса со свежей статистикой и невыполненными порогами."""
     rows = list(
         await session.scalars(
-            select(FamilyRow).where(FamilyRow.status == status).order_by(FamilyRow.slug)
+            select(FamilyRow)
+            .where(FamilyRow.status == status, FamilyRow.company_id.is_(None))  # E41-14
+            .order_by(FamilyRow.slug)
         )
     )
     out = []

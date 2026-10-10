@@ -178,12 +178,15 @@ export function CandidateOfferDetail() {
       {o && (
         <>
           <header className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <h1 className="break-words font-mono text-20 font-semibold">{o.company.name}</h1>
-              <p className="text-13 text-muted">
-                {offerTitle(o)}
-                {o.vacancy ? ` · ${GRADE_LABEL[o.vacancy.grade_min]}–${GRADE_LABEL[o.vacancy.grade_max]}` : ` · ${T.invite.toLowerCase()}`}
-              </p>
+            <div className="flex min-w-0 items-start gap-3">
+              <Avatar name={o.company.name} src={avatarSrc(o.company.logo_url)} size={48} className="rounded-xl" />
+              <div className="min-w-0">
+                <h1 className="break-words font-mono text-20 font-semibold">{o.company.name}</h1>
+                <p className="text-13 text-muted">
+                  {offerTitle(o)}
+                  {o.vacancy ? ` · ${GRADE_LABEL[o.vacancy.grade_min]}–${GRADE_LABEL[o.vacancy.grade_max]}` : ` · ${T.invite.toLowerCase()}`}
+                </p>
+              </div>
             </div>
             <StatusBadge status={o.status as OfferStatus} />
           </header>

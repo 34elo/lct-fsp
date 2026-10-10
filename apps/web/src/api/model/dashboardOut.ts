@@ -5,6 +5,8 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { AppAnalyticsDashboardStage } from './appAnalyticsDashboardStage';
+import type { Counter } from './counter';
+import type { DayPoint } from './dayPoint';
 import type { Ratio } from './ratio';
 
 export interface DashboardOut {
@@ -14,4 +16,6 @@ export interface DashboardOut {
   funnel: AppAnalyticsDashboardStage[];
   fsp_share: Ratio;
   navigator_to_competition: Ratio;
+  counters?: Counter[];
+  daily?: DayPoint[];
 }

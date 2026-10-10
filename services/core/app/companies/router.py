@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
+from typing import Annotated, Any
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Request, Response
+from fastapi import APIRouter, Depends, File, Request, Response, UploadFile
 from fsp_contracts.enums import CompanyMemberRole, CompanyStatus
 from fsp_platform.app import ProblemError
 from pydantic import BaseModel, ConfigDict, Field
@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.companies import service
 from app.companies.models import Company
-from app.deps import get_session
+from app.deps import get_limiter, get_session, get_storage
 from app.identity import profile
 from app.identity.deps import require_roles
 from app.identity.mailer import SmtpMailer
@@ -40,7 +40,7 @@ class CompanyOut(BaseModel):
     inn: str | None
     site: str | None
     description: str | None
-    logo_key: str | None
+    logo_url: str | None = None  # `/companies/{id}/logo?v=`, публичный (E41-12)
     contacts: dict[str, Any] | None
     direction: str | None
     status: CompanyStatus
@@ -93,7 +93,7 @@ def company_out(c: Company, my_role: str | None = None) -> CompanyOut:
         inn=c.inn,
         site=c.site,
         description=c.description,
-        logo_key=c.logo_key,
+        logo_url=service.logo_url(c),
         contacts=c.contacts,
         direction=c.direction,
         status=CompanyStatus(c.status),
@@ -142,6 +142,66 @@ async def patch_my_company(
             changes.pop(key, None)
     await service.update_company(session, company, changes)
     return company_out(company, member.role)
+
+
+@router.put(
+    "/companies/me/logo",
+    response_model=CompanyOut,
+    responses=problem_responses(401, 403, 404, 413, 415, 422, 429),
+)
+async def put_company_logo(
+    request: Request,
+    file: Annotated[UploadFile, File()],
+    user: User = Depends(_employer),
+    session: AsyncSession = Depends(get_session),
+    storage=Depends(get_storage),
+    limiter=Depends(get_limiter),
+):
+    """Логотип компании (E41-12): PNG, JPEG или WebP по сигнатуре, до 2 МБ; только владелец."""
+    company, member = await service.require_company(session, user.id, admin=True)
+    await limiter.check(f"logo:{company.id}", 20, 3600)
+    data = await file.read(profile.AVATAR_MAX_BYTES + 1)
+    if not getattr(request.app.state, "bucket_ready", False):
+        await storage.ensure_bucket()
+        request.app.state.bucket_ready = True
+    return company_out(await service.set_logo(session, storage, company, data), member.role)
+
+
+@router.delete(
+    "/companies/me/logo", response_model=CompanyOut, responses=problem_responses(401, 403, 404)
+)
+async def delete_company_logo(
+    user: User = Depends(_employer),
+    session: AsyncSession = Depends(get_session),
+    storage=Depends(get_storage),
+):
+    company, member = await service.require_company(session, user.id, admin=True)
+    return company_out(await service.clear_logo(session, storage, company), member.role)
+
+
+@router.get(
+    "/companies/{company_id}/logo",
+    response_class=Response,
+    responses={200: {"content": {"image/*": {}}}, **problem_responses(404)},
+)
+async def get_company_logo(
+    company_id: UUID,
+    session: AsyncSession = Depends(get_session),
+    storage=Depends(get_storage),
+):
+    """Без авторизации: `<img>` не несёт токен, логотип компании публичен."""
+    company = await service.get_company(session, company_id)
+    if company is None or not company.logo_key:
+        raise ProblemError(404, "logo_not_found", "Логотип не найден")
+    try:
+        data = await storage.get(company.logo_key)
+    except Exception as exc:  # файл пропал из хранилища
+        raise ProblemError(404, "logo_not_found", "Логотип не найден") from exc
+    return Response(
+        content=data,
+        media_type=profile.content_type(company.logo_key),
+        headers={"Cache-Control": "public, max-age=86400", "X-Content-Type-Options": "nosniff"},
+    )
 
 
 @router.post(

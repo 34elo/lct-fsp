@@ -170,6 +170,7 @@ class PublicCompany(BaseModel):
     verified: bool
     responsibility_score: float | None = None
     demo: bool = False  # E40-1: демо-компания витрины — пометка «демо»
+    logo_url: str | None = None  # E41-12
 
 
 class PublicVacancyOut(BaseModel):
@@ -209,6 +210,7 @@ async def _public_out(session: AsyncSession, v: Vacancy, skills: list) -> Public
             verified=bool(co and companies.badge_visible(co)),
             responsibility_score=co.responsibility_score if co else None,
             demo=bool(co and co.is_demo),
+            logo_url=companies.logo_url(co) if co else None,
         ),
     )
 
