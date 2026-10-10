@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { Badge, Button, Dialog, DialogContent, DialogTitle, EmptyState, ErrorState, Field, Skeleton, useFieldProps } from "@fsp/ui";
+import { Badge, Button, Dialog, DialogContent, DialogTitle, EmptyState, ErrorState, Field, Skeleton, cardInteractive, cn, useFieldProps } from "@fsp/ui";
 
 import {
   getListCardsAdminSkillCardsGetQueryKey,
@@ -171,7 +171,7 @@ export function CardsTab() {
                 data-testid={sel(`open-${c.skill}`)}
                 aria-label={`${c.skill}. ${T.open}`}
                 onClick={() => { setOpenSlug(c.skill); setNotice(""); }}
-                className="flex h-full min-h-24 w-full flex-col items-start gap-1 rounded-xl border border-hairline bg-card p-4 text-left transition-colors hover:border-brand focus-visible:outline-2 focus-visible:outline-brand"
+                className={cn("flex h-full min-h-24 w-full flex-col items-start gap-1 rounded-xl border border-hairline bg-card p-4 text-left", cardInteractive)}
               >
                 <span className="break-all font-mono text-14 font-semibold" data-testid={sel(`slug-${c.skill}`)}>{c.skill}</span>
                 <span className="text-13 text-muted" data-testid={sel(`meta-${c.skill}`)}>

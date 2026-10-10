@@ -26,8 +26,15 @@ from fsp_platform.messaging import (
 )
 from fsp_platform.storage import ObjectStorage
 
+from fsp_ml import family_bank
 from fsp_ml.config import Settings
-from fsp_ml.handlers import HANDLERS, handle, resume_parse_llm
+from fsp_ml.handlers import (
+    HANDLERS,
+    families_generate_llm,
+    families_started,
+    handle,
+    resume_parse_llm,
+)
 from fsp_ml.llm import LlmClient, OpenAiLlm
 from fsp_ml.taxonomy import TaxonomyProvider
 
@@ -73,6 +80,8 @@ class MlWorker:
     async def _on_command(self, envelope: Envelope) -> None:
         if not self.fake and envelope.type == "ml.resume.parse":
             results = await self._resume_parse(envelope)
+        elif not self.fake and envelope.type == "ml.families.generate":
+            results = await self._families_generate(envelope)
         else:
             if not self.fake:
                 log.warning("ml_fake_fallback", type=envelope.type)
@@ -100,6 +109,19 @@ class MlWorker:
             today=datetime.now(UTC).date(),
             progress=progress,
         )
+
+    async def _families_generate(self, envelope: Envelope) -> list[Envelope]:
+        """E43-9: «идёт» сразу, затем формы генератора (промпт `/v1/families/generate`)."""
+        p = parse_payload(envelope)
+        await publish_envelope(self.broker, families_started(envelope, p))
+        llm, model = self.llm, self.settings.llm_model
+
+        async def generate(req):  # noqa: ANN001, ANN202
+            return await family_bank.generate_llm(llm, req, model)
+
+        return [
+            await families_generate_llm(envelope, p, generate=generate if llm is not None else None)
+        ]
 
     async def start(self) -> None:
         self.consumer.attach(self.broker)

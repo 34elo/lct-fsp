@@ -390,6 +390,24 @@ CREATE TABLE profession_suggestions (
   updated_at         timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX ix_profession_suggestions_status ON profession_suggestions (status);
+-- Заказы LLM-заданий из админки (E43-9, миграция b1_18; assessment.md §7)
+CREATE TABLE family_orders (
+  id           uuid PRIMARY KEY,
+  skill        text NOT NULL,                 -- slug навыка справочника
+  kind         text NOT NULL,                 -- FamilyKind
+  level        smallint NOT NULL,             -- 1..5
+  count        smallint NOT NULL,             -- 1..10
+  status       text NOT NULL DEFAULT 'queued',  -- queued | running | done | failed
+  created      int NOT NULL DEFAULT 0,        -- черновиков легло в families
+  rejected     jsonb NOT NULL,                -- причина отбраковки → число
+  slugs        jsonb NOT NULL,                -- slug'и созданных семейств
+  model        text,
+  error        text,                          -- llm_disabled | llm_unavailable | llm_invalid | empty
+  requested_by uuid REFERENCES users(id) ON DELETE SET NULL,
+  created_at   timestamptz NOT NULL DEFAULT now(),
+  updated_at   timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX ix_family_orders_created ON family_orders (created_at);
 ```
 
 Ядро графа навыков на старте — YAML в `data/taxonomy/*.yaml` (ревью в git), собирается из тегов Stack Overflow, карты пакетов и русских названий. `make taxonomy-load` загружает его в БД. Дальше граф растёт через конвейер ([skills.md](skills.md)), правки идут через админку, есть экспорт в YAML.

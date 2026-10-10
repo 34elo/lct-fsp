@@ -37,7 +37,7 @@ function ResponseCard({ o }: { o: OfferForCandidate }) {
   });
   const tab = candTabOf(o.status);
   return (
-    <li className="flex flex-col gap-3 rounded-2xl border border-hairline bg-card p-4">
+    <li className="flex flex-col gap-3 rounded-xl border border-hairline bg-card p-4">
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 items-start gap-3">
           <Avatar name={o.company.name} src={avatarSrc(o.company.logo_url)} size={40} className="rounded-xl" />

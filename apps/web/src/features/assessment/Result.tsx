@@ -25,7 +25,7 @@ import {
 } from "@fsp/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import {
   getGetAttemptAssessmentAttemptsAttemptIdGetQueryKey,
@@ -104,6 +104,11 @@ export default function Result() {
   const [topics, setTopics] = useState(false);
 
   const attempt = aq.data?.status === 200 ? aq.data.data : undefined;
+  const finished = attempt?.status === "passed" || attempt?.status === "failed";
+  // E43-5: тест завершён — место в категории, просмотры, интересы и путь пересчитались; кеш кандидата устарел.
+  useEffect(() => {
+    if (finished) void qc.invalidateQueries({ predicate: (q) => String(q.queryKey[0] ?? "").startsWith("/candidates/me") });
+  }, [finished, qc]);
   const history = hq.data?.status === 200 ? hq.data.data : undefined;
   const professions = pq.data?.status === 200 ? pq.data.data.professions : [];
   const interests = iq.data?.status === 200 ? iq.data.data : undefined;

@@ -12,7 +12,7 @@
 - `fsp_bot/sender.py` — `notify.telegram` → сообщение: лимиты, `edit_of` (ключ → message_id в Redis `bot:msg:*`), RetryAfter, дедуп по `message_id` (`bot:sent:*`)
 - `fsp_bot/limiter.py` — token bucket 25/с глобально и 1/с на чат
 - `fsp_bot/core_client.py` — httpx-клиент core с `Authorization: Service <SERVICE_TOKEN_BOT>`
-- `fsp_bot/handlers.py` — `/start`, согласия (`c:ok`/`c:no`), меню, резюме файлом (сигнатура и 10 МБ в боте и в core, опрос статуса, `r:ok:<id>`), профиль, офферы (`o:v|a|d|r|q|b:<id>`, причины отказа, вопрос работодателю через FSM `Offer.awaiting_question`); остальное — E9-4 и далее
+- `fsp_bot/handlers.py` — `/start` (только привязка по `link_<token>` или отправка на сайт, E43-7; регистрации и согласий в боте нет), меню, резюме файлом (сигнатура и 10 МБ в боте и в core, опрос статуса, `r:ok:<id>`), профиль, офферы (`o:v|a|d|r|q|b:<id>`, причины отказа, вопрос работодателю через FSM `Offer.awaiting_question`); остальное — E9-4 и далее
 - `fsp_bot/account.py` — 🏆 ФСП (привязка по ID/email + код, обновление), 🎯 категория и кнопка короткого теста, 🔥 статус `s:*`, ⚙️ настройки `g:*` (зарплата через FSM `Settings.awaiting_salary`, форматы); GitHub (E10-3) ещё не подключён
 - `fsp_bot/assessment.py` — короткий тест (E25-3: `/test`, кнопка в 🎯; режим `express` API `/assessment/*` блока 1, ответы кнопками `t:c|r|rx:<n>:<i>` или текстом, счётчик `n` защищает от повторных нажатий, продолжение активной попытки, приглашение `t:u:<id>`) и 📋 Задания (`/tasks`, `t:t:<id>`); в core ходит от имени кандидата коротким токеном `CoreClient.as_user` (`POST /internal/tg/token`)
 - `fsp_bot/templates/` — HTML-шаблоны по `TgTemplate`, клавиатуры; `fsp_bot/states.py` — FSM

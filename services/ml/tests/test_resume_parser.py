@@ -505,3 +505,51 @@ def test_declared_schema_rejects_unknown_grade_and_role():
 def test_rules_mode_has_no_declared_fields():
     out = resume_parser.extract_rules(TEXT, INDEX)
     assert out.soft_skills == [] and out.declared_grade is None and out.roles == []
+
+
+# --- E43-8: запасной путь, когда LLM вернул мало навыков ---
+
+
+async def _parse_with(answer, text=TEXT):
+    return await resume_parser.parse_resume(
+        _pdf(text), llm=FakeLlm(answer), index=INDEX, model="test", today=TODAY
+    )
+
+
+async def test_fallback_rules_when_llm_returns_zero_skills():
+    parsed = await _parse_with({**LLM_OUT, "skills": []})
+    slugs = {s.slug for s in parsed.skills}
+    assert {"python", "fastapi", "postgresql", "docker"} <= slugs
+    assert all(s.source == "rules" and s.quote.strip() for s in parsed.skills)
+    assert any(w.startswith("llm_fallback_rules:") for w in parsed.warnings)
+    assert parsed.parser_version == "resume-v2:test"  # разбор остаётся LLM-овым, опыт от LLM
+    assert parsed.experience
+
+
+async def test_fallback_keeps_llm_skills_and_adds_only_new_with_quote():
+    one = {**LLM_OUT, "skills": [LLM_OUT["skills"][0]]}
+    long_text = TEXT + "\n" + "Дополнительная информация о проектах. " * 40
+    parsed = await _parse_with(one, long_text)
+    by = {s.slug: s for s in parsed.skills}
+    assert by[one["skills"][0]["name"].lower()].source == "llm"
+    assert any(s.source == "rules" for s in parsed.skills)
+    assert len(by) == len(parsed.skills)  # без дублей
+    text_norm = resume_parser.norm_text(long_text)
+    assert all(resume_parser.quote_in_text(s.quote, text_norm) for s in parsed.skills)
+
+
+async def test_no_fallback_when_llm_enough_or_short_text():
+    full = await _parse_with(LLM_OUT)
+    assert all(s.source == "llm" for s in full.skills)
+    assert not any(w.startswith("llm_fallback_rules") for w in full.warnings)
+    # 1–2 навыка при коротком тексте (< 1000 знаков) — не повод для запасного пути
+    short = await _parse_with({**LLM_OUT, "skills": LLM_OUT["skills"][:1]})
+    assert len(short.skills) == 1 and short.skills[0].source == "llm"
+
+
+def test_needs_rules_fallback_thresholds():
+    f = resume_parser.needs_rules_fallback
+    assert f(0, 200) and f(0, 5000)
+    assert f(2, 1001) and not f(2, 1000)
+    assert not f(3, 5000)
+    assert not f(0, 0)

@@ -709,6 +709,42 @@
         }
       }
     },
+    "ml_families_started": {
+      "address": "ml.families.started",
+      "messages": {
+        "ml_families_started__ml_families_started": {
+          "$ref": "#/components/messages/ml_families_started__ml_families_started"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
+    "ml_families_generated": {
+      "address": "ml.families.generated",
+      "messages": {
+        "ml_families_generated__ml_families_generated": {
+          "$ref": "#/components/messages/ml_families_generated__ml_families_generated"
+        }
+      },
+      "bindings": {
+        "amqp": {
+          "is": "routingKey",
+          "exchange": {
+            "name": "events",
+            "type": "topic",
+            "durable": true
+          }
+        }
+      }
+    },
     "offer_interest_sent": {
       "address": "offer.interest.sent",
       "messages": {
@@ -822,6 +858,9 @@
         },
         "ml_llm__ml_questions_generate": {
           "$ref": "#/components/messages/ml_llm__ml_questions_generate"
+        },
+        "ml_llm__ml_families_generate": {
+          "$ref": "#/components/messages/ml_llm__ml_families_generate"
         }
       },
       "bindings": {
@@ -1488,6 +1527,28 @@
         }
       ]
     },
+    "send_ml_families_started__ml_families_started": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/ml_families_started"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/ml_families_started/messages/ml_families_started__ml_families_started"
+        }
+      ]
+    },
+    "send_ml_families_generated__ml_families_generated": {
+      "action": "send",
+      "channel": {
+        "$ref": "#/channels/ml_families_generated"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/ml_families_generated/messages/ml_families_generated__ml_families_generated"
+        }
+      ]
+    },
     "send_offer_interest_sent__offer_interest_sent": {
       "action": "send",
       "channel": {
@@ -1617,6 +1678,17 @@
       "messages": [
         {
           "$ref": "#/channels/ml_llm/messages/ml_llm__ml_questions_generate"
+        }
+      ]
+    },
+    "receive_ml_llm__ml_families_generate": {
+      "action": "receive",
+      "channel": {
+        "$ref": "#/channels/ml_llm"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/ml_llm/messages/ml_llm__ml_families_generate"
         }
       ]
     },
@@ -2702,6 +2774,52 @@
           ]
         }
       },
+      "ml_families_started__ml_families_started": {
+        "name": "ml.families.started",
+        "title": "ml.families.started",
+        "summary": "Событие от ml",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "ml.families.started"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/FamilyOrderStarted"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ml_families_generated__ml_families_generated": {
+        "name": "ml.families.generated",
+        "title": "ml.families.generated",
+        "summary": "Событие от ml",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "ml.families.generated"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/FamilyOrderGenerated"
+                }
+              }
+            }
+          ]
+        }
+      },
       "offer_interest_sent__offer_interest_sent": {
         "name": "offer.interest.sent",
         "title": "offer.interest.sent",
@@ -2972,6 +3090,29 @@
                 },
                 "payload": {
                   "$ref": "#/components/schemas/MlQuestionsGenerate"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ml_llm__ml_families_generate": {
+        "name": "ml.families.generate",
+        "title": "ml.families.generate",
+        "summary": "Команда для ml, приоритет 0",
+        "payload": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "ml.families.generate"
+                },
+                "payload": {
+                  "$ref": "#/components/schemas/MlFamiliesGenerate"
                 }
               }
             }
@@ -4350,6 +4491,62 @@
         "title": "ExplanationItem",
         "type": "object"
       },
+      "FamilyOrderGenerated": {
+        "description": "`ml.families.generated` (E43-9): ответ генератора на заказ `ml.families.generate`.\n\n`specs` — черновики форм конструктора (`FamilySpec`), их проверяет core (схема, навык,\nавтопроверка, дубли) и кладёт в `families` со `status = draft`, `source = llm`. `error` —\nмашинный код отказа (`llm_disabled`, `llm_unavailable`, `llm_invalid`, …), тогда `specs` пуст.",
+        "properties": {
+          "order_id": {
+            "format": "uuid",
+            "title": "Order Id",
+            "type": "string"
+          },
+          "specs": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "maxItems": 10,
+            "title": "Specs",
+            "type": "array"
+          },
+          "model": {
+            "default": "",
+            "title": "Model",
+            "type": "string"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Error"
+          }
+        },
+        "required": [
+          "order_id"
+        ],
+        "title": "FamilyOrderGenerated",
+        "type": "object"
+      },
+      "FamilyOrderStarted": {
+        "description": "`ml.families.started` (E43-9): ml-worker-llm взял заказ админа на задания в работу.",
+        "properties": {
+          "order_id": {
+            "format": "uuid",
+            "title": "Order Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "order_id"
+        ],
+        "title": "FamilyOrderStarted",
+        "type": "object"
+      },
       "FamilyStatusChanged": {
         "description": "`assessment.family.status_changed` (внутреннее для блока 1).",
         "properties": {
@@ -5494,6 +5691,75 @@
           "candidate_id"
         ],
         "title": "MlCodeResult",
+        "type": "object"
+      },
+      "MlFamiliesGenerate": {
+        "description": "E43-9: заказ админа на LLM-задания (навык × `kind` × уровень, до 10 штук).\n\nНизший приоритет `ml.llm`: не мешает разбору резюме и остальным задачам GPU. Ответ —\n`ml.families.started`, затем `ml.families.generated` (assessment.md §7).",
+        "properties": {
+          "order_id": {
+            "format": "uuid",
+            "title": "Order Id",
+            "type": "string"
+          },
+          "skill": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Skill",
+            "type": "string"
+          },
+          "skill_type": {
+            "default": "",
+            "maxLength": 40,
+            "title": "Skill Type",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "exact",
+              "estimate",
+              "choice",
+              "find_bug",
+              "order",
+              "sjt",
+              "open"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "level": {
+            "maximum": 5,
+            "minimum": 1,
+            "title": "Level",
+            "type": "integer"
+          },
+          "n": {
+            "maximum": 10,
+            "minimum": 1,
+            "title": "N",
+            "type": "integer"
+          },
+          "domain": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Domain"
+          }
+        },
+        "required": [
+          "order_id",
+          "skill",
+          "kind",
+          "level",
+          "n"
+        ],
+        "title": "MlFamiliesGenerate",
         "type": "object"
       },
       "MlInterviewGenerate": {
@@ -6990,6 +7256,15 @@
             "minimum": 0,
             "title": "Confidence",
             "type": "number"
+          },
+          "source": {
+            "default": "llm",
+            "enum": [
+              "llm",
+              "rules"
+            ],
+            "title": "Source",
+            "type": "string"
           }
         },
         "required": [

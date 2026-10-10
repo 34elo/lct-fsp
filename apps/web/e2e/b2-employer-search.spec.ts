@@ -17,13 +17,15 @@ test("b2: запрос «python django middle» → чипсы → катего�
   // Чипсы: навыки — в строке, грейд — в условиях.
   await expect(page.getByTestId("query-chip-skill").filter({ hasText: "Python" })).toBeVisible();
   await expect(page.getByTestId("query-chip-skill").filter({ hasText: "Django" })).toBeVisible();
-  await expect(page.getByTestId("match-chips")).toContainText("Middle");
+  await expect(page.getByTestId("filter-grade-middle")).toHaveAttribute("aria-pressed", "true"); // грейд — в панели
 
-  // Категории с объяснением и кандидаты; условия — в ссылке.
+  // По умолчанию «Кандидаты»; категории с объяснением — переключателем; условия — в ссылке.
+  await expect(page.getByTestId("match-candidates")).toBeVisible();
+  await page.getByRole("radio", { name: "Категории" }).click();
   const cats = page.getByTestId("match-categories");
   await expect(cats.getByRole("button", { pressed: true })).toBeVisible();
   await expect(page.getByTestId("match-why")).toContainText("Python");
-  await expect(page).toHaveURL(/skill=python.*grade=middle.*need=/);
+  await expect(page).toHaveURL(/skill=python.*grade=middle.*need=.*view=categories|skill=python.*grade=middle.*view=categories.*need=/);
   const cards = page.getByTestId("match-top").getByRole("article");
   await expect(cards.first()).toBeVisible();
   const before = await cards.count();
@@ -35,7 +37,7 @@ test("b2: запрос «python django middle» → чипсы → катего�
 
   // Фильтр сужает выдачу: «только подтверждённый грейд» + доверие ●●●● + ожидания до 50 000.
   await page.goto(`${new URL(page.url()).pathname}?skill=python&skill=django&grade=middle&confirmed=1&trust=4&to=50000`);
-  await expect(page.getByTestId("match-chips")).toContainText("Только подтверждённый грейд");
+  await expect(page.getByTestId("filter-confirmed")).toBeChecked(); // заданное — подсвечено в панели
   await expect(page).toHaveURL(/need=/);
   await expect(cats.or(page.getByText("Под запрос нет категорий"))).toBeVisible();
   const top = page.getByTestId("match-top");
@@ -47,18 +49,17 @@ test("b2: запрос «python django middle» → чипсы → катего�
 /** E41-11: переключатель «Категории / Кандидаты», фильтры свёрнуты, «В шорт-лист» на карточке. */
 test("b2: режим «Кандидаты» → фильтр навыка → «В шорт-лист»", async ({ page }) => {
   await loginAs(page, "olga");
-  await page.goto("/employer?skill=python&grade=middle");
+  await page.goto("/employer?skill=python&grade=middle&view=categories");
   await expect(page.getByTestId("match-categories")).toBeVisible();
   await expect(page.getByTestId("filter-fsp")).toHaveCount(0); // блоки фильтров закрыты
 
   await page.getByRole("radio", { name: "Кандидаты" }).click();
-  await expect(page).toHaveURL(/view=candidates/);
+  await expect(page).not.toHaveURL(/view=/); // «Кандидаты» — вид по умолчанию
   const list = page.getByTestId("match-candidates");
   const first = list.getByRole("article").first();
   await expect(first).toBeVisible();
 
-  await page.getByTestId("match-filters").getByRole("button", { name: /^Навыки/ }).click();
-  await expect(page.getByTestId("filter-skills")).toBeVisible();
+  await expect(page.getByTestId("filter-skills")).toBeVisible(); // заполненный блок раскрыт
 
   await first.getByRole("button", { name: "В шорт-лист" }).click();
   await expect(first.getByRole("button", { name: "В шорт-листе" })).toBeVisible();

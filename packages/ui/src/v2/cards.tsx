@@ -1,6 +1,7 @@
 import type { FormEvent, ReactNode } from "react";
 
 import { cn } from "../lib/cn";
+import { cardInteractive } from "../primitives/display";
 import { Button } from "../primitives/button";
 import { CheckItem, Chips, CompanyMark, GradeTag, Lbl, MeterBar, SkillTag, StatusTag, clamp } from "./primitives";
 
@@ -97,7 +98,7 @@ export function CategoryCard({
   );
   const cls = cn(
     "flex flex-col gap-2.5 rounded-xl border border-hairline bg-card p-3.5 text-left text-ink no-underline",
-    (href || onClick) && "cursor-pointer hover:border-brand",
+    (href || onClick) && cardInteractive,
     selected && "border-brand shadow-[0_0_0_1px_var(--brand)]",
     className,
   );

@@ -158,12 +158,31 @@ test("владелец: создаёт доступ HR без почты и ко
 
 test("владелец: выдаёт HR новый пароль и отзывает доступ", async () => {
   const calls = install({ role: "admin" });
-  vi.stubGlobal("confirm", () => true);
+  const confirm = vi.fn(() => true);
+  const alert = vi.fn();
+  vi.stubGlobal("confirm", confirm);
+  vi.stubGlobal("alert", alert);
   mount("/employer/company?tab=team");
   expect(await screen.findAllByTestId("company-member-remove")).toHaveLength(1); // владельца убрать нельзя
+  // подтверждение — модалка @fsp/ui: до «Выдать пароль» запрос не уходит
   fireEvent.click(screen.getByTestId("company-member-reset"));
+  expect(await screen.findByTestId("company-confirm")).toHaveTextContent("новый временный пароль");
+  expect(calls.some((c) => c.url.endsWith("/members/u2/password"))).toBe(false);
+  fireEvent.click(screen.getByTestId("company-confirm-cancel"));
+  await waitFor(() => expect(screen.queryByTestId("company-confirm")).toBeNull());
+  fireEvent.click(screen.getByTestId("company-member-reset"));
+  fireEvent.click(await screen.findByTestId("company-confirm-ok"));
+  // пароль — в модалке: логин, пароль, предупреждение «показывается один раз»
   expect(await screen.findByTestId("company-access-password")).toHaveTextContent("wxyz-WXYZ-6789");
+  expect(screen.getByTestId("company-access-login")).toBeInTheDocument();
+  expect(screen.getByTestId("company-access-once")).toHaveTextContent("один раз");
+  expect(screen.getByRole("alertdialog")).toBeInTheDocument();
+  fireEvent.click(screen.getByTestId("company-access-close"));
+  await waitFor(() => expect(screen.queryByTestId("company-access-card")).toBeNull());
   fireEvent.click(screen.getByTestId("company-member-remove"));
+  fireEvent.click(await screen.findByTestId("company-confirm-ok"));
+  expect(confirm).not.toHaveBeenCalled();
+  expect(alert).not.toHaveBeenCalled();
   await waitFor(() => expect(calls.some((c) => c.method === "DELETE" && c.url.endsWith("/companies/me/members/u2"))).toBe(true));
 });
 

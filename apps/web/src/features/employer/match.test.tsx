@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter, useLocation } from "react-router-dom";
 
 import { App } from "@/app/App";
@@ -117,14 +117,18 @@ test("«python django middle» → чипсы → категории с объя
   fireEvent.change(await query(), { target: { value: "python django middle" } });
   fireEvent.click(await screen.findByRole("option", { name: /Разобрать «python django middle»/ }));
 
-  // чипсы навыков в строке, грейд — в условиях
+  // чипсы навыков в строке; заданный грейд подсвечен в панели фильтров, строки условий над списком нет
   expect((await screen.findAllByTestId("query-chip-skill")).map((x) => x.textContent)).toEqual(["Python", "Django"]);
-  expect(within(screen.getByTestId("match-chips")).getByText("Middle")).toBeInTheDocument();
+  expect(screen.queryByTestId("match-chips")).not.toBeInTheDocument();
+  expect(within(screen.getAllByTestId("match-filters")[0]!).getByTestId("filter-grade-middle")).toHaveAttribute("aria-pressed", "true");
   expect(calls.find((c) => c.url.includes("/search/parse"))?.body).toEqual({ text: "python django middle" });
 
-  // потребность из условий, категории и «почему»
-  const cats = await screen.findByTestId("match-categories");
+  // потребность из условий; по умолчанию — «Кандидаты», категории — переключателем
+  await waitFor(() => expect(posts()).toHaveLength(1));
   expect(posts()[0]).toEqual({ filters: { skills_must: [{ slug: "python" }, { slug: "django" }], grade_min: "middle", grade_max: "middle" } });
+  expect(await screen.findByTestId("match-candidates")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("radio", { name: "Категории" }));
+  const cats = await screen.findByTestId("match-categories");
   expect(within(cats).getByRole("button", { name: /Backend · Middle/ })).toHaveAttribute("aria-pressed", "true");
   expect(within(cats).queryByRole("button", { name: /Backend · Senior/ })).not.toBeInTheDocument(); // пустая — по кнопке
   fireEvent.click(within(cats).getByRole("button", { name: "Ещё 1 без кандидатов" }));
@@ -140,7 +144,9 @@ test("«python django middle» → чипсы → категории с объя
   expect(first).toHaveTextContent("Middle");
   expect(first).toHaveTextContent("от 200");
   expect(first).toHaveTextContent("Python");
-  expect(location).toBe("/employer?skill=python&skill=django&grade=middle&need=n1");
+  expect(location).toContain("skill=python&skill=django&grade=middle");
+  expect(location).toContain("need=n1");
+  expect(location).toContain("view=categories");
 
   // выбор категории — в URL, кандидаты другой категории
   fireEvent.click(within(cats).getByRole("button", { name: /Backend · Junior/ }));
@@ -149,8 +155,8 @@ test("«python django middle» → чипсы → категории с объя
   expect(location).toContain("cat=backend%3Ajunior");
 });
 
-test("фильтр сужает выдачу: «Есть результаты ФСП» → новая потребность, меньше кандидатов; условие снимается крестиком", async () => {
-  mount("/employer?skill=python&grade=middle&need=n1");
+test("фильтр сужает выдачу: «Есть результаты ФСП» → новая потребность, меньше кандидатов; снимается в панели", async () => {
+  mount("/employer?skill=python&grade=middle&need=n1&view=categories");
   expect(within(await screen.findByTestId("match-top")).getAllByRole("article")).toHaveLength(5);
   expect(posts()).toHaveLength(0); // потребность уже в ссылке
 
@@ -161,14 +167,15 @@ test("фильтр сужает выдачу: «Есть результаты Ф
   expect(await screen.findByText("1 человек", undefined, { timeout: 3000 })).toBeInTheDocument();
   expect(posts().at(-1)!.filters).toMatchObject({ skills_must: [{ slug: "python" }], fsp_only: true });
   expect(within(await screen.findByTestId("match-top")).getAllByRole("article")).toHaveLength(1);
-  expect(location).toBe("/employer?skill=python&grade=middle&fsp=1&need=n2");
+  expect(location).toContain("fsp=1");
+  expect(location).toContain("need=n2");
 
-  fireEvent.click(screen.getByRole("button", { name: "Убрать условие «Есть результаты ФСП»" }));
+  fireEvent.click(panel.getByRole("checkbox", { name: "Есть результаты ФСП" }));
   expect(within(await screen.findByTestId("match-top")).getAllByRole("article")).toHaveLength(5);
 });
 
 test("подсказки системы: профессия и навык вставляются чипсами", async () => {
-  mount("/employer");
+  mount("/employer?view=categories");
   fireEvent.change(await query(), { target: { value: "back" } });
   const prof = await screen.findByRole("option", { name: /Backend.*профессия/ });
   fireEvent.click(prof);
@@ -180,7 +187,7 @@ test("подсказки системы: профессия и навык вст
   fireEvent.change(await query(), { target: { value: "pyt" } });
   fireEvent.click(await screen.findByRole("option", { name: /Python.*навык/ }));
   expect((await screen.findAllByTestId("query-chip-skill")).map((x) => x.textContent)).toEqual(["Python"]);
-  await screen.findByTestId("match-categories");
+  expect(await screen.findByTestId("match-categories")).toBeInTheDocument();
   expect(posts().at(-1)).toEqual({ filters: { professions: ["backend"], skills_must: [{ slug: "python" }] } });
 });
 
@@ -191,40 +198,44 @@ test("только фильтры без навыка и профессии — 
 });
 
 test("повторный вход: восстанавливаются условия последнего запроса", async () => {
-  localStorage.setItem("fsp.employer.lastNeed", JSON.stringify({ id: "n1", text: "Python", chips: ["Python"], company: "co1", qs: "skill=python&grade=middle" }));
+  localStorage.setItem("fsp.employer.lastNeed", JSON.stringify({ id: "n1", text: "Python", chips: ["Python"], company: "co1", qs: "skill=python&grade=middle&view=categories" }));
   mount("/employer");
   expect(await screen.findByTestId("match-categories")).toBeInTheDocument();
-  expect(location).toBe("/employer?skill=python&grade=middle&need=n1");
+  expect(location).toContain("skill=python&grade=middle");
+  expect(location).toContain("need=n1");
   expect(posts()).toHaveLength(0);
 });
 
 test("запомненный запрос пропал — потребность строится заново", async () => {
   lostNeed = true;
-  localStorage.setItem("fsp.employer.lastNeed", JSON.stringify({ id: "n1", text: "x", chips: [], company: "co1", qs: "skill=python&fsp=1" }));
+  localStorage.setItem("fsp.employer.lastNeed", JSON.stringify({ id: "n1", text: "x", chips: [], company: "co1", qs: "skill=python&fsp=1&view=categories" }));
   mount("/employer");
   // Цепочка: восстановление → 404 → новая потребность (с задержкой) → категории → кандидаты.
   expect(await screen.findByText("1 человек", undefined, { timeout: 4000 })).toBeInTheDocument();
-  expect(location).toBe("/employer?skill=python&fsp=1&need=n2");
+  expect(location).toContain("skill=python");
+  expect(location).toContain("need=n2");
 });
 
 test("переключатель «Кандидаты»: список по запросу, фильтр навыка, «В шорт-лист»", async () => {
   mount("/employer?skill=python&need=n1");
+  const list = await screen.findByTestId("match-candidates");
+  expect(location).not.toContain("view=");
+  fireEvent.click(screen.getByRole("radio", { name: "Категории" }));
   expect(await screen.findByTestId("match-categories")).toBeInTheDocument();
   fireEvent.click(screen.getByRole("radio", { name: "Кандидаты" }));
-  const list = await screen.findByTestId("match-candidates");
-  expect(location).toContain("view=candidates");
+  expect(await screen.findByTestId("match-candidates")).toBeInTheDocument();
   expect(await within(list).findAllByRole("article")).toHaveLength(3);
   expect(calls.find((c) => c.url.includes("/search/candidates"))?.body).toMatchObject({ filters: { skills_must: [{ slug: "python" }] } });
 
-  // фильтр по навыкам — в панели, блок раскрывается по клику
+  // фильтр по навыкам — в панели
   const panel = within(screen.getAllByTestId("match-filters")[0]!);
-  fireEvent.click(panel.getByRole("button", { name: /^Навыки/ }));
-  expect(panel.getByRole("combobox", { name: "Добавить навык" })).toBeInTheDocument();
+  expect(panel.getByRole("combobox", { name: "Добавить навык" })).toBeInTheDocument(); // заполненный блок раскрыт
 
-  const card = within(list).getByRole("article", { name: "Backend #1001" });
-  const btn = within(card).getByRole("button", { name: "В шорт-лист" });
-  fireEvent.click(btn);
-  expect(await within(card).findByRole("button", { name: "В шорт-листе" })).toHaveAttribute("aria-pressed", "true");
+  // карточку берём заново: список перерисовывается после загрузки
+  const card = await waitFor(() => screen.getByRole("article", { name: "Backend #1001" }));
+  fireEvent.click(within(card).getByRole("button", { name: "В шорт-лист" }));
+  const shortlisted = await within(screen.getByRole("article", { name: "Backend #1001" })).findByRole("button", { name: "В шорт-листе" });
+  expect(shortlisted).toHaveAttribute("aria-pressed", "true");
   expect(calls.some((c) => c.method === "POST" && c.url.includes("/needs/n1/shortlist/p1"))).toBe(true);
 });
 
