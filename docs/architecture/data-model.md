@@ -369,6 +369,27 @@ CREATE TABLE discipline_skill_rules (
 );
 CREATE UNIQUE INDEX ON discipline_skill_rules (discipline, skill_id, coalesce(track, ''));
 CREATE TABLE scoring_config (key text PRIMARY KEY, value jsonb NOT NULL, version int NOT NULL, updated_at timestamptz);
+-- Предложения новых профессий (E41-17, миграция b1_17; skills.md §5.1)
+CREATE TABLE profession_suggestions (
+  id                 uuid PRIMARY KEY,
+  key                text NOT NULL UNIQUE,      -- отсортированные slug'и ядра через запятую
+  title              text NOT NULL,             -- название-кандидат (частое название вакансий кластера)
+  skills             jsonb NOT NULL,            -- ядро: slug'и по убыванию частоты
+  weights            jsonb NOT NULL,            -- slug → доля корзин кластера с навыком
+  support_vacancies  int NOT NULL DEFAULT 0,
+  support_needs      int NOT NULL DEFAULT 0,
+  nearest_profession text,                      -- ближайшая профессия и доля ядра в её навыках
+  nearest_overlap    real NOT NULL DEFAULT 0,
+  examples           jsonb NOT NULL,            -- [{vacancy_id, title}], до 3
+  source             text NOT NULL DEFAULT 'mining',  -- mining | seed
+  status             text NOT NULL DEFAULT 'open',    -- open | created | rejected (решение запоминается)
+  profession         text,                      -- slug созданной профессии
+  decided_by         uuid REFERENCES users(id) ON DELETE SET NULL,
+  decided_at         timestamptz,
+  created_at         timestamptz NOT NULL DEFAULT now(),
+  updated_at         timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX ix_profession_suggestions_status ON profession_suggestions (status);
 ```
 
 Ядро графа навыков на старте — YAML в `data/taxonomy/*.yaml` (ревью в git), собирается из тегов Stack Overflow, карты пакетов и русских названий. `make taxonomy-load` загружает его в БД. Дальше граф растёт через конвейер ([skills.md](skills.md)), правки идут через админку, есть экспорт в YAML.

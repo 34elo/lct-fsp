@@ -8,6 +8,7 @@ from typing import Any
 from fsp_contracts.ml import SearchFilters
 from fsp_platform.app import ProblemError
 from pydantic import BaseModel
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.assessment import service as assessment
@@ -67,6 +68,12 @@ async def create(
     session.add(need)
     await session.flush()
     return need
+
+
+async def skill_sets(session: AsyncSession) -> list[set[str]]:
+    """Наборы навыков всех потребностей (slug'и весов) — для предложений профессий (E41-17).
+    Без текста запроса и компании: только slug'и."""
+    return [set(w) for w in await session.scalars(select(Need.weights)) if w]
 
 
 async def get_owned(session: AsyncSession, company_id: uuid.UUID, need_id: uuid.UUID) -> Need:
