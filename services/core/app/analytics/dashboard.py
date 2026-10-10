@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Collection
 from datetime import UTC, datetime, timedelta
+from datetime import date as Date
 
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -40,8 +41,24 @@ _NAVIGATOR_SOURCES = ("navigator", "uplift")
 _EVENTS = {
     "signup_completed", "test_completed", "category_changed", "profile_updated",
     "offer_received", "offer_accepted", "offer_declined", "fsp_link_completed",
-    "uplift_shown", "competition_clicked",
+    "uplift_shown", "competition_clicked", "interest_shown",
 }  # fmt: skip
+
+# Счётчики «Аналитики» (E41-15): id, подпись, предикат. Считаем события, а не людей.
+COUNTERS: list[tuple[str, str, Pred]] = [
+    ("registrations", "Регистрации", lambda e, p: e == "signup_completed"),
+    ("tests", "Пройденные тесты", lambda e, p: e == "test_completed"),
+    (
+        "grades",
+        "Присвоенные грейды",
+        lambda e, p: (
+            e == "category_changed" or (e == "profile_updated" and bool(p.get("grade_to")))
+        ),
+    ),
+    ("interests", "Интересы работодателей", lambda e, p: e == "interest_shown"),
+    ("invites", "Приглашения", lambda e, p: e == "offer_received"),
+    ("accepted", "Принятые приглашения", lambda e, p: e == "offer_accepted"),
+]
 
 
 class Cell(BaseModel):
@@ -63,6 +80,18 @@ class Ratio(Cell):
     of: int | None
 
 
+class Counter(Cell):
+    id: str
+    title: str
+
+
+class DayPoint(BaseModel):
+    """Один день: значения счётчиков по id; меньше `MIN_CELL` событий — `null`."""
+
+    date: Date
+    values: dict[str, int | None]
+
+
 class DashboardOut(BaseModel):
     since: datetime
     days: int
@@ -70,6 +99,8 @@ class DashboardOut(BaseModel):
     funnel: list[Stage]
     fsp_share: Ratio  # доля зарегистрированных с привязанным ФСП
     navigator_to_competition: Ratio  # кликнувшие на соревнование / увидевшие подсказку
+    counters: list[Counter] = []  # итоги окна по событиям (E41-15)
+    daily: list[DayPoint] = []  # те же счётчики по дням, от старого к новому
 
 
 def _cell(n: int) -> Cell:
@@ -94,7 +125,7 @@ async def build(
     since = datetime.now(UTC) - timedelta(days=days)
     rows = (
         await session.execute(
-            select(E.event, E.actor, E.props).where(
+            select(E.event, E.actor, E.props, E.ts).where(
                 E.ts >= since, E.event.in_(_EVENTS), E.actor.is_not(None)
             )
         )
@@ -102,6 +133,8 @@ async def build(
     if exclude_actors:
         skip = set(exclude_actors)
         rows = [r for r in rows if r[1] not in skip]
+    stamped = rows
+    rows = [(e, a, p) for e, a, p, _ in stamped]
 
     def actors(pred: Pred) -> set[str]:
         return {a for e, a, p in rows if pred(e, p or {})}
@@ -127,6 +160,29 @@ async def build(
     clicked = actors(
         lambda e, p: e == "competition_clicked" and p.get("source") in _NAVIGATOR_SOURCES
     )
+    counters = [
+        Counter(
+            id=cid,
+            title=title,
+            **_cell(sum(1 for e, _, p in rows if pred(e, p or {}))).model_dump(),
+        )
+        for cid, title, pred in COUNTERS
+    ]
+    by_day: dict[Date, dict[str, int]] = {}
+    today = datetime.now(UTC).date()
+    for i in range(days, -1, -1):
+        by_day[today - timedelta(days=i)] = {cid: 0 for cid, _, _ in COUNTERS}
+    for e, _, p, ts in stamped:
+        bucket = by_day.get(ts.date())
+        if bucket is None:
+            continue
+        for cid, _, pred in COUNTERS:
+            if pred(e, p or {}):
+                bucket[cid] += 1
+    daily = [
+        DayPoint(date=d, values={k: (v if v >= MIN_CELL else None) for k, v in vals.items()})
+        for d, vals in by_day.items()
+    ]
     return DashboardOut(
         since=since,
         days=days,
@@ -134,4 +190,6 @@ async def build(
         funnel=funnel,
         fsp_share=_ratio(fsp_n, len(cohort)),
         navigator_to_competition=_ratio(len(clicked & shown), len(shown)),
+        counters=counters,
+        daily=daily,
     )
