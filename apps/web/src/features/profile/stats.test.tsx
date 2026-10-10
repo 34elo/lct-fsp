@@ -141,6 +141,7 @@ describe("модель Статистики (E38-2)", () => {
     expect(parseViews({ total_30d: 2, companies_30d: 1, by_day: [{ date: "2026-10-07", count: 2 }, { bad: 1 }] })).toEqual({
       total: 2,
       companies: 1,
+      visible: true,
       byDay: [{ date: "2026-10-07", count: 2 }],
     });
     expect(parseViews(null)).toBeUndefined();
@@ -232,6 +233,23 @@ describe("Статистика /me/stats (E38-2)", () => {
     mount();
     await screen.findByTestId("stats-main");
     expect(screen.queryByTestId("stats-category")).not.toBeInTheDocument();
+  });
+
+  it("нулевые просмотры — полная шкала и пояснение, а не пустое место (E43-5)", async () => {
+    const zero = Array.from({ length: 30 }, (_, i) => ({ date: `2026-09-${String(i + 1).padStart(2, "0")}`, count: 0 }));
+    routes["/candidates/me/views"] = () => res(200, { total_30d: 0, companies_30d: 0, window_days: 30, visible: true, by_day: zero });
+    mount();
+    const views = await screen.findByTestId("stats-views");
+    expect(views.querySelectorAll("[data-level]")).toHaveLength(35);
+    expect(within(views).getByTestId("stats-views-caption")).toHaveTextContent("Ещё нет просмотров — профиль виден работодателям после теста");
+    cleanup();
+    routes["/candidates/me/views"] = () => res(200, { total_30d: 0, companies_30d: 0, window_days: 30, visible: false, by_day: zero });
+    mount();
+    expect(await screen.findByTestId("stats-views-caption")).toHaveTextContent("не виден работодателям");
+    cleanup();
+    routes["/candidates/me/views"] = () => res(500);
+    mount();
+    expect((await screen.findByTestId("stats-views")).querySelectorAll("[data-level]")).toHaveLength(35);
   });
 
   it("загрузка — скелетон; ошибка — код и «Повторить»", async () => {

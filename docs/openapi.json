@@ -2912,7 +2912,7 @@
           "candidates"
         ],
         "summary": "My Views",
-        "description": "«Вас смотрели N компаний» — только агрегаты, без названий (security.md §3).",
+        "description": "«Вас смотрели N компаний» — только агрегаты, без названий (security.md §3). Шкала 30 дней\nполная; `visible` — видна ли карточка работодателям (тест + согласие на публикацию).",
         "operationId": "my_views_candidates_me_views_get",
         "responses": {
           "200": {
@@ -2920,9 +2920,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response My Views Candidates Me Views Get"
+                  "$ref": "#/components/schemas/ProfileViewsStats"
                 }
               }
             }
@@ -30882,6 +30880,58 @@
         "type": "object",
         "title": "ProfileIn",
         "description": "`PATCH /candidates/me/profile`: частичное обновление ручной формы (E20-4)."
+      },
+      "ProfileViewDay": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "date"
+        ],
+        "title": "ProfileViewDay"
+      },
+      "ProfileViewsStats": {
+        "properties": {
+          "total_30d": {
+            "type": "integer",
+            "title": "Total 30D",
+            "default": 0
+          },
+          "companies_30d": {
+            "type": "integer",
+            "title": "Companies 30D",
+            "default": 0
+          },
+          "window_days": {
+            "type": "integer",
+            "title": "Window Days",
+            "default": 30
+          },
+          "visible": {
+            "type": "boolean",
+            "title": "Visible",
+            "default": false
+          },
+          "by_day": {
+            "items": {
+              "$ref": "#/components/schemas/ProfileViewDay"
+            },
+            "type": "array",
+            "title": "By Day"
+          }
+        },
+        "type": "object",
+        "title": "ProfileViewsStats",
+        "description": "`GET /candidates/me/views` (E43-5): просмотры карточки за 30 дней, без названий компаний.\n\n`by_day` — полная шкала: ровно `window_days` дней по возрастанию, последний — сегодня (UTC),\nдни без просмотров с нулём. `visible` — карточка вообще попадает работодателям (действующий\nгрейд из теста и согласие `profile_publication`); при `false` нули объясняются этим."
       },
       "ProvisionalOut": {
         "properties": {
