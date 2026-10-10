@@ -421,6 +421,20 @@ async def count_families(session: AsyncSession, status: str) -> int:
     )
 
 
+async def tested_skill_ids(session: AsyncSession) -> set[uuid.UUID]:
+    """Навыки, по которым в общем банке есть активные семейства (E41-17: профиль новой профессии
+    дополняется навыками, на которых тест уже строится)."""
+    from app.assessment.models import FamilyRow
+
+    return set(
+        await session.scalars(
+            select(FamilyRow.skill_id)
+            .where(FamilyRow.status == "active", FamilyRow.company_id.is_(None))
+            .distinct()
+        )
+    )
+
+
 # --- задание в приглашении (заявка З-2-02, E33-3, E41-14) ---------------------------------------
 
 

@@ -33,6 +33,7 @@ from app.matching import handlers as matching_handlers
 from app.matching.scoring import MatchConfig
 from app.notifications import handlers as notification_handlers
 from app.resumes import handlers as resume_handlers
+from app.taxonomy import profession_suggest
 
 log = structlog.get_logger()
 
@@ -87,6 +88,7 @@ class Worker:
             self.consumers, self.session_factory, self.settings.analytics_salt
         )
         # >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
+        profession_suggest.register(self.consumers, self.session_factory)
         # <<< block1
         # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
         fsp_links.register(self.consumers, self.session_factory)
