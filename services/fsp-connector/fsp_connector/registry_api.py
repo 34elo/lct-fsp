@@ -124,6 +124,27 @@ async def import_participants(body: CsvIn, reg: RegistryService = Depends(get_re
     return await reg.import_csv(body.csv)
 
 
+class ResultsImportIn(BaseModel):
+    csv: str = Field(min_length=1, max_length=1_000_000)
+    commit: bool = False
+    skip_errors: bool = False
+    create_events: list[str] = Field(default_factory=list, max_length=1000)
+    default_discipline: FspDiscipline = FspDiscipline.algorithmic
+    default_level: FspLevel = FspLevel.regional
+
+
+@router.post("/results/import")
+async def import_results(body: ResultsImportIn, reg: RegistryService = Depends(get_registry)):
+    return await reg.import_results(
+        body.csv,
+        commit=body.commit,
+        skip_errors=body.skip_errors,
+        create_events=body.create_events,
+        default_discipline=body.default_discipline.value,
+        default_level=body.default_level.value,
+    )
+
+
 # ------------------------------------------------------------------------ результаты
 @router.get("/results")
 async def list_results(
