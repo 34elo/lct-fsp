@@ -25,6 +25,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 PROFESSIONS = ("backend", "frontend", "mobile", "ml", "devops", "qa")
 GRADE_SHARES = (("junior", 0.40), ("middle", 0.40), ("senior", 0.20))
 NEEDS_CONFIRMATION_SHARE = 0.05
+DUAL_EVERY = 8  # каждый N-й кандидат с двумя направлениями (E43-6)
 # Роли синтетики, которых нет среди 6 профессий, → ближайшая профессия.
 ROLE_TO_PROFESSION = {
     "fullstack": "backend",
@@ -97,6 +98,14 @@ def plan_grades(plan: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
                 if all(e["profession"] != prof for e in out[key]):
                     out[key].append(entry(prof, grade, False))
                     break
+
+    # E43-6: каждый 8-й кандидат прошёл тесты по двум направлениям (одна карточка, две категории).
+    for i, key in enumerate(keys):
+        if i % DUAL_EVERY or len(out[key]) > 1:
+            continue
+        taken = {e["profession"] for e in out[key]}
+        other = [p for p in PROFESSIONS if p not in taken]
+        out[key].append(entry(rng.choice(other), rng.choice([g for g, _ in GRADE_SHARES]), False))
     return out
 
 

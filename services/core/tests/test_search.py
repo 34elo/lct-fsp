@@ -628,3 +628,34 @@ def test_grade_filter_narrows_by_test_grade_of_category(c, market):
     assert q(professions=["ml"], grade_min="senior", grade_max="senior") == ["pid0040"]
     assert q(professions=["ml"], grade_min="junior", grade_max="middle") == []
     assert q(professions=["backend"], grade_min="senior", grade_max="senior") == ["pid0001"]
+
+
+def test_two_directions_candidate_found_by_each_profession(c, market):
+    """E43-6: два завершённых теста — кандидат в выдаче по каждой профессии, одна карточка."""
+    uid = _cand(c, 50, [("python", 0.7, 3, ["test"])], primary_role="qa", grade="junior")
+    with sqlite3.connect(c.db) as con:
+        _grade(con, uid, "ml", "middle")
+
+    def q(**f):
+        return _search(c, market, filters=f, sort="trust")
+
+    for f in ({"roles": ["qa"]}, {"roles": ["ml"]}, {"professions": ["ml"]}):
+        assert "pid0050" in _pids(q(**f)), f
+    # Одна карточка на кандидата, без дублей при повторных запросах (и из кеша).
+    for _ in range(2):
+        assert _pids(q(roles=["ml"])).count("pid0050") == 1
+    # Анкета без primary_role, но с тестом — тоже в выдаче по профессии.
+    nr = _cand(c, 51, [("python", 0.5, 2, ["test"])], primary_role=None, grade=None, tested=False)
+    with sqlite3.connect(c.db) as con:
+        _grade(con, nr, "ml", "junior")
+    assert "pid0051" in _pids(q(professions=["ml"]))
+    # Карточка показывает запрошенное направление, псевдоним общий.
+    it = next(i for i in q(roles=["ml"]).json()["items"] if i["pseudo_id"] == "pid0050")
+    assert (it["primary_role"], it["grade"], it["pseudonym"]) == ("ml", "middle", "Backend #50")
+    it = next(i for i in q(roles=["qa"]).json()["items"] if i["pseudo_id"] == "pid0050")
+    assert (it["primary_role"], it["grade"]) == ("qa", "junior")
+    assert {x["profession"] for x in it["categories"]} == {"qa", "ml"}
+    # По категории тоже находится, с грейдом этой категории.
+    r = _search(c, market, filters={}, category={"profession": "ml", "grade": "middle"})
+    assert _pids(r) == ["pid0050"]
+    assert r.json()["items"][0]["primary_role"] == "ml"
