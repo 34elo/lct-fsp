@@ -4,6 +4,7 @@
  * core
  * OpenAPI spec version: 0.1.0
  */
+import type { ResumeSkillSource } from './resumeSkillSource';
 
 export interface ResumeSkill {
   raw: string;
@@ -15,5 +16,5 @@ export interface ResumeSkill {
      * @maximum 1
      */
   confidence: number;
-  source?: 'llm' | 'rules';
+  source?: ResumeSkillSource;
 }
