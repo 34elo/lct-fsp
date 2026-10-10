@@ -130,6 +130,8 @@ def build_html(
             if by_type.get(t)
         ]
         out.append(_section("Навыки", "".join(rows)))
+    else:  # заявленный стек ещё не пересчитан в навыки — раздел всё равно есть
+        out.append(_section("Навыки", '<p class="muted">Навыки пока не подтверждены.</p>'))
 
     if p.experience:
         items = []
