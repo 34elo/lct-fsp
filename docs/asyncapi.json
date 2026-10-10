@@ -6990,6 +6990,15 @@
             "minimum": 0,
             "title": "Confidence",
             "type": "number"
+          },
+          "source": {
+            "default": "llm",
+            "enum": [
+              "llm",
+              "rules"
+            ],
+            "title": "Source",
+            "type": "string"
           }
         },
         "required": [

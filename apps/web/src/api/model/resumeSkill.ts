@@ -15,4 +15,5 @@ export interface ResumeSkill {
      * @maximum 1
      */
   confidence: number;
+  source?: 'llm' | 'rules';
 }
