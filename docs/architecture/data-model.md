@@ -87,7 +87,11 @@ CREATE TABLE users (
   created_at    timestamptz NOT NULL DEFAULT now(),
   deleted_at    timestamptz,
   email_verified_at timestamptz,                  -- v2, миграция s0_02 (blocks.md §4.6)
-  is_demo       boolean NOT NULL DEFAULT false    -- E40-1 (b2_17): демо-аккаунт `*@demo.fsp.test` (seed, жюри)
+  is_demo       boolean NOT NULL DEFAULT false,   -- E40-1 (b2_17): демо-аккаунт `*@demo.fsp.test` (seed, жюри)
+  -- E41-16 (b2_19): аккаунт HR, созданный владельцем компании (временный пароль, смена при первом входе)
+  must_change_password     boolean NOT NULL DEFAULT false, -- до смены доступны только /me и /auth/*
+  temp_password_expires_at timestamptz,                    -- временный пароль живёт 72 ч
+  managed_by_company_id    uuid                             -- компания, владелец которой создал аккаунт (без FK)
 );
 -- E40-1: is_demo есть у users, companies, vacancies, offers (частичный индекс WHERE is_demo).
 -- Компания — демо, если создана демо-пользователем; вакансия — если компания демо; приглашение —
@@ -473,6 +477,14 @@ CREATE TABLE company_invites (
   revoked_at timestamptz
 );
 CREATE INDEX ix_company_invites_company_id ON company_invites (company_id);
+-- E41-16 (b2_19): журнал доступа HR — кто (actor), кого (target), что и когда; паролей нет
+CREATE TABLE company_access_log (
+  id uuid PRIMARY KEY, company_id uuid NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  actor_id uuid REFERENCES users(id) ON DELETE SET NULL, target_user_id uuid REFERENCES users(id) ON DELETE SET NULL,
+  target_email text, action text NOT NULL,                     -- created | password_reset | revoked
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX ix_company_access_log_company_id ON company_access_log (company_id);
 -- E39-24: личный профиль сотрудника компании или админа ФСП (подпись приглашения кандидату)
 CREATE TABLE user_profiles (
   user_id uuid PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
