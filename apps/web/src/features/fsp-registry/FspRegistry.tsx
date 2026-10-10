@@ -1,5 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useState, type ChangeEvent, type ComponentProps, type FormEvent } from "react";
+import { useSearchParams } from "react-router-dom";
 
 import {
   Badge,
@@ -7,16 +8,20 @@ import {
   Card,
   CardContent,
   Combobox,
+  Dialog,
+  DialogContent,
+  DialogTitle,
   EmptyState,
   ErrorState,
   Field,
   FieldInput,
   NumberInput,
+  ScrollTabs,
+  SegmentedControl,
   Select,
   Skeleton,
   Tabs,
   TabsContent,
-  TabsList,
   TabsTrigger,
   Textarea,
   useFieldProps,
@@ -25,7 +30,11 @@ import {
 } from "@fsp/ui";
 
 import {
+  registryEventsAdminFspEventsGet,
   registryParticipantsAdminFspParticipantsGet,
+  registryUpdateEventAdminFspEventsEventIdPatch,
+  registryCreateEventAdminFspEventsPost,
+  registryUpsertResultAdminFspResultsPut,
   useRegistryAcceptRequestAdminFspRequestsRequestIdAcceptPost,
   useRegistryCreateEventAdminFspEventsPost,
   useRegistryCreateParticipantAdminFspParticipantsPost,
@@ -39,23 +48,18 @@ import {
   useRegistryUpdateEventAdminFspEventsEventIdPatch,
   useRegistryUpsertResultAdminFspResultsPut,
 } from "@/api/endpoints/admin/admin";
-import type {
-  AdminFspRequestOut,
-  CsvImportOut,
-  FspDiscipline,
-  FspLevel,
-  RegistryEventOut,
-  RegistryParticipantOut,
-} from "@/api/model";
+import type { AdminFspRequestOut, CsvImportOut, FspDiscipline, FspLevel, RegistryEventOut, RegistryParticipantOut } from "@/api/model";
 import { ApiError } from "@/api/mutator";
 import { AdminPageHeader } from "@/features/admin/PageHeader";
 import { PAGE } from "@/shared/lib/page";
 
+import { dropHeader, parseCsv } from "./csv";
 import { DISCIPLINE, LEVEL, R } from "./text";
 
-type Tab = "events" | "participants" | "results";
+type Tab = "events" | "participants" | "results" | "requests";
 type ReqStatus = "pending" | "accepted" | "rejected";
 
+const TABS: Tab[] = ["events", "participants", "results", "requests"];
 const DISCIPLINE_OPTIONS: ComboOption[] = Object.entries(DISCIPLINE).map(([value, label]) => ({ value, label }));
 const LEVEL_OPTIONS: ComboOption[] = Object.entries(LEVEL).map(([value, label]) => ({ value, label }));
 
@@ -95,18 +99,18 @@ function participantOption(p: RegistryParticipantOut): ComboOption {
   return { value: p.id, label: p.full_name, hint: [p.email, p.phone, p.id].filter(Boolean).join(" · ") };
 }
 
-// ---------------------------------------------------------------------------------- мероприятия
+// ---------------------------------------------------------------------------------- формы создания
 type EventDraft = { id: string | null; title: string; discipline: string | null; level: string | null; date: string };
 const NEW_EVENT: EventDraft = { id: null, title: "", discipline: null, level: null, date: "" };
 
-function Events({ onResults }: { onResults: (eventId: string) => void }) {
+function EventForm({ edit, onDone }: { edit: RegistryEventOut | null; onDone: () => void }) {
   const refresh = useRefresh();
-  const q = useRegistryEventsAdminFspEventsGet({ query: { retry: false } });
   const create = useRegistryCreateEventAdminFspEventsPost();
   const update = useRegistryUpdateEventAdminFspEventsEventIdPatch();
-  const [draft, setDraft] = useState<EventDraft>(NEW_EVENT);
+  const [draft, setDraft] = useState<EventDraft>(
+    edit ? { id: edit.id, title: edit.title, discipline: edit.discipline, level: edit.level, date: edit.date } : NEW_EVENT,
+  );
   const [err, setErr] = useState<string | null>(null);
-  const items = q.data?.status === 200 ? q.data.data : null;
   const valid = draft.title.trim().length >= 2 && draft.discipline && draft.level && draft.date;
   const busy = create.isPending || update.isPending;
 
@@ -123,92 +127,47 @@ function Events({ onResults }: { onResults: (eventId: string) => void }) {
     try {
       if (draft.id) await update.mutateAsync({ eventId: draft.id, data });
       else await create.mutateAsync({ data });
-      setDraft(NEW_EVENT);
       await refresh();
+      onDone();
     } catch (x) {
       setErr(errText(x));
     }
   }
 
-  const edit = (ev: RegistryEventOut) =>
-    setDraft({ id: ev.id, title: ev.title, discipline: ev.discipline, level: ev.level, date: ev.date });
-
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(320px,400px)]">
-      <section aria-label={R.tabs.events} className="order-2 flex flex-col gap-3 lg:order-1">
-        {q.isLoading && <Skeleton className="h-32" />}
-        {(q.isError || (q.data && q.data.status !== 200)) && <ErrorState onRetry={() => void q.refetch()} />}
-        {items && items.length === 0 && <EmptyState title={R.ev.empty} description={R.ev.emptyHint} />}
-        {items?.map((ev) => (
-          <Card key={ev.id}>
-            <CardContent className="flex flex-wrap items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-16 font-semibold">{ev.title}</p>
-                <p className="text-13 text-muted">
-                  {DISCIPLINE[ev.discipline] ?? ev.discipline} · {LEVEL[ev.level] ?? ev.level} ·{" "}
-                  {new Date(ev.date).toLocaleDateString("ru-RU")} · {R.ev.results(ev.results ?? 0)}
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Button size="sm" variant="outline" onClick={() => edit(ev)}>
-                  {R.edit}
-                </Button>
-                <Button size="sm" variant="ghost" onClick={() => onResults(ev.id)}>
-                  {R.ev.toResults}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </section>
-      <Card className="order-1 self-start lg:order-2">
-        <CardContent>
-          <form className="flex flex-col gap-3" aria-label={draft.id ? R.ev.editTitle : R.ev.create} onSubmit={(e) => void submit(e)}>
-            <h2 className="text-16 font-semibold">{draft.id ? R.ev.editTitle : R.ev.create}</h2>
-            <Field label={R.ev.name}>
-              <FieldInput value={draft.title} maxLength={200} onChange={(e) => setDraft({ ...draft, title: e.target.value })} />
-            </Field>
-            <Field label={R.ev.discipline}>
-              <Select aria-label={R.ev.discipline} options={DISCIPLINE_OPTIONS} value={draft.discipline} onChange={(v) => setDraft({ ...draft, discipline: v })} />
-            </Field>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label={R.ev.level}>
-                <Select aria-label={R.ev.level} options={LEVEL_OPTIONS} value={draft.level} onChange={(v) => setDraft({ ...draft, level: v })} />
-              </Field>
-              <Field label={R.ev.date}>
-                <FieldInput type="date" value={draft.date} onChange={(e) => setDraft({ ...draft, date: e.target.value })} />
-              </Field>
-            </div>
-            <ErrorLine text={err} />
-            <div className="flex flex-wrap gap-2">
-              <Button type="submit" size="sm" disabled={!valid || busy}>
-                {busy ? R.saving : R.save}
-              </Button>
-              {draft.id && (
-                <Button type="button" size="sm" variant="ghost" onClick={() => setDraft(NEW_EVENT)}>
-                  {R.cancel}
-                </Button>
-              )}
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+    <form className="flex flex-col gap-3" aria-label={draft.id ? R.ev.editTitle : R.ev.create} onSubmit={(e) => void submit(e)}>
+      <Field label={R.ev.name}>
+        <FieldInput value={draft.title} maxLength={200} onChange={(e) => setDraft({ ...draft, title: e.target.value })} />
+      </Field>
+      <Field label={R.ev.discipline}>
+        <Select aria-label={R.ev.discipline} options={DISCIPLINE_OPTIONS} value={draft.discipline} onChange={(v) => setDraft({ ...draft, discipline: v })} />
+      </Field>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field label={R.ev.level}>
+          <Select aria-label={R.ev.level} options={LEVEL_OPTIONS} value={draft.level} onChange={(v) => setDraft({ ...draft, level: v })} />
+        </Field>
+        <Field label={R.ev.date}>
+          <FieldInput type="date" value={draft.date} onChange={(e) => setDraft({ ...draft, date: e.target.value })} />
+        </Field>
+      </div>
+      <ErrorLine text={err} />
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button type="button" variant="ghost" onClick={onDone}>
+          {R.cancel}
+        </Button>
+        <Button type="submit" disabled={!valid || busy}>
+          {busy ? R.saving : R.save}
+        </Button>
+      </div>
+    </form>
   );
 }
 
-// ---------------------------------------------------------------------------------- участники
-function Participants() {
+function ParticipantForm({ onDone }: { onDone: () => void }) {
   const refresh = useRefresh();
-  const [search, setSearch] = useState("");
-  const q = useRegistryParticipantsAdminFspParticipantsGet({ q: search.trim() || undefined, limit: 100 }, { query: { retry: false } });
   const create = useRegistryCreateParticipantAdminFspParticipantsPost();
-  const importCsv = useRegistryImportParticipantsAdminFspParticipantsImportPost();
   const [draft, setDraft] = useState({ full_name: "", email: "", phone: "" });
-  const [csv, setCsv] = useState("");
-  const [report, setReport] = useState<CsvImportOut | null>(null);
   const [err, setErr] = useState<string | null>(null);
-  const items = q.data?.status === 200 ? q.data.data : null;
   const valid = draft.full_name.trim().length >= 2;
 
   async function add(e: FormEvent) {
@@ -219,135 +178,50 @@ function Participants() {
       await create.mutateAsync({
         data: { full_name: draft.full_name.trim(), email: draft.email.trim() || null, phone: draft.phone.trim() || null },
       });
-      setDraft({ full_name: "", email: "", phone: "" });
       await refresh();
+      onDone();
     } catch (x) {
       setErr(errText(x));
     }
-  }
-
-  async function upload(e: FormEvent) {
-    e.preventDefault();
-    if (!csv.trim()) return;
-    setErr(null);
-    try {
-      const res = await importCsv.mutateAsync({ data: { csv } });
-      setReport(res.data as CsvImportOut);
-      setCsv("");
-      await refresh();
-    } catch (x) {
-      setErr(errText(x));
-    }
-  }
-
-  function readFile(e: ChangeEvent<HTMLInputElement>) {
-    const f = e.target.files?.[0];
-    if (f) void f.text().then(setCsv);
-    e.target.value = "";
   }
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(320px,400px)]">
-      <section aria-label={R.tabs.participants} className="order-2 flex flex-col gap-3 lg:order-1">
-        <Field label={R.pt.search}>
-          <FieldInput type="search" value={search} onChange={(e) => setSearch(e.target.value)} />
-        </Field>
-        {q.isLoading && <Skeleton className="h-32" />}
-        {(q.isError || (q.data && q.data.status !== 200)) && <ErrorState onRetry={() => void q.refetch()} />}
-        {items && items.length === 0 && <EmptyState title={R.pt.empty} description={R.pt.emptyHint} />}
-        {items && items.length > 0 && (
-          <ul className="flex flex-col divide-y divide-hairline rounded-lg border border-hairline bg-card">
-            {items.map((p) => (
-              <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
-                <div className="min-w-0">
-                  <p className="text-14 font-semibold">{p.full_name}</p>
-                  <p className="break-all text-13 text-muted">{[p.email, p.phone].filter(Boolean).join(" · ") || "—"}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {p.linked && <Badge variant="success">{R.pt.linked}</Badge>}
-                  <span className="font-mono text-12 text-muted">{p.id}</span>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-      <div className="order-1 flex flex-col gap-4 self-start lg:order-2">
-        <Card>
-          <CardContent>
-            <form className="flex flex-col gap-3" aria-label={R.pt.create} onSubmit={(e) => void add(e)}>
-              <h2 className="text-16 font-semibold">{R.pt.create}</h2>
-              <Field label={R.pt.name}>
-                <FieldInput value={draft.full_name} maxLength={200} onChange={(e) => setDraft({ ...draft, full_name: e.target.value })} />
-              </Field>
-              <Field label={R.pt.email} hint={R.pt.contactHint}>
-                <FieldInput type="email" value={draft.email} maxLength={254} onChange={(e) => setDraft({ ...draft, email: e.target.value })} />
-              </Field>
-              <Field label={R.pt.phone}>
-                <FieldInput type="tel" value={draft.phone} maxLength={32} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} />
-              </Field>
-              <ErrorLine text={err} />
-              <Button type="submit" size="sm" className="self-start" disabled={!valid || create.isPending}>
-                {R.pt.add}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent>
-            <form className="flex flex-col gap-3" aria-label={R.pt.importTitle} onSubmit={(e) => void upload(e)}>
-              <h2 className="text-16 font-semibold">{R.pt.importTitle}</h2>
-              <p className="text-13 text-muted">{R.pt.importHint}</p>
-              <Field label={R.pt.csv}>
-                <FieldTextarea rows={5} value={csv} onChange={(e) => setCsv(e.target.value)} placeholder={"ФИО;email;телефон\nИванова Мария;m@example.test;+7 900 000-00-00"} />
-              </Field>
-              <div className="flex flex-wrap items-center gap-2">
-                <label className="inline-flex min-h-9 cursor-pointer items-center rounded-lg border border-hairline px-3 text-14 font-semibold hover:border-brand-mid">
-                  {R.pt.file}
-                  <input type="file" accept=".csv,text/csv,text/plain" className="sr-only" onChange={readFile} />
-                </label>
-                <Button type="submit" size="sm" disabled={!csv.trim() || importCsv.isPending}>
-                  {R.pt.import}
-                </Button>
-              </div>
-              {report && (
-                <div role="status" className="flex flex-col gap-1 text-14">
-                  <p>{R.pt.imported(report.created, report.updated)}</p>
-                  {report.errors.length > 0 && (
-                    <>
-                      <p className="text-error">{R.pt.importErrors}</p>
-                      <ul className="list-inside list-disc text-13 text-muted">
-                        {report.errors.slice(0, 20).map((x) => (
-                          <li key={x.line}>
-                            {R.pt.line(x.line)}: {R.pt.reason[x.reason] ?? x.reason}
-                          </li>
-                        ))}
-                      </ul>
-                    </>
-                  )}
-                </div>
-              )}
-            </form>
-          </CardContent>
-        </Card>
+    <form className="flex flex-col gap-3" aria-label={R.pt.create} onSubmit={(e) => void add(e)}>
+      <Field label={R.pt.name}>
+        <FieldInput value={draft.full_name} maxLength={200} onChange={(e) => setDraft({ ...draft, full_name: e.target.value })} />
+      </Field>
+      <Field label={R.pt.email} hint={R.pt.contactHint}>
+        <FieldInput type="email" value={draft.email} maxLength={254} onChange={(e) => setDraft({ ...draft, email: e.target.value })} />
+      </Field>
+      <Field label={R.pt.phone}>
+        <FieldInput type="tel" value={draft.phone} maxLength={32} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} />
+      </Field>
+      <ErrorLine text={err} />
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button type="button" variant="ghost" onClick={onDone}>
+          {R.cancel}
+        </Button>
+        <Button type="submit" disabled={!valid || create.isPending}>
+          {R.pt.add}
+        </Button>
       </div>
-    </div>
+    </form>
   );
 }
 
-// ---------------------------------------------------------------------------------- результаты
-function Results({ eventId, setEventId }: { eventId: string | null; setEventId: (v: string | null) => void }) {
+type ResultPreset = { eventId: string | null; participant: ComboOption | null; place: number | null; team: string };
+const NEW_RESULT: ResultPreset = { eventId: null, participant: null, place: null, team: "" };
+
+function ResultForm({ preset, onDone }: { preset: ResultPreset; onDone: () => void }) {
   const refresh = useRefresh();
   const events = useRegistryEventsAdminFspEventsGet({ query: { retry: false } });
-  const q = useRegistryResultsAdminFspResultsGet({ event_id: eventId ?? undefined }, { query: { enabled: Boolean(eventId), retry: false } });
   const upsert = useRegistryUpsertResultAdminFspResultsPut();
-  const del = useRegistryDeleteResultAdminFspResultsResultIdDelete();
-  const [participant, setParticipant] = useState<ComboOption | null>(null);
-  const [place, setPlace] = useState<number | null>(null);
-  const [team, setTeam] = useState("");
+  const [eventId, setEventId] = useState<string | null>(preset.eventId);
+  const [participant, setParticipant] = useState<ComboOption | null>(preset.participant);
+  const [place, setPlace] = useState<number | null>(preset.place);
+  const [team, setTeam] = useState(preset.team);
   const [err, setErr] = useState<string | null>(null);
   const evs = events.data?.status === 200 ? events.data.data : [];
-  const items = q.data?.status === 200 ? q.data.data : null;
 
   async function save(e: FormEvent) {
     e.preventDefault();
@@ -355,14 +229,290 @@ function Results({ eventId, setEventId }: { eventId: string | null; setEventId: 
     setErr(null);
     try {
       await upsert.mutateAsync({ data: { event_id: eventId, participant_id: participant.value, place, team: team.trim() || null } });
-      setParticipant(null);
-      setPlace(null);
-      setTeam("");
       await refresh();
+      onDone();
     } catch (x) {
       setErr(errText(x));
     }
   }
+
+  if (events.isLoading) return <Skeleton className="h-32" />;
+  if (evs.length === 0) return <EmptyState title={R.rs.noEvents} />;
+
+  return (
+    <form className="flex flex-col gap-3" aria-label={R.rs.add} onSubmit={(e) => void save(e)}>
+      <Field label={R.rs.event}>
+        <Select
+          aria-label={R.rs.event}
+          placeholder={R.rs.pickEvent}
+          options={evs.map((ev) => ({ value: ev.id, label: ev.title, hint: new Date(ev.date).toLocaleDateString("ru-RU") }))}
+          value={eventId}
+          onChange={(v) => setEventId(v)}
+        />
+      </Field>
+      <Field label={R.rs.participant}>
+        <Combobox
+          aria-label={R.rs.participant}
+          placeholder={R.rs.pickParticipant}
+          loadOptions={participantSource}
+          selectedOptions={participant ? [participant] : []}
+          value={participant?.value ?? null}
+          onChange={(_, o) => setParticipant(o)}
+        />
+      </Field>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field label={R.rs.place}>
+          <NumberInput value={place} onChange={setPlace} min={1} max={100000} />
+        </Field>
+        <Field label={R.rs.team} hint={R.rs.teamHint}>
+          <FieldInput value={team} maxLength={120} onChange={(e) => setTeam(e.target.value)} />
+        </Field>
+      </div>
+      <p className="text-13 text-muted">{R.rs.hint}</p>
+      <ErrorLine text={err} />
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button type="button" variant="ghost" onClick={onDone}>
+          {R.cancel}
+        </Button>
+        <Button type="submit" disabled={!eventId || !participant || upsert.isPending}>
+          {R.rs.add}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+type Kind = "event" | "participant" | "result";
+type Dlg = { kind: Kind; event?: RegistryEventOut; result?: ResultPreset } | null;
+
+/** Модалка «Создать»: сверху выбор, что создаём; при правке выбор скрыт. */
+function CreateDialog({ dlg, setDlg }: { dlg: Dlg; setDlg: (d: Dlg) => void }) {
+  const editing = Boolean(dlg?.event || dlg?.result);
+  const close = () => setDlg(null);
+  const title = dlg?.event ? R.ev.editTitle : dlg?.result ? R.rs.editTitle : R.create.title;
+  return (
+    <Dialog open={dlg !== null} onOpenChange={(o) => !o && close()}>
+      <DialogContent className="max-h-[90dvh] max-w-lg overflow-y-auto" aria-describedby={undefined}>
+        {dlg && (
+          <div className="flex flex-col gap-4" data-testid="registry-create">
+            <DialogTitle>{title}</DialogTitle>
+            {!editing && (
+              <SegmentedControl
+                label={R.create.what}
+                value={dlg.kind}
+                onValueChange={(v) => setDlg({ kind: v as Kind })}
+                options={[
+                  { value: "event", label: R.create.event },
+                  { value: "participant", label: R.create.participant },
+                  { value: "result", label: R.create.result },
+                ]}
+              />
+            )}
+            {dlg.kind === "event" && <EventForm key={dlg.event?.id ?? "new"} edit={dlg.event ?? null} onDone={close} />}
+            {dlg.kind === "participant" && <ParticipantForm onDone={close} />}
+            {dlg.kind === "result" && <ResultForm key={dlg.result?.participant?.value ?? "new"} preset={dlg.result ?? NEW_RESULT} onDone={close} />}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ---------------------------------------------------------------------------------- импорт CSV
+type Report = { created: number; updated: number; errors: { line: number; reason: string }[] };
+
+const lc = (s: string) => s.trim().toLowerCase();
+const byLabel = (dict: Record<string, string>, v: string) =>
+  Object.entries(dict).find(([k, label]) => lc(k) === lc(v) || lc(label) === lc(v))?.[0] ?? null;
+
+function toIsoDate(v: string): string | null {
+  const t = v.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(t)) return t;
+  const m = t.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+  return m ? `${m[3]}-${m[2]}-${m[1]}` : null;
+}
+
+/** Импорт мероприятий: «название; дисциплина; уровень; дата». Совпали название и дата — запись правится. */
+async function importEvents(rows: string[][]): Promise<Report> {
+  const known = await registryEventsAdminFspEventsGet();
+  const existing = known.status === 200 ? known.data : [];
+  const rep: Report = { created: 0, updated: 0, errors: [] };
+  const data = dropHeader(rows, (r) => toIsoDate(r[3] ?? "") !== null);
+  const offset = rows.length - data.length;
+  for (const [i, r] of data.entries()) {
+    const line = i + 1 + offset;
+    const [title = "", disc = "", lvl = "", date = ""] = r;
+    const discipline = byLabel(DISCIPLINE, disc);
+    const level = byLabel(LEVEL, lvl);
+    const iso = toIsoDate(date);
+    if (title.trim().length < 2) rep.errors.push({ line, reason: "no_title" });
+    else if (!discipline) rep.errors.push({ line, reason: "bad_discipline" });
+    else if (!level) rep.errors.push({ line, reason: "bad_level" });
+    else if (!iso) rep.errors.push({ line, reason: "bad_date" });
+    else {
+      const body = { title: title.trim(), discipline: discipline as FspDiscipline, level: level as FspLevel, date: iso };
+      const same = existing.find((e) => lc(e.title) === lc(body.title) && e.date === iso);
+      try {
+        if (same) {
+          await registryUpdateEventAdminFspEventsEventIdPatch(same.id, body);
+          rep.updated++;
+        } else {
+          await registryCreateEventAdminFspEventsPost(body);
+          rep.created++;
+        }
+      } catch {
+        rep.errors.push({ line, reason: "failed" });
+      }
+    }
+  }
+  return rep;
+}
+
+/** Импорт результатов: «участник (ФИО, email или телефон); мероприятие; место; команда». */
+async function importResults(rows: string[][]): Promise<Report> {
+  const known = await registryEventsAdminFspEventsGet();
+  const events = known.status === 200 ? known.data : [];
+  const rep: Report = { created: 0, updated: 0, errors: [] };
+  const data = dropHeader(rows, (r) => (r[2] ?? "") === "" || /^\d+$/.test(r[2] ?? ""));
+  const offset = rows.length - data.length;
+  for (const [i, r] of data.entries()) {
+    const line = i + 1 + offset;
+    const [who = "", eventTitle = "", placeRaw = "", team = ""] = r;
+    const event = events.find((e) => lc(e.title) === lc(eventTitle));
+    const place = placeRaw.trim() === "" ? null : Number(placeRaw);
+    if (!who.trim()) rep.errors.push({ line, reason: "no_participant" });
+    else if (!event) rep.errors.push({ line, reason: "no_event" });
+    else if (place !== null && !(Number.isInteger(place) && place >= 1 && place <= 100000)) rep.errors.push({ line, reason: "bad_place" });
+    else {
+      try {
+        const found = await registryParticipantsAdminFspParticipantsGet({ q: who.trim(), limit: 5 });
+        const list = found.status === 200 ? found.data : [];
+        const exact = list.filter((p) => [p.full_name, p.email, p.phone, p.id].some((x) => x && lc(x) === lc(who)));
+        const pick = list.length === 1 ? list[0] : exact.length === 1 ? exact[0] : null;
+        if (!pick) rep.errors.push({ line, reason: list.length === 0 ? "no_participant" : "ambiguous_participant" });
+        else {
+          await registryUpsertResultAdminFspResultsPut({ event_id: event.id, participant_id: pick.id, place, team: team.trim() || null });
+          rep.created++;
+        }
+      } catch {
+        rep.errors.push({ line, reason: "failed" });
+      }
+    }
+  }
+  return rep;
+}
+
+/** «Импорт CSV»: только выбор файла, формат подсказан рядом с кнопкой. */
+function ImportButton({ tab, onReport }: { tab: "events" | "participants" | "results"; onReport: (r: Report | null, err?: string) => void }) {
+  const refresh = useRefresh();
+  const importParticipants = useRegistryImportParticipantsAdminFspParticipantsImportPost();
+  const [busy, setBusy] = useState(false);
+
+  async function pick(e: ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    e.target.value = "";
+    if (!f) return;
+    setBusy(true);
+    onReport(null);
+    try {
+      const text = await f.text();
+      let rep: Report;
+      if (tab === "participants") rep = (await importParticipants.mutateAsync({ data: { csv: text } })).data as CsvImportOut;
+      else if (tab === "events") rep = await importEvents(parseCsv(text));
+      else rep = await importResults(parseCsv(text));
+      onReport(rep);
+      await refresh();
+    } catch {
+      onReport(null, R.error);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <label
+      className={`inline-flex min-h-9 cursor-pointer items-center rounded-lg border border-hairline px-3 text-14 font-semibold hover:border-brand-mid ${busy ? "pointer-events-none opacity-60" : ""}`}
+    >
+      {busy ? R.importing : R.importCsv}
+      <input type="file" accept=".csv,text/csv,text/plain" className="sr-only" aria-label={R.importCsv} onChange={(e) => void pick(e)} />
+    </label>
+  );
+}
+
+// ---------------------------------------------------------------------------------- вкладки
+function Events({ onEdit, onResults }: { onEdit: (ev: RegistryEventOut) => void; onResults: (eventId: string) => void }) {
+  const q = useRegistryEventsAdminFspEventsGet({ query: { retry: false } });
+  const items = q.data?.status === 200 ? q.data.data : null;
+  return (
+    <section aria-label={R.tabs.events} className="flex flex-col gap-3">
+      {q.isLoading && <Skeleton className="h-32" />}
+      {(q.isError || (q.data && q.data.status !== 200)) && <ErrorState onRetry={() => void q.refetch()} />}
+      {items && items.length === 0 && <EmptyState title={R.ev.empty} description={R.ev.emptyHint} />}
+      {items?.map((ev) => (
+        <Card key={ev.id}>
+          <CardContent className="flex flex-wrap items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-16 font-semibold">{ev.title}</p>
+              <p className="text-13 text-muted">
+                {DISCIPLINE[ev.discipline] ?? ev.discipline} · {LEVEL[ev.level] ?? ev.level} · {new Date(ev.date).toLocaleDateString("ru-RU")} ·{" "}
+                {R.ev.results(ev.results ?? 0)}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" onClick={() => onEdit(ev)}>
+                {R.edit}
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => onResults(ev.id)}>
+                {R.ev.toResults}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </section>
+  );
+}
+
+function Participants() {
+  const [search, setSearch] = useState("");
+  const q = useRegistryParticipantsAdminFspParticipantsGet({ q: search.trim() || undefined, limit: 100 }, { query: { retry: false } });
+  const items = q.data?.status === 200 ? q.data.data : null;
+  return (
+    <section aria-label={R.tabs.participants} className="flex flex-col gap-3">
+      <Field label={R.pt.search}>
+        <FieldInput type="search" value={search} onChange={(e) => setSearch(e.target.value)} />
+      </Field>
+      {q.isLoading && <Skeleton className="h-32" />}
+      {(q.isError || (q.data && q.data.status !== 200)) && <ErrorState onRetry={() => void q.refetch()} />}
+      {items && items.length === 0 && <EmptyState title={R.pt.empty} description={R.pt.emptyHint} />}
+      {items && items.length > 0 && (
+        <ul className="flex flex-col divide-y divide-hairline rounded-lg border border-hairline bg-card">
+          {items.map((p) => (
+            <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
+              <div className="min-w-0">
+                <p className="text-14 font-semibold">{p.full_name}</p>
+                <p className="break-all text-13 text-muted">{[p.email, p.phone].filter(Boolean).join(" · ") || "—"}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                {p.linked && <Badge variant="success">{R.pt.linked}</Badge>}
+                <span className="font-mono text-12 text-muted">{p.id}</span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+function Results({ eventId, setEventId, onEdit }: { eventId: string | null; setEventId: (v: string | null) => void; onEdit: (p: ResultPreset) => void }) {
+  const refresh = useRefresh();
+  const events = useRegistryEventsAdminFspEventsGet({ query: { retry: false } });
+  const q = useRegistryResultsAdminFspResultsGet({ event_id: eventId ?? undefined }, { query: { enabled: Boolean(eventId), retry: false } });
+  const del = useRegistryDeleteResultAdminFspResultsResultIdDelete();
+  const [err, setErr] = useState<string | null>(null);
+  const evs = events.data?.status === 200 ? events.data.data : [];
+  const items = q.data?.status === 200 ? q.data.data : null;
 
   async function remove(id: number) {
     setErr(null);
@@ -389,73 +539,41 @@ function Results({ eventId, setEventId }: { eventId: string | null; setEventId: 
         />
       </Field>
       {eventId && (
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(320px,400px)]">
-          <section aria-label={R.tabs.results} className="order-2 flex flex-col gap-3 lg:order-1">
-            {q.isLoading && <Skeleton className="h-24" />}
-            {(q.isError || (q.data && q.data.status !== 200)) && <ErrorState onRetry={() => void q.refetch()} />}
-            {items && items.length === 0 && <EmptyState title={R.rs.empty} />}
-            {items && items.length > 0 && (
-              <ul className="flex flex-col divide-y divide-hairline rounded-lg border border-hairline bg-card">
-                {items.map((r) => (
-                  <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
-                    <div className="min-w-0">
-                      <p className="text-14 font-semibold">{r.participant_name}</p>
-                      <p className="text-13 text-muted">
-                        {R.rs.placeShort(r.place)}
-                        {r.team ? ` · ${r.team}` : ""}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          setParticipant({ value: r.participant_id, label: r.participant_name });
-                          setPlace(r.place ?? null);
-                          setTeam(r.team ?? "");
-                        }}
-                      >
-                        {R.edit}
-                      </Button>
-                      <Button size="sm" variant="ghost" disabled={del.isPending} onClick={() => void remove(r.id)}>
-                        {R.rs.remove}
-                      </Button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-          <Card className="order-1 self-start lg:order-2">
-            <CardContent>
-              <form className="flex flex-col gap-3" aria-label={R.rs.add} onSubmit={(e) => void save(e)}>
-                <Field label={R.rs.participant}>
-                  <Combobox
-                    aria-label={R.rs.participant}
-                    placeholder={R.rs.pickParticipant}
-                    loadOptions={participantSource}
-                    selectedOptions={participant ? [participant] : []}
-                    value={participant?.value ?? null}
-                    onChange={(_, o) => setParticipant(o)}
-                  />
-                </Field>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <Field label={R.rs.place}>
-                    <NumberInput value={place} onChange={setPlace} min={1} max={100000} />
-                  </Field>
-                  <Field label={R.rs.team} hint={R.rs.teamHint}>
-                    <FieldInput value={team} maxLength={120} onChange={(e) => setTeam(e.target.value)} />
-                  </Field>
-                </div>
-                <p className="text-13 text-muted">{R.rs.hint}</p>
-                <ErrorLine text={err} />
-                <Button type="submit" size="sm" className="self-start" disabled={!participant || upsert.isPending}>
-                  {R.rs.add}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
+        <section aria-label={R.tabs.results} className="flex flex-col gap-3">
+          {q.isLoading && <Skeleton className="h-24" />}
+          {(q.isError || (q.data && q.data.status !== 200)) && <ErrorState onRetry={() => void q.refetch()} />}
+          {items && items.length === 0 && <EmptyState title={R.rs.empty} />}
+          <ErrorLine text={err} />
+          {items && items.length > 0 && (
+            <ul className="flex flex-col divide-y divide-hairline rounded-lg border border-hairline bg-card">
+              {items.map((r) => (
+                <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
+                  <div className="min-w-0">
+                    <p className="text-14 font-semibold">{r.participant_name}</p>
+                    <p className="text-13 text-muted">
+                      {R.rs.placeShort(r.place)}
+                      {r.team ? ` · ${r.team}` : ""}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        onEdit({ eventId: r.event_id, participant: { value: r.participant_id, label: r.participant_name }, place: r.place ?? null, team: r.team ?? "" })
+                      }
+                    >
+                      {R.edit}
+                    </Button>
+                    <Button size="sm" variant="ghost" disabled={del.isPending} onClick={() => void remove(r.id)}>
+                      {R.rs.remove}
+                    </Button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
       )}
     </div>
   );
@@ -546,13 +664,14 @@ function RequestCard({ r }: { r: AdminFspRequestOut }) {
   );
 }
 
-/** Заявки на привязку с фильтром по статусу — страница «Заявки ФСП» (E39-29). */
-export function Requests() {
+/** Заявки на привязку с фильтром по статусу — вкладка «Заявки» реестра (E41-15). */
+function Requests() {
   const [status, setStatus] = useState<ReqStatus | "all">("pending");
   const q = useRegistryRequestsAdminFspRequestsGet(status === "all" ? undefined : { status }, { query: { retry: false } });
   const items = q.data?.status === 200 ? q.data.data : null;
   return (
     <section aria-label={R.requests.title} className="flex flex-col gap-3">
+      <p className="text-13 text-muted">{R.requests.lead}</p>
       <div role="group" className="flex flex-wrap gap-1">
         {(["pending", "accepted", "rejected", "all"] as const).map((o) => (
           <button
@@ -574,25 +693,78 @@ export function Requests() {
   );
 }
 
+function ImportReport({ report, error }: { report: Report | null; error: string | null }) {
+  if (error) return <ErrorLine text={error} />;
+  if (!report) return null;
+  return (
+    <div role="status" className="flex flex-col gap-1 rounded-lg border border-hairline bg-card px-4 py-3 text-14">
+      <p>{R.pt.imported(report.created, report.updated)}</p>
+      {report.errors.length > 0 && (
+        <>
+          <p className="text-error">{R.pt.importErrors}</p>
+          <ul className="list-inside list-disc text-13 text-muted">
+            {report.errors.slice(0, 20).map((x) => (
+              <li key={x.line}>
+                {R.pt.line(x.line)}: {R.pt.reason[x.reason] ?? x.reason}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </div>
+  );
+}
+
 /**
- * `/federation/registry` — реестр ФСП (E39-28, справочник): мероприятия, участники (руками и CSV), результаты.
- * Заявки на привязку — отдельная очередь `/federation/requests` (E39-29).
+ * `/federation/registry` — единый реестр ФСП (E41-15): вкладки «Мероприятия · Участники · Результаты · Заявки»,
+ * на первых трёх «Импорт CSV» (только выбор файла) и одна кнопка «Создать» с выбором, что создаём.
  */
 export default function FspRegistry() {
-  const [tab, setTab] = useState<Tab>("events");
+  const [params, setParams] = useSearchParams();
+  const asked = params.get("tab") as Tab | null;
+  const tab: Tab = asked && TABS.includes(asked) ? asked : "events";
+  const setTab = (t: Tab) => setParams(t === "events" ? {} : { tab: t }, { replace: true });
   const [eventId, setEventId] = useState<string | null>(null);
+  const [dlg, setDlg] = useState<Dlg>(null);
+  const [report, setReport] = useState<Report | null>(null);
+  const [reportErr, setReportErr] = useState<string | null>(null);
+  const pending = useRegistryRequestsAdminFspRequestsGet({ status: "pending" }, { query: { retry: false } });
+  const waiting = pending.data?.status === 200 ? pending.data.data.length : undefined;
+
+  const createKind: Kind = tab === "participants" ? "participant" : tab === "results" ? "result" : "event";
+  const onReport = (r: Report | null, err?: string) => {
+    setReport(r);
+    setReportErr(err ?? null);
+  };
+  const switchTab = (t: string) => {
+    onReport(null);
+    setTab(t as Tab);
+  };
 
   return (
     <div className={PAGE.wide}>
-      <AdminPageHeader title={R.title} tip={R.lead} />
-      <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
-        <TabsList className="max-w-full overflow-x-auto">
+      <AdminPageHeader title={R.title} tip={R.lead}>
+        <div className="flex flex-wrap items-center gap-2">
+          {tab !== "requests" && <ImportButton tab={tab} onReport={onReport} />}
+          <Button onClick={() => setDlg({ kind: createKind })}>{R.create.button}</Button>
+        </div>
+      </AdminPageHeader>
+      <Tabs value={tab} onValueChange={switchTab}>
+        <ScrollTabs>
           <TabsTrigger value="events">{R.tabs.events}</TabsTrigger>
           <TabsTrigger value="participants">{R.tabs.participants}</TabsTrigger>
           <TabsTrigger value="results">{R.tabs.results}</TabsTrigger>
-        </TabsList>
+          <TabsTrigger value="requests" count={waiting || undefined}>
+            {R.tabs.requests}
+          </TabsTrigger>
+        </ScrollTabs>
+        {tab !== "requests" && <p className="pt-3 text-13 text-muted">{R.csvHint[tab]}</p>}
+        <div className="pt-3">
+          <ImportReport report={report} error={reportErr} />
+        </div>
         <TabsContent value="events" className="pt-4">
           <Events
+            onEdit={(ev) => setDlg({ kind: "event", event: ev })}
             onResults={(id) => {
               setEventId(id);
               setTab("results");
@@ -603,9 +775,13 @@ export default function FspRegistry() {
           <Participants />
         </TabsContent>
         <TabsContent value="results" className="pt-4">
-          <Results eventId={eventId} setEventId={setEventId} />
+          <Results eventId={eventId} setEventId={setEventId} onEdit={(p) => setDlg({ kind: "result", result: p })} />
+        </TabsContent>
+        <TabsContent value="requests" className="pt-4">
+          <Requests />
         </TabsContent>
       </Tabs>
+      <CreateDialog dlg={dlg} setDlg={setDlg} />
     </div>
   );
 }

@@ -102,9 +102,10 @@ export const ROUTES: RouteDef[] = [
   { path: "/federation", title: "Главная", section: "admin", owner: "b2", nav: true },
   { path: "/federation/moderation", title: "Модерация", screen: "F3", section: "admin", owner: "b2", nav: true },
   { path: "/admin/skills", title: "Граф навыков", screen: "G3", section: "admin", owner: "b1", nav: true },
-  { path: "/admin/quality", title: "Качество", screen: "Q1", section: "admin", owner: "b2", nav: true },
-  { path: "/admin/quality/fairness", title: "Справедливость", screen: "Q2", section: "admin", owner: "b2" },
-  { path: "/admin/quality/runs", title: "Живые прогоны", screen: "Q3", section: "admin", owner: "b2" },
+  // «Качество» заменено «Аналитикой» (E41-15): старые адреса ведут на неё.
+  { path: "/admin/quality", title: "Качество", section: "admin", owner: "b2", redirect: "/federation/analytics" },
+  { path: "/admin/quality/fairness", title: "Справедливость", section: "admin", owner: "b2", redirect: "/federation/analytics" },
+  { path: "/admin/quality/runs", title: "Живые прогоны", section: "admin", owner: "b2", redirect: "/federation/analytics" },
   // >>> block1 (admin)
   { path: "/admin/families", title: "Допуск заданий", section: "admin", owner: "b1", nav: true },
   { path: "/admin/professions", title: "Профессии и навыки", section: "admin", owner: "b1", nav: true },
@@ -115,8 +116,10 @@ export const ROUTES: RouteDef[] = [
   // >>> block2 (admin)
   // Меню админки по группам (E39-29): реестр — справочник, заявки — очередь, воронка — аналитика.
   { path: "/federation/registry", title: "Реестр ФСП", section: "admin", owner: "b2", nav: true },
-  { path: "/federation/requests", title: "Заявки ФСП", section: "admin", owner: "b2", nav: true },
+  // Заявки — вкладка реестра (E41-15), старый адрес ведёт на неё.
+  { path: "/federation/requests", title: "Заявки ФСП", section: "admin", owner: "b2", redirect: "/federation/registry?tab=requests" },
   { path: "/federation/funnel", title: "Воронка", screen: "F1", section: "admin", owner: "b2", nav: true },
+  { path: "/federation/analytics", title: "Аналитика", section: "admin", owner: "b2", nav: true },
   // <<< block2 (admin)
 ];
 
@@ -174,14 +177,13 @@ export const NAV: Record<"candidate" | "employer" | "admin", NavItem[]> = {
   // Админка (E39-29): «Главная» и три группы — где нужно решение, что админ ведёт, что смотрит.
   admin: [
     { to: "/federation", label: "Главная" },
-    { to: "/federation/requests", label: "Заявки ФСП", group: "queues" },
     { to: "/admin/families", label: "Допуск заданий", group: "queues" },
     { to: "/federation/moderation", label: "Модерация", group: "queues" },
     { to: "/federation/registry", label: "Реестр ФСП", group: "refs" },
     { to: "/admin/professions", label: "Профессии", group: "refs" },
     { to: "/admin/skills", label: "Граф навыков", group: "refs" },
     { to: "/federation/funnel", label: "Воронка", group: "analytics" },
-    { to: "/admin/quality", label: "Качество", group: "analytics" },
+    { to: "/federation/analytics", label: "Аналитика", group: "analytics" },
   ],
 };
 

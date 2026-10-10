@@ -23572,6 +23572,41 @@
         ],
         "title": "CooldownOut"
       },
+      "Counter": {
+        "properties": {
+          "count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Count"
+          },
+          "hidden": {
+            "type": "boolean",
+            "title": "Hidden"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          }
+        },
+        "type": "object",
+        "required": [
+          "count",
+          "hidden",
+          "id",
+          "title"
+        ],
+        "title": "Counter"
+      },
       "CreateInterest": {
         "properties": {
           "candidate_pseudo_id": {
@@ -24039,6 +24074,22 @@
           },
           "navigator_to_competition": {
             "$ref": "#/components/schemas/Ratio"
+          },
+          "counters": {
+            "items": {
+              "$ref": "#/components/schemas/Counter"
+            },
+            "type": "array",
+            "title": "Counters",
+            "default": []
+          },
+          "daily": {
+            "items": {
+              "$ref": "#/components/schemas/DayPoint"
+            },
+            "type": "array",
+            "title": "Daily",
+            "default": []
           }
         },
         "type": "object",
@@ -24051,6 +24102,36 @@
           "navigator_to_competition"
         ],
         "title": "DashboardOut"
+      },
+      "DayPoint": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "values": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "values"
+        ],
+        "title": "DayPoint",
+        "description": "Один день: значения счётчиков по id; меньше `MIN_CELL` событий — `null`."
       },
       "Decline": {
         "properties": {
