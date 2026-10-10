@@ -30,7 +30,7 @@ from fsp_bot.account import (
 )
 from fsp_bot.assessment import BTN_TASKS, build_assessment_router
 from fsp_bot.core_client import CoreClient, CoreError
-from fsp_bot.states import Onboarding, Resume
+from fsp_bot.states import Resume
 from fsp_bot.templates.render import (
     DECLINE_CODES,
     decline_keyboard,
@@ -44,13 +44,17 @@ from fsp_bot.templates.render import (
 
 log = structlog.get_logger()
 
-WELCOME = (
-    "Привет! Я бот <b>ФСП Карьера</b>.\n"
-    "1. Загрузи резюме или привяжи ФСП и GitHub.\n"
-    "2. Мы соберём профиль, где каждый навык подтверждён доказательствами.\n"
-    "3. Работодатели находят тебя анонимно и присылают офферы с вилкой прямо сюда."
+NOT_LINKED = (
+    "Бот работает только с привязанными аккаунтами. Зарегистрируйся на сайте "
+    "и привяжи Telegram в профиле."
 )
-CONSENTS_ASK = "Для продолжения нужно согласие на обработку данных профиля."
+LINKED_OK = "✅ Telegram привязан к аккаунту. Выбери действие в меню."
+ALREADY_LINKED = "Аккаунт уже привязан. Выбери действие в меню."
+LINK_EXPIRED = "Ссылка устарела. Получи новую в профиле на сайте."
+LINK_CONFLICT = {
+    "telegram_already_linked": "Этот Telegram или аккаунт уже привязан к другому. "
+    "Отвяжи его в профиле на сайте и получи новую ссылку.",
+}
 CORE_DOWN = "Сервис временно недоступен, попробуй чуть позже."
 
 NOT_RESUME = "Это не PDF и не DOCX. Пришли резюме в одном из этих форматов."
@@ -71,23 +75,13 @@ MENU_KB = ReplyKeyboardMarkup(
     resize_keyboard=True,
 )
 
-CONSENT_KB = InlineKeyboardMarkup(
-    inline_keyboard=[
-        [
-            InlineKeyboardButton(text="✅ Согласен", callback_data="c:ok"),
-            InlineKeyboardButton(text="Отказаться", callback_data="c:no"),
-        ]
-    ]
-)
-
-
 OFFER_ERRORS = {
     "offer_not_found": "Оффер не найден.",
     "invalid_transition": "Оффер уже закрыт, ответить на него нельзя.",
     "offer_expired": "Срок действия оффера истёк.",
     "offer_closed": "Переписка по этому офферу закрыта.",
     "empty_message": "Напиши вопрос текстом.",
-    "telegram_unknown": "Сначала нажми /start.",
+    "telegram_unknown": NOT_LINKED,
     "forbidden": "Офферы доступны кандидатам.",
 }
 NO_OFFERS = "Активных офферов пока нет. Они появятся здесь, как только работодатель ответит."
@@ -115,6 +109,7 @@ def build_router(
     poll_interval: float = POLL_INTERVAL,
     poll_timeout: float = POLL_TIMEOUT,
     sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+    web_base_url: str = "",
 ) -> Router:
     router = Router()
 
@@ -136,50 +131,52 @@ def build_router(
     router.include_router(build_account_router(core, site_button))
     router.include_router(build_assessment_router(core, site_button, MENU_TEXTS))
 
+    def site_kb(path: str = "/me/profile") -> InlineKeyboardMarkup | None:
+        base = (web_base_url or "").rstrip("/")
+        if not base.startswith(("http://", "https://")):
+            return None
+        return InlineKeyboardMarkup(
+            inline_keyboard=[[InlineKeyboardButton(text="🌐 Открыть сайт", url=base + path)]]
+        )
+
     @router.message(CommandStart())
     async def start(message: Message, command: CommandObject, state: FSMContext) -> None:
+        """E43-7: бот аккаунтов не создаёт. `/start link_<token>` привязывает, остальное —
+        «уже привязан» или отправка на сайт."""
         user = message.from_user
         if user is None:
             return
-        param = command.args
+        await state.clear()
+        param = command.args or ""
         try:
-            info = await core.start(user.id, message.chat.id, user.username, param)
-            if param and param.startswith("link_"):
-                await core.link(user.id, param.removeprefix("link_"))
+            if param.startswith("link_"):
+                await core.link(
+                    user.id, param.removeprefix("link_"), message.chat.id, user.username
+                )
+                await message.answer(LINKED_OK, reply_markup=MENU_KB)
+                return
+            linked = await core.is_linked(user.id)
         except CoreError as exc:
+            if param.startswith("link_") and exc.status == 410:
+                # токен одноразовый: повторный «Старт» после успешной привязки
+                try:
+                    if await core.is_linked(user.id):
+                        await message.answer(ALREADY_LINKED, reply_markup=MENU_KB)
+                        return
+                except CoreError:
+                    pass
+                await message.answer(LINK_EXPIRED, reply_markup=site_kb("/settings"))
+                return
             log.warning("core_error", code=exc.code, status=exc.status)
-            await message.answer(CORE_DOWN)
+            if exc.status == 429:
+                await message.answer("Слишком часто, попробуй чуть позже.")
+            else:
+                await message.answer(LINK_CONFLICT.get(exc.code, CORE_DOWN))
             return
-        await message.answer(WELCOME, parse_mode="HTML")
-        if info.get("missing_consents"):
-            await state.set_state(Onboarding.consents)
-            await state.update_data(missing=info["missing_consents"])
-            await message.answer(CONSENTS_ASK, reply_markup=CONSENT_KB)
+        if linked:
+            await message.answer(ALREADY_LINKED, reply_markup=MENU_KB)
         else:
-            await state.clear()
-            await message.answer("Выбери действие в меню.", reply_markup=MENU_KB)
-
-    @router.callback_query(F.data == "c:ok")
-    async def consent_ok(call: CallbackQuery, state: FSMContext) -> None:
-        data = await state.get_data()
-        try:
-            await core.consents(call.from_user.id, data.get("missing", []))
-        except CoreError:
-            await call.answer(CORE_DOWN, show_alert=True)
-            return
-        await state.clear()
-        await call.answer("Спасибо!")
-        if isinstance(call.message, Message):
-            await call.message.edit_text("✅ Согласия сохранены.")
-            await call.message.answer(RESUME_PROMPT, reply_markup=MENU_KB)
-        await state.set_state(Resume.awaiting_file)
-
-    @router.callback_query(F.data == "c:no")
-    async def consent_no(call: CallbackQuery, state: FSMContext) -> None:
-        await state.clear()
-        await call.answer()
-        if isinstance(call.message, Message):
-            await call.message.edit_text("Без согласий продолжить нельзя. Вернуться: /start")
+            await message.answer(NOT_LINKED, reply_markup=site_kb())
 
     # --- Офферы (telegram.md §2, §3, §5) ---------------------------------------------------
 
@@ -320,7 +317,7 @@ def build_router(
             "unsupported_file_type": NOT_RESUME,
             "file_too_large": "Файл больше 10 МБ. Сожми или пришли другой.",
             "empty_file": "Файл пустой.",
-            "consent_required": "Сначала нужно согласие на обработку данных: /start",
+            "consent_required": "Нужно согласие на обработку данных: дай его в профиле на сайте.",
         }.get(
             exc.code,
             "Много загрузок за сутки, попробуй завтра." if exc.status == 429 else CORE_DOWN,
@@ -390,9 +387,7 @@ def build_router(
         try:
             data = await core.profile(user.id)
         except CoreError as exc:
-            await message.answer(
-                "Сначала нажми /start." if exc.code == "telegram_unknown" else CORE_DOWN
-            )
+            await message.answer(NOT_LINKED if exc.code == "telegram_unknown" else CORE_DOWN)
             return
         row = await site_button(user.id, "🌐 Открыть профиль", "/me")
         kb = InlineKeyboardMarkup(inline_keyboard=[row]) if row else None
