@@ -34,9 +34,14 @@ async def record(
 
 
 async def stats(
-    session: AsyncSession, candidate_id: uuid.UUID, now: datetime | None = None
+    session: AsyncSession,
+    candidate_id: uuid.UUID,
+    now: datetime | None = None,
+    *,
+    visible: bool = False,
 ) -> dict:
-    """`{total_30d, companies_30d, by_day[]}` — только числа, компании не называются."""
+    """`{total_30d, companies_30d, window_days, visible, by_day[]}` — только числа, компании не
+    называются. `by_day` — полная шкала `WINDOW_DAYS` дней (нули для дней без просмотров, E43-5)."""
     now = now or datetime.now(UTC)
     since = now - timedelta(days=WINDOW_DAYS)
     rows = (
@@ -50,10 +55,14 @@ async def stats(
     for at, _ in rows:
         day = (at if at.tzinfo else at.replace(tzinfo=UTC)).astimezone(UTC).date().isoformat()
         per_day[day] = per_day.get(day, 0) + 1
+    today = now.astimezone(UTC).date()
+    days = [(today - timedelta(days=i)).isoformat() for i in range(WINDOW_DAYS - 1, -1, -1)]
     return {
         "total_30d": len(rows),
         "companies_30d": len({c for _, c in rows if c is not None}),
-        "by_day": [{"date": d, "count": n} for d, n in sorted(per_day.items())],
+        "window_days": WINDOW_DAYS,
+        "visible": visible,
+        "by_day": [{"date": d, "count": per_day.get(d, 0)} for d in days],
     }
 
 
