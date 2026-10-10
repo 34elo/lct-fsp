@@ -779,7 +779,7 @@ def _market_side(
         fmt = sv["work_format"]
         required = [s for s in sv["must_skills"] if s in names]
         nice = [s for s in sv["nice_skills"] if s in names and s not in required]
-        if not required and nice:  # у профессии с мягкими навыками в выборке: хотя бы один обязательный
+        if not required and nice:  # в выборке одни мягкие навыки: нужен хотя бы один обязательный
             required, nice = nice[:1], nice[1:]
         vacancies.append(
             {
