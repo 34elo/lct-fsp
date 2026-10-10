@@ -5,6 +5,7 @@ import {
   useEffect,
   useLayoutEffect,
   useMemo,
+  useId,
   useRef,
   useState,
   type CSSProperties,
@@ -78,6 +79,8 @@ export interface EvidenceGraphProps {
   defaultOnlyConfirmed?: boolean;
   /** Скрыть переключатель «Только подтверждённые» (граф без фактов-подтверждений, например справочник навыков). */
   hideConfirmedFilter?: boolean;
+  /** Компактный режим (Главная): без фильтров и счётчика, ниже холст. */
+  compact?: boolean;
   className?: string;
   "data-testid"?: string;
 }
@@ -305,10 +308,12 @@ export function EvidenceGraph({
   renderSkillAction,
   defaultOnlyConfirmed = false,
   hideConfirmedFilter = false,
+  compact = false,
   className,
   "data-testid": testId = "egraph",
 }: EvidenceGraphProps) {
   const layout = useMemo(() => layoutGraph(data), [data]);
+  const gridId = useId();
   const [types, setTypes] = useState<ReadonlySet<string>>(() => new Set());
   const [onlyConfirmed, setOnlyConfirmed] = useState(defaultOnlyConfirmed);
   const visible = useMemo(() => visibleIds(layout, { types, onlyConfirmed }), [layout, types, onlyConfirmed]);
@@ -475,34 +480,36 @@ export function EvidenceGraph({
         </div>
       )}
 
-      <div role="group" aria-label="Фильтры графа" data-testid={`${testId}-filters`} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-        {layout.skillTypes.length > 1 ? (
-          <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Тип навыка">
-            <button
-              type="button"
-              aria-pressed={types.size === 0}
-              onClick={() => setTypes(new Set())}
-              data-testid={`${testId}-type-all`}
-              className={chip(types.size === 0)}
-            >
-              Все типы
-            </button>
-            {layout.skillTypes.map((t) => (
-              <button key={t} type="button" aria-pressed={types.has(t)} onClick={() => toggleType(t)} data-testid={`${testId}-type-${t}`} className={chip(types.has(t))}>
-                {typeLabels[t] ?? t}
+      {!compact && (
+        <div role="group" aria-label="Фильтры графа" data-testid={`${testId}-filters`} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          {layout.skillTypes.length > 1 ? (
+            <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Тип навыка">
+              <button
+                type="button"
+                aria-pressed={types.size === 0}
+                onClick={() => setTypes(new Set())}
+                data-testid={`${testId}-type-all`}
+                className={chip(types.size === 0)}
+              >
+                Все типы
               </button>
-            ))}
-          </div>
-        ) : (
-          <span />
-        )}
-        {!hideConfirmedFilter && (
-          <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 whitespace-nowrap text-14 text-ink">
-            <Switch checked={onlyConfirmed} onCheckedChange={setOnlyConfirmed} data-testid={`${testId}-confirmed`} aria-label="Только подтверждённые" />
-            Только подтверждённые
-          </label>
-        )}
-      </div>
+              {layout.skillTypes.map((t) => (
+                <button key={t} type="button" aria-pressed={types.has(t)} onClick={() => toggleType(t)} data-testid={`${testId}-type-${t}`} className={chip(types.has(t))}>
+                  {typeLabels[t] ?? t}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <span />
+          )}
+          {!hideConfirmedFilter && (
+            <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 whitespace-nowrap text-14 text-ink">
+              <Switch checked={onlyConfirmed} onCheckedChange={setOnlyConfirmed} data-testid={`${testId}-confirmed`} aria-label="Только подтверждённые" />
+              Только подтверждённые
+            </label>
+          )}
+        </div>
+      )}
 
       <div
         ref={boxRef}
@@ -511,7 +518,10 @@ export function EvidenceGraph({
         aria-roledescription="граф"
         aria-label={`Граф: навыков ${skillShown} из ${skillTotal}. Колесо или щипок — масштаб, перетаскивание — сдвиг, плюс и минус — масштаб, 0 — вписать.`}
         onKeyDown={onKeyDown}
-        className="relative h-[420px] overflow-hidden rounded-xl border border-hairline bg-page outline-none focus-visible:ring-2 focus-visible:ring-brand md:h-[520px]"
+        className={cn(
+          "relative overflow-hidden rounded-xl border border-hairline bg-page outline-none focus-visible:ring-2 focus-visible:ring-brand",
+          compact ? "h-[320px] md:h-[380px]" : "h-[420px] md:h-[520px]",
+        )}
       >
         <svg
           ref={svgRef}
@@ -527,6 +537,12 @@ export function EvidenceGraph({
           onPointerCancel={onPointerUp}
           onPointerLeave={(e) => e.pointerType === "mouse" && !pointers.current.size && setHovered(null)}
         >
+          <defs>
+            <pattern id={gridId} width="32" height="32" patternUnits="userSpaceOnUse" patternTransform={`translate(${view.x} ${view.y}) scale(${view.k})`}>
+              <circle cx="16" cy="16" r="1.2" className="fill-muted" fillOpacity="0.4" />
+            </pattern>
+          </defs>
+          <rect data-testid={`${testId}-grid`} width="100%" height="100%" fill={`url(#${gridId})`} className="pointer-events-none" />
           <g transform={`translate(${view.x} ${view.y}) scale(${view.k})`} data-testid={`${testId}-viewport`} data-k={view.k.toFixed(3)}>
             <Scene layout={layout} visible={visible} focus={focus} />
             <Labels layout={layout} shown={shown} k={view.k} focus={focus} />
@@ -568,9 +584,11 @@ export function EvidenceGraph({
 
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
         <Legend />
-        <p className="whitespace-nowrap text-12 text-muted" data-testid={`${testId}-count`}>
-          Навыков: {skillShown} из {skillTotal}
-        </p>
+        {!compact && (
+          <p className="whitespace-nowrap text-12 text-muted" data-testid={`${testId}-count`}>
+            Навыков: {skillShown} из {skillTotal}
+          </p>
+        )}
       </div>
     </div>
   );
