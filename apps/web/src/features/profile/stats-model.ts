@@ -21,6 +21,8 @@ export function scatter(peers: StandingPeer[], mine?: number | null): { points: 
 export interface ViewsStats {
   total: number;
   companies: number;
+  /** Карточка доступна работодателям (тест + согласие на публикацию); без неё нули ожидаемы (E43-5). */
+  visible: boolean;
   byDay: { date: string; count: number }[];
 }
 
@@ -36,8 +38,11 @@ export function parseViews(raw: unknown): ViewsStats | undefined {
         return o && typeof o.date === "string" ? [{ date: o.date, count: num(o.count) }] : [];
       })
     : [];
-  return { total: num(r.total_30d), companies: num(r.companies_30d), byDay };
+  return { total: num(r.total_30d), companies: num(r.companies_30d), visible: r.visible !== false, byDay };
 }
+
+/** Состояние без просмотров: ответ не пришёл или нулевая статистика (полная шкала с нулями, E43-5). */
+export const NO_VIEWS: ViewsStats = { total: 0, companies: 0, visible: true, byDay: [] };
 
 /** Просмотры по дням для тепловой карты: `weeks` полных недель, последний день — `today` (UTC), от старых к новым. */
 export function viewsSeries(byDay: { date: string; count: number }[], today: Date, weeks = 5): number[] {

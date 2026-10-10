@@ -393,11 +393,11 @@ export default function Home() {
   const pq = useGetProfileCandidatesMeProfileGet();
   const hq = useHistoryAssessmentHistoryGet({ query: { refetchOnMount: "always", retry: false } });
   const sq = useMyStandingCandidatesMeStandingGet({ query: { refetchOnMount: "always", retry: false } });
-  const iq = useMyInterestsCandidatesMeInterestsGet({ query: { retry: false } });
+  const iq = useMyInterestsCandidatesMeInterestsGet({ query: { retry: false, refetchOnMount: "always" } });
   const oq = useMyOffersCandidatesMeOffersGet(undefined, { query: { retry: false } });
   const nq = useMyNavigatorCandidatesMeNavigatorGet({ query: { retry: false } });
   const tq = useGetProfessionsTaxonomyProfessionsGet();
-  const vq = useMyViewsCandidatesMeViewsGet({ query: { retry: false } });
+  const vq = useMyViewsCandidatesMeViewsGet({ query: { retry: false, refetchOnMount: "always" } });
 
   const page = (body: ReactNode, h1 = true) => (
     <div className={PAGE.normal} data-testid="home-page">

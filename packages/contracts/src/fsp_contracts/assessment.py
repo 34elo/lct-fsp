@@ -112,6 +112,26 @@ class CandidateStanding(BaseModel):
     category_stats: StandingCategoryStats | None = None  # E39-16
 
 
+class ProfileViewDay(BaseModel):
+    date: str  # YYYY-MM-DD (UTC)
+    count: int = 0
+
+
+class ProfileViewsStats(BaseModel):
+    """`GET /candidates/me/views` (E43-5): просмотры карточки за 30 дней, без названий компаний.
+
+    `by_day` — полная шкала: ровно `window_days` дней по возрастанию, последний — сегодня (UTC),
+    дни без просмотров с нулём. `visible` — карточка вообще попадает работодателям (действующий
+    грейд из теста и согласие `profile_publication`); при `false` нули объясняются этим.
+    """
+
+    total_30d: int = 0
+    companies_30d: int = 0
+    window_days: int = 30
+    visible: bool = False
+    by_day: list[ProfileViewDay] = Field(default_factory=list)
+
+
 class CandidateGrade(BaseModel):
     candidate_id: UUID
     profession: ProfessionSlug
