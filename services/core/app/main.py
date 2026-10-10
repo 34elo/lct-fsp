@@ -23,6 +23,7 @@ from app.analytics.runs_router import public as live_runs_public_router
 from app.assessment.admin_router import router as admin_families_router
 from app.assessment.constructor_router import router as families_router
 from app.assessment.demo_router import router as admin_demo_router
+from app.assessment.orders_router import router as admin_family_orders_router
 from app.assessment.router import router as assessment_router
 from app.assessment.tasks_router import candidate_router as candidate_tasks_router
 from app.assessment.tasks_router import employer_router as employer_tasks_router
@@ -117,6 +118,7 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     # >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
     app.include_router(assessment_router)
     app.include_router(admin_families_router)
+    app.include_router(admin_family_orders_router)  # E43-9: заказ LLM-заданий
     app.include_router(admin_demo_router)
     app.include_router(admin_taxonomy_router)
     app.include_router(admin_skills_router)

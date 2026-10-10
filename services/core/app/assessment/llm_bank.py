@@ -129,6 +129,24 @@ class HttpBank:
         return d if d is not None and key_draft.fits(spec, d) else None
 
 
+class GeneratedOnly:
+    """Банк заказа из админки (E43-9): формы уже пришли событием `ml.families.generated`.
+
+    Второго мнения (черновик ключа, решатель) нет: синхронные вызовы ml-api заняли бы слот GPU
+    работодателя. Форма без ключа отбраковывается (`no_key`); `ai_solvable` и флаги досчитывает
+    офлайн-прогон `make assessment-llm-bank ARGS=--skip-propose`.
+    """
+
+    async def generate(self, req: FamilyGenerateRequest) -> FamilyGenerateResponse | None:
+        return None
+
+    async def solve(self, req: FamilySolveRequest) -> FamilySolveAnswer | None:
+        return None
+
+    async def key_draft(self, spec: FamilySpec) -> FamilyKeyDraft | None:
+        return None
+
+
 def _parse(model, data):  # noqa: ANN001, ANN202 — маленький помощник для трёх DTO
     if data is None:
         return None
@@ -199,6 +217,7 @@ class Target:
     level: int
     n: int = 1
     domain: str | None = None
+    order: str | None = None  # заказ из админки (E43-9), пишется в `spec.llm.order_id`
 
 
 @dataclass
@@ -283,9 +302,27 @@ async def propose(
         if gen is None:
             report.llm_available = False
             continue
-        for raw in gen.specs:
-            report.proposed += 1
-            await _one(session, bank, cfg, t, raw, gen.model, k, report)
+        await accept(session, bank, cfg, t, gen.specs, gen.model, k=k, report=report)
+    await session.flush()
+    return report
+
+
+async def accept(
+    session: AsyncSession,
+    bank: Bank,
+    cfg: AssessmentConfig,
+    target: Target,
+    specs: Iterable[dict[str, Any]],
+    model: str,
+    *,
+    k: int = SOLVE_K,
+    report: Report | None = None,
+) -> Report:
+    """Формы генератора → проверки → `draft` (общий путь CLI и заказа из админки). Без `commit`."""
+    report = report or Report()
+    for raw in specs:
+        report.proposed += 1
+        await _one(session, bank, cfg, target, raw, model, k, report)
     await session.flush()
     return report
 
@@ -362,6 +399,7 @@ async def _one(
                 "model": model,
                 "digest": d,
                 "domain": t.domain,
+                "order_id": t.order,
                 "flags": flags,
                 "solver": {"score": solved, "k": k},
             },

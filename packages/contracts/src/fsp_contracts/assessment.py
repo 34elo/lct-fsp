@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field
@@ -289,12 +289,34 @@ class RegularTaskPublished(BaseModel):
     published_at: datetime | None = None
 
 
+class FamilyOrderStarted(BaseModel):
+    """`ml.families.started` (E43-9): ml-worker-llm взял заказ админа на задания в работу."""
+
+    order_id: UUID
+
+
+class FamilyOrderGenerated(BaseModel):
+    """`ml.families.generated` (E43-9): ответ генератора на заказ `ml.families.generate`.
+
+    `specs` — черновики форм конструктора (`FamilySpec`), их проверяет core (схема, навык,
+    автопроверка, дубли) и кладёт в `families` со `status = draft`, `source = llm`. `error` —
+    машинный код отказа (`llm_disabled`, `llm_unavailable`, `llm_invalid`, …), тогда `specs` пуст.
+    """
+
+    order_id: UUID
+    specs: list[dict[str, Any]] = Field(default_factory=list, max_length=10)
+    model: str = ""
+    error: str | None = None
+
+
 ASSESSMENT_EVENTS: dict[str, type[BaseModel]] = {
     "assessment.attempt.finished": AttemptFinished,
     "candidate.category.changed": CategoryChanged,
     "candidate.visibility.changed": VisibilityChanged,
     "assessment.family.status_changed": FamilyStatusChanged,
     "regular_task.published": RegularTaskPublished,
+    "ml.families.started": FamilyOrderStarted,  # E43-9
+    "ml.families.generated": FamilyOrderGenerated,  # E43-9
 }
 
 __all__ = [
@@ -308,6 +330,8 @@ __all__ = [
     "CategoryRef",
     "ClaimedVsConfirmed",
     "DeclaredGrade",
+    "FamilyOrderGenerated",
+    "FamilyOrderStarted",
     "FamilyStatusChanged",
     "ProfessionInfo",
     "ProfessionSlug",
