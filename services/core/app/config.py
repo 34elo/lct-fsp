@@ -59,6 +59,8 @@ class Settings(BaseServiceSettings):
     # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
     # демо-кнопки для ФСП (E13-3): создание результатов и сброс
     demo_mode: bool = False
+    # E43: профиль без ФИО и контакта не попадает в выдачу работодателям (демо-аккаунты — попадают)
+    require_candidate_contacts: bool = False
     # Open Badge 3.0 (E18-9): seed Ed25519 в base64url (32 байта); пусто: временный ключ процесса
     ob_signing_key: str = ""
     ob_issuer_domain: str = "fsp.patissons.tech"
