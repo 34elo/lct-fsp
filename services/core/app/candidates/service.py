@@ -9,6 +9,7 @@ import secrets
 import statistics
 import uuid
 from datetime import UTC, date, timedelta
+from functools import cache
 
 import sqlalchemy as sa
 from fsp_contracts.enums import EvidenceSource
@@ -20,8 +21,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.candidates import pii
 from app.candidates.models import DEFAULT_VISIBILITY, Candidate, CategoryDispute
+from app.config import Settings
 from app.graph import service as graph
-from app.identity.models import utcnow
+from app.identity.models import User, utcnow
 from app.taxonomy import service as taxonomy
 
 ACTIVE_DAYS = 7
@@ -382,11 +384,27 @@ def effective_status(cand: Candidate) -> str:
 # --- чтение для подбора (matching) -------------------------------------------------------
 
 
-_PUBLISHABLE = sa.or_(
+_AGE_OK = sa.or_(
     Candidate.age_group.is_(None),
     Candidate.age_group != "minor",
     Candidate.parent_consent_at.is_not(None),
 )
+# Профиль без ФИО и контактов работодателям не показывается: связаться с таким кандидатом нельзя.
+# Демо-аккаунты (seed, песочница жюри) без ПДн остаются в выдаче.
+_REACHABLE = sa.or_(
+    sa.and_(Candidate.full_name_enc.is_not(None), Candidate.contacts_enc.is_not(None)),
+    Candidate.user_id.in_(sa.select(User.id).where(User.is_demo.is_(True))),
+)
+
+
+@cache
+def _require_contacts() -> bool:
+    return Settings().require_candidate_contacts
+
+
+def _publishable() -> sa.ColumnElement[bool]:
+    """Профиль можно показывать работодателям: возраст и (если включено) ФИО с контактом."""
+    return sa.and_(_AGE_OK, _REACHABLE) if _require_contacts() else _AGE_OK
 
 
 def _attr_filters(
@@ -396,7 +414,7 @@ def _attr_filters(
     stmt = stmt.where(
         Candidate.deleted_at.is_(None),
         Candidate.search_status != "dnd",
-        _PUBLISHABLE,
+        _publishable(),
         sa.or_(Candidate.salary_min.is_(None), Candidate.salary_min <= salary_cap),
     )
     if pg:
@@ -488,7 +506,7 @@ async def search_pool(
     stmt = select(Candidate).where(
         Candidate.deleted_at.is_(None),
         Candidate.search_status != "dnd",
-        _PUBLISHABLE,
+        _publishable(),
     )
     if require_role:
         stmt = stmt.where(Candidate.primary_role.is_not(None))

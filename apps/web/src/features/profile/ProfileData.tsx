@@ -110,8 +110,14 @@ function View({ p }: { p: CandidateProfile }) {
   const pref = p.preferences;
   const formats = formatsText(pref.formats ?? []);
   const roles = (p.desired_roles ?? []).map(roleLabel);
+  const unreachable = !v.fullName || !(v.email || v.phone || v.telegram);
   return (
     <>
+      {unreachable && (
+        <p role="alert" data-testid="profile-hidden-warning" className="m-0 rounded-lg bg-warning-bg px-3 py-2 text-sm text-warning-fg">
+          {DATA.hiddenWarning}
+        </p>
+      )}
       <Card title={DATA.personal} testid="profile-data-personal">
         <div>
           <Row label={DATA.fullName} testid="profile-data-name">
