@@ -121,7 +121,7 @@ apps/web/
 
 ## 5. Тема и токены
 
-**Из дизайна** (v1 — [design-pack/components](../archive/design-pack/components/) и [design-pack/tokens](../archive/design-pack/tokens/); v2 — [design/v2](../design/v2/README.md)):
+**Из дизайна** (v1 — пакет `design-pack`, удалён, история git; v2 — [design/v2](../design/v2/README.md)):
 - `globals.css` → `packages/ui/src/styles/tokens.css` (`@fsp/ui`): CSS-переменные, светлая в `:root`, тёмная в `.dark` (переключение классом на `<html>`, тем две — светлая и тёмная (E39-2): при первом входе тема системная и следует за ней, выбор пользователя (шапка, «Настройки», `localStorage fsp-theme`) сильнее; карточка кандидата следует общей теме; `<ThemeScope dark>` включает тёмную тему для области; шкала текста `text-11…text-48`, метка `lbl`, тени `shadow-xs`/`shadow-card`). **v2:** имена из `docs/design/v2/fsp2.css` (`--deep`, `--mid`, `--t50…t200`, `--hair`, `--ok`, `--warn*`, `--err*`) — алиасы тех же токенов, плюс `--chip-fg`, `--code-*`, `--err-border`, `--shadow-menu`; `<ThemeScope light>` (класс `.light`) — светлая область внутри тёмной (`.dark .lt` макетов). Утилиты `num`, `skl`. Шапка `.hd`, нижняя панель `.tb` и меню аватара — `AppBar`/`TabBar`/`AccountMenu` из `@fsp/ui`, приложение передаёт `renderLink`.
 - **Tailwind 4** (CSS-first): цвета из `tailwind.config.ts` переносятся в `@theme inline` и **ссылаются на переменные**, например `--color-brand: var(--brand)`, `--color-tint-50: var(--tint-50)`. Тогда классы `bg-brand`, `border-tint-200`, `text-brand-deep` из `fsp-ui.tsx` работают в обеих темах.
 - `fsp-ui.tsx` → `packages/ui/src/brand/`. Захардкоженные цвета заменить токенами (см. [design/brief.md §0](../design/brief.md#0-дизайн-получен-2026-10-02--с-чего-начинать-фронтенду)).

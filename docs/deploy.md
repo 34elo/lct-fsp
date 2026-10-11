@@ -274,7 +274,7 @@ Pull request → [`ci.yml`](../.github/workflows/ci.yml) на облачных �
 3. бэкап (`pre-<коммит>`);
 4. `make up` — сборка образов, миграции (`core-migrate`), запуск;
 5. проверка API, SPA и справочника до 3 минут;
-6. смоук ML ([`smoke-ml.sh`](../infra/scripts/smoke-ml.sh), E42-6): `ml-api /healthz` (embedder не `down`; `fallback` допустим), `POST /v1/embeddings` → 200, короткий запрос к LLM (при `LLM_ENABLED=true`: недоступный llama-server или пустой/неверный `LLM_API_KEY` — сбой), бот запущен и не перезапускается (при заданном `TG_BOT_TOKEN`); поле `llm` из `/healthz` не смотрим — оно отражает режим `ML_FAKE`, а не доступность llama-server;
+6. смоук ML ([`smoke-ml.sh`](../infra/scripts/smoke-ml.sh), E42-6): `ml-api /healthz` (embedder не `down`; `fallback` допустим, пока модель e5-small скачивается при первом старте в том `hfcache` — до ~470 МБ, нужен выход к huggingface.co; готовность — `embedder: up`), `POST /v1/embeddings` → 200, короткий запрос к LLM (при `LLM_ENABLED=true`: недоступный llama-server или пустой/неверный `LLM_API_KEY` — сбой), бот запущен и не перезапускается (при заданном `TG_BOT_TOKEN`); поле `llm` из `/healthz` не смотрим — оно отражает режим `ML_FAKE`, а не доступность llama-server;
 7. успех — чистка образов, обновление таймеров, сообщение в чат алертов; сбой (в том числе смоука) — откат кода на прежний коммит и сообщение с причиной (`FAIL <проверка>: <причина>`).
 
 Операции идут строго по одной (`concurrency: stand`). Откат возвращает код, но не миграции: миграция в `main` должна быть совместима с прежним кодом (добавляем, не удаляем и не переименовываем в том же релизе).

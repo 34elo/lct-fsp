@@ -1,21 +1,21 @@
 # Дизайн-бриф
 
-> ⚠️ **Бриф v1** (пакет `archive/design-pack`, экраны до ТЗ 2026). Вид экранов v2 — [design/v2](v2/README.md), бриф v2 — [claude-design/brief.md](claude-design/brief.md). Отсюда по-прежнему действует словарь текстов §7.
+> ⚠️ **Бриф v1** (пакет макетов v1, удалён из репозитория, экраны до ТЗ 2026). Вид экранов v2 — [design/v2](v2/README.md), бриф v2 — [claude-design/brief.md](claude-design/brief.md). Отсюда по-прежнему действует словарь текстов §7.
 
 > Для дизайнера, фронтендера и Claude Design. Токены и правила бренда: [brand.md](brand.md). Готовый промпт: [prompt.md](claude-design/brief.md).
 
 ## 0. Дизайн получен (2026-10-02) — с чего начинать фронтенду
 
-**Пакет дизайна с PNG-эталонами (2026-10-03, в архиве):** [design-pack/](../archive/design-pack/) — эталон вида для редизайна, задачи — [backlog.md §E19](../process/backlog.md#e19-редизайн-по-пакету-дизайна). Таблица ниже остаётся справочной.
+**Пакет дизайна с PNG-эталонами (2026-10-03, удалён из репозитория, остался в истории git):** `design-pack/` — эталон вида для редизайна, задачи — [backlog.md §E19](../process/backlog.md#e19-редизайн-по-пакету-дизайна). Таблица ниже остаётся справочной.
 
 **Источник:** макеты Claude Design — https://claude.ai/artifact/BFv79UauSjh1LLt7kEDHBr. Локальные копии лежат в репозитории, ходить в артефакт не нужно.
 
 | Что | Где | Как использовать |
 |---|---|---|
-| Токены (CSS-переменные, светлая и тёмная тема) | [handoff/globals.css](../archive/design-pack/tokens/globals.css) | Основа `apps/web/src/styles/tokens.css` |
-| Tailwind-тема | [handoff/tailwind.config.ts](../archive/design-pack/tokens/tailwind.config.ts) | Перенести в `@theme` Tailwind 4 (см. [frontend.md §5](../architecture/frontend.md#5-тема-и-токены)) |
-| Готовые компоненты | [handoff/fsp-ui.tsx](../archive/design-pack/components/fsp-ui.tsx) | `TrustDots`, `SkillChip`, `ConstellationAvatar`, `MatchRing`, `CandidateCard`, `OfferCard`, `UpliftCard` → `apps/web/src/shared/brand/` |
-| Экраны (41 макет) | [screens/](../archive/design-pack/screens/html/) | Открой нужный `.dc.html`: разметка с инлайн-стилями плюс логика интерактива в `<script data-dc-script>` (например, живая подсказка вилки в `C_Offer`) |
+| Токены (CSS-переменные, светлая и тёмная тема) | `handoff/globals.css` | Основа `apps/web/src/styles/tokens.css` |
+| Tailwind-тема | `handoff/tailwind.config.ts` | Перенести в `@theme` Tailwind 4 (см. [frontend.md §5](../architecture/frontend.md#5-тема-и-токены)) |
+| Готовые компоненты | `handoff/fsp-ui.tsx` | `TrustDots`, `SkillChip`, `ConstellationAvatar`, `MatchRing`, `CandidateCard`, `OfferCard`, `UpliftCard` → `apps/web/src/shared/brand/` |
+| Экраны (41 макет) | `screens/` | Открой нужный `.dc.html`: разметка с инлайн-стилями плюс логика интерактива в `<script data-dc-script>` (например, живая подсказка вилки в `C_Offer`) |
 
 **Экран → файл → маршрут.** Маршруты из макетов приняты, они же в [frontend.md §1](../architecture/frontend.md#1-карта-маршрутов). Точки адаптива: 1440 / 1024 / 390.
 
@@ -153,7 +153,7 @@
 Не экраны, но дизайн нужен: структура сообщения об оффере (компания, роль, **вилка жирным**, совпадение, 3 строки ✓/⚠, кнопки), «профиль обновился», лог разбора резюме. Тексты — в [../architecture/telegram.md](../architecture/telegram.md).
 
 ### 4.7. Макеты v2, блок 2 (E19-16b)
-Эталоны: [pack/screens/png](../archive/design-pack/screens/png) (№ 39–42), разметка в [pack/screens/html](../archive/design-pack/screens/html), описание в [pack/docs/SCREENS.md](../archive/design-pack/docs/SCREENS.md). Строятся на готовых паттернах: сетка категорий — как A/E4, отклики — как M2/E5.
+Эталоны: `pack/screens/png` (№ 39–42), разметка в `pack/screens/html`, описание в `pack/docs/SCREENS.md`. Строятся на готовых паттернах: сетка категорий — как A/E4, отклики — как M2/E5.
 
 | ID | Экран | Файл | Маршрут | Адаптив |
 |---|---|---|---|---|
@@ -162,7 +162,7 @@
 | R1 | Отклики: работодатель (таблица) и кандидат (карточки) | `R1_Responses` | `/employer/responses`, `/me/responses` | кандидат — 390 |
 | J1 | Публичные вакансии и отклик | `J1_Jobs` | `/jobs`, `/jobs/:id` | список 1440, карточка 390 |
 
-Правила: имена и контакты скрыты до приглашения; контакты кандидата открываются компании при его отклике; вилка в вакансии и приглашении обязательна и крупная; статус «заявлено vs подтверждено» всегда с иконкой и словом (`confirmed`, `overclaimed`, `underclaimed`, `unconfirmed`); отсутствие теста не штрафуется текстом, только пометка «нет теста»; все числа в макетах демонстрационные, компании вымышленные. Состояния: загрузка, пусто, ошибка, email не подтверждён. Промпты для Claude Design — в [архиве](../archive/claude-design/).
+Правила: имена и контакты скрыты до приглашения; контакты кандидата открываются компании при его отклике; вилка в вакансии и приглашении обязательна и крупная; статус «заявлено vs подтверждено» всегда с иконкой и словом (`confirmed`, `overclaimed`, `underclaimed`, `unconfirmed`); отсутствие теста не штрафуется текстом, только пометка «нет теста»; все числа в макетах демонстрационные, компании вымышленные. Состояния: загрузка, пусто, ошибка, email не подтверждён. Промпты для Claude Design — в `архиве`.
 
 ## 5. Вау-моменты (для демо и жюри)
 

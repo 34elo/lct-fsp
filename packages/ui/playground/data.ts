@@ -1,4 +1,4 @@
-// Демо-данные из docs/archive/design-pack/docs/DATA.md. Только для playground и тестов, не для экранов.
+// Демо-данные из пакета макетов v1 (DATA.md). Только для playground и тестов, не для экранов.
 import type { CandidateCardV2Data, CategoryCardData, ConstellationNode, FspResult, OfferCardV2Data, ScatterPoint, TrustKind, TrustLevel } from "../src";
 
 export const DEMO_CANDIDATES = [

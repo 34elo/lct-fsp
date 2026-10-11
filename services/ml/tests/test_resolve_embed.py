@@ -93,7 +93,7 @@ def test_embeddings_limit_and_fallback():
 class _Stub:
     model = "bge-m3"
 
-    def encode(self, texts):
+    def encode(self, texts, kind="passage"):
         return [[1.0, 0.0, 0.0] for _ in texts]
 
 
