@@ -4,7 +4,7 @@ import type { HTMLAttributes } from "react";
 import { cn } from "../lib/cn";
 import { Popover, PopoverContent, PopoverTrigger } from "../primitives/overlay";
 
-/* Фирменные компоненты (эталон — docs/archive/design-pack/components/fsp-ui.tsx), без захардкоженных цветов. */
+/* Фирменные компоненты (эталон — fsp-ui.tsx пакета макетов v1), без захардкоженных цветов. */
 
 export type TrustKind = "verified" | "inferred" | "adjacent" | "claimed" | "provisional";
 export type TrustLevel = 0 | 1 | 2 | 3 | 4;

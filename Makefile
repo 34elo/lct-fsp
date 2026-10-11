@@ -9,7 +9,7 @@ lint: docs-links
 	uv run lint-imports
 	pnpm -r lint && pnpm -r typecheck
 
-# Относительные ссылки и якоря в Markdown (E39-37), без сети; docs/archive не проверяется
+# Относительные ссылки и якоря в Markdown (E39-37), без сети
 .PHONY: docs-links deadcode
 docs-links:
 	PYTHONUTF8=1 uv run python tools/check_links.py

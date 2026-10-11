@@ -27,8 +27,7 @@ SKIP_DIRS = {
     ".ruff_cache",
     "__pycache__",
 }
-# Архив хранится как есть: ссылки в нём не правим и не проверяем.
-SKIP_PREFIXES = ("docs/archive/",)
+SKIP_PREFIXES: tuple[str, ...] = ()
 
 LINK_RE = re.compile(r"(?<!!)\[[^\]\n]*\]\(\s*<?([^)\s>]+)>?(?:\s+\"[^\"]*\")?\s*\)")
 IMAGE_RE = re.compile(r"!\[[^\]\n]*\]\(\s*<?([^)\s>]+)>?(?:\s+\"[^\"]*\")?\s*\)")
