@@ -1,95 +1,52 @@
-# Документация ФСП Карьера
+# Документация ФСП Карьеры
 
-Единая точка входа: каждый действующий документ — одной строкой ниже. Устаревшее удалено (история git). Правила работы с репозиторием — [AGENTS.md](../AGENTS.md).
+Начать с нуля: [кейс](product/case.md) → [архитектура](architecture/overview.md) → [механика теста](mechanics/assessment.md) → [механика подбора](mechanics/matching.md) → [запуск](operations/running.md).
 
-**Читать с нуля:** [case.md](case.md) → [solution.md](solution.md) → [architecture/system.md](architecture/system.md) → [deploy.md](deploy.md).
-
-## Продукт и сдача
+## Продукт
 
 | Документ | О чём |
 |---|---|
-| [case.md](case.md) | ТЗ за 5 минут: задача, критерии, что сдаём (оригинал — [tz-2026.pdf](tz-2026.pdf)) |
-| [solution.md](solution.md) | Наше решение: ключевые идеи, отличия, соответствие ТЗ |
-| [submission.md](submission.md) | Документ сдачи (в PDF/DOCX — `make submission-pdf`) |
-| [pitch.md](pitch.md) | Питч и демо: сценарий, вау-моменты, чек-лист |
-| [libraries.md](libraries.md) | Библиотеки с версиями и лицензиями (генерируется `make submission-libs`) |
+| [product/case.md](product/case.md) | Кейс и требования ТЗ кратко (оригинал — [tz-2026.pdf](tz-2026.pdf)) |
+| [product/requirements.md](product/requirements.md) | Каждое требование ТЗ → как и где реализовано |
+| [product/features.md](product/features.md) | Весь функционал по ролям |
+| [product/qa-session.md](product/qa-session.md) | Сводка сессии вопросов и ответов с организаторами |
+| [product/questions.md](product/questions.md) | Наши вопросы организаторам и ответы |
 
 ## Архитектура
 
 | Документ | О чём |
 |---|---|
-| [architecture/system.md](architecture/system.md) | Архитектура для защиты: схемы, сущности, потоки, вопросы и ответы |
-| [architecture/services.md](architecture/services.md) | Сервисы и модули core, границы, владельцы |
-| [architecture/stack.md](architecture/stack.md) | Технологии и почему они |
-| [architecture/flows.md](architecture/flows.md) | Сценарии с диаграммами последовательностей |
-| [architecture/data-model.md](architecture/data-model.md) | Таблицы БД |
-| [architecture/api.md](architecture/api.md) | REST, схемы, SSE, internal API (справочник — [openapi.json](openapi.json)) |
-| [architecture/messaging.md](architecture/messaging.md) | RabbitMQ, outbox/inbox, Redis, лимиты (справочник — [asyncapi.json](asyncapi.json)) |
-| [architecture/decisions.md](architecture/decisions.md) | Журнал архитектурных решений (ADR) |
-| [architecture/security.md](architecture/security.md) | Аутентификация, приватность, согласия, 152-ФЗ |
-| [architecture/deployment.md](architecture/deployment.md) | Топология, compose, GPU, окружение |
+| [architecture/overview.md](architecture/overview.md) | Функциональная и компонентная архитектура, потоки, концепции за рамками MVP (защита от фиктивных вакансий, ATS) |
+| [architecture/modules.md](architecture/modules.md) | Структура репозитория, модули и их мини-документация |
+| [architecture/data-model.md](architecture/data-model.md) | Таблицы баз данных |
+| [architecture/api.md](architecture/api.md) | REST API, ошибки, internal API (спецификация — [openapi.json](openapi.json)) |
+| [architecture/messaging.md](architecture/messaging.md) | События, команды, очереди, outbox/inbox (каталог — [asyncapi.json](asyncapi.json)) |
+| [architecture/security.md](architecture/security.md) | Аутентификация, роли, персональные данные, 152-ФЗ |
+| [architecture/frontend.md](architecture/frontend.md) | Устройство SPA, экраны, UX-правила |
+| [design.md](design.md) | Дизайн-система: токены, компоненты, принципы |
 
-## Тест, навыки, подбор
+## Механики
 
 | Документ | О чём |
 |---|---|
-| [architecture/assessment.md](architecture/assessment.md) | Тест: семейства, «мир», Rasch + SPRT, грейды, ранжирование заданий и кандидатов |
-| [architecture/skills.md](architecture/skills.md) | Граф навыков: типы, профессии, рост, софт-сигналы |
-| [architecture/graph.md](architecture/graph.md) | Граф доказательств, доверие, сила |
-| [architecture/matching.md](architecture/matching.md) | Подбор, ранжирование, рекомендации, uplift, `p_accept` |
-| [architecture/ml.md](architecture/ml.md) | Модели, разбор резюме, LLM и режим без LLM |
-| [architecture/metrics.md](architecture/metrics.md) | Метрики (v2 — §9), аналитика, живые прогоны |
-| [architecture/evaluation.md](architecture/evaluation.md) | Эталоны, синтетика, демо-данные, `make eval` |
+| [mechanics/assessment.md](mechanics/assessment.md) | Тест: семейства заданий, «мир», Rasch + SPRT, грейды, антисписывание, устойчивость к утечке |
+| [mechanics/matching.md](mechanics/matching.md) | Категоризация, потребность → категории, ранжирование, подбор под вакансию |
+| [mechanics/contact.md](mechanics/contact.md) | Интерес, приглашение, отклик, раскрытие контактов |
+| [mechanics/skills.md](mechanics/skills.md) | Граф навыков, доказательства, доверие, рост справочника |
+| [mechanics/fsp.md](mechanics/fsp.md) | Интеграция с реестром ФСП и FSP ID |
+| [mechanics/ml.md](mechanics/ml.md) | Модели, разбор резюме, где участвует LLM |
 
-## Интеграции и интерфейсы
-
-| Документ | О чём |
-|---|---|
-| [architecture/fsp.md](architecture/fsp.md) | ФСП: реестр, привязка, синхронизация, мок |
-| [architecture/telegram.md](architecture/telegram.md) | Telegram-бот |
-| [architecture/frontend.md](architecture/frontend.md) | SPA: маршруты, компоненты, состояние |
-| [architecture/admin.md](architecture/admin.md) | Админка ФСП: что модерирует человек, что работает само |
-| [design/v2/README.md](design/v2/README.md) | Эталон вида: экраны HTML, экран → маршрут → задача |
-| [design/v3/landing/README.md](design/v3/landing/README.md) | Макет лендинга (E39-35) |
-| [design/claude-design/brief.md](design/claude-design/brief.md) | Смысл и данные экранов (бриф для Claude Design) |
-| [design/brief.md](design/brief.md) | Бриф v1; действует словарь текстов §7 |
-| [design/brand.md](design/brand.md) | Бренд ФСП: цвета, логотипы, контрасты (файлы — `design/assets/`) |
-| [ux/ux-spec.md](ux/ux-spec.md) | UX: что пользователь получает на каждой странице, стиль |
-| [ux/feedback.md](ux/feedback.md) | Правки команды по стенду и их статус |
-
-## Запуск и демо
+## Эксплуатация и качество
 
 | Документ | О чём |
 |---|---|
-| [deploy.md](deploy.md) | Развёртывание: профили lite/standard/full, команды, демо-сброс |
+| [operations/running.md](operations/running.md) | Сборка, запуск, демо-данные и демо-аккаунты |
+| [operations/infrastructure.md](operations/infrastructure.md) | Docker Compose, gateway, порты, CI/CD, продовый стенд |
+| [operations/configuration.md](operations/configuration.md) | Переменные окружения и `scoring.yaml` |
+| [quality/validation.md](quality/validation.md) | Процедура валидации теста и подбора, результаты |
+| [quality/testing.md](quality/testing.md) | Тесты и проверки кода |
+| [libraries.md](libraries.md) | Библиотеки с версиями и лицензиями (`make libraries`) |
 
-## Процесс
+## Решения
 
-| Документ | О чём |
-|---|---|
-| [process/plan.md](process/plan.md) | Очередь задач для агентов (`/vibe`), журнал |
-| [process/backlog.md](process/backlog.md) | Эпики и задачи с критериями готовности |
-| [process/blocks.md](process/blocks.md) | Работа двумя блоками: зоны, контракты стыка, общие файлы |
-| [process/workflow.md](process/workflow.md) | Git, контракты, Definition of Done, работа с агентами |
-| [notes/qa-2026.md](notes/qa-2026.md) | Ответы организаторов (сессия и чат) |
-| [notes/questions.md](notes/questions.md) | Открытые и закрытые вопросы к организаторам |
-| [notes/research.md](notes/research.md) | Как это делают другие: платформы, наука, нормы |
-
-## Отчёты
-
-| Документ | О чём |
-|---|---|
-| [reports/metrics-2026-10-07.md](reports/metrics-2026-10-07.md) | Прогон метрик качества на дату |
-| [reports/matching-weights-2026-10-07.md](reports/matching-weights-2026-10-07.md) | Подбор весов ранжирования |
-| [reports/design-v2-check.md](reports/design-v2-check.md) | Сверка экранов с дизайном v2 |
-| [reports/review-b1.md](reports/review-b1.md) | Ревью задач блока 1 |
-| [reports/review-b2.md](reports/review-b2.md) | Ревью задач блока 2 |
-| [../reports/e39-check.md](../reports/e39-check.md) | Прогон глазами жюри после E39 (E39-36) |
-| [../reports/admin-audit.md](../reports/admin-audit.md) | Автоаудит админки (E39-30) |
-
-## Правила
-
-- Документация — часть кода: меняешь контракт, схему или формулу — правишь документ в том же PR. Решения — в [decisions.md](architecture/decisions.md).
-- Источник правды для API — `openapi.json` и `asyncapi.json` из сервисов; `api.md` и `messaging.md` описывают договорённости.
-- Новые документы не заводим без необходимости: дополняем подходящий раздел и строку в этом файле.
-- Ссылки проверяет `uv run python tools/check_links.py` (в CI и `make lint`).
+[Журнал архитектурных решений (ADR)](adr/README.md) — 24 решения: что выбрали, почему и с какими последствиями.
