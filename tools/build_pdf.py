@@ -7,6 +7,7 @@
 рисуются скриптом с CDN, поэтому при сборке нужен интернет. Результат — `submission/*.pdf`.
 """
 
+# ruff: noqa: E501
 from __future__ import annotations
 
 import argparse
@@ -35,18 +36,55 @@ BROWSERS = (
 SUPPORT = [
     ("Обзор документации", ["README.md"]),
     ("Как решение закрывает критерии оценки", ["product/criteria.md"]),
-    ("Продукт", ["product/case.md", "product/requirements.md", "product/features.md",
-                 "product/qa-session.md", "product/questions.md", "product/roadmap.md"]),
-    ("Архитектура", ["architecture/overview.md", "architecture/modules.md", "architecture/data-model.md",
-                     "architecture/api.md", "architecture/messaging.md", "architecture/security.md",
-                     "architecture/frontend.md", "design.md"]),
-    ("Механики", ["mechanics/assessment.md", "mechanics/matching.md", "mechanics/contact.md",
-                  "mechanics/skills.md", "mechanics/fsp.md", "mechanics/ml.md"]),
+    (
+        "Продукт",
+        [
+            "product/case.md",
+            "product/requirements.md",
+            "product/features.md",
+            "product/qa-session.md",
+            "product/questions.md",
+            "product/roadmap.md",
+        ],
+    ),
+    (
+        "Архитектура",
+        [
+            "architecture/overview.md",
+            "architecture/modules.md",
+            "architecture/data-model.md",
+            "architecture/api.md",
+            "architecture/messaging.md",
+            "architecture/security.md",
+            "architecture/frontend.md",
+            "design.md",
+        ],
+    ),
+    (
+        "Механики",
+        [
+            "mechanics/assessment.md",
+            "mechanics/matching.md",
+            "mechanics/contact.md",
+            "mechanics/skills.md",
+            "mechanics/fsp.md",
+            "mechanics/ml.md",
+        ],
+    ),
     ("Валидация и качество", ["quality/validation.md", "quality/testing.md"]),
-    ("Запуск и эксплуатация", ["operations/running.md", "operations/infrastructure.md",
-                               "operations/configuration.md"]),
-    ("Решения (ADR)", ["adr/README.md", *sorted(str(p.relative_to(DOCS)).replace("\\", "/")
-                                                  for p in (DOCS / "adr").glob("0*.md"))]),
+    (
+        "Запуск и эксплуатация",
+        ["operations/running.md", "operations/infrastructure.md", "operations/configuration.md"],
+    ),
+    (
+        "Решения (ADR)",
+        [
+            "adr/README.md",
+            *sorted(
+                str(p.relative_to(DOCS)).replace("\\", "/") for p in (DOCS / "adr").glob("0*.md")
+            ),
+        ],
+    ),
 ]
 
 CSS = """
@@ -79,8 +117,12 @@ def slug(path: str) -> str:
 
 def convert(md_path: Path, rel: str, known: dict[str, str]) -> str:
     text = md_path.read_text(encoding="utf-8")
-    text = re.sub(r"```mermaid\n(.*?)```", lambda m: f'<div class="mermaid">{html.escape(m.group(1))}</div>',
-                  text, flags=re.S)
+    text = re.sub(
+        r"```mermaid\n(.*?)```",
+        lambda m: f'<div class="mermaid">{html.escape(m.group(1))}</div>',
+        text,
+        flags=re.S,
+    )
 
     def link(m: re.Match[str]) -> str:
         label, target = m.group(1), m.group(2)
@@ -115,16 +157,27 @@ def to_pdf(html_text: str, out: Path) -> None:
         src = Path(tmp) / "doc.html"
         src.write_text(html_text, encoding="utf-8")
         subprocess.run(
-            [browser, "--headless=new", "--disable-gpu", "--no-pdf-header-footer",
-             "--virtual-time-budget=30000", f"--print-to-pdf={out}", src.as_uri()],
-            check=True, capture_output=True, timeout=300,
+            [
+                browser,
+                "--headless=new",
+                "--disable-gpu",
+                "--no-pdf-header-footer",
+                "--virtual-time-budget=30000",
+                f"--print-to-pdf={out}",
+                src.as_uri(),
+            ],
+            check=True,
+            capture_output=True,
+            timeout=300,
         )
     print(f"{out.relative_to(ROOT)}  {out.stat().st_size // 1024} КБ")
 
 
 def build_summary() -> None:
     known = {"product/summary.md": "summary"}
-    body = convert(DOCS / "product/summary.md", "product/summary.md", known).replace(' class="doc"', "", 1)
+    body = convert(DOCS / "product/summary.md", "product/summary.md", known).replace(
+        ' class="doc"', "", 1
+    )
     to_pdf(page("ФСП Карьера — сводка проекта", body), OUT / "fsp-career-summary.pdf")
 
 
@@ -139,8 +192,10 @@ def build_support() -> None:
     for title, group in SUPPORT:
         parts.append(f"<h1 class='part'>{html.escape(title)}</h1>")
         parts.extend(convert(DOCS / f, f, known) for f in group)
-    to_pdf(page("ФСП Карьера — сопроводительная документация", "".join(parts)),
-           OUT / "fsp-career-documentation.pdf")
+    to_pdf(
+        page("ФСП Карьера — сопроводительная документация", "".join(parts)),
+        OUT / "fsp-career-documentation.pdf",
+    )
 
 
 if __name__ == "__main__":
