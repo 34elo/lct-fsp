@@ -8,6 +8,11 @@ class Settings(BaseServiceSettings):
     embedding_model: str = "bge-m3"  # lite: multilingual-e5-small (384, +нули)
     embedding_model_path: str = ""  # локальный каталог bge-m3; пусто → фейк при ML_FAKE=true
     embedding_max_texts: int = 128
+    # E44-1: модель с HF (кеш HF_HOME в томе), если локального каталога нет; пусто → по имени
+    # модели (multilingual-e5-small → intfloat/...); EMBEDDING_AUTOLOAD=false выключает загрузку
+    embedding_hf_id: str = ""
+    embedding_autoload: bool = True
+    embedding_cache_dir: str = ""  # пусто → HF_HOME / ~/.cache/huggingface
     core_url: str = "http://core-api:8000"
     service_token_ml: str = ""  # SERVICE_TOKEN_ML из .env; пусто → снимок графа не тянем
     # false (профиль lite, ADR-023/024): LLM не вызываем, каждая функция идёт правиловой веткой

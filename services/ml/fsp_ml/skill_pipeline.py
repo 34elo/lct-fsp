@@ -337,7 +337,7 @@ class SkillPipeline:
             texts = self._texts(s, index)
             lex = self.reranker.score(norm, texts)
             sims[s] = (lex, lex)
-        if self.embedder is not None and sims:
+        if self.embedder is not None and getattr(self.embedder, "ready", True) and sims:
             order = sorted(sims)
             docs = [" ".join(self._texts(s, index)) for s in order]
             vecs = await self._embed([norm, *docs], index)
