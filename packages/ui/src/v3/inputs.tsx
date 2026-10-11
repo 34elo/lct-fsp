@@ -98,7 +98,7 @@ export interface ProfessionOption {
   title: string;
 }
 
-/** Источник подсказок профессий (E39-3: `/taxonomy/professions/suggest`). */
+/** Источник подсказок профессий (`/taxonomy/professions/suggest`). */
 export type ProfessionSource = (query: string, signal: AbortSignal) => Promise<ProfessionOption[]>;
 
 /**

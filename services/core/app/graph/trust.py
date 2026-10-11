@@ -1,4 +1,4 @@
-"""Доверие к навыкам: чистые формулы (ml.md §3.1, §3.3), без БД.
+"""Доверие к навыкам: чистые формулы, без БД.
 
 Параметры берутся из `data/scoring.yaml` (`TrustConfig.load`); формулы силы по источникам
 (GitHub, тест, ФСП…) считают писатели evidence, здесь — только затухание и объединение.
@@ -24,7 +24,7 @@ ROOT = Path(__file__).resolve().parents[4]
 DEFAULT_SCORING_PATH = ROOT / "data" / "scoring.yaml"
 CLAIMED_SOURCES = frozenset({"self", "resume"})
 DAYS_IN_YEAR = 365.25
-UNVERIFIED_FSP_FACTOR = 0.5  # ml.md §3.1: неверифицированная привязка ФСП
+UNVERIFIED_FSP_FACTOR = 0.5  # неверифицированная привязка ФСП
 
 
 @dataclass(frozen=True, slots=True)
@@ -96,7 +96,7 @@ def effective_strength(
 
 def level_for(confidence: float, cfg: TrustConfig) -> int:
     """Уровень доверия 0–4 (точки ○○○○…●●●●): старший уровень, чей порог `level_min` не выше
-    `confidence` (ml.md §3.3).
+    `confidence`.
     """
     return max(i for i, lo in enumerate(cfg.level_min) if confidence >= lo)
 
@@ -108,7 +108,7 @@ def combine(
     *,
     provisional: bool = False,
 ) -> SkillTrust | None:
-    """Максимум внутри источника, noisy-OR между источниками (ml.md §3.3).
+    """Максимум внутри источника, noisy-OR между источниками.
 
     None — если не осталось ни одного действующего доказательства.
     """
@@ -133,7 +133,7 @@ def combine(
     )
 
 
-MAX_INHERIT_LEVELS = 2  # graph.md §5.1: наследуем вверх не больше двух уровней
+MAX_INHERIT_LEVELS = 2  # наследуем вверх не больше двух уровней
 
 
 def inherit(
@@ -141,7 +141,7 @@ def inherit(
     parents_of: Callable[[uuid.UUID], Iterable[tuple[uuid.UUID, float]]],
     cfg: TrustConfig,
 ) -> dict[uuid.UUID, tuple[SkillTrust, uuid.UUID]]:
-    """Наследование по иерархии (graph.md §5.1).
+    """Наследование по иерархии.
 
     Родитель получает `max(child_conf × coef(child→parent))`, если это выше его собственного
     доверия. Возвращает {родитель: (доверие, непосредственный дочерний навык-источник)}.

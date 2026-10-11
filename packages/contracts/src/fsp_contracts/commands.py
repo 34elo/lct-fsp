@@ -1,4 +1,4 @@
-"""Команды: обменник `commands` (direct), routing key = имя очереди исполнителя (messaging.md §2.2).
+"""Команды: обменник `commands` (direct), routing key = имя очереди исполнителя.
 
 `Envelope.type` = имя команды, AMQP priority = `CommandSpec.priority` (важно для `ml.llm`).
 """
@@ -56,7 +56,7 @@ class MlInterviewGrade(BaseModel):
 
 
 class MlInterviewKitGenerate(BaseModel):
-    """Вход без ПДн (ml.md §10.1)."""
+    """Вход без ПДн."""
 
     kit_id: UUID
     vacancy_id: UUID
@@ -89,10 +89,10 @@ class MlQuestionsGenerate(BaseModel):
 
 
 class MlFamiliesGenerate(BaseModel):
-    """E43-9: заказ админа на LLM-задания (навык × `kind` × уровень, до 10 штук).
+    """Заказ админа на LLM-задания (навык × `kind` × уровень, до 10 штук).
 
     Низший приоритет `ml.llm`: не мешает разбору резюме и остальным задачам GPU. Ответ —
-    `ml.families.started`, затем `ml.families.generated` (assessment.md §7).
+    `ml.families.started`, затем `ml.families.generated`.
     """
 
     order_id: UUID
@@ -145,7 +145,7 @@ class CoreMatchCandidate(BaseModel):
 
 
 class CoreJob(BaseModel):
-    """Cron-команды и фоновые задачи `core.jobs` (messaging.md §4)."""
+    """Cron-команды и фоновые задачи `core.jobs`."""
 
     candidate_id: UUID | None = None  # для candidate.delete
 
@@ -168,7 +168,7 @@ COMMANDS: dict[str, CommandSpec] = {
     "ml.skills.resolve": CommandSpec(_LLM, MlSkillsResolve, 3, "ml"),
     "ml.matches.explain": CommandSpec(_LLM, MlMatchesExplain, 2, "ml"),
     "ml.questions.generate": CommandSpec(_LLM, MlQuestionsGenerate, 1, "ml"),
-    "ml.families.generate": CommandSpec(_LLM, MlFamiliesGenerate, 0, "ml"),  # E43-9, фон
+    "ml.families.generate": CommandSpec(_LLM, MlFamiliesGenerate, 0, "ml"),  # фон
     "ml.code.analyze": CommandSpec("ml.code", MlCodeAnalyze, consumer="ml"),
     "fsp.sync": CommandSpec("fsp.sync", FspSync, consumer="fsp-connector"),
     "fsp.sync_all": CommandSpec("fsp.sync", FspSyncAll, consumer="fsp-connector"),
@@ -187,7 +187,7 @@ COMMANDS: dict[str, CommandSpec] = {
             "cleanup",
             "recompute_all",
             "candidate.delete",
-            "taxonomy.professions.suggest",  # E41-17: раз в неделю, предложения новых профессий
+            "taxonomy.professions.suggest",  # раз в неделю, предложения новых профессий
         )
     },
 }

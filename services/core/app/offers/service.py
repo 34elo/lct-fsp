@@ -1,6 +1,6 @@
 """Офферы: создание с проверками, лимиты, идемпотентность, автомат статусов, журнал.
 
-Правила (api.md §2.5, data-model.md §3.8, flows.md F8, security.md §2):
+Правила:
 - вилка обязательна; `salary_to >= salary_from`; слишком широкая вилка — только предупреждение;
 - создавать может участник `verified` компании по своей опубликованной вакансии;
 - лимиты считаем по БД за скользящие 24 ч: компания — `offer_company_per_day`,
@@ -8,11 +8,11 @@
 - `Idempotency-Key` уникален в паре с компанией; повтор того же запроса возвращает исходный
   оффер, тот же ключ с другим запросом — 409;
 - чужой оффер → 404; каждый переход пишет `offer_events` и `offer.*` в outbox в одной транзакции;
-- приглашение без вакансии (ADR-022): нужен `title`; второе открытое приглашение без вакансии
+- приглашение без вакансии: нужен `title`; второе открытое приглашение без вакансии
   тому же кандидату от той же компании — 409; события `offer.*` идут со schema_version 2;
-- отклик (E20-3, `initiator = candidate`): `apply`, вилка из вакансии, контакты раскрыты сразу,
+- отклик (`initiator = candidate`): `apply`, вилка из вакансии, контакты раскрыты сразу,
   ответ компании — `APPLICATION_TRANSITIONS`, повтор → 409 `already_applied`;
-- интерес (E33-1, ADR-026): `interest → interest_opened → sent` в той же строке; вилка
+- интерес: `interest → interest_opened → sent` в той же строке; вилка
   обязательна, сообщение ≤ 300, срок `interest_validity_days`; лимит —
   `interest_company_per_week` за скользящие 7 дней; повтор отметки возвращает открытый интерес;
   события `offer.interest.*` (schema_version 3), после приглашения — обычные `offer.*`.
@@ -55,7 +55,7 @@ from app.vacancies.service import VacancyStatus
 
 S = OfferStatus
 OPEN = (S.sent.value, S.viewed.value)  # ждут ответа кандидата
-INTEREST_OPEN = (S.interest.value, S.interest_opened.value)  # интерес до приглашения (ADR-026)
+INTEREST_OPEN = (S.interest.value, S.interest_opened.value)  # интерес до приглашения
 EXPIRABLE = OPEN + INTEREST_OPEN
 WINDOW = timedelta(hours=24)
 INTEREST_WINDOW = timedelta(days=7)
@@ -77,7 +77,7 @@ TRANSITIONS: dict[tuple[OfferStatus, OfferStatus], str] = {
     (S.interview, S.hired): "company",
     (S.interview, S.not_hired): "company",
 }
-# отклик кандидата (ADR-022, `initiator = candidate`): ответчик - компания, принятие не нужно
+# отклик кандидата (`initiator = candidate`): ответчик - компания, принятие не нужно
 # (контакты кандидата раскрываются сразу при отклике), отозвать может сам кандидат
 APPLICATION_TRANSITIONS: dict[tuple[OfferStatus, OfferStatus], str] = {
     (S.sent, S.viewed): "company",
@@ -92,7 +92,7 @@ APPLICATION_TRANSITIONS: dict[tuple[OfferStatus, OfferStatus], str] = {
     (S.interview, S.hired): "company",
     (S.interview, S.not_hired): "company",
 }
-# интерес работодателя до приглашения (ADR-026): кандидат открывает или отклоняет, компания
+# интерес работодателя до приглашения: кандидат открывает или отклоняет, компания
 # после открытия отправляет приглашение (`interest_opened → sent`) или отзывает интерес
 INTEREST_TRANSITIONS: dict[tuple[OfferStatus, OfferStatus], str] = {
     (S.interest, S.interest_opened): "candidate",
@@ -205,7 +205,7 @@ async def first_invitations(
 ) -> tuple[int, dict[uuid.UUID, datetime]]:
     """Приглашения компаний: сколько всего и `candidate_id → время первого` (счётчики лендинга).
 
-    `real_only` — без демо-приглашений (E40-1).
+    `real_only` — без демо-приглашений.
     """
     employer = Offer.initiator == OfferInitiator.employer.value
     if real_only:
@@ -227,7 +227,7 @@ def _retry_after(oldest: datetime | None, now: datetime) -> dict[str, str]:
 
 
 def _in_interest_phase(offer: Offer) -> bool:
-    """Интерес, по которому ещё не отправлено приглашение (ADR-026)."""
+    """Интерес, по которому ещё не отправлено приглашение."""
     return offer.interest_at is not None and offer.invited_at is None
 
 
@@ -295,7 +295,7 @@ async def create(
     team_offer_id: uuid.UUID | None = None,
     now: datetime | None = None,
 ) -> tuple[Offer, bool]:
-    """Новый оффер (приглашение работодателя, ADR-022: вакансия необязательна).
+    """Новый оффер (приглашение работодателя: вакансия необязательна).
 
     Возвращает `(оффер, replay)`: `replay=True` — это повтор по тому же ключу.
     """
@@ -379,10 +379,10 @@ async def apply(
     session: AsyncSession, *, vacancy: Vacancy, candidate: Candidate, message: str | None,
     limits: OfferLimits, now: datetime | None = None,
 ) -> Offer:  # fmt: skip
-    """Отклик кандидата на опубликованную вакансию (ADR-022, `initiator = candidate`).
+    """Отклик кандидата на опубликованную вакансию (`initiator = candidate`).
 
     Вилка берётся из вакансии. Контакты кандидата раскрываются компании сразу: отклик - его
-    согласие (solution.md §2). Повторный отклик -> 409 `already_applied`.
+    согласие. Повторный отклик -> 409 `already_applied`.
     """
     now = now or datetime.now(UTC)
     if vacancy.status != VacancyStatus.published.value:
@@ -429,7 +429,7 @@ async def apply(
     return offer
 
 
-# --- интерес до приглашения (E33-1, ADR-026) -------------------------------------------
+# --- интерес до приглашения -------------------------------------------
 
 
 def interest_not_found() -> ProblemError:
@@ -545,7 +545,7 @@ async def interests_for(
 async def category_interest_salaries(
     session: AsyncSession, candidate_ids: list[uuid.UUID]
 ) -> list[tuple[int, int]]:
-    """Вилки `(от, до)` интересов и приглашений кандидатам из списка (E39-16)."""
+    """Вилки `(от, до)` интересов и приглашений кандидатам из списка."""
     if not candidate_ids:
         return []
     rows = await session.execute(
@@ -635,7 +635,7 @@ def _replay(existing: Offer, vacancy: Vacancy | None, candidate: Candidate) -> O
 async def avg_response_hours(
     session: AsyncSession, role: str | None, min_sample: int = 3
 ) -> float | None:
-    """Средний срок ответа кандидатов категории (роли) на приглашения, часы (E33-5).
+    """Средний срок ответа кандидатов категории (роли) на приглашения, часы.
 
     Старт — `invited_at` (приглашение после интереса) или `created_at`; конец — `responded_at`.
     Откликов кандидата (`initiator = candidate`) и без ответа не считаем; мало данных — None.
@@ -723,8 +723,8 @@ async def briefs_for(
 
 
 async def invited(session: AsyncSession, company_id: uuid.UUID, candidate_id: uuid.UUID) -> bool:
-    """Компания уже пригласила кандидата (E39-15: ФИО в карточке). Интерес без приглашения
-    (ADR-026) не считается; отклик кандидата — считается (он сам вышел на контакт)."""
+    """Компания уже пригласила кандидата (ФИО в карточке). Интерес без приглашения
+    не считается; отклик кандидата — считается (он сам вышел на контакт)."""
     q = (
         select(Offer.id)
         .where(
@@ -779,7 +779,7 @@ async def transition(
 
 
 async def _reveal(session: AsyncSession, offer: Offer, now: datetime) -> None:
-    """Контакты раскрываются только здесь, в транзакции перехода в `accepted` (security.md §3)."""
+    """Контакты раскрываются только здесь, в транзакции перехода в `accepted`."""
     if await session.get(ContactReveal, offer.id) is None:
         session.add(
             ContactReveal(
@@ -812,7 +812,7 @@ async def require_revealed(session: AsyncSession, offer: Offer) -> ContactReveal
 async def revoke_contacts(
     session: AsyncSession, offer: Offer, now: datetime | None = None
 ) -> ContactReveal:
-    """Отзыв доступа к контактам (E32-5a). Нечего отзывать — 409; повторный отзыв — no-op."""
+    """Отзыв доступа к контактам. Нечего отзывать — 409; повторный отзыв — no-op."""
     reveal = await session.get(ContactReveal, offer.id)
     if reveal is None:
         raise ProblemError(409, "contacts_not_revealed", "Контакты ещё не раскрыты")
@@ -851,7 +851,7 @@ async def add_message(
 ) -> OfferMessage:  # fmt: skip
     """Сообщение от стороны оффера; пока оффер не закрыт (отказ, отзыв, срок, итог) — можно."""
     now = now or datetime.now(UTC)
-    if side == "candidate":  # E41-4: кандидат текстом не отвечает, после принятия — контакты
+    if side == "candidate":  # кандидат текстом не отвечает, после принятия — контакты
         raise ProblemError(
             403, "candidate_message_disabled",
             "Кандидат отвечает без текста: после принятия открываются контакты",
@@ -863,7 +863,7 @@ async def add_message(
         raise ProblemError(409, "offer_closed", "Переписка по этому офферу закрыта")
     if _is_expired(offer, now):
         raise ProblemError(409, "offer_expired", "Срок действия оффера истёк")
-    # E39-26: вместо чата — по одному сообщению от стороны. Сообщение компании — сопроводительное
+    # вместо чата — по одному сообщению от стороны. Сообщение компании — сопроводительное
     # к приглашению (`offer.message`), ответ кандидата — одно, вместе с «Принять».
     already = await session.scalar(
         select(OfferMessage.id).where(
@@ -930,7 +930,7 @@ async def list_complaints(
 
 
 async def count_complaints(session: AsyncSession, status: str) -> int:
-    """Число жалоб в статусе — счётчик на главной админки (E39-29)."""
+    """Число жалоб в статусе — счётчик на главной админки."""
     q = select(func.count()).select_from(Complaint).where(Complaint.status == status)
     return int(await session.scalar(q) or 0)
 
@@ -985,9 +985,7 @@ async def withdraw_application(
 
 
 async def accept(session: AsyncSession, offer: Offer, now: datetime | None = None) -> Offer:
-    """Кандидат принимает приглашение: `transition` в `accepted` (там же открываются контакты,
-    api.md §2.5).
-    """
+    """Кандидат принимает приглашение: `transition` в `accepted` (там же открываются контакты)."""
     return await transition(session, offer, S.accepted, actor="candidate", now=now)
 
 
@@ -995,9 +993,7 @@ async def decline(
     session: AsyncSession, offer: Offer, reason: DeclineReason, comment: str | None,
     now: datetime | None = None,
 ) -> Offer:  # fmt: skip
-    """Кандидат отклоняет приглашение работодателя с причиной; свой отклик так не закрыть — 409
-    (api.md §2.5).
-    """
+    """Кандидат отклоняет приглашение работодателя с причиной; свой отклик так не закрыть — 409."""
     if offer.status not in EXPIRABLE or (offer.initiator == OfferInitiator.candidate.value):
         raise ProblemError(
             409, "invalid_transition", f"Переход {offer.status} → declined невозможен"
@@ -1021,7 +1017,7 @@ async def set_status(
 
 
 async def expire_due(session: AsyncSession, now: datetime | None = None, batch: int = 200) -> int:
-    """`sent|viewed|interest|interest_opened` с истёкшим сроком → `expired` (cron E8-5)."""
+    """`sent|viewed|interest|interest_opened` с истёкшим сроком → `expired` (по расписанию)."""
     now = now or datetime.now(UTC)
     q = (
         select(Offer).where(Offer.status.in_(EXPIRABLE), Offer.expires_at <= now)

@@ -1,4 +1,4 @@
-"""Обработчики очереди `fsp.sync` (messaging.md §2.4): `fsp.sync` и `fsp.sync_all`."""
+"""Обработчики очереди `fsp.sync`: `fsp.sync` и `fsp.sync_all`."""
 
 from __future__ import annotations
 

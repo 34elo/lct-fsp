@@ -1,4 +1,4 @@
-"""Семейства-спецификации из конструктора (assessment.md §4, E30-1): интерпретаторы по `kind`.
+"""Семейства-спецификации из конструктора: интерпретаторы по `kind`.
 
 Спецификация — JSON формы конструктора (`families.spec`). Варианты получаются из сида:
 - `params` — переменные: диапазон `{min, max, step}` или список `values`;
@@ -73,7 +73,7 @@ class SjtAction(BaseModel):
 
 
 class FamilySpec(BaseModel):
-    """Форма конструктора. Поля ключа необязательны: без них нужен черновик LLM (E30-1)."""
+    """Форма конструктора. Поля ключа необязательны: без них нужен черновик LLM."""
 
     title: str = Field(min_length=3, max_length=120)
     kind: Kind
@@ -161,9 +161,7 @@ def _fmt(v: Any) -> str:
 
 
 def variables(spec: FamilySpec, rng: Random, world: World) -> dict[str, Any]:
-    """Переменные варианта из сида: сущности мира, `params` и `derived` по порядку (assessment.md
-    §4, E30-1).
-    """
+    """Переменные варианта из сида: сущности мира, `params` и `derived` по порядку."""
     env: dict[str, Any] = {
         "company": world.company,
         "service": world.services[0],

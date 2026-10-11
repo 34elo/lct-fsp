@@ -22,7 +22,7 @@ import { Button, cn, SalaryRangeInput, Select, Skeleton } from "@fsp/ui";
 import { EMPLOYMENT_LABEL, FORMAT_LABEL, LEVEL_WORD, QUALITY_HINT, VACANCY_STATUS_LABEL, vacancyErrorText } from "./text";
 
 const GRADES = Object.keys(GRADE_LABEL);
-const WIDE_RATIO = 1.6; // api.md: salary_to / salary_from > 1.6
+const WIDE_RATIO = 1.6; // salary_to / salary_from > 1.6
 const num = (s: string) => (s.trim() === "" ? null : Math.max(0, Math.round(Number(s.replace(/\s/g, "")))) || null);
 
 interface TaxSkill { slug: string; name: string; kind?: string }

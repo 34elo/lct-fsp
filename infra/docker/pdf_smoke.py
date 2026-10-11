@@ -1,4 +1,4 @@
-"""E39-20: смоук генерации PDF-профиля внутри образа core (WeasyPrint + системные библиотеки).
+"""Смоук генерации PDF-профиля внутри образа core (WeasyPrint + системные библиотеки).
 
 Запуск: см. job pdf-smoke в .github/workflows/ci.yml.
 Падает, если нет libpango/libgobject или шрифтов, либо PDF пустой.

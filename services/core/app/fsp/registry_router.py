@@ -1,4 +1,4 @@
-"""Реестр ФСП (E39-28, ADR-052): кнопка «Привязать ФСП», заявка кандидата, раздел админа.
+"""Реестр ФСП: кнопка «Привязать ФСП», заявка кандидата, раздел админа.
 
 Хранилище — fsp-connector (`/internal/registry/*`); core проверяет права и передаёт контакты
 аккаунта. Права: кандидат — только своё (без ID в пути), админ — роль `fsp_admin`.
@@ -150,7 +150,7 @@ class RegistryResultIdOut(BaseModel):
 
 
 class ResultsImportIn(BaseModel):
-    """E43-4: `commit=false` — превью (dry-run), `true` — запись; повтор идемпотентен."""
+    """`commit=false` — превью (dry-run), `true` — запись; повтор идемпотентен."""
 
     csv: str = Field(min_length=1, max_length=1_000_000)
     commit: bool = False
@@ -421,7 +421,7 @@ async def registry_import_results(
     _: User = Depends(_admin),
     connector: ConnectorClient = Depends(get_connector),
 ):
-    """Результаты списком (E43-4): CSV `участник;мероприятие;дата;результат`, до 1000 строк.
+    """Результаты списком: CSV `участник;мероприятие;дата;результат`, до 1000 строк.
 
     Без `commit` — превью с построчной проверкой. С `commit` — запись и пересчёт профилей
     затронутых кандидатов (outbox). Новые мероприятия создаются только по `create_events`.

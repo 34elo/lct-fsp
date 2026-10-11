@@ -14,9 +14,9 @@ _ID = sa.BigInteger().with_variant(sa.Integer(), "sqlite")
 
 
 class Offer(Base):
-    """Оффер (data-model.md §3.8). Вилка обязательна; статусы — `OfferStatus`.
+    """Оффер. Вилка обязательна; статусы — `OfferStatus`.
 
-    ADR-022: `vacancy_id` пуст у приглашения без вакансии (тогда обязателен `title`);
+    `vacancy_id` пуст у приглашения без вакансии (тогда обязателен `title`);
     `initiator` — `employer` (приглашение) или `candidate` (отклик).
     """
 
@@ -53,7 +53,7 @@ class Offer(Base):
     team_offer_id: Mapped[uuid.UUID | None] = mapped_column(default=None)
     idempotency_key: Mapped[str | None] = mapped_column(Text, default=None)
     expires_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True))
-    # ADR-026 (E33-1): оффер начался с интереса (`interest_at`), кандидат открыл интерес,
+    # оффер начался с интереса (`interest_at`), кандидат открыл интерес,
     # компания отправила приглашение (`invited_at`). Интерес без приглашения: invited_at пуст.
     interest_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), default=None)
     interest_opened_at: Mapped[datetime | None] = mapped_column(
@@ -62,7 +62,7 @@ class Offer(Base):
     invited_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), default=None)
     viewed_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), default=None)
     responded_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), default=None)
-    # E40-1: демо-данные (seed, жюри): не в статистике, сбрасываются `demo-reset`
+    # демо-данные (seed, жюри): не в статистике, сбрасываются `demo-reset`
     is_demo: Mapped[bool] = mapped_column(default=False, server_default=sa.false())
     created_at: Mapped[datetime] = mapped_column(
         sa.DateTime(timezone=True), default=utcnow, server_default=sa.func.now()
@@ -113,12 +113,12 @@ class ContactReveal(Base):
     revealed_at: Mapped[datetime] = mapped_column(
         sa.DateTime(timezone=True), default=utcnow, server_default=sa.func.now()
     )
-    # E32-5a: кандидат отозвал доступ к контактам; после отзыва компания их не видит
+    # кандидат отозвал доступ к контактам; после отзыва компания их не видит
     revoked_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), default=None)
 
 
 class Complaint(Base):
-    """Жалоба кандидата на оффер/компанию; разбирает админ (E12)."""
+    """Жалоба кандидата на оффер/компанию; разбирает админ."""
 
     __tablename__ = "complaints"
     __table_args__ = (
@@ -137,9 +137,9 @@ class Complaint(Base):
 
 
 class OfferTask(Base):
-    """Задача в приглашении (E33-3, ADR-026): одна на оффер, видна только его сторонам.
+    """Задача в приглашении: одна на оффер, видна только его сторонам.
 
-    Семейство (`family_id`) лежит в банке блока 1 — связи по внешнему ключу нет, доступ только
+    Семейство (`family_id`) лежит в банке заданий — связи по внешнему ключу нет, доступ только
     через порт `offers/invite_task.py`. Ответ один; повтор возвращает принятый.
     """
 

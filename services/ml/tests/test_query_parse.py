@@ -1,4 +1,4 @@
-"""AU-2: /v1/query/parse не отвечает 503 ни в одном профиле."""
+"""/v1/query/parse не отвечает 503 ни в одном профиле."""
 
 from fastapi.testclient import TestClient
 from fsp_ml.config import Settings

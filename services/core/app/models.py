@@ -4,8 +4,6 @@ from fsp_platform.db import Base
 from fsp_platform.outbox import InboxRecord, OutboxRecord  # noqa: F401
 
 from app.analytics.models import AnalyticsEventRow, LiveRun  # noqa: F401
-
-# >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
 from app.assessment.models import Grade, RegularTask, TaskSubmission  # noqa: F401
 from app.candidates.models import Candidate, CategoryDispute  # noqa: F401
 from app.companies.models import Company, CompanyInvite, CompanyMember  # noqa: F401
@@ -39,9 +37,5 @@ from app.taxonomy import models as _taxonomy  # noqa: F401
 from app.telegram.models import TelegramAccount  # noqa: F401
 from app.vacancies.models import Vacancy, VacancySkill  # noqa: F401
 from app.views.models import ProfileView  # noqa: F401
-
-# <<< block1
-# >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
-# <<< block2
 
 metadata = Base.metadata

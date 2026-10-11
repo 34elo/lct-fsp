@@ -64,7 +64,7 @@ import { FEED_TEXT, FIND_TEXT as F, MATCH_TEXT as T } from "./text";
 const PAGE_SIZE = 12;
 const FEED_LIMIT = 8;
 
-/** Плитка категории (E41-11): профессия, грейд, вилка, совпадение, 3 навыка; подробности — «Почему эти категории». */
+/** Плитка категории: профессия, грейд, вилка, совпадение, 3 навыка; подробности — «Почему эти категории». */
 function CategoryTile({ c, on, onSelect }: { c: NeedCategory; on: boolean; onSelect: () => void }) {
   const s = categoryStats(c);
   const affinity = Math.round(c.affinity * 100);
@@ -264,7 +264,7 @@ function FeedEmpty({ hint, action }: { hint: string; action?: ReactNode }) {
   );
 }
 
-/** Лента активности компании (E35-12b): интересы, приглашения, новые по подпискам. */
+/** Лента активности компании: интересы, приглашения, новые по подпискам. */
 function FeedPanel({ hasCompany }: { hasCompany: boolean }) {
   const q = useEmployerActivityEmployerActivityGet({ limit: FEED_LIMIT }, { query: { enabled: hasCompany, retry: false } });
   const items = q.data?.status === 200 ? q.data.data.items : [];
@@ -372,7 +372,7 @@ function Examples({ onPick, disabled }: { onPick: (text: string) => void; disabl
 
 
 /**
- * Подбор работодателя `/employer` (E38-8, E39-21 — поиск сотрудников). Строка запроса с тегами (навыки и
+ * Подбор работодателя `/employer` (поиск сотрудников). Строка запроса с тегами (навыки и
  * профессия из подсказок системы, фраза — в условия через `/search/parse`) и панель фильтров живут в URL;
  * условия → `POST /needs` (`?need=<id>`) → категории с объяснением «почему» → компактная подборка.
  * Справа — подписки и лента. Без условий — примеры запросов.
@@ -380,7 +380,7 @@ function Examples({ onPick, disabled }: { onPick: (text: string) => void; disabl
 export default function MatchPage() {
   const { me } = useAuth();
   const navigate = useNavigate();
-  // Новая компания (E39-7): онбординг из трёх шагов, пока её нет и его не пропускали.
+  // Новая компания: онбординг из трёх шагов, пока её нет и его не пропускали.
   const [wizard, setWizard] = useState(() => !me?.company && !onboardingSkipped());
   if (wizard)
     return (
@@ -405,7 +405,7 @@ function Match({ hasCompany, companyId, onSetup }: { hasCompany: boolean; compan
   const key = criteriaKey(criteria);
   const needId = params.get("need");
   const subject = hasSubject(criteria);
-  // По умолчанию — «Кандидаты» (E43-2); категории — по `view=categories`.
+  // По умолчанию — «Кандидаты»; категории — по `view=categories`.
   const view: "categories" | "candidates" = params.get("view") === "categories" ? "categories" : "candidates";
   const viewExtra = view === "categories" ? { view } : {};
 

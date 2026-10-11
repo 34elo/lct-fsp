@@ -12,7 +12,7 @@ from app.identity.models import utcnow
 
 
 class ProfileView(Base):
-    """Журнал открытия карточки работодателем (data-model.md §3.8, security.md §3)."""
+    """Журнал открытия карточки работодателем."""
 
     __tablename__ = "profile_views"
     __table_args__ = (

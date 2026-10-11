@@ -59,7 +59,7 @@ const TEXT_ON: Array<[string, string]> = [
   ["on-brand", "brand"],
 ];
 
-describe("контраст пар (brand.md §3)", () => {
+describe("контраст пар", () => {
   it("светлая: brand-fg определён и равен brand", () => {
     expect(light["brand-fg"]).toBe(light.brand);
   });

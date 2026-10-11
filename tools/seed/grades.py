@@ -1,4 +1,4 @@
-"""Seed-грейды блока 1 (blocks.md §4.11, S0-3): таблица `grades` до появления настоящего теста.
+"""Seed-грейды: таблица `grades` для демо-кандидатов без прохождения теста.
 
 Грейды пишет `app.assessment.service.seed_grade` (source="seed", событие
 `candidate.category.changed`).
@@ -25,7 +25,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 PROFESSIONS = ("backend", "frontend", "mobile", "ml", "devops", "qa")
 GRADE_SHARES = (("junior", 0.40), ("middle", 0.40), ("senior", 0.20))
 NEEDS_CONFIRMATION_SHARE = 0.05
-DUAL_EVERY = 8  # каждый N-й кандидат с двумя направлениями (E43-6)
+DUAL_EVERY = 8  # каждый N-й кандидат с двумя направлениями
 # Роли синтетики, которых нет среди 6 профессий, → ближайшая профессия.
 ROLE_TO_PROFESSION = {
     "fullstack": "backend",
@@ -37,7 +37,7 @@ ROLE_TO_PROFESSION = {
     "product": "qa",
     "designer": "frontend",
 }
-# θ внутри полосы грейда (cut: junior −1.0, middle 0.0, senior 1.0 — assessment.md §9).
+# θ внутри полосы грейда (cut: junior −1.0, middle 0.0, senior 1.0).
 _THETA_RANGE = {"junior": (-0.95, -0.05), "middle": (0.05, 0.95), "senior": (1.05, 2.0)}
 HERO_GRADES = {
     "anya": ("backend", "junior", -0.45, False),
@@ -99,7 +99,7 @@ def plan_grades(plan: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
                     out[key].append(entry(prof, grade, False))
                     break
 
-    # E43-6: каждый 8-й кандидат прошёл тесты по двум направлениям (одна карточка, две категории).
+    # каждый 8-й кандидат прошёл тесты по двум направлениям (одна карточка, две категории).
     for i, key in enumerate(keys):
         if i % DUAL_EVERY or len(out[key]) > 1:
             continue

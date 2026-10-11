@@ -1,4 +1,4 @@
-"""HTTP `/assessment/*` (assessment.md §10). Попытка, `next`, `answers`, состояние, опрос."""
+"""HTTP `/assessment/*`. Попытка, `next`, `answers`, состояние, опрос."""
 
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ DEMO_EMAIL_DOMAIN = "@demo.fsp.test"
 
 
 def _demo_bypass(request: Request, user: User) -> bool:
-    """E35-8: в `DEMO_MODE` кулдауны не действуют для демо-аккаунтов (`*@demo.fsp.test`)."""
+    """В `DEMO_MODE` кулдауны не действуют для демо-аккаунтов (`*@demo.fsp.test`)."""
     return bool(
         request.app.state.settings.demo_mode
         and user.email
@@ -50,12 +50,12 @@ def _cfg(request: Request) -> AssessmentConfig:
 class AttemptIn(BaseModel):
     profession: ProfessionSlug
     declared_grade: TestGrade
-    # E32-4a: `express` — экспресс для жюри (6–8 заданий, α = β = 0.15), грейд с меткой «экспресс»
+    # `express` — экспресс для жюри (6–8 заданий, α = β = 0.15), грейд с меткой «экспресс»
     mode: AttemptMode = "standard"
 
 
 class AttemptResultOut(BaseModel):
-    """Итог завершённой попытки (assessment.md §10): грейд, θ по типам, честность, разбор."""
+    """Итог завершённой попытки: грейд, θ по типам, честность, разбор."""
 
     grade: TestGrade | None = None  # грейд, подтверждённый этой попыткой
     theta: float | None = None
@@ -72,14 +72,14 @@ class AttemptOut(BaseModel):
     profession: str
     declared_grade: TestGrade
     stage: Literal["main", "bonus"]
-    mode: AttemptMode = "standard"  # E32-4a
+    mode: AttemptMode = "standard"
     status: Literal["active", "passed", "failed", "abandoned"]
     answered: int
     target: int
     started_at: datetime
     finished_at: datetime | None
     low_confidence: bool = False  # решение по EAP на максимуме заданий или при нехватке банка
-    # ADR-025 п.2: бонусный этап пройден → приглашение на отдельный тест этого грейда
+    # бонусный этап пройден → приглашение на отдельный тест этого грейда
     invited_grade: TestGrade | None = None
     invite_expires_at: datetime | None = None  # приглашение действует `rules.invite_days` дней
     invite_attempt_id: uuid.UUID | None = None  # попытка, начатая по приглашению
@@ -97,7 +97,7 @@ class NextOut(BaseModel):
     stem: str | None = None
     options: list[str] | None = None
     time_limit_s: int | None = None
-    steps: list[dict[str, Any]] | None = None  # шаги `chain` (E26-3): {kind, stem, options, …}
+    steps: list[dict[str, Any]] | None = None  # шаги `chain`: {kind, stem, options, …}
 
 
 class AnswerIn(BaseModel):
@@ -203,7 +203,7 @@ async def upgrade(
     user: User = Depends(_candidate),
     session: AsyncSession = Depends(get_session),
 ):
-    """Начать тест следующего грейда по приглашению бонусного этапа (ADR-025 п.2).
+    """Начать тест следующего грейда по приглашению бонусного этапа.
 
     Возвращает новую попытку; без кулдаунов; повтор возвращает уже начатую. Грейд не меняется,
     пока не пройден сам приглашённый тест. `409 no_invite`, `invite_expired`, `invite_stale`.
@@ -213,7 +213,7 @@ async def upgrade(
     return await attempts.attempt_summary(session, user.id, att.id)
 
 
-# --- «Объясни ответ» (E24-2) ----------------------------------------------------------------------
+# --- «Объясни ответ» ----------------------------------------------------------------------
 
 
 class ExplainIn(BaseModel):
@@ -309,15 +309,15 @@ async def review_attempt(
     user: User = Depends(_candidate),
     session: AsyncSession = Depends(get_session),
 ):
-    """Разбор теста (E41-5): только «что подтянуть», без верных ответов и вариантов."""
+    """Разбор теста: только «что подтянуть», без верных ответов и вариантов."""
     return await explain.review_attempt(session, user.id, attempt_id)
 
 
-# --- опрос и история (E22-7) ------------------------------------------------------------------
+# --- опрос и история ------------------------------------------------------------------
 
 
 class SurveyIn(BaseModel):
-    # ADR-025 п.4: «отрасль» = IT-направление = `profession`; `industry` не спрашивается в UI
+    # «отрасль» = IT-направление = `profession`; `industry` не спрашивается в UI
     industry: str | None = Field(default=None, max_length=64)
     profession: ProfessionSlug  # IT-направление — первый шаг опроса
     stack: list[str] = Field(default_factory=list, max_length=survey.MAX_STACK)
@@ -473,7 +473,7 @@ class PlanExampleOut(BaseModel):
     stem: str
     options: list[str] | None = None
     time_limit_s: int
-    steps: list[dict[str, Any]] | None = None  # шаги `chain` (E26-3)
+    steps: list[dict[str, Any]] | None = None  # шаги `chain`
 
 
 class PlanPreviewOut(BaseModel):

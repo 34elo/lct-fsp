@@ -1,11 +1,11 @@
-"""Настройка весов подбора (E36-6): веса match и rank на размеченных парах синтетики.
+"""Настройка весов подбора: веса match и rank на размеченных парах синтетики.
 
 Настраиваются: `matching_weights` (skills / grade / salary / fsp), множитель обязательного
 навыка в покрытии (`skills_coverage.required_weight_multiplier`) и `strength.rank_match`
 (`rank_strength = 1 − rank_match`).
 
 Пары «потребность – кандидат» с истинной релевантностью `rel` — синтетический рынок
-(tools/synth, evaluation.md §3). Ручной разметки потребностей в репозитории нет, поэтому
+(tools/synth). Ручной разметки потребностей в репозитории нет, поэтому
 настраиваем только на синтетике. Против переобучения рынки разные (фиксированные seed'ы из
 tools/synth/config.yaml): **train** — `dev` (seed 1001), **holdout** — `test` (seed 2002, его же
 считает `make eval`). Веса выбираются только по train; «после» и решение «менять ли веса» —
@@ -74,7 +74,7 @@ class Weights:
         }
 
 
-# «До» — веса E27-2 / E23-2, с которыми считался отчёт AU-1 (docs/reports/metrics-2026-10-07.md).
+# «До» — исходные веса подбора и силы профиля.
 BEFORE = Weights({"skills": 0.45, "grade": 0.15, "salary": 0.10, "fsp": 0.10}, 2.0, 0.6)
 
 
@@ -297,7 +297,7 @@ def run(
 # ---------- отчёт ----------
 
 LABELS = {
-    "before": "До (веса E27-2)",
+    "before": "До (исходные веса)",
     "current": "Сейчас в scoring.yaml",
     "tuned": "Подобрано на train",
 }
@@ -321,7 +321,7 @@ def to_markdown(r: Mapping[str, Any]) -> str:
     k = r["k"]
     mk = r["markets"]
     lines = [
-        "# Настройка весов подбора (E36-6)",
+        "# Настройка весов подбора",
         "",
         f"Train — синтетический рынок `dev` (seed {mk['dev']['seed']}, {r['candidates']['dev']} "
         f"кандидатов, {r['needs']['train']} потребностей); holdout — рынок `test` (seed "

@@ -1,4 +1,4 @@
-"""Заказы LLM-заданий из админки (E43-9): `family_orders`.
+"""Заказы LLM-заданий из админки: `family_orders`.
 
 Revision ID: b1_18
 Revises: b1_17

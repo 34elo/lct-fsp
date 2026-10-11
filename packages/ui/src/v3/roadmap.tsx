@@ -3,7 +3,7 @@ import type { MouseEvent, ReactNode } from "react";
 
 import { cn } from "../lib/cn";
 
-/* Roadmap (E39-11): горизонтальный роадмап роста. Этапы слева направо, на узком экране лист прокручивается пальцем. */
+/* Roadmap: горизонтальный роадмап роста. Этапы слева направо, на узком экране лист прокручивается пальцем. */
 
 export type RoadmapKind = "current" | "skill" | "test" | "goal";
 export type RoadmapState = "done" | "current" | "future";

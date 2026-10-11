@@ -2,7 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 
 import { LEGAL_PAGES } from "./legal-text";
 
-/** Статичные «Условия» и «Приватность»: публичные, без входа (E35-7b). */
+/** Статичные «Условия» и «Приватность»: публичные, без входа. */
 export default function Legal() {
   const { pathname } = useLocation();
   const page = pathname === "/privacy" ? LEGAL_PAGES.privacy : LEGAL_PAGES.terms;

@@ -1,4 +1,4 @@
-"""Разбор резюме (E3-3): текст, правила, LLM по схеме, проверка цитат, нормализация, прогресс.
+"""Разбор резюме: текст, правила, LLM по схеме, проверка цитат, нормализация, прогресс.
 
 LLM — фейковый клиент с записанным ответом (`fixtures/llm_resume_backend.json`), сеть не нужна.
 """
@@ -403,7 +403,7 @@ async def test_real_resume_parse_publishes_progress_and_result():
     assert ui[-1]["data"]["pct"] == 100 and ui[-1]["data"]["job_id"] == str(p.resume_id)
 
 
-# --- заявленное в резюме (E20-5) ---
+# --- заявленное в резюме ---
 
 DECL_TEXT = (
     "Пётр Вымыслов\n"
@@ -507,7 +507,7 @@ def test_rules_mode_has_no_declared_fields():
     assert out.soft_skills == [] and out.declared_grade is None and out.roles == []
 
 
-# --- E43-8: запасной путь, когда LLM вернул мало навыков ---
+# --- запасной путь, когда LLM вернул мало навыков ---
 
 
 async def _parse_with(answer, text=TEXT):
@@ -555,7 +555,7 @@ def test_needs_rules_fallback_thresholds():
     assert not f(0, 0)
 
 
-# --- E44-2: цитата без названия навыка — ищем название рядом, а не теряем навык ---
+# --- цитата без названия навыка — ищем название рядом, а не теряем навык ---
 
 FRONT_TEXT = (FIX / "resume_frontend.txt").read_text()
 # (навык, цитата из резюме без его названия): так отвечает слабая модель

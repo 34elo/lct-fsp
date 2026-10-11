@@ -123,7 +123,7 @@ describe("K1 конструктор", () => {
     expect(post?.body).toMatchObject({ kind: "exact", skill: "system_design", level: 3, answer: "rps" });
   });
 
-  test("E41-14: черновик → «Готово» без админа", async () => {
+  test("черновик → «Готово» без админа", async () => {
     await fill();
     fireEvent.click(screen.getByTestId("constructor-save"));
     expect(await screen.findByTestId("constructor-status")).toHaveTextContent("черновик");

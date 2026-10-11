@@ -16,7 +16,7 @@ const sk = (slug: string, level: number, extra: Partial<SkillWithTrust> = {}, ty
 
 const skills = [sk("python", 4), sk("sql", 2, {}, "fundamental"), sk("redis", 0, { claimed_only: true }, null), sk("kafka", 1)];
 
-describe("фильтр навыков профиля (E39-15)", () => {
+describe("фильтр навыков профиля", () => {
   it("тип, доверие, статус, скрытые", () => {
     const slugs = (f = {}, hidden: string[] = []) => filterSkills(skills, new Set(hidden), { ...NO_FILTER, ...f }).map((s) => s.skill.slug);
     expect(slugs()).toEqual(["python", "sql", "kafka", "redis"]); // подтверждённые выше заявленных

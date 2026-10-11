@@ -18,8 +18,6 @@ from app.analytics.router import internal as analytics_internal_router
 from app.analytics.router import router as analytics_router
 from app.analytics.runs_router import admin as live_runs_admin_router
 from app.analytics.runs_router import public as live_runs_public_router
-
-# >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
 from app.assessment.admin_router import router as admin_families_router
 from app.assessment.constructor_router import router as families_router
 from app.assessment.demo_router import router as admin_demo_router
@@ -27,10 +25,6 @@ from app.assessment.orders_router import router as admin_family_orders_router
 from app.assessment.router import router as assessment_router
 from app.assessment.tasks_router import candidate_router as candidate_tasks_router
 from app.assessment.tasks_router import employer_router as employer_tasks_router
-
-# <<< block1
-# >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
-# <<< block2
 from app.candidates.router import public_router as candidates_public_router
 from app.candidates.router import router as candidates_router
 from app.companies.router import admin_router as admin_companies_router
@@ -115,10 +109,9 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(recommendations_router)
     app.include_router(offers_router)
     app.include_router(admin_complaints_router)
-    # >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
     app.include_router(assessment_router)
     app.include_router(admin_families_router)
-    app.include_router(admin_family_orders_router)  # E43-9: заказ LLM-заданий
+    app.include_router(admin_family_orders_router)  # заказ LLM-заданий
     app.include_router(admin_demo_router)
     app.include_router(admin_taxonomy_router)
     app.include_router(admin_skills_router)
@@ -126,10 +119,8 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(employer_tasks_router)
     app.include_router(candidate_tasks_router)
     app.include_router(graph_router)  # /candidates/me/graph раньше {pseudo_id}
-    # <<< block1
-    # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
     app.include_router(employer_activity_router)
-    app.include_router(fsp_registry_router)  # реестр ФСП (E39-28)
+    app.include_router(fsp_registry_router)  # реестр ФСП
     app.include_router(fsp_registry_admin_router)
     app.include_router(analytics_router)
     app.include_router(analytics_internal_router)
@@ -141,11 +132,10 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(subscriptions_router)
     app.include_router(views_router)
     app.include_router(public_stats_router)
-    app.include_router(jury_router)  # вход жюри в песочницу (E40-1)
+    app.include_router(jury_router)  # вход жюри в песочницу
     app.include_router(credentials_router)
     app.include_router(profile_router)
     app.include_router(company_invites_router)
-    # <<< block2
 
     @app.get("/readyz", include_in_schema=False)
     async def readyz():

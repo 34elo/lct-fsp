@@ -1,6 +1,6 @@
-"""Грейд кандидата: сигналы, пороги, ограничения, уверенность, разбивка, `next_grade` (ml.md §5).
+"""Грейд кандидата: сигналы, пороги, ограничения, уверенность, разбивка, `next_grade`.
 
-С E22-4 (ADR-018) это не грейд кандидата: грейд берётся из `grades` (тест, `assessment.service`).
+Это не грейд кандидата: грейд берётся из `grades` (тест, `assessment.service`).
 Баллы тут — сигнал силы профиля и подсказки «как подтвердить»; доказательства `test` из теста
 попадают сюда как `test_theta`.
 
@@ -25,7 +25,7 @@ LEAD = "lead"
 NO_COMMERCIAL_CAP = "middle"
 PRELIMINARY_BELOW = 0.5
 FSP_LEVELS = {"regional": 0, "interregional": 1, "national": 2, "international": 3}
-# группы сигналов для grade_confidence (ml.md §5): стаж, ФСП, тесты, код
+# группы сигналов для grade_confidence: стаж, ФСП, тесты, код
 GROUPS = ("experience", "fsp", "tests", "code")
 
 _ACH_KEYS = {
@@ -200,7 +200,7 @@ class GradeResult:
 
 
 def experience_points(months: int | None, cfg: GradeConfig) -> float:
-    """Баллы за стаж: значение последней ступени `experience`, до которой дорос стаж (ml.md §5)."""
+    """Баллы за стаж: значение последней ступени `experience`, до которой дорос стаж."""
     if not months or months <= 0:
         return 0.0
     pts = 0.0
@@ -211,7 +211,7 @@ def experience_points(months: int | None, cfg: GradeConfig) -> float:
 
 
 def achievement_kind(r: FspResult) -> str:
-    """Вид достижения ФСП для баллов грейда: медаль и уровень соревнования, финал (ml.md §5)."""
+    """Вид достижения ФСП для баллов грейда: медаль и уровень соревнования, финал."""
     medal = r.place is not None and r.place <= 3
     national = FSP_LEVELS.get(r.level, 0) >= FSP_LEVELS["national"]
     if medal and national:
@@ -226,7 +226,7 @@ def achievement_kind(r: FspResult) -> str:
 
 
 def theta_points(theta: float | None, cfg: GradeConfig) -> float:
-    """Баллы за θ теста по ступеням `test_points` (<0, <1, ≤2, >2); нет теста — 0 (ml.md §5)."""
+    """Баллы за θ теста по ступеням `test_points` (<0, <1, ≤2, >2); нет теста — 0."""
     if theta is None:
         return 0.0
     p = cfg.test_points
@@ -238,7 +238,7 @@ def theta_points(theta: float | None, cfg: GradeConfig) -> float:
 
 
 def grade_for_points(points: float, cfg: GradeConfig, *, leadership_ok: bool) -> str:
-    """Старший грейд, чей порог набран; Lead — только при подтверждённом лидерстве (ml.md §5)."""
+    """Старший грейд, чей порог набран; Lead — только при подтверждённом лидерстве."""
     grade = cfg.thresholds[0][0]
     for g, lo in cfg.thresholds:
         if points >= lo and (g != LEAD or leadership_ok):

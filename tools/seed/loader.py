@@ -126,7 +126,7 @@ class Seeder:
             await self.candidate(c)
         await self.provisional_evidence()
         await self.companies_and_vacancies()
-        await self.grades()  # до подбора: без грейда из теста кандидат не виден (E23-1)
+        await self.grades()  # до подбора: без грейда из теста кандидат не виден
         await self.match_all()
         await self.offer_history()
         await self.close_vacancies()
@@ -149,7 +149,7 @@ class Seeder:
                         source="seed",
                         description="Демо: новый навык, ждёт подтверждения",
                     )
-                )  # сервиса создания provisional-навыков в core пока нет (E16)
+                )  # сервиса создания provisional-навыков в core пока нет
                 self.stats["provisional_skills"] += 1
 
     async def provisional_evidence(self) -> None:
@@ -408,7 +408,7 @@ class Seeder:
         return self.plan["companies"][idx]
 
     async def grades(self) -> None:
-        """Seed-грейды (`tools/seed/grades.py`, блок 1) — идемпотентно, как команда `grades`."""
+        """Seed-грейды (`tools/seed/grades.py`) — идемпотентно, как команда `grades`."""
         from .grades import seed_grades
 
         for k, v in (await seed_grades(self.factory, self.plan, self.user_ids)).items():

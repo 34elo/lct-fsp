@@ -629,7 +629,7 @@ function RequestCard({ r }: { r: AdminFspRequestOut }) {
   );
 }
 
-/** Заявки на привязку с фильтром по статусу — вкладка «Заявки» реестра (E41-15). */
+/** Заявки на привязку с фильтром по статусу — вкладка «Заявки» реестра. */
 function Requests() {
   const [status, setStatus] = useState<ReqStatus | "all">("pending");
   const q = useRegistryRequestsAdminFspRequestsGet(status === "all" ? undefined : { status }, { query: { retry: false } });
@@ -681,7 +681,7 @@ function ImportReport({ report, error }: { report: Report | null; error: string 
 }
 
 /**
- * `/federation/registry` — единый реестр ФСП (E41-15): вкладки «Мероприятия · Участники · Результаты · Заявки»,
+ * `/federation/registry` — единый реестр ФСП: вкладки «Мероприятия · Участники · Результаты · Заявки»,
  * на первых трёх «Импорт CSV» (только выбор файла) и одна кнопка «Создать» с выбором, что создаём.
  */
 export default function FspRegistry() {

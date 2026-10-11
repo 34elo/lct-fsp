@@ -1,4 +1,4 @@
-"""Представление graph_edges: UNION ALL рёбер графа для визуализации и выгрузки (graph.md §4.1).
+"""Представление graph_edges: UNION ALL рёбер графа для визуализации и выгрузки.
 
 Revision ID: b1_08
 Revises: b1_05

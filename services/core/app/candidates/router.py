@@ -91,7 +91,7 @@ class EducationItem(BaseModel):
 
 
 class CandidateProfile(BaseModel):
-    """`CandidateProfile` (api.md §3). Пока без `code`, `completeness`."""
+    """`CandidateProfile`. Пока без `code`, `completeness`."""
 
     pseudonym: str
     profile_version: int
@@ -113,14 +113,14 @@ class CandidateProfile(BaseModel):
     publishable: bool = True  # false: 15–17 лет без согласия родителя, в выдачу не попадает
     fsp: card.OwnerFsp | None = None
     experience: list[ExperienceItem] = []
-    claimed_vs_confirmed: list[ClaimedVsConfirmed] = []  # E23-3: заявлено (опрос/резюме) vs тест
-    # E39-15: вкладка «Данные» — образование, ссылки (только владельцу), скрытые навыки и
+    claimed_vs_confirmed: list[ClaimedVsConfirmed] = []  # заявлено (опрос/резюме) vs тест
+    # вкладка «Данные» — образование, ссылки (только владельцу), скрытые навыки и
     # неподтверждённый черновик резюме (загружено после последнего подтверждённого)
     education: list[EducationItem] = []
     links: list[str] = []
     hidden_skills: list[str] = []
     resume_draft_id: UUID | None = None
-    avatar_url: str | None = None  # E41-12: только владельцу; подпись в адресе
+    avatar_url: str | None = None  # только владельцу; подпись в адресе
 
 
 class PreferencesIn(BaseModel):
@@ -167,7 +167,7 @@ Slug = Annotated[str, Field(min_length=1, max_length=100)]
 
 
 class ProfileIn(BaseModel):
-    """`PATCH /candidates/me/profile`: частичное обновление ручной формы (E20-4)."""
+    """`PATCH /candidates/me/profile`: частичное обновление ручной формы."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -175,12 +175,12 @@ class ProfileIn(BaseModel):
     full_name: str | None = Field(default=None, max_length=120)  # null или пусто очищает
     stack: list[StackItem] | None = Field(default=None, max_length=60)  # полный список
     experience_months: int | None = Field(default=None, ge=0, le=720)
-    # профессии системы (E41-6)
+    # профессии системы
     desired_roles: list[Slug] | None = Field(default=None, max_length=5)
     soft_skills: list[str] | None = Field(default=None, max_length=30)  # slug
     age_group: Literal["adult", "minor"] | None = None
     parent_consent: bool | None = None  # true — родитель согласен; false — отзыв
-    # E39-15: полный список; null или [] очищает
+    # полный список; null или [] очищает
     links: list[Link] | None = Field(default=None, max_length=10)
     hidden_skills: list[Slug] | None = Field(default=None, max_length=200)
 
@@ -264,7 +264,7 @@ async def put_avatar(
     session: AsyncSession = Depends(get_session),
     limiter=Depends(get_limiter),
 ):
-    """Аватар кандидата (E41-12): PNG, JPEG или WebP по сигнатуре, до 2 МБ. Работодатель видит
+    """Аватар кандидата: PNG, JPEG или WebP по сигнатуре, до 2 МБ. Работодатель видит
     его только после приглашения, как ФИО; в анонимную карточку он не попадает."""
     await limiter.check(f"avatar:{user.id}", AVATAR_LIMIT, AVATAR_WINDOW)
     data = await file.read(user_profile.AVATAR_MAX_BYTES + 1)
@@ -326,7 +326,7 @@ async def profile_pdf(
     user: User = Depends(owner),
     session: AsyncSession = Depends(get_session),
 ):
-    """PDF-профиль владельца (E20-6): категория, грейд, навыки с доверием, ФСП, тесты."""
+    """PDF-профиль владельца: категория, грейд, навыки с доверием, ФСП, тесты."""
     cand = await _cand(request, session, user)
     profile = await profile_out(session, cand, request.app.state.settings)
     grades = await assessment.get_grades(session, cand.user_id)
@@ -453,7 +453,7 @@ async def put_stoplist(
 async def my_views(
     user: User = Depends(owner), session: AsyncSession = Depends(get_session)
 ) -> dict:
-    """«Вас смотрели N компаний» — только агрегаты, без названий (security.md §3). Шкала 30 дней
+    """«Вас смотрели N компаний» — только агрегаты, без названий. Шкала 30 дней
     полная; `visible` — видна ли карточка работодателям (тест + согласие на публикацию)."""
     visible = user.id in await visible_ids(session, [user.id])
     return await views.stats(session, user.id, visible=visible)
@@ -462,7 +462,7 @@ async def my_views(
 class CategoryRole(BaseModel):
     role: str
     weight: float  # доля метки среди выбранных
-    score: float  # role_score (ml.md §4)
+    score: float  # role_score
 
 
 class CategoryContribution(BaseModel):
@@ -484,7 +484,7 @@ class DisputeOut(BaseModel):
 
 
 class CategoryExplanation(BaseModel):
-    """`CategoryExplanation` (api.md §3): почему такая категория и как подняться."""
+    """`CategoryExplanation`: почему такая категория и как подняться."""
 
     primary_role: str | None
     roles: list[CategoryRole]

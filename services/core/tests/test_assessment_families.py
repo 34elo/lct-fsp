@@ -1,4 +1,4 @@
-"""E22-6: первые кодовые семейства и `families-check` (assessment.md §4)."""
+"""Первые кодовые семейства и `families-check`."""
 
 from random import Random
 
@@ -74,7 +74,7 @@ def test_js_default_sort_is_lexicographic():
 
 
 def test_all_professions_open_core_has_full_bank():
-    """E39-6: все профессии справочника открыты; у Backend, Frontend, AI Engineer пустых ячеек нет,
+    """Все профессии справочника открыты; у Backend, Frontend, AI Engineer пустых ячеек нет,
     у остальных тонкий банк — они «бета»."""
     from app.taxonomy.loader import load_taxonomy
 
@@ -190,13 +190,13 @@ def test_key_never_public(fam):
     ],
 )
 def test_malformed_answer_scores_zero_not_crash(kind, key, answer):
-    """E37-1: кривой ответ клиента — балл 0, а не 500 на /answer."""
+    """Кривой ответ клиента — балл 0, а не 500 на /answer."""
     fam = BaseFamily()
     assert fam.score(Item(kind=kind, stem="?", key=key), answer) == 0.0
 
 
 def test_world_task_tables_are_gfm():
-    """E39-9: таблицы в условиях — Markdown (GFM): заголовок, разделитель, строки одной ширины."""
+    """Таблицы в условиях — Markdown (GFM): заголовок, разделитель, строки одной ширины."""
     fam = registry.REGISTRY["sql_join_filter"]
     for seed in range(20):
         stem = fam.generate(Random(seed), World.from_seed(seed)).stem

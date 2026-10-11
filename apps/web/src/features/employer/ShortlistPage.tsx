@@ -170,13 +170,13 @@ function Compare({ cards, offers, onClose }: { cards: CandidateCard[]; offers: M
 }
 
 /**
- * Общий шорт-лист работодателя `/employer/shortlist` (E38-12, E39-23): все отмеченные кандидаты компании
+ * Общий шорт-лист работодателя `/employer/shortlist`: все отмеченные кандидаты компании
  * (по всем её запросам, без памяти браузера), статус интереса, сравнение 2–4 кандидатов рядом; «Интерес» и
  * «Пригласить» открывают модалку на месте.
  */
 export default function ShortlistPage() {
   const qc = useQueryClient();
-  // Без компании шорт-листа нет, а запрос дал бы 404 в консоли нового аккаунта (E39-7).
+  // Без компании шорт-листа нет, а запрос дал бы 404 в консоли нового аккаунта.
   const hasCompany = !!useAuth().me?.company;
   const [target, setTarget] = useState<Target | null>(null);
   const [picked, setPicked] = useState<string[]>([]);

@@ -1,4 +1,4 @@
-"""E30-1: `POST /v1/families/key-draft` — черновик ключа задания (ML_FAKE, LLM_ENABLED, LLM)."""
+"""`POST /v1/families/key-draft` — черновик ключа задания (ML_FAKE, LLM_ENABLED, LLM)."""
 
 from fastapi.testclient import TestClient
 from fsp_contracts.ml import FamilyKeyDraftRequest

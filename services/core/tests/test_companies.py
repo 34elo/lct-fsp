@@ -221,7 +221,7 @@ def test_company_contacts_optional(c):
 
 
 def test_new_employer_without_company_gets_empty_lists(c):
-    """E39-7: без компании списки пусты (200), а не 404; права кандидата и гостя прежние."""
+    """Без компании списки пусты (200), а не 404; права кандидата и гостя прежние."""
     h = _user(c, "newco@x.ru")
     for path in (
         "/offers",

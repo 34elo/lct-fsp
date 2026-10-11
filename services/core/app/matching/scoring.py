@@ -1,8 +1,8 @@
-"""Подбор вакансия ↔ кандидат: жёсткие фильтры, скоринг и объяснения шаблонами (ml.md §6), без БД.
+"""Подбор вакансия ↔ кандидат: жёсткие фильтры, скоринг и объяснения шаблонами, без БД.
 
 Формулы детерминированные, веса — из `data/scoring.yaml` (`matching_weights`, `hard_filters`,
-`grade_fit_scoring`, `skills_coverage`, `team_signal_*`). Командные сигналы — через `k_soft`
-(skills.md §8.3): только повышают скор. Каждый пункт объяснения об опыте кандидата (навык, ФСП,
+`grade_fit_scoring`, `skills_coverage`, `team_signal_*`). Командные сигналы — через `k_soft`:
+только повышают скор. Каждый пункт объяснения об опыте кандидата (навык, ФСП,
 грейд, командный сигнал) несёт `evidence_ids`; пункт без доказательства не показывается.
 """
 
@@ -38,7 +38,7 @@ TEAM_LABELS = {
     "results": "Результативность", "growth": "Рост",
 }  # fmt: skip
 STRENGTH_WORDS = {"strong": "сильное подтверждение", "present": "есть подтверждение"}
-# Пункты об опыте кандидата: без доказательства не показываем (критерий E7-1).
+# Пункты об опыте кандидата: без доказательства не показываем.
 EVIDENCE_REQUIRED = frozenset(
     {"skill_confirmed", "skill_adjacent", "skill_claimed_only", "fsp_achievement",
      "grade_fit", "grade_mismatch", "team_signal"}
@@ -65,7 +65,7 @@ class MatchConfig:
     semantic_floor: float = 0.30
     semantic_span: float = 0.55
     active_bonus: float = 1.03
-    interest_boost: float = 1.05  # встречный сигнал кандидата (E33-6): множитель к порядку
+    interest_boost: float = 1.05  # встречный сигнал кандидата: множитель к порядку
     top_explanations: int = 3
     candidate_limit: int = 300
     semantic_limit: int = 100
@@ -247,7 +247,7 @@ def grade_distance(grade: str | None, lo: str, hi: str) -> int | None:
 
 
 def grade_component(grade: str | None, lo: str, hi: str, cfg: MatchConfig) -> float:
-    """Слагаемое грейда в скоринге: внутри диапазона, соседний, дальше (ml.md §6.2)."""
+    """Слагаемое грейда в скоринге: внутри диапазона, соседний, дальше."""
     d = grade_distance(grade, lo, hi)
     if d is None:
         return 0.0
@@ -307,7 +307,7 @@ def hard_filter(
     *,
     semantic_only: bool = False,
 ) -> str | None:
-    """Причина отсева или None (ml.md §6.1). Отбор по смыслу не проверяет навыки."""
+    """Причина отсева или None. Отбор по смыслу не проверяет навыки."""
     if cand.deleted:
         return "deleted"
     if cand.status == "dnd":

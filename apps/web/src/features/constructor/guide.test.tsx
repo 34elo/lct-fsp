@@ -47,7 +47,7 @@ function mount(path: string) {
   );
 }
 
-describe("E39-27 модель", () => {
+describe("модель", () => {
   test("все шаблоны проходят локальную проверку и собираются в спек", () => {
     expect(TEMPLATES.map((t) => t.id)).toEqual(["backend", "frontend", "ai"]);
     for (const t of TEMPLATES) {
@@ -66,7 +66,7 @@ describe("E39-27 модель", () => {
   });
 });
 
-describe("E39-27 мастер", () => {
+describe("мастер", () => {
   test("задание по шаблону сохраняется за 5 шагов", async () => {
     mount("/employer/families/guide");
     await screen.findByTestId("guide-page");

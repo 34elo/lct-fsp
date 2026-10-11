@@ -1,4 +1,4 @@
-"""E20-6: PDF-профиль `GET /candidates/me/profile.pdf`."""
+"""PDF-профиль `GET /candidates/me/profile.pdf`."""
 # ruff: noqa: E501
 
 from test_candidate_profile_form import PWD, _patch, _user, c  # noqa: F401

@@ -1,4 +1,4 @@
-"""Нормализованные факты ФСП в core (data-model.md §3.5). Пишет только `fsp_ingest`."""
+"""Нормализованные факты ФСП в core. Пишет только `fsp_ingest`."""
 
 from __future__ import annotations
 
@@ -98,7 +98,7 @@ class FspTeamMember(Base):
 
 
 class CandidateLink(Base):
-    """Связь двух кандидатов платформы (graph.md §7). Пишет только `fsp_links.refresh_links`.
+    """Связь двух кандидатов платформы. Пишет только `fsp_links.refresh_links`.
 
     Обычная таблица, а не материализованное представление: перестраивается идемпотентно
     и одинаково работает на PostgreSQL и SQLite в тестах. Пара упорядочена: a < b.

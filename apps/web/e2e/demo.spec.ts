@@ -1,7 +1,7 @@
 /**
- * Сквозной демо-сценарий в порядке ТЗ (AU-5, audit E-1), одним тестом по шагам:
+ * Сквозной демо-сценарий в порядке ТЗ (audit E-1), одним тестом по шагам:
  *   1. регистрация нового соискателя → согласия;
- *   2. опрос (сразу после согласий, E35-2a) и экспресс-тест → результат (категория/грейд) → Главная;
+ *   2. опрос (сразу после согласий) и экспресс-тест → результат (категория/грейд) → Главная;
  *   3. работодатель (Ольга) описывает потребность и находит категорию с кандидатами;
  *   4. приглашение (оффер с вилкой) выбранному кандидату;
  *   5. отклик кандидата (Аня) на вакансию Ольги и отклик в кабинете работодателя.
@@ -11,7 +11,7 @@
  * (категории из `make seed`), а не по только что созданному аккаунту.
  *
  * Скриншоты: 1440 px (проект desktop) и 375 px (mobile-375) — в `test-results/` (в git не попадают)
- * и в приложениях отчёта. Запуск на поднятом стеке с сидом: `pnpm e2e e2e/joint-demo.spec.ts`.
+ * и в приложениях отчёта. Запуск на поднятом стеке с сидом: `pnpm e2e e2e/demo.spec.ts`.
  */
 import { expect, test, type Browser, type Page, type TestInfo } from "@playwright/test";
 import { loginAs } from "./fixtures";
@@ -35,7 +35,7 @@ async function freshPage(browser: Browser, baseURL: string | undefined, like: Pa
   return ctx.newPage();
 }
 
-test("joint: регистрация → опрос и тест → категория → работодатель находит → приглашение → отклик", async ({ page, browser, baseURL }, info) => {
+test("регистрация → опрос и тест → категория → работодатель находит → приглашение → отклик", async ({ page, browser, baseURL }, info) => {
   if (info.project.name === "desktop") await page.setViewportSize({ width: 1440, height: 900 });
   let n = 0;
 
@@ -47,18 +47,18 @@ test("joint: регистрация → опрос и тест → катего�
     await page.getByTestId("auth-email").fill(email);
     await page.getByTestId("auth-password").fill(NEW_USER_PASSWORD);
     await shot(page, info, ++n, "register");
-    await page.getByTestId("auth-consent-pd").click(); // E39-6: обязательное согласие — в форме регистрации
+    await page.getByTestId("auth-consent-pd").click(); // обязательное согласие — в форме регистрации
     await page.getByTestId("auth-submit").click();
     await expect(page).toHaveURL(/\/me\/assessment$/);
   });
 
   // --- 2. опрос и экспресс-тест ----------------------------------------------------------------
-  // Главный путь (E35-2a): после согласий новый кандидат сразу попадает в опрос.
+  // Главный путь: после согласий новый кандидат сразу попадает в опрос.
   await test.step("опрос", async () => {
     // Если включено подтверждение email, дальше нужен код из письма (Mailpit): вручную, не в этом тесте.
     test.skip(/\/verify-email/.test(page.url()), "включено подтверждение email: код приходит в Mailpit, сценарий требует ручного шага");
     await expect(page).toHaveURL(/\/me\/assessment$/);
-    // E39-6: шаг 1 — направление (карточка), шаг 2 — грейд и экспресс-переключатель.
+    // шаг 1 — направление (карточка), шаг 2 — грейд и экспресс-переключатель.
     await expect(page.getByTestId("flow-step-1")).toHaveAttribute("aria-current", "step");
     await page.locator("label[data-choice]").first().click();
     await page.getByTestId("assessment-next").click();
@@ -86,11 +86,11 @@ test("joint: регистрация → опрос и тест → катего�
     await page.getByTestId("assessment-to-profile").click();
     await expect(page).toHaveURL(/\/me$/);
     await expect(page.getByTestId("path-banner")).toHaveCount(0);
-    // Главная v2 (E38-1): после теста — следующий шаг и плитки «Сила», «Место», «Интересы».
+    // Главная v2: после теста — следующий шаг и плитки «Сила», «Место», «Интересы».
     await expect(page.getByTestId("home-after")).toBeVisible();
     await expect(page.getByTestId("home-next-action")).toBeVisible();
     await shot(page, info, ++n, "home");
-    // Статистика (E38-2): ссылка с Главной → /me/stats, сила, место и «Где ты среди своих».
+    // Статистика: ссылка с Главной → /me/stats, сила, место и «Где ты среди своих».
     await page.getByTestId("home-stats").click();
     await expect(page).toHaveURL(/\/me\/stats$/);
     // «Не знаю» не подтверждает грейд, места ещё нет: честное пустое состояние с одной кнопкой «Пройти тест».
@@ -161,7 +161,7 @@ test("joint: регистрация → опрос и тест → катего�
     await loginAs(anya, "anya");
     await anya.goto("/jobs");
     await expect(anya.getByRole("heading", { name: "Вакансии с открытой вилкой" })).toBeVisible();
-    // E41-10: вакансии внутри кабинета — то же меню; поиск закреплён при прокрутке
+    // вакансии внутри кабинета — то же меню; поиск закреплён при прокрутке
     await expect(anya.getByRole("navigation", { name: "Разделы" }).first()).toBeVisible();
     await expect(anya.getByRole("search")).toHaveCSS("position", "sticky");
     // В списке десятки вакансий (выдача постраничная): ищем нужную по названию.
@@ -177,7 +177,7 @@ test("joint: регистрация → опрос и тест → катего�
     await expect(anya.getByText(/Отклик отправлен|Вы уже откликались/).first()).toBeVisible({ timeout: 20_000 });
     await shot(anya, info, ++n, "candidate-applied");
     await anya.goto("/me/responses");
-    await expect(anya).toHaveURL(/\/me\/offers\?show=responses/); // E39-25: отклики — фильтр в «Приглашениях»
+    await expect(anya).toHaveURL(/\/me\/offers\?show=responses/); // отклики — фильтр в «Приглашениях»
     await expect(anya.getByRole("heading", { name: "Приглашения" }).first()).toBeVisible();
     await shot(anya, info, ++n, "candidate-responses");
   });

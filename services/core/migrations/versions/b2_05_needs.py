@@ -1,4 +1,4 @@
-"""needs: потребности работодателя (E23-4, assessment.md §9)
+"""needs: потребности работодателя
 
 Revision ID: b2_05
 Revises: b2_04

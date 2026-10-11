@@ -1,4 +1,4 @@
-"""Банк вопросов data/questions (E2-5): формат и совместимость с таксономией."""
+"""Банк вопросов data/questions: формат и совместимость с таксономией."""
 
 from collections import Counter
 from pathlib import Path

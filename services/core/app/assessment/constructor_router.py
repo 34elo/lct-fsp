@@ -1,4 +1,4 @@
-"""HTTP `/families` — конструктор заданий (assessment.md §4, §10; E30-1).
+"""HTTP `/families` — конструктор заданий.
 
 Создают работодатель (задание компании) и админ. Эксперт — роль `fsp_admin` до появления
 отдельной роли. Чужое задание → 404.
@@ -156,7 +156,7 @@ async def set_ready(
     user: User = Depends(_author),
     session: AsyncSession = Depends(get_session),
 ):
-    """«Готово» (задание доступно для приглашений компании) или возврат в черновик (E41-14)."""
+    """«Готово» (задание доступно для приглашений компании) или возврат в черновик."""
     found = await companies.my_company(session, user.id) if user.role == "employer" else None
     row = await constructor.get_visible(
         session,

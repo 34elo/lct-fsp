@@ -215,7 +215,7 @@ function NextStepCard({ p, standing, interests, navigator, history }: { p: Candi
   );
 }
 
-/** «Граф навыков»: тот же `EvidenceGraph`, что в профиле, в компактном режиме (E41-8). Нет данных — блока нет. */
+/** «Граф навыков»: тот же `EvidenceGraph`, что в профиле, в компактном режиме. Нет данных — блока нет. */
 function GraphCard() {
   const q = useMyGraphCandidatesMeGraphGet({ skills: MyGraphCandidatesMeGraphGetSkills.top, depth: MyGraphCandidatesMeGraphGetDepth.facts }, { query: { retry: false } });
   if (q.isPending) return <Skeleton className="order-3 h-[320px] lg:order-none" data-testid="home-graph-loading" />;
@@ -270,7 +270,7 @@ function Interests({ interests, offers }: { interests?: InterestsSummary; offers
   );
 }
 
-/** Открытые регулярные задания (E39-15: раньше — кнопка в профиле). Нет открытых — блока нет. */
+/** Открытые регулярные задания (раньше — кнопка в профиле). Нет открытых — блока нет. */
 function RegularTasks() {
   const q = useMyTasksAssessmentTasksGet({ query: { retry: false } });
   const open = (q.data?.status === 200 ? q.data.data : []).filter((t) => candStatus(t) === "new");
@@ -314,7 +314,7 @@ function Tiles({ standing, interests, profTitle }: { standing?: CandidateStandin
   );
 }
 
-/** Ссылка на «Статистику» (`/me/stats`, E38-2) под плитками. */
+/** Ссылка на «Статистику» (`/me/stats`) под плитками. */
 function StatsLink({ views }: { views?: ViewsStats }) {
   return (
     <Link
@@ -385,7 +385,7 @@ function HomeSkeleton() {
 }
 
 /**
- * Главная кандидата `/me` (E38-1, макеты v2_me__before / v2_me__after, бриф §6.1).
+ * Главная кандидата `/me`.
  * До теста — одна карточка «Пройди тест» с созвездием заявленных навыков; после — профиль, навыки и ФСП слева,
  * следующий шаг, созвездие и «Вами интересуются» в центре, плитки «Сила», «Место», «Интересы» справа.
  */

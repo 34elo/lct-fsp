@@ -1,11 +1,11 @@
-/** Чистые функции экрана «Статистика» (E38-2): точки «Где ты среди своих», просмотры по дням, история тестов. */
+/** Чистые функции экрана «Статистика»: точки «Где ты среди своих», просмотры по дням, история тестов. */
 import type { ScatterPoint } from "@fsp/ui";
 
 import type { AttemptOut, StandingPeer } from "@/api/model";
 
 /**
- * Точки категории для ScatterPlot (E39-16): X — уровень в тесте θ, нормированный по категории в 0–100;
- * Y — сила профиля 0–100. Своя точка в `peers` первая (api.md, E35-12a). Без θ у участников X — сила;
+ * Точки категории для ScatterPlot: X — уровень в тесте θ, нормированный по категории в 0–100;
+ * Y — сила профиля 0–100. Своя точка в `peers` первая. Без θ у участников X — сила;
  * одинаковая θ у всех — посередине.
  */
 export function scatter(peers: StandingPeer[], mine?: number | null): { points: ScatterPoint[]; you?: ScatterPoint } {
@@ -21,7 +21,7 @@ export function scatter(peers: StandingPeer[], mine?: number | null): { points: 
 export interface ViewsStats {
   total: number;
   companies: number;
-  /** Карточка доступна работодателям (тест + согласие на публикацию); без неё нули ожидаемы (E43-5). */
+  /** Карточка доступна работодателям (тест + согласие на публикацию); без неё нули ожидаемы. */
   visible: boolean;
   byDay: { date: string; count: number }[];
 }
@@ -41,7 +41,7 @@ export function parseViews(raw: unknown): ViewsStats | undefined {
   return { total: num(r.total_30d), companies: num(r.companies_30d), visible: r.visible !== false, byDay };
 }
 
-/** Состояние без просмотров: ответ не пришёл или нулевая статистика (полная шкала с нулями, E43-5). */
+/** Состояние без просмотров: ответ не пришёл или нулевая статистика (полная шкала с нулями). */
 export const NO_VIEWS: ViewsStats = { total: 0, companies: 0, visible: true, byDay: [] };
 
 /** Просмотры по дням для тепловой карты: `weeks` полных недель, последний день — `today` (UTC), от старых к новым. */

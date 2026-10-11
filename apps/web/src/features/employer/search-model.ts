@@ -5,7 +5,7 @@ import type { CandidateCard, FilterChip, SearchFilters, SearchRequestSort } from
 import { dots, GRADE_LABEL } from "@/features/profile/text";
 import { FORMAT_LABEL, FSP_LEVEL_LABEL, percent } from "./text";
 
-/* Модель экрана A: форма фильтров, разбор запроса (E2) и перевод карточки API в CandidateCard из @fsp/ui. */
+/* Модель экрана A: форма фильтров, разбор запроса и перевод карточки API в CandidateCard из @fsp/ui. */
 
 /** Грейды по порядку: диапазон `grade_min..grade_max` ↔ отмеченные галочки. */
 export const GRADES = Object.keys(GRADE_LABEL);

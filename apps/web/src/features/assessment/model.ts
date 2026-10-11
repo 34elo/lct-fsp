@@ -85,7 +85,7 @@ export function hasTable(stem: string): boolean {
   return /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/m.test(stem);
 }
 
-/** В условии есть блок ```mermaid (E41-9): такое условие тоже показываем Markdown-ом целиком, схема рисуется картинкой. */
+/** В условии есть блок ```mermaid: такое условие тоже показываем Markdown-ом целиком, схема рисуется картинкой. */
 export function hasDiagram(stem: string): boolean {
   return /^\s*```\s*mermaid(\s|$)/m.test(stem);
 }
@@ -209,13 +209,13 @@ export function missedAnswers(raw: unknown): AnswerRow[] {
   return rows.sort((a, b) => a.seq - b.seq);
 }
 
-/** Первый шаг пути кандидата после согласий (E35-2a): опрос, из него — тест. */
+/** Первый шаг пути кандидата после согласий: опрос, из него — тест. */
 export const PATH_START = "/me/assessment";
 
 export type PathStep = { kind: "survey" | "test"; to: string } | { kind: "continue"; to: string };
 
 /**
- * Чего не хватает кандидату на главном пути (E35-2a): нет опроса → опрос; есть идущая попытка →
+ * Чего не хватает кандидату на главном пути: нет опроса → опрос; есть идущая попытка →
  * продолжить её; нет завершённого теста → тест. Всё пройдено — `null` (баннер не нужен).
  */
 export function pathStep(history: {
@@ -229,11 +229,11 @@ export function pathStep(history: {
   return null;
 }
 
-/* ---------- Результат v2 (E38-5): шкала 0–100 для GradeScale и TypeBar ---------- */
+/* ---------- Результат v2: шкала 0–100 для GradeScale и TypeBar ---------- */
 
 const GRADE_ORDER = ["junior", "middle", "senior"] as const;
 
-/** Пороги θ грейдов (assessment.md §2): Junior −1, Middle 0, Senior 1. */
+/** Пороги θ грейдов: Junior −1, Middle 0, Senior 1. */
 export const GRADE_CUTS: Record<string, number> = { junior: -1, middle: 0, senior: 1 };
 
 /**

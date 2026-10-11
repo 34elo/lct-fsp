@@ -1,4 +1,4 @@
-"""`python -m app.demo snapshot|reset` — снапшот и сброс только демо-данных (E40-1).
+"""`python -m app.demo snapshot|reset` — снапшот и сброс только демо-данных.
 
 Вызывается из `infra/scripts/demo.sh` внутри контейнера core-api (`DATABASE_URL`, соль из env).
 В stdout — только строки `DEMO_ID <uuid>`: id демо-кандидатов для сброса в fsp-connector

@@ -8,7 +8,7 @@ import { useAuth } from "@/shared/lib/auth";
 import { INVITE as T } from "./text";
 
 /**
- * Приглашение в команду компании (E39-24): `/invite/company/:token`, без входа видно, кто и куда зовёт.
+ * Приглашение в команду компании: `/invite/company/:token`, без входа видно, кто и куда зовёт.
  * Аноним — «Войти» / «Зарегистрироваться» с возвратом сюда; работодатель — «Принять».
  */
 export default function InviteAccept() {

@@ -47,7 +47,7 @@ export function errorText(e: unknown): string {
   return T.errorTitle;
 }
 
-/** Подсказка в карточке роста: способы подтверждения (matching.md §6). */
+/** Подсказка в карточке роста: способы подтверждения. */
 export function confirmHint(list: UpliftConfirm[], date: (iso: string) => string): string {
   const parts = list.map((c) => {
     if (c.kind === "test") return c.minutes ? `тест, около ${c.minutes} мин` : "тест";

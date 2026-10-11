@@ -1,4 +1,4 @@
-"""Формулы доверия на примерах из ml.md §3.1 и §3.3."""
+"""Формулы доверия на примерах."""
 
 import uuid
 from datetime import date, timedelta
@@ -95,7 +95,7 @@ def test_top_evidence_strongest_first_max_three():
 
 
 def test_single_test_never_reaches_level_4():
-    """E41-5: один тест (даже полный балл) — не выше ●●●○; ●●●● только со вторым источником."""
+    """Один тест (даже полный балл) — не выше ●●●○; ●●●● только со вторым источником."""
     from app.assessment.config import load_config
 
     cap = load_config().evidence_max_strength

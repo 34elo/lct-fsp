@@ -271,7 +271,7 @@ def test_me_telegram_link_requires_auth_and_bot_name(ctx):
 
 
 def test_link_without_prior_start_creates_account_and_status(ctx):
-    """E43-7: бот не вызывает /start — привязка сама создаёт запись Telegram."""
+    """Бот не вызывает /start — привязка сама создаёт запись Telegram."""
     c, engine = ctx
     h, site_id = reg(c)
     assert c.get("/internal/tg/linked", params={"tg_user_id": 777}, headers=SVC).json() == {

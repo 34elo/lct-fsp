@@ -1,7 +1,7 @@
 """Загрузка ядра графа в БД, версия справочника, снимки (публичный и для ml).
 
 Версия растёт только когда содержимое изменилось (хеш снимка); тогда в той же транзакции
-в outbox пишется `taxonomy.updated {version, changed_skill_ids}` (messaging.md).
+в outbox пишется `taxonomy.updated {version, changed_skill_ids}`.
 """
 
 from __future__ import annotations
@@ -332,13 +332,13 @@ def skill_id_of(after: dict[str, Any], before: dict[str, Any], slug: str) -> uui
 
 @dataclass(frozen=True, slots=True)
 class SkillGraph:
-    """Граф навыков в памяти core (graph.md §3): версия справочника, slug и иерархия «вверх»."""
+    """Граф навыков в памяти core: версия справочника, slug и иерархия «вверх»."""
 
     version: int
     slugs: dict[uuid.UUID, str]
     parents: dict[uuid.UUID, tuple[tuple[uuid.UUID, float], ...]]  # child → ((parent, coef), …)
     roles: dict[str, dict[uuid.UUID, float]] = field(default_factory=dict)  # role → {skill: вес}
-    stack_ids: frozenset[uuid.UUID] = frozenset()  # языки и их фреймворки (ml.md §4)
+    stack_ids: frozenset[uuid.UUID] = frozenset()  # языки и их фреймворки
 
     def parents_of(self, skill_id: uuid.UUID) -> tuple[tuple[uuid.UUID, float], ...]:
         return self.parents.get(skill_id, ())
@@ -397,7 +397,7 @@ class DisciplineRule:
 
 
 async def discipline_rules(session: AsyncSession) -> dict[str, list[DisciplineRule]]:
-    """Правила «дисциплина (+трек) → навык» (fsp.md §5). Отклонённые и слитые навыки пропущены."""
+    """Правила «дисциплина (+трек) → навык». Отклонённые и слитые навыки пропущены."""
     rows = await session.execute(
         select(DisciplineSkillRule, Skill)
         .join(Skill, Skill.id == DisciplineSkillRule.skill_id)
@@ -524,9 +524,9 @@ async def alias_index(session: AsyncSession) -> AliasIndex:
 async def list_professions(
     session: AsyncSession, *, include_hidden: bool = False
 ) -> list[ProfessionInfo]:
-    """Профессии теста (`roles.is_profession`), веса и типы навыков (blocks.md §4.3).
+    """Профессии теста (`roles.is_profession`), веса и типы навыков.
 
-    По умолчанию — только активные (ADR-027 п.1: опрос, выдача, новые тесты). `include_hidden` —
+    По умолчанию — только активные (опрос, выдача, новые тесты). `include_hidden` —
     и скрытые: подписи и уже накопленные данные (грейды, попытки) по ним не пропадают.
     """
     q = select(Role).where(Role.is_profession.is_(True))
@@ -574,7 +574,7 @@ async def skill_kinds(session: AsyncSession, skill_ids: list[uuid.UUID]) -> dict
     return {sid: kind for sid, kind in rows.all()}
 
 
-# --- конвейер навыков: журнал решений и черновики карточек (E16-4) ---
+# --- конвейер навыков: журнал решений и черновики карточек ---
 
 
 def _clean_norm(norm: str) -> str | None:
@@ -653,7 +653,7 @@ async def save_card_draft(
 
 
 async def pending_merge_count(session: AsyncSession) -> int:
-    """Число предложенных слияний навыков — счётчик на главной админки (E39-29)."""
+    """Число предложенных слияний навыков — счётчик на главной админки."""
     from app.taxonomy import decisions
 
     return len(await decisions.pending_merges(session))

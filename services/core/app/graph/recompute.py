@@ -1,4 +1,4 @@
-"""Пересчёт профиля кандидата (graph.md §4.4, flows.md F5).
+"""Пересчёт профиля кандидата.
 
 `recompute_profile` собирает `candidate_skills` из активных доказательств в одной транзакции
 вызывающего, увеличивает `profile_version` (только если агрегат изменился) и пишет
@@ -72,7 +72,7 @@ def grade_inputs(
     rows: list[tuple[Evidence, Skill]],
     role_skill_ids: set[uuid.UUID] | None,
 ) -> GradeInputs:
-    """Сигналы грейда из активных доказательств (соглашения по `details` — ml.md §5)."""
+    """Сигналы грейда из активных доказательств."""
     fsp: list[FspResult] = []
     rank, rank_ev = None, None
     theta: tuple[float, str] | None = None
@@ -209,9 +209,8 @@ async def recompute_profile(
     now: datetime | None = None,
     embedder: Embedder | None = None,
 ) -> RecomputeResult:
-    """Пересобирает `candidate_skills` из активных доказательств и пишет `skills.profile.updated`
-    (graph.md §4.4); пропускает устаревшую команду.
-    """
+    """Пересобирает `candidate_skills` из активных доказательств и пишет `skills.profile.updated`;
+    пропускает устаревшую команду."""
     now = _utc(now or datetime.now(UTC))
     cand = await session.get(Candidate, candidate_id, with_for_update=True)
     if cand is None or cand.deleted_at is not None:
@@ -312,7 +311,7 @@ async def recompute_profile(
             await session.delete(row)
             changed = True
 
-    # E22-4 (ADR-018): роли и грейд ниже — сигналы силы профиля, не категория; её задаёт assessment
+    # роли и грейд ниже — сигналы силы профиля, не категория; её задаёт assessment
     category_diff = None
     if graph is not None:
         cat = category_for(

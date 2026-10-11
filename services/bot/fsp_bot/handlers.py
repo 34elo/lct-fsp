@@ -58,7 +58,7 @@ LINK_CONFLICT = {
 CORE_DOWN = "Сервис временно недоступен, попробуй чуть позже."
 
 NOT_RESUME = "Это не PDF и не DOCX. Пришли резюме в одном из этих форматов."
-MAX_RESUME_BYTES = 10 * 1024 * 1024  # telegram.md §3
+MAX_RESUME_BYTES = 10 * 1024 * 1024
 RESUME_PROMPT = "Пришли резюме файлом: PDF или DOCX, до 10 МБ."
 BTN_RESUME, BTN_PROFILE, BTN_OFFERS = "📄 Резюме", "👤 Профиль", "💼 Офферы"
 POLL_INTERVAL = 3.0
@@ -95,7 +95,7 @@ def offer_error(exc: CoreError) -> str:
 
 
 def file_kind(head: bytes) -> str | None:
-    """Тип по сигнатуре, а не по имени и mime из Telegram (security.md §3). Содержимое не читаем."""
+    """Тип по сигнатуре, а не по имени и mime из Telegram. Содержимое не читаем."""
     if head.startswith(b"%PDF-"):
         return "pdf"
     if head.startswith(b"PK\x03\x04"):
@@ -141,7 +141,7 @@ def build_router(
 
     @router.message(CommandStart())
     async def start(message: Message, command: CommandObject, state: FSMContext) -> None:
-        """E43-7: бот аккаунтов не создаёт. `/start link_<token>` привязывает, остальное —
+        """Бот аккаунтов не создаёт. `/start link_<token>` привязывает, остальное —
         «уже привязан» или отправка на сайт."""
         user = message.from_user
         if user is None:
@@ -178,7 +178,7 @@ def build_router(
         else:
             await message.answer(NOT_LINKED, reply_markup=site_kb())
 
-    # --- Офферы (telegram.md §2, §3, §5) ---------------------------------------------------
+    # --- Офферы ---------------------------------------------------
 
     @router.message(Command("offers"))
     @router.message(F.text == BTN_OFFERS)

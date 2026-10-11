@@ -1,4 +1,4 @@
-"""Перечисления, общие для бэка, фронта и ML (data-model.md §1).
+"""Перечисления, общие для бэка, фронта и ML.
 
 ⚠️ Значения ФСП (`FspDiscipline`, `FspLevel`, `FspRankCode`) — предположение до ответа организаторов.
 """
@@ -135,7 +135,7 @@ class OfferStatus(StrEnum):
     interview = "interview"
     hired = "hired"
     not_hired = "not_hired"
-    # ADR-026 (E33-1): интерес — шаг до приглашения; `interest_opened` — кандидат открыл интерес
+    # интерес — шаг до приглашения; `interest_opened` — кандидат открыл интерес
     interest = "interest"
     interest_opened = "interest_opened"
 
@@ -147,7 +147,7 @@ class DeclineReason(StrEnum):
     wrong_grade = "wrong_grade"
     not_looking = "not_looking"
     other = "other"
-    wrong_company = "wrong_company"  # «не интересно»: компания (E33-1)
+    wrong_company = "wrong_company"  # «не интересно»: компания
 
 
 class ConsentType(StrEnum):

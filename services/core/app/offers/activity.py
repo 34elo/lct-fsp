@@ -1,4 +1,4 @@
-"""Лента активности работодателя (E35-12b): `GET /employer/activity`.
+"""Лента активности работодателя: `GET /employer/activity`.
 
 Собирается из данных компании: попадания в её подписки, интересы и приглашения, ответы на
 задания в приглашениях. Только её собственные строки (по `company_id`), кандидат — анонимная
@@ -126,6 +126,6 @@ async def employer_activity(
 ) -> Any:
     """Лента событий компании, новые сверху. Чужих данных нет. Без компании - пусто."""
     found = await companies.my_company(session, user.id)
-    if found is None:  # новая компания: событий ещё нет (E39-7)
+    if found is None:  # новая компания: событий ещё нет
         return ActivityFeed(items=[])
     return ActivityFeed(items=await build_feed(session, found[0].id, limit))

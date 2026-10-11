@@ -6,7 +6,7 @@ import { Briefcase, ClipboardList, Filter, Gauge, LayoutDashboard, Logo, Network
 import { ADMIN_GROUPS, type NavItem } from "@/app/routes";
 import { activeNav } from "./shell-meta";
 
-/** Пункты меню по группам (E39-29): сначала без группы («Главная»), затем Очереди · Справочники · Аналитика. */
+/** Пункты меню по группам: сначала без группы («Главная»), затем Очереди · Справочники · Аналитика. */
 export function groupNav(nav: NavItem[]): { id: string; label?: string; items: NavItem[] }[] {
   const out: { id: string; label?: string; items: NavItem[] }[] = [{ id: "top", items: nav.filter((n) => !n.group) }];
   for (const g of ADMIN_GROUPS) {
@@ -16,7 +16,7 @@ export function groupNav(nav: NavItem[]): { id: string; label?: string; items: N
   return out.filter((g) => g.items.length);
 }
 
-/** Иконки пунктов админки (E41-2): по пути пункта, без изменения маршрутов. */
+/** Иконки пунктов админки: по пути пункта, без изменения маршрутов. */
 const ADMIN_ICONS: Record<string, LucideIcon> = {
   "/federation": LayoutDashboard,
   "/admin/families": SlidersHorizontal,
@@ -34,7 +34,7 @@ const itemClass = (on: boolean) =>
     on ? "bg-tint-100 text-brand-deep dark:text-brand-mid" : "text-muted hover:bg-tint-50 hover:text-ink",
   );
 
-/** Боковая панель админки ФСП (макет F1): меню по группам, закреплено при прокрутке (E41-2). На телефоне — `AdminMobileNav`. */
+/** Боковая панель админки ФСП (макет F1): меню по группам, закреплено при прокрутке. На телефоне — `AdminMobileNav`. */
 export function AdminSidebar({ nav }: { nav: NavItem[] }) {
   const current = activeNav(nav, useLocation().pathname);
   return (

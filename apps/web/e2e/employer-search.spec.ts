@@ -3,10 +3,10 @@ import { expect, test } from "@playwright/test";
 import { loginAs } from "./fixtures";
 
 /**
- * E39-21: поиск сотрудников на «Подборе». Фраза «python django middle» → чипсы навыков и грейд в условиях →
+ * Поиск сотрудников на «Подборе». Фраза «python django middle» → чипсы навыков и грейд в условиях →
  * категории с объяснением «почему» → компактные карточки кандидатов; состояние в URL; фильтр сужает выдачу.
  */
-test("b2: запрос «python django middle» → чипсы → категории → кандидаты; фильтры сужают выдачу", async ({ page }) => {
+test("запрос «python django middle» → чипсы → категории → кандидаты; фильтры сужают выдачу", async ({ page }) => {
   await loginAs(page, "olga");
   await page.goto("/employer");
 
@@ -46,8 +46,8 @@ test("b2: запрос «python django middle» → чипсы → катего�
   expect(after).toBeLessThanOrEqual(before);
 });
 
-/** E41-11: переключатель «Категории / Кандидаты», фильтры свёрнуты, «В шорт-лист» на карточке. */
-test("b2: режим «Кандидаты» → фильтр навыка → «В шорт-лист»", async ({ page }) => {
+/** Переключатель «Категории / Кандидаты», фильтры свёрнуты, «В шорт-лист» на карточке. */
+test("режим «Кандидаты» → фильтр навыка → «В шорт-лист»", async ({ page }) => {
   await loginAs(page, "olga");
   await page.goto("/employer?skill=python&grade=middle&view=categories");
   await expect(page.getByTestId("match-categories")).toBeVisible();

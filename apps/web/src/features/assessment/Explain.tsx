@@ -71,7 +71,7 @@ function Row({ attemptId, row }: { attemptId: string; row: AnswerRow }) {
 }
 
 /**
- * Ошибки (E24-2, макет v2): задания, где набрано не всё, с «Объясни ответ».
+ * Ошибки (макет v2): задания, где набрано не всё, с «Объясни ответ».
  * Только после завершения попытки; ключей и правильных ответов не показываем.
  */
 export function ExplainAnswers({ attemptId, answers, className }: { attemptId: string; answers: unknown; className?: string }) {

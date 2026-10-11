@@ -1,4 +1,4 @@
-"""users и refresh_tokens (data-model.md §3.1)
+"""users и refresh_tokens
 
 Revision ID: 0003
 Revises: 0002

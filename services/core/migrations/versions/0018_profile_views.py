@@ -1,4 +1,4 @@
-"""profile_views (data-model.md §3.8)
+"""profile_views
 
 Revision ID: 0018
 Revises: 0017

@@ -1,6 +1,6 @@
-"""Props аналитики блока 1: `survey_*`, `assessment_*`, `family_*`, `regular_task_*`.
+"""Props аналитики теста: `survey_*`, `assessment_*`, `family_*`, `regular_task_*`.
 
-Только числа, флаги, перечисления и slug'и (blocks.md §4.7).
+Только числа, флаги, перечисления и slug'и.
 """
 
 from __future__ import annotations
@@ -36,7 +36,7 @@ class AssessmentStarted(_Props):
     attempt_id: Slug
     profession: Slug
     declared_grade: Grade
-    mode: Literal["standard", "express"] = "standard"  # E32-4a
+    mode: Literal["standard", "express"] = "standard"
 
 
 class AssessmentAnswered(_Props):
@@ -59,7 +59,7 @@ class AssessmentFinished(_Props):
     grade: Grade | None = None
     items: Nat = 0
     duration_s: Nat | None = None
-    mode: Literal["standard", "express"] = "standard"  # E32-4a
+    mode: Literal["standard", "express"] = "standard"
 
 
 class FamilyStatusChangedProps(_Props):
@@ -70,7 +70,7 @@ class FamilyStatusChangedProps(_Props):
 
 
 class RegularTaskProps(_Props):
-    """Регулярное задание: выдача, ответ, пропуск (E25-1)."""
+    """Регулярное задание: выдача, ответ, пропуск."""
 
     task_kind: Slug | None = None
     profession: Slug | None = None

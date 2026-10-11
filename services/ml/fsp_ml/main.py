@@ -1,4 +1,4 @@
-"""ml-api: синхронный HTTP для core (api.md §2.10). Сейчас — заглушки `ML_FAKE=true`."""
+"""ml-api: синхронный HTTP для core. Сейчас — заглушки `ML_FAKE=true`."""
 
 from __future__ import annotations
 
@@ -75,15 +75,11 @@ def build_app(
             max_tokens=settings.llm_max_tokens,
         )
     pipeline = SkillPipeline(llm=llm, embedder=real, llm_model=settings.llm_model)
-    # >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
-    app.include_router(family_key.build_router(settings))  # E30-1: черновик ключа задания
-    app.include_router(family_bank.build_router(settings))  # E26-4: генератор и решатель
-    app.include_router(answer_explain.build_router(settings))  # E24-2: «Объясни ответ»
-    # <<< block1
-    # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
-    app.include_router(query_parse.build_router(settings, llm))  # AU-2: разбор запроса без 503
-    # <<< block2
-    # у ml-api свой формат /healthz (api.md §2.10), вместо базового {"status": "ok"}
+    app.include_router(family_key.build_router(settings))  # черновик ключа задания
+    app.include_router(family_bank.build_router(settings))  # генератор и решатель
+    app.include_router(answer_explain.build_router(settings))  # «Объясни ответ»
+    app.include_router(query_parse.build_router(settings, llm))  # разбор запроса без 503
+    # у ml-api свой формат /healthz, вместо базового {"status": "ok"}
     app.router.routes[:] = [r for r in app.router.routes if getattr(r, "path", "") != "/healthz"]
 
     def require_fake() -> None:

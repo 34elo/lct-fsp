@@ -1,4 +1,4 @@
-"""Задачи соревнований ФСП в банке заданий (E32-6, ADR-025, assessment.md §4).
+"""Задачи соревнований ФСП в банке заданий.
 
 Платформа не только для олимпиадников: задачи прошлых соревнований ФСП — дополнительный источник
 банка (`families.source = fsp`), но участник соревнования не получает преимущества. Защита:
@@ -233,7 +233,7 @@ async def _import(paths: list[Path], to_pilot: bool) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    p = argparse.ArgumentParser(description="Банк задач ФСП (E32-6)")
+    p = argparse.ArgumentParser(description="Банк задач ФСП")
     sub = p.add_subparsers(dest="cmd", required=True)
     for name in ("check", "import"):
         sp = sub.add_parser(name)

@@ -1,4 +1,4 @@
-"""companies, company_members (data-model.md §3.7)
+"""companies, company_members
 
 Revision ID: 0009
 Revises: 0008

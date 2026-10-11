@@ -1,4 +1,4 @@
-"""Порт ФСП (fsp.md §2). Адаптеры нормализуют ответы источника в DTO `fsp_contracts.fsp`."""
+"""Порт ФСП. Адаптеры нормализуют ответы источника в DTO `fsp_contracts.fsp`."""
 
 from __future__ import annotations
 

@@ -1,7 +1,7 @@
 import { API_BASE } from "@/api/mutator";
 import { getAccessToken } from "@/shared/lib/token";
 
-/** Трекер событий интерфейса (metrics.md §2.1): очередь, батч раз в 5 с, sendBeacon при уходе. */
+/** Трекер событий интерфейса: очередь, батч раз в 5 с, sendBeacon при уходе. */
 
 export const MAX_BATCH = 50;
 export const FLUSH_MS = 5000;
@@ -11,7 +11,7 @@ const MAX_QUEUE = 500;
 const RUN_KEY = "fsp_run_id";
 let runId: string | null = null;
 
-/** Метка живого прогона (metrics.md §3): все события вкладки получают `run_id`. Живёт в sessionStorage вкладки. */
+/** Метка живого прогона: все события вкладки получают `run_id`. Живёт в sessionStorage вкладки. */
 export function setRunId(id: string | null) {
   runId = id;
   try {
@@ -151,7 +151,7 @@ let shared: Tracker | null = null;
 
 /**
  * Один трекер на вкладку; слушатели ухода со страницы ставятся при первом обращении.
- * Вызывается из `useTrack()` (metrics.md §2.3); экраны его пока не подключают, поэтому в knip.json — белый список.
+ * Вызывается из `useTrack()`; экраны его пока не подключают, поэтому в knip.json — белый список.
  * @public
  */
 export function getTracker(): Tracker {

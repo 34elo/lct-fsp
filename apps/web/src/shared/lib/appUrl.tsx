@@ -1,7 +1,7 @@
 import type { AnchorHTMLAttributes } from "react";
 import { Link, type LinkProps } from "react-router-dom";
 
-/** Адрес кабинета (E41-7): на корневом домене лендинг, кабинет — на `dashboard.`. Пусто — всё на одном origin. */
+/** Адрес кабинета: на корневом домене лендинг, кабинет — на `dashboard.`. Пусто — всё на одном origin. */
 export const appBase = (): string => ((import.meta.env.VITE_APP_URL as string | undefined) ?? "").replace(/\/+$/, "");
 
 /** Кабинет живёт на другом origin, чем текущая страница (лендинг на корневом домене). */

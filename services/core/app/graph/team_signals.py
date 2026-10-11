@@ -1,4 +1,4 @@
-"""Командные сигналы L/T/R/G и коэффициент `K_soft` (skills.md §8), без БД.
+"""Командные сигналы L/T/R/G и коэффициент `K_soft`, без БД.
 
 Сигналы считаются только из проверяемых фактов: результатов ФСП (`fact_type=fsp_result`,
 `details`: `level`, `place`, `participants`, `final|stage`, `team_role`, `team_size`,
@@ -34,7 +34,7 @@ _GRADE_GROUP = {
     "senior": "senior",
     "lead": "lead",
 }
-STRONG, PRESENT = 0.6, 0.3  # пороги подписи (skills.md §8.5)
+STRONG, PRESENT = 0.6, 0.3  # пороги подписи
 
 
 @dataclass(frozen=True, slots=True)
@@ -101,7 +101,7 @@ class TeamConfig:
     )
     emphasis_multiplier: float = 2.0
     emphasis_ceiling_bonus: float = 0.02
-    beta_hard_cap: float = 0.12  # skills.md §8.6
+    beta_hard_cap: float = 0.12  # жёсткий потолок β
 
     @classmethod
     def load(cls, path: Path | str | None = None) -> TeamConfig:
@@ -195,18 +195,18 @@ class TeamSignals:
 
 
 def decay(observed: date, today: date) -> float:
-    """Затухание факта по возрасту: период полураспада `HALF_LIFE_YEARS` (skills.md §8.2)."""
+    """Затухание факта по возрасту: период полураспада `HALF_LIFE_YEARS`."""
     age_years = max(0, (today - observed).days) / DAYS_IN_YEAR
     return 0.5 ** (age_years / HALF_LIFE_YEARS)
 
 
 def k_level(level: str, cfg: TeamConfig) -> float:
-    """Коэффициент уровня соревнования для командных сигналов (skills.md §8.2)."""
+    """Коэффициент уровня соревнования для командных сигналов."""
     return cfg.level_k.get(level, min(cfg.level_k.values()))
 
 
 def k_result(place: int | None, participants: int | None, cfg: TeamConfig) -> float:
-    """Коэффициент результата команды по месту и числу участников (skills.md §8.2)."""
+    """Коэффициент результата команды по месту и числу участников."""
     if place is None:
         return cfg.participated_k
     if place <= cfg.prize_places:
@@ -245,7 +245,7 @@ def leadership(
     perfs: Sequence[FspPerformance], repos: Sequence[RepoFact], today: date, cfg: TeamConfig
 ) -> tuple[float, list[TeamFact]]:
     """L — лидерство: капитанство (уровень, результат, размер команды, затухание) и сопровождение
-    репозиториев с внешними авторами; noisy-OR (skills.md §8.2).
+    репозиториев с внешними авторами; noisy-OR.
     """
     parts: list[float] = []
     facts: list[TeamFact] = []
@@ -276,7 +276,7 @@ def teamwork(
     perfs: Sequence[FspPerformance], repos: Sequence[RepoFact], today: date, cfg: TeamConfig
 ) -> tuple[float, list[TeamFact]]:
     """T — командная работа: `1 − Π(1 − τ)·(1 − b)` по командным выступлениям, бонус `b` за разных
-    напарников и общий репозиторий (skills.md §8.2).
+    напарников и общий репозиторий.
     """
     taus: list[float] = []
     facts: list[TeamFact] = []
@@ -304,9 +304,7 @@ def teamwork(
 
 
 def results(perfs: Sequence[FspPerformance], cfg: TeamConfig) -> tuple[float, list[TeamFact]]:
-    """R — результативность: сглаженная доля успешных выступлений `(успехи + 1) / (всего + 3)`
-    (skills.md §8.2).
-    """
+    """R — результативность: сглаженная доля успешных выступлений `(успехи + 1) / (всего + 3)`."""
     if len(perfs) < cfg.results_min_attempts:
         return 0.0, []
     wins = [p for p in perfs if _is_success(p, cfg)]
@@ -319,7 +317,7 @@ def results(perfs: Sequence[FspPerformance], cfg: TeamConfig) -> tuple[float, li
 
 
 def growth(perfs: Sequence[FspPerformance], cfg: TeamConfig) -> tuple[float, list[TeamFact]]:
-    """G — рост: наклон перцентиля по сезонам, `clip(0.5 + k·slope, 0, 1)` (skills.md §8.2)."""
+    """G — рост: наклон перцентиля по сезонам, `clip(0.5 + k·slope, 0, 1)`."""
     pts = [(p.observed_at.year, pc) for p in perfs if (pc := _percentile(p)) is not None]
     if len(pts) < cfg.growth_min_performances or len({x for x, _ in pts}) < cfg.growth_min_seasons:
         return 0.0, []
@@ -340,7 +338,7 @@ def compute_team_signals(
     today: date,
     cfg: TeamConfig | None = None,
 ) -> TeamSignals:
-    """Все сигналы L/T/R/G с фактами-основаниями; в подбор идут через `K_soft` (skills.md §8.3)."""
+    """Все сигналы L/T/R/G с фактами-основаниями; в подбор идут через `K_soft`."""
     cfg = cfg or TeamConfig()
     values: dict[str, float] = {}
     facts: dict[str, list[TeamFact]] = {}

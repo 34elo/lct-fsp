@@ -1,4 +1,4 @@
-"""Подсказки навыков и профессий (E39-3): синонимы, опечатки, Java ≠ JavaScript, кеш, права."""
+"""Подсказки навыков и профессий: синонимы, опечатки, Java ≠ JavaScript, кеш, права."""
 
 from pathlib import Path
 
@@ -93,7 +93,7 @@ def test_profession_boosts_own_skills(client):
 
 
 def test_kind_soft_only_soft_skills(client):
-    # E41-6: «Личные качества» — подсказки только из софт-навыков
+    # «Личные качества» — подсказки только из софт-навыков
     soft = _slugs(client, "", kind="soft", limit=50)
     assert "teamwork" in soft and "python" not in soft
     assert _slugs(client, "pyth", kind="soft") == []

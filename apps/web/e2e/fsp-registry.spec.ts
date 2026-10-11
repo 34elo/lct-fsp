@@ -3,7 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { DEMO_PASSWORD } from "./fixtures";
 
 /**
- * E39-28: ФСП — реестр + заявка. Стенд после `make seed` (или `make demo-reset`): жюри-кандидат есть в реестре с email
+ * ФСП — реестр + заявка. Стенд после `make seed` (или `make demo-reset`): жюри-кандидат есть в реестре с email
  * аккаунта и не привязан. (1) «Привязать ФСП» → «найден в базе» → достижения на Главной и в профиле.
  * (2) Новый кандидат с чужим email → заявка → в очереди админа → принята → привязано.
  */
@@ -21,7 +21,7 @@ async function login(page: Page, email: string, password = DEMO_PASSWORD) {
 
 test.describe.configure({ mode: "serial" });
 
-test("b2: жюри-кандидат привязывает ФСП одной кнопкой", async ({ page }) => {
+test("жюри-кандидат привязывает ФСП одной кнопкой", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await login(page, JURY);
   await page.goto("/me/profile?tab=data");
@@ -35,7 +35,7 @@ test("b2: жюри-кандидат привязывает ФСП одной к�
   await expect(page.getByTestId("home-fsp")).toContainText("Кубок по продуктовому программированию");
 });
 
-test("b2: заявка с чужим email → админ принимает → привязано", async ({ browser }) => {
+test("заявка с чужим email → админ принимает → привязано", async ({ browser }) => {
   const cand = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   const email = `e39-28-${Date.now()}@e2e.fsp.test`;
   await cand.goto("/register");
@@ -58,7 +58,7 @@ test("b2: заявка с чужим email → админ принимает →
   const admin = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   await login(admin, ADMIN);
   await admin.goto("/federation");
-  // «Что требует вас» на главной админки ведёт в очередь заявок (E39-29)
+  // «Что требует вас» на главной админки ведёт в очередь заявок
   await admin.getByTestId("queue-fsp_requests").click();
   await expect(admin).toHaveURL(/\/federation\/requests/);
   const card = admin.getByTestId("fsp-request").filter({ hasText: "Дроздова Алина Петровна" }).first();

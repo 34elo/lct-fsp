@@ -1,5 +1,5 @@
 #!/bin/sh
-# Деплой и обслуживание стенда (docs/deploy.md «Прод»). Запускает self-hosted раннер из .github/workflows/cd.yml.
+# Деплой и обслуживание стенда. Запускает self-hosted раннер из .github/workflows/cd.yml.
 # Прод — каталог стенда с .env.server: .env собирается render-env.sh из infra/env/prod.env, .env.server и секретов
 # окружения GitHub `prod`. Без .env.server (старый стенд на .env.demo) — деплой как раньше, без сборки .env.
 #   deploy       — STAND_DIR на коммит SHA (из копии SRC_DIR), бэкап, сборка и запуск (миграции — core-migrate),
@@ -38,7 +38,7 @@ health() {
   return 1
 }
 
-# Смоук ML, LLM и бота (E42-6); причина сбоя остаётся в SMOKE_FAIL для алерта
+# Смоук ML, LLM и бота; причина сбоя остаётся в SMOKE_FAIL для алерта
 smoke() {
   mkdir -p reports/seed
   if sh infra/scripts/smoke-ml.sh >reports/seed/smoke-ml.log 2>&1; then cat reports/seed/smoke-ml.log; return 0; fi
@@ -59,7 +59,7 @@ checkout_sha() {
   git checkout --quiet --detach "$SHA"
 }
 
-# Шаг наполнения: при сбое печатаем хвост вывода и шлём его в алерт (E42-3); сид идемпотентен — повтор безопасен
+# Шаг наполнения: при сбое печатаем хвост вывода и шлём его в алерт; сид идемпотентен — повтор безопасен
 run_step() {
   name="$1"; shift
   LOG="reports/seed/step-$name.log"

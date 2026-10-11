@@ -1,4 +1,4 @@
-"""Граница блока 1: assessment.service (blocks.md §4.3), email (§4.6), профессии, OpenAPI."""
+"""Публичное API теста: assessment.service, email, профессии, OpenAPI."""
 
 import uuid
 from datetime import UTC, datetime, timedelta
@@ -161,9 +161,9 @@ async def test_list_professions(factory):
         await tax.sync(s, data)
     async with session_scope(factory) as s:
         profs = {p.slug: p for p in await tax.list_professions(s)}
-    # все профессии открыты (E39-6, отменяет скрытие E36-2)
+    # все профессии открыты
     assert {"backend", "frontend", "ai_engineer", "mobile", "ml", "devops", "qa"} <= set(profs)
-    assert len(profs) == 15  # E41-6: профессией стали и остальные роли справочника
+    assert len(profs) == 15  # профессией стали и остальные роли справочника
     async with session_scope(factory) as s:
         await s.execute(update(Role).where(Role.slug == "ml").values(is_active=False))
     async with session_scope(factory) as s:
@@ -197,9 +197,9 @@ async def test_professions_endpoint(factory, db_url):
         r = c.get("/taxonomy/professions")
     assert r.status_code == 200
     body = r.json()
-    # все профессии открыты (E39-6); тонкий банк — «бета», у ядра MVP банк полный
+    # все профессии открыты; тонкий банк — «бета», у ядра MVP банк полный
     profs = {p["slug"]: p for p in body["professions"]}
-    # E41-6: в выборе направления все профессии справочника, а не часть из них
+    # в выборе направления все профессии справочника, а не часть из них
     import yaml
 
     roles = yaml.safe_load((CORE.parents[1] / "data" / "taxonomy" / "roles.yaml").read_text("utf8"))
@@ -311,7 +311,7 @@ async def test_claimed_vs_confirmed_resume_old_scale(factory):
 
 
 async def test_declared_grades_unconfirmed(factory):
-    """E32-1 (ADR-025): заявленный грейд из последнего опроса виден, пока нет подтверждения."""
+    """Заявленный грейд из последнего опроса виден, пока нет подтверждения."""
     from app.assessment.models import Survey
 
     async with session_scope(factory) as s:

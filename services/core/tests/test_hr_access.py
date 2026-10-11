@@ -1,4 +1,4 @@
-"""Доступ HR без почты (E41-16): временный пароль, смена при первом входе, сброс, отзыв, журнал."""
+"""Доступ HR без почты: временный пароль, смена при первом входе, сброс, отзыв, журнал."""
 
 import sqlite3
 import uuid
@@ -239,7 +239,7 @@ def test_rate_limit(c):
 
 
 def test_e43_3_full_flow_temp_change_login_refresh(c):
-    """E43-3: временный пароль → смена → вход новым 200, старым 401; refresh работает."""
+    """Временный пароль → смена → вход новым 200, старым 401; refresh работает."""
     owner = _owner(c)
     temp = _create_hr(c, owner, "hr3@x.io")["temp_password"]
     r = _login(c, "hr3@x.io", temp)

@@ -1,4 +1,4 @@
-"""CLI майнинга мутаций (E30-3).
+"""CLI майнинга мутаций.
 
     python -m app.assessment.mining mine --source thealgorithms       # GitHub, MUTMINE_GITHUB=1
     python -m app.assessment.mining mine --source NAME --dir PATH     # локальная копия

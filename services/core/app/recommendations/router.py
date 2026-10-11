@@ -1,7 +1,7 @@
-"""API для логирования показов и реакций (E17-1).
+"""API для логирования показов и реакций.
 
 POST /recs/feedback - отправить реакцию на показ кандидата.
-GET/DELETE /recs/sessions/{id} - учтённая подстройка сессии (E17-4) / сброс.
+GET/DELETE /recs/sessions/{id} - учтённая подстройка сессии / сброс.
 """
 
 from typing import Any
@@ -56,7 +56,7 @@ class WeightOut(BaseModel):
 
 
 class SessionTuning(BaseModel):
-    """Учтённая подстройка сессии (matching.md §7): чипсы «Учли: …» и подсказки фильтров."""
+    """Учтённая подстройка сессии: чипсы «Учли: …» и подсказки фильтров."""
 
     session_id: str
     active: bool

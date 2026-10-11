@@ -1,4 +1,4 @@
-"""Internal API реестра ФСП для core-api (api.md §2.9, E39-28): `Authorization: Service <token>`.
+"""Internal API реестра ФСП для core-api: `Authorization: Service <token>`.
 
 Права (админ/кандидат) проверяет core; здесь — только сервисный токен.
 """

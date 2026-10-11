@@ -5,7 +5,7 @@ import { fspResults } from "./candidate-model";
 import { toMatchCard } from "./match-model";
 import { FORMAT_LABEL, SHORTLIST_PAGE_TEXT as T } from "./text";
 
-/* Модель общего шорт-листа (E38-12): статус интереса по последнему приглашению компании кандидату. */
+/* Модель общего шорт-листа: статус интереса по последнему приглашению компании кандидату. */
 
 export type InterestState = "none" | "waiting" | "opened" | "other";
 

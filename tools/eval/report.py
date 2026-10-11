@@ -1,4 +1,4 @@
-"""Отчёт стенда оценки: markdown + JSON в `reports/eval/` (evaluation.md §5)."""
+"""Отчёт стенда оценки: markdown + JSON в `reports/eval/`."""
 
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ SECTION_LABELS = {
 def _resumes_md(r: dict[str, Any]) -> list[str]:
     verdict = "достигнута" if r["meets_target"] else "не достигнута"
     lines = [
-        "# Разбор резюме hh.ru (E39-19)",
+        "# Разбор резюме hh.ru",
         "",
         f"Набор: {r['n_resumes']} обезличенных резюме (PDF и DOCX, вымышленные люди), "
         "`data/eval/resumes/hh/`; правиловая ветка ml без LLM.",
@@ -57,7 +57,7 @@ def _resumes_md(r: dict[str, Any]) -> list[str]:
 def to_markdown(result: dict[str, Any], meta: dict[str, Any]) -> str:
     m = result["matching"]
     lines = [
-        "# Валидация подбора (E27-2)",
+        "# Валидация подбора",
         "",
         f"Синтетический рынок: seed {meta['seed']}, хеш параметров `{meta['params_hash']}`; "
         f"кандидатов {m['candidates']} (приукрашивают {m['embellished_candidates']}), "
@@ -78,7 +78,7 @@ def to_markdown(result: dict[str, Any], meta: dict[str, Any]) -> str:
         f"Прирост precision@{m['k']}: к BM25 {_pct(lift['p10']['vs_bm25'])}, "
         f"к BM25 с фильтрами {_pct(lift['p10']['vs_bm25_filtered'])}.",
         f"Вклад ФСП (Δ nDCG@{m['k']}): {m['fsp_delta_ndcg10']:+.3f}.",
-        f"Категории потребности (E23-4): настоящая роль среди предложенных — "
+        f"Категории потребности: настоящая роль среди предложенных — "
         f"{m['category_hit'] * 100:.0f} % потребностей.",
         "",
         "Ограничения: рынок синтетический; уверенность в навыках для подбора считается упрощённой "

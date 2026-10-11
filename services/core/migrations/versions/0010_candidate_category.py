@@ -1,4 +1,4 @@
-"""candidates: primary_role, roles, primary_stack (data-model.md §3.2, ml.md §4)
+"""candidates: primary_role, roles, primary_stack
 
 Revision ID: 0010
 Revises: 0009

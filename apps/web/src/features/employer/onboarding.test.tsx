@@ -35,7 +35,7 @@ beforeEach(() => {
         company = { id: "co1", name: "Acme", status: "pending", role: "admin" };
         return res(201, { ...company, created_at: "2026-10-05T00:00:00Z" });
       }
-      if (url.includes("/offers")) return res(200, []); // списки без компании пусты (E39-7)
+      if (url.includes("/offers")) return res(200, []); // списки без компании пусты
       if (!company) return problem(404, "company_not_found");
       if (url.endsWith("/needs") && method === "POST") return res(201, need);
       if (url.includes("/needs/n1/categories")) return res(200, { need_id: "n1", shortlist: [], categories: need.categories });

@@ -1,4 +1,4 @@
-"""DTO ФСП, нормализованные (fsp.md §2–3). Порт и маппинги — в fsp-connector."""
+"""DTO ФСП, нормализованные. Порт и маппинги — в fsp-connector."""
 
 from __future__ import annotations
 

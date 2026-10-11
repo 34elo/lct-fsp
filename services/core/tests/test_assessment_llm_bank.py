@@ -1,4 +1,4 @@
-"""E26-4: конвейер LLM-заданий → `draft` в очереди допуска; LLM как кандидат → ai_solvable."""
+"""Конвейер LLM-заданий → `draft` в очереди допуска; LLM как кандидат → ai_solvable."""
 
 import uuid
 from pathlib import Path

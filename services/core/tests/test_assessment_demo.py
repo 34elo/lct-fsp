@@ -1,4 +1,4 @@
-"""E34-3: вау-экраны питча — `/admin/demo/two-worlds` и `/admin/demo/llm-exam`."""
+"""Вау-экраны питча — `/admin/demo/two-worlds` и `/admin/demo/llm-exam`."""
 
 import json
 import sqlite3

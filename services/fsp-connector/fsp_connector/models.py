@@ -1,4 +1,4 @@
-"""Таблицы базы `fsp_connector` (data-model.md §3.10). outbox/inbox — из платформы."""
+"""Таблицы базы `fsp_connector`. outbox/inbox — из платформы."""
 
 from __future__ import annotations
 
@@ -44,7 +44,7 @@ class FspLink(Base):
 
 
 class FspLinkConflict(Base):
-    """Попытка привязать уже занятый participant_id: запись для модерации (fsp.md §4)."""
+    """Попытка привязать уже занятый participant_id: запись для модерации."""
 
     __tablename__ = "fsp_link_conflicts"
 
@@ -83,7 +83,7 @@ class WebhookLog(Base):
     processed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
 
 
-# ------------------------------------------------------------------ реестр ФСП (E39-28, ADR-052)
+# ------------------------------------------------------------------ реестр ФСП
 class RegistryEvent(Base):
     """Мероприятие реестра: заводит админ. Для core это обычное соревнование ФСП."""
 

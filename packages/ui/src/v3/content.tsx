@@ -12,7 +12,7 @@ import { Diagram } from "./diagram";
 
 /**
  * Значок ⓘ рядом с термином → карточка пояснения. Мышь — по наведению, касание и клавиатура — по нажатию.
- * Текст 1–2 предложения (словарь — E39-5).
+ * Текст 1–2 предложения.
  */
 export function InfoTip({
   children,
@@ -132,7 +132,7 @@ const md: Components = {
   blockquote: (p) => <blockquote className="my-2 border-l-2 border-tint-200 pl-3 text-muted" {...rest(p)} />,
   hr: () => <hr className="my-3 border-hairline" />,
   pre: (p) => {
-    // Блок ```mermaid → схема (E41-9); остальные блоки кода — как раньше.
+    // Блок ```mermaid → схема; остальные блоки кода — как раньше.
     const child = Children.toArray(p.children)[0];
     if (isValidElement<{ className?: string; children?: ReactNode }>(child) && (child.props.className ?? "").split(" ").includes("language-mermaid")) {
       return <Diagram code={String(child.props.children ?? "").trim()} />;

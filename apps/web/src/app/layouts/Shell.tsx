@@ -24,7 +24,7 @@ function useOfferCounts(variant: "top" | "side"): Record<string, number | undefi
   const interestCount = interests.data?.status === 200 ? interests.data.data.companies : 0;
   return {
     "/employer/offers": offerCount(employer.data),
-    // «Интересы» и «Отклики» — фильтр внутри «Приглашений», бейдж общий (E39-25).
+    // «Интересы» и «Отклики» — фильтр внутри «Приглашений», бейдж общий.
     "/me/offers": positive((offerCount(candidate.data) ?? 0) + (interestCount > 0 ? interestCount : 0)),
   };
 }
@@ -38,10 +38,10 @@ export function offerCount(res?: { status: number; data: unknown }): number | un
 }
 
 /**
- * Каркас по ролям (E19-5). Кабинеты кандидата и работодателя: шапка с меню на десктопе,
- * на ≤768 px ещё и нижняя панель (у работодателя — с E38-8); админка — боковая панель по группам,
- * на телефоне — строка разделов под шапкой (E39-29). `banner` — над страницей
- * (у кандидата — баннер пути «опрос → тест», E35-2a).
+ * Каркас по ролям. Кабинеты кандидата и работодателя: шапка с меню на десктопе,
+ * на ≤768 px ещё и нижняя панель (в том числе у работодателя); админка — боковая панель по группам,
+ * на телефоне — строка разделов под шапкой. `banner` — над страницей
+ * (у кандидата — баннер пути «опрос → тест»).
  */
 export function Shell({ nav, variant, banner }: { nav: NavItem[]; variant: "top" | "side"; banner?: ReactNode }) {
   const { role } = useAuth();

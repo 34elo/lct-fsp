@@ -1,9 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 
 /**
- * E43-3: выдача пароля HR. Владелец создаёт доступ — логин и временный пароль показаны в модалке; HR входит
+ * Выдача пароля HR. Владелец создаёт доступ — логин и временный пароль показаны в модалке; HR входит
  * временным паролем, задаёт свой и попадает в кабинет; повторный вход новым паролем работает, временным — нет.
- * Нужен поднятый стек (`make up`), запуск: `pnpm exec playwright test e2e/b2-hr-password.spec.ts`.
+ * Нужен поднятый стек (`make up`), запуск: `pnpm exec playwright test e2e/hr-password.spec.ts`.
  */
 
 const PASS = "e2e-pass-12345";
@@ -16,7 +16,7 @@ async function login(page: Page, email: string, password: string) {
   await page.getByTestId("auth-submit").click();
 }
 
-test("b2: HR входит временным паролем, меняет его и входит новым", async ({ page, browser }) => {
+test("HR входит временным паролем, меняет его и входит новым", async ({ page, browser }) => {
   const stamp = `${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
   const owner = `e43-3-owner-${stamp}@e2e.fsp.test`;
   const hr = `e43-3-hr-${stamp}@e2e.fsp.test`;

@@ -1,4 +1,4 @@
-"""CachedFspAdapter: кеш ответов ФСП в Redis (messaging.md §6, ключи `c:fsp:*`, TTL 10 мин)."""
+"""CachedFspAdapter: кеш ответов ФСП в Redis (ключи `c:fsp:*`, TTL 10 мин)."""
 
 from __future__ import annotations
 

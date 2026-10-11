@@ -32,7 +32,7 @@ DEFAULT_SCORING_PATH = Path(__file__).resolve().parents[4] / "data" / "scoring.y
 
 log = structlog.get_logger()
 router = APIRouter(tags=["taxonomy"])
-CACHE_TTL = 24 * 3600  # messaging.md: c:tax:{version}, версия в ключе — инвалидация не нужна
+CACHE_TTL = 24 * 3600  # c:tax:{version}, версия в ключе — инвалидация не нужна
 
 
 def _static_part() -> dict[str, list[str]]:
@@ -94,7 +94,7 @@ async def get_taxonomy(
 
 
 async def require_ml(request: Request, authorization: str | None = Header(default=None)) -> None:
-    """`Authorization: Service <token>` (security.md §1); пустой токен в настройках = закрыто."""
+    """`Authorization: Service <token>`; пустой токен в настройках = закрыто."""
     expected = request.app.state.settings.service_token_ml
     scheme, _, token = (authorization or "").partition(" ")
     if not (expected and scheme == "Service" and hmac.compare_digest(token, expected)):
@@ -137,9 +137,9 @@ class ProfessionsOut(BaseModel):
 async def get_professions(
     request: Request, session: AsyncSession = Depends(get_session)
 ) -> ProfessionsOut:
-    """Профессии теста, веса и типы навыков, грейды с порогами θ (assessment.md §10).
+    """Профессии теста, веса и типы навыков, грейды с порогами θ.
 
-    `beta` — тонкий банк семейств (E39-6): профессия открыта, в опросе помечена «бета».
+    `beta` — тонкий банк семейств: профессия открыта, в опросе помечена «бета».
     """
     from app.assessment import service as assessment  # публичное API модуля, без цикла импорта
 
@@ -190,7 +190,7 @@ async def suggest_skills(
 ) -> list[dict[str, Any]]:
     """Подсказки навыков: синонимы, префикс, опечатки; частые выше, `provisional` помечен.
 
-    `kind=soft` — только софт-навыки (поле «Личные качества», E41-6).
+    `kind=soft` — только софт-навыки (поле «Личные качества»).
     """
     version = await service.get_version(session)
     sig = _sha(suggest.norm_alias(q), str(limit), profession or "", kind or "")
@@ -211,7 +211,7 @@ async def suggest_professions(
     session: AsyncSession = Depends(get_session),
     redis: Redis = Depends(get_redis),
 ) -> list[dict[str, Any]]:
-    """Подсказки профессий: все видимые роли системы, включая добавленные админом (E39-3)."""
+    """Подсказки профессий: все видимые роли системы, включая добавленные админом."""
     version = await service.get_version(session)
     key = f"c:tax:suggest:p:{version}:{_sha(suggest.norm_alias(q), str(limit))}"
     return await _suggest_cached(redis, key, lambda: suggest.suggest_professions(session, q, limit))

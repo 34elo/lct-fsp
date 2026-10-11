@@ -1,4 +1,4 @@
-"""Валидация теста на синтетике (assessment.md §5–8, metrics.md §9.1, E27-1).
+"""Валидация теста на синтетике.
 
 Симулятор повторяет поток попытки из `app/assessment/attempts.py` на чистых функциях ядра
 (`selection`, `sprt`, `psychometrics`, `integrity`, `lifecycle`) без БД. Истину (θ кандидата,
@@ -15,7 +15,7 @@
    повышения, ответов до карантина утёкшего семейства.
 4. **llm** — LLM-«кандидат» (верно с вероятностью `ai_solvable`, мгновенно); банк не калибрует.
 
-Пилотные слоты не моделируются: они не влияют на θ, LLR и грейд (§6).
+Пилотные слоты не моделируются: они не влияют на θ, LLR и грейд.
 Всё детерминировано по `seed`.
 """
 
@@ -39,7 +39,7 @@ from fsp_contracts.assessment import TEST_GRADE_ORDER, TestGrade
 
 GRADES = ("none", *(g.value for g in TEST_GRADE_ORDER))  # none < junior < middle < senior
 
-# Синтетическая профессия: (навык, тип, вес). Покрывает все типы плана §6.
+# Синтетическая профессия: (навык, тип, вес). Покрывает все типы плана теста.
 SKILLS: tuple[tuple[str, str, float], ...] = (
     ("algorithms", "fundamental", 1.0),
     ("data_structures", "fundamental", 1.0),
@@ -95,7 +95,7 @@ class SimConfig:
     cheat_item_p: float = 0.5  # доля заданий, где «списывающий» списывает
     honest_away_p: float = 0.03  # честный ушёл со вкладки > 10 с
     rt_sigma: float = 0.35  # лог-разброс времени ответа
-    mode: str = "standard"  # standard | express (E32-4a: --mode express)
+    mode: str = "standard"  # standard | express (--mode express)
 
 
 @dataclass
@@ -345,7 +345,7 @@ def run_attempt(
 
 
 def finalize(bank: Bank, out: AttemptOut, rng: random.Random, *, calibrate: bool = True) -> None:
-    """После попытки: калибровка b по финальному θ, время, статистика и тревоги (§7)."""
+    """После попытки: калибровка b по финальному θ, время, статистика и тревоги."""
     cfg = bank.cfg
     for r in out.responses:
         f = r.fam
@@ -388,7 +388,7 @@ def journey(
     *,
     calibrate: bool = True,
 ) -> Journey:
-    """Путь кандидата: заявленный грейд; при неудаче — сразу грейд ниже (§5, правила грейда)."""
+    """Путь кандидата: заявленный грейд; при неудаче — сразу грейд ниже (правила грейда)."""
     atts: list[AttemptOut] = []
     grade: TestGrade | None = p.declared
     granted = "none"

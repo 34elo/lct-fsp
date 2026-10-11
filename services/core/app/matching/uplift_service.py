@@ -1,4 +1,4 @@
-"""Uplift кандидата: данные, кеш, способы подтверждения (matching.md §6, api.md `Uplift`)."""
+"""Uplift кандидата: данные, кеш, способы подтверждения."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ from app.matching.uplift import UpliftConfig, UpliftResult, is_relevant, simulat
 from app.taxonomy import service as taxonomy
 from app.vacancies import service as vacancies
 
-CACHE_TTL = 600  # 10 минут (matching.md §6)
+CACHE_TTL = 600  # 10 минут
 
 
 def empty(base: int = 0, total: int = 0) -> dict[str, Any]:
@@ -71,9 +71,7 @@ async def compute(
     ucfg: UpliftConfig | None = None,
     today: date | None = None,
 ) -> dict[str, Any]:
-    """Uplift кандидата: какие навыки добавят больше всего релевантных вакансий, с кешем в Redis
-    (matching.md §6).
-    """
+    """Uplift кандидата: какие навыки добавят больше всего релевантных вакансий, с кешем в Redis."""
     ucfg = ucfg or UpliftConfig.load()
     day = today or datetime.now(UTC).date()
     published = await vacancies.list_published(session)

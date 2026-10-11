@@ -1,4 +1,4 @@
-"""taxonomy: skills, aliases, relations, roles, disciplines, scoring_config (data-model.md §3.4)
+"""taxonomy: skills, aliases, relations, roles, disciplines, scoring_config
 
 Revision ID: 0006
 Revises: 0005

@@ -1,4 +1,4 @@
-"""E22-3: SPRT, бонусный этап, выбор задания, экспозиция, пилотные слоты (assessment.md §5–6).
+"""SPRT, бонусный этап, выбор задания, экспозиция, пилотные слоты.
 
 Числа — из документа: θ₀/θ₁ = cut ∓ 0.7, границы ±2.197, минимум 10 / максимум 24, бонус ≤ 10
 и θ ≥ cut_след (до 10 заданий), доли секций по грейду, счёт `P(1−P)·(1 − 0.3·ai_solvable)`,
@@ -33,7 +33,7 @@ CFG = load_config()
 TAXONOMY = Path(__file__).resolve().parents[3] / "data" / "taxonomy"
 J, M, S = TestGrade.junior, TestGrade.middle, TestGrade.senior
 
-# --- SPRT (§5) --------------------------------------------------------------------------------
+# --- SPRT --------------------------------------------------------------------------------
 
 
 def test_sprt_bounds_and_hypotheses():
@@ -98,7 +98,7 @@ def test_bonus_eligibility_numbers():
     assert CFG.bonus_max_items == 10
 
 
-# --- выбор задания (§6) -----------------------------------------------------------------------
+# --- выбор задания -----------------------------------------------------------------------
 
 
 def test_type_shares_table():
@@ -432,7 +432,7 @@ async def test_no_repeat_within_90_days(api, factory, taxonomy_loaded, fake_bank
     h = register(api)
     first = _start(api, h)
     _run(api, h, first, answer="0")
-    async with session_scope(factory) as s:  # E22-4: повтор грейда после неудачи — через 30 дней
+    async with session_scope(factory) as s:  # повтор грейда после неудачи — через 30 дней
         (await s.get(Attempt, uuid.UUID(first))).finished_at = datetime.now(UTC) - timedelta(
             days=31
         )

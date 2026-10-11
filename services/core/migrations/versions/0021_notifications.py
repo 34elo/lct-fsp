@@ -1,4 +1,4 @@
-"""notifications (data-model.md §3.12)
+"""notifications
 
 Revision ID: 0021
 Revises: 0020

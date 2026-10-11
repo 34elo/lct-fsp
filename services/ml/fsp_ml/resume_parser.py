@@ -1,9 +1,9 @@
-"""Разбор резюме `ml.parse_resume` (ml.md §2).
+"""Разбор резюме `ml.parse_resume`.
 
 файл → текст → правила → LLM (JSON-схема) → проверка цитат → нормализация → ParsedResume.
 
 LLM только извлекает. Навык попадает в результат, только если его цитата найдена в тексте
-и сам навык упомянут в цитате (AGENTS.md п. 4); иначе отбрасывается с записью в `warnings`.
+и сам навык упомянут в цитате; иначе отбрасывается с записью в `warnings`.
 Сопоставление с графом — быстрый путь `TaxonomyIndex` (как `/v1/skills/resolve`).
 """
 
@@ -46,12 +46,12 @@ log = structlog.get_logger()
 PROMPT_VERSION = "v2"
 PROMPTS_DIR = Path(__file__).resolve().parents[1] / "prompts"
 MAX_TEXT_CHARS = 12_000  # ≈ 4–5 тыс. токенов: влезает в слот llama-server 8k вместе с ответом
-QUOTE_THRESHOLD = 90.0  # rapidfuzz.partial_ratio цитаты к тексту (ml.md §2, шаг 4)
+QUOTE_THRESHOLD = 90.0  # rapidfuzz.partial_ratio цитаты к тексту (шаг 4)
 MENTION_THRESHOLD = 80.0  # навык должен быть упомянут в своей цитате (fuzz.ratio по словам)
 CONFIDENCE = {"alias": 0.95, "fuzzy": 0.85}
 DROP_WARNINGS = ("quote_not_found:", "skill_not_in_quote:")  # навык отброшен
-DECLARED_DROP_WARNINGS = ("soft_dropped:", "grade_dropped:", "role_dropped:")  # E20-5
-# E43-8: запасной путь — LLM вернул мало навыков, добавляем найденное правилами
+DECLARED_DROP_WARNINGS = ("soft_dropped:", "grade_dropped:", "role_dropped:")
+# запасной путь — LLM вернул мало навыков, добавляем найденное правилами
 FALLBACK_MIN_SKILLS = 3
 FALLBACK_MIN_CHARS = 1000
 
@@ -100,7 +100,7 @@ class LlmResume(BaseModel):
     experience: list[LlmExperience] = Field(default_factory=list, max_length=30)
     education: list[LlmEducation] = Field(default_factory=list, max_length=10)
     skills: list[LlmSkill] = Field(default_factory=list, max_length=80)
-    # E20-5: заявленное; каждое поле с цитатой
+    # заявленное; каждое поле с цитатой
     soft_skills: list[LlmSkill] = Field(default_factory=list, max_length=20)
     declared_grade: LlmGrade | None = None
     roles: list[LlmRole] = Field(default_factory=list, max_length=6)
@@ -128,7 +128,7 @@ def parser_version(model: str) -> str:
 
 def _require_all(node: object) -> None:
     """Все поля объектов схемы — обязательные: иначе строгая грамматика llama.cpp позволяет модели
-    пропустить `person`, `experience`, `skills` и вернуть почти пустой ответ (E43-8)."""
+    пропустить `person`, `experience`, `skills` и вернуть почти пустой ответ."""
     if isinstance(node, dict):
         props = node.get("properties")
         if isinstance(props, dict):
@@ -141,7 +141,7 @@ def _require_all(node: object) -> None:
 
 
 async def extract_llm(llm: LlmClient, text: str) -> LlmResume:
-    """Одна генерация по схеме; при невалидном ответе — один повтор с ошибкой (ml.md §1.3)."""
+    """Одна генерация по схеме; при невалидном ответе — один повтор с ошибкой."""
     messages = build_messages(text)
     schema = LlmResume.model_json_schema()
     _require_all(schema)
@@ -264,7 +264,7 @@ def _aliases_by_slug(index: TaxonomyIndex | None) -> dict[str, list[str]]:
     return out
 
 
-# --- заявленное в резюме (E20-5) ---
+# --- заявленное в резюме ---
 
 # маркеры в цитате: без них заявленный грейд/роль отбрасывается (модель не «додумывает»)
 _GRADE_MARKERS: dict[Grade, tuple[str, ...]] = {
@@ -301,7 +301,7 @@ def _marker_in(markers: tuple[str, ...], quote_norm: str) -> bool:
 def assemble_declared(
     text_norm: str, llm_out: LlmResume, warnings: list[str]
 ) -> tuple[list[ResumeSoftSkill], ResumeDeclaredGrade | None, list[ResumeDeclaredRole]]:
-    """Софт-навыки, заявленный грейд и роли: оставляем только с цитатой из текста (AGENTS.md п. 4).
+    """Софт-навыки, заявленный грейд и роли: оставляем только с цитатой из текста.
 
     Цитата должна найтись в резюме, а заявленное значение читаться в самой цитате.
     Отброшенное пишем в `warnings` (`soft_dropped:` / `grade_dropped:` / `role_dropped:`).
@@ -377,7 +377,7 @@ def assemble(
         quote = s.quote.strip()
         slug_aliases = aliases.get(slug or "", [])
         if not mention_in_quote(raw, norm_text(quote), slug_aliases):
-            # E44-2: название ищем рядом с цитатой, затем во всём тексте
+            # название ищем рядом с цитатой, затем во всём тексте
             found = recover_quote(text, quote, raw, slug_aliases)
             if found is None or not quote_in_text(found, text_norm):
                 warnings.append(f"skill_not_in_quote:{raw}")
@@ -501,7 +501,7 @@ def _full_name(head: list[str]) -> str | None:
 
 
 def extract_rules(text: str, index: TaxonomyIndex | None) -> LlmResume:
-    """Разбор без LLM (LLM_ENABLED=false, E20-8 + E30-4): правила, словарь графа, Natasha.
+    """Разбор без LLM (LLM_ENABLED=false): правила, словарь графа, Natasha.
 
     Навыки: каждое слово и пара-тройка слов строки ищутся в словаре синонимов, цитата — строка
     резюме; `assemble` проверяет цитату так же, как для LLM. Опыт, образование, даты, город и
@@ -537,7 +537,7 @@ async def _noop(stage: str, pct: int, message: str) -> None:
 
 
 def needs_rules_fallback(skills_found: int, text_len: int) -> bool:
-    """LLM вернул 0 навыков (при любом тексте) или меньше порога при длинном тексте (E43-8)."""
+    """LLM вернул 0 навыков (при любом тексте) или меньше порога при длинном тексте."""
     if skills_found == 0:
         return text_len > 0
     return skills_found < FALLBACK_MIN_SKILLS and text_len > FALLBACK_MIN_CHARS

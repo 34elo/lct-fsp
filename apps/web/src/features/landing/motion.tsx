@@ -1,7 +1,7 @@
 import { cn } from "@fsp/ui";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ElementType, type HTMLAttributes, type RefObject } from "react";
 
-/* Движение лендинга (spec.html): появление блоков (A3), счётчики (A8), плавная прокрутка (T4).
+/* Движение лендинга: появление блоков, счётчики, плавная прокрутка.
    Везде учитывается prefers-reduced-motion: итоговое состояние сразу, без анимации. */
 
 export function prefersReducedMotion(): boolean {

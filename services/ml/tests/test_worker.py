@@ -51,7 +51,7 @@ async def test_command_to_published_event():
 
 
 async def test_family_order_real_path_publishes_started_then_specs():
-    """E43-9, ML_FAKE=false: «идёт» до вызова LLM, затем формы генератора."""
+    """ML_FAKE=false: «идёт» до вызова LLM, затем формы генератора."""
 
     class _Llm:
         async def complete_json(self, messages, schema, *, schema_name, temperature=0.0):

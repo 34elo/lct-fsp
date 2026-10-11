@@ -83,5 +83,5 @@ jobs:
       - run: test -n "$E2E_PROD_URL" || { echo "задайте переменную репозитория E2E_PROD_URL" >&2; exit 1; }
       - run: pnpm exec playwright install --with-deps chromium
         working-directory: apps/web
-      - run: pnpm exec playwright test e2e/b2-prod-demo.spec.ts --project=desktop
+      - run: pnpm exec playwright test e2e/prod-demo.spec.ts --project=desktop
         working-directory: apps/web

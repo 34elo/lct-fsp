@@ -1,4 +1,4 @@
-"""E31-3: сборщик отчёта `make metrics` — светофор, деградация, детерминизм."""
+"""Сборщик отчёта `make metrics` — светофор, деградация, детерминизм."""
 
 from __future__ import annotations
 
@@ -77,7 +77,7 @@ def test_report_lights_and_unmeasured():
     }
     rep = build_report(42, comp)
     assert status(rep, "grade_acc_outside") == GREEN
-    assert status(rep, "kappa") == INFO  # справочная метрика без цели (ADR-030)
+    assert status(rep, "kappa") == INFO  # справочная метрика без цели
     assert status(rep, "max_share") == YELLOW  # 0.105 против ≤ 0.10
     assert status(rep, "ndcg_lift") == RED  # 13 % против +20 %
     assert status(rep, "families_pass") == GREEN

@@ -11,7 +11,7 @@ import { T } from "./text";
 type Who = "candidate" | "employer";
 
 /** Кнопки «войти как жюри» и подсказка «что попробовать». Без `VITE_JURY_MODE` ничего не рисует.
- * Каждый браузер получает свою песочницу (E40-1): действия разных членов жюри не пересекаются. */
+ * Каждый браузер получает свою песочницу: действия разных членов жюри не пересекаются. */
 export function JuryEntry() {
   const { loginAsJury } = useAuth();
   const navigate = useNavigate();

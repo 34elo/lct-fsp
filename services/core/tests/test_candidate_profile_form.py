@@ -1,4 +1,4 @@
-"""E20-4: ручная форма профиля `PATCH /candidates/me/profile`."""
+"""Ручная форма профиля `PATCH /candidates/me/profile`."""
 
 import asyncio
 
@@ -150,7 +150,7 @@ def test_validation_errors(c):
     assert _patch(c, h, {"contacts": {"email": "bad"}}).status_code == 422
     assert _patch(c, h, {"experience_months": -1}).status_code == 422
     assert _patch(c, h, {"desired_roles": ["wizard"]}).status_code == 422
-    assert _patch(c, h, {"desired_roles": ["ai_engineer", "product"]}).status_code == 200  # E41-6
+    assert _patch(c, h, {"desired_roles": ["ai_engineer", "product"]}).status_code == 200
     assert _patch(c, h, {"unknown": 1}).status_code == 422
 
 

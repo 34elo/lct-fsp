@@ -1,6 +1,6 @@
 import { ApiError } from "@/api/mutator";
 
-/** Русский текст по машинному `code` Problem Details (api.md, коды `/auth/*`). */
+/** Русский текст по машинному `code` Problem Details (коды `/auth/*`). */
 export function authErrorText(err: unknown, fallback: string, opts: { credentials?: boolean } = {}): string {
   if (!(err instanceof ApiError)) return fallback;
   switch (err.code) {
@@ -17,7 +17,7 @@ export function authErrorText(err: unknown, fallback: string, opts: { credential
       return "Временный пароль истёк. Попросите владельца компании выдать новый";
   }
   if (err.status === 429) return "Слишком много попыток. Подождите минуту";
-  // 401 без кода на регистрации (например, из /me после неё) — не «неверный пароль» (E35-7a).
+  // 401 без кода на регистрации (например, из /me после неё) — не «неверный пароль».
   if (err.status === 401 && opts.credentials !== false) return "Неверная почта или пароль";
   return fallback;
 }

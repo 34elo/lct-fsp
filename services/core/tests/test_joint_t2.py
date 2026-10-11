@@ -1,7 +1,7 @@
-"""Т2 (blocks.md §10): тест через API → грейд → событие → выдача категории работодателю.
+"""Т2: тест через API → грейд → событие → выдача категории работодателю.
 
 Совместный тест блоков: Б1 — `/assessment/*`, `grades`, `candidate.category.changed`;
-Б2 — `GET /categories/{profession}/{grade}/candidates`, видимость (§4.5), аналитика.
+Б2 — `GET /categories/{profession}/{grade}/candidates`, видимость, аналитика.
 События из outbox доставляются обработчикам воркера core (`Worker.consumers`) без RabbitMQ.
 """
 
@@ -204,7 +204,7 @@ async def test_t2_visibility_rules(api, factory, worker, taxonomy_loaded):
     await _pass_test(api, factory, hidden)
     _, hidden_pid = await _candidate_id(api, hidden, factory)
 
-    # 15–17 лет без согласия родителя — не виден (E32-5b)
+    # 15–17 лет без согласия родителя — не виден
     minor = register(api)
     _consents(api, minor, pd_processing=True, profile_publication=True)
     r = api.patch("/candidates/me/profile", json={"age_group": "minor"}, headers=minor)

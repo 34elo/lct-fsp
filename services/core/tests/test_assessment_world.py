@@ -1,4 +1,4 @@
-"""E26-1: полный `World` (assessment.md §4, ADR-021): граф, данные, метрики, команда, домен."""
+"""Полный `World`: граф, данные, метрики, команда, домен."""
 
 from random import Random
 
@@ -33,7 +33,7 @@ def test_one_seed_one_world():
 
 
 def test_legacy_fields_unchanged():
-    """Старые поля — та же последовательность `Random(seed)`, что в E22-1: выданные задания живы."""
+    """Старые поля — та же последовательность `Random(seed)`, что раньше: выданные задания живы."""
     for s in SEEDS:
         for d in (None, "rag_service"):
             rng = Random(s)
@@ -106,7 +106,7 @@ def test_metrics_and_team(domain):
 
 
 def test_fraction_metrics_stay_in_bounds():
-    """E26-1: метрики с единицей 'доля' остаются в [0.0, 1.0] несмотря на шум."""
+    """Метрики с единицей 'доля' остаются в [0.0, 1.0] несмотря на шум."""
     for domain in DOMAINS:
         for s in SEEDS[:30]:
             w = World.from_seed(s, domain)

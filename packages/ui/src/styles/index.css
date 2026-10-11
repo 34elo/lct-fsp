@@ -73,7 +73,7 @@
   }
 }
 
-/* Метка: Mono 500, 11 px, капс, разрядка .06em (docs/design/pack/docs/DESIGN_RULES.md). */
+/* Метка: Mono 500, 11 px, капс, разрядка .06em. */
 @utility lbl {
   font-family: var(--font-mono);
   font-size: var(--fs-11);

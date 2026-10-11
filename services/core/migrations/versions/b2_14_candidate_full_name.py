@@ -1,4 +1,4 @@
-"""ФИО кандидата (шифруется): `candidates.full_name_enc` (E36-5, ADR-027)
+"""ФИО кандидата (шифруется): `candidates.full_name_enc`
 
 Revision ID: b2_14
 Revises: b2_13

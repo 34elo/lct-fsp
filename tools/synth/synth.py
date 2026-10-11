@@ -1,4 +1,4 @@
-"""Синтетический рынок для стенда оценки (evaluation.md §3).
+"""Синтетический рынок для стенда оценки.
 
 Правило честности: генератор устроен иначе, чем подбор. «Настоящие» уровни навыков порождает
 собственная латентная модель (роль, стаж, талант τ, склонность приукрашивать π); формулы доверия,
@@ -109,7 +109,7 @@ class Market:
     item_bank: dict[str, list[dict[str, float]]] = field(default_factory=dict)
 
     def meta(self) -> dict[str, Any]:
-        """Параметры генератора — для страницы качества (evaluation.md §3.5)."""
+        """Параметры генератора — для страницы качества."""
         blob = json.dumps(self.params, sort_keys=True, ensure_ascii=False).encode()
         return {
             "seed": self.seed,
@@ -438,7 +438,7 @@ def generate_market(
     return Generator(cfg, load_taxonomy(), s).build(n_candidates, n_vacancies)
 
 
-# ---------- истинная релевантность (§3.3) ----------
+# ---------- истинная релевантность ----------
 
 
 def relevance(candidate: dict[str, Any], vacancy: dict[str, Any], config: dict[str, Any]) -> int:
@@ -474,7 +474,7 @@ def relevance_matrix(market: Market) -> dict[str, dict[str, int]]:
     return out
 
 
-# ---------- симулированные работодатели (§3.4) ----------
+# ---------- симулированные работодатели ----------
 
 
 def employer_features(candidate: dict[str, Any], vacancy: dict[str, Any]) -> dict[str, float]:
@@ -557,7 +557,7 @@ def write_market(market: Market, out: Path) -> None:
 
 
 def main(argv: list[str] | None = None) -> None:
-    p = argparse.ArgumentParser(description="Синтетический рынок (evaluation.md §3)")
+    p = argparse.ArgumentParser(description="Синтетический рынок")
     p.add_argument("--split", choices=["dev", "test"], default="dev")
     p.add_argument("--seed", type=int, default=None, help="перекрывает seed split'а")
     p.add_argument("--candidates", type=int, default=None)

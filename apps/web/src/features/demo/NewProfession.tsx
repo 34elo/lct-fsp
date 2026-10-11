@@ -11,7 +11,7 @@ import { AdminPageHeader } from "@/features/admin/PageHeader";
 
 const N = T.newProfession;
 
-/** `/admin/demo/new-profession`: рост графа (E16-6/E16-7) → кластер → новая профессия (E13-1a). */
+/** `/admin/demo/new-profession`: рост графа навыков → кластер → новая профессия. */
 export default function NewProfession() {
   const hints = useGetHintsAdminSkillsHintsGet({ query: { retry: false } });
   const profs = useListProfessionsAdminProfessionsGet({ query: { retry: false } });

@@ -98,7 +98,7 @@ export function declineBreakdown(offers: { decline?: { reason: string } | null }
 
 /**
  * Приглашение глазами кандидата. Сгенерированный `OfferForCandidate` ещё без `title` и `initiator`
- * и с обязательной вакансией, а API отдаёт `vacancy: null` для приглашения без вакансии (ADR-022).
+ * и с обязательной вакансией, а API отдаёт `vacancy: null` для приглашения без вакансии.
  */
 export type CandidateOffer = Omit<OfferForCandidate, "vacancy"> & {
   vacancy?: VacancyBrief | null;

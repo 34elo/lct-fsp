@@ -1,4 +1,4 @@
-"""Регистрация, вход, ротация refresh-токенов с семьями (security.md §1)."""
+"""Регистрация, вход, ротация refresh-токенов с семьями."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import Settings
 from app.identity.mailer import Mailer
 from app.identity.models import EmailVerification, RefreshToken, User, utcnow
-from app.identity.profile import signature as staff_signature  # noqa: F401  (E39-24)
+from app.identity.profile import signature as staff_signature  # noqa: F401
 
 REFRESH_TTL = timedelta(days=30)
 ACCESS_TTL = timedelta(minutes=15)
@@ -28,7 +28,7 @@ SELF_REGISTER_ROLES = {"candidate", "employer"}
 _hasher = PasswordHasher()
 # Хеш для выравнивания времени ответа, когда пользователя нет
 _DUMMY_HASH = _hasher.hash("dummy-password-for-timing")
-# E40-1: домен демо-аккаунтов (seed, жюри); такие пользователи помечаются `is_demo`
+# домен демо-аккаунтов (seed, жюри); такие пользователи помечаются `is_demo`
 DEMO_EMAIL_DOMAIN = "@demo.fsp.test"
 
 
@@ -38,7 +38,7 @@ def is_demo_email(email: str | None) -> bool:
 
 
 async def is_demo_user(session: AsyncSession, user_id: uuid.UUID | None) -> bool:
-    """Пользователь помечен как демо (E40-1)."""
+    """Пользователь помечен как демо."""
     if user_id is None:
         return False
     return bool(await session.scalar(select(User.is_demo).where(User.id == user_id)))
@@ -284,7 +284,7 @@ def password_matches(user: User, password: str) -> bool:
 async def change_password(
     session: AsyncSession, user: User, current: str, new: str, keep_raw: str | None
 ) -> None:
-    """Смена пароля (E39-8): сверка текущего, новый хеш, чужие сессии закрываются.
+    """Смена пароля: сверка текущего, новый хеш, чужие сессии закрываются.
 
     Сессия с refresh-токеном `keep_raw` (текущая вкладка) остаётся. Нет пароля
     (вход через Telegram) или неверный текущий — 403 `wrong_password`.
@@ -308,7 +308,7 @@ async def change_password(
     await session.flush()
 
 
-# --- E41-16: временный пароль HR, который выдаёт владелец компании ---
+# --- временный пароль HR, который выдаёт владелец компании ---
 
 TEMP_PASSWORD_TTL = timedelta(hours=72)
 # без похожих символов (0/O, 1/l/I): пароль переписывают из мессенджера руками

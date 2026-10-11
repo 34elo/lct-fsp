@@ -1,7 +1,7 @@
-"""Публичное API блока 1 для блока 2 (blocks.md §4.3). Сигнатуры заморожены.
+"""Публичное API модуля теста для остальных модулей core. Сигнатуры стабильны.
 
 Функции не делают `commit`: транзакцией управляет вызывающий. Читают только таблицу `grades`
-(и `candidates` для заявленного); `surveys`/`attempts` есть (E22-7).
+(и `candidates` для заявленного); `surveys`/`attempts` есть.
 """
 
 from __future__ import annotations
@@ -30,8 +30,8 @@ from app.assessment.models import Grade, Survey, TaskSubmission
 from app.candidates.models import Candidate
 
 PRODUCER = "core"
-GRADE_VALIDITY = timedelta(days=365)  # срок грейда: 12 месяцев (blocks.md §4.2)
-GRADE_COOLDOWN = timedelta(days=90)  # смена грейда не чаще раза в 90 дней (assessment.md §5)
+GRADE_VALIDITY = timedelta(days=365)  # срок грейда: 12 месяцев
+GRADE_COOLDOWN = timedelta(days=90)  # смена грейда не чаще раза в 90 дней
 
 
 def _aware(dt: datetime) -> datetime:
@@ -64,7 +64,7 @@ def _active(now: datetime | None = None):
 
 
 def thin_professions(professions: Iterable[ProfessionInfo]) -> set[str]:
-    """Слаги профессий с тонким банком семейств — «бета» в опросе (E39-6, families-check)."""
+    """Слаги профессий с тонким банком семейств — «бета» в опросе (families-check)."""
     from app.assessment.families import REGISTRY
     from app.assessment.families.check import thin_professions as thin
 
@@ -102,7 +102,7 @@ async def get_grades_many(
 async def get_grade(
     session: AsyncSession, candidate_id: uuid.UUID, profession: str
 ) -> CandidateGrade | None:
-    """Действующий грейд кандидата по одной профессии или `None` (публичное API блока 1, blocks.md
+    """Действующий грейд кандидата по одной профессии или `None` (публичное API модуля
     §4.3).
     """
     row = await session.scalar(
@@ -116,7 +116,7 @@ async def get_grade(
 async def category_members(
     session: AsyncSession, profession: str, grade: TestGrade | str
 ) -> list[uuid.UUID]:
-    """Кандидаты с действующим грейдом ровно `grade`. Согласия и видимость фильтрует Б2."""
+    """Кандидаты с действующим грейдом ровно `grade`. Согласия и видимость фильтрует подбор."""
     rows = await session.scalars(
         select(Grade.candidate_id)
         .where(Grade.profession == profession, Grade.grade == str(grade), _active())
@@ -140,7 +140,7 @@ async def graded_candidates_first_at(
 ) -> dict[uuid.UUID, datetime]:
     """`candidate_id → когда впервые подтверждён грейд` (все, и истёкшие): для лендинга.
 
-    `real_only` — без демо-кандидатов (E40-1).
+    `real_only` — без демо-кандидатов.
     """
     q = select(Grade.candidate_id, func.min(Grade.confirmed_at)).group_by(Grade.candidate_id)
     if real_only:
@@ -215,7 +215,7 @@ async def claimed_vs_confirmed(
     return out
 
 
-# --- заявленный грейд без подтверждения (ADR-025, E32-1) ---
+# --- заявленный грейд без подтверждения ---
 
 
 def _declared_rows(now: datetime | None = None):
@@ -263,7 +263,7 @@ async def declared_grades_many(
     """Заявленные в опросе грейды по профессиям без действующего подтверждения.
 
     Каждый запрошенный кандидат есть в словаре (без заявленного — пустой список). Согласия и
-    видимость не учитываются: их проверяет Б2.
+    видимость не учитываются: их проверяет подбор.
     """
     ids = list(set(candidate_ids))
     out: dict[uuid.UUID, list[DeclaredGrade]] = {i: [] for i in ids}
@@ -308,7 +308,7 @@ async def last_activity_at(session: AsyncSession, candidate_id: uuid.UUID) -> da
     """Последний завершённый тест или регулярное задание (для свежести R).
 
     Пока завершённые попытки не учитываются, берём `confirmed_at` грейдов любого срока и
-    ответы на регулярные задания (`task_submissions`, E25-1).
+    ответы на регулярные задания (`task_submissions`).
     """
     graded = await session.scalar(
         select(func.max(Grade.confirmed_at)).where(Grade.candidate_id == candidate_id)
@@ -385,12 +385,12 @@ async def _active_after(
     return [_dto(r) for r in rows]
 
 
-# cut_g — нижняя граница полосы грейда на шкале θ (assessment.md §9); у senior ширина 1.0.
+# cut_g — нижняя граница полосы грейда на шкале θ; у senior ширина 1.0.
 _CUT = {TestGrade.junior: -1.0, TestGrade.middle: 0.0, TestGrade.senior: 1.0}
 
 
 def _band_position(grade: TestGrade, theta: float) -> float:
-    """T = clamp((θ − cut_g) / (cut_{g+1} − cut_g), 0, 1); формула assessment.md §9."""
+    """T = clamp((θ − cut_g) / (cut_{g+1} − cut_g), 0, 1)."""
     idx = TEST_GRADE_ORDER.index(grade)
     lo = _CUT[grade]
     hi = _CUT[TEST_GRADE_ORDER[idx + 1]] if idx + 1 < len(TEST_GRADE_ORDER) else lo + 1.0
@@ -410,7 +410,7 @@ async def erase_candidate(session: AsyncSession, candidate_id: uuid.UUID) -> Non
 
 
 async def count_families(session: AsyncSession, status: str) -> int:
-    """Число семейств в статусе — счётчик очереди допуска на главной админки (E39-29)."""
+    """Число семейств в статусе — счётчик очереди допуска на главной админки."""
     from app.assessment.models import FamilyRow
 
     return int(
@@ -422,7 +422,7 @@ async def count_families(session: AsyncSession, status: str) -> int:
 
 
 async def tested_skill_ids(session: AsyncSession) -> set[uuid.UUID]:
-    """Навыки, по которым в общем банке есть активные семейства (E41-17: профиль новой профессии
+    """Навыки, по которым в общем банке есть активные семейства (профиль новой профессии
     дополняется навыками, на которых тест уже строится)."""
     from app.assessment.models import FamilyRow
 
@@ -435,7 +435,7 @@ async def tested_skill_ids(session: AsyncSession) -> set[uuid.UUID]:
     )
 
 
-# --- задание в приглашении (заявка З-2-02, E33-3, E41-14) ---------------------------------------
+# --- задание в приглашении ---------------------------------------
 
 
 async def invite_task_describe(session, family_id, *, company_id, user_id):

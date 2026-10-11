@@ -121,7 +121,7 @@ describe("модель графа", () => {
       expect(sy).toBeGreaterThanOrEqual(31);
       expect(sy).toBeLessThanOrEqual(449);
     }
-    // E41-8: подписи справа от узлов тоже помещаются в окно.
+    // подписи справа от узлов тоже помещаются в окно.
     const narrow = fitView(l.nodes, 360, 320, 16, 72);
     for (const n of l.nodes) {
       expect(labelBox(n, narrow.k).x1 + narrow.x).toBeLessThanOrEqual(360 - 15);
@@ -133,7 +133,7 @@ describe("модель графа", () => {
     expect(zoomAt({ x: 0, y: 0, k: 5 }, 10, 0, 0).k).toBe(6);
   });
 
-  it("доверие → точки по порогам ml.md §3", () => {
+  it("доверие → точки по порогам", () => {
     expect([0, 0.19, 0.2, 0.4, 0.6, 0.79, 0.8, 1].map(trustLevelOf)).toEqual([0, 0, 1, 2, 3, 3, 4, 4]);
   });
 });
@@ -238,7 +238,7 @@ describe("EvidenceGraph", () => {
   });
 });
 
-describe("EvidenceGraph: сетка и компактный режим (E41-8)", () => {
+describe("EvidenceGraph: сетка и компактный режим", () => {
   it("фоновая сетка есть всегда и двигается вместе с графом", () => {
     render(<EvidenceGraph data={data} />);
     const grid = screen.getByTestId("egraph-grid");

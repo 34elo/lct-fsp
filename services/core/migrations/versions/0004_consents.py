@@ -1,4 +1,4 @@
-"""consents (data-model.md §3.1)
+"""consents
 
 Revision ID: 0004
 Revises: 0003

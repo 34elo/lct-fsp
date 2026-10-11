@@ -10,7 +10,7 @@ export function makeQueryClient() {
   return new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, retry: 1, refetchOnWindowFocus: false } } });
 }
 
-/** QueryClient → Theme → Auth → SSE (frontend.md §2). Роутер снаружи. */
+/** QueryClient → Theme → Auth → SSE. Роутер снаружи. */
 export function Providers({ children, client }: { children: ReactNode; client?: QueryClient }) {
   const [qc] = useState(() => client ?? makeQueryClient());
   return (

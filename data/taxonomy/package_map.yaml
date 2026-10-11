@@ -1,4 +1,4 @@
-# Карта пакетов: имя пакета → slug навыка (E2-6)
+# Карта пакетов: имя пакета → slug навыка
 # Источники: npm (package.json), pip (requirements.txt/pyproject.toml), maven (pom.xml),
 #           gradle (build.gradle), cargo (Cargo.toml), composer (composer.json), nuget (.csproj)
 # Формат: пакеты (ключ) → slug навыка из data/taxonomy/skills.yaml

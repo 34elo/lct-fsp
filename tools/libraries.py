@@ -1,9 +1,9 @@
-"""E27-4: список библиотек с версиями из lock-файлов (uv.lock, pnpm-lock.yaml) → docs/libraries.md.
+"""Список библиотек с версиями из lock-файлов (uv.lock, pnpm-lock.yaml) → docs/libraries.md.
 
 Только stdlib. Версии берём из lock-файлов; лицензии — из метаданных установленных пакетов
 (`.venv/.../*.dist-info/METADATA`, `node_modules/.pnpm/**/package.json`), если окружение
 установлено. Нет метаданных — «проверить».
-Запуск: `python tools/submission/libs.py [--root .] [--out docs/libraries.md]`.
+Запуск: `python tools/libraries.py [--root .] [--out docs/libraries.md]`.
 """
 
 from __future__ import annotations

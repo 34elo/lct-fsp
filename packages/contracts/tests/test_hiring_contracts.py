@@ -1,4 +1,4 @@
-"""Контракты блока 2: `offer.interest.*` (ADR-026, E33-1)."""
+"""Контракты подбора: `offer.interest.*`."""
 
 from uuid import uuid4
 

@@ -1,4 +1,4 @@
-"""Token bucket для исходящих сообщений: глобально 25/с и 1/с на чат (telegram.md §1)."""
+"""Token bucket для исходящих сообщений: глобально 25/с и 1/с на чат."""
 
 from __future__ import annotations
 

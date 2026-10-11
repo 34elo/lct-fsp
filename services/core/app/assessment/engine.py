@@ -1,4 +1,4 @@
-"""Выбор задания и остановка поверх БД (assessment.md §5–6, E22-3).
+"""Выбор задания и остановка поверх БД.
 
 Чистые формулы — в `selection.py` (план, дефицит, счёт, топ-3, пилоты) и `sprt.py` (LLR, решение,
 бонус). Здесь — фильтры банка, которым нужна БД:
@@ -71,7 +71,7 @@ async def _seen_competitions(
     """Соревнования ФСП кандидата — только если среди кандидатов есть задачи соревнований."""
     if not any(r.competition_id for r in rows):
         return set()
-    from app.graph import service as graph  # граф читает ФСП-модели Б2 через свой service
+    from app.graph import service as graph  # данные ФСП — только через graph.service
 
     return await graph.fsp_competitions_of(session, candidate_id)
 
@@ -103,7 +103,7 @@ async def eligible(
         if r.id in shown or r.id in hot:
             continue
         if r.competition_id and r.competition_id in seen_comps:
-            continue  # участнику соревнования его задачи не даём (E32-6)
+            continue  # участнику соревнования его задачи не даём
         if grade is not None and not sel.level_ok(r.level, grade, cfg):
             continue
         out.setdefault(by_id[r.skill_id], []).append(r)

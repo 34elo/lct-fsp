@@ -1,4 +1,4 @@
-"""E41-9: проверка Mermaid-блоков в условиях заданий (families/mermaid.py)."""
+"""Проверка Mermaid-блоков в условиях заданий (families/mermaid.py)."""
 
 import pytest
 from app.assessment.families import check, mermaid

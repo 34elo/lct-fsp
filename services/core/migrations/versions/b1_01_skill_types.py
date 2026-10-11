@@ -1,4 +1,4 @@
-"""skills.skill_type и roles.is_profession: типы навыков и профессии теста (E21-1).
+"""skills.skill_type и roles.is_profession: типы навыков и профессии теста.
 
 Revision ID: b1_01
 Revises: b2_08

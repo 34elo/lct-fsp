@@ -1,4 +1,4 @@
-"""Лимитер со скользящим окном на Redis (messaging.md §7). Ключи `rl:*`."""
+"""Лимитер со скользящим окном на Redis. Ключи `rl:*`."""
 
 from __future__ import annotations
 

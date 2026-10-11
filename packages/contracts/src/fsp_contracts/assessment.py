@@ -1,6 +1,6 @@
-"""Контракты блока 1 (тест, грейды v2): словарь, DTO стыка и события (blocks.md §4.1, §4.3, §4.4).
+"""Контракты теста и грейдов: словарь, DTO для подбора и события.
 
-Владелец — блок 1. Добавлять можно, ломать нельзя. Payload без ПДн.
+Добавлять можно, ломать нельзя. Payload без ПДн.
 """
 
 from __future__ import annotations
@@ -34,7 +34,7 @@ class TestGrade(StrEnum):
 
 TEST_GRADE_ORDER: tuple[TestGrade, ...] = (TestGrade.junior, TestGrade.middle, TestGrade.senior)
 
-# Режим теста: обычный или экспресс для жюри (ADR-025, E32-4a). Экспресс — короче и грубее.
+# Режим теста: обычный или экспресс для жюри. Экспресс — короче и грубее.
 AttemptMode = Literal["standard", "express"]
 
 # Профессия — данные (создаёт админ), не enum. Slug из data/taxonomy/roles.yaml.
@@ -75,7 +75,7 @@ class StandingStrength(BaseModel):
     value: float = Field(ge=0, le=1)
     rank: int = Field(ge=1)
     top_percent: int = Field(ge=1, le=100)  # «топ-30 %»: ceil(rank / category_size · 100)
-    relative: float = Field(default=100.0, ge=0, le=100)  # сила / сила лидера категории, % (E39-12)
+    relative: float = Field(default=100.0, ge=0, le=100)  # сила / сила лидера категории, %
     gap_to_next_ten: StandingGap | None = None  # до ближайшей «десятки» выше; у топ-10 % нет
     parts: list[StandingPart] = Field(default_factory=list)
 
@@ -85,11 +85,11 @@ class StandingPeer(BaseModel):
 
     strength: float = Field(ge=0, le=1)
     salary_min: int | None = None
-    theta: float | None = None  # уровень в тесте θ (E39-16); ось X графика
+    theta: float | None = None  # уровень в тесте θ; ось X графика
 
 
 class StandingCategoryStats(BaseModel):
-    """Общие числа категории «профессия × грейд» для «Статистики» (E39-16). Без идентификаторов."""
+    """Общие числа категории «профессия × грейд» для «Статистики». Без идентификаторов."""
 
     candidates: int = 0  # кандидатов с действующим грейдом категории
     interests: int = 0  # интересов и приглашений компаний кандидатам категории
@@ -99,7 +99,7 @@ class StandingCategoryStats(BaseModel):
 
 
 class CandidateStanding(BaseModel):
-    """`GET /candidates/me/standing` (E35-12a). Без действующего грейда все поля пустые."""
+    """`GET /candidates/me/standing`. Без действующего грейда все поля пустые."""
 
     profession: ProfessionSlug | None = None
     grade: TestGrade | None = None
@@ -109,7 +109,7 @@ class CandidateStanding(BaseModel):
     leader: StandingLeader | None = None
     category_size: int = 0
     peers: list[StandingPeer] = Field(default_factory=list)  # включая самого кандидата
-    category_stats: StandingCategoryStats | None = None  # E39-16
+    category_stats: StandingCategoryStats | None = None
 
 
 class ProfileViewDay(BaseModel):
@@ -118,7 +118,7 @@ class ProfileViewDay(BaseModel):
 
 
 class ProfileViewsStats(BaseModel):
-    """`GET /candidates/me/views` (E43-5): просмотры карточки за 30 дней, без названий компаний.
+    """`GET /candidates/me/views`: просмотры карточки за 30 дней, без названий компаний.
 
     `by_day` — полная шкала: ровно `window_days` дней по возрастанию, последний — сегодня (UTC),
     дни без просмотров с нулём. `visible` — карточка вообще попадает работодателям (действующий
@@ -148,11 +148,11 @@ class CandidateGrade(BaseModel):
     confirmed_at: datetime
     valid_until: datetime
     next_change_at: datetime
-    mode: AttemptMode = "standard"  # ADR-025: «экспресс» показывается меткой
+    mode: AttemptMode = "standard"  # «экспресс» показывается меткой
 
 
 class DeclaredGrade(BaseModel):
-    """Заявленный в опросе грейд без действующего подтверждения тестом (ADR-025).
+    """Заявленный в опросе грейд без действующего подтверждения тестом.
 
     Есть только по профессиям, где у кандидата нет действующей строки `grades`. В выдаче
     показывается с меткой «не подтверждён» и ниже подтверждённых; видимость и согласия — Б2.
@@ -177,14 +177,14 @@ class ProfessionInfo(BaseModel):
     title: str
     # slug навыка → вес 0..1 («насколько типичен», как в roles.yaml); не нормирован
     skill_weights: dict[str, float]
-    skill_types: dict[str, SkillType] = Field(default_factory=dict)  # заполняет E21-1
-    active: bool = True  # false — скрыта в опросе и выдаче, данные остаются (ADR-027 п.1)
-    # тонкий банк: есть пустая ячейка «грейд × тип навыка», в опросе — метка «бета» (E39-6)
+    skill_types: dict[str, SkillType] = Field(default_factory=dict)
+    active: bool = True  # false — скрыта в опросе и выдаче, данные остаются
+    # тонкий банк: есть пустая ячейка «грейд × тип навыка», в опросе — метка «бета»
     beta: bool = False
 
 
 class SkillSuggestion(BaseModel):
-    """Подсказка навыка `GET /taxonomy/skills/suggest` (E39-3)."""
+    """Подсказка навыка `GET /taxonomy/skills/suggest`."""
 
     slug: str
     name: str
@@ -195,7 +195,7 @@ class SkillSuggestion(BaseModel):
 
 
 class ProfessionSuggestion(BaseModel):
-    """Подсказка профессии `GET /taxonomy/professions/suggest` (E39-3)."""
+    """Подсказка профессии `GET /taxonomy/professions/suggest`."""
 
     slug: str
     title: str
@@ -223,7 +223,7 @@ class AttemptFinished(BaseModel):
     finished_at: datetime
     profile_version: int
     mode: AttemptMode = "standard"
-    # ADR-025: бонусный этап не повышает, а приглашает на отдельный тест этого грейда
+    # бонусный этап не повышает, а приглашает на отдельный тест этого грейда
     invited_grade: TestGrade | None = None
 
 
@@ -236,7 +236,7 @@ class CategoryChanged(BaseModel):
 
 
 class VisibilityChanged(BaseModel):
-    """`candidate.visibility.changed` (E36-4, ADR-027): кандидат изменил, что видно работодателю.
+    """`candidate.visibility.changed`: кандидат изменил, что видно работодателю.
 
     Только ключи и булевы значения, без ПДн. `changed` — изменившиеся ключи,
     `visibility` — полный текущий набор.
@@ -248,7 +248,7 @@ class VisibilityChanged(BaseModel):
 
 
 class FamilyStatusChanged(BaseModel):
-    """`assessment.family.status_changed` (внутреннее для блока 1)."""
+    """`assessment.family.status_changed` (внутреннее событие модуля теста)."""
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -258,14 +258,14 @@ class FamilyStatusChanged(BaseModel):
 
 
 class RegularTaskPublished(BaseModel):
-    """`regular_task.published`: рассылка регулярного задания (E25-1). Без ПДн: только id.
+    """`regular_task.published`: рассылка регулярного задания. Без ПДн: только id.
 
     `recipients` — кандидаты с действующим грейдом ровно `profession × grade` и согласием
     `profile_publication`. `round` растёт с каждой новой рассылкой; повтор публикации в
     пределах периода события не создаёт.
     """
 
-    # `family_id` и `candidate_ids` — прежние имена полей (обработчик уведомлений блока 2, E9-6)
+    # `family_id` и `candidate_ids` — прежние имена полей (обработчик уведомлений)
     task_id: UUID = Field(validation_alias=AliasChoices("task_id", "family_id"))
     company_id: UUID | None = None
     profession: ProfessionSlug
@@ -278,25 +278,25 @@ class RegularTaskPublished(BaseModel):
 
     @property
     def family_id(self) -> UUID:
-        """Совместимость с обработчиком уведомлений блока 2 (E9-6): задание = `task_id`."""
+        """Совместимость с обработчиком уведомлений: задание = `task_id`."""
         return self.task_id
 
     @property
     def candidate_ids(self) -> list[UUID]:
-        """Совместимость с обработчиком блока 2: получатели рассылки."""
+        """Совместимость с обработчиком уведомлений: получатели рассылки."""
         return self.recipients
 
     published_at: datetime | None = None
 
 
 class FamilyOrderStarted(BaseModel):
-    """`ml.families.started` (E43-9): ml-worker-llm взял заказ админа на задания в работу."""
+    """`ml.families.started`: ml-worker-llm взял заказ админа на задания в работу."""
 
     order_id: UUID
 
 
 class FamilyOrderGenerated(BaseModel):
-    """`ml.families.generated` (E43-9): ответ генератора на заказ `ml.families.generate`.
+    """`ml.families.generated`: ответ генератора на заказ `ml.families.generate`.
 
     `specs` — черновики форм конструктора (`FamilySpec`), их проверяет core (схема, навык,
     автопроверка, дубли) и кладёт в `families` со `status = draft`, `source = llm`. `error` —
@@ -315,8 +315,8 @@ ASSESSMENT_EVENTS: dict[str, type[BaseModel]] = {
     "candidate.visibility.changed": VisibilityChanged,
     "assessment.family.status_changed": FamilyStatusChanged,
     "regular_task.published": RegularTaskPublished,
-    "ml.families.started": FamilyOrderStarted,  # E43-9
-    "ml.families.generated": FamilyOrderGenerated,  # E43-9
+    "ml.families.started": FamilyOrderStarted,
+    "ml.families.generated": FamilyOrderGenerated,
 }
 
 __all__ = [

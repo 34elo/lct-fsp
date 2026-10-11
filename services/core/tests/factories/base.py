@@ -1,4 +1,4 @@
-"""Базовые фабрики (blocks.md §5.8): user, candidate, company, vacancy, grade.
+"""Базовые фабрики: user, candidate, company, vacancy, grade.
 
 Меняются только по заявке. Функции принимают `AsyncSession`, делают `flush`; коммитит вызывающий.
 """
@@ -14,7 +14,7 @@ from app.vacancies.models import Vacancy
 from fsp_contracts.assessment import TestGrade
 from sqlalchemy.ext.asyncio import AsyncSession
 
-GRADE_THETA = {  # θ в середине полосы грейда (blocks.md §4.2)
+GRADE_THETA = {  # θ в середине полосы грейда
     TestGrade.junior: -1.0,
     TestGrade.middle: 0.0,
     TestGrade.senior: 1.0,

@@ -93,7 +93,7 @@ export default function Result() {
   const qc = useQueryClient();
   // Попытка в кеше осталась «активной» (последний ответ вернул done без перечитывания): всегда перечитываем.
   const aq = useGetAttemptAssessmentAttemptsAttemptIdGet(id, { query: { retry: retryServerOnly, refetchOnMount: "always" } });
-  // Тест завершён: свежая история нужна и здесь (кулдауны), и баннеру пути на Главной (E35-2a).
+  // Тест завершён: свежая история нужна и здесь (кулдауны), и баннеру пути на Главной.
   const hq = useHistoryAssessmentHistoryGet({ query: { refetchOnMount: "always" } });
   const pq = useGetProfessionsTaxonomyProfessionsGet();
   const iq = useMyInterestsCandidatesMeInterestsGet({ query: { retry: false } });
@@ -105,7 +105,7 @@ export default function Result() {
 
   const attempt = aq.data?.status === 200 ? aq.data.data : undefined;
   const finished = attempt?.status === "passed" || attempt?.status === "failed";
-  // E43-5: тест завершён — место в категории, просмотры, интересы и путь пересчитались; кеш кандидата устарел.
+  // тест завершён — место в категории, просмотры, интересы и путь пересчитались; кеш кандидата устарел.
   useEffect(() => {
     if (finished) void qc.invalidateQueries({ predicate: (q) => String(q.queryKey[0] ?? "").startsWith("/candidates/me") });
   }, [finished, qc]);
@@ -160,7 +160,7 @@ export default function Result() {
   const thr = thresholdGrade(grade, attempt.declared_grade);
   const cut = toScale(GRADE_CUTS[thr] ?? 0);
   const score = typeof r.theta === "number" ? toScale(r.theta) : null;
-  // ADR-025 п.2: бонусный этап приглашает на отдельный тест следующего грейда, а не повышает.
+  // бонусный этап приглашает на отдельный тест следующего грейда, а не повышает.
   const invited = attempt.invited_grade ?? null;
   const inviteLive = !!invited && (!attempt.invite_expires_at || isFuture(attempt.invite_expires_at));
   const invitedAttempt = attempt.invite_attempt_id ?? null;

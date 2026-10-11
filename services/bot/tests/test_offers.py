@@ -126,7 +126,7 @@ async def test_list_offers_shows_fork_and_status_buttons(redis):
     assert len(sent) == 2 and "200 000 – 250 000 ₽" in sent[0].text
     first = [b.callback_data for row in sent[0].reply_markup.inline_keyboard for b in row]
     assert first == [f"o:{a}:{OID}" for a in "adv"]
-    assert sent[1].reply_markup is None  # принятый: кнопок нет, чата нет (E39-26)
+    assert sent[1].reply_markup is None  # принятый: кнопок нет, чата нет
     assert core.requests == [("GET", "/internal/tg/offers", {})]
 
 

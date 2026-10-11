@@ -30,13 +30,13 @@ class User(Base):
         sa.DateTime(timezone=True), default=utcnow, server_default=sa.func.now()
     )
     deleted_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True), default=None)
-    # подтверждение email (blocks.md §4.6); поток кода — E20-1
+    # подтверждение email; поток кода
     email_verified_at: Mapped[datetime | None] = mapped_column(
         sa.DateTime(timezone=True), default=None
     )
-    # E40-1: демо-данные (seed, жюри): не в статистике, сбрасываются `demo-reset`
+    # демо-данные (seed, жюри): не в статистике, сбрасываются `demo-reset`
     is_demo: Mapped[bool] = mapped_column(default=False, server_default=sa.false())
-    # E41-16: аккаунт HR, созданный владельцем компании, входит временным паролем и обязан
+    # аккаунт HR, созданный владельцем компании, входит временным паролем и обязан
     # сменить его до любого другого действия; временный пароль живёт 72 ч
     must_change_password: Mapped[bool] = mapped_column(default=False, server_default=sa.false())
     temp_password_expires_at: Mapped[datetime | None] = mapped_column(
@@ -60,7 +60,7 @@ class RefreshToken(Base):
 
 
 class EmailVerification(Base):
-    """Активный код подтверждения email (E20-1): одна строка на пользователя."""
+    """Активный код подтверждения email: одна строка на пользователя."""
 
     __tablename__ = "email_verifications"
 
@@ -74,7 +74,7 @@ class EmailVerification(Base):
 
 
 class UserProfile(Base):
-    """Личный профиль пользователя (E39-24): ФИО, должность, описание, аватар в MinIO.
+    """Личный профиль пользователя: ФИО, должность, описание, аватар в MinIO.
 
     Нужен прежде всего сотрудникам компании: приглашение кандидату подписано HR.
     """

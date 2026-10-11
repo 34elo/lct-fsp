@@ -1,8 +1,8 @@
-"""Смысловой слой профиля: `profile_text` из графа и эмбеддинг через ml-api (graph.md §4.3).
+"""Смысловой слой профиля: `profile_text` из графа и эмбеддинг через ml-api.
 
 Текст строится детерминированно из проекций (роль, грейд, навыки) без ПДн. Вектор считается,
 только если `sha256(profile_text)` отличается от сохранённого; такой же текст у другого
-кандидата берётся из Redis (`c:emb:p:{model}:{sha}`, messaging.md §6).
+кандидата берётся из Redis (`c:emb:p:{model}:{sha}`).
 """
 
 from __future__ import annotations
@@ -83,7 +83,7 @@ class Embedder(Protocol):
 
 
 class MlEmbedder:
-    """Клиент `POST /v1/embeddings` ml-api (api.md §2.10) с кешем в Redis по sha текста."""
+    """Клиент `POST /v1/embeddings` ml-api с кешем в Redis по sha текста."""
 
     def __init__(
         self,
@@ -101,7 +101,7 @@ class MlEmbedder:
         )
         self._dim = dim
         self._redis = redis
-        # после сбоя ml-api не долбим его на каждый пересчёт: пауза `cooldown` секунд (E42-2)
+        # после сбоя ml-api не долбим его на каждый пересчёт: пауза `cooldown` секунд
         self._cooldown = cooldown
         self._down_until = 0.0
         self._client = httpx.AsyncClient(base_url=base_url, timeout=timeout, transport=transport)

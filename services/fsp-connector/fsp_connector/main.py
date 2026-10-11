@@ -1,4 +1,4 @@
-"""fsp-connector api: healthz, internal API привязки и реестра ФСП (E39-28); вебхук ФСП (E5-6)."""
+"""fsp-connector api: healthz, internal API привязки и реестра ФСП; вебхук ФСП."""
 
 from __future__ import annotations
 
@@ -31,7 +31,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     engine = make_engine(settings.database_url)
     app.state.settings = settings
     app.state.session_factory = make_session_factory(engine)
-    # реестр ФСП поверх источника (ADR-052): синхронизация и привязка видят оба
+    # реестр ФСП поверх источника: синхронизация и привязка видят оба
     app.state.adapter = RegistryAdapter(build_adapter(settings, redis), app.state.session_factory)
     app.state.redis = redis
     app.state.sync = SyncService(app.state.adapter, app.state.session_factory)

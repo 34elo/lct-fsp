@@ -109,8 +109,8 @@ describe("model", () => {
   });
 });
 
-describe("E13-4a профессии", () => {
-  test("скрытая профессия помечена в списке (E36-2)", async () => {
+describe("профессии", () => {
+  test("скрытая профессия помечена в списке", async () => {
     professions = [...professions, { slug: "ml", title: "ML", skill_weights: { python: 1 }, skill_types: {}, active: false }];
     mount();
     expect(await screen.findByTestId("admin-prof-hidden-ml")).toHaveTextContent("скрыта");
@@ -171,7 +171,7 @@ describe("E13-4a профессии", () => {
   });
 });
 
-describe("E41-17 предложения новых профессий", () => {
+describe("предложения новых профессий", () => {
   test("нет предложений — короткая строка, без кнопок", async () => {
     mount();
     expect(await screen.findByTestId("admin-sugg-empty")).toBeInTheDocument();
@@ -204,7 +204,7 @@ describe("E41-17 предложения новых профессий", () => {
   });
 });
 
-describe("E13-4a карточки", () => {
+describe("карточки", () => {
   const openCard = async () => {
     mount();
     fireEvent.click(await screen.findByTestId("admin-taxonomy-tab-cards"));

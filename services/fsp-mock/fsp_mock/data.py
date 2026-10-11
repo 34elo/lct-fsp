@@ -1,4 +1,4 @@
-"""Данные мока в памяти. Минимальный набор + герои демо; полный seed — E5-2 (tools/seed).
+"""Данные мока в памяти. Минимальный набор + герои демо; полный набор пишет tools/seed.
 
 Все люди и команды вымышленные.
 """
@@ -101,7 +101,7 @@ class Store:
         self.results.setdefault(pid, []).append(res)
         return res
 
-    # --- представления (схема fsp.md §3) ---
+    # --- представления ---
     def participant_view(self, pid: str) -> dict[str, Any]:
         p = self.participants[pid]
         return {

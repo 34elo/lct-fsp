@@ -1,4 +1,4 @@
-"""Офлайн-конвейер LLM-заданий (E26-4, ADR-024, assessment.md §7): генератор → решатель → черновик
+"""Офлайн-конвейер LLM-заданий: генератор → решатель → черновик
 ключа → автопроверки → `draft` в очереди допуска; прогон нашей LLM как кандидата → `ai_solvable`.
 
 В LLM core напрямую не ходит: только ml-api (`/v1/families/generate`, `/solve`, `/key-draft`), по
@@ -11,7 +11,7 @@
 `families` (`source = llm`, `status = draft`, `key_status = draft`). Второе мнение — черновик ключа
 и решатель на тех же вариантах — не отбраковывает, а пишется флагами в `spec.llm.flags` для админа.
 Дальше всё как у конструктора: админ утверждает ключ (`POST /admin/families/{id}/key`) и переводит в
-пилот (`POST /admin/families/{id}/pilot`), в `active` — только по статистике пилота (E22-9).
+пилот (`POST /admin/families/{id}/pilot`), в `active` — только по статистике пилота.
 
 `ai_solvable` = средний балл LLM-«кандидата» на `k` вариантах семейства (свои сиды, не боевые),
 считается своим же `score` семейства. Повторный прогон перезаписывает значение — идемпотентно.
@@ -130,7 +130,7 @@ class HttpBank:
 
 
 class GeneratedOnly:
-    """Банк заказа из админки (E43-9): формы уже пришли событием `ml.families.generated`.
+    """Банк заказа из админки: формы уже пришли событием `ml.families.generated`.
 
     Второго мнения (черновик ключа, решатель) нет: синхронные вызовы ml-api заняли бы слот GPU
     работодателя. Форма без ключа отбраковывается (`no_key`); `ai_solvable` и флаги досчитывает
@@ -217,7 +217,7 @@ class Target:
     level: int
     n: int = 1
     domain: str | None = None
-    order: str | None = None  # заказ из админки (E43-9), пишется в `spec.llm.order_id`
+    order: str | None = None  # заказ из админки, пишется в `spec.llm.order_id`
 
 
 @dataclass
@@ -242,7 +242,7 @@ class Report:
 
     def markdown(self) -> str:
         lines = [
-            "# Офлайн-конвейер LLM-заданий (E26-4)",
+            "# Офлайн-конвейер LLM-заданий",
             "",
             f"LLM доступна: {'да' if self.llm_available else 'нет (LLM_ENABLED=false/ML_API_URL)'}",
             "",
@@ -521,7 +521,7 @@ def _csv(v: str) -> list[str]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    p = argparse.ArgumentParser(description="Офлайн-конвейер LLM-заданий и ai_solvable (E26-4)")
+    p = argparse.ArgumentParser(description="Офлайн-конвейер LLM-заданий и ai_solvable")
     p.add_argument("--skills", type=_csv, default=["python", "sql"])
     p.add_argument("--kinds", type=_csv, default=["exact", "choice", "find_bug", "order", "sjt"])
     p.add_argument("--levels", type=lambda v: [int(x) for x in _csv(v)], default=[2, 3])

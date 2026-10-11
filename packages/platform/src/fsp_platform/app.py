@@ -35,7 +35,7 @@ def problem_response(
     errors: list[dict[str, str]] | None = None,
     headers: dict[str, str] | None = None,
 ):
-    """RFC 9457 Problem Details (api.md §1)."""
+    """RFC 9457 Problem Details."""
     body: dict = {"type": f"about:blank#{code}", "title": title, "status": status, "code": code}
     if detail:
         body["detail"] = detail

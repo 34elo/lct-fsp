@@ -55,7 +55,7 @@ class Vector(sa.types.TypeDecorator):
         return value
 
 
-# Что видно работодателю до принятия приглашения (ADR-027, blocks.md §4.5). Контактов здесь нет:
+# Что видно работодателю до принятия приглашения. Контактов здесь нет:
 # они открываются только принятием приглашения или откликом (`contact_reveals`).
 DEFAULT_VISIBILITY = {
     "full_name": False,
@@ -70,7 +70,7 @@ DEFAULT_VISIBILITY = {
 
 
 class Candidate(Base):
-    """Анкета кандидата (data-model.md §3.2). Вычисляемое: категория (E4-3), грейд (E4-4)."""
+    """Анкета кандидата. Вычисляемое: категория, грейд."""
 
     __tablename__ = "candidates"
 
@@ -89,18 +89,18 @@ class Candidate(Base):
     visibility: Mapped[dict] = mapped_column(sa.JSON, default=lambda: dict(DEFAULT_VISIBILITY))
     stoplist_company_ids: Mapped[list[str]] = mapped_column(TextArray, default=list)
     profile_version: Mapped[int] = mapped_column(default=0, server_default="0")
-    # категория (ml.md §4), считает recompute_profile
+    # категория, считает recompute_profile
     primary_role: Mapped[str | None] = mapped_column(Text, default=None)
     roles: Mapped[list | None] = mapped_column(sa.JSON, default=None)  # [{role, weight}]
     primary_stack: Mapped[list[str] | None] = mapped_column(TextArray, default=None)
-    # грейд (ml.md §5), считает recompute_profile
+    # грейд, считает recompute_profile
     grade: Mapped[str | None] = mapped_column(Text, default=None)
     grade_score: Mapped[float | None] = mapped_column(sa.Float, default=None)
     grade_confidence: Mapped[float | None] = mapped_column(sa.Float, default=None)
     grade_breakdown: Mapped[list | None] = mapped_column(sa.JSON, default=None)
     grade_next: Mapped[dict | None] = mapped_column(sa.JSON, default=None)  # next_grade + hints
     experience_months: Mapped[int | None] = mapped_column(default=None)
-    # смысловой слой (graph.md §4.3): вектор пересчитывается, если sha(profile_text) сменился
+    # смысловой слой: вектор пересчитывается, если sha(profile_text) сменился
     profile_text: Mapped[str | None] = mapped_column(Text, default=None)
     profile_text_sha: Mapped[str | None] = mapped_column(
         Text, default=None
@@ -109,23 +109,23 @@ class Candidate(Base):
     embedding_model: Mapped[str | None] = mapped_column(Text, default=None)
     team_signals: Mapped[dict | None] = mapped_column(sa.JSON, default=None)
     claimed_soft: Mapped[list[str] | None] = mapped_column(TextArray, default=None)
-    # ручная форма (E20-4): контакты шифруются Fernet (security.md §3), желаемые роли — slug
+    # ручная форма: контакты шифруются Fernet, желаемые роли — slug
     contacts_enc: Mapped[bytes | None] = mapped_column(sa.LargeBinary, default=None)
-    # ФИО (E36-5): шифруется как контакты; работодателю — только при `visibility.full_name`
+    # ФИО: шифруется как контакты; работодателю — только при `visibility.full_name`
     full_name_enc: Mapped[bytes | None] = mapped_column(sa.LargeBinary, default=None)
-    # E41-12: аватар в MinIO; работодатель видит его только после приглашения
+    # аватар в MinIO; работодатель видит его только после приглашения
     avatar_key: Mapped[str | None] = mapped_column(Text, default=None)
     desired_roles: Mapped[list[str] | None] = mapped_column(TextArray, default=None)
-    # E39-15: slug навыков, скрытых кандидатом от работодателя (карточка, выдача); подбор не меняют
+    # slug навыков, скрытых кандидатом от работодателя (карточка, выдача); подбор не меняют
     hidden_skills: Mapped[list[str] | None] = mapped_column(TextArray, default=None)
-    # E39-15: ссылки кандидата (GitHub, портфолио) — JSON-список, шифруется; видны только владельцу
+    # ссылки кандидата (GitHub, портфолио) — JSON-список, шифруется; видны только владельцу
     links_enc: Mapped[bytes | None] = mapped_column(sa.LargeBinary, default=None)
-    # возраст (E32-5b): только группа, дата рождения не собирается; `minor` = 15–17 лет
+    # возраст: только группа, дата рождения не собирается; `minor` = 15–17 лет
     age_group: Mapped[str | None] = mapped_column(Text, default=None)  # adult | minor
     parent_consent_at: Mapped[datetime | None] = mapped_column(
         sa.DateTime(timezone=True), default=None
     )  # отметка о согласии родителя на обработку ПДн несовершеннолетнего
-    # слияние пересчётов (graph.md §4.4)
+    # слияние пересчётов
     recompute_requested_at: Mapped[datetime | None] = mapped_column(
         sa.DateTime(timezone=True), default=None
     )
@@ -137,7 +137,7 @@ class Candidate(Base):
 
 
 class CategoryDispute(Base):
-    """Оспаривание категории кандидатом; разбирает админ (data-model.md §3.2)."""
+    """Оспаривание категории кандидатом; разбирает админ."""
 
     __tablename__ = "category_disputes"
 

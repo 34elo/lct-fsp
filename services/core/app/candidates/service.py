@@ -28,7 +28,7 @@ from app.taxonomy import service as taxonomy
 
 ACTIVE_DAYS = 7
 STOPLIST_MAX = 200
-STRENGTH_SELF = 0.15  # навык из ручной формы: «заявлено», потолок provisional 0.25 (skills.md)
+STRENGTH_SELF = 0.15  # навык из ручной формы: «заявлено», потолок provisional 0.25
 SELF_FACT = "self_profile"
 
 
@@ -128,7 +128,7 @@ def full_name_of(cand: Candidate, key: str) -> str | None:
 
 
 def shown_full_name(cand: Candidate, key: str, *, invited: bool = False) -> str | None:
-    """ФИО для карточки работодателя (E39-15, ADR-027): после приглашения от этой компании
+    """ФИО для карточки работодателя: после приглашения от этой компании
     (`invited`) или раньше, если кандидат открыл его сам (`visibility.full_name`)."""
     return full_name_of(cand, key) if invited or visibility_of(cand)["full_name"] else None
 
@@ -139,7 +139,7 @@ def _avatar_sig(cand: Candidate, secret: str) -> str:
 
 
 def avatar_url(cand: Candidate, secret: str) -> str | None:
-    """Адрес аватара с подписью (E41-12): `<img>` не несёт токен, а доступ ограничен тем, кому
+    """Адрес аватара с подписью: `<img>` не несёт токен, а доступ ограничен тем, кому
     сервер отдал ссылку (владелец; работодатель — после приглашения, как ФИО). Смена файла
     меняет подпись и версию — старые ссылки перестают работать."""
     if not cand.avatar_key:
@@ -186,7 +186,7 @@ async def clear_avatar(session: AsyncSession, storage, cand: Candidate) -> Candi
 
 
 def links_of(cand: Candidate, key: str) -> list[str]:
-    """Ссылки владельца (E39-15): расшифрованный список; нечитаемое — пустой список."""
+    """Ссылки владельца: расшифрованный список; нечитаемое — пустой список."""
     raw = pii.decrypt_text(key, cand.links_enc)
     try:
         links = json.loads(raw) if raw else []
@@ -196,14 +196,14 @@ def links_of(cand: Candidate, key: str) -> list[str]:
 
 
 def hidden_skills_of(cand: Candidate) -> set[str]:
-    """Slug навыков, скрытых кандидатом от работодателя (E39-15)."""
+    """Slug навыков, скрытых кандидатом от работодателя."""
     return set(cand.hidden_skills or ())
 
 
 async def update_profile(
     session: AsyncSession, cand: Candidate, changes: dict, *, pii_key: str
 ) -> Candidate:
-    """Ручная форма (E20-4): контакты, ФИО, ссылки, скрытые навыки (E39-15), стек (`self`), стаж,
+    """Ручная форма: контакты, ФИО, ссылки, скрытые навыки, стек (`self`), стаж,
     роли, софт-навыки.
 
     Частичное обновление по ключам `changes`. Стек — полный список: убранные навыки
@@ -259,7 +259,7 @@ async def update_profile(
 
 
 def _set_age(cand: Candidate, changes: dict) -> None:
-    """Возрастная группа и согласие родителя (E32-5b). Дата рождения не хранится.
+    """Возрастная группа и согласие родителя. Дата рождения не хранится.
 
     Согласие осмысленно только для `minor`; смена группы на `adult` или отзыв сбрасывают отметку.
     """
@@ -278,7 +278,7 @@ def _set_age(cand: Candidate, changes: dict) -> None:
 
 
 def is_publishable(cand: Candidate) -> bool:
-    """Профиль 15–17 лет не публикуется без согласия родителя (E32-5b)."""
+    """Профиль 15–17 лет не публикуется без согласия родителя."""
     return cand.age_group != "minor" or cand.parent_consent_at is not None
 
 
@@ -339,7 +339,7 @@ async def _set_stack(session: AsyncSession, cand: Candidate, stack: list[dict]) 
 
 
 def visibility_of(cand: Candidate) -> dict[str, bool]:
-    """Настройки видимости с умолчаниями для отсутствующих ключей (старые анкеты, ADR-027)."""
+    """Настройки видимости с умолчаниями для отсутствующих ключей (старые анкеты)."""
     stored = cand.visibility or {}
     return {k: bool(stored.get(k, d)) for k, d in DEFAULT_VISIBILITY.items()}
 
@@ -410,7 +410,7 @@ def _publishable() -> sa.ColumnElement[bool]:
 def _attr_filters(
     stmt: sa.Select, *, salary_cap: float, formats: list[str], company_id: uuid.UUID, pg: bool
 ) -> sa.Select:
-    """Жёсткие фильтры по анкете (ml.md §6.1); массивы — только в PostgreSQL (в SQLite JSON)."""
+    """Жёсткие фильтры по анкете; массивы — только в PostgreSQL (в SQLite JSON)."""
     stmt = stmt.where(
         Candidate.deleted_at.is_(None),
         Candidate.search_status != "dnd",
@@ -456,7 +456,7 @@ async def nearest_by_embedding(
     formats: list[str],
     company_id: uuid.UUID,
 ) -> list[Candidate]:
-    """Отбор по смыслу (matching.md §3, B): `embedding <=> :vec`; только PostgreSQL + pgvector."""
+    """Отбор по смыслу (B): `embedding <=> :vec`; только PostgreSQL + pgvector."""
     if session.bind.dialect.name != "postgresql":
         return []
     dist = Candidate.embedding.op("<=>")(vector)
@@ -467,7 +467,7 @@ async def nearest_by_embedding(
     return list(await session.scalars(stmt))
 
 
-# --- каталог для поиска работодателя (E7-3) ----------------------------------------------
+# --- каталог для поиска работодателя ----------------------------------------------
 
 GRADE_ORDER = ("intern", "junior", "junior_plus", "middle", "middle_plus", "senior", "lead")
 
@@ -501,7 +501,7 @@ async def search_pool(
     """Каталог: видимые анкеты по фильтрам анкеты (скаляры — SQL, массивы — в памяти).
 
     `require_role=False` — не скрывать анкеты без `primary_role` (видимость тогда определяет
-    грейд из теста: у прошедшего тест роль в анкете может быть ещё не вычислена, E43-6).
+    грейд из теста: у прошедшего тест роль в анкете может быть ещё не вычислена).
     """
     stmt = select(Candidate).where(
         Candidate.deleted_at.is_(None),
@@ -542,7 +542,7 @@ MEDIAN_MIN_SAMPLE = 3
 
 
 async def category_median(session: AsyncSession, role: str | None, grade: str | None) -> int | None:
-    """Медиана `salary_min` по ячейке role×grade (ml.md §6.5); мало данных — None."""
+    """Медиана `salary_min` по ячейке role×grade; мало данных — None."""
     if not role or not grade:
         return None
     stmt = select(Candidate.salary_min).where(
@@ -595,7 +595,7 @@ async def erase(session: AsyncSession, storage, user) -> Candidate:
     """Необратимо удалить профиль: ПДн и доказательства стираются, анкета остаётся обезличенной.
 
     Строка `candidates` сохраняется как «надгробие» с псевдонимом: на неё ссылаются офферы и
-    таблицы блока 2 (в офферах остаётся только псевдоним, flows.md F13). `deleted_at` скрывает
+    таблицы подбора (в офферах остаётся только псевдоним). `deleted_at` скрывает
     кандидата из подбора. Чужие зоны (подбор, офферы, Telegram, ФСП, бейджи, просмотры, кеши)
     чистят свои данные по событию `candidate.deleted`. Повторный вызов — 404 (в роутере).
     """

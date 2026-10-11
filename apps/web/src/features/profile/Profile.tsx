@@ -40,7 +40,7 @@ import { CLAIM_STATUS_LABEL, GRADE_LABEL, HOME, PROFILE, SIGNAL_LABEL, STATUS_LA
 import { useEventStream } from "@/shared/lib/useEventStream";
 
 const TABS = ["overview", "skills", "data", "graph"] as const;
-/** Старые вкладки «ФСП» и «Резюме» (до E39-15) слились в «Данные». */
+/** Старые вкладки «ФСП» и «Резюме» слились в «Данные». */
 const LEGACY: Record<string, Tab> = { fsp: "data", resume: "data" };
 type Tab = (typeof TABS)[number];
 const gradeLabel = (g: string) => GRADE[g] ?? GRADE_LABEL[g] ?? g;
@@ -153,7 +153,7 @@ function StatusCard({ p, standing }: { p: CandidateProfile; standing?: Candidate
         <Link to="/me/profile/edit" data-testid="profile-edit-link" className="inline-flex min-h-11 items-center font-semibold text-brand-fg">
           {T.editLink}
         </Link>
-        {/* Данные шага 1 потока до теста (E39-6) правятся здесь же: направление и навыки. */}
+        {/* Данные шага 1 потока до теста правятся здесь же: направление и навыки. */}
         <Link to="/me/assessment?step=1" data-testid="profile-direction-link" className="inline-flex min-h-11 items-center font-semibold text-brand-fg">
           {T.directionLink}
         </Link>
@@ -276,7 +276,7 @@ function OverviewTab({ p, standing }: { p: CandidateProfile; standing?: Candidat
 }
 
 /**
- * Профиль кандидата `/me/profile` (E38-6, переработан в E39-15): вкладки `ScrollTabs` «Обзор · Навыки · Данные ·
+ * Профиль кандидата `/me/profile`: вкладки `ScrollTabs` «Обзор · Навыки · Данные ·
  * Граф» (`?tab=`). Обзор — грейд и статус, плитки, что усилит профиль, заявлено и подтверждено, командные
  * сигналы; Навыки — список с поиском и фильтрами; Данные — ФИО, контакты, опыт, образование, ссылки и ФСП;
  * Граф — `EvidenceGraph`. Старые адреса `?tab=fsp|resume` ведут в «Данные».

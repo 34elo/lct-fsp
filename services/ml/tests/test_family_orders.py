@@ -1,4 +1,4 @@
-"""E43-9: заказ заданий из админки через очередь `ml.llm` (`ml.families.generate`)."""
+"""Заказ заданий из админки через очередь `ml.llm` (`ml.families.generate`)."""
 
 from uuid import uuid4
 

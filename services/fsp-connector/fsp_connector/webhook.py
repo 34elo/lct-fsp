@@ -1,4 +1,4 @@
-"""Публичный вебхук ФСП/мока: `POST /integrations/fsp/webhook` (fsp.md §2, §6; F11).
+"""Публичный вебхук ФСП/мока: `POST /integrations/fsp/webhook` (F11).
 
 Подпись `X-Signature: sha256=<hex(HMAC(secret, body))>`; идемпотентность по `event_id`
 (`webhook_log`). Результат — инкрементальная синхронизация привязанного участника

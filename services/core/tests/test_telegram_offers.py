@@ -1,4 +1,4 @@
-"""Офферы из бота: /internal/tg/offers* (api.md §2.10, E9-3)."""
+"""Офферы из бота: /internal/tg/offers*."""
 
 import shutil
 import sqlite3

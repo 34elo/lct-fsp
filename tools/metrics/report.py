@@ -1,7 +1,7 @@
 """Сборка отчёта `make metrics`: компоненты → строки светофора → JSON и markdown.
 
 Чистые функции без ввода-вывода: детерминированы (никаких дат и времён прогона).
-Цели — metrics.md §9.1/§9.3 в редакции ADR-030 (точность грейда мерим вне зоны безразличия).
+Цели — docs/quality/validation.md (точность грейда мерим вне зоны безразличия).
 Светофор: зелёный — цель выполнена; жёлтый — промах не больше `TOLERANCE` от цели;
 красный — дальше; серый — не измерено (компонент недоступен или раннера нет).
 Метрики с целью «отчёт» показываются без цвета.
@@ -433,7 +433,7 @@ def summarize(rows: list[dict[str, Any]]) -> dict[str, int]:
 
 def build_report(seed: int, comp: dict[str, dict[str, Any]]) -> dict[str, Any]:
     rows = build_rows(comp)
-    for r in rows:  # готовые строки для веб-страницы качества (E31-5): цифры совпадают с report.md
+    for r in rows:  # готовые строки для веб-страницы качества: цифры совпадают с report.md
         t = r["target"]
         r["value_text"] = fmt(r["value"], r["unit"])
         r["target_text"] = fmt_target(t["op"], t["value"], r["unit"])
@@ -452,7 +452,7 @@ def build_report(seed: int, comp: dict[str, dict[str, Any]]) -> dict[str, Any]:
 def render_md(rep: dict[str, Any]) -> str:
     s = rep["summary"]
     lines = [
-        "# Офлайн-метрики (E31-3)",
+        "# Офлайн-метрики",
         "",
         f"`make metrics` · seed {rep['seed']} · "
         f"{ICON[GREEN]} {s[GREEN]} · {ICON[YELLOW]} {s[YELLOW]} · {ICON[RED]} {s[RED]} · "
@@ -461,7 +461,7 @@ def render_md(rep: dict[str, Any]) -> str:
         f"Светофор: зелёный — цель выполнена; жёлтый — промах до {int(rep['tolerance'] * 100)} % "
         "от цели; "
         "красный — больше; серый — не измерено (компонент недоступен без стенда или раннера нет). "
-        "Цели — [metrics.md](../../docs/architecture/metrics.md) §9.1 в редакции ADR-030: "
+        "Цели — docs/quality/validation.md: "
         "точность грейда мерим вне зоны безразличия.",
         "",
     ]

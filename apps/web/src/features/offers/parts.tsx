@@ -52,7 +52,7 @@ export function telegramHref(handle: string | null | undefined): string | null {
   return /^[A-Za-z0-9_]{3,32}$/.test(nick) ? `https://t.me/${nick}` : null;
 }
 
-/** Контакты другой стороны (E39-26): после принятия видны обеим сторонам; кнопка «Написать в Telegram». */
+/** Контакты другой стороны: после принятия видны обеим сторонам; кнопка «Написать в Telegram». */
 export function ContactsCard({ title, hint, contacts, testId }: { title: string; hint: string; contacts: ContactsData; testId?: string }) {
   const tg = telegramHref(contacts.telegram);
   return (

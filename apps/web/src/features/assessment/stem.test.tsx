@@ -6,7 +6,7 @@ import { Question } from "./Question";
 
 const TABLE = "Выгрузка из базы «Рога»:\n\n`orders(id, status)`\n\n| id | status |\n| --- | --- |\n| 1 | new |\n| 2 | done |\n\nСколько заказов?";
 
-describe("условие с таблицей (E39-9)", () => {
+describe("условие с таблицей", () => {
   it("hasTable видит GFM-таблицу и не путает с кодом", () => {
     expect(hasTable(TABLE)).toBe(true);
     expect(hasTable("print(1 | 2)\n\nx")).toBe(false);

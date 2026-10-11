@@ -1,4 +1,4 @@
-/** Вход жюри (E32-4b, E40-1): включается `VITE_JURY_MODE=true` при сборке стенда. Пароль не нужен:
+/** Вход жюри: включается `VITE_JURY_MODE=true` при сборке стенда. Пароль не нужен:
  * `POST /auth/jury` выдаёт свою песочницу (кандидат + работодатель), см. `useAuth().loginAsJury`. */
 export const JURY = {
   candidate: { to: "/me/assessment?mode=express" },

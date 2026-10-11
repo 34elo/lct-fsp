@@ -169,8 +169,8 @@ class PublicCompany(BaseModel):
     name: str
     verified: bool
     responsibility_score: float | None = None
-    demo: bool = False  # E40-1: демо-компания витрины — пометка «демо»
-    logo_url: str | None = None  # E41-12
+    demo: bool = False  # демо-компания витрины — пометка «демо»
+    logo_url: str | None = None
 
 
 class PublicVacancyOut(BaseModel):
@@ -266,7 +266,7 @@ async def apply_to_vacancy(
     user: User = Depends(_candidate),
     session: AsyncSession = Depends(get_session),
 ):
-    """Отклик кандидата (ADR-022): оффер с `initiator = candidate`, контакты сразу у компании."""
+    """Отклик кандидата: оффер с `initiator = candidate`, контакты сразу у компании."""
     vacancy = await service.get(session, vacancy_id)
     if vacancy is None or vacancy.status != VacancyStatus.published.value:
         raise ProblemError(404, "vacancy_not_found", "Вакансия не найдена")

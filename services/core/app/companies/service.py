@@ -67,7 +67,7 @@ async def require_company(
 
 
 def badge_visible(company: Company) -> bool:
-    """Метка «компания проверена» для кандидатов: verified и компания не скрыла её (E32-5a)."""
+    """Метка «компания проверена» для кандидатов: verified и компания не скрыла её."""
     return company.status == "verified" and bool(company.show_verified_badge)
 
 
@@ -79,7 +79,7 @@ async def update_company(session: AsyncSession, company: Company, changes: dict)
 
 
 def logo_url(company: Company) -> str | None:
-    """Путь относительно API; `v` меняется с файлом. Логотип компании публичный (E41-12)."""
+    """Путь относительно API; `v` меняется с файлом. Логотип компании публичный."""
     if not company.logo_key:
         return None
     version = company.logo_key.rsplit("/", 1)[-1].split(".", 1)[0]
@@ -143,14 +143,14 @@ async def list_by_status(session: AsyncSession, status: str | None) -> list[Comp
 
 
 def demo_company_ids():
-    """Подзапрос id демо-компаний (E40-1) — для фильтров статистики и сброса демо."""
+    """Подзапрос id демо-компаний — для фильтров статистики и сброса демо."""
     return select(Company.id).where(Company.is_demo.is_(True))
 
 
 async def count_by_status(session: AsyncSession, status: str, *, real_only: bool = False) -> int:
-    """Число компаний в статусе — счётчик модерации на главной админки (E39-29).
+    """Число компаний в статусе — счётчик модерации на главной админки.
 
-    `real_only` — без демо-компаний (лендинг, E40-1).
+    `real_only` — без демо-компаний (лендинг).
     """
     q = select(func.count()).select_from(Company).where(Company.status == status)
     if real_only:
@@ -194,7 +194,7 @@ async def member_user_ids(session: AsyncSession, company_id: uuid.UUID) -> list[
     return list(rows)
 
 
-# --- E39-24: команда компании (владелец = `admin`, HR = `member`) и приглашения по ссылке ---
+# --- команда компании (владелец = `admin`, HR = `member`) и приглашения по ссылке ---
 
 INVITE_TTL = timedelta(days=7)
 
@@ -218,7 +218,7 @@ class MemberView:
     full_name: str | None
     position: str | None
     avatar_url: str | None
-    managed: bool = False  # E41-16: аккаунт создан владельцем этой компании
+    managed: bool = False  # аккаунт создан владельцем этой компании
     must_change_password: bool = False  # HR ещё не сменил временный пароль
     temp_password_expires_at: datetime | None = None
 
@@ -343,7 +343,7 @@ async def accept_invite(session: AsyncSession, user: User, token: str) -> Compan
 async def remove_member(
     session: AsyncSession, company_id: uuid.UUID, user_id: uuid.UUID, actor: User | None = None
 ) -> None:
-    """Отозвать доступ HR (E41-16): убрать из команды и закрыть все его сессии.
+    """Отозвать доступ HR: убрать из команды и закрыть все его сессии.
 
     Аккаунт, созданный владельцем этой компании, ещё и выключается — войти им больше нельзя.
     Чужой участник — 404; владельца убрать нельзя — 409.
@@ -364,7 +364,7 @@ async def remove_member(
     await session.flush()
 
 
-# --- E41-16: доступ HR без почты — владелец создаёт аккаунт и передаёт временный пароль ---
+# --- доступ HR без почты — владелец создаёт аккаунт и передаёт временный пароль ---
 
 ACCESS_LOG_LIMIT = 50
 
@@ -437,7 +437,7 @@ async def create_hr(
             role="employer",
             is_demo=bool(company.is_demo),
             managed_by_company_id=company.id,
-            # адрес подтверждает владелец компании: письма HR не получает (E41-16)
+            # адрес подтверждает владелец компании: письма HR не получает
             email_verified_at=datetime.now(UTC),
         )
         session.add(user)

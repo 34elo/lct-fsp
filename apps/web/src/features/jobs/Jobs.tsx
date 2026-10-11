@@ -182,7 +182,7 @@ type Params = ListPublicVacanciesVacanciesPublicGetParams;
 /** Публичные вакансии (J1): поиск сверху, фильтры сбоку (на телефоне — шторка), состояние в URL. */
 export default function Jobs() {
   const { status, role } = useAuth();
-  // В кабинете кандидата шапка закреплена (56 px) — поиск и фильтры прижимаются под ней (E41-10).
+  // В кабинете кандидата шапка закреплена (56 px) — поиск и фильтры прижимаются под ней.
   const inCabinet = status === "authenticated" && role === "candidate";
   const [sp, setSp] = useSearchParams();
   const loc = useLocation();

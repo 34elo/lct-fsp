@@ -73,7 +73,7 @@ function ApplyBox({ vacancyId }: { vacancyId: string }) {
   );
 }
 
-/** Встречный сигнал кандидата (E33-6): «интересна компания». Только для кандидата; снимается. */
+/** Встречный сигнал кандидата: «интересна компания». Только для кандидата; снимается. */
 function CompanyInterest({ companyId }: { companyId: string }) {
   const { status, role } = useAuth();
   const [marked, setMarked] = useState(false);

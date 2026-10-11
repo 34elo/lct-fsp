@@ -61,12 +61,12 @@ def _assessment(seed: int, out: Path, mode: str) -> Comp:
 
 
 def collect_assessment(seed: int, parts: Path) -> Comp:
-    """Симулятор теста: честные, списывающие, «знающие утечку», LLM-«кандидат» (E27-1)."""
+    """Симулятор теста: честные, списывающие, «знающие утечку», LLM-«кандидат»."""
     return _assessment(seed, parts / "eval-assessment", "standard")
 
 
 def collect_express(seed: int, parts: Path) -> Comp:
-    """Тот же симулятор в экспресс-режиме (ADR-025, E32-4a)."""
+    """Тот же симулятор в экспресс-режиме."""
     return _assessment(seed, parts / "eval-assessment-express", "express")
 
 

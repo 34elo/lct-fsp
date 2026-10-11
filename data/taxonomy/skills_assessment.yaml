@@ -1,5 +1,5 @@
-# Навыки для теста (E21-1): мышление, бизнес, софт, опыт, AI Engineer + типы навыков.
-# Тип навыка (assessment.md §2): fundamental | hard | thinking | business | soft | experience.
+# Навыки для теста: мышление, бизнес, софт, опыт, AI Engineer + типы навыков.
+# Тип навыка: fundamental | hard | thinking | business | soft | experience.
 # Без явного типа: kind soft → soft; group fundamentals → fundamental; group product/analysis/design → business;
 # остальное → hard. Переопределения — в списке `skill_types` ниже.
 skills:

@@ -1,4 +1,4 @@
-"""Поиск кандидатов работодателем (api.md §2.5): `POST /search/candidates`."""
+"""Поиск кандидатов работодателем: `POST /search/candidates`."""
 
 from __future__ import annotations
 
@@ -62,7 +62,7 @@ class SearchRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     filters: SearchFilters = Field(default_factory=SearchFilters)
-    category: CategoryRef | None = None  # профессия × грейд из теста (ADR-018)
+    category: CategoryRef | None = None  # профессия × грейд из теста
     sort: search.Sort | None = None  # по умолчанию: с вакансией — mutual (H), без — match
     cursor: str | None = Field(default=None, max_length=200)
     limit: int = Field(default=20, ge=1, le=search.MAX_LIMIT)
@@ -84,7 +84,7 @@ class TuningHint(BaseModel):
 
 
 class SearchTuning(BaseModel):
-    """Подстройка выдачи в сессии (matching.md §7): включается после ≥ 3 реакций."""
+    """Подстройка выдачи в сессии: включается после ≥ 3 реакций."""
 
     active: bool
     signals: int
@@ -129,7 +129,7 @@ async def search_parse(
     user: User = Depends(_employer),
     session: AsyncSession = Depends(get_session),
 ) -> Any:
-    """Разбор текста в чипсы-фильтры: правила (E7-5) + LLM-уточнение и слияние (E7-6).
+    """Разбор текста в чипсы-фильтры: правила + LLM-уточнение и слияние.
 
     LLM недоступна или ответила невалидно — отдаём правиловый результат (`refining=false`).
     """
@@ -166,7 +166,7 @@ async def search_candidates(
         version = (await vacancies.get_owned(session, user, body.vacancy_id)).version
     sort = body.sort or ("mutual" if body.vacancy_id else "match")
     signals = None
-    if body.session_id is not None:  # подстройка только по своей сессии (matching.md §7)
+    if body.session_id is not None:  # подстройка только по своей сессии
         signals = await rec_service.session_signals(
             session, redis, user.id, str(body.session_id), _TUNING
         )
@@ -183,7 +183,7 @@ async def search_candidates(
     context_type = "vacancy" if body.vacancy_id else "search"
     context_id = str(body.vacancy_id) if body.vacancy_id else ""
 
-    # Логировать impressions для каждого кандидата в выдаче (E17-1)
+    # Логировать impressions для каждого кандидата в выдаче
     for position, item in enumerate(page["items"], 1):
         candidate_id = await _get_candidate_id_by_pseudo_id(session, item["pseudo_id"])
         if candidate_id:
@@ -263,7 +263,7 @@ async def candidate_similar(
     user: User = Depends(_employer),
     session: AsyncSession = Depends(get_session),
 ) -> Any:
-    """Похожие на открытого кандидата (matching.md §1); скрытый или несуществующий → 404."""
+    """Похожие на открытого кандидата; скрытый или несуществующий → 404."""
     from app.recommendations import service as rec_service
 
     company, _ = await companies.require_company(session, user.id)
@@ -350,7 +350,7 @@ class NavNextGrade(BaseModel):
 class NavTest(BaseModel):
     profession: str
     grade: str
-    path: str  # маршрут блока 1: /me/assessment?profession=&grade=
+    path: str  # маршрут теста: /me/assessment?profession=&grade=
 
 
 class NavGap(BaseModel):
@@ -407,7 +407,7 @@ async def my_standing(
     user: User = Depends(_candidate),
     session: AsyncSession = Depends(get_session),
 ) -> Any:
-    """Сила профиля и место в категории «профессия × грейд» (E35-12a). Без теста — пусто."""
+    """Сила профиля и место в категории «профессия × грейд». Без теста — пусто."""
     cand = await candidates.get(session, user.id)
     if cand is None:
         return CandidateStanding()
@@ -425,7 +425,7 @@ async def my_uplift(
     session: AsyncSession = Depends(get_session),
     redis: Redis = Depends(get_redis),
 ) -> Any:
-    """Какой навык подтвердить, чтобы подойти под больше вакансий (matching.md §6)."""
+    """Какой навык подтвердить, чтобы подойти под больше вакансий."""
     cand = await candidates.get(session, user.id)
     if cand is None:
         return uplift_service.empty()
@@ -444,7 +444,7 @@ async def mark_candidate_interest(
     user: User = Depends(_candidate),
     session: AsyncSession = Depends(get_session),
 ) -> Any:
-    """Кандидат показывает интерес к компании (E33-6)."""
+    """Кандидат показывает интерес к компании."""
     cand = await candidates.get(session, user.id)
     if cand is None:
         raise ProblemError(404, "company_not_found", "Компания не найдена")
@@ -466,7 +466,7 @@ async def remove_candidate_interest(
     user: User = Depends(_candidate),
     session: AsyncSession = Depends(get_session),
 ) -> Any:
-    """Кандидат снимает интерес к компании (E33-6)."""
+    """Кандидат снимает интерес к компании."""
     cand = await candidates.get(session, user.id)
     if cand is None:
         raise ProblemError(404, "company_not_found", "Компания не найдена")

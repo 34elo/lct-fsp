@@ -1,4 +1,4 @@
-"""Команда `notify.telegram` → очередь `bot.telegram` (messaging.md §2.2, telegram.md §5).
+"""Команда `notify.telegram` → очередь `bot.telegram`.
 
 Шаблоны и клавиатуры рендерит бот (`bot/templates/*.py`); core передаёт только данные.
 """
@@ -26,12 +26,12 @@ class TgTemplate(StrEnum):
     regular_task_published = "regular_task_published"
     test_result = "test_result"
     uplift = "uplift"
-    category_subscription = "category_subscription"  # работодателю: новые кандидаты (E33-4)
+    category_subscription = "category_subscription"  # работодателю: новые кандидаты
 
 
 class TgButton(BaseModel):
     text: str
-    callback_data: str | None = None  # api.md §5, ≤ 64 байт
+    callback_data: str | None = None  # ≤ 64 байт (лимит Telegram)
     url: str | None = None
 
     @model_validator(mode="after")

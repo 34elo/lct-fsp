@@ -1,4 +1,4 @@
-"""Привязка ФСП для web: OAuth «Войти через ФСП», код, ручной ID (api.md §1, §2.2)."""
+"""Привязка ФСП для web: OAuth «Войти через ФСП», код, ручной ID."""
 
 from __future__ import annotations
 
@@ -227,7 +227,7 @@ async def fsp_overview(
     )
 
 
-# -------------------------------------------------------------------------- админ: демо (E13-3)
+# -------------------------------------------------------------------------- админ: демо
 _admin = require_roles("fsp_admin")
 
 
@@ -242,7 +242,7 @@ async def admin_demo_create_fsp_result(
     session: AsyncSession = Depends(get_session),
     connector: ConnectorClient = Depends(get_connector),
 ):
-    """Админ: демо-кнопка создания результата ФСП для случайного кандидата (E13-3).
+    """Админ: демо-кнопка создания результата ФСП для случайного кандидата.
     Создаёт результат в мок-ФСП и отправляет вебхук для синхронизации.
     Доступно только при DEMO_MODE=true."""
     if not request.app.state.settings.demo_mode:
@@ -262,7 +262,7 @@ async def admin_demo_reset_fsp(
     session: AsyncSession = Depends(get_session),
     connector: ConnectorClient = Depends(get_connector),
 ):
-    """Админ: демо-кнопка сброса всех результатов ФСП к снапшоту (E13-3).
+    """Админ: демо-кнопка сброса всех результатов ФСП к снапшоту.
     Доступно только при DEMO_MODE=true."""
     if not request.app.state.settings.demo_mode:
         raise ProblemError(400, "demo_disabled", "Демо-режим отключен")

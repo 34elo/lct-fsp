@@ -1,4 +1,4 @@
-"""offers, offer_events (data-model.md §3.8)
+"""offers, offer_events
 
 Revision ID: 0019
 Revises: 0018

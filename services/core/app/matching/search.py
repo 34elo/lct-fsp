@@ -1,4 +1,4 @@
-"""Поиск по каталогу анонимных карточек (api.md §2.5, matching.md §11, messaging.md §6).
+"""Поиск по каталогу анонимных карточек.
 
 Работодатель получает только `CandidateCard`: псевдоним, роль, грейд, навыки с уровнем доверия,
 ФСП-достижения, вилка и форматы. Имени, контактов, user_id, компаний и репозиториев в DTO нет.
@@ -83,7 +83,7 @@ class FspHighlight(BaseModel):
     place: int | None = None
     of: int | None = None
     year: int
-    # релевантность дисциплины профессии кандидата (ADR-027 п. 2): relevant | other; нет — null
+    # релевантность дисциплины профессии кандидата: relevant | other; нет — null
     relevance: Literal["relevant", "other"] | None = None
     note: str | None = None  # «релевантно профессии» / «соревнование другого направления»
 
@@ -113,10 +113,10 @@ class CandidateCard(BaseModel):
     search_status: str
     match: CardMatch | None = None
     updated_at: datetime
-    categories: list[CategoryRef] = []  # подтверждённые тестом профессия × грейд (ADR-018)
-    strength: StrengthView | None = None  # сила профиля внутри категории (assessment.md §9)
-    is_shortlisted: bool = False  # в шорт-листе потребности (E23-5)
-    interested_you: bool = False  # кандидат отметил вашу компанию (E33-6): «вами интересовался»
+    categories: list[CategoryRef] = []  # подтверждённые тестом профессия × грейд
+    strength: StrengthView | None = None  # сила профиля внутри категории
+    is_shortlisted: bool = False  # в шорт-листе потребности
+    interested_you: bool = False  # кандидат отметил вашу компанию: «вами интересовался»
 
 
 @dataclass(slots=True)
@@ -127,13 +127,13 @@ class Row:
     skills: list[Any]
     result: MatchResult | None = None
     p_accept: float | None = None
-    mult: float = 1.0  # множитель переранжирования (matching.md §5)
-    x: dict[str, float] | None = None  # признаки для подстройки в сессии (matching.md §7)
+    mult: float = 1.0  # множитель переранжирования
+    x: dict[str, float] | None = None  # признаки для подстройки в сессии
     tuned: float | None = None  # скор после подстройки в сессии
-    strength: StrengthResult | None = None  # сила профиля (E23-2)
+    strength: StrengthResult | None = None  # сила профиля
     rank_on: bool = False  # выбрана категория: порядок по rank = 0.6·match + 0.4·strength
     strength_cfg: StrengthConfig | None = None
-    interest_boost: float = 1.0  # >1 — кандидат отметил эту компанию (E33-6)
+    interest_boost: float = 1.0  # >1 — кандидат отметил эту компанию
 
     def key(self, sort: Sort) -> float:
         if sort == "fresh":
@@ -190,7 +190,7 @@ def extra_ok(
     has_musts: bool,
     profession: str | None = None,
 ) -> bool:
-    """Фильтры поверх пула анкет (E39-21) — одни для выдачи и для счётчиков категорий.
+    """Фильтры поверх пула анкет — одни для выдачи и для счётчиков категорий.
 
     `salary_min` — ожидания кандидата не ниже (не указаны — проходит); `fsp_only` — есть ФСП;
     `min_trust` без обязательных навыков — хотя бы один навык запроса (без навыков — любой)
@@ -223,7 +223,7 @@ def extra_ok(
 
 def _has_direction(cand: Any, grades: list[Any], wanted: set[str]) -> bool:
     """Кандидат работает в одном из направлений: `primary_role` анкеты или действующий грейд
-    теста по профессии (E43-6: второе направление не прячется за `primary_role`)."""
+    теста по профессии (второе направление не прячется за `primary_role`)."""
     return cand.primary_role in wanted or any(g.profession in wanted for g in grades)
 
 
@@ -338,8 +338,8 @@ def _card(
     interested_you: bool = False,
     direction: Any | None = None,
 ) -> CandidateCard:
-    vis = candidates.visibility_of(c)  # ADR-027: что кандидат открыл работодателю
-    hidden = candidates.hidden_skills_of(c)  # E39-15: скрытые кандидатом навыки не показываем
+    vis = candidates.visibility_of(c)  # что кандидат открыл работодателю
+    hidden = candidates.hidden_skills_of(c)  # скрытые кандидатом навыки не показываем
     shown = [s for s in skills if s.skill_id in names and names[s.skill_id][0] not in hidden]
     ordered = sorted(shown, key=lambda s: (s.claimed_only, -s.confidence, str(s.skill_id)))
     top = [
@@ -385,7 +385,7 @@ def _card(
 async def categories_of(
     session: AsyncSession, ids: list[uuid.UUID]
 ) -> dict[uuid.UUID, list[CategoryRef]]:
-    """Категории карточек пачкой (blocks.md §4.3, `get_grades_many`): профессия × грейд."""
+    """Категории карточек пачкой (`get_grades_many`): профессия × грейд."""
     grades = await assessment.get_grades_many(session, ids)
     return {
         cid: [CategoryRef(profession=g.profession, grade=g.grade) for g in gs]
@@ -429,12 +429,12 @@ async def _attach_strength(
     cfg: StrengthConfig,
     fsp_cfg: FspStrengthConfig,
 ) -> None:
-    """Сила профиля (assessment.md §9) по грейду выбранной категории, иначе по профессии
+    """Сила профиля по грейду выбранной категории, иначе по профессии
     `primary_role`, иначе по лучшему грейду. Без действующего грейда силы нет.
 
     F — результативность в ФСП (`fsp_term`: победитель/призёр/финалист/участник, убывающая отдача
-    по числу соревнований, без учёта уровня) × релевантность дисциплины профессии грейда
-    (ADR-027, E36-3); нет ФСП — 0, без штрафа;
+    по числу соревнований, без учёта уровня) × релевантность дисциплины профессии грейда; нет ФСП —
+    0, без штрафа;
     S — среднее доверие по навыкам запроса, без запроса — `trust_of`; R — свежесть теста
     по `confirmed_at`; C — полнота анкеты."""
     grades = await assessment.get_grades_many(session, [r.cand.user_id for r in rows])
@@ -453,7 +453,7 @@ async def _attach_strength(
             continue
         held = {s.skill_id: s for s in r.skills}
         facts = fsp_facts.get(r.cand.user_id, ())
-        if rel_ctx is not None:  # E36-3: × релевантность дисциплины профессии грейда
+        if rel_ctx is not None:  # × релевантность дисциплины профессии грейда
             facts = [
                 replace(f, relevance=rel_ctx.of(g.profession, f.discipline, f.track)) for f in facts
             ]
@@ -476,7 +476,7 @@ async def _attach_strength(
 
 
 def features_of(r: Row) -> dict[str, float]:
-    """Признаки подстройки (matching.md §7): компоненты скора и бинарные капитан/GitHub/«ищу».
+    """Признаки подстройки: компоненты скора и бинарные капитан/GitHub/«ищу».
 
     Без вакансии `skills` — покрытие запрошенных навыков, `fsp` — есть ли навык из ФСП.
     """
@@ -606,7 +606,7 @@ async def search_candidates(
     rr_cfg = rr_cfg or RerankConfig.load()
     st_cfg = strength_cfg or StrengthConfig.load()
     after = decode_cursor(cursor, sort) if cursor else None
-    liked = await interested_candidate_ids(session, company_id)  # встречный сигнал (E33-6)
+    liked = await interested_candidate_ids(session, company_id)  # встречный сигнал
     key = cache_key(
         await candidates.catalog_version(session) + await visibility_version(session),
         {"company": str(company_id), "f": filters.model_dump(mode="json"), "sort": sort,

@@ -227,7 +227,7 @@ _GRADES = {
 
 
 def profile_summary(d: dict) -> str:
-    """Краткий профиль (telegram.md §2): категория, грейд, топ-6 навыков, ФСП."""
+    """Краткий профиль: категория, грейд, топ-6 навыков, ФСП."""
     lines = ["👤 <b>Твой профиль</b>"]
     if d.get("primary_role"):
         lines.append(f"Категория: {_e(d['primary_role'])}")
@@ -247,7 +247,7 @@ def profile_summary(d: dict) -> str:
     return "\n".join(lines)
 
 
-# callback_data причин отказа (api.md §5) → DeclineReason core
+# callback_data причин отказа → DeclineReason core
 DECLINE_CODES = {
     "ls": "low_salary",
     "ws": "wrong_stack",
@@ -267,7 +267,7 @@ _DECLINE_LABELS = (
 
 
 def offer_keyboard(offer_id: str, status: str) -> InlineKeyboardMarkup | None:
-    """Ответить можно, пока оффер `sent|viewed`; после принятия кнопок нет (E39-26: чата нет)."""
+    """Ответить можно, пока оффер `sent|viewed`; после принятия кнопок нет (чата нет)."""
     if status in ("sent", "viewed"):
         rows = [
             [

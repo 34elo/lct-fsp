@@ -49,7 +49,7 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllGlobals());
 
-test("согласия: из API только обязательные (E39-6), неизвестный тип не ломает экран", async () => {
+test("согласия: из API только обязательные, неизвестный тип не ломает экран", async () => {
   install(() => json(200, [consent("pd_processing", true), consent("profile_publication"), consent("brand_new_type", true)]));
   mount("/consents");
   expect(await screen.findByTestId("consents-item-pd_processing")).toHaveTextContent("обязательно");

@@ -1,8 +1,8 @@
-"""Таблицы модуля `assessment` (assessment.md §3, blocks.md §4.2).
+"""Таблицы модуля `assessment`.
 
-`grades` — текущий подтверждённый грейд по профессии: пишет только блок 1 (E22-4 и
-`seed_grade`), блок 2 читает через `service.py`. `surveys`, `families`, `attempts`,
-`responses` — внутренние таблицы теста (E22-1).
+`grades` — текущий подтверждённый грейд по профессии: пишет только модуль теста (и `seed_grade`),
+остальные модули читают через `service.py`. `surveys`, `families`, `attempts`, `responses` —
+внутренние таблицы теста.
 """
 
 from __future__ import annotations
@@ -35,7 +35,7 @@ class Grade(Base):
     needs_confirmation: Mapped[bool] = mapped_column(default=False, server_default=sa.false())
     low_confidence: Mapped[bool] = mapped_column(default=False, server_default=sa.false())
     source: Mapped[str] = mapped_column(Text)  # test | seed
-    # standard | express — экспресс-грейд показывается меткой (ADR-025 п.7, E32-4a)
+    # standard | express — экспресс-грейд показывается меткой
     mode: Mapped[str] = mapped_column(Text, default="standard", server_default="standard")
     attempt_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("attempts.id", ondelete="SET NULL"), default=None
@@ -51,7 +51,7 @@ class Grade(Base):
 
 
 class Survey(Base):
-    """Опрос кандидата; история — новые строки (assessment.md §3)."""
+    """Опрос кандидата; история — новые строки."""
 
     __tablename__ = "surveys"
 
@@ -72,7 +72,7 @@ class Survey(Base):
 
 
 class FamilyRow(Base):
-    """Семейство заданий в банке: статус, сложность `b`, статистика (assessment.md §3, §7)."""
+    """Семейство заданий в банке: статус, сложность `b`, статистика."""
 
     __tablename__ = "families"
 
@@ -91,7 +91,7 @@ class FamilyRow(Base):
     key_status: Mapped[str] = mapped_column(Text, default="approved", server_default="approved")
     author_id: Mapped[uuid.UUID | None] = mapped_column(default=None)
     company_id: Mapped[uuid.UUID | None] = mapped_column(default=None)
-    competition_id: Mapped[str | None] = mapped_column(Text, default=None)  # source = fsp (E32-6)
+    competition_id: Mapped[str | None] = mapped_column(Text, default=None)  # source = fsp
     ai_solvable: Mapped[float] = mapped_column(sa.Float, default=0.0, server_default="0")
     stats: Mapped[dict] = mapped_column(sa.JSON, default=dict)
     version: Mapped[int] = mapped_column(default=1, server_default="1")
@@ -107,7 +107,7 @@ class FamilyRow(Base):
 
 
 class Attempt(Base):
-    """Попытка теста на профессию и заявленный грейд (assessment.md §3, §5)."""
+    """Попытка теста на профессию и заявленный грейд."""
 
     __tablename__ = "attempts"
 
@@ -159,7 +159,7 @@ class Response(Base):
 
 
 class RegularTask(Base):
-    """Регулярное задание компании кандидатам её категории (assessment.md §3, E25-1)."""
+    """Регулярное задание компании кандидатам её категории."""
 
     __tablename__ = "regular_tasks"
 
@@ -209,7 +209,7 @@ class TaskSubmission(Base):
 
 
 class FamilyOrder(Base):
-    """Заказ админа на LLM-задания (E43-9): навык × `kind` × уровень × `count` → черновики.
+    """Заказ админа на LLM-задания: навык × `kind` × уровень × `count` → черновики.
 
     `status`: `queued` (команда в outbox) → `running` (ml-worker взял) → `done` | `failed`.
     `created` — сколько черновиков легло в `families`, `rejected` — отбраковка по причинам.

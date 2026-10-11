@@ -17,7 +17,7 @@ export default function Register() {
   const { register, me, status } = useAuth();
   const state = useLocation().state as { from?: string; role?: SignupRole } | null;
   const from = state?.from;
-  // Приглашение в команду компании (E39-24) открывает регистрацию сразу с ролью работодателя.
+  // Приглашение в команду компании открывает регистрацию сразу с ролью работодателя.
   const [role, setRole] = useState<SignupRole>(
     state?.role === "employer" || new URLSearchParams(window.location.search).get("role") === "employer" ? "employer" : "candidate",
   );
@@ -27,7 +27,7 @@ export default function Register() {
   const [consent, setConsent] = useState(false);
   const [needConsent, setNeedConsent] = useState(false);
 
-  // Главный путь (E39-6): обязательное согласие — в самой форме, новый кандидат сразу идёт в поток
+  // Главный путь: обязательное согласие — в самой форме, новый кандидат сразу идёт в поток
   // «направление и навыки → грейд и ожидания → тест», без Главной и без экрана согласий.
   if (status === "authenticated" && me) {
     const next = from ?? (fresh && me.role === "candidate" ? PATH_START : undefined);

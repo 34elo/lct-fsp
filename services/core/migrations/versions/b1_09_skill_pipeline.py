@@ -1,4 +1,4 @@
-"""taxonomy: журнал решений конвейера навыков `skill_mentions` и черновики карточек (E16-4).
+"""taxonomy: журнал решений конвейера навыков `skill_mentions` и черновики карточек.
 
 Revision ID: b1_09
 Revises: b1_08

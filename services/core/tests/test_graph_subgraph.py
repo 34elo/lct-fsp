@@ -1,4 +1,4 @@
-"""E16-2: подграф доказательств `GET /candidates/me/graph` и анонимный `/candidates/{id}/graph`."""
+"""Подграф доказательств `GET /candidates/me/graph` и анонимный `/candidates/{id}/graph`."""
 
 import asyncio
 import uuid

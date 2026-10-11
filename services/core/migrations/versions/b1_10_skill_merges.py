@@ -1,4 +1,4 @@
-"""taxonomy: журнал слияний навыков `skill_merges` (E16-5).
+"""taxonomy: журнал слияний навыков `skill_merges`.
 
 Revision ID: b1_10
 Revises: b1_09

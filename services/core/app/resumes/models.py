@@ -13,7 +13,7 @@ from app.identity.models import utcnow
 
 
 class Resume(Base):
-    """Загруженное резюме (data-model.md §3.2). `parsed` — ParsedResume из contracts."""
+    """Загруженное резюме. `parsed` — ParsedResume из contracts."""
 
     __tablename__ = "resumes"
     __table_args__ = (
@@ -41,7 +41,7 @@ class Resume(Base):
 
 
 class Experience(Base):
-    """Место работы (data-model.md §3.2); `skill_ids` — строки, как `top_evidence`."""
+    """Место работы; `skill_ids` — строки, как `top_evidence`."""
 
     __tablename__ = "experience"
 

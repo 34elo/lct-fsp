@@ -53,7 +53,7 @@ function mount(path: string) {
   );
 }
 
-describe("вау-экраны E34-3", () => {
+describe("демо-экраны", () => {
   it("два мира: две компании и общая сложность", async () => {
     mount("/admin/demo/two-worlds");
     expect(await screen.findByTestId("demo-world-ecommerce")).toHaveTextContent("Корзинка");

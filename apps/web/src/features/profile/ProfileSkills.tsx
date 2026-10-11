@@ -52,7 +52,7 @@ function SkillRow({ s, hidden, busy, onToggle }: { s: SkillWithTrust; hidden: bo
 const STATES: SkillState[] = ["all", "confirmed", "claimed"];
 
 /**
- * Вкладка «Навыки» профиля (E39-15): поиск, фильтры (тип, доверие, заявлено/подтверждено), скрытие навыка
+ * Вкладка «Навыки» профиля: поиск, фильтры (тип, доверие, заявлено/подтверждено), скрытие навыка
  * от компаний (`hidden_skills`), по умолчанию первые 15 сильнейших. Блоков про грейд здесь нет — они в «Обзоре».
  */
 export function SkillsTab({ p }: { p: CandidateProfile }) {

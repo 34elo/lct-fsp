@@ -33,7 +33,7 @@ function renderLanding() {
 }
 
 describe("Landing", () => {
-  it("«Демо для жюри» и вход жюри скрыты без VITE_JURY_MODE и видны с ним (E32-4b, T6)", () => {
+  it("«Демо для жюри» и вход жюри скрыты без VITE_JURY_MODE и видны с ним (T6)", () => {
     const { unmount } = renderLanding();
     expect(screen.queryByTestId("jury-entry")).toBeNull();
     expect(screen.queryByRole("link", { name: "Демо для жюри" })).toBeNull();
@@ -146,7 +146,7 @@ function Where() {
   return <p data-testid="where">{`${loc.pathname}|${role}`}</p>;
 }
 
-describe("Переходы лендинга (E39-34)", () => {
+describe("Переходы лендинга", () => {
   function go(name: string) {
     render(
       <Providers client={makeQueryClient()}>
@@ -183,7 +183,7 @@ describe("Переходы лендинга (E39-34)", () => {
 });
 
 describe("JuryPanel", () => {
-  it("рисует 5 шагов только в режиме жюри (E34-2)", () => {
+  it("рисует 5 шагов только в режиме жюри", () => {
     const ui = <MemoryRouter initialEntries={["/me"]}><JuryPanel /></MemoryRouter>;
     const { unmount } = render(ui);
     expect(screen.queryByTestId("jury-panel")).toBeNull();
@@ -194,7 +194,7 @@ describe("JuryPanel", () => {
   });
 });
 
-describe("Лендинг на корневом домене (E41-7)", () => {
+describe("Лендинг на корневом домене", () => {
   it("кнопки ведут на кабинет, когда VITE_APP_URL указывает на другой origin", () => {
     vi.stubEnv("VITE_APP_URL", "https://dashboard.fsp.example");
     renderLanding();

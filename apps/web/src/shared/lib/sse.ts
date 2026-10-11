@@ -1,6 +1,6 @@
 import type { QueryClient } from "@tanstack/react-query";
 
-/** Типы SSE-событий из api.md §4. */
+/** Типы SSE-событий потока `/events/stream`. */
 export const SSE_EVENTS = [
   "job.progress",
   "resume.parsed",
@@ -83,7 +83,7 @@ export function createEventStream(opts: EventStreamOptions) {
   };
 }
 
-/** Инвалидация кешей по событиям (frontend.md §4). Ключи уточнятся с генерацией клиента. */
+/** Инвалидация кешей по событиям. Ключи уточнятся с генерацией клиента. */
 export function invalidateFor(qc: QueryClient, m: SseMessage) {
   const d = (m.data ?? {}) as { offer_id?: string; vacancy_id?: string };
   switch (m.type) {

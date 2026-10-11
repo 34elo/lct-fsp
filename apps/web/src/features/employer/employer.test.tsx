@@ -90,7 +90,7 @@ test("свободный поиск: галочка формата попада�
   await vi.waitFor(() => expect(bodies.at(-1)).toMatchObject({ filters: { formats: ["remote"] }, vacancy_id: null }));
 });
 
-test("E2: текст превращается в чипсы и фильтры, крестик убирает условие", async () => {
+test("текст превращается в чипсы и фильтры, крестик убирает условие", async () => {
   mount("/employer/search");
   await screen.findByRole("article", { name: "Candidate #1" });
   fireEvent.change(screen.getByRole("searchbox", { name: "Кого ищете" }), { target: { value: "бэкендер на Python, highload, удалёнка, до 220 тыс" } });
@@ -152,7 +152,7 @@ test("карточка кандидата: обе темы, навыки без 
   expect(screen.getAllByText(/Кубок · всероссийский этап/)).toHaveLength(1);
 });
 
-test("E4: интерес кандидата, переключатель сортировки и кнопка «Приглашение»", async () => {
+test("интерес кандидата, переключатель сортировки и кнопка «Приглашение»", async () => {
   const f = fetch as unknown as ReturnType<typeof vi.fn>;
   const prev = f.getMockImplementation()!;
   f.mockImplementation(async (url: string, init?: RequestInit) => {
@@ -178,7 +178,7 @@ test("E4: интерес кандидата, переключатель сорт
   await vi.waitFor(() => expect(feedback.at(-1)).toMatchObject({ candidate_pseudo_id: "p1", event: "shortlist" }));
 });
 
-test("E3: список вакансий строками, из строки — в подборку", async () => {
+test("список вакансий строками, из строки — в подборку", async () => {
   mount("/employer/vacancies");
   const list = await screen.findByRole("list", { name: "Вакансии" });
   expect(within(list).getByText("Backend (Python)")).toBeInTheDocument();

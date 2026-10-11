@@ -1,4 +1,4 @@
-"""`GET /admin/metrics` — онлайн-метрики v2 (E31-4). Только роль `fsp_admin`, только агрегаты."""
+"""`GET /admin/metrics` — онлайн-метрики v2. Только роль `fsp_admin`, только агрегаты."""
 
 from __future__ import annotations
 

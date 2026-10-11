@@ -1,4 +1,4 @@
-"""Сила профиля внутри категории и итоговый `rank` (assessment.md §9, E23-2). Без БД.
+"""Сила профиля внутри категории и итоговый `rank`. Без БД.
 
 `strength = (0.5·T + 0.2·F + 0.15·S + 0.1·R + 0.05·C) · (I < 0.6 ? 0.8 : 1)`,
 `rank = 0.6·match + 0.4·strength`. Веса и пороги — `data/scoring.yaml`, секция `strength`.
@@ -103,7 +103,7 @@ def _clip(x: float) -> float:
 
 
 def recency(days: float | None, cfg: StrengthConfig) -> float:
-    """R — свежесть теста: `exp(−дней / recency_days)`; нет даты теста — 0 (assessment.md §9)."""
+    """R — свежесть теста: `exp(−дней / recency_days)`; нет даты теста — 0."""
     if days is None:
         return 0.0
     return math.exp(-max(0.0, days) / cfg.recency_days)
@@ -117,7 +117,7 @@ def band_position(theta: float, cut_lo: float, cut_hi: float) -> float:
 
 def strength(inp: StrengthInput, cfg: StrengthConfig) -> StrengthResult:
     """Сила профиля внутри категории: взвешенная сумма T, F, S, R, C, при честности `I` ниже порога
-    — ×`integrity_mult` (assessment.md §9).
+    — ×`integrity_mult`.
     """
     terms = {
         "T": _clip(inp.band_position),
@@ -133,9 +133,7 @@ def strength(inp: StrengthInput, cfg: StrengthConfig) -> StrengthResult:
 
 
 def rank(match: float, strength_value: float, cfg: StrengthConfig) -> float:
-    """Итоговый `rank = rank_match·match + rank_strength·strength` для выдачи работодателю
-    (assessment.md §9).
-    """
+    """Итоговый `rank = rank_match·match + rank_strength·strength` для выдачи работодателю."""
     return round(cfg.rank_match * match + cfg.rank_strength * strength_value, 6)
 
 
@@ -174,7 +172,7 @@ def completeness(cand: Any, skills_count: int = 0) -> float:
     return filled / (len(COMPLETENESS_FIELDS) + 1)
 
 
-# --- справедливость (metrics.md §9: «без ФСП / с ФСП» при равном θ) ------------------------
+# --- справедливость («без ФСП / с ФСП» при равном θ) ------------------------
 
 
 def impact_ratio(items: Iterable[tuple[str, bool]]) -> dict[str, float]:

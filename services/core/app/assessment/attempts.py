@@ -1,11 +1,11 @@
-"""Попытка теста: банк семейств, выдача заданий, приём ответов (assessment.md §3–6).
+"""Попытка теста: банк семейств, выдача заданий, приём ответов.
 
-- Выбор задания (E22-3, §6): секция с наибольшим дефицитом → фильтры банка → топ-3 по счёту
+- Выбор задания: секция с наибольшим дефицитом → фильтры банка → топ-3 по счёту
   у порога грейда этапа (`engine.py`, `selection.py`); пилотные слоты — скрытые позиции.
-- Остановка (E22-3, §5): SPRT после каждого оцениваемого ответа (`sprt.py`); прошёл быстро и
+- Остановка: SPRT после каждого оцениваемого ответа (`sprt.py`); прошёл быстро и
   близко к следующему грейду → бонусный этап в той же попытке (`stage = bonus`). Прошёл бонус —
-  приглашение на отдельный тест следующего грейда (ADR-025 п.2, `start_invited`), грейд не меняется.
-- Завершение: θ/SE по EAP и калибровка `b` (E22-2, `psychometrics_db`). Грейды и события — E22-4.
+  приглашение на отдельный тест следующего грейда (`start_invited`), грейд не меняется.
+- Завершение: θ/SE по EAP и калибровка `b` (`psychometrics_db`). Грейды и события.
 
 Ключ на клиент не уходит: в `responses` лежат только `(family_id, seed)`, задание пересобирается
 на сервере при выдаче и при проверке.
@@ -45,7 +45,7 @@ def family_id(slug: str) -> uuid.UUID:
 
 
 def item_seed(candidate_id: uuid.UUID, attempt_id: uuid.UUID, fam_id: uuid.UUID) -> int:
-    """seed = hash(candidate_id, attempt_id, family_id) (assessment.md §3), 63 бита."""
+    """seed = hash(candidate_id, attempt_id, family_id), 63 бита."""
     h = hashlib.sha256(f"{candidate_id}:{attempt_id}:{fam_id}".encode()).digest()
     return int.from_bytes(h[:8], "big") & (2**63 - 1)
 
@@ -59,7 +59,7 @@ async def sync_code_families(session: AsyncSession, cfg: AssessmentConfig) -> No
     """Реестр кодовых семейств → таблица `families` (идемпотентно).
 
     Новое семейство: `b` — априорная по уровню; статус `active` только у стартового банка (в таблице
-    ещё нет кодовых семейств), позже добавленные идут в `pilot` и ждут допуска админом (E22-9).
+    ещё нет кодовых семейств), позже добавленные идут в `pilot` и ждут допуска админом.
     У существующего обновляются только описательные поля; `b`, `n`, `status`, `stats` принадлежат
     калибровке и админу.
     """
@@ -110,7 +110,7 @@ def _skills_of(prof) -> tuple[dict[str, float], dict[str, str]]:
 
 
 async def _profession(session: AsyncSession, profession: str, *, include_hidden: bool = False):
-    """Профессия теста. Новый тест — только по активной (ADR-027 п.1); идущий и по приглашению
+    """Профессия теста. Новый тест — только по активной; идущий и по приглашению
     из него — и по скрытой: начатое по ней доводится до конца."""
     profs = await taxonomy.list_professions(session, include_hidden=include_hidden)
     return next((p for p in profs if p.slug == profession), None)
@@ -127,9 +127,9 @@ async def create_attempt(
     mode: AttemptMode = "standard",
     skip_cooldown: bool = False,
 ) -> Attempt:
-    """Новая попытка. `skip_cooldown` — демо-аккаунт в `DEMO_MODE` (E35-8): кулдауны не проверяются.
-    `invited_by` — попытка, чей бонусный этап пригласил на этот тест
-    (ADR-025 п.2): такой тест идёт без кулдаунов. `mode = express` — экспресс для жюри (E32-4a)."""
+    """Новая попытка. `skip_cooldown` — демо-аккаунт в `DEMO_MODE`: кулдауны не проверяются.
+    `invited_by` — попытка, чей бонусный этап пригласил на этот тест: такой тест идёт без
+    кулдаунов. `mode = express` — экспресс для жюри."""
     if mode == "express" and not cfg.express_enabled:
         raise ProblemError(422, "express_disabled", "Экспресс-режим выключен")
     cfg = cfg.for_mode(mode)
@@ -212,10 +212,10 @@ async def _family(session: AsyncSession, fam_id: uuid.UUID) -> Family:
 
 
 def family_of(row: FamilyRow) -> Family | None:
-    """Кодовое семейство из реестра, спецификация (конструктор E30-1, LLM E26-4) или майнинг."""
+    """Кодовое семейство из реестра, спецификация (конструктор, LLM) или майнинг."""
     if row.source == "code":
         return registry.get(row.slug)
-    if row.source in ("spec", "llm", "fsp") and row.spec:  # llm — E26-4, fsp — E32-6
+    if row.source in ("spec", "llm", "fsp") and row.spec:  # llm, fsp
         return SpecFamily.from_row(row)
     if row.source == "mutation" and row.spec:
         return MinedFamily.from_row(row)
@@ -241,7 +241,7 @@ def _stage_scored(att: Attempt, issued: list[Response]) -> list[Response]:
 async def _finish(session: AsyncSession, att: Attempt, status: str, cfg: AssessmentConfig) -> None:
     att.status = status
     att.finished_at = datetime.now(UTC)
-    await telemetry.assess_attempt(session, att, cfg)  # E24-1: до калибровки `b`
+    await telemetry.assess_attempt(session, att, cfg)  # до калибровки `b`
     await finalize_attempt(session, att, cfg)
     await grading.on_finished(session, att, cfg)
 
@@ -291,7 +291,7 @@ async def _conclude(
 def invitation(
     bonus: dict[str, Any], result: str, cfg: AssessmentConfig, now: datetime | None = None
 ) -> dict[str, Any]:
-    """Поля плана по итогу бонуса: прошёл — приглашение на тест следующего грейда (ADR-025 п.2)."""
+    """Поля плана по итогу бонуса: прошёл — приглашение на тест следующего грейда."""
     if result != "passed":
         return {"invited_grade": None, "invite_expires_at": None}
     until = (now or datetime.now(UTC)) + timedelta(days=cfg.invite_days)
@@ -301,7 +301,7 @@ def invitation(
 async def start_invited(
     session: AsyncSession, candidate_id: uuid.UUID, attempt_id: uuid.UUID, cfg: AssessmentConfig
 ) -> Attempt:
-    """Начать тест следующего грейда по приглашению бонусного этапа (ADR-025 п.2).
+    """Начать тест следующего грейда по приглашению бонусного этапа.
 
     Без кулдаунов; приглашение действует `invite_days` дней и используется один раз: повтор
     возвращает уже начатую попытку. Грейд меняет только пройденный приглашённый тест.

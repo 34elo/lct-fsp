@@ -1,4 +1,4 @@
-"""E22-1: каркас assessment — семейства, мир, пересборка, попытка через API (assessment.md §3–4)."""
+"""Каркас assessment — семейства, мир, пересборка, попытка через API."""
 
 import uuid
 from pathlib import Path
@@ -138,7 +138,7 @@ async def test_attempt_flow_through_api(api, factory, taxonomy_loaded):
         assert seen <= 20
 
     final = api.get(f"/assessment/attempts/{aid}", headers=h).json()
-    # длину задаёт SPRT (E22-3): минимум 6, если банк позволяет; иначе решение по EAP
+    # длину задаёт SPRT: минимум 6, если банк позволяет; иначе решение по EAP
     assert final["status"] == "passed" and final["answered"] == seen
     assert seen >= att["target"] or final["low_confidence"]
     assert final["finished_at"] is not None
@@ -167,7 +167,7 @@ async def test_repeat_answer_is_idempotent(api, factory, taxonomy_loaded):
 
 
 async def test_empty_answer_moves_to_new_item(api, factory, taxonomy_loaded):
-    """E35-7a: «Не знаю» (answer=null) не оставляет то же задание: следующее — другое."""
+    """«Не знаю» (answer=null) не оставляет то же задание: следующее — другое."""
     h = register(api)
     aid = _start(api, h).json()["id"]
     url = f"/assessment/attempts/{aid}/answers"
@@ -235,7 +235,7 @@ async def test_foreign_attempt_is_404(api, factory, taxonomy_loaded):
 async def test_attempt_checks(api, taxonomy_loaded, monkeypatch):
     h = register(api)
     assert _start(api, h, profession="ghost_role").json()["code"] == "unknown_profession"
-    # все профессии открыты (E39-6): тест по профессии с тонким банком («бета») начинается
+    # все профессии открыты: тест по профессии с тонким банком («бета») начинается
     other = register(api)
     beta = _start(api, other, profession="mobile")
     assert beta.status_code == 201, beta.text

@@ -105,7 +105,7 @@ test("вход без согласия ведёт на экран согласи
   expect(await screen.findByRole("heading", { name: "Согласия" })).toBeInTheDocument();
   const submit = await screen.findByRole("button", { name: "Продолжить" });
   expect(submit).toBeDisabled();
-  // только обязательные (E39-6): необязательные — в настройках, выключены
+  // только обязательные: необязательные — в настройках, выключены
   expect(screen.getAllByRole("checkbox")).toHaveLength(1);
   expect(screen.queryByTestId("consents-item-fsp_data")).toBeNull();
 
@@ -145,7 +145,7 @@ test("регистрация отправляет выбранную роль, �
   expect(screen.queryByRole("heading", { name: "Согласия" })).toBeNull();
 });
 
-test("новый кандидат (E39-6): согласие в форме регистрации → сразу шаг 1 потока до теста", async () => {
+test("новый кандидат: согласие в форме регистрации → сразу шаг 1 потока до теста", async () => {
   installFetch();
   mount("/register");
   fireEvent.change(await screen.findByLabelText("Почта"), { target: { value: "new@b.ru" } });
@@ -202,7 +202,7 @@ test("аноним на /consents уходит на вход", async () => {
   expect(await screen.findByRole("heading", { name: "Вход" })).toBeInTheDocument();
 });
 
-test("регистрация (E35-7a): сбой чтения профиля после неё не даёт «Неверная почта или пароль»", async () => {
+test("регистрация: сбой чтения профиля после неё не даёт «Неверная почта или пароль»", async () => {
   installFetch({ meFailsOnce: true });
   mount("/register");
   fireEvent.change(await screen.findByLabelText("Почта"), { target: { value: "new@b.ru" } });

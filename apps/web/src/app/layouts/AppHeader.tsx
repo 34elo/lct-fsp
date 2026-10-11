@@ -30,7 +30,7 @@ export function ThemeToggle() {
 
 const THEME_HINT: Record<ThemeMode, string> = { light: "светлая", dark: "тёмная" };
 
-/** Меню аватара v2 (`.menu`): тема и выход. «Настройки» — у всех ролей (`/settings`, E39-8). */
+/** Меню аватара v2 (`.menu`): тема и выход. «Настройки» — у всех ролей (`/settings`). */
 function UserMenu() {
   const { me, status, logout } = useAuth();
   const { mode, setMode } = useTheme();

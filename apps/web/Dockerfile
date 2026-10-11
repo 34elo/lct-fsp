@@ -1,5 +1,5 @@
 # Сборка SPA (Vite) → статика в caddy. API-клиент ходит на относительный /api/v1 через gateway.
-# Контекст — корень репозитория: pnpm-workspace (apps/web + packages/ui, ADR-050).
+# Контекст — корень репозитория: pnpm-workspace (apps/web + packages/ui).
 FROM node:22-alpine AS build
 RUN corepack enable
 WORKDIR /repo
@@ -12,7 +12,7 @@ COPY apps/web/ apps/web/
 # Режим жюри вшивается при сборке (import.meta.env), см. features/landing/jury.ts
 ARG VITE_JURY_MODE=false
 ENV VITE_JURY_MODE=$VITE_JURY_MODE
-# Адрес кабинета для кнопок лендинга на корневом домене (E41-7); пусто — всё на одном origin
+# Адрес кабинета для кнопок лендинга на корневом домене; пусто — всё на одном origin
 ARG VITE_APP_URL=
 ENV VITE_APP_URL=$VITE_APP_URL
 RUN pnpm --filter fsp-web exec vite build

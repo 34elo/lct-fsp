@@ -1,9 +1,8 @@
-"""Обработчики `core.handlers`: `offer.*`, `skills.profile.updated` → уведомления (E8-3).
+"""Обработчики `core.handlers`: `offer.*`, `skills.profile.updated` → уведомления.
 
-Цепочка (messaging.md §3): запись в `notifications` + `ui.user.<id>` + команда `notify.telegram`.
+Цепочка: запись в `notifications` + `ui.user.<id>` + команда `notify.telegram`.
 Идемпотентность — inbox; команда боту идёт через outbox в той же транзакции.
-
-E9-6: обработчики для FSP и регулярных заданий; E25-1 добавит регулярные задания.
+Отдельные обработчики — для результатов ФСП и регулярных заданий.
 """
 
 from __future__ import annotations
@@ -51,7 +50,7 @@ OFFER_EVENTS = (
     "offer.message",
     "offer.status_changed",
 )
-# E33-1 (ADR-026): интерес до приглашения; payload `OfferInterestEvent` читается как `OfferEvent`
+# интерес до приглашения; payload `OfferInterestEvent` читается как `OfferEvent`
 INTEREST_EVENTS = (
     "offer.interest.sent",
     "offer.interest.opened",
@@ -102,7 +101,7 @@ async def offer_card_data(session: AsyncSession, offer: Offer) -> dict:
         "offer_id": str(offer.id),
         "company_name": company.name if company else None,
         "company_responsibility": company.responsibility_score if company else None,
-        # приглашение без вакансии (ADR-022) показывает своё название
+        # приглашение без вакансии показывает своё название
         "vacancy_title": vacancy.title if vacancy else offer.title,
         "formats": list(vacancy.formats) if vacancy else [],
         "employment_type": vacancy.employment_type if vacancy else None,
@@ -153,7 +152,7 @@ async def _to_company(
     vacancy = await vacancies.get(session, ev.vacancy_id) if ev.vacancy_id else None
     if vacancy is not None:
         vacancy_title = vacancy.title
-    else:  # приглашение без вакансии (ADR-022): его название
+    else:  # приглашение без вакансии: его название
         offer = await offers.get(session, ev.offer_id)
         vacancy_title = offer.title if offer else None
     data = {
@@ -336,7 +335,7 @@ def register(
     @idempotent(session_factory, "notifications.profile")
     async def on_profile(envelope: Envelope, session: AsyncSession) -> None:
         ev = SkillsProfileUpdated.model_validate(envelope.payload)
-        if not _significant(ev):  # telegram.md §5: только при значимом diff
+        if not _significant(ev):  # только при значимом diff
             return
         diff = ev.diff.model_dump(mode="json")
         out: list[UiMessage] = []
@@ -353,7 +352,6 @@ def register(
         )  # fmt: skip
         await service.push(ui_publish, out)
 
-    # >>> block2 (E9-6)
     @consumers["core.handlers"].on("fsp.results.imported")
     @idempotent(session_factory, "notifications.fsp_imported")
     async def on_fsp_imported(envelope: Envelope, session: AsyncSession) -> None:
@@ -373,7 +371,7 @@ def register(
     async def on_regular_task(envelope: Envelope, session: AsyncSession) -> None:
         ev = RegularTaskPublished.model_validate(envelope.payload)
         out: list[UiMessage] = []
-        # человеку — название профессии, не slug (публичное API Б1, blocks.md §4.3)
+        # человеку — название профессии, не slug
         profs = await taxonomy.list_professions(session, include_hidden=True)
         titles = {p.slug: p.title for p in profs}
         title = titles.get(ev.profession, ev.profession)
@@ -387,7 +385,7 @@ def register(
             )  # fmt: skip
         await service.push(ui_publish, out)
 
-    # E33-4: новый подходящий кандидат → подписка компании (SSE + бот, дайджест не чаще раза в час)
+    # новый подходящий кандидат → подписка компании (SSE + бот, дайджест не чаще раза в час)
     @consumers["core.handlers"].on("candidate.category.changed")
     @idempotent(session_factory, "notifications.category_subscription")
     async def on_category_changed(envelope: Envelope, session: AsyncSession) -> None:
@@ -397,5 +395,3 @@ def register(
             return
         cfg = needs_cfg.NeedsConfig.load()
         await service.push(ui_publish, await subscriptions.flush_due(session, cfg, only=touched))
-
-    # <<< block2

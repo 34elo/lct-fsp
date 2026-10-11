@@ -1,4 +1,4 @@
-"""core.analytics: доменные события → analytics_events (E18-1)."""
+"""core.analytics: доменные события → analytics_events."""
 
 import asyncio
 import json

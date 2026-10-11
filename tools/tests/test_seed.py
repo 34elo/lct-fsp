@@ -243,7 +243,7 @@ async def test_seed_core_end_to_end_and_idempotent(factory):
     assert await counts() == first  # повторный запуск ничего не меняет
 
 
-# ------------------------------------------------------------------ seed-грейды блока 1
+# ------------------------------------------------------------------ seed-грейды
 def test_grades_plan_distribution_and_coverage(plan):
     from collections import Counter
 
@@ -260,7 +260,7 @@ def test_grades_plan_distribution_and_coverage(plan):
     assert flags == round(n * 0.05)
     assert g["hero-anya"][0]["grade"] == "junior" and g["hero-dima"][0]["grade"] == "middle"
     assert plan_grades(build_plan(seed=8, anchor=ANCHOR)) != g
-    # E43-6: есть кандидаты с двумя разными направлениями
+    # есть кандидаты с двумя разными направлениями
     dual = [es for es in g.values() if len({e["profession"] for e in es}) >= 2]
     assert dual and all(len({e["profession"] for e in es}) == len(es) for es in g.values())
 
@@ -278,7 +278,7 @@ async def test_seed_grades_core_and_idempotent(factory):
     from tools.seed.loader import Seeder
 
     seeder = Seeder(plan, factory, password="demo-pass-1234", pseudo_secret="t", analytics_salt="t")
-    stats = await seeder.run()  # E23-1: грейды пишутся до подбора, иначе выдача пуста
+    stats = await seeder.run()  # грейды пишутся до подбора, иначе выдача пуста
     assert stats["grades"] >= 42 and stats["matched_vacancies"] > 0
     async with session_scope(factory) as s:
         counts = await assessment.category_counts(s)
@@ -298,7 +298,7 @@ async def test_seed_grades_core_and_idempotent(factory):
 
 
 def test_jury_accounts_in_config():
-    """E32-4b: демо-аккаунты жюри заданы в config.yaml и не пересекаются с планом витрины."""
+    """Демо-аккаунты жюри заданы в config.yaml и не пересекаются с планом витрины."""
     from tools.seed.jury import jury_emails
 
     emails = jury_emails()
@@ -309,7 +309,7 @@ def test_jury_accounts_in_config():
 
 
 async def test_seed_jury_idempotent(factory):
-    """E32-4b: аккаунты жюри создаются один раз, кандидат без грейда, компания проверена."""
+    """Аккаунты жюри создаются один раз, кандидат без грейда, компания проверена."""
     from app.assessment import service as assessment
     from app.companies import service as companies
     from app.identity import service as identity
@@ -337,7 +337,7 @@ async def test_seed_jury_idempotent(factory):
 
 
 def test_demo_v2_data_consistent(plan):
-    """E34-1: герои v2 покрывают сценарии, ссылки в данных замкнуты, email уникальны."""
+    """Герои v2 покрывают сценарии, ссылки в данных замкнуты, email уникальны."""
     from tools.seed.demo_v2 import load_data, plan_attempts
     from tools.seed.plan import _hero_candidate
 
@@ -372,7 +372,7 @@ def test_demo_v2_data_consistent(plan):
 
 
 async def test_fsp_registry_demo_heroes_and_jury(plan, tmp_path):
-    """E39-28: герои и жюри-кандидат в реестре с email своих аккаунтов; seed идемпотентен."""
+    """Герои и жюри-кандидат в реестре с email своих аккаунтов; seed идемпотентен."""
     from fsp_connector.models import metadata as fspc_metadata
     from fsp_connector.registry import normalize_email
     from fsp_platform.db import make_engine, make_session_factory
@@ -410,7 +410,7 @@ async def test_fsp_registry_demo_heroes_and_jury(plan, tmp_path):
 
 
 def test_families_demo_covers_every_cell():
-    """E39-31: по заданию на каждую ячейку «профессия × грейд», каждое собирается и имеет ответ."""
+    """По заданию на каждую ячейку «профессия × грейд», каждое собирается и имеет ответ."""
     from app.assessment import admission
     from app.assessment.families.spec import FamilySpec, SpecFamily
 
@@ -445,7 +445,7 @@ async def test_seed_families_idempotent(factory):
 
 
 async def test_seed_profession_suggestion_idempotent(factory):
-    """E41-17: одно демо-предложение «Разработчик 1С», не покрытое профессиями."""
+    """Одно демо-предложение «Разработчик 1С», не покрытое профессиями."""
     from app.taxonomy import profession_suggest
 
     from tools.seed.professions import seed_profession_suggestion

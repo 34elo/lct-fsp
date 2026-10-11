@@ -1,4 +1,4 @@
-"""analytics_events с месячными партициями (metrics.md §2.4)
+"""analytics_events с месячными партициями
 
 Revision ID: 0022
 Revises: 0021

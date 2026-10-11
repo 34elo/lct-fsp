@@ -1,4 +1,4 @@
-"""Uplift (matching.md §6): релевантные вакансии, симуляция, комбинация, способы подтверждения."""
+"""Uplift: релевантные вакансии, симуляция, комбинация, способы подтверждения."""
 
 import uuid
 from datetime import date, timedelta
@@ -82,7 +82,7 @@ def test_simulation_gain_combo_and_median():
 
 
 def test_prediction_equals_actual_after_confirmation():
-    """Критерий E17-6: подтвердил навык — число подходящих вакансий ровно предсказанное."""
+    """Подтвердил навык — число подходящих вакансий ровно предсказанное."""
     vacs, cand = _world(), _cand()
     res = _run(vacs, cand)
     for g in res.items:

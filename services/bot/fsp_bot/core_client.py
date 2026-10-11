@@ -1,4 +1,4 @@
-"""Клиент core `/internal/tg/*` (api.md §2.10). Бизнес-логики в боте нет: только вызовы."""
+"""Клиент core `/internal/tg/*`. Бизнес-логики в боте нет: только вызовы."""
 
 from __future__ import annotations
 
@@ -137,7 +137,7 @@ class CoreClient:
         body = {"tg_user_id": tg_user_id, "reason": reason}
         return await self.request("POST", f"/internal/tg/offers/{offer_id}/decline", json=body)
 
-    # --- тест и регулярные задания: API блока 1 от имени кандидата (E25-3) ----------------
+    # --- тест и регулярные задания: API от имени кандидата ------------------------
 
     async def _user_token(self, tg_user_id: int) -> str:
         cached = self._tokens.get(tg_user_id)

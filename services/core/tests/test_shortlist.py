@@ -1,4 +1,4 @@
-"""Шорт-лист: уточнение фильтров без потери подборки (E23-5)."""
+"""Шорт-лист: уточнение фильтров без потери подборки."""
 
 import pytest
 import test_search as ts
@@ -58,7 +58,7 @@ def _get_candidates(c, h, profession, grade, need_id=None):
 
 
 def test_shortlist_is_shown_in_candidates(c, market_with_shortlist):
-    """Флаг is_shortlisted присутствует в выдаче кандидатов (E23-5 критерий)."""
+    """Флаг is_shortlisted присутствует в выдаче кандидатов."""
     need_resp = _create_need(
         c, market_with_shortlist, filters={"skills_must": [{"slug": "python"}]}
     )
@@ -147,7 +147,7 @@ def test_shortlist_ownership_check(c, market_with_shortlist):
 
 
 def test_shortlist_all_merges_needs_without_repeats(c, market_with_shortlist):
-    """GET /shortlist собирает отмеченных из всех потребностей компании без повторов (E39-23)."""
+    """GET /shortlist собирает отмеченных из всех потребностей компании без повторов."""
     h = market_with_shortlist
     assert c.get("/shortlist", headers=_hdr(h)).json() == {"items": []}
     n1 = _create_need(c, h, filters={"skills_must": [{"slug": "python"}]}).json()["id"]

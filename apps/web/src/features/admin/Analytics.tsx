@@ -53,7 +53,7 @@ function CounterCard({ c, days }: { c: Counter; days: DayPoint[] }) {
   );
 }
 
-/** `/federation/analytics` — «Аналитика» вместо «Качества» (E41-15): счётчики и динамика по дням. */
+/** `/federation/analytics` — «Аналитика» вместо «Качества»: счётчики и динамика по дням. */
 export default function Analytics() {
   const [days, setDays] = useState(30);
   const q = useGetDashboardAdminDashboardGet({ days }, { query: { retry: false } });

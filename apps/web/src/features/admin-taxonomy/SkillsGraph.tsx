@@ -11,7 +11,7 @@ import { SK } from "./text";
 
 type Target = "queue" | "provisional";
 
-/** Вкладка «Карта связей»: граф справочника для просмотра и что ждёт решения (E39-33). */
+/** Вкладка «Карта связей»: граф справочника для просмотра и что ждёт решения. */
 export function GraphTab({ onOpen }: { onOpen: (t: Target) => void }) {
   const g = useGetGraphAdminSkillsGraphGet({ query: { retry: false } });
   const queue = useGetQueueAdminSkillsQueueGet({ query: { retry: false } });

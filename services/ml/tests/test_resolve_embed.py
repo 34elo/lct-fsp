@@ -87,7 +87,7 @@ def test_embeddings_limit_and_fallback():
     r = c.post("/v1/embeddings", json={"texts": ["x"] * 129, "kind": "passage"})
     assert r.status_code == 422
     r = _client(fake_mode=False).post("/v1/embeddings", json={"texts": ["x"], "kind": "query"})
-    assert r.status_code == 200  # запасные векторы вместо 503 (E42-2)
+    assert r.status_code == 200  # запасные векторы вместо 503
 
 
 class _Stub:

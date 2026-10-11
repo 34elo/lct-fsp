@@ -1,4 +1,4 @@
-# Черновик банка (E2-5): вопросы не проверены вторым человеком. После проверки status: draft -> approved.
+# Черновик банка: вопросы не проверены вторым человеком. После проверки status: draft -> approved.
 skill: linux
 status: draft
 source: llm_draft

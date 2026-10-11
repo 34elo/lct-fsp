@@ -1,4 +1,4 @@
-"""Похожие кандидаты (matching.md §1, §11): пересечение навыков с весом по доверию + вектор.
+"""Похожие кандидаты: пересечение навыков с весом по доверию + вектор.
 
 `sim = W_SKILLS · J + W_VECTOR · cos⁺`, где `J = Σ min(c_a, c_b) / Σ max(c_a, c_b)` по навыкам
 без `claimed_only`, `cos⁺` — косинус эмбеддингов, обрезанный снизу нулём. Нет вектора у одной из
@@ -50,7 +50,7 @@ def similarity(
     vb: Sequence[float] | None,
 ) -> float:
     """Похожесть кандидатов: `W_SKILLS·J + W_VECTOR·cos⁺`; без вектора у одной из сторон — только
-    `J` (matching.md §11).
+    `J`.
     """
     j = skill_overlap(a, b)
     if va is None or vb is None or len(va) == 0 or len(vb) == 0 or len(va) != len(vb):

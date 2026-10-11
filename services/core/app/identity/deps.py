@@ -39,7 +39,7 @@ async def _user_by_token(request: Request, session: AsyncSession) -> User:
 async def get_user_pending_password(
     request: Request, session: AsyncSession = Depends(get_session)
 ) -> User:
-    """Вошедший пользователь, в том числе ещё не сменивший временный пароль (E41-16).
+    """Вошедший пользователь, в том числе ещё не сменивший временный пароль.
 
     Только для `/me` и `/auth/password/initial`; остальные эндпоинты — `get_current_user`.
     """

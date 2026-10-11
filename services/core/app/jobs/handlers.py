@@ -1,4 +1,4 @@
-"""Cron-команды `core.jobs` (messaging.md §4): истечение офферов, сброс поиска, рейтинг компаний.
+"""Cron-команды `core.jobs`: истечение офферов, сброс поиска, рейтинг компаний.
 
 Все обработчики вызываются раз в час (или чаще для offers.expire) из scheduler.
 Идемпотентность не требуется: это cron, повтор означает просто повторный расчёт.
@@ -24,7 +24,7 @@ log = structlog.get_logger()
 
 
 async def _expire_offers(session: AsyncSession) -> None:
-    """Переведи `sent|viewed` офферы с истёкшим сроком в статус `expired` (E8-5)."""
+    """Переведи `sent|viewed` офферы с истёкшим сроком в статус `expired`."""
     count = await offers.expire_due(session)
     if count > 0:
         log.info("offers_expired", count=count)
@@ -32,12 +32,12 @@ async def _expire_offers(session: AsyncSession) -> None:
 
 async def _expire_active_status(session: AsyncSession, now: datetime | None = None) -> None:
     """«Активно ищу» истекает на чтении: `candidates.service.effective_status` трактует
-    просроченный `active` как `open`. Таблицу кандидатов (зона Б1) не трогаем (E8-5)."""
+    просроченный `active` как `open`. Таблицу кандидатов не трогаем."""
     return None
 
 
 async def _calculate_company_rating(session: AsyncSession, now: datetime | None = None) -> None:
-    """Пересчёт ответственности компаний на основе истории офферов (E8-5).
+    """Пересчёт ответственности компаний на основе истории офферов.
 
     Формула:
     - Доля принятых офферов из отправленных: (accepted + hired) / sent
@@ -95,10 +95,10 @@ def register(
     @consumers["core.jobs"].on("offers.expire")
     @idempotent(session_factory, "jobs.offers_expire")
     async def on_offers_expire(envelope: Envelope, session: AsyncSession) -> None:
-        """Периодическое истечение офферов (каждые 5 минут, messaging.md §4)."""
+        """Периодическое истечение офферов (каждые 5 минут)."""
         # CoreJob.model_validate(envelope.payload)  # пусто, но валидируем
         await _expire_offers(session)
-        # E33-4: отложенные дайджесты подписок на категории (интервал проверяет flush_due)
+        # отложенные дайджесты подписок на категории (интервал проверяет flush_due)
         await subscriptions.flush_due(session, needs_cfg.NeedsConfig.load())
 
     @consumers["core.jobs"].on("active_status.expire")

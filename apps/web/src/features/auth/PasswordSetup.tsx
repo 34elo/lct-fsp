@@ -11,7 +11,7 @@ import { postAuthPath, useAuth } from "@/shared/lib/auth";
 const t = authText.passwordSetup;
 
 /**
- * Первый вход HR временным паролем от владельца компании (E41-16): свой пароль — обязательный шаг,
+ * Первый вход HR временным паролем от владельца компании: свой пароль — обязательный шаг,
  * до него другие экраны закрыты (`RequireRole`), а API отвечает `403 password_change_required`.
  */
 export default function PasswordSetup() {

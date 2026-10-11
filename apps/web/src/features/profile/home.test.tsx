@@ -141,7 +141,7 @@ function mount(path = "/me") {
   );
 }
 
-describe("модель Главной (E38-1)", () => {
+describe("модель Главной", () => {
   it("latestInvites: объединяет, убирает дубли и отклики кандидата, берёт 3 свежих", () => {
     const o = (id: string, d: string, initiator?: string) => ({ ...offer(id, id, 1, 2), created_at: d, initiator }) as never;
     const r = latestInvites([o("a", "2026-10-01"), o("b", "2026-10-05")], [o("b", "2026-10-05"), o("c", "2026-10-06"), o("d", "2026-10-09", "candidate"), o("e", "2026-10-02")]);
@@ -190,7 +190,7 @@ describe("модель Главной (E38-1)", () => {
   });
 });
 
-describe("Главная кандидата /me (E38-1)", () => {
+describe("Главная кандидата /me", () => {
   it("после теста: профиль, навыки, ФСП, следующий шаг, граф навыков, интересы, плитки", async () => {
     mount();
     const after = await screen.findByTestId("home-after");
@@ -219,7 +219,7 @@ describe("Главная кандидата /me (E38-1)", () => {
     expect(action).toHaveTextContent("Ответить на интерес");
     expect(action).toHaveAttribute("href", "/me/offers?show=interests");
 
-    // E41-8: вместо созвездия — компактный EvidenceGraph с фоновой сеткой, без фильтров.
+    // вместо созвездия — компактный EvidenceGraph с фоновой сеткой, без фильтров.
     const graph = await screen.findByTestId("egraph");
     expect(screen.getByTestId("home-constellation")).toHaveTextContent("Граф навыков");
     expect(within(graph).getByTestId("egraph-grid")).toBeInTheDocument();
@@ -244,7 +244,7 @@ describe("Главная кандидата /me (E38-1)", () => {
     expect(tiles).not.toHaveTextContent("64");
     expect(within(tiles).getByRole("meter", { name: "Место" })).toHaveAttribute("aria-valuenow", "70");
 
-    // Ссылка «Статистика» (E38-2) со счётчиком компаний, смотревших профиль; баннера пути на Главной нет.
+    // Ссылка «Статистика» со счётчиком компаний, смотревших профиль; баннера пути на Главной нет.
     const stats = screen.getByTestId("home-stats");
     expect(stats).toHaveAttribute("href", "/me/stats");
     expect(await within(stats).findByText("смотрели: 2 ›")).toBeInTheDocument();
@@ -298,7 +298,7 @@ describe("Главная кандидата /me (E38-1)", () => {
     expect(screen.queryByTestId("path-banner")).not.toBeInTheDocument();
   });
 
-  it("новый кандидат без навыков: карточки-подсказки вместо пустого созвездия (E41-3)", async () => {
+  it("новый кандидат без навыков: карточки-подсказки вместо пустого созвездия", async () => {
     routes["/assessment/history"] = () => res(200, { surveys: [], attempts: [], cooldowns: [], retries: [] });
     routes["/candidates/me/profile"] = () => res(200, { ...profile, skills: [] });
     mount();
@@ -321,7 +321,7 @@ describe("Главная кандидата /me (E38-1)", () => {
     expect(within(card).getAllByRole("link")[0]).toHaveTextContent("Продолжить тест");
   });
 
-  it("регулярные задания (E39-15): открытые — блок на Главной, без заданий — блока нет", async () => {
+  it("регулярные задания: открытые — блок на Главной, без заданий — блока нет", async () => {
     const task = (id: string, extra: object = {}) => ({ id, title: `Задание ${id}`, kind: "choice", profession: "backend", grade: "middle", answer_until: "2999-01-01T00:00:00Z", submitted: false, score: null, ...extra });
     routes["/assessment/tasks"] = () => res(200, [task("t1"), task("t2", { submitted: true }), task("t3", { answer_until: "2000-01-01T00:00:00Z" })]);
     mount();

@@ -256,7 +256,7 @@ const PHOTO_TEXT: ImagePickerText = {
   error: PROFILE.photoError,
 };
 
-/** Фото сотрудника: `PUT|DELETE /me/avatar` (E39-24); сервер проверяет сигнатуру файла. */
+/** Фото сотрудника: `PUT|DELETE /me/avatar`; сервер проверяет сигнатуру файла. */
 function AvatarPicker({ name, url, onChanged }: { name: string; url?: string | null; onChanged: () => Promise<void> }) {
   const put = usePutMyAvatarMeAvatarPut();
   const del = useDeleteMyAvatarMeAvatarDelete();
@@ -278,7 +278,7 @@ function AvatarPicker({ name, url, onChanged }: { name: string; url?: string | n
   );
 }
 
-/** Фото кандидата: `PUT|DELETE /candidates/me/avatar` (E41-12). Работодатель видит его после приглашения. */
+/** Фото кандидата: `PUT|DELETE /candidates/me/avatar`. Работодатель видит его после приглашения. */
 function CandidateAvatarPicker({ name, url, onChanged }: { name: string; url?: string | null; onChanged: () => Promise<void> }) {
   const put = usePutAvatarCandidatesMeAvatarPut();
   const del = useDeleteAvatarCandidatesMeAvatarDelete();
@@ -344,7 +344,7 @@ function CompanyLine() {
 }
 
 /**
- * Личный профиль сотрудника компании и админа ФСП (E39-24): ФИО, должность, фото, «О себе».
+ * Личный профиль сотрудника компании и админа ФСП: ФИО, должность, фото, «О себе».
  * `GET|PATCH /me/profile`; имя, должность и фото подписывают приглашения кандидатам.
  */
 function StaffProfileCard() {
@@ -430,7 +430,7 @@ function LoadError({ onRetry, status }: { onRetry: () => void; status?: number }
   );
 }
 
-/** Профиль: кандидат правит ФИО анкеты, сотрудник компании и админ — личный профиль (E39-24). */
+/** Профиль: кандидат правит ФИО анкеты, сотрудник компании и админ — личный профиль. */
 function ProfileTab({ role }: { role: Role }) {
   const pq = useGetProfileCandidatesMeProfileGet({ query: { retry: false, enabled: role === "candidate" } });
   let body: ReactNode;
@@ -552,9 +552,9 @@ export function tabsFor(role: Role | null): TabId[] {
 }
 
 /**
- * Настройки `/settings` для всех ролей (E39-8): Профиль, Приватность (кандидат), Уведомления,
+ * Настройки `/settings` для всех ролей: Профиль, Приватность (кандидат), Уведомления,
  * Согласия, Оформление, Безопасность. Вкладка — в `?tab=`, на 375 px полоса листается пальцем.
- * Сотрудник компании и админ загружают фото (E39-24), у кандидата — инициалы.
+ * Сотрудник компании и админ загружают фото, у кандидата — инициалы.
  */
 export default function Settings() {
   const { role } = useAuth();

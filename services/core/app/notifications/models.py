@@ -13,7 +13,7 @@ from app.identity.models import utcnow
 
 
 class Notification(Base):
-    """Уведомление пользователя (data-model.md §3.12). `channels` ⊂ {web, tg}."""
+    """Уведомление пользователя. `channels` ⊂ {web, tg}."""
 
     __tablename__ = "notifications"
     __table_args__ = (sa.Index("ix_notifications_user_created", "user_id", "created_at"),)

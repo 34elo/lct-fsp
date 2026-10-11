@@ -1,4 +1,4 @@
-"""`/me/telegram/link` и internal API для бота (api.md §2.1, §2.9)."""
+"""`/me/telegram/link` и internal API для бота."""
 
 from __future__ import annotations
 
@@ -46,7 +46,7 @@ internal = APIRouter(prefix="/internal", tags=["internal"])
 
 
 async def require_bot(request: Request, authorization: str | None = Header(default=None)) -> None:
-    """`Authorization: Service <token>` (security.md §1); пустой токен в настройках = закрыто."""
+    """`Authorization: Service <token>`; пустой токен в настройках = закрыто."""
     expected = request.app.state.settings.service_token_bot
     scheme, _, token = (authorization or "").partition(" ")
     if not (expected and scheme == "Service" and hmac.compare_digest(token, expected)):
@@ -149,7 +149,7 @@ class TgLinkedOut(BaseModel):
 
 @internal.get("/tg/linked", response_model=TgLinkedOut, dependencies=[Depends(require_bot)])
 async def tg_linked(tg_user_id: int, session: AsyncSession = Depends(get_session)):
-    """Привязан ли Telegram к аккаунту сайта. Ничего не создаёт (E43-7: бот не регистрирует)."""
+    """Привязан ли Telegram к аккаунту сайта. Ничего не создаёт (бот не регистрирует)."""
     return TgLinkedOut(linked=await service.is_linked_tg(session, tg_user_id))
 
 
@@ -193,7 +193,7 @@ async def tg_user_token(
     session: AsyncSession = Depends(get_session),
     limiter: RateLimiter = Depends(get_limiter),
 ):
-    """Короткий access-токен кандидата: бот ходит с ним в `/assessment/*` блока 1 (E25-3).
+    """Короткий access-токен кандидата: бот ходит с ним в `/assessment/*`.
 
     Тот же JWT, что и после входа, но живёт `BOT_USER_TOKEN_TTL` (5 минут), refresh не выдаётся.
     """
@@ -209,7 +209,7 @@ async def tg_user_token(
     return UserTokenOut(access_token=token, expires_in=int(BOT_USER_TOKEN_TTL.total_seconds()))
 
 
-# --- Резюме и профиль из бота (api.md §2.10) --------------------------------------------------
+# --- Резюме и профиль из бота --------------------------------------------------
 
 PROFILE_SKILLS = 6
 FSP_LINES = 3
@@ -351,7 +351,7 @@ async def tg_profile(
     )
 
 
-# --- ФСП, категория, статус и настройки из бота (api.md §2.10, E9-4) ----------------------------
+# --- ФСП, категория, статус и настройки из бота ----------------------------
 
 
 async def _fsp_labels(session: AsyncSession, user_id: UUID) -> list[str]:
@@ -473,7 +473,7 @@ class TgCategoryOut(BaseModel):
 
 @internal.get("/tg/category", response_model=TgCategoryOut, dependencies=[Depends(require_bot)])
 async def tg_category(tg_user_id: int, session: AsyncSession = Depends(get_session)):
-    """Подтверждённые категории (грейды теста) и «заявлено vs подтверждено»; публичное API Б1."""
+    """Подтверждённые категории (грейды теста) и «заявлено vs подтверждено»."""
     user = await _candidate_by_tg(session, tg_user_id)
     profs = await taxonomy.list_professions(session, include_hidden=True)  # грейды остаются
     titles = {p.slug: p.title for p in profs}
@@ -568,7 +568,7 @@ async def tg_status(
     return await _settings_out(request, session, user)
 
 
-# --- Офферы из бота (api.md §2.10) --------------------------------------------------------------
+# --- Офферы из бота --------------------------------------------------------------
 
 ACTIVE_OFFERS = (
     OfferStatus.sent.value,
@@ -608,7 +608,7 @@ async def _offer_out(session: AsyncSession, offer) -> TgOfferOut:
 async def tg_offers(tg_user_id: int, session: AsyncSession = Depends(get_session)):
     """Активные офферы кандидата (меню «Офферы»): новые первыми, не больше 10."""
     user = await _candidate_by_tg(session, tg_user_id)
-    rows = [  # свои отклики (ADR-022) в меню «Офферы» не показываем
+    rows = [  # свои отклики в меню «Офферы» не показываем
         o
         for o in await offers.list_for_candidate(session, user.id, initiator="employer")
         if o.status in ACTIVE_OFFERS

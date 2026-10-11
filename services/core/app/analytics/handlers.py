@@ -1,7 +1,7 @@
-"""Очередь `core.analytics`: доменные события → `analytics_events` (E18-1).
+"""Очередь `core.analytics`: доменные события → `analytics_events`.
 
 Подписка только на отображаемые типы; остальное очередь молча пропускает.
-`candidate.deleted` удаляет сырые события пользователя по псевдониму (metrics.md §7).
+`candidate.deleted` удаляет сырые события пользователя по псевдониму.
 """
 
 from __future__ import annotations

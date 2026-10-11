@@ -39,7 +39,7 @@ function Tiles({ standing, interests, views }: { standing: CandidateStanding; in
   );
 }
 
-/** Составляющие силы профиля: из чего складывается «% от лидера» (формула assessment.md §9). */
+/** Составляющие силы профиля: из чего складывается «% от лидера» (формула — docs/mechanics/matching.md). */
 function PartsCard({ standing }: { standing: CandidateStanding }) {
   const parts = standing.strength?.parts ?? [];
   if (parts.length === 0) return null;
@@ -58,7 +58,7 @@ function PartsCard({ standing }: { standing: CandidateStanding }) {
   );
 }
 
-/** «Где ты среди своих» на всю ширину: оси подписаны, «свои» объяснены (E39-16). */
+/** «Где ты среди своих» на всю ширину: оси подписаны, «свои» объяснены. */
 function PeersCard({ standing, category }: { standing: CandidateStanding; category: string }) {
   const { points, you } = scatter(standing.peers ?? [], standing.strength?.value);
   return (
@@ -90,7 +90,7 @@ function PeersCard({ standing, category }: { standing: CandidateStanding; catego
   );
 }
 
-/** Общие числа категории: сколько кандидатов, вилки интересов, сколько компаний ищут (E39-16). */
+/** Общие числа категории: сколько кандидатов, вилки интересов, сколько компаний ищут. */
 function CategoryCard({ standing }: { standing: CandidateStanding }) {
   const c = standing.category_stats;
   if (!c) return null;
@@ -169,7 +169,7 @@ function StatsSkeleton() {
 }
 
 /**
- * Статистика кандидата `/me/stats` (E38-2, макеты v2_me-stats__*, бриф §6.1): плитки «Сила», «Место», «Интересы», «Смотрели»;
+ * Статистика кандидата `/me/stats`: плитки «Сила», «Место», «Интересы», «Смотрели»;
  * «Где ты среди своих» (2/3) и «Твоя категория в цифрах» рядом; просмотры профиля слева, ФСП и история тестов справа.
  * Без действующего грейда — пустое состояние с одной кнопкой «Пройти тест».
  */

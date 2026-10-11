@@ -12,7 +12,7 @@ from app.identity.models import utcnow
 
 
 class IssuedCredential(Base):
-    """Выданный Open Badge 3.0 (data-model.md §3.9): подписанный VC целиком в `credential`."""
+    """Выданный Open Badge 3.0: подписанный VC целиком в `credential`."""
 
     __tablename__ = "issued_credentials"
     __table_args__ = (sa.Index("ix_issued_credentials_candidate", "candidate_id"),)

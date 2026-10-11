@@ -1,4 +1,4 @@
-"""Жизненный цикл семейства заданий (assessment.md §7, E22-9).
+"""Жизненный цикл семейства заданий.
 
 ```
 draft ─ автопроверка ─► pilot ─ пороги + админ ─► active ─ тревога ─► quarantine ─► retired
@@ -141,7 +141,7 @@ def admission_failures(
 ) -> list[str]:
     """Невыполненные пороги допуска `pilot → active` (пусто — можно допускать).
 
-    `need_dif` — задачи ФСП (E32-6): без измеренного DIF «с ФСП / без ФСП» допуска нет.
+    `need_dif` — задачи ФСП: без измеренного DIF «с ФСП / без ФСП» допуска нет.
     """
     out: list[str] = []
     if stats.n < cfg.admit_min_n:
@@ -351,7 +351,9 @@ async def queue(
     rows = list(
         await session.scalars(
             select(FamilyRow)
-            .where(FamilyRow.status == status, FamilyRow.company_id.is_(None))  # E41-14
+            .where(
+                FamilyRow.status == status, FamilyRow.company_id.is_(None)
+            )  # без заданий работодателей
             .order_by(FamilyRow.slug)
         )
     )
@@ -419,7 +421,7 @@ def _rank(grade: str) -> int:
 def _granted(status: str, plan: dict) -> str | None:
     """Грейд, который даёт попытка: заявленный при `passed`.
 
-    Принятое повышение (`upgrade_accepted_at`) — только у попыток до ADR-025 п.2: теперь бонусный
+    Принятое повышение (`upgrade_accepted_at`) — только у старых попыток: теперь бонусный
     этап приглашает на отдельный тест, а не повышает.
     """
     if status != "passed":
@@ -454,7 +456,7 @@ async def _regrade(
     session: AsyncSession, att: Attempt, cfg: AssessmentConfig, withdrawn: set[uuid.UUID], now
 ) -> bool:
     """Пересчитать одну завершённую попытку без выведенных семейств. Истина — грейд изменился."""
-    cfg = cfg.for_mode(att.mode)  # экспресс — свои α/β (E32-4a)
+    cfg = cfg.for_mode(att.mode)  # экспресс — свои α/β
     rows = [
         (r, f)
         for r, f in (
@@ -502,7 +504,7 @@ async def _regrade(
         invite_ok = status == "passed" and bonus_d.result == "passed"
         if not invite_ok:
             plan.update(invited_grade=None, invite_expires_at=None)
-        elif not plan.get("invited_grade"):  # приглашение (ADR-025 п.2) — от конца попытки
+        elif not plan.get("invited_grade"):  # приглашение — от конца попытки
             from app.assessment import attempts
 
             finished = grading._aware(att.finished_at or now)

@@ -1,4 +1,4 @@
-"""Обработчики подбора (messaging.md §3–4): события → команды `core.match.*` → таблица `matches`."""
+"""Обработчики подбора: события → команды `core.match.*` → таблица `matches`."""
 
 from __future__ import annotations
 
