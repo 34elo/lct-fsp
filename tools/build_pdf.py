@@ -4,7 +4,7 @@
     uv run --with markdown python tools/build_pdf.py docs         # сопроводительная документация
 
 Нужен установленный Edge или Chrome (`BROWSER` — путь к исполняемому файлу). Диаграммы Mermaid
-рисуются скриптом с CDN, поэтому при сборке нужен интернет. Результат — `docs/pdf/*.pdf`.
+рисуются скриптом с CDN, поэтому при сборке нужен интернет. Результат — `submission/*.pdf`.
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ import markdown
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs"
-OUT = DOCS / "pdf"
+OUT = ROOT / "submission"  # каталог в .gitignore: PDF для сдачи в репозиторий не входят
 MERMAID = "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"
 BROWSERS = (
     r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
