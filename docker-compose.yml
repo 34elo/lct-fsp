@@ -311,7 +311,7 @@ services:
     profiles: [ml]
     build:
       <<: *py-build
-      args: {PACKAGE: fsp-ml, SERVICE_DIR: services/ml}
+      args: {PACKAGE: fsp-ml, SERVICE_DIR: services/ml, EMBEDDINGS: "1"}
     image: fsp-ml
     environment: &env-ml
       <<: *env-common
@@ -330,8 +330,16 @@ services:
       GITHUB_TOKEN: ${GITHUB_TOKEN:-}
       EMBEDDING_MODEL: ${EMBEDDING_MODEL:-bge-m3}
       EMBEDDING_MODEL_PATH: ${EMBEDDING_MODEL_PATH:-}
+      # E44-1: модель с HF скачивается при первом старте в том hfcache; EMBEDDING_AUTOLOAD=false — только fallback
+      EMBEDDING_HF_ID: ${EMBEDDING_HF_ID:-}
+      EMBEDDING_AUTOLOAD: ${EMBEDDING_AUTOLOAD:-true}
+      HF_HOME: /hf-cache
+      HF_HUB_DOWNLOAD_TIMEOUT: ${HF_HUB_DOWNLOAD_TIMEOUT:-60}
+      HF_HUB_ETAG_TIMEOUT: ${HF_HUB_ETAG_TIMEOUT:-20}
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    volumes:
+      - hfcache:/hf-cache
     command: ["uvicorn", "fsp_ml.main:app", "--host", "0.0.0.0", "--port", "8100"]
     depends_on:
       redis: {condition: service_healthy}
@@ -403,3 +411,4 @@ volumes:
   pgdata:
   rabbitdata:
   minio:
+  hfcache:  # кеш Hugging Face ml-api (E44-1): модель эмбеддингов скачивается один раз

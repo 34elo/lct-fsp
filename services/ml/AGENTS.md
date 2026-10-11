@@ -10,7 +10,7 @@
 
 ## Ключевые файлы
 - `fsp_ml/main.py` — ml-api: `/v1/query/parse`, `/v1/embeddings`, `/v1/skills/resolve`, `/v1/skills/card-draft`, `/v1/families/key-draft` (`family_key.py`, E30-1), `/v1/families/generate` и `/solve` (`family_bank.py`, E26-4: генератор и LLM-кандидат), `/healthz`
-- `fsp_ml/normalize.py`, `taxonomy.py` — нормализация и быстрый путь resolve (снимок графа из core); `embedder.py` — bge-m3 или фейк
+- `fsp_ml/normalize.py`, `taxonomy.py` — нормализация и быстрый путь resolve (снимок графа из core); `embedder.py` — e5-small/bge-m3 (фоновая загрузка, префиксы e5) или запасные векторы
 - `fsp_ml/skill_moderation.py`, `skill_pipeline.py`, `skill_card.py` — конвейер навыков (E16-4): модерация, судья, кеш, черновик карточки; метрики — `tests/test_skill_pipeline.py`, `fixtures/skill_eval.yaml`
 - `fsp_ml/fake.py` — детерминированные ответы по контрактам `fsp_contracts.ml`
 - `fsp_ml/handlers.py` — команда → события `ml.*.completed/failed` (`HANDLERS`, `handle`; `resume_parse_llm` — реальный)

@@ -22,6 +22,10 @@ COPY packages packages
 COPY ${SERVICE_DIR} ${SERVICE_DIR}
 COPY data data
 RUN uv sync --frozen --no-dev --package ${PACKAGE}
+# E44-1: ml-api считает настоящие эмбеддинги (multilingual-e5-small) на CPU. sentence-transformers и
+# torch (только CPU-сборка, без CUDA) ставятся вне uv.lock, и только когда сборка просит EMBEDDINGS=1
+ARG EMBEDDINGS=0
+RUN if [ "$EMBEDDINGS" = "1" ]; then       uv pip install --python /repo/.venv/bin/python         --extra-index-url https://download.pytorch.org/whl/cpu         "torch>=2.4,<3" "sentence-transformers>=3,<6";     fi
 
 FROM python:3.12-slim
 ARG SERVICE_DIR
@@ -36,4 +40,7 @@ RUN useradd --system --uid 10001 --home-dir /nonexistent --shell /usr/sbin/nolog
 COPY --from=builder /repo /repo
 ENV PATH=/repo/.venv/bin:$PATH PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
 WORKDIR /repo/${SERVICE_DIR}
+# кеш Hugging Face (E44-1): каталог принадлежит app, именованный том наследует права
+RUN mkdir -p /hf-cache && chown app /hf-cache
+ENV HF_HOME=/hf-cache
 USER app

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from functools import partial
+
 from fastapi import FastAPI
 from fastapi.concurrency import run_in_threadpool
 from fsp_contracts.ml import (
@@ -18,7 +20,15 @@ from fsp_platform.logging import configure_logging
 
 from fsp_ml import answer_explain, fake, family_bank, family_key, query_parse, skill_card
 from fsp_ml.config import Settings
-from fsp_ml.embedder import Embedder, embed, load_embedder
+from fsp_ml.embedder import (
+    Embedder,
+    LazyEmbedder,
+    configure_hf_cache,
+    embed,
+    is_ready,
+    load_embedder,
+    resolve_source,
+)
 from fsp_ml.llm import LlmClient, OpenAiLlm
 from fsp_ml.skill_pipeline import SkillPipeline
 from fsp_ml.taxonomy import TaxonomyProvider
@@ -33,9 +43,27 @@ def build_app(
     settings = settings or Settings()
     configure_logging(settings.service_name, settings.log_level)
     app = create_app(settings.service_name)
-    real = embedder or load_embedder(
-        settings.embedding_model_path, settings.embedding_model, settings.embedding_dim
-    )
+    real = embedder
+    if real is None and resolve_source(
+        settings.embedding_model_path,
+        settings.embedding_model,
+        settings.embedding_hf_id,
+        settings.embedding_autoload,
+    ):
+        # модель грузится в фоне (первый старт скачивает её в кеш тома); пока не готова — fallback
+        configure_hf_cache(settings.embedding_cache_dir)
+        real = LazyEmbedder(
+            settings.embedding_model,
+            partial(
+                load_embedder,
+                settings.embedding_model_path,
+                settings.embedding_model,
+                settings.embedding_dim,
+                settings.embedding_hf_id,
+                settings.embedding_autoload,
+                settings.embedding_cache_dir,
+            ),
+        )
     taxonomy = taxonomy or TaxonomyProvider(settings.core_url, settings.service_token_ml)
     # LLM нужен только при ML_FAKE=false и LLM_ENABLED=true; иначе конвейер навыков идёт по правилам
     if llm is None and not settings.ml_fake and settings.llm_enabled and settings.llm_base_url:
@@ -86,9 +114,12 @@ def build_app(
     @app.get("/healthz")
     async def healthz() -> MlHealth:
         up = "up" if settings.ml_fake and settings.llm_enabled else "down"
-        emb = "up" if real is not None else "fallback"
+        ok = is_ready(real)
         return MlHealth(
-            llm=up, embedder=emb, model=real.model if real else fake.FAKE_MODEL, queue_depth=0
+            llm=up,
+            embedder="up" if ok else "fallback",
+            model=real.model if ok and real else fake.FAKE_MODEL,
+            queue_depth=0,
         )
 
     return app
