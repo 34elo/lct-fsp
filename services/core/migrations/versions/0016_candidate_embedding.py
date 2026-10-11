@@ -1,4 +1,4 @@
-"""candidates: profile_text, profile_text_sha, embedding vector(1024), embedding_model (E4-5)
+"""candidates: profile_text, profile_text_sha, embedding vector(1024), embedding_model
 
 Revision ID: 0016
 Revises: 0015

@@ -1,4 +1,4 @@
-"""Офферы (api.md §2.5): создание с `Idempotency-Key`, чтение, ответы, действия компании."""
+"""Офферы: создание с `Idempotency-Key`, чтение, ответы, действия компании."""
 
 from __future__ import annotations
 
@@ -57,7 +57,7 @@ _VACANCY_CFG = VacancyConfig.load()
 
 
 class TaskAttach(BaseModel):
-    """Задача в приглашении (E33-3): семейство из конструктора компании или банка, ≤ 15 минут."""
+    """Задача в приглашении: семейство из конструктора компании или банка, ≤ 15 минут."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -66,7 +66,7 @@ class TaskAttach(BaseModel):
 
 
 class CreateOffer(BaseModel):
-    """Приглашение работодателя. Без `vacancy_id` (ADR-022) обязателен `title`."""
+    """Приглашение работодателя. Без `vacancy_id` обязателен `title`."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -80,7 +80,7 @@ class CreateOffer(BaseModel):
     title: str | None = Field(default=None, max_length=200)
     description: str | None = Field(default=None, max_length=4000)
     contact_method: ContactMethod | None = None
-    task: TaskAttach | None = None  # E33-3
+    task: TaskAttach | None = None
 
 
 class DeclineIn(BaseModel):
@@ -117,7 +117,7 @@ class Decline(BaseModel):
 
 
 class OfferSender(BaseModel):
-    """Подпись приглашения (E39-24): сотрудник компании, без email и телефона."""
+    """Подпись приглашения: сотрудник компании, без email и телефона."""
 
     full_name: str
     position: str | None = None
@@ -129,12 +129,12 @@ class OfferOut(BaseModel):
     status: OfferStatus
     created_at: datetime
     expires_at: datetime
-    vacancy: VacancyBrief | None = None  # пусто у приглашения без вакансии (ADR-022)
+    vacancy: VacancyBrief | None = None  # пусто у приглашения без вакансии
     title: str | None = None
     description: str | None = None
     contact_method: ContactMethod | None = None
     initiator: OfferInitiator = OfferInitiator.employer
-    team_offer_id: uuid.UUID | None = None  # общий у офферов одной команды (E15-2)
+    team_offer_id: uuid.UUID | None = None  # общий у офферов одной команды
     salary_from: int
     salary_to: int
     salary_basis: SalaryBasis = SalaryBasis.gross
@@ -144,11 +144,11 @@ class OfferOut(BaseModel):
     match_snapshot: MatchSnapshot | None = None
     decline: Decline | None = None
     awaiting_reply_from: str | None = None
-    # E33-1 (ADR-026): оффер начался с интереса; кандидат открыл; компания пригласила
+    # оффер начался с интереса; кандидат открыл; компания пригласила
     interest_at: datetime | None = None
     interest_opened_at: datetime | None = None
     invited_at: datetime | None = None
-    # E39-24: кто из компании отправил (только у интереса и приглашения компании, нет ФИО — null)
+    # кто из компании отправил (только у интереса и приглашения компании, нет ФИО — null)
     sender: OfferSender | None = None
 
 
@@ -196,9 +196,9 @@ class CompanyBrief(BaseModel):
     logo_url: str | None = None
     responsibility_score: float | None = None
     verified: bool
-    reliability: why.CompanyReliability | None = None  # E33-2: доля ответов, срок ответа
-    description: str | None = None  # E39-24: «О компании», Markdown
-    demo: bool = False  # E40-1: демо-компания витрины; реальный кандидат видит пометку «демо»
+    reliability: why.CompanyReliability | None = None  # доля ответов, срок ответа
+    description: str | None = None  # «О компании», Markdown
+    demo: bool = False  # демо-компания витрины; реальный кандидат видит пометку «демо»
 
 
 class Contacts(BaseModel):
@@ -210,21 +210,21 @@ class Contacts(BaseModel):
 
 class OfferForCandidate(OfferOut):
     company: CompanyBrief
-    why_you: why.WhyYou | None = None  # E33-2: только у интереса и приглашения компании
-    task: TaskBrief | None = None  # E33-3: после приглашения
-    company_contacts: Contacts | None = None  # E39-26: после принятия, пока доступ не отозван
+    why_you: why.WhyYou | None = None  # только у интереса и приглашения компании
+    task: TaskBrief | None = None  # после приглашения
+    company_contacts: Contacts | None = None  # после принятия, пока доступ не отозван
 
 
 class OfferForCompany(OfferOut):
     candidate: CandidateCard | None = None
     contacts: Contacts | None = None  # только после accepted, см. GET /offers/{id}/contacts
-    task: TaskResult | None = None  # E33-3: результат только у компании этого оффера
+    task: TaskResult | None = None  # результат только у компании этого оффера
 
 
 class SalaryHintIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    vacancy_id: uuid.UUID | None = None  # интерес без вакансии (E33-5): формат и навыки неизвестны
+    vacancy_id: uuid.UUID | None = None  # интерес без вакансии: формат и навыки неизвестны
     candidate_pseudo_id: str = Field(min_length=1, max_length=64)
     salary_from: int | None = Field(default=None, le=100_000_000)
     salary_to: int | None = Field(default=None, le=100_000_000)
@@ -339,7 +339,7 @@ async def _base(session: AsyncSession, o: Offer) -> dict[str, Any]:
 
 
 async def _company_contacts(session: AsyncSession, o: Offer, company: Any) -> Contacts | None:
-    """Контакты компании для кандидата (E39-26): только после принятия, пока доступ не отозван.
+    """Контакты компании для кандидата: только после принятия, пока доступ не отозван.
     Источник — контакты компании; почта подписанта — запасной вариант."""
     if o.initiator != OfferInitiator.employer.value or not await service.is_revealed(session, o):
         return None
@@ -523,7 +523,7 @@ async def create_offer(
 ) -> Any:
     if not idempotency_key or not idempotency_key.strip():
         raise ProblemError(422, "idempotency_key_required", "Нужен заголовок Idempotency-Key")
-    identity.require_verified_email(user)  # blocks.md §4.6
+    identity.require_verified_email(user)
     company, _ = await companies.require_company(session, user.id)
     vacancy = await vacancies.get_owned(session, user, body.vacancy_id) if body.vacancy_id else None
     cand = await card.get_visible(session, body.candidate_pseudo_id, company.id)
@@ -553,7 +553,7 @@ async def create_offer(
     return await for_company(session, offer)
 
 
-# --- интерес до приглашения (E33-1, ADR-026) -------------------------------------------
+# --- интерес до приглашения -------------------------------------------
 
 
 class CreateInterest(BaseModel):
@@ -581,7 +581,7 @@ class InviteFromInterest(BaseModel):
     title: str | None = Field(default=None, max_length=200)
     description: str | None = Field(default=None, max_length=4000)
     contact_method: ContactMethod | None = None
-    task: TaskAttach | None = None  # E33-3
+    task: TaskAttach | None = None
 
 
 class InterestsSummary(BaseModel):
@@ -606,7 +606,7 @@ async def create_interest(
     session: AsyncSession = Depends(get_session),
 ) -> Any:
     """Интерес к анонимному кандидату. Повтор отметки возвращает открытый интерес."""
-    identity.require_verified_email(user)  # blocks.md §4.6
+    identity.require_verified_email(user)
     company, _ = await companies.require_company(session, user.id)
     vacancy = await vacancies.get_owned(session, user, body.vacancy_id) if body.vacancy_id else None
     cand = await card.get_visible(session, body.candidate_pseudo_id, company.id)
@@ -735,7 +735,7 @@ async def list_fsp_teams(
     user: User = Depends(_employer),
     session: AsyncSession = Depends(get_session),
 ) -> Any:
-    """Команды ФСП, где есть минимум два видимых кандидата платформы (анонимно, E15-2)."""
+    """Команды ФСП, где есть минимум два видимых кандидата платформы (анонимно)."""
     company, _ = await companies.require_company(session, user.id)
     found = await teams.list_teams(session, company.id, discipline=discipline, min_place=min_place)
     return [_team_out(t) for t in found]
@@ -757,7 +757,7 @@ async def create_team_offer(
     """Командный оффер: по офферу на участника с общим `team_offer_id`, вилка у каждого своя."""
     if not idempotency_key or not idempotency_key.strip():
         raise ProblemError(422, "idempotency_key_required", "Нужен заголовок Idempotency-Key")
-    identity.require_verified_email(user)  # blocks.md §4.6
+    identity.require_verified_email(user)
     company, _ = await companies.require_company(session, user.id)
     vacancy = await vacancies.get_owned(session, user, body.vacancy_id)
     team = await teams.get_team(session, company.id, body.fsp_team_id)
@@ -800,7 +800,7 @@ async def list_offers(
     user: User = Depends(_employer),
     session: AsyncSession = Depends(get_session),
 ) -> Any:
-    """Офферы компании; `initiator=candidate` - её отклики. Без компании - пусто (E39-7)."""
+    """Офферы компании; `initiator=candidate` - её отклики. Без компании - пусто."""
     found = await companies.my_company(session, user.id)
     if found is None:
         return []
@@ -930,7 +930,7 @@ async def accept_offer(
     offer_id: uuid.UUID, user: User = Depends(_candidate),
     session: AsyncSession = Depends(get_session),
 ) -> Any:  # fmt: skip
-    """Принять без текста (E41-4): после принятия стороны видят контакты друг друга."""
+    """Принять без текста: после принятия стороны видят контакты друг друга."""
     offer = await service.get_for_candidate(session, user.id, offer_id, lock=True)
     await service.accept(session, offer)
     return await for_candidate(session, offer)
@@ -946,7 +946,7 @@ async def decline_offer(
     session: AsyncSession = Depends(get_session),
 ) -> Any:  # fmt: skip
     offer = await service.get_for_candidate(session, user.id, offer_id, lock=True)
-    await service.decline(session, offer, body.reason, None)  # E41-4: без текста кандидата
+    await service.decline(session, offer, body.reason, None)  # без текста кандидата
     return await for_candidate(session, offer)
 
 
@@ -1024,7 +1024,7 @@ async def revoke_contacts(
     offer_id: uuid.UUID, user: User = Depends(_candidate),
     session: AsyncSession = Depends(get_session),
 ) -> Any:  # fmt: skip
-    """Отзыв доступа к контактам: компания перестаёт их видеть (E32-5a). Повтор — no-op."""
+    """Отзыв доступа к контактам: компания перестаёт их видеть. Повтор — no-op."""
     offer = await service.get_for_candidate(session, user.id, offer_id, lock=True)
     await service.revoke_contacts(session, offer)
     return await for_candidate(session, offer)

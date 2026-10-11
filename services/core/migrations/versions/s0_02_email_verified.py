@@ -1,4 +1,4 @@
-"""users.email_verified_at: подтверждение email (blocks.md §4.6).
+"""users.email_verified_at: подтверждение email.
 
 Revision ID: s0_02
 Revises: s0_01

@@ -1,4 +1,4 @@
-"""Отправка писем по SMTP (E20-1). Пустой `SMTP_HOST` — письма не уходят."""
+"""Отправка писем по SMTP. Пустой `SMTP_HOST` — письма не уходят."""
 
 from __future__ import annotations
 

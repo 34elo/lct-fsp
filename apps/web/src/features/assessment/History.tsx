@@ -56,7 +56,7 @@ function CooldownCard({ title, tag, text, until, to }: { title: string; tag: str
   );
 }
 
-/** S4: история попыток, кулдауны и пересдачи. */
+/** История попыток, кулдауны и пересдачи. */
 export default function History() {
   const hq = useHistoryAssessmentHistoryGet();
   const pq = useGetProfessionsTaxonomyProfessionsGet();

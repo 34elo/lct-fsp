@@ -1,4 +1,4 @@
-"""E42-1: ml-сервисы получают настройки MinIO (иначе resume_file_unavailable)."""
+"""ml-сервисы получают настройки MinIO (иначе resume_file_unavailable)."""
 
 from __future__ import annotations
 

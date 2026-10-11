@@ -1,4 +1,4 @@
-"""HTTP `/admin/assessment/generate` — заказ LLM-заданий из «Допуска заданий» (E43-9)."""
+"""HTTP `/admin/assessment/generate` — заказ LLM-заданий из «Допуска заданий»."""
 
 from __future__ import annotations
 

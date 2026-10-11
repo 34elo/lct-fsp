@@ -2,7 +2,7 @@
 
 Чистые функции без брокера: воркер публикует то, что они вернули. `message_id` результата
 детерминирован от `message_id` команды, поэтому повторная доставка даёт дубликат,
-который inbox получателя отбрасывает (AGENTS.md п. 8).
+который inbox получателя отбрасывает.
 """
 
 from __future__ import annotations
@@ -44,7 +44,7 @@ def resume_parse(c: Envelope, p: cmd.MlResumeParse) -> list[Envelope]:
         )
         return [_result(c, "ml.resume.failed", r)]
     if not p.object_key.endswith(".fixture"):
-        # E41-3: без LLM не выдаём выдуманную фикстуру; она только для тестов (`*.fixture`)
+        # без LLM не выдаём выдуманную фикстуру; она только для тестов (`*.fixture`)
         r = evt.MlResumeResult(
             resume_id=p.resume_id, candidate_id=p.candidate_id, error="llm_unavailable"
         )
@@ -171,7 +171,7 @@ async def families_generate_llm(
     *,
     generate: Callable[[FamilyGenerateRequest], Awaitable[FamilyGenerateResponse]] | None,
 ) -> Envelope:
-    """`ml.families.generate` через LLM (E43-9). Нет модели или ошибка — `error`, без ретраев:
+    """`ml.families.generate` через LLM. Нет модели или ошибка — `error`, без ретраев:
     заказ можно повторить кнопкой, а GPU не тратится на повторы фоновой задачи."""
     if generate is None:
         return _families_done(c, p, [], "", "llm_disabled")
@@ -225,7 +225,7 @@ async def resume_parse_llm(
     today: date,
     progress: Progress | None = None,
 ) -> list[Envelope]:
-    """`ml.resume.parse` через LLM (ml.md §2). Ошибки файла и LLM → `ml.resume.failed`."""
+    """`ml.resume.parse` через LLM. Ошибки файла и LLM → `ml.resume.failed`."""
 
     def failed(code: str) -> list[Envelope]:
         r = evt.MlResumeResult(resume_id=p.resume_id, candidate_id=p.candidate_id, error=code)

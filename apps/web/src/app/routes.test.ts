@@ -10,10 +10,6 @@ describe("routes", () => {
     expect(paths.filter((p, i) => paths.indexOf(p) !== i)).toEqual([]);
   });
 
-  it("у каждого маршрута есть владелец", () => {
-    for (const r of ROUTES) expect(["b1", "b2"], r.path).toContain(r.owner);
-  });
-
   it("конкретные пути объявлены раньше параметрических", () => {
     ROUTES.forEach((a, i) => {
       const sa = segs(a.path);
@@ -27,7 +23,7 @@ describe("routes", () => {
     });
   });
 
-  // E35-1: нет пункта меню, ссылки или кнопки без работающего экрана.
+  // нет пункта меню, ссылки или кнопки без работающего экрана.
   const items = (nav: NavItem[]) => nav;
   const all = Object.values(NAV).flatMap(items);
   const byPath = new Map(ROUTES.map((r) => [r.path, r]));
@@ -59,14 +55,14 @@ describe("routes", () => {
     for (const r of ROUTES.filter((x) => x.nav)) expect(inMenu.has(r.path), r.path).toBe(true);
   });
 
-  it("меню без подвкладок: кандидат и работодатель по E39-25", () => {
+  it("меню без подвкладок: кандидат и работодатель", () => {
     expect(NAV.candidate.map((n) => n.label)).toEqual(["Главная", "Тест", "Приглашения", "Вакансии", "Статистика", "Профиль"]);
     expect(NAV.employer.map((n) => n.label)).toEqual(["Подбор", "Шорт-лист", "Приглашения", "Вакансии", "Задания", "Компания"]);
     for (const n of Object.values(NAV).flat()) expect(n, n.label).not.toHaveProperty("tabs");
     for (const n of [...NAV.candidate, ...NAV.employer]) expect(n, n.label).not.toHaveProperty("group");
   });
 
-  it("меню админа (E39-29): «Главная», затем группы Очереди · Справочники · Аналитика, в группе не больше 4 пунктов", () => {
+  it("меню админа: «Главная», затем группы Очереди · Справочники · Аналитика, в группе не больше 4 пунктов", () => {
     const [home, ...rest] = NAV.admin;
     expect(home).toEqual({ to: "/federation", label: "Главная" });
     expect(ADMIN_GROUPS.map((g) => g.label)).toEqual(["Очереди", "Справочники", "Аналитика"]);
@@ -99,13 +95,13 @@ describe("routes", () => {
     expect(activeNav(NAV.employer, "/employer/subscriptions")?.label).toBe("Подбор");
     expect(activeNav(NAV.employer, "/employer/vacancies/1/shortlist")?.label).toBe("Вакансии");
     expect(activeNav(NAV.employer, "/employer/families/new")?.label).toBe("Задания");
-    expect(activeNav(NAV.candidate, "/me/tasks")?.label).toBe("Главная"); // задания — с Главной (E39-15)
-    expect(activeNav(NAV.candidate, "/onboarding")).toBeUndefined(); // онбординга в меню нет (E39-15)
+    expect(activeNav(NAV.candidate, "/me/tasks")?.label).toBe("Главная"); // задания — с Главной
+    expect(activeNav(NAV.candidate, "/onboarding")).toBeUndefined(); // онбординга в меню нет
     expect(activeNav(NAV.candidate, "/me/stats")?.label).toBe("Статистика");
     expect(activeNav(NAV.admin, "/federation/moderation")?.label).toBe("Модерация");
     expect(activeNav(NAV.admin, "/federation")?.label).toBe("Главная");
     expect(activeNav(NAV.admin, "/federation/registry")?.label).toBe("Реестр ФСП");
     expect(activeNav(NAV.admin, "/federation/analytics")?.label).toBe("Аналитика");
-    expect(NAV.admin.some((n) => /Качество|Заявки/.test(n.label))).toBe(false); // E41-15: «Качество» и «Заявки» ушли из меню
+    expect(NAV.admin.some((n) => /Качество|Заявки/.test(n.label))).toBe(false); // «Качество» и «Заявки» ушли из меню
   });
 });

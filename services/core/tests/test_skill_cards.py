@@ -1,4 +1,4 @@
-"""E21-2: схема карточки навыка и проверка карточек data/skills/cards (assessment.md §2)."""
+"""Схема карточки навыка и проверка карточек data/skills/cards."""
 
 from pathlib import Path
 

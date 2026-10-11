@@ -6,7 +6,7 @@
  */
 
 /**
- * Подсказка навыка `GET /taxonomy/skills/suggest` (E39-3).
+ * Подсказка навыка `GET /taxonomy/skills/suggest`.
  */
 export interface SkillSuggestion {
   slug: string;

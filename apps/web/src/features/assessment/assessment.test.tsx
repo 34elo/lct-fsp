@@ -94,7 +94,7 @@ function mount(path: string, handler: Handler) {
 
 const tid = (id: string) => screen.findByTestId(id);
 
-describe("поток до теста (S1, E39-6)", () => {
+describe("поток до теста", () => {
   it("предзаполняет шаги 1–2, сохраняет и начинает тест", async () => {
     const calls = mount("/me/assessment", (url, init) => {
       if (url.endsWith("/assessment/survey") && (init?.method ?? "GET") === "GET") return res(200, survey);
@@ -105,7 +105,7 @@ describe("поток до теста (S1, E39-6)", () => {
       if (url.endsWith("/attempts/a1")) return res(200, attemptBase);
     });
     expect(await tid("assessment-prefilled")).toBeInTheDocument();
-    expect(screen.queryByTestId("assessment-industry")).toBeNull(); // ADR-025 п.4: отрасль не спрашиваем
+    expect(screen.queryByTestId("assessment-industry")).toBeNull(); // отрасль не спрашиваем
     expect(screen.getByTestId("flow-step-1")).toHaveAttribute("aria-current", "step");
     expect(screen.getByRole("heading", { name: "Направление и навыки" })).toBeInTheDocument();
     expect(screen.getByTestId("assessment-profession-backend")).toBeChecked();
@@ -123,7 +123,7 @@ describe("поток до теста (S1, E39-6)", () => {
     expect(calls.find((c) => c.url.endsWith("/assessment/attempts") && c.method === "POST")!.body).toEqual({ profession: "backend", declared_grade: "middle" });
   });
 
-  it("экспресс-режим (E32-4a): ?mode=express включает переключатель, попытка создаётся с mode", async () => {
+  it("экспресс-режим: ?mode=express включает переключатель, попытка создаётся с mode", async () => {
     const calls = mount("/me/assessment?mode=express", (url, init) => {
       if (url.endsWith("/assessment/survey") && (init?.method ?? "GET") === "GET") return res(200, survey);
       if (url.endsWith("/assessment/survey")) return res(200, { ...survey, id: "s1", prefilled: false });
@@ -175,7 +175,7 @@ describe("поток до теста (S1, E39-6)", () => {
   });
 });
 
-describe("поток до теста (S1) · состояния", () => {
+describe("поток до теста · состояния", () => {
   const surveyGet = (url: string, init?: RequestInit) => (url.endsWith("/assessment/survey") && (init?.method ?? "GET") === "GET" ? res(200, survey) : undefined);
 
   it("кулдаун: плашка с датой, грейд в контуре, старт предлагает грейд ниже", async () => {
@@ -270,7 +270,7 @@ function attemptRoutes(items: unknown[], answers: { body: unknown }[] = []): Han
   };
 }
 
-describe("тест (S2)", () => {
+describe("тест", () => {
   it("exact: ответ уходит с response_id, rt_ms и телеметрией; после последнего — результат", async () => {
     const answers: { body: unknown }[] = [];
     mount(
@@ -319,7 +319,7 @@ describe("тест (S2)", () => {
     expect((answers[0]!.body as { answer: unknown }).answer).toBeNull();
   });
 
-  it("«Не знаю» (E35-7a): после пустого ответа показано следующее задание, а не то же", async () => {
+  it("«Не знаю»: после пустого ответа показано следующее задание, а не то же", async () => {
     const answers: { body: unknown }[] = [];
     mount(
       "/me/assessment/attempts/a1",
@@ -337,7 +337,7 @@ describe("тест (S2)", () => {
     expect(screen.queryByRole("heading", { name: "Первое?" })).toBeNull();
   });
 
-  it("choice (E35-7a): варианты — радиокнопки с подписями, группа подписана условием", async () => {
+  it("choice: варианты — радиокнопки с подписями, группа подписана условием", async () => {
     mount("/me/assessment/attempts/a1", attemptRoutes([{ done: false, response_id: "c", seq: 1, kind: "choice", stem: "Что?", options: ["Альфа", "Бета"], time_limit_s: 60 }]));
     expect(await screen.findByRole("radiogroup", { name: "Что?" })).toBeInTheDocument();
     const radio = screen.getByRole("radio", { name: "Бета" });
@@ -388,7 +388,7 @@ describe("тест (S2)", () => {
   });
 });
 
-describe("тест (S2) · макет v2 (E38-4)", () => {
+describe("прохождение теста", () => {
   it("шапка: номер из цели, таймер тикает; «?» открывает правила; «Не знаю» вторичное", async () => {
     mount("/me/assessment/attempts/a1", attemptRoutes([{ done: false, response_id: "r1", seq: 7, kind: "choice", stem: "Что?", options: ["A", "B"], time_limit_s: 60 }]));
     const timer = await screen.findByRole("timer");
@@ -453,7 +453,7 @@ describe("тест (S2) · макет v2 (E38-4)", () => {
   });
 });
 
-describe("результат (S3)", () => {
+describe("результат", () => {
   const routes = (calls: { n: number }): Handler => (url, init) => {
     if (url.endsWith("/attempts/a1/upgrade")) {
       calls.n += 1;
@@ -478,13 +478,13 @@ describe("результат (S3)", () => {
     expect(await screen.findByText(/Следующая смена грейда — с 04\.01\.2999/)).toBeInTheDocument();
     expect(screen.getByTestId("assessment-invite")).toHaveTextContent("Приглашение на тест Senior");
     expect(screen.getByTestId("assessment-invite-until")).toHaveTextContent("05.11.2999");
-    expect(screen.queryByText(/Принять/)).toBeNull(); // ADR-025 п.2: повышения нет, только отдельный тест
+    expect(screen.queryByText(/Принять/)).toBeNull(); // повышения нет, только отдельный тест
     fireEvent.click(screen.getByTestId("assessment-invite-start"));
     await waitFor(() => expect(calls.n).toBe(1));
     expect(await tid("assessment-item")).toBeInTheDocument();
   });
 
-  it("макет v2 (E38-5): шкала 0–100 с порогом следующего грейда, разбивка по типам, «?»", async () => {
+  it("результат: шкала 0–100 с порогом следующего грейда, разбивка по типам, «?»", async () => {
     mount("/me/assessment/attempts/a1/result", (url) => {
       if (url.endsWith("/attempts/a1")) return res(200, { ...finished, invited_grade: null });
       if (url.endsWith("/candidates/me/interests")) return res(200, { companies: 3, salary_from_min: 140000, salary_to_max: 220000, items: [] });
@@ -508,7 +508,7 @@ describe("результат (S3)", () => {
     expect(screen.getByTestId("assessment-skills")).toBeInTheDocument();
   });
 
-  it("не подтверждён (E38-5): главная — тест грейдом ниже, заявленный стек пунктиром", async () => {
+  it("не подтверждён: главная — тест грейдом ниже, заявленный стек пунктиром", async () => {
     mount("/me/assessment/attempts/a1/result", (url) => {
       if (url.endsWith("/attempts/a1"))
         return res(200, { ...finished, status: "failed", invited_grade: null, result: { ...finished.result, grade: null, theta: -0.4 } });
@@ -579,7 +579,7 @@ describe("результат (S3)", () => {
   });
 });
 
-describe("история (S4)", () => {
+describe("история", () => {
   it("кулдауны и пересдачи, попытки и опросы", async () => {
     mount("/me/assessment/history", (url) => {
       if (url.endsWith("/assessment/history"))
@@ -610,7 +610,7 @@ describe("история (S4)", () => {
   });
 });
 
-describe("«Объясни ответ» (E24-2)", () => {
+describe("«Объясни ответ»", () => {
   const explainOut = {
     response_id: "r2",
     seq: 2,
@@ -655,7 +655,7 @@ describe("«Объясни ответ» (E24-2)", () => {
   });
 });
 
-describe("баннер пути кандидата (E35-2a)", () => {
+describe("баннер пути кандидата", () => {
   const history = (surveys: unknown[], attempts: unknown[]) => (url: string) =>
     url.endsWith("/assessment/history") ? res(200, { surveys, attempts, cooldowns: [], retries: [] }) : undefined;
 
@@ -688,7 +688,7 @@ describe("баннер пути кандидата (E35-2a)", () => {
   });
 });
 
-describe("путь: тест сейчас или позже, результат → Главная (E35-2a)", () => {
+describe("путь: тест сейчас или позже, результат → Главная", () => {
   it("«Сохранить, тест позже» предлагает пройти тест позже и ведёт на Главную", async () => {
     mount("/me/assessment", (url, init) => {
       if (url.endsWith("/assessment/survey") && (init?.method ?? "GET") === "GET") return res(200, survey);
@@ -712,7 +712,7 @@ describe("путь: тест сейчас или позже, результат 
   });
 });
 
-describe("разбор теста (E39-10)", () => {
+describe("разбор теста", () => {
   const part = { kind: "exact", stem: "Сколько будет 2+2?", reason: { code: "calc_error", label: "Ошибка в вычислении", detail: null } };
   const review = {
     attempt_id: "a1",
@@ -732,7 +732,7 @@ describe("разбор теста (E39-10)", () => {
     expect(await tid("assessment-review-group-hard")).toBeInTheDocument();
     expect(screen.getByTestId("assessment-review-group-thinking")).toBeInTheDocument();
     expect(screen.getByTestId("assessment-review-item-2-yours")).toHaveTextContent("5");
-    // E41-5: верных ответов в разборе нет
+    // верных ответов в разборе нет
     expect(screen.queryByTestId("assessment-review-item-2-correct")).toBeNull();
     expect(screen.queryByText(/Верный ответ/)).toBeNull();
     expect(screen.getByTestId("assessment-review-item-2")).toHaveAttribute("data-verdict", "bad");

@@ -1,4 +1,4 @@
-"""E42-3: сид на чистом Postgres проходит с первого раза и повторяется без ошибок.
+"""Сид на чистом Postgres проходит с первого раза и повторяется без ошибок.
 
 Нужен пустой Postgres с pgvector: `SEED_PG_URL=postgresql+asyncpg://user:pw@host:port/db`
 (например, docker run с образом pgvector/pgvector:pg16, POSTGRES_DB=core, порт 29432).
@@ -39,7 +39,7 @@ def test_seed_chain_on_clean_postgres_twice():
 
 
 def test_expire_due_on_seed_data_postgres():
-    """E42-4: на данных сида просроченные приглашения истекают без ошибки, повтор — no-op."""
+    """На данных сида просроченные приглашения истекают без ошибки, повтор — no-op."""
     import asyncio
 
     from sqlalchemy import text

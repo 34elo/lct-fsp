@@ -1,4 +1,4 @@
-"""Связи людей по командам ФСП (E16-9, graph.md §7). Без анализа GitHub.
+"""Связи людей по командам ФСП. Без анализа GitHub.
 
 - `refresh_links` перестраивает связи `fsp_team` из `fsp_team_members` (идемпотентно);
   вызывается заданием `candidate_links.refresh` (core.jobs, раз в 10 минут).

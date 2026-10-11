@@ -1,4 +1,4 @@
-"""Флаг `roles.is_active`: скрытые профессии (E36-2, ADR-027 п.1)
+"""Флаг `roles.is_active`: скрытые профессии
 
 Revision ID: b2_13
 Revises: b1_15

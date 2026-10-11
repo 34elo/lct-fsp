@@ -1,4 +1,4 @@
-"""candidate_skills и поля слияния пересчётов (data-model.md §3.2–3.3, graph.md §4.4)
+"""candidate_skills и поля слияния пересчётов
 
 Revision ID: 0008
 Revises: 0007

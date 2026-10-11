@@ -7,7 +7,7 @@
 import type { RoleSlug } from './roleSlug';
 
 /**
- * Роль, которую кандидат назвал сам (E20-5). Только «заявлено»: категорию даёт тест.
+ * Роль, которую кандидат назвал сам. Только «заявлено»: категорию даёт тест.
  */
 export interface ResumeDeclaredRole {
   role: RoleSlug;

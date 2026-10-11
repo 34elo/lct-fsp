@@ -1,4 +1,4 @@
-"""Грейды, кулдауны и итог попытки (assessment.md §5, blocks.md §4.2, §4.4); `grades` пишет Б1.
+"""Грейды, кулдауны и итог попытки; таблицу `grades` пишет только этот модуль.
 
 - Кулдауны (`check_cooldown`): смена грейда — не чаще раза в `change_cooldown_days` (90), повтор
   того же грейда после неудачи — через `retry_days` (30); попытка на грейд ниже после неудачи
@@ -6,9 +6,9 @@
 - Итог (`on_finished`): при завершении попытки (один раз) — запись грейда (без понижения),
   доказательства `test` в `graph`, события `assessment.attempt.finished` и, если набор категорий или
   поля, влияющие на силу профиля, изменились, — `candidate.category.changed` (всегда полный набор).
-- Бонусный этап грейд не повышает (ADR-025 п.2): прошёл — в событии `invited_grade`, а тест по
+- Бонусный этап грейд не повышает: прошёл — в событии `invited_grade`, а тест по
   приглашению (`attempts.start_invited`) идёт без кулдаунов; его провал повтор не закрывает.
-- Экспресс (ADR-025 п.7, E32-4a): грейд пишется с `mode = express` и сверх метки прав не даёт:
+- Экспресс: грейд пишется с `mode = express` и сверх метки прав не даёт:
   обычный грейд не перекрывает; обычный тест заменяет экспресс-грейд (в том числе ниже) без
   кулдауна смены грейда, а неудачи экспресса повтор обычного теста не закрывают.
 
@@ -53,7 +53,7 @@ def _rank(grade: str) -> int:
 
 
 def band_position(grade: TestGrade, theta: float, cfg: AssessmentConfig) -> float:
-    """T = clamp((θ − cut_g) / (cut_{g+1} − cut_g), 0, 1); у senior ширина полосы 1.0 (§9)."""
+    """T = clamp((θ − cut_g) / (cut_{g+1} − cut_g), 0, 1); у senior ширина полосы 1.0."""
     idx = TEST_GRADE_ORDER.index(grade)
     lo = cfg.cuts[grade.value]
     hi = cfg.cuts[TEST_GRADE_ORDER[idx + 1].value] if idx + 1 < len(TEST_GRADE_ORDER) else lo + 1.0
@@ -75,8 +75,8 @@ async def _failed_attempts(
 ) -> list[Attempt]:
     """Неудачи, которые закрывают повтор попытки в режиме `mode`.
 
-    Провал теста по приглашению не считается (ADR-025 п.2); для обычного теста не считаются и
-    неудачи экспресса (E32-4a). По умолчанию (`express`) — все остальные неудачи.
+    Провал теста по приглашению не считается; для обычного теста не считаются и
+    неудачи экспресса. По умолчанию (`express`) — все остальные неудачи.
     """
     rows = list(
         await session.scalars(
@@ -145,7 +145,7 @@ async def check_cooldown(
     row = await session.get(Grade, (candidate_id, profession))
     if row is None or _aware(row.valid_until) <= now or row.grade == declared.value:
         return
-    if mode == "standard" and row.mode == "express":  # экспресс-грейд не держит кулдаун (E32-4a)
+    if mode == "standard" and row.mode == "express":  # экспресс-грейд не держит кулдаун
         return
     until = _aware(row.next_change_at)
     if until <= now:
@@ -256,7 +256,7 @@ async def _write_evidence(
 ) -> None:
     """Доказательства `test` по навыкам попытки: сила = max · доля набранного (идемпотентно).
 
-    `exclude` — выведенные из оценки семейства (пересчёт при карантине, E22-9).
+    `exclude` — выведенные из оценки семейства (пересчёт при карантине).
     """
     rows = (
         await session.execute(
@@ -323,7 +323,7 @@ async def on_finished(
         active = row is not None and _aware(row.valid_until) > now
         express = att.mode == "express"
         if active and express and row.mode != "express":
-            pass  # экспресс обычный грейд не перекрывает (E32-4a)
+            pass  # экспресс обычный грейд не перекрывает
         elif (
             not active
             or (not express and row.mode == "express")  # обычный тест заменяет экспресс-грейд
@@ -359,7 +359,7 @@ async def on_finished(
     await add_to_outbox(
         session, new_event("assessment.attempt.finished", PRODUCER, event), att.candidate_id
     )
-    from app.assessment import track  # E31-2a
+    from app.assessment import track
 
     await track.emit(
         session,
@@ -382,6 +382,6 @@ async def on_finished(
         },
         now=now,
     )
-    from app.assessment import lifecycle  # тревоги семейств после попытки (E22-9)
+    from app.assessment import lifecycle  # тревоги семейств после попытки
 
     await lifecycle.watch_attempt(session, att, cfg)

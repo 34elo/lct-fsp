@@ -1,4 +1,4 @@
-"""Сообщения для SSE: обменник `ui` (topic), routing key `ui.user.<user_id>` (api.md §4).
+"""Сообщения для SSE: обменник `ui` (topic), routing key `ui.user.<user_id>`.
 
 core-api пересылает `UiMessage` своим SSE-соединениям как `event: <event>`, `data: <data>`.
 """

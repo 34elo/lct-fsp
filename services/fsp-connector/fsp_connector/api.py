@@ -1,4 +1,4 @@
-"""Internal API fsp-connector для core-api (api.md §2.9): `Authorization: Service <token>`."""
+"""Internal API fsp-connector для core-api: `Authorization: Service <token>`."""
 
 from __future__ import annotations
 
@@ -93,10 +93,10 @@ async def verify_link(body: VerifyIn, links: LinkService = Depends(get_links)) -
     return VerifyOut(verified=await links.verify(body.candidate_id, body.code))
 
 
-# -------------------------------------------------------------------------- демо (E13-3)
+# -------------------------------------------------------------------------- демо
 @router.post("/demo/fsp-result", status_code=202)
 async def demo_create_fsp_result(request: Request) -> dict[str, str]:
-    """Демо: создать результат ФСП для случайного кандидата (E13-3)."""
+    """Демо: создать результат ФСП для случайного кандидата."""
     if not request.app.state.settings.demo_mode:
         raise ProblemError(400, "demo_disabled", "Демо-режим отключен")
     from fsp_connector.service import demo_create_result
@@ -107,7 +107,7 @@ async def demo_create_fsp_result(request: Request) -> dict[str, str]:
 
 @router.post("/demo/reset", status_code=202)
 async def demo_reset_fsp(request: Request) -> dict[str, str]:
-    """Демо: сброс результатов ФСП (E13-3)."""
+    """Демо: сброс результатов ФСП."""
     if not request.app.state.settings.demo_mode:
         raise ProblemError(400, "demo_disabled", "Демо-режим отключен")
     from fsp_connector.service import demo_reset

@@ -1,6 +1,6 @@
-"""Категория кандидата: роли, мульти-метки, `primary_stack`, объяснение (ml.md §4).
+"""Категория кандидата: роли, мульти-метки, `primary_stack`, объяснение.
 
-С E22-4 (ADR-018) это не категория кандидата: категорию (профессия × грейд) задаёт только тест
+Это не категория кандидата: категорию (профессия × грейд) задаёт только тест
 (`assessment.service`). Роли и `primary_stack` отсюда — сигнал силы профиля и старые поля резюме.
 
 Чистые формулы без БД: вход — доверие к навыкам (slug → confidence/level/sources) и веса ролей
@@ -109,7 +109,7 @@ def compute_category(
 ) -> Category:
     # fullstack не считается по своим весам: это метка backend + frontend по правилу ниже
     """Роли с баллами, мульти-метки, `primary_stack` и объяснение — сигнал силы профиля, не
-    категория теста (ml.md §4).
+    категория теста.
     """
     scores = {
         r: round(role_score(w, skills, cfg.top_k), 4) for r, w in roles.items() if r != FULLSTACK
@@ -181,7 +181,7 @@ def category_for(
 async def load_category(
     session: AsyncSession, candidate_id: uuid.UUID, graph: SkillGraph, cfg: CategoryConfig
 ) -> Category:
-    """Категория и объяснение по сохранённым `candidate_skills` (для E4-6)."""
+    """Категория и объяснение по сохранённым `candidate_skills`."""
     rows = await session.scalars(
         select(CandidateSkill).where(CandidateSkill.candidate_id == candidate_id)
     )

@@ -1,4 +1,4 @@
-"""E16-4: журнал решений конвейера навыков и черновики карточек (taxonomy/service.py)."""
+"""Журнал решений конвейера навыков и черновики карточек (taxonomy/service.py)."""
 
 import uuid
 from pathlib import Path

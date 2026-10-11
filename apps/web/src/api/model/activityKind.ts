@@ -6,7 +6,7 @@
  */
 
 /**
- * Тип события ленты активности работодателя (`GET /employer/activity`, E35-12b).
+ * Тип события ленты активности работодателя (`GET /employer/activity`).
  */
 export type ActivityKind = typeof ActivityKind[keyof typeof ActivityKind];
 

@@ -4,7 +4,7 @@
 	admin off
 }
 
-# Общие маршруты API: префикс /api/v1 срезается, core монтирует роуты без него (api.md §1).
+# Общие маршруты API: префикс /api/v1 срезается, core монтирует роуты без него.
 # /internal наружу не отдаём. flush_interval -1: иначе SSE буферизуется.
 (api_routes) {
 	@internal path /internal /internal/* /api/v1/internal /api/v1/internal/*
@@ -74,7 +74,7 @@ http://s3.fsp.patissons.tech {
 	reverse_proxy minio:9000
 }
 
-# Корневой домен — лендинг (E41-7). SPA отдаём только на публичных маршрутах и их статике,
+# Корневой домен — лендинг. SPA отдаём только на публичных маршрутах и их статике,
 # остальное — 302 на кабинет. API нужен публичным страницам (вакансии, цифры лендинга).
 http://fsp.patissons.tech {
 	import api_routes

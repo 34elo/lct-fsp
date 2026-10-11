@@ -46,7 +46,7 @@ def test_stage0_migrations_chain(tmp_path):
     # Check that b2_01 migration adds contacts and direction columns to companies
     assert "contacts" in {c["name"] for c in insp.get_columns("companies")}
     assert "direction" in {c["name"] for c in insp.get_columns("companies")}
-    # b2_02: приглашение без вакансии (ADR-022)
+    # b2_02: приглашение без вакансии
     offer_cols = {c["name"]: c for c in insp.get_columns("offers")}
     assert {"title", "description", "contact_method", "initiator"} <= set(offer_cols)
     assert offer_cols["vacancy_id"]["nullable"] is True

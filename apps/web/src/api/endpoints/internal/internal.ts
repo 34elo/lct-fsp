@@ -438,7 +438,7 @@ export const getTgLinkedInternalTgLinkedGetUrl = (params: TgLinkedInternalTgLink
 }
 
 /**
- * Привязан ли Telegram к аккаунту сайта. Ничего не создаёт (E43-7: бот не регистрирует).
+ * Привязан ли Telegram к аккаунту сайта. Ничего не создаёт (бот не регистрирует).
  * @summary Tg Linked
  */
 export const tgLinkedInternalTgLinkedGet = async (params: TgLinkedInternalTgLinkedGetParams, options?: Parameters<typeof apiFetch>[1]): Promise<tgLinkedInternalTgLinkedGetResponse> => {
@@ -664,7 +664,7 @@ export const getTgUserTokenInternalTgTokenPostUrl = () => {
 }
 
 /**
- * Короткий access-токен кандидата: бот ходит с ним в `/assessment/*` блока 1 (E25-3).
+ * Короткий access-токен кандидата: бот ходит с ним в `/assessment/*`.
  *
  * Тот же JWT, что и после входа, но живёт `BOT_USER_TOKEN_TTL` (5 минут), refresh не выдаётся.
  * @summary Tg User Token
@@ -1690,7 +1690,7 @@ export const getTgCategoryInternalTgCategoryGetUrl = (params: TgCategoryInternal
 }
 
 /**
- * Подтверждённые категории (грейды теста) и «заявлено vs подтверждено»; публичное API Б1.
+ * Подтверждённые категории (грейды теста) и «заявлено vs подтверждено».
  * @summary Tg Category
  */
 export const tgCategoryInternalTgCategoryGet = async (params: TgCategoryInternalTgCategoryGetParams, options?: Parameters<typeof apiFetch>[1]): Promise<tgCategoryInternalTgCategoryGetResponse> => {

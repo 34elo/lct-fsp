@@ -1,4 +1,4 @@
-"""Потребность → категории (assessment.md §9, E23-4). Чистые функции, без БД.
+"""Потребность → категории. Чистые функции, без БД.
 
 `affinity(prof) = Σ_s min(w_need(s), w_prof(s)) / Σ_s w_need(s)`; показываем профессии с
 affinity ≥ порога, грейд берём из потребности. Параметры — `data/scoring.yaml`, секция `needs`.
@@ -34,7 +34,7 @@ class NeedsConfig:
     nice_weight: float = 0.5
     max_categories: int = 6
     fallback_top: int = 1
-    subscription_digest_minutes: int = 60  # дайджест подписки не чаще (E33-4)
+    subscription_digest_minutes: int = 60  # дайджест подписки не чаще
     max_subscriptions: int = 20  # подписок на компанию
 
     @classmethod
@@ -90,7 +90,7 @@ def need_grades(filters: SearchFilters) -> list[str]:
 
 
 def affinity(need: Mapping[str, float], prof: Mapping[str, float]) -> float:
-    """Близость профессии к потребности: `Σ min(w_need, w_prof) / Σ w_need` (assessment.md §9)."""
+    """Близость профессии к потребности: `Σ min(w_need, w_prof) / Σ w_need`."""
     total = sum(need.values())
     if total <= 0:
         return 0.0

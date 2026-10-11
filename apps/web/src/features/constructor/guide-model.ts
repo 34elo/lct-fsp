@@ -11,7 +11,7 @@ const v = (id: number, name: string, p: Partial<FormState["vars"][number]>): For
   id, name, type: "range", min: "", max: "", step: "", list: "", expr: "", ...p,
 });
 
-/** Три шаблона для работодателя: Backend, Frontend, AI Engineer (E39-27). */
+/** Три шаблона для работодателя: Backend, Frontend, AI Engineer. */
 export const TEMPLATES: TaskTemplate[] = [
   {
     id: "backend",

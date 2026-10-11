@@ -578,7 +578,7 @@ export const getShortlistAllShortlistGetUrl = () => {
 }
 
 /**
- * Общий шорт-лист компании (E39-23): отмеченные во всех её потребностях, без повторов.
+ * Общий шорт-лист компании: отмеченные во всех её потребностях, без повторов.
  *
  * Сначала отмеченные в свежих потребностях; запоминать последний запрос в браузере не нужно.
  * @summary Shortlist All
@@ -731,7 +731,7 @@ export const getShortlistAddNeedsNeedIdShortlistPseudoIdPostUrl = (needId: strin
 }
 
 /**
- * Добавить кандидата в шорт-лист потребности (E23-5). Фильтр не сбрасывает отмеченных.
+ * Добавить кандидата в шорт-лист потребности. Фильтр не сбрасывает отмеченных.
  * @summary Shortlist Add
  */
 export const shortlistAddNeedsNeedIdShortlistPseudoIdPost = async (needId: string,
@@ -856,7 +856,7 @@ export const getShortlistRemoveNeedsNeedIdShortlistPseudoIdDeleteUrl = (needId: 
 }
 
 /**
- * Удалить кандидата из шорт-листа потребности (E23-5).
+ * Удалить кандидата из шорт-листа потребности.
  * @summary Shortlist Remove
  */
 export const shortlistRemoveNeedsNeedIdShortlistPseudoIdDelete = async (needId: string,

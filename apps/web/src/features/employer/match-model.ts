@@ -6,7 +6,7 @@ import { GRADE_LABEL, ROLE_LABEL } from "@/features/profile/text";
 import { displayPseudonym } from "@/shared/lib/pseudonym";
 import { FORMAT_LABEL, MATCH_TEXT as T, percent } from "./text";
 
-/* Модель экрана «Подбор» (E38-8): категории потребности, карточки лучших совпадений, подписки, лента. */
+/* Модель экрана «Подбор»: категории потребности, карточки лучших совпадений, подписки, лента. */
 
 export const catKey = (c: Pick<NeedCategory, "profession" | "grade">): string => `${c.profession}:${c.grade}`;
 
@@ -83,7 +83,7 @@ export interface LastNeed {
   chips: string[];
   /** Компания, чей это запрос: чужой запрос из того же браузера не читаем (иначе 404 в консоли). */
   company?: string;
-  /** Условия поиска в URL (E39-21): по ним экран восстанавливает чипсы и фильтры. */
+  /** Условия поиска в URL: по ним экран восстанавливает чипсы и фильтры. */
   qs?: string;
 }
 

@@ -1,4 +1,4 @@
-"""Разбор резюме в раскладке hh.ru (E39-19): набор data/eval/resumes/hh/ и точечные случаи."""
+"""Разбор резюме в раскладке hh.ru: набор data/eval/resumes/hh/ и точечные случаи."""
 
 import importlib.util
 import sys

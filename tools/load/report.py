@@ -1,4 +1,4 @@
-"""Проверка порогов нагрузочного прогона (E29-2) по CSV `locust --csv`.
+"""Проверка порогов нагрузочного прогона по CSV `locust --csv`.
 
 Запуск: `python tools/load/report.py reports/load/load_stats.csv [--out reports/load/load.md]`.
 Код выхода 1, если порог нарушен. Зависит только от стандартной библиотеки.
@@ -11,7 +11,7 @@ import csv
 import sys
 from pathlib import Path
 
-# Пороги (metrics.md, «Техника»): p95 подборки и поиска при 50 пользователях ≤ 1 с; ошибки ≤ 1 %.
+# Пороги («Техника»): p95 подборки и поиска при 50 пользователях ≤ 1 с; ошибки ≤ 1 %.
 P95_LIMITS_MS: dict[str, float] = {"search": 1000.0, "matches": 1000.0}
 MAX_ERROR_RATE = 0.01
 P95_COLUMN = "95%"

@@ -46,7 +46,7 @@ export interface CategoryFilters {
 
 export const EMPTY_CATEGORY_FILTERS: CategoryFilters = { minStrength: 0, confirmedOnly: false, fspOnly: false, remoteOnly: false, budgetMax: null, skill: null };
 
-/** Фильтр не сбрасывает отмеченных в шорт-лист (E23-5): они остаются в списке при любых условиях. */
+/** Фильтр не сбрасывает отмеченных в шорт-лист: они остаются в списке при любых условиях. */
 export function applyFilters(items: CandidateCard[], f: CategoryFilters, profession: string, shortlist: ReadonlySet<string>): CandidateCard[] {
   return items.filter((c) => {
     if (shortlist.has(c.pseudo_id)) return true;

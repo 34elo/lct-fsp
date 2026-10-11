@@ -1,8 +1,8 @@
 """`python -m app.assessment.families.check` (`make families-check`, CI): автопроверка семейств.
 
-На N сидах (по умолчанию 1000) для каждого кодового семейства (assessment.md §4):
+На N сидах (по умолчанию 1000) для каждого кодового семейства:
 - генерация без ошибок, `kind` совпадает, публичная часть и ключ сериализуются в JSON;
-- блоки ```mermaid в условии и вариантах валидны (`mermaid.py`, E41-9);
+- блоки ```mermaid в условии и вариантах валидны (`mermaid.py`);
 - ключ, пришедший как ответ через JSON, даёт балл 1;
 - ключ однозначен: варианты различны, неверные варианты ≠ ключу, порядок — перестановка;
 - ответ решателя = исполнению (`meta["exec"]`);
@@ -10,12 +10,12 @@
 - ручки в границах уровня (`knob_bounds` ↔ `meta["knobs"]`);
 - детерминизм: повторная генерация и два прогона в подпроцессах с разным `PYTHONHASHSEED`.
 
-Банки задач ФСП (`data/questions/fsp`, E32-6) — лицензия, ключ, автопроверка (`fsp_bank`).
+Банки задач ФСП (`data/questions/fsp`) — лицензия, ключ, автопроверка (`fsp_bank`).
 
 По банку: каждый тип навыка покрыт ≥ 2 семействами, каждый `kind` (кроме `open`) — хотя бы одним,
 навык семейства есть в `data/taxonomy` и его тип совпадает, есть якорные семейства.
 
-Покрытие (E36-2, E39-6): у каждой активной профессии справочника для каждого грейда и типа навыка
+Покрытие: у каждой активной профессии справочника для каждого грейда и типа навыка
 ищется семейство — навык из весов профессии, уровень в окне грейда (`selection.level_ok`). Пустая
 ячейка «профессия × грейд × тип навыка» — предупреждение «тонкий банк»: профессия остаётся открытой,
 в опросе помечена «бета» (`thin_professions`). Провал — только если активных профессий нет.
@@ -83,7 +83,7 @@ class _Step:
 
 
 def check_chain(fam: Family, item: Item) -> list[str]:
-    """`chain` (E26-3): ≥ 2 шагов обычных типов, каждый проходит те же проверки, ключ — их ключи."""
+    """`chain`: ≥ 2 шагов обычных типов, каждый проходит те же проверки, ключ — их ключи."""
     errs: list[str] = []
     if len(item.steps) < 2:
         return ["в цепочке меньше двух шагов"]
@@ -227,7 +227,7 @@ def thin_professions(
     professions: dict[str, dict[str, float]],
     level_window: int | None = None,
 ) -> set[str]:
-    """Профессии с тонким банком — есть пустая ячейка «грейд × тип навыка» (E39-6, «бета»)."""
+    """Профессии с тонким банком — есть пустая ячейка «грейд × тип навыка» («бета»)."""
     if level_window is None:
         level_window = load_config().level_window
     return {
@@ -246,7 +246,7 @@ def _active_professions(taxonomy_dir: Path) -> dict[str, dict[str, float]]:
 def check_coverage(
     families: Sequence[Family], taxonomy_dir: Path, level_window: int | None = None
 ) -> list[str]:
-    """Пустые ячейки покрытия у активных профессий справочника — предупреждения (E39-6)."""
+    """Пустые ячейки покрытия у активных профессий справочника — предупреждения."""
     if level_window is None:
         level_window = load_config().level_window
     professions = _active_professions(taxonomy_dir)
@@ -290,7 +290,7 @@ def run(families: Sequence[Family], n: int, taxonomy_dir: Path | None = TAXONOMY
 
 
 def check_fsp_banks() -> list[str]:
-    """Банки задач ФСП `data/questions/fsp/*.yaml` (E32-6): лицензия, ключ, автопроверка."""
+    """Банки задач ФСП `data/questions/fsp/*.yaml`: лицензия, ключ, автопроверка."""
     from app.assessment import fsp_bank
 
     return fsp_bank.check_files(fsp_bank.bank_files())

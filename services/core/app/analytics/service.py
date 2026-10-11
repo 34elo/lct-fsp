@@ -1,4 +1,4 @@
-"""Запись продуктовых событий (metrics.md §2.4, §7).
+"""Запись продуктовых событий.
 
 `actor` — псевдоним `HMAC(id, ANALYTICS_SALT)`: соль только на сервере, по псевдониму
 можно удалить сырые события пользователя, а восстановить id по событию нельзя.
@@ -98,7 +98,7 @@ async def track_employer(
 
 
 async def demo_actors(session: AsyncSession, salt: str) -> set[str]:
-    """Псевдонимы демо-пользователей и демо-компаний (E40-1): их события не идут в дашборд
+    """Псевдонимы демо-пользователей и демо-компаний: их события не идут в дашборд
     ФСП и метрики. Кандидат и пользователь — один id, работодатель пишется по компании."""
     from app.companies.service import demo_company_ids
     from app.identity.service import demo_user_ids
@@ -108,6 +108,6 @@ async def demo_actors(session: AsyncSession, salt: str) -> set[str]:
 
 
 async def delete_by_actor(session: AsyncSession, actor: str) -> int:
-    """Удаление профиля → удаление сырых событий по псевдониму (metrics.md §7)."""
+    """Удаление профиля → удаление сырых событий по псевдониму."""
     res = await session.execute(delete(AnalyticsEventRow).where(AnalyticsEventRow.actor == actor))
     return res.rowcount or 0

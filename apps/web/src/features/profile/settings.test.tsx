@@ -225,7 +225,7 @@ test("вкладки: у кандидата шесть, неизвестная ?
   for (const t of ["profile", "privacy", "notifications", "consents", "appearance", "security"]) expect(screen.getByTestId(`settings-tab-${t}`)).toBeInTheDocument();
 });
 
-test("работодатель: личный профиль уходит в PATCH /me/profile, компания — ссылкой с ролью (E39-24)", async () => {
+test("работодатель: личный профиль уходит в PATCH /me/profile, компания — ссылкой с ролью", async () => {
   const { staffPatches, companyPatches } = install({ role: "employer", company: true });
   mount();
   const name = await screen.findByTestId("settings-full-name");

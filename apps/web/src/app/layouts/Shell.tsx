@@ -24,7 +24,7 @@ function useOfferCounts(variant: "top" | "side"): Record<string, number | undefi
   const interestCount = interests.data?.status === 200 ? interests.data.data.companies : 0;
   return {
     "/employer/offers": offerCount(employer.data),
-    // «Интересы» и «Отклики» — фильтр внутри «Приглашений», бейдж общий (E39-25).
+    // «Интересы» и «Отклики» — фильтр внутри «Приглашений», бейдж общий.
     "/me/offers": positive((offerCount(candidate.data) ?? 0) + (interestCount > 0 ? interestCount : 0)),
   };
 }
@@ -38,15 +38,15 @@ export function offerCount(res?: { status: number; data: unknown }): number | un
 }
 
 /**
- * Каркас по ролям (E19-5). Кабинеты кандидата и работодателя: шапка с меню на десктопе,
- * на ≤768 px ещё и нижняя панель (у работодателя — с E38-8); админка — боковая панель по группам,
- * на телефоне — строка разделов под шапкой (E39-29). `banner` — над страницей
- * (у кандидата — баннер пути «опрос → тест», E35-2a).
+ * Каркас по ролям. Кабинеты кандидата и работодателя: шапка с меню на десктопе,
+ * на ≤768 px ещё и нижняя панель (в том числе у работодателя); админка — боковая панель по группам,
+ * на телефоне — строка разделов под шапкой. `banner` — над страницей
+ * (у кандидата — баннер пути «опрос → тест»).
  */
 export function Shell({ nav, variant, banner }: { nav: NavItem[]; variant: "top" | "side"; banner?: ReactNode }) {
   const { role } = useAuth();
   const counts = useOfferCounts(variant);
-  // Нижняя панель на телефоне — у кандидата и работодателя (макеты v2: `.tb` на 4 пункта).
+  // Нижняя панель на телефоне — у кандидата и работодателя (`.tb` на 4 пункта).
   const bottom = variant === "top" && (role === "candidate" || role === "employer");
   return (
     <div className={cn("min-h-dvh overflow-x-clip bg-page text-ink", variant === "side" && "md:grid md:grid-cols-[220px_1fr]")}>

@@ -54,7 +54,7 @@ export function useShortlist(needId: string | null) {
 export type ShortlistApi = ReturnType<typeof useShortlist>;
 
 /**
- * Карточка кандидата для подбора (E41-11): только главное — псевдоним, грейд, вилка, совпадение, 3 навыка.
+ * Карточка кандидата для подбора: только главное — псевдоним, грейд, вилка, совпадение, 3 навыка.
  * Подробности — по клику (вся карточка ведёт в профиль); кнопка «В шорт-лист» видна всегда и не открывает профиль.
  */
 export function CandidateTile({ card, profession, shortlist }: { card: CandidateCard; profession: string; shortlist: ShortlistApi }) {

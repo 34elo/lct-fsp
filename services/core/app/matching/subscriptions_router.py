@@ -1,4 +1,4 @@
-"""Подписки на категорию (E33-4): `POST|GET /subscriptions`, `DELETE /subscriptions/{id}`."""
+"""Подписки на категорию: `POST|GET /subscriptions`, `DELETE /subscriptions/{id}`."""
 
 from __future__ import annotations
 
@@ -44,7 +44,7 @@ async def list_subscriptions(
     user: User = Depends(_employer), session: AsyncSession = Depends(get_session)
 ) -> Any:
     found = await companies.my_company(session, user.id)
-    if found is None:  # новая компания: подписок ещё нет (E39-7)
+    if found is None:  # новая компания: подписок ещё нет
         return []
     return [subscriptions.to_out(s) for s in await subscriptions.list_for(session, found[0].id)]
 

@@ -1,4 +1,4 @@
-"""Правиловый парсер текстового запроса и POST /search/parse (ml.md §7, E7-5)."""
+"""Правиловый парсер текстового запроса и POST /search/parse."""
 
 import sqlite3
 import uuid
@@ -206,7 +206,7 @@ def test_endpoint_permissions_and_validation(c):
     assert c.post("/search/parse", json={"text": "x" * 501}, headers=h).status_code == 422
 
 
-# --- LLM-уточнение и слияние (E7-6) -------------------------------------------------------------
+# --- LLM-уточнение и слияние -------------------------------------------------------------
 
 
 def _llm_client(handler, redis=None):

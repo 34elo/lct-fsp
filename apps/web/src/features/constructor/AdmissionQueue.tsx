@@ -250,7 +250,7 @@ function Card1({
   );
 }
 
-/** Допуск заданий (K2, E39-31): карточки семейств с примером, статистикой пилота и решением админа. */
+/** Допуск заданий: карточки семейств с примером, статистикой пилота и решением админа. */
 export default function AdmissionQueue() {
   const qc = useQueryClient();
   const [status, setStatus] = useState<Status>("pilot");

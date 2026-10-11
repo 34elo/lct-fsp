@@ -1,4 +1,4 @@
-"""Подписки компаний на категорию (E33-4, assessment.md §9).
+"""Подписки компаний на категорию.
 
 По `candidate.category.changed` кандидат сверяется с подписками на его категории. Подошедший
 пишется в `category_subscription_hits` (PK «подписка + кандидат» — повтор не дублирует), затем
@@ -227,7 +227,7 @@ async def flush_due(
 async def recent_hits(
     session: AsyncSession, company_id: uuid.UUID, limit: int
 ) -> list[tuple[Sub, Hit]]:
-    """Свежие попадания кандидатов в подписки компании (для ленты активности, E35-12b)."""
+    """Свежие попадания кандидатов в подписки компании (для ленты активности)."""
     rows = await session.execute(
         select(Sub, Hit)
         .join(Hit, Hit.subscription_id == Sub.id)

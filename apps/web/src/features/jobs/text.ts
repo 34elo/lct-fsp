@@ -1,6 +1,6 @@
 import { ApiError } from "@/api/mutator";
 
-/** Тексты публичных вакансий и отклика (экран J1). */
+/** Тексты публичных вакансий и отклика. */
 export const JOBS_TEXT = {
   companyInterest: "Мне интересна компания",
   companyInterestOn: "Вы отметили компанию. Она увидит это в выдаче рядом с вашим профилем.",
@@ -53,7 +53,7 @@ export const JOBS_TEXT = {
   sentHint: "Статус смотрите в разделе «Отклики».",
   toResponses: "Мои отклики",
   verified: "Проверена",
-  demo: "демо", // E40-1: вакансия демо-компании
+  demo: "демо", // вакансия демо-компании
   employment: { full: "полная занятость", part: "частичная занятость", project: "проект", internship: "стажировка" } as Record<string, string>,
 };
 

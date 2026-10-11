@@ -2,7 +2,7 @@
 
 Upsert идемпотентен по (candidate_id, skill_id, source, fact_type, fact_id): повтор с теми же
 данными ничего не меняет и не порождает событие. Реальное изменение → `evidence.changed`
-в outbox в той же транзакции (messaging.md); пересчёт запрашивается там же командой
+в outbox в той же транзакции; пересчёт запрашивается там же командой
 `core.recompute` (`request_recompute`).
 """
 
@@ -65,7 +65,7 @@ def _key(candidate_id: uuid.UUID, i: EvidenceIn) -> tuple:
 async def request_recompute(
     session: AsyncSession, candidate_id: uuid.UUID, requested_at: datetime | None = None
 ) -> None:
-    """Слияние пересчётов (graph.md §4.4): поставить `recompute_requested_at` и отправить команду.
+    """Слияние пересчётов: поставить `recompute_requested_at` и отправить команду.
 
     Обработчик `core.recompute` пропустит её, если `recomputed_at >= requested_at`.
     """
@@ -214,7 +214,7 @@ async def covering_candidates(
     max_failed: int,
     limit: int,
 ) -> list[uuid.UUID]:
-    """Отбор по графу (matching.md §3, A): закрыто ≥ `required_count − (max_failed − 1)` требований.
+    """Отбор по графу (A): закрыто ≥ `required_count − (max_failed − 1)` требований.
 
     `cover = max(conf(via) · adj)` по каждому требованию; порядок — число закрытых, затем сумма.
     """
@@ -336,7 +336,7 @@ async def has_source(session: AsyncSession, candidate_id: uuid.UUID, source: str
 
 
 async def fsp_competitions_of(session: AsyncSession, candidate_id: uuid.UUID) -> set[str]:
-    """Соревнования ФСП, где кандидат участвовал: результат или состав команды (E32-6)."""
+    """Соревнования ФСП, где кандидат участвовал: результат или состав команды."""
     out: set[str] = set()
     rows = await session.scalars(
         select(FspResultRow.competition_id).where(
@@ -370,7 +370,7 @@ async def upcoming_competitions(
 
 
 async def erase_candidate(session: AsyncSession, candidate_id: uuid.UUID) -> None:
-    """Удаление профиля (F13): доказательства и агрегат навыков кандидата. Без событий."""
+    """Удаление профиля: доказательства и агрегат навыков кандидата. Без событий."""
     await session.execute(sa.delete(Evidence).where(Evidence.candidate_id == candidate_id))
     await session.execute(
         sa.delete(CandidateSkill).where(CandidateSkill.candidate_id == candidate_id)

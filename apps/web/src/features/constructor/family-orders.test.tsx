@@ -5,7 +5,7 @@ import { App } from "@/app/App";
 import { Providers, makeQueryClient } from "@/app/Providers";
 import { setAccessToken } from "@/shared/lib/token";
 
-/** E43-9: «Сгенерировать задания» в «Допуске заданий» — форма, заказ, статус и счётчик. */
+/** «Сгенерировать задания» в «Допуске заданий» — форма, заказ, статус и счётчик. */
 
 const res = (status: number, body?: unknown) => new Response(body === undefined ? null : JSON.stringify(body), { status });
 const calls: { url: string; method: string; body: unknown }[] = [];
@@ -61,7 +61,7 @@ async function openForm() {
   return screen.findByTestId("gen-dialog");
 }
 
-describe("Сгенерировать задания (E43-9)", () => {
+describe("Сгенерировать задания", () => {
   test("заказ: навык, тип, уровень, количество → POST /admin/assessment/generate", async () => {
     const dialog = await openForm();
     fireEvent.change(within(dialog).getByTestId("gen-skill"), { target: { value: "SQL" } });

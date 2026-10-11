@@ -57,7 +57,7 @@ function errorText(e: unknown): string {
   return e instanceof ApiError ? (T.errors[e.code ?? ""] ?? T.fallbackError) : T.fallbackError;
 }
 
-/** Подписки работодателя на категорию (E33-4): форма фильтра и список подписок. */
+/** Подписки работодателя на категорию: форма фильтра и список подписок. */
 export default function Subscriptions() {
   const qc = useQueryClient();
   const [params] = useSearchParams();

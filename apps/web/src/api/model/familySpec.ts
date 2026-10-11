@@ -10,7 +10,7 @@ import type { Kind } from './kind';
 import type { SjtAction } from './sjtAction';
 
 /**
- * Форма конструктора. Поля ключа необязательны: без них нужен черновик LLM (E30-1).
+ * Форма конструктора. Поля ключа необязательны: без них нужен черновик LLM.
  */
 export interface FamilySpec {
   /**

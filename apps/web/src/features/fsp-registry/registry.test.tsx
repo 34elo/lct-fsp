@@ -86,7 +86,7 @@ test("мероприятие: правка из списка в модалке �
   await waitFor(() => expect(calls.find((c) => c.method === "PATCH")?.body).toEqual({ title: "Кубок 2026", discipline: "product", level: "national", date: "2026-05-01" }));
 });
 
-test("реестр — одна страница с четырьмя вкладками и одной кнопкой «Создать» (E41-15)", async () => {
+test("реестр — одна страница с четырьмя вкладками и одной кнопкой «Создать»", async () => {
   mount();
   await screen.findByRole("tab", { name: /Участники/ });
   expect(screen.getAllByRole("tab").map((t) => t.textContent?.replace(/\d+$/, ""))).toEqual(["Мероприятия", "Участники", "Результаты", "Заявки"]);
@@ -151,7 +151,7 @@ test("мероприятия: «Импорт CSV» создаёт и прави�
   expect(calls.find((c) => c.method === "POST" && c.url.endsWith("/admin/fsp/events"))?.body).toEqual({ title: "Новый кубок", discipline: "product", level: "national", date: "2026-06-01" });
 });
 
-test("результаты: «Добавить списком» — превью с ошибками, импорт только после пропуска ошибок (E43-4)", async () => {
+test("результаты: «Добавить списком» — превью с ошибками, импорт только после пропуска ошибок", async () => {
   mount("/federation/registry?tab=results");
   fireEvent.click(await screen.findByRole("button", { name: "Добавить списком" }));
   fireEvent.change(await screen.findByLabelText("Или вставьте текст из таблицы"), { target: { value: "p;Кубок;2026-05-01;1\nx;Кубок;2026-05-01;2" } });

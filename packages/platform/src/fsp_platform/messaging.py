@@ -1,6 +1,6 @@
 """RabbitMQ поверх FastStream: топология, публикация, потребители с ретраями и DLQ.
 
-messaging.md §2: обменники `events` (topic), `commands` (direct), `ui` (topic), `dlx` (direct).
+Обменники `events` (topic), `commands` (direct), `ui` (topic), `dlx` (direct).
 Очередь `<q>` → при ошибке копия в `<q>.retry.<5s|30s|2m>` (TTL, затем dead-letter обратно
 в `<q>`), счётчик в заголовке `x-retry`; после 3 повторов `nack` → `dlx` → `<q>.dlq`.
 """
@@ -71,7 +71,7 @@ class QueueSpec:
 
 
 def _commands(name: str, prefetch: int, max_priority: int | None = None) -> QueueSpec:
-    """Команды: routing key в `commands` = имя очереди (messaging.md §2.4)."""
+    """Команды: routing key в `commands` = имя очереди."""
     return QueueSpec(name, COMMANDS_EXCHANGE, (name,), prefetch, max_priority)
 
 

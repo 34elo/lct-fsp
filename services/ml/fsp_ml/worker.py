@@ -1,8 +1,8 @@
 """ml-worker-llm (очередь ml.llm, prefetch=1) и ml-worker-code (ml.code).
 
 Запуск: `python -m fsp_ml.worker llm|code`. `ML_FAKE=true` — фикстуры (`fsp_ml/fake.py`).
-`ML_FAKE=false` — реальные обработчики, где они уже есть (`ml.resume.parse` через LLM, E3-3);
-остальные команды до своих задач (E10-* и др.) отвечают фикстурами с предупреждением в логе.
+`ML_FAKE=false` — реальные обработчики, где они уже есть (`ml.resume.parse` через LLM);
+остальные команды без реализации отвечают фикстурами с предупреждением в логе.
 """
 
 from __future__ import annotations
@@ -111,7 +111,7 @@ class MlWorker:
         )
 
     async def _families_generate(self, envelope: Envelope) -> list[Envelope]:
-        """E43-9: «идёт» сразу, затем формы генератора (промпт `/v1/families/generate`)."""
+        """«идёт» сразу, затем формы генератора (промпт `/v1/families/generate`)."""
         p = parse_payload(envelope)
         await publish_envelope(self.broker, families_started(envelope, p))
         llm, model = self.llm, self.settings.llm_model

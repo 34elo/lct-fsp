@@ -1,4 +1,4 @@
-/* Модель EvidenceGraph (E39-14): раскладка, фильтры, подписи без наложений, вписывание в экран. Чистые функции без DOM. */
+/* Модель EvidenceGraph: раскладка, фильтры, подписи без наложений, вписывание в экран. Чистые функции без DOM. */
 
 export interface EvidenceGraphNode {
   id: string;
@@ -85,7 +85,7 @@ const GROUP_TYPES = new Set(["competition", "team"]);
 export const pairKey = (a: string, b: string) => `${a}|${b}`;
 export const clipLabel = (s: string, n = LABEL_MAX_CHARS) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
 
-/** Доверие 0–1 → точки ○○○○…●●●● (ml.md §3: 0.2 / 0.4 / 0.6 / 0.8). */
+/** Доверие 0–1 → точки ○○○○…●●●● (0.2 / 0.4 / 0.6 / 0.8). */
 export function trustLevelOf(confidence?: number | null): 0 | 1 | 2 | 3 | 4 {
   const c = confidence ?? 0;
   if (c >= 0.8) return 4;

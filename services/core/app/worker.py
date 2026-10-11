@@ -89,18 +89,14 @@ class Worker:
         analytics_handlers.register(
             self.consumers, self.session_factory, self.settings.analytics_salt
         )
-        # >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
         profession_suggest.register(self.consumers, self.session_factory)
-        family_orders.register(  # E43-9: заказ заданий из админки
+        family_orders.register(  # заказ заданий из админки
             self.consumers,
             self.session_factory,
             load_assessment_config(self.settings.scoring_config_path or None),
         )
-        # <<< block1
-        # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
         fsp_links.register(self.consumers, self.session_factory)
         jobs_handlers.register(self.consumers, self.session_factory)
-        # <<< block2
         self.relay = OutboxRelay(
             self.session_factory,
             lambda env: publish_envelope(self.broker, env),

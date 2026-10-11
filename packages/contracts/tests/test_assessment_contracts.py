@@ -1,4 +1,4 @@
-"""Контракты стыка блоков (blocks.md §4.1, §4.3, §4.4)."""
+"""Контракты теста и грейдов."""
 
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
@@ -115,7 +115,7 @@ def test_registries_wired():
 
 
 def test_family_key_draft_contract():
-    """E30-1: core ↔ ml-api `POST /v1/families/key-draft`."""
+    """core ↔ ml-api `POST /v1/families/key-draft`."""
     from fsp_contracts.ml import FamilyKeyDraft, FamilyKeyDraftRequest
 
     req = FamilyKeyDraftRequest.model_validate(
@@ -130,7 +130,7 @@ def test_family_key_draft_contract():
 
 
 def test_answer_explain_contract():
-    """E24-2: core ↔ ml-api `POST /v1/assessment/explain`."""
+    """core ↔ ml-api `POST /v1/assessment/explain`."""
     from fsp_contracts.ml import AnswerExplain, AnswerExplainRequest
 
     req = AnswerExplainRequest.model_validate(
@@ -171,7 +171,7 @@ def test_family_llm_bank_contracts():
 
 
 def test_regular_task_published_contract():
-    """E25-1: событие рассылки регулярного задания (E9-6 у блока 2 читает его)."""
+    """Событие рассылки регулярного задания (его читают уведомления)."""
     from fsp_contracts.assessment import RegularTaskPublished
 
     assert ASSESSMENT_EVENTS["regular_task.published"] is RegularTaskPublished
@@ -278,9 +278,9 @@ def test_hiring_analytics_events_validate_and_reject_pii():
 
 
 def test_e32_declared_grade_and_compatible_fields():
-    """E32-1 (ADR-025): заявленный грейд, режим «экспресс», приглашение после бонуса.
+    """Заявленный грейд, режим «экспресс», приглашение после бонуса.
 
-    Старые payload без новых полей валидны: изменение совместимое (blocks.md §5.3).
+    Старые payload без новых полей валидны: изменение совместимое.
     """
     from fsp_contracts.assessment import DeclaredGrade
 
@@ -331,7 +331,7 @@ def test_e32_declared_grade_and_compatible_fields():
 
 
 def test_assessment_mode_fields_are_optional():
-    """E32-4a: `mode` в событиях и аналитике необязателен (совместимо), `express` принимается."""
+    """`mode` в событиях и аналитике необязателен (совместимо), `express` принимается."""
     from uuid import uuid4
 
     import pytest
@@ -380,7 +380,7 @@ def test_candidate_standing_defaults_and_bounds():
 
 
 def test_family_order_contracts():
-    """E43-9: заказ заданий из админки — команда низкого приоритета и два события ml."""
+    """Заказ заданий из админки — команда низкого приоритета и два события ml."""
     from fsp_contracts import new_command
     from fsp_contracts.assessment import FamilyOrderGenerated, FamilyOrderStarted
     from fsp_contracts.commands import COMMANDS, MlFamiliesGenerate

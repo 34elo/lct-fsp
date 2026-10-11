@@ -6,7 +6,7 @@ import { ThemeToggle } from "./Shell";
 
 export default function PublicLayout() {
   const { status } = useAuth();
-  // Лендинг рисует свою шапку и на всю ширину (E19-14).
+  // Лендинг рисует свою шапку и на всю ширину.
   if (useLocation().pathname === "/") return <Outlet />;
   return (
     <div className="min-h-dvh bg-page text-ink">

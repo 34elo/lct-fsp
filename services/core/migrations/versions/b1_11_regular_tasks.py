@@ -1,4 +1,4 @@
-"""assessment: регулярные задания `regular_tasks` и ответы `task_submissions` (E25-1).
+"""assessment: регулярные задания `regular_tasks` и ответы `task_submissions`.
 
 Revision ID: b1_11
 Revises: b1_10

@@ -43,7 +43,7 @@ export const suggestProfessions: ProfessionSource = async (query, signal): Promi
   return r.status === 200 ? r.data.map((p) => ({ slug: p.slug, title: p.title })) : [];
 };
 
-/** Подсказки только софт-навыков для «Личных качеств» (E41-6): значение вне списка не принимается. */
+/** Подсказки только софт-навыков для «Личных качеств»: значение вне списка не принимается. */
 export const suggestSoftSkills: SkillSource = async (query, signal): Promise<SkillSuggestion[]> => {
   const r = await suggestSkillsTaxonomySkillsSuggestGet({ q: query, limit: 20, kind: "soft" }, { signal });
   return r.status === 200 ? r.data.map((s) => ({ slug: s.slug, name: s.name })) : [];

@@ -14,7 +14,7 @@ export default defineConfig({
   build: { outDir: here("./dist"), emptyOutDir: true },
   test: {
     root: here("."),
-    include: ["src/**/*.test.{ts,tsx}", "scripts/**/*.test.mjs"],
+    include: ["src/**/*.test.{ts,tsx}"],
     environment: "jsdom",
     globals: true,
     setupFiles: [here("./src/test-setup.ts")],

@@ -1,4 +1,4 @@
-"""resumes, experience, education, candidates.claimed_soft (data-model.md §3.2)
+"""resumes, experience, education, candidates.claimed_soft
 
 Revision ID: 0014
 Revises: 0013

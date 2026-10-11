@@ -2,7 +2,7 @@ import type { SkillWithTrust } from "@/api/model";
 
 import { sortSkills } from "./home-model";
 
-/** Сколько навыков на вкладке «Навыки» по умолчанию (E39-15). */
+/** Сколько навыков на вкладке «Навыки» по умолчанию. */
 export const SKILLS_TOP = 15;
 
 export type SkillState = "all" | "confirmed" | "claimed";

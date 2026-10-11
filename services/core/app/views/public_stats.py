@@ -1,7 +1,7 @@
-"""Цифры для лендинга (E39-35): `GET /public/stats`.
+"""Цифры для лендинга: `GET /public/stats`.
 
 Только агрегаты: никаких идентификаторов, имён и ПДн.
-Демо-данные (`is_demo`, E40-1) не считаются. Без авторизации, кеш в Redis на 5 минут.
+Демо-данные (`is_demo`) не считаются. Без авторизации, кеш в Redis на 5 минут.
 Пока данных нет, поле `null`, и лендинг скрывает свой счётчик.
 """
 
@@ -50,7 +50,7 @@ def median_days(graded: dict[UUID, datetime], invited: dict[UUID, datetime]) -> 
 
 
 async def build(session: AsyncSession) -> PublicStatsOut:
-    # E40-1: демо-данные (seed, жюри) в цифры лендинга не попадают
+    # демо-данные (seed, жюри) в цифры лендинга не попадают
     graded = await assessment.graded_candidates_first_at(session, real_only=True)
     invitations, invited = await offers.first_invitations(session, real_only=True)
     verified = await companies.count_by_status(

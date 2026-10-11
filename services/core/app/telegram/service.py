@@ -1,4 +1,4 @@
-"""Telegram: Login Widget, magic-ссылки, привязка по deep link (security.md §1, telegram.md)."""
+"""Telegram: Login Widget, magic-ссылки, привязка по deep link."""
 
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ from app.consents import service as consents
 from app.identity.models import User
 from app.telegram.models import TelegramAccount
 
-MAGIC_TTL = 300  # 5 мин (security.md §1)
+MAGIC_TTL = 300  # 5 мин
 LINK_TTL = 900  # deep link с сайта живёт 15 мин
 WIDGET_MAX_AGE = 24 * 3600
 # Согласия, которые бот просит при первом /start
@@ -104,7 +104,7 @@ async def _active_user(session: AsyncSession, user_id: uuid.UUID) -> User:
 async def ensure_user(
     session: AsyncSession, tg_user_id: int, chat_id: int, username: str | None
 ) -> tuple[User, TelegramAccount]:
-    """Пользователь по tg_user_id; нет — создаём кандидата без email (data-model.md §3.1)."""
+    """Пользователь по tg_user_id; нет — создаём кандидата без email."""
     acc = await account_by_tg(session, tg_user_id)
     if acc is None:
         user = User(role="candidate")
@@ -219,7 +219,7 @@ async def link_by_token(
     chat_id: int | None = None,
     username: str | None = None,
 ) -> TelegramAccount:
-    """Привязка Telegram к аккаунту с сайта. Бот сам аккаунты не создаёт (E43-7): нет записи
+    """Привязка Telegram к аккаунту с сайта. Бот сам аккаунты не создаёт: нет записи
     о `tg_user_id` — привязываем новую. Заготовка старого `/start` (без email и пароля)
     сливается в аккаунт сайта: согласия переносятся, заготовка деактивируется."""
     target_id = await _consume(redis, "tglink", token)

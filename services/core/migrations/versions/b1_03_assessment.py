@@ -1,4 +1,4 @@
-"""assessment: surveys, families, attempts, responses + FK grades.attempt_id (E22-1).
+"""assessment: surveys, families, attempts, responses + FK grades.attempt_id.
 
 Revision ID: b1_03
 Revises: b1_02

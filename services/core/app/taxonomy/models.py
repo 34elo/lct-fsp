@@ -25,7 +25,7 @@ class Skill(Base):
     support_candidates: Mapped[int] = mapped_column(default=0, server_default="0")
     support_vacancies: Mapped[int] = mapped_column(default=0, server_default="0")
     testable: Mapped[bool] = mapped_column(default=False, server_default=sa.false())
-    # fundamental | hard | thinking | business | soft | experience (assessment.md §2)
+    # fundamental | hard | thinking | business | soft | experience
     skill_type: Mapped[str | None] = mapped_column(Text, default=None)
     description: Mapped[str | None] = mapped_column(Text, default=None)
     created_at: Mapped[datetime] = mapped_column(
@@ -81,9 +81,9 @@ class Role(Base):
 
     slug: Mapped[str] = mapped_column(Text, primary_key=True)
     name: Mapped[str] = mapped_column(Text)
-    # профессия теста (assessment.md §2); остальные роли — только для подсказок и поиска
+    # профессия теста; остальные роли — только для подсказок и поиска
     is_profession: Mapped[bool] = mapped_column(default=False, server_default=sa.false())
-    # профессия видна в опросе и выдаче (ADR-027 п.1); скрытая хранит данные, но не предлагается
+    # профессия видна в опросе и выдаче; скрытая хранит данные, но не предлагается
     is_active: Mapped[bool] = mapped_column(default=True, server_default=sa.true())
 
 
@@ -136,7 +136,7 @@ class ScoringConfig(Base):
 
 
 class SkillMention(Base):
-    """Журнал и кеш решений конвейера навыков ml (skills.md §3.3): ключ кеша — `norm`."""
+    """Журнал и кеш решений конвейера навыков ml: ключ кеша — `norm`."""
 
     __tablename__ = "skill_mentions"
     __table_args__ = (sa.Index("ix_skill_mentions_norm", "norm"),)
@@ -158,7 +158,7 @@ class SkillMention(Base):
 
 
 class SkillCardDraftRow(Base):
-    """Черновик карточки нового навыка от ml (E16-4). В `data/skills/cards` — после ревью."""
+    """Черновик карточки нового навыка от ml. В `data/skills/cards` — после ревью."""
 
     __tablename__ = "skill_card_drafts"
 
@@ -172,7 +172,7 @@ class SkillCardDraftRow(Base):
 
 
 class SkillMerge(Base):
-    """Журнал слияний (skills.md §6): по `moved` слияние откатывается (разделение)."""
+    """Журнал слияний: по `moved` слияние откатывается (разделение)."""
 
     __tablename__ = "skill_merges"
     __table_args__ = (sa.Index("ix_skill_merges_from", "from_skill"),)
@@ -189,7 +189,7 @@ class SkillMerge(Base):
 
 
 class ProfessionSuggestion(Base):
-    """Предложение новой профессии (E41-17, skills.md §5.1): кластер навыков вакансий и запросов.
+    """Предложение новой профессии: кластер навыков вакансий и запросов.
 
     `key` — отсортированные slug'и ядра через запятую. Отклонённые и принятые строки остаются:
     по ним майнинг узнаёт похожий кластер (Жаккар ≥ 0.6) и не предлагает его снова.

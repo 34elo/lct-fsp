@@ -1,5 +1,5 @@
-"""HTTP `/admin/professions*`, `/admin/skill-cards*` (E13-1a), `/admin/profession-suggestions*`
-(E41-17): справочник для роли `fsp_admin`."""
+"""HTTP `/admin/professions*`, `/admin/skill-cards*`, `/admin/profession-suggestions*`: справочник
+для роли `fsp_admin`."""
 
 from __future__ import annotations
 
@@ -168,7 +168,7 @@ async def put_card(
     )
 
 
-# --- предложения новых профессий (E41-17) --------------------------------------------------------
+# --- предложения новых профессий --------------------------------------------------------
 
 
 class SuggestionSkill(BaseModel):

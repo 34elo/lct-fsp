@@ -40,7 +40,7 @@ class UserOut(BaseModel):
     email: str | None
     role: str
     email_verified: bool = False
-    # E41-16: вход временным паролем — до смены доступны только `/me` и `/auth/password/initial`
+    # вход временным паролем — до смены доступны только `/me` и `/auth/password/initial`
     must_change_password: bool = False
 
     @classmethod
@@ -77,7 +77,7 @@ def _clear_cookie(request: Request, response: Response) -> None:
 
 
 def _check_origin(request: Request) -> None:
-    """CSRF для cookie-эндпоинтов (security.md §1): Origin, если есть, должен быть разрешённым."""
+    """CSRF для cookie-эндпоинтов: Origin, если есть, должен быть разрешённым."""
     origin = request.headers.get("origin")
     allowed = request.app.state.settings.allowed_origins
     if origin and allowed and origin not in allowed:
@@ -169,14 +169,14 @@ async def login(
     session: AsyncSession = Depends(get_session),
     limiter: RateLimiter = Depends(get_limiter),
 ):
-    # messaging.md §7: 10/мин на IP, 5/мин на email
+    # 10/мин на IP, 5/мин на email
     await limiter.check(f"login:ip:{_client_ip(request)}", 10, 60)
     await limiter.check(f"login:email:{service.normalize_email(body.email)}", 5, 60)
     user = await service.authenticate(session, body.email, body.password)
     issued = await service.issue_tokens(
         session, request.app.state.settings.jwt_secret, user, request.headers.get("user-agent")
     )
-    # E43-3: refresh-токен должен быть в БД до того, как клиент получит ответ (см. password_initial)
+    # refresh-токен должен быть в БД до того, как клиент получит ответ (см. password_initial)
     await session.commit()
     return tokens_out(request, response, issued)
 
@@ -193,7 +193,7 @@ async def auth_telegram(
     session: AsyncSession = Depends(get_session),
     limiter: RateLimiter = Depends(get_limiter),
 ):
-    """Telegram Login Widget → вход или регистрация кандидата (security.md §1)."""
+    """Telegram Login Widget → вход или регистрация кандидата."""
     await limiter.check(f"tglogin:ip:{_client_ip(request)}", 10, 60)
     s = request.app.state.settings
     user = await telegram.login_widget(session, body, s.tg_bot_token)
@@ -289,14 +289,14 @@ async def password_initial(
     session: AsyncSession = Depends(get_session),
     limiter: RateLimiter = Depends(get_limiter),
 ):
-    """Первая смена временного пароля HR (E41-16): без текущего пароля, вход уже выполнен им.
+    """Первая смена временного пароля HR: без текущего пароля, вход уже выполнен им.
 
     Не требуется — 409 `password_change_not_required`; срок вышел — 403 `temp_password_expired`;
     совпадает с временным — 422 `same_password`; 5 в час (429).
     """
     await limiter.check(f"password_initial:{user.id}", 5, 3600)
     await service.set_initial_password(session, user, body.new_password)
-    # E43-3: get_session закрывается ПОСЛЕ отправки ответа (FastAPI ≥ 0.118, scope="request").
+    # get_session закрывается ПОСЛЕ отправки ответа (FastAPI ≥ 0.118, scope="request").
     # Фронт сразу после 204 читает /me и входит новым паролем — без явного commit он мог застать
     # старый хеш и must_change_password=true. Фиксируем до ответа.
     await session.commit()
@@ -308,12 +308,12 @@ class MeCompany(BaseModel):
     name: str
     status: str
     role: str
-    logo_url: str | None = None  # E41-12
+    logo_url: str | None = None
 
 
 class MeOut(UserOut):
     consents: list[str]
-    avatar_url: str | None = None  # E41-12: своё фото; у кандидата — со строкой доступа
+    avatar_url: str | None = None  # своё фото; у кандидата — со строкой доступа
     telegram_linked: bool = False
     company: MeCompany | None = None
 
@@ -324,7 +324,7 @@ async def me(
     user: User = Depends(get_user_pending_password),
     session: AsyncSession = Depends(get_session),
 ):
-    """consents — действующие типы; company — E6-1; candidate — E3-1."""
+    """consents — действующие типы; company и candidate — краткие сводки роли."""
     found = await companies.my_company(session, user.id) if user.role == "employer" else None
     if user.role == "candidate":
         cand = await candidates.get(session, user.id)

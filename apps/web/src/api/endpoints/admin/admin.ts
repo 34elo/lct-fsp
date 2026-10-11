@@ -1569,7 +1569,7 @@ export const getToPilotAdminFamiliesFamilyIdPilotPostUrl = (familyId: string,) =
 }
 
 /**
- * Задание компании → общий банк: `draft → pilot` (E30-1).
+ * Задание компании → общий банк: `draft → pilot`.
  * @summary To Pilot
  */
 export const toPilotAdminFamiliesFamilyIdPilotPost = async (familyId: string, options?: Parameters<typeof apiFetch>[1]): Promise<toPilotAdminFamiliesFamilyIdPilotPostResponse> => {
@@ -7472,7 +7472,7 @@ export const getRegistryImportResultsAdminFspRegistryImportPostUrl = () => {
 }
 
 /**
- * Результаты списком (E43-4): CSV `участник;мероприятие;дата;результат`, до 1000 строк.
+ * Результаты списком: CSV `участник;мероприятие;дата;результат`, до 1000 строк.
  *
  * Без `commit` — превью с построчной проверкой. С `commit` — запись и пересчёт профилей
  * затронутых кандидатов (outbox). Новые мероприятия создаются только по `create_events`.

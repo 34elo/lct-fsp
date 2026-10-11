@@ -10,7 +10,7 @@ import { EMPLOYMENT_LABEL, FORMAT_LABEL, VACANCY_STATUS_LABEL } from "./text";
 const linkBtn =
   "inline-flex h-10 items-center justify-center rounded-lg px-4 text-14 font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand";
 
-/** Свои вакансии (экран E3, список): строка на вакансию, оттуда идём в подборку. */
+/** Свои вакансии: строка на вакансию, оттуда идём в подборку. */
 export default function Vacancies() {
   const q = useListVacanciesVacanciesGet();
   const list = q.data?.status === 200 ? q.data.data : [];

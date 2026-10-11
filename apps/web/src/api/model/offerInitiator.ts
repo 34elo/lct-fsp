@@ -6,7 +6,7 @@
  */
 
 /**
- * Кто начал взаимодействие (ADR-022): приглашение работодателя или отклик кандидата.
+ * Кто начал взаимодействие: приглашение работодателя или отклик кандидата.
  */
 export type OfferInitiator = typeof OfferInitiator[keyof typeof OfferInitiator];
 

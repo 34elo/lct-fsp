@@ -1,4 +1,4 @@
-"""Распределённые блокировки на Redis (`lock:*`, messaging.md §5)."""
+"""Распределённые блокировки на Redis (`lock:*`)."""
 
 from __future__ import annotations
 

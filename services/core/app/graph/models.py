@@ -13,7 +13,7 @@ from app.identity.models import utcnow
 
 
 class Evidence(Base):
-    """Ребро «факт подтверждает навык» (graph.md §3); ключ upsert — uq_evidence_fact."""
+    """Ребро «факт подтверждает навык»; ключ upsert — uq_evidence_fact."""
 
     __tablename__ = "evidence"
     __table_args__ = (
@@ -44,7 +44,7 @@ class Evidence(Base):
 
 
 class CandidateSkill(Base):
-    """Ребро «владеет»: агрегат доверия по навыку (data-model.md §3.3); пишет только пересчёт.
+    """Ребро «владеет»: агрегат доверия по навыку; пишет только пересчёт.
 
     `top_evidence` хранит id доказательств строками (Text[]: единый тип для PostgreSQL и SQLite).
     """

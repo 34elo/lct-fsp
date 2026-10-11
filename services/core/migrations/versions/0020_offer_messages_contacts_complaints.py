@@ -1,4 +1,4 @@
-"""offer_messages, contact_reveals, complaints (data-model.md §3.8)
+"""offer_messages, contact_reveals, complaints
 
 Revision ID: 0020
 Revises: 0019

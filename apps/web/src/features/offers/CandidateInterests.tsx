@@ -47,7 +47,7 @@ function InterestItem({ o, onDecline }: { o: CandidateOffer; onDecline: (id: str
   );
 }
 
-/** Вкладка «Интересы» (E38-14, ADR-026): карточки без контактов, «открыть интерес» / «отклонить» с причиной. */
+/** Вкладка «Интересы»: карточки без контактов, «открыть интерес» / «отклонить» с причиной. */
 export function CandidateInterests({ filter }: { filter?: ReactNode } = {}) {
   const qc = useQueryClient();
   const q = useMyInterestsCandidatesMeInterestsGet();

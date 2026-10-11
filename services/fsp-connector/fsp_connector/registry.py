@@ -1,4 +1,4 @@
-"""Реестр ФСП (E39-28, ADR-052): мероприятия, участники, результаты и заявки на привязку.
+"""Реестр ФСП: мероприятия, участники, результаты и заявки на привязку.
 
 Админ ведёт реестр руками или CSV. Кандидат жмёт «Привязать ФСП»: core присылает email и телефон
 его аккаунта, мы ищем участника по нормализованным контактам — совпал ровно один → привязка сразу
@@ -345,7 +345,7 @@ class RegistryService:
         default_discipline: str = "algorithmic",
         default_level: str = "regional",
     ) -> dict[str, Any]:
-        """E43-4: результаты списком. dry-run — превью построчно, commit — запись и пересчёт."""
+        """Результаты списком. dry-run — превью построчно, commit — запись и пересчёт."""
         lines = parse_import_text(text)
         if not lines:
             raise ProblemError(422, "empty_file", "В файле нет строк с данными")
@@ -821,7 +821,7 @@ class RegistryAdapter:
             members=[FspTeamMember(participant_id=r.participant_id, role="member") for r in rows],
         )
 
-    # верификация и OAuth — у источника (бэкенд OAuth сохраняем, ADR-052)
+    # верификация и OAuth — у источника (бэкенд OAuth сохраняем)
     async def send_verification_code(self, participant_id: str) -> MaskedContact:
         return await self.inner.send_verification_code(participant_id)
 

@@ -758,7 +758,7 @@ export const getUpgradeAssessmentAttemptsAttemptIdUpgradePostUrl = (attemptId: s
 }
 
 /**
- * Начать тест следующего грейда по приглашению бонусного этапа (ADR-025 п.2).
+ * Начать тест следующего грейда по приглашению бонусного этапа.
  *
  * Возвращает новую попытку; без кулдаунов; повтор возвращает уже начатую. Грейд не меняется,
  * пока не пройден сам приглашённый тест. `409 no_invite`, `invite_expired`, `invite_stale`.
@@ -1054,7 +1054,7 @@ export const getReviewAttemptAssessmentAttemptsAttemptIdReviewGetUrl = (attemptI
 }
 
 /**
- * Разбор теста (E41-5): только «что подтянуть», без верных ответов и вариантов.
+ * Разбор теста: только «что подтянуть», без верных ответов и вариантов.
  * @summary Review Attempt
  */
 export const reviewAttemptAssessmentAttemptsAttemptIdReviewGet = async (attemptId: string, options?: Parameters<typeof apiFetch>[1]): Promise<reviewAttemptAssessmentAttemptsAttemptIdReviewGetResponse> => {
@@ -2181,7 +2181,7 @@ export const getSetReadyFamiliesFamilyIdReadyPutUrl = (familyId: string,) => {
 }
 
 /**
- * «Готово» (задание доступно для приглашений компании) или возврат в черновик (E41-14).
+ * «Готово» (задание доступно для приглашений компании) или возврат в черновик.
  * @summary Set Ready
  */
 export const setReadyFamiliesFamilyIdReadyPut = async (familyId: string,

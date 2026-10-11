@@ -5,123 +5,99 @@ export type Section = "public" | "auth" | "candidate" | "employer" | "admin";
 export interface RouteDef {
   path: string;
   title: string;
-  /** Макет из docs/design/screens (для сверки). */
-  screen?: string;
   section: Section;
-  /** Владелец страницы (blocks.md §4.8). */
-  owner: "b1" | "b2";
-  /** Пункт навигации: меню строится из routes.ts (blocks.md §4.8). */
+  /** Пункт навигации: меню строится из routes.ts. */
   nav?: boolean;
   /** Старый адрес без своего экрана: ведёт на рабочий экран (ссылки на него ещё есть в коде). */
   redirect?: string;
 }
 
-/** Карта маршрутов — frontend.md §1. Роль определяется разделом. */
+/** Карта маршрутов. Роль определяется разделом. */
 export const ROUTES: RouteDef[] = [
-  { path: "/", title: "Лендинг", screen: "L1, L2", section: "public", owner: "b2" },
-  { path: "/run/:token", title: "Живой прогон", screen: "Q3", section: "public", owner: "b2" },
-  // >>> block1 (public)
-  // <<< block1 (public)
-  // >>> block2 (public)
-  { path: "/jobs", title: "Вакансии", section: "public", owner: "b2", nav: true },
-  { path: "/jobs/:id", title: "Вакансия", section: "public", owner: "b2" },
-  { path: "/terms", title: "Условия", section: "public", owner: "b2" },
-  { path: "/privacy", title: "Приватность", section: "public", owner: "b2" },
-  { path: "/invite/company/:token", title: "Приглашение в команду", section: "public", owner: "b2" },
-  // <<< block2 (public)
+  { path: "/", title: "Лендинг", section: "public" },
+  { path: "/run/:token", title: "Живой прогон", section: "public" },
+  { path: "/jobs", title: "Вакансии", section: "public", nav: true },
+  { path: "/jobs/:id", title: "Вакансия", section: "public" },
+  { path: "/terms", title: "Условия", section: "public" },
+  { path: "/privacy", title: "Приватность", section: "public" },
+  { path: "/invite/company/:token", title: "Приглашение в команду", section: "public" },
 
-  { path: "/login", title: "Вход", section: "auth", owner: "b1" },
-  { path: "/register", title: "Регистрация", section: "auth", owner: "b1" },
-  { path: "/auth/magic", title: "Вход по ссылке", section: "auth", owner: "b1" },
-  { path: "/consents", title: "Согласия", screen: "M1", section: "auth", owner: "b1" },
-  // >>> block1 (auth)
-  { path: "/verify-email", title: "Подтверждение email", section: "auth", owner: "b1" },
-  // <<< block1 (auth)
-  // >>> block2 (auth)
-  { path: "/password/new", title: "Новый пароль", section: "auth", owner: "b2" },
-  // <<< block2 (auth)
+  { path: "/login", title: "Вход", section: "auth" },
+  { path: "/register", title: "Регистрация", section: "auth" },
+  { path: "/auth/magic", title: "Вход по ссылке", section: "auth" },
+  { path: "/consents", title: "Согласия", section: "auth" },
+  { path: "/verify-email", title: "Подтверждение email", section: "auth" },
+  { path: "/password/new", title: "Новый пароль", section: "auth" },
 
-  { path: "/onboarding", title: "Онбординг", screen: "M1", section: "candidate", owner: "b1" },
-  { path: "/me", title: "Главная", screen: "v2_me__before, v2_me__after", section: "candidate", owner: "b1", nav: true },
-  // Граф переехал во вкладку профиля (E38-6).
-  { path: "/me/graph", title: "Граф доказательств", section: "candidate", owner: "b1", redirect: "/me/profile?tab=graph" },
-  { path: "/me/skills/:slug", title: "Доказательства навыка", section: "candidate", owner: "b1" },
-  { path: "/me/offers", title: "Приглашения", screen: "M2", section: "candidate", owner: "b2", nav: true },
-  { path: "/me/offers/:id", title: "Приглашение", screen: "M2", section: "candidate", owner: "b2" },
-  { path: "/me/growth", title: "Рост и тест", section: "candidate", owner: "b1", redirect: "/me/navigator" },
-  // Настройки (E38-7): пункт меню аватара, не вкладка.
-  { path: "/me/settings", title: "Настройки", section: "candidate", owner: "b2", redirect: "/settings" },
-  // Общий для всех ролей (E39-8): раздел только для карты, каркас выбирается по роли (AccountLayout).
-  { path: "/settings", title: "Настройки", screen: "v2_me-settings", section: "candidate", owner: "b2" },
-  // >>> block1 (candidate)
-  { path: "/me/assessment", title: "Тест и грейд", section: "candidate", owner: "b1", nav: true },
-  { path: "/me/assessment/history", title: "История тестов", section: "candidate", owner: "b1" },
-  { path: "/me/assessment/attempts/:id", title: "Прохождение теста", section: "candidate", owner: "b1" },
-  { path: "/me/assessment/attempts/:id/result", title: "Результат теста", section: "candidate", owner: "b1" },
-  { path: "/me/assessment/attempts/:id/review", title: "Разбор теста", section: "candidate", owner: "b1" },
-  { path: "/me/tasks", title: "Регулярные задания", section: "candidate", owner: "b1" },
-  { path: "/me/profile", title: "Мой профиль", screen: "v2_me-profile", section: "candidate", owner: "b1", nav: true },
-  { path: "/me/profile/edit", title: "Редактирование профиля", section: "candidate", owner: "b1" },
-  // Статистика (E38-2): пункт меню (E39-25), ссылка есть и на Главной.
-  { path: "/me/stats", title: "Статистика", screen: "v2_me-stats", section: "candidate", owner: "b1", nav: true },
-  // <<< block1 (candidate)
-  // >>> block2 (candidate)
-  // Интересы и отклики — фильтр на странице «Приглашения» (E39-25).
-  { path: "/me/responses", title: "Мои отклики", section: "candidate", owner: "b2", redirect: "/me/offers?show=responses" },
-  { path: "/me/navigator", title: "Навигатор роста", section: "candidate", owner: "b2" },
-  { path: "/me/interests", title: "Вами интересуются", section: "candidate", owner: "b2", redirect: "/me/offers?show=interests" },
-  // <<< block2 (candidate)
+  { path: "/onboarding", title: "Онбординг", section: "candidate" },
+  { path: "/me", title: "Главная", section: "candidate", nav: true },
+  // Граф переехал во вкладку профиля.
+  { path: "/me/graph", title: "Граф доказательств", section: "candidate", redirect: "/me/profile?tab=graph" },
+  { path: "/me/skills/:slug", title: "Доказательства навыка", section: "candidate" },
+  { path: "/me/offers", title: "Приглашения", section: "candidate", nav: true },
+  { path: "/me/offers/:id", title: "Приглашение", section: "candidate" },
+  { path: "/me/growth", title: "Рост и тест", section: "candidate", redirect: "/me/navigator" },
+  // Настройки: пункт меню аватара, не вкладка.
+  { path: "/me/settings", title: "Настройки", section: "candidate", redirect: "/settings" },
+  // Общий для всех ролей: раздел только для карты, каркас выбирается по роли (AccountLayout).
+  { path: "/settings", title: "Настройки", section: "candidate" },
+  { path: "/me/assessment", title: "Тест и грейд", section: "candidate", nav: true },
+  { path: "/me/assessment/history", title: "История тестов", section: "candidate" },
+  { path: "/me/assessment/attempts/:id", title: "Прохождение теста", section: "candidate" },
+  { path: "/me/assessment/attempts/:id/result", title: "Результат теста", section: "candidate" },
+  { path: "/me/assessment/attempts/:id/review", title: "Разбор теста", section: "candidate" },
+  { path: "/me/tasks", title: "Регулярные задания", section: "candidate" },
+  { path: "/me/profile", title: "Мой профиль", section: "candidate", nav: true },
+  { path: "/me/profile/edit", title: "Редактирование профиля", section: "candidate" },
+  // Статистика: пункт меню, ссылка есть и на Главной.
+  { path: "/me/stats", title: "Статистика", section: "candidate", nav: true },
+  // Интересы и отклики — фильтр на странице «Приглашения».
+  { path: "/me/responses", title: "Мои отклики", section: "candidate", redirect: "/me/offers?show=responses" },
+  { path: "/me/navigator", title: "Навигатор роста", section: "candidate" },
+  { path: "/me/interests", title: "Вами интересуются", section: "candidate", redirect: "/me/offers?show=interests" },
 
-  { path: "/employer/search", title: "Поиск", screen: "A, E2", section: "employer", owner: "b2" },
-  { path: "/employer/candidates/:id", title: "Карточка кандидата", screen: "B", section: "employer", owner: "b2" },
-  { path: "/employer/offers/new", title: "Новое приглашение", screen: "C", section: "employer", owner: "b2" },
-  { path: "/employer/vacancies", title: "Вакансии", screen: "E3", section: "employer", owner: "b2", nav: true },
-  { path: "/employer/vacancies/new", title: "Новая вакансия", screen: "E3", section: "employer", owner: "b2" },
-  { path: "/employer/vacancies/:id", title: "Вакансия", screen: "E3", section: "employer", owner: "b2" },
-  { path: "/employer/vacancies/:id/shortlist", title: "Подборка", screen: "E4", section: "employer", owner: "b2" },
-  { path: "/employer/offers", title: "Мои приглашения", screen: "E5", section: "employer", owner: "b2", nav: true },
-  { path: "/employer/offers/:id", title: "Приглашение", screen: "E5", section: "employer", owner: "b2" },
-  { path: "/employer/company", title: "Компания", section: "employer", owner: "b2", nav: true },
-  // >>> block1 (employer)
-  { path: "/employer/tasks", title: "Задания компании", section: "employer", owner: "b1", nav: true },
-  { path: "/employer/families/new", title: "Конструктор задания", section: "employer", owner: "b1" },
-  { path: "/employer/families/guide", title: "Как сделать задание", section: "employer", owner: "b1" },
-  // <<< block1 (employer)
-  // >>> block2 (employer)
-  { path: "/employer", title: "Подбор", screen: "v2_employer__first, v2_employer__results", section: "employer", owner: "b2", nav: true },
-  { path: "/employer/needs/new", title: "Новая потребность", section: "employer", owner: "b2" },
-  { path: "/employer/needs/:id", title: "Рекомендованные категории", section: "employer", owner: "b2" },
-  { path: "/employer/categories/:profession/:grade", title: "Кандидаты категории", section: "employer", owner: "b2" },
-  { path: "/employer/shortlist", title: "Шорт-лист", screen: "v2_employer-shortlist", section: "employer", owner: "b2", nav: true },
-  // Отклики — фильтр на странице «Приглашения» (E39-25).
-  { path: "/employer/responses", title: "Отклики на вакансии", section: "employer", owner: "b2", redirect: "/employer/offers?show=responses" },
-  // Подписки — блок «Ваши категории» в Подборе (E39-25), управление открывается из него.
-  { path: "/employer/subscriptions", title: "Подписки на категории", section: "employer", owner: "b2" },
-  // <<< block2 (employer)
+  { path: "/employer/search", title: "Поиск", section: "employer" },
+  { path: "/employer/candidates/:id", title: "Карточка кандидата", section: "employer" },
+  { path: "/employer/offers/new", title: "Новое приглашение", section: "employer" },
+  { path: "/employer/vacancies", title: "Вакансии", section: "employer", nav: true },
+  { path: "/employer/vacancies/new", title: "Новая вакансия", section: "employer" },
+  { path: "/employer/vacancies/:id", title: "Вакансия", section: "employer" },
+  { path: "/employer/vacancies/:id/shortlist", title: "Подборка", section: "employer" },
+  { path: "/employer/offers", title: "Мои приглашения", section: "employer", nav: true },
+  { path: "/employer/offers/:id", title: "Приглашение", section: "employer" },
+  { path: "/employer/company", title: "Компания", section: "employer", nav: true },
+  { path: "/employer/tasks", title: "Задания компании", section: "employer", nav: true },
+  { path: "/employer/families/new", title: "Конструктор задания", section: "employer" },
+  { path: "/employer/families/guide", title: "Как сделать задание", section: "employer" },
+  { path: "/employer", title: "Подбор", section: "employer", nav: true },
+  { path: "/employer/needs/new", title: "Новая потребность", section: "employer" },
+  { path: "/employer/needs/:id", title: "Рекомендованные категории", section: "employer" },
+  { path: "/employer/categories/:profession/:grade", title: "Кандидаты категории", section: "employer" },
+  { path: "/employer/shortlist", title: "Шорт-лист", section: "employer", nav: true },
+  // Отклики — фильтр на странице «Приглашения».
+  { path: "/employer/responses", title: "Отклики на вакансии", section: "employer", redirect: "/employer/offers?show=responses" },
+  // Подписки — блок «Ваши категории» в Подборе, управление открывается из него.
+  { path: "/employer/subscriptions", title: "Подписки на категории", section: "employer" },
 
-  // Главная админки (E39-29): «Что требует вас» и что работает само; воронка — /federation/funnel.
-  { path: "/federation", title: "Главная", section: "admin", owner: "b2", nav: true },
-  { path: "/federation/moderation", title: "Модерация", screen: "F3", section: "admin", owner: "b2", nav: true },
-  { path: "/admin/skills", title: "Граф навыков", screen: "G3", section: "admin", owner: "b1", nav: true },
-  // «Качество» заменено «Аналитикой» (E41-15): старые адреса ведут на неё.
-  { path: "/admin/quality", title: "Качество", section: "admin", owner: "b2", redirect: "/federation/analytics" },
-  { path: "/admin/quality/fairness", title: "Справедливость", section: "admin", owner: "b2", redirect: "/federation/analytics" },
-  { path: "/admin/quality/runs", title: "Живые прогоны", section: "admin", owner: "b2", redirect: "/federation/analytics" },
-  // >>> block1 (admin)
-  { path: "/admin/families", title: "Допуск заданий", section: "admin", owner: "b1", nav: true },
-  { path: "/admin/professions", title: "Профессии и навыки", section: "admin", owner: "b1", nav: true },
-  { path: "/admin/demo/two-worlds", title: "Два мира", section: "admin", owner: "b1" },
-  { path: "/admin/demo/llm-exam", title: "LLM сдаёт тест", section: "admin", owner: "b1" },
-  { path: "/admin/demo/new-profession", title: "Новая профессия", section: "admin", owner: "b1" },
-  // <<< block1 (admin)
-  // >>> block2 (admin)
-  // Меню админки по группам (E39-29): реестр — справочник, заявки — очередь, воронка — аналитика.
-  { path: "/federation/registry", title: "Реестр ФСП", section: "admin", owner: "b2", nav: true },
-  // Заявки — вкладка реестра (E41-15), старый адрес ведёт на неё.
-  { path: "/federation/requests", title: "Заявки ФСП", section: "admin", owner: "b2", redirect: "/federation/registry?tab=requests" },
-  { path: "/federation/funnel", title: "Воронка", screen: "F1", section: "admin", owner: "b2", nav: true },
-  { path: "/federation/analytics", title: "Аналитика", section: "admin", owner: "b2", nav: true },
-  // <<< block2 (admin)
+  // Главная админки: «Что требует вас» и что работает само; воронка — /federation/funnel.
+  { path: "/federation", title: "Главная", section: "admin", nav: true },
+  { path: "/federation/moderation", title: "Модерация", section: "admin", nav: true },
+  { path: "/admin/skills", title: "Граф навыков", section: "admin", nav: true },
+  // «Качество» заменено «Аналитикой»: старые адреса ведут на неё.
+  { path: "/admin/quality", title: "Качество", section: "admin", redirect: "/federation/analytics" },
+  { path: "/admin/quality/fairness", title: "Справедливость", section: "admin", redirect: "/federation/analytics" },
+  { path: "/admin/quality/runs", title: "Живые прогоны", section: "admin", redirect: "/federation/analytics" },
+  { path: "/admin/families", title: "Допуск заданий", section: "admin", nav: true },
+  { path: "/admin/professions", title: "Профессии и навыки", section: "admin", nav: true },
+  { path: "/admin/demo/two-worlds", title: "Два мира", section: "admin" },
+  { path: "/admin/demo/llm-exam", title: "LLM сдаёт тест", section: "admin" },
+  { path: "/admin/demo/new-profession", title: "Новая профессия", section: "admin" },
+  // Меню админки по группам: реестр — справочник, заявки — очередь, воронка — аналитика.
+  { path: "/federation/registry", title: "Реестр ФСП", section: "admin", nav: true },
+  // Заявки — вкладка реестра, старый адрес ведёт на неё.
+  { path: "/federation/requests", title: "Заявки ФСП", section: "admin", redirect: "/federation/registry?tab=requests" },
+  { path: "/federation/funnel", title: "Воронка", section: "admin", nav: true },
+  { path: "/federation/analytics", title: "Аналитика", section: "admin", nav: true },
 ];
 
 export const SECTION_ROLE: Partial<Record<Section, Role>> = {
@@ -132,7 +108,7 @@ export const SECTION_ROLE: Partial<Record<Section, Role>> = {
 
 export type AdminGroup = "queues" | "refs" | "analytics";
 
-/** Группы меню админки (E39-29): порядок и подписи. */
+/** Группы меню админки: порядок и подписи. */
 export const ADMIN_GROUPS: { id: AdminGroup; label: string }[] = [
   { id: "queues", label: "Очереди" },
   { id: "refs", label: "Справочники" },
@@ -149,25 +125,25 @@ export interface NavItem {
 }
 
 /**
- * Меню по ролям (E35-1, ux-spec §2). Правило: нет пункта меню, ссылки или кнопки без работающего
+ * Меню по ролям. Правило: нет пункта меню, ссылки или кнопки без работающего
  * экрана — каждый пункт и вкладка ведут на маршрут с `nav: true` и настоящей страницей (routes.test.ts).
  * «Настройки» и «Согласия»
- * в меню аватара — вместе с экраном настроек (E36-4).
+ * в меню аватара — вместе с экраном настроек.
  */
 export const NAV: Record<"candidate" | "employer" | "admin", NavItem[]> = {
   candidate: [
-    // Регулярные задания открываются с Главной (E39-15), когда они есть.
+    // Регулярные задания открываются с Главной, когда они есть.
     { to: "/me", label: "Главная", match: ["/me/tasks"] },
     { to: "/me/assessment", label: "Тест" },
-    // «Интересы» и «Отклики» — фильтр внутри страницы (E39-25).
+    // «Интересы» и «Отклики» — фильтр внутри страницы.
     { to: "/me/offers", label: "Приглашения", match: ["/me/interests", "/me/responses"] },
     { to: "/jobs", label: "Вакансии" },
     { to: "/me/stats", label: "Статистика" },
-    // Резюме, ФСП и данные — вкладка «Данные» профиля (E39-15); /onboarding в меню нет.
+    // Резюме, ФСП и данные — вкладка «Данные» профиля; /onboarding в меню нет.
     { to: "/me/profile", label: "Профиль" },
   ],
   employer: [
-    // Подбор (E38-8): «Поиск» и «Кого ищете» заменяет строка запроса; подписки — блок «Ваши категории».
+    // Подбор: «Поиск» и «Кого ищете» заменяет строка запроса; подписки — блок «Ваши категории».
     { to: "/employer", label: "Подбор", match: ["/employer/subscriptions"] },
     { to: "/employer/shortlist", label: "Шорт-лист" },
     { to: "/employer/offers", label: "Приглашения", match: ["/employer/responses"] },
@@ -175,7 +151,7 @@ export const NAV: Record<"candidate" | "employer" | "admin", NavItem[]> = {
     { to: "/employer/tasks", label: "Задания", match: ["/employer/families"] },
     { to: "/employer/company", label: "Компания" },
   ],
-  // Админка (E39-29): «Главная» и три группы — где нужно решение, что админ ведёт, что смотрит.
+  // Админка: «Главная» и три группы — где нужно решение, что админ ведёт, что смотрит.
   admin: [
     { to: "/federation", label: "Главная" },
     { to: "/admin/families", label: "Допуск заданий", group: "queues" },

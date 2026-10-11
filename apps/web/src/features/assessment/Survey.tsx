@@ -40,7 +40,7 @@ function Fld({ label, resume, tid, children }: { label: React.ReactNode; resume?
 type Step = 1 | 2;
 
 /**
- * S1 (E39-6): поток «Шаг 1. Направление и навыки → Шаг 2. Грейд и ожидания → Шаг 3. Тест».
+ * Поток «Шаг 1. Направление и навыки → Шаг 2. Грейд и ожидания → Шаг 3. Тест».
  * Новый кандидат попадает сюда сразу после регистрации; «Начать тест» сохраняет ответы и открывает
  * первое задание. Шаг 2 открывается сразу, если направление уже сохранено или пришло в ссылке
  * (навигатор, результат теста); `?step=1` — правка направления и навыков из профиля.
@@ -63,7 +63,7 @@ export default function Survey() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [grade, setGrade] = useState<TestGrade | "">("");
-  const [express, setExpress] = useState(params.get("mode") === "express"); // E32-4a: вход жюри
+  const [express, setExpress] = useState(params.get("mode") === "express"); // вход жюри
   const [touched, setTouched] = useState(false);
   const [done, setDone] = useState(false);
   const { suggest } = useSkillSource(profession || undefined);
@@ -103,7 +103,7 @@ export default function Survey() {
   const lowerGrade = grade ? GRADE_ORDER[GRADE_ORDER.indexOf(grade) - 1] : undefined;
 
   const body = (g: TestGrade | ""): SurveyIn => ({
-    industry: survey?.industry ?? null, // ADR-025 п.4: отрасль не спрашиваем, прежнее значение сохраняем
+    industry: survey?.industry ?? null, // отрасль не спрашиваем, прежнее значение сохраняем
     profession,
     stack,
     formats,

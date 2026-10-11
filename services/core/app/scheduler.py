@@ -1,4 +1,4 @@
-"""core-scheduler: cron-команды в RabbitMQ (messaging.md §4). Запуск: `python -m app.scheduler`.
+"""core-scheduler: cron-команды в RabbitMQ. Запуск: `python -m app.scheduler`.
 
 Условия вида «если были изменения» проверяет обработчик команды, а не расписание.
 """
@@ -31,11 +31,7 @@ SCHEDULE: dict[str, int] = {
     "company.rating": 60 * 60,
     "candidate_links.refresh": 10 * 60,
     "cleanup": 24 * 60 * 60,
-    # >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
-    "taxonomy.professions.suggest": 7 * 24 * 60 * 60,  # E41-17
-    # <<< block1
-    # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
-    # <<< block2
+    "taxonomy.professions.suggest": 7 * 24 * 60 * 60,
 }
 
 

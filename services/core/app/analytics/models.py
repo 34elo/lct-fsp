@@ -12,7 +12,7 @@ _JSON = sa.JSON().with_variant(postgresql.JSONB(), "postgresql")
 
 
 class AnalyticsEventRow(Base):
-    """Продуктовое событие (metrics.md §2.4). В PostgreSQL — партиции по месяцам, PK `(id, ts)`.
+    """Продуктовое событие. В PostgreSQL — партиции по месяцам, PK `(id, ts)`.
 
     Пишем через Core `insert()`: `id` выдаёт БД (bigserial / rowid в SQLite для тестов).
     """
@@ -37,7 +37,7 @@ class AnalyticsEventRow(Base):
 
 
 class LiveRun(Base):
-    """Живой прогон (metrics.md §3): приглашение испытателю, задания, SUS.
+    """Живой прогон: приглашение испытателю, задания, SUS.
 
     `tasks` — список `{id, title, target, count, done_at}`; `actor` — псевдоним испытателя
     (привязывается по токену первого события с `run_id`): по нему серверные события

@@ -9,11 +9,11 @@ import { authText } from "@/features/auth/text";
 import { ErrorNote } from "@/features/auth/ui";
 
 const t = authText.consents;
-/** E41-3: анализ кода в разработке — согласие не показываем. */
+/** Анализ кода в разработке — согласие не показываем. */
 export const HIDDEN_CONSENTS = new Set(["code_analysis"]);
 
 /**
- * Согласия при входе (E39-6): по умолчанию только обязательные; необязательные выдаются в настройках
+ * Согласия при входе: по умолчанию только обязательные; необязательные выдаются в настройках
  * и до этого выключены. `requiredOnly={false}` — полный список.
  */
 export function ConsentsForm({

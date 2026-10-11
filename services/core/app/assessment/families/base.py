@@ -1,4 +1,4 @@
-"""Интерфейс семейства заданий и правила оценки по `kind` (assessment.md §4).
+"""Интерфейс семейства заданий и правила оценки по `kind`.
 
 Семейство — генератор вариантов с доказуемым ответом: `generate(rng, world)` даёт `Item` с ключом,
 `score(item, answer)` — балл 0..1. Ключ живёт только на сервере: клиент получает `public()`.
@@ -25,7 +25,7 @@ class Kind(StrEnum):
     find_bug = "find_bug"
     order = "order"
     sjt = "sjt"
-    chain = "chain"  # цепочка шагов (E26-3): ответ — список ответов шагов, балл — средний
+    chain = "chain"  # цепочка шагов: ответ — список ответов шагов, балл — средний
     open = "open"  # только регулярные задания, в θ не идёт
 
 
@@ -154,9 +154,9 @@ class BaseFamily:
     skill: str
     skill_type: SkillType
     level: int
-    anchor: bool = False  # якорь держит шкалу: K = 0 при калибровке (assessment.md §7)
+    anchor: bool = False  # якорь держит шкалу: K = 0 при калибровке
     # Ручки сложности и их границы для уровня: `generate` кладёт значения в `item.meta["knobs"]`,
-    # `make families-check` проверяет, что они в границах (assessment.md §4).
+    # `make families-check` проверяет, что они в границах.
     knob_bounds: ClassVar[dict[str, tuple[float, float]]] = {}
 
     def generate(self, rng: Random, world: World) -> Item:  # pragma: no cover - абстрактный

@@ -103,7 +103,7 @@ test("главная: ошибка сводки — повторить", async (
   expect(await screen.findByRole("button", { name: "Повторить" })).toBeInTheDocument();
 });
 
-test("у каждой страницы админки есть подзаголовок «зачем» (E39-29)", () => {
+test("у каждой страницы админки есть подзаголовок «зачем»", () => {
   const admin = ROUTES.filter((r) => r.section === "admin" && !r.redirect);
   for (const r of admin) expect(WHY[r.path], r.path).toBeTruthy();
   for (const n of NAV.admin) expect(WHY[n.to], n.to).toBeTruthy();

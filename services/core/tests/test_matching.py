@@ -1,5 +1,4 @@
-"""Подбор: жёсткие фильтры, скоринг, объяснения — примеры из ml.md §6, matching.md §3–4,
-skills.md §8.3."""
+"""Подбор: жёсткие фильтры, скоринг, объяснения, командные сигналы."""
 
 import os
 import uuid
@@ -94,7 +93,7 @@ def test_config_from_scoring_yaml():
     assert (CFG.w_skills, CFG.w_semantic, CFG.w_grade, CFG.w_salary, CFG.w_fsp) == (
         0.45, 0.20, 0.15, 0.10, 0.10,
     )  # fmt: skip
-    assert CFG.target(2) == 0.4 and CFG.target(3) == 0.6  # ml.md §6.2: 2 → 0.4, 3 → 0.6
+    assert CFG.target(2) == 0.4 and CFG.target(3) == 0.6  # 2 → 0.4, 3 → 0.6
     assert CFG.salary_grace == 1.10 and CFG.max_failed_required == 2
     assert CFG.team == TeamConfig.load()
 
@@ -372,7 +371,7 @@ async def test_unknown_vacancy_empty(factory):
         assert await match_vacancy_candidates(s, uuid.uuid4(), CFG, TrustConfig.load()) == []
 
 
-# --- таблица matches (E7-2) ----------------------------------------------------------------
+# --- таблица matches ----------------------------------------------------------------
 
 
 async def _rows(s, vid) -> dict:
@@ -499,7 +498,7 @@ async def test_handlers_chain_and_redelivery(db, factory):
 
 
 async def test_upsert_new_survives_existing_row(factory):
-    """E42-5: строка уже вставлена параллельной доставкой — обновляем, а не падаем на PK."""
+    """Строка уже вставлена параллельной доставкой — обновляем, а не падаем на PK."""
     from app.matching.service import _upsert_new
 
     vid, ids = await _seed(factory)
@@ -539,7 +538,7 @@ def _alembic_head(url: str) -> None:
     not os.environ.get("MATCH_PG_URL"), reason="нужен MATCH_PG_URL (пустой Postgres с pgvector)"
 )
 async def test_match_candidate_parallel_on_postgres():
-    """E42-5: параллельная доставка core.match.candidate не даёт IntegrityError matches_pkey."""
+    """Параллельная доставка core.match.candidate не даёт IntegrityError matches_pkey."""
     import asyncio
 
     url = os.environ["MATCH_PG_URL"]

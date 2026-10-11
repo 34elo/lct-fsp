@@ -28,7 +28,7 @@ function Toggle<V extends string>({ label, value, options, onChange, testid }: {
   );
 }
 
-/** Граф доказательств: вкладка «Граф» профиля (`/me/profile?tab=graph`, E38-6). Фильтры живут в адресе. */
+/** Граф доказательств: вкладка «Граф» профиля (`/me/profile?tab=graph`). Фильтры живут в адресе. */
 export default function GraphView() {
   const [sp, setSp] = useSearchParams();
   const skills = sp.get("skills") === "all" ? MyGraphCandidatesMeGraphGetSkills.all : MyGraphCandidatesMeGraphGetSkills.top;

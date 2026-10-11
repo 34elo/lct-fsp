@@ -1,7 +1,7 @@
 """HTTP регулярных заданий: `/employer/tasks` (работодатель) и `/assessment/tasks` (кандидат).
 
-assessment.md §10, E25-1. Чужое задание → 404. «Пригласить» — ссылка на форму оффера Б2
-(blocks.md §4.8): `/employer/offers/new?candidate=<pseudo_id>&source=regular_task`.
+Чужое задание → 404. «Пригласить» — ссылка на форму приглашения:
+`/employer/offers/new?candidate=<pseudo_id>&source=regular_task`.
 """
 
 from __future__ import annotations
@@ -167,7 +167,7 @@ async def create_task(
 @employer_router.get("", response_model=list[TaskOut], responses=problem_responses(401, 403))
 async def list_tasks(user: User = Depends(_employer), session: AsyncSession = Depends(get_session)):
     found = await companies.my_company(session, user.id)
-    if found is None:  # новая компания: заданий ещё нет (E39-7)
+    if found is None:  # новая компания: заданий ещё нет
         return []
     rows = await tasks.list_company_tasks(session, found[0].id)
     c = await tasks.counts(session, [t.id for t in rows])

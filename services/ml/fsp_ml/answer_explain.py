@@ -1,4 +1,4 @@
-"""`POST /v1/assessment/explain`: текст объяснения ошибки (E24-2).
+"""`POST /v1/assessment/explain`: текст объяснения ошибки.
 
 Причину считает core по правилам; здесь LLM только формулирует текст по JSON-схеме.
 `ML_FAKE=true` — шаблон, `LLM_ENABLED=false` — 503 `llm_disabled` (core тогда берёт свой шаблон).

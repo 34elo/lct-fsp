@@ -1,4 +1,4 @@
-"""matches (data-model.md §3.7)
+"""matches
 
 Revision ID: 0017
 Revises: 0016

@@ -1,7 +1,7 @@
-"""Props аналитики блока 2: `need_*`, `category_*`, `invite_*`, `response_*`, `shortlist_*`.
+"""Props аналитики подбора: `need_*`, `category_*`, `invite_*`, `response_*`, `shortlist_*`.
 
-Только числа, флаги, перечисления и slug'и (blocks.md §4.7). Каталог метрик, которые
-питаются этими событиями, — metrics.md §9.3. Запись событий — E31-2b.
+Только числа, флаги, перечисления и slug'и. Каталог метрик, которые
+питаются этими событиями. Запись событий.
 """
 
 from __future__ import annotations
@@ -70,7 +70,7 @@ class ShortlistRefined(_Props):
     kept: Nat  # сколько кандидатов шорт-листа сохранилось
 
 
-# --- приглашения (ADR-022) ---
+# --- приглашения ---
 
 
 class InviteSent(_Props):
@@ -90,7 +90,7 @@ class InviteAnswered(_Props):
     channel: Literal["web", "tg"] | None = None
 
 
-# --- отклики кандидатов (ADR-022) ---
+# --- отклики кандидатов ---
 
 
 class ResponseCreated(_Props):
@@ -106,7 +106,7 @@ class ResponseAnswered(_Props):
     reason: Slug | None = None
 
 
-# --- интерес (ADR-026, E33-1) ---
+# --- интерес ---
 
 
 class InterestShown(_Props):

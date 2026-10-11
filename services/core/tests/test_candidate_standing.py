@@ -1,5 +1,5 @@
 # ruff: noqa: F811
-"""Сила профиля и место в категории кандидата (E35-12a): формула места, права, приватность."""
+"""Сила профиля и место в категории кандидата: формула места, права, приватность."""
 
 import pytest
 from app.matching.standing import gap_to_next_ten, median, place, relative_strength

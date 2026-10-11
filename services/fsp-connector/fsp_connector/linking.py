@@ -1,4 +1,4 @@
-"""Привязка кандидата к участнику ФСП: реестр (E39-28), OAuth, код, ручной ID (fsp.md §4)."""
+"""Привязка кандидата к участнику ФСП: реестр, OAuth, код, ручной ID."""
 
 from __future__ import annotations
 
@@ -72,7 +72,7 @@ class LinkService:
         await self._bind(candidate_id, participant_id, "manual", False)
 
     async def bind_registry(self, candidate_id: UUID, participant_id: str) -> None:
-        """Реестр (ADR-052): совпали контакты аккаунта или админ принял заявку — подтверждено."""
+        """Реестр: совпали контакты аккаунта или админ принял заявку — подтверждено."""
         await self._bind(candidate_id, participant_id, "registry", True)
 
     async def verify(self, candidate_id: UUID, code: str) -> bool:

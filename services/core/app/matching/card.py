@@ -1,7 +1,7 @@
-"""`CandidateCardFull` (api.md §3): расширенная анонимная карточка для работодателя.
+"""`CandidateCardFull`: расширенная анонимная карточка для работодателя.
 
 Нет: user_id, контактов (никогда), ссылок на репозитории и анализ кода (пока нет модуля),
-образования. ФИО — после приглашения от этой компании или при `visibility.full_name` (E39-15).
+образования. ФИО — после приглашения от этой компании или при `visibility.full_name`.
 Компании в опыте — только при `visibility.companies`. Скрытые кандидатом навыки не показываются.
 Просмотр — в `profile_views`.
 """
@@ -66,7 +66,7 @@ class SkillInfo(BaseModel):
     slug: str
     name: str
     group: str
-    type: str | None = None  # тип навыка (`SkillType`), заполняется в профиле владельца (E39-15)
+    type: str | None = None  # тип навыка (`SkillType`), заполняется в профиле владельца
 
 
 class EvidenceBrief(BaseModel):
@@ -119,8 +119,8 @@ class ExperienceBrief(BaseModel):
 
 
 class CandidateCardFull(search.CandidateCard):
-    full_name: str | None = None  # только при visibility.full_name (ADR-027); контактов нет никогда
-    avatar_url: str | None = None  # E41-12: только после приглашения от этой компании
+    full_name: str | None = None  # только при visibility.full_name; контактов нет никогда
+    avatar_url: str | None = None  # только после приглашения от этой компании
     skills: list[SkillWithTrust]
     grade_info: GradeInfo
     experience: list[ExperienceBrief]
@@ -197,7 +197,7 @@ async def get_visible(
 async def get_listed(
     session: AsyncSession, pseudo_id: str, company_id: uuid.UUID
 ) -> Candidate | None:
-    """Как `get_visible`, плюс видимость выдачи (blocks.md §4.5): действующий грейд из теста
+    """Как `get_visible`, плюс видимость выдачи: действующий грейд из теста
     и согласие `profile_publication`. Для карточки и «похожих»."""
     c = await get_visible(session, pseudo_id, company_id)
     if c is None or c.user_id not in await visible_ids(session, [c.user_id]):
@@ -285,7 +285,7 @@ async def build_card(
     return CandidateCardFull(
         **base.model_dump(),
         full_name=candidates.shown_full_name(c, pii_key, invited=invited) if pii_key else None,
-        # E41-12: аватар только после приглашения (`visibility.full_name` его не открывает)
+        # аватар только после приглашения (`visibility.full_name` его не открывает)
         avatar_url=candidates.avatar_url(c, avatar_secret) if invited and avatar_secret else None,
         skills=skills,
         grade_info=_grade_info(c, show_fsp=show_fsp),
@@ -297,7 +297,7 @@ async def build_card(
     )
 
 
-# --- профиль владельца (`GET /candidates/me/profile`, E4-7) -------------------------------
+# --- профиль владельца (`GET /candidates/me/profile`) -------------------------------
 
 
 class RoleWeight(BaseModel):

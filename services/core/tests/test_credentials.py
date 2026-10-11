@@ -1,4 +1,4 @@
-"""Open Badge 3.0 (E18-9): подпись eddsa-jcs-2022, did.json, проверка, видимость, чужое → 404."""
+"""Open Badge 3.0: подпись eddsa-jcs-2022, did.json, проверка, видимость, чужое → 404."""
 
 from __future__ import annotations
 

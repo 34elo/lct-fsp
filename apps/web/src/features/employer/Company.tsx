@@ -316,7 +316,7 @@ function AccessLog() {
   );
 }
 
-/** Команда: участники (видят все); доступ HR — логин и временный пароль от владельца (E41-16). */
+/** Команда: участники (видят все); доступ HR — логин и временный пароль от владельца. */
 function TeamPanel({ companyName }: { companyName: string }) {
   const qc = useQueryClient();
   const q = useMyTeamCompaniesMeMembersGet({ query: { retry: false } });
@@ -421,11 +421,11 @@ function TeamPanel({ companyName }: { companyName: string }) {
   );
 }
 
-/** Компания работодателя (E39-24): владелец правит и ведёт команду, HR видит компанию и команду. */
+/** Компания работодателя: владелец правит и ведёт команду, HR видит компанию и команду. */
 export default function Company() {
   const qc = useQueryClient();
   const { me, reloadMe } = useAuth();
-  // Есть ли компания, известно из `GET /me`: без неё запрос дал бы 404 в консоли нового аккаунта (E39-7).
+  // Есть ли компания, известно из `GET /me`: без неё запрос дал бы 404 в консоли нового аккаунта.
   const hasCompany = !!me?.company;
   const q = useGetMyCompanyCompaniesMeGet({ query: { retry: false, enabled: hasCompany } });
   const company = q.data?.status === 200 ? q.data.data : null;

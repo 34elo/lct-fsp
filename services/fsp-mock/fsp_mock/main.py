@@ -1,4 +1,4 @@
-"""fsp-mock: имитация API ФСП (docs/architecture/fsp.md §3). Данные в памяти, ПДн вымышленные."""
+"""fsp-mock: имитация API ФСП. Данные в памяти, ПДн вымышленные."""
 
 from __future__ import annotations
 
@@ -85,7 +85,7 @@ def build_app(settings: Settings | None = None, store: Store | None = None) -> F
     configure_logging(settings.service_name, settings.log_level)
     app = create_app(settings.service_name)
     app.description = (
-        "Мок API ФСП (fsp.md §3). Данные вымышленные, хранятся в памяти.\n\n"
+        "Мок API ФСП. Данные вымышленные, хранятся в памяти.\n\n"
         "- `/api/v1/*` — требуют заголовок `X-Api-Key`.\n"
         "- `/oauth/*` — OAuth 2.0 code + PKCE (S256): `/oauth/authorize` отдаёт HTML-страницу "
         "выбора участника, редирект на `redirect_uri?code=&state=`; "
@@ -422,7 +422,7 @@ def build_app(settings: Settings | None = None, store: Store | None = None) -> F
 
     @app.post("/mock/reset", dependencies=auth, include_in_schema=False)
     async def mock_reset() -> dict[str, str]:
-        """Админ: очистить результаты ФСП (демо-кнопка E13-3)."""
+        """Админ: очистить результаты ФСП (демо-кнопка)."""
         st.results.clear()
         st.sent_events.clear()
         return {"status": "reset"}

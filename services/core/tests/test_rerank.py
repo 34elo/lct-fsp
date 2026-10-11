@@ -1,4 +1,4 @@
-"""Переранжирование (matching.md §5): множители и MMR на примерах из документа, E17-2."""
+"""Переранжирование: множители и MMR на примерах из документации."""
 
 import pytest
 from app.matching.rerank import RerankConfig, mmr, multiplier

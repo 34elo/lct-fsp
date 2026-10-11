@@ -1,4 +1,4 @@
-"""Синхронизация результатов ФСП (fsp.md §6): fsp-connector → события `fsp.*` для core.
+"""Синхронизация результатов ФСП: fsp-connector → события `fsp.*` для core.
 
 Команда `fsp.sync {candidate_id, reason, since?}`: берём привязку, тянем результаты, разряды,
 составы команд и календарь, пишем `fsp.competitions.updated` и `fsp.results.imported` в outbox.

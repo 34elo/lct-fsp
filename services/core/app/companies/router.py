@@ -40,7 +40,7 @@ class CompanyOut(BaseModel):
     inn: str | None
     site: str | None
     description: str | None
-    logo_url: str | None = None  # `/companies/{id}/logo?v=`, публичный (E41-12)
+    logo_url: str | None = None  # `/companies/{id}/logo?v=`, публичный
     contacts: dict[str, Any] | None
     direction: str | None
     status: CompanyStatus
@@ -157,7 +157,7 @@ async def put_company_logo(
     storage=Depends(get_storage),
     limiter=Depends(get_limiter),
 ):
-    """Логотип компании (E41-12): PNG, JPEG или WebP по сигнатуре, до 2 МБ; только владелец."""
+    """Логотип компании: PNG, JPEG или WebP по сигнатуре, до 2 МБ; только владелец."""
     company, member = await service.require_company(session, user.id, admin=True)
     await limiter.check(f"logo:{company.id}", 20, 3600)
     data = await file.read(profile.AVATAR_MAX_BYTES + 1)
@@ -220,7 +220,7 @@ async def invite_member(
     return MemberOut(user_id=member.user_id, role=CompanyMemberRole(member.role))
 
 
-# --- E39-24: команда компании — владелец (`admin`) и HR (`member`) ---
+# --- команда компании — владелец (`admin`) и HR (`member`) ---
 
 
 class CompanyMemberOut(BaseModel):
@@ -231,7 +231,7 @@ class CompanyMemberOut(BaseModel):
     position: str | None = None
     avatar_url: str | None = None
     is_me: bool = False
-    # E41-16 (только владельцу): аккаунт создан владельцем — ему можно выдать новый пароль;
+    # Только владельцу: аккаунт создан владельцем — ему можно выдать новый пароль;
     # HR ещё не сменил временный пароль и до какого времени тот действует
     managed: bool = False
     must_change_password: bool = False
@@ -311,7 +311,7 @@ async def my_team(user: User = Depends(_employer), session: AsyncSession = Depen
     "/companies/me/invites",
     response_model=InviteCreated,
     status_code=201,
-    deprecated=True,  # E41-16: интерфейс выдаёт доступ HR через `/companies/me/hr`
+    deprecated=True,  # интерфейс выдаёт доступ HR через `/companies/me/hr`
     responses=problem_responses(401, 403, 404, 409, 422, 429),
 )
 async def create_invite(
@@ -372,7 +372,7 @@ async def remove_member(
     return Response(status_code=204)
 
 
-# --- E41-16: доступ HR без почты — карточка доступа с временным паролем ---
+# --- доступ HR без почты — карточка доступа с временным паролем ---
 
 HR_ACCESS_LIMIT = 20  # создание и сброс пароля HR: в час на компанию
 

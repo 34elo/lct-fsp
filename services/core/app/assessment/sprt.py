@@ -1,6 +1,6 @@
-"""Остановка теста — SPRT у порога грейда и бонусный этап (assessment.md §5). Чистые формулы.
+"""Остановка теста — SPRT у порога грейда и бонусный этап. Чистые формулы.
 
-- Гипотезы: θ₀ = cut − δ, θ₁ = cut + δ (δ = 0.7, подбор по eval — ADR-030).
+- Гипотезы: θ₀ = cut − δ, θ₁ = cut + δ (δ = 0.7, подобрано на синтетике).
 - После каждого оцениваемого ответа: `LLR += y·ln(P₁/P₀) + (1 − y)·ln((1 − P₁)/(1 − P₀))`.
 - Границы при α = β = 0.1: `ln((1 − β)/α) = +2.197` → прошёл, `ln(β/(1 − α)) = −2.197` → не прошёл.
 - Основной этап: минимум 10, максимум 24 оцениваемых задания. На максимуме (или когда банк
@@ -30,7 +30,7 @@ class Decision:
 
 
 def hypotheses(cut: float, cfg: AssessmentConfig) -> tuple[float, float]:
-    """Гипотезы SPRT у порога: `(θ₀, θ₁) = (cut − δ, cut + δ)` (assessment.md §5, ADR-030)."""
+    """Гипотезы SPRT у порога: `(θ₀, θ₁) = (cut − δ, cut + δ)`."""
     return cut - cfg.sprt_delta, cut + cfg.sprt_delta
 
 
@@ -77,9 +77,7 @@ def decide(
 
 
 def next_grade(grade: TestGrade) -> TestGrade | None:
-    """Следующий грейд по лестнице теста или `None` для старшего — для бонусного этапа
-    (assessment.md §5).
-    """
+    """Следующий грейд по лестнице теста или `None` для старшего — для бонусного этапа."""
     i = TEST_GRADE_ORDER.index(grade)
     return TEST_GRADE_ORDER[i + 1] if i + 1 < len(TEST_GRADE_ORDER) else None
 
@@ -89,7 +87,7 @@ def bonus_eligible(
 ) -> TestGrade | None:
     """Следующий грейд для бонусного этапа или `None`: прошёл за ≤ 10 и θ ≥ cut_след − margin."""
     nxt = next_grade(grade)
-    if not cfg.bonus_enabled:  # экспресс-режим без бонуса (E32-4a)
+    if not cfg.bonus_enabled:  # экспресс-режим без бонуса
         return None
     if nxt is None or decision.result != "passed" or n_main > cfg.bonus_max_main_items:
         return None

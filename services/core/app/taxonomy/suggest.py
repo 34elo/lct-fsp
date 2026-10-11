@@ -1,4 +1,4 @@
-"""Подсказки навыков и профессий для полей ввода (E39-3, `/taxonomy/skills/suggest`).
+"""Подсказки навыков и профессий для полей ввода (`/taxonomy/skills/suggest`).
 
 Поиск по нормализованной форме: точное совпадение → префикс → слово/подстрока → триграммы
 (опечатки). Внутри класса совпадения ранжирует частота у кандидатов и вакансий (`support_*`),
@@ -71,7 +71,7 @@ async def suggest_skills(
 ) -> list[SkillSuggestion]:
     nq = norm_alias(q)
     query = select(Skill).where(Skill.status.in_(("active", "provisional")))
-    if kind:  # E41-6: только навыки заданного вида (например, soft для «Личных качеств»)
+    if kind:  # только навыки заданного вида (например, soft для «Личных качеств»)
         query = query.where(Skill.kind == kind)
     skills = {s.id: s for s in await session.scalars(query)}
     forms: dict[uuid.UUID, list[str]] = {}

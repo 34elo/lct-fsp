@@ -123,7 +123,7 @@ function mount(path = "/me/stats") {
   );
 }
 
-describe("модель Статистики (E38-2)", () => {
+describe("модель Статистики", () => {
   it("точки: X — θ в 0–100 по категории, Y — сила; без θ X — сила; одинаковая θ — посередине", () => {
     const { points, you } = scatter(standing.peers);
     expect(you).toEqual({ x: 75, y: 64 });
@@ -157,7 +157,7 @@ describe("модель Статистики (E38-2)", () => {
   });
 });
 
-describe("Статистика /me/stats (E38-2)", () => {
+describe("Статистика /me/stats", () => {
   it("основное: плитки, «Где ты среди своих», просмотры, ФСП, история", async () => {
     mount();
     const main = await screen.findByTestId("stats-main");
@@ -194,7 +194,7 @@ describe("Статистика /me/stats (E38-2)", () => {
     expect(within(views).getByRole("img", { name: /7 за 30 дней/ })).toBeInTheDocument();
     expect(views).toHaveTextContent("3 компании смотрели за 30 дней");
 
-    // E41-8: блока «Как тебя видят» нет; «Где ты среди своих» и «Твоя категория в цифрах» — рядом.
+    // блока «Как тебя видят» нет; «Где ты среди своих» и «Твоя категория в цифрах» — рядом.
     expect(screen.queryByTestId("stats-seen-as")).not.toBeInTheDocument();
     expect(peers.parentElement?.nextElementSibling).toBe(cat);
 
@@ -235,7 +235,7 @@ describe("Статистика /me/stats (E38-2)", () => {
     expect(screen.queryByTestId("stats-category")).not.toBeInTheDocument();
   });
 
-  it("нулевые просмотры — полная шкала и пояснение, а не пустое место (E43-5)", async () => {
+  it("нулевые просмотры — полная шкала и пояснение, а не пустое место", async () => {
     const zero = Array.from({ length: 30 }, (_, i) => ({ date: `2026-09-${String(i + 1).padStart(2, "0")}`, count: 0 }));
     routes["/candidates/me/views"] = () => res(200, { total_30d: 0, companies_30d: 0, window_days: 30, visible: true, by_day: zero });
     mount();

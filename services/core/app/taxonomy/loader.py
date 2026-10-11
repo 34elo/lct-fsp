@@ -9,12 +9,12 @@
     distinct:    [[a, b], ...]               # «точно разные»
     blocklist:   [{norm, reason?}]
     roles:       [{slug, name, profession?, active?, skills: {slug: weight}}]
-    skill_types: [{type, skills: [slug, ...]}]  # типы навыков (assessment.md §2), переопределения
+    skill_types: [{type, skills: [slug, ...]}]  # типы навыков, переопределения
 
 Тип навыка без явного указания: kind soft → soft; group fundamentals → fundamental;
 group product/analysis/design → business; остальное → hard. `profession: true` — роль является
 профессией теста; такая профессия обязана иметь навыки всех шести типов. `active: false` — профессия
-скрыта в опросе и выдаче (ADR-027 п.1), данные по ней остаются; по умолчанию активна.
+скрыта в опросе и выдаче, данные по ней остаются; по умолчанию активна.
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_valida
 
 SKILL_KINDS = ("hard", "soft", "domain")
 _SLUG = re.compile(r"^[a-z0-9][a-z0-9_.+#-]*$")
-_ROLE_SLUG = re.compile(r"^[a-z][a-z0-9_]{1,31}$")  # ProfessionSlug (blocks.md §4.1)
+_ROLE_SLUG = re.compile(r"^[a-z][a-z0-9_]{1,31}$")  # ProfessionSlug
 _BUSINESS_GROUPS = ("product", "analysis", "design")
 
 
@@ -95,7 +95,7 @@ class RoleIn(_Strict):
     slug: str
     name: str = Field(min_length=1)
     profession: bool = False
-    active: bool = True  # false — скрыта в опросе (ADR-027 п.1)
+    active: bool = True  # false — скрыта в опросе
     skills: dict[str, float] = Field(default_factory=dict)
 
     @field_validator("slug")

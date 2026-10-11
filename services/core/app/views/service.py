@@ -41,7 +41,7 @@ async def stats(
     visible: bool = False,
 ) -> dict:
     """`{total_30d, companies_30d, window_days, visible, by_day[]}` — только числа, компании не
-    называются. `by_day` — полная шкала `WINDOW_DAYS` дней (нули для дней без просмотров, E43-5)."""
+    называются. `by_day` — полная шкала `WINDOW_DAYS` дней (нули для дней без просмотров)."""
     now = now or datetime.now(UTC)
     since = now - timedelta(days=WINDOW_DAYS)
     rows = (

@@ -1,9 +1,9 @@
-"""Схемы продуктовых событий аналитики (metrics.md §2.2–2.3).
+"""Схемы продуктовых событий аналитики.
 
 Конверт `AnalyticsEvent` + модель `props` на каждое событие трекинг-плана.
 Модели строгие (`extra="forbid"`): неизвестное событие или лишнее поле отклоняются.
 В `props` только числа, флаги, перечисления и короткие slug'и: свободного текста и ПДн нет
-(AGENTS.md п.5, metrics.md §7). `actor` — псевдоним `HMAC(id, ANALYTICS_SALT)`, не id.
+`actor` — псевдоним `HMAC(id, ANALYTICS_SALT)`, не id.
 """
 
 from __future__ import annotations
@@ -332,7 +332,7 @@ ANALYTICS_EVENTS: dict[str, tuple[type[_Props], tuple[Source, ...]]] = {
     "matches_computed": (MatchesComputed, _S),
 }
 
-# события v2 блоков (blocks.md §5.3); имена не должны пересекаться с общим списком
+# события теста и подбора; имена не должны пересекаться с общим списком
 from fsp_contracts.analytics_assessment import ASSESSMENT_ANALYTICS_EVENTS  # noqa: E402
 from fsp_contracts.analytics_hiring import HIRING_ANALYTICS_EVENTS  # noqa: E402
 
@@ -342,11 +342,11 @@ for _extra in (ASSESSMENT_ANALYTICS_EVENTS, HIRING_ANALYTICS_EVENTS):
         raise RuntimeError(f"дубли имён событий аналитики: {sorted(_dup)}")
     ANALYTICS_EVENTS.update(_extra)
 
-MAX_TRACK_BATCH = 50  # metrics.md §2.1: до 50 событий в запросе
+MAX_TRACK_BATCH = 50  # до 50 событий в запросе
 
 
 class AnalyticsEvent(BaseModel):
-    """Конверт события (metrics.md §2.2); `props` проверяет `validate_event`."""
+    """Конверт события; `props` проверяет `validate_event`."""
 
     model_config = ConfigDict(extra="forbid")
 

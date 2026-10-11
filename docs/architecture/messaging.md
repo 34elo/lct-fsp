@@ -1,209 +1,97 @@
-# RabbitMQ, события и кеш
+# События, команды и очереди
 
-> Межсервисное взаимодействие идёт через **RabbitMQ**: доменные события, команды сервисам, задачи для ML и уведомления. **Redis** остаётся только для короткоживущего состояния: кеш, лимиты, состояния бота, одноразовые токены, сессии тестов и рекомендаций (ADR-012).
-> Библиотека — **FastStream** (поверх aio-pika). Схемы сообщений — pydantic-модели из `packages/contracts`. FastStream генерирует **AsyncAPI**-документацию событий (`/asyncapi` у каждого сервиса), это часть «документированного API».
+Сервисы общаются через RabbitMQ (библиотека FastStream). Все схемы — pydantic-модели в `packages/contracts`, полный каталог — [asyncapi.json](../asyncapi.json) (`make asyncapi`).
 
-## 1. Кто с кем говорит
+## Конверт
 
-```
-                 ┌──────────── exchange events (topic) ────────────┐
-core ──publish──►│ offer.* · vacancy.* · skills.* · candidate.*    │──► core.handlers (реакции core на свои события)
-fsp-connector ──►│ fsp.results.imported · fsp.competitions.updated │──► core.ingest
-ml ──publish────►│ ml.*.completed · ml.*.failed                    │──► core.ingest
-                 └──────────────────────────────────────────────────┘
-                 ┌──────────── exchange commands (direct) ──────────┐
-core ──────────► │ ml.llm (приоритеты) · ml.code                    │──► ml-worker
-core ──────────► │ fsp.sync                                         │──► fsp-connector
-core ──────────► │ notify.telegram                                  │──► bot
-core ──────────► │ core.recompute · core.match · core.jobs          │──► core-worker
-scheduler ─────► │ core.jobs (cron)                                 │──► core-worker
-                 └──────────────────────────────────────────────────┘
-                 ┌──────────── exchange ui (topic) ──────────────────┐
-core-worker ───► │ ui.user.<user_id>                                 │──► core-api (SSE-соединения)
-ml-worker ─────► │ ui.user.<user_id> (прогресс задач)                │
-                 └──────────────────────────────────────────────────┘
-```
+Каждое сообщение — `Envelope`: `message_id`, `type`, `schema_version`, `producer`, `occurred_at`, `correlation_id`, `payload`. Ломающее изменение схемы — новый `schema_version` или новое имя события.
 
-Правило: **событие** («что-то случилось») публикуется в `events`, и подписаться может кто угодно. **Команда** («сделай это») идёт в `commands` конкретному исполнителю.
+## Топология
 
-Синхронный HTTP остаётся только там, где нужен ответ сразу: web/бот → core; core → ml-api (разбор текстового запроса, эмбеддинг); core → fsp-connector (URL авторизации ФСП, обмен кода); ml → core (снимок справочника, с кешем).
-
-## 2. Обменники и очереди
-
-### 2.1. `events` (topic, durable)
-
-| Ключ маршрутизации | Публикует | Payload (`contracts/events.py`) |
+| Обменник | Тип | Назначение |
 |---|---|---|
-| `candidate.registered` | core | `{candidate_id, channel}` |
-| `candidate.preferences.updated` | core | `{candidate_id, fields[]}` |
-| `candidate.deleted` | core | `{candidate_id}`. Отправляет `DELETE /candidates/me` ([api.md](api.md) §2.2) после стирания данных блока 1. Потребители обязаны удалить свои данные кандидата и скрыть его: аналитика (сырые события по псевдониму) — есть; подбор, офферы (остаётся псевдоним), Telegram, ФСП, бейджи, просмотры — блок 2 (blocks.md §13.1, З-1-10). Идемпотентно |
-| `resume.parsed` / `resume.confirmed` | core | `{resume_id, candidate_id}` |
-| `evidence.changed` | core | `{candidate_id, sources[]}` |
-| `skills.profile.updated` | core | `{candidate_id, profile_version, diff: {skills_up, skills_new, grade, category}}` |
-| `category.disputed` | core | `{dispute_id, candidate_id, claimed_role, claimed_grade}` (комментарий кандидата в событие не попадает) |
-| `assessment.attempt.finished` | core | `{candidate_id, attempt_id, profession, declared_grade, stage, result, grade?, theta, se, integrity, needs_confirmation, low_confidence, finished_at, profile_version, mode, invited_grade?}` (`contracts/assessment.py`, assessment.md §11; `mode`, `invited_grade` — ADR-025, необязательные) |
-| `candidate.visibility.changed` | core | `{candidate_id, changed: {ключ: bool}, visibility: {ключ: bool}}` — E36-4 (ADR-027), только флаги, без ПДн; пишется, если изменился хотя бы один ключ |
-| `candidate.category.changed` | core | `{candidate_id, categories: [{profession, grade}], profile_version}` — полный набор, не дельта |
-| `regular_task.published` | core | `{task_id, company_id, profession, grade, round, period_days, recipients[], published_at}` — рассылка регулярного задания (E25-1); потребитель — бот/уведомления (E9-6) |
-| `assessment.family.status_changed` | core | `{family_id, from, to}` (внутреннее блока 1) |
-| `taxonomy.updated` | core | `{version, changed_skill_ids[]}` |
-| `vacancy.published` / `vacancy.updated` / `vacancy.closed` | core | `{vacancy_id, version}` |
-| `offer.interest.sent` / `offer.interest.opened` / `offer.interest.declined` / `offer.interest.expired` / `offer.interest.withdrawn` | core | E33-1 (ADR-026), `hiring.py` `OfferInterestEvent`, `schema_version: 3`: `{offer_id, candidate_id, company_id, vacancy_id?, status, prev_status?, actor, decline_reason?, salary_from, salary_to}`; статусы `interest`, `interest_opened`. Идут, пока по интересу нет приглашения; `interest_opened → sent` публикует обычный `offer.sent` (`prev_status = interest_opened`). Уведомления: `interest.sent` → кандидату `interest_new`; `opened` / `declined` (с причиной) / `expired` → компании `interest_opened|interest_declined|interest_expired`; `withdrawn` → кандидату только SSE `offer.updated` |
-| `offer.sent` / `offer.viewed` / `offer.accepted` / `offer.declined` / `offer.expired` / `offer.withdrawn` / `offer.message` / `offer.status_changed` | core | `{offer_id, candidate_id, company_id, vacancy_id?, status, prev_status?, actor, message_id?, decline_reason?, initiator}`. С E20-2 (ADR-022) `schema_version: 2`: `vacancy_id = null` у приглашения без вакансии, `initiator` — `employer` (приглашение) или `candidate` (отклик, E20-3: `offer.sent` приходит с `actor = candidate`, уведомление получает компания); payload v1 без `initiator` читается как `employer` |
-| `matches.ready` | core | `{vacancy_id, count}` |
-| `fsp.linked` | fsp-connector | `{candidate_id, participant_id, verified, method}`; `method`: `oauth`, `code`, `manual`, `registry` (реестр ФСП, E39-28) |
-| `fsp.results.imported` | fsp-connector | `{candidate_id, participant_id, results: FspResult[], ranks: FspRank[], teams: FspTeam[], new: bool}`. `new=true` — полная выгрузка: результаты, которых в ней нет, core деактивирует; иначе инкремент (`since`), ничего не гасим |
-| `fsp.competitions.updated` | fsp-connector | `{competitions: FspCompetition[]}` |
-| `ml.resume.completed` / `ml.resume.failed` | ml | `{resume_id, candidate_id, parsed?, error?}` |
-| `ml.code.completed` / `ml.code.failed` | ml | `{analysis_id, candidate_id, result?, error?}` |
-| `ml.interview.generated` / `ml.interview.graded` | ml | `{interview_id, candidate_id, questions[] | grades[] + total, error?}` |
-| `ml.matches.explained` | ml | `{vacancy_id, vacancy_version, items[]}` |
-| `ml.interview_kit.generated` | ml | `{kit_id, vacancy_id, vacancy_version, candidate_id, profile_version, questions[], error?}` |
-| `ml.skills.resolved` | ml | `{request_id, taxonomy_version, items[]}` (ответ на `ml.skills.resolve`) |
-| `ml.questions.generated` | ml | `{skill_slug, questions[]}` — черновики, `status=draft` |
-| `ml.families.started` | ml | `{order_id}` — ml-worker-llm взял заказ заданий (E43-9), заказ → `running` |
-| `ml.families.generated` | ml | `{order_id, specs[], model, error?}` — формы конструктора от генератора; core (`core.ingest`, inbox `assessment.family_order_generated`) проверяет их как `llm_bank` и пишет `families` (`draft`, `source = llm`), заказ → `done`/`failed`; заказ в финальном статусе не меняется |
+| `events` | topic | Доменные события, ключ маршрутизации = тип события |
+| `commands` | direct | Команды, ключ = имя очереди-получателя |
+| `ui` | topic | Сообщения для SSE: `ui.user.<id>` |
+| `dlx` | direct | Сообщения, исчерпавшие повторы → `<очередь>.dlq` |
 
-### 2.2. Очереди
+| Очередь | Слушает | Prefetch | Потребитель |
+|---|---|---|---|
+| `core.ingest` | `fsp.results.imported`, `fsp.competitions.updated`, `fsp.linked`, `ml.#` | 8 | core-worker |
+| `core.handlers` | `evidence.changed`, `skills.profile.updated`, `vacancy.#`, `offer.#`, `candidate.#`, `taxonomy.updated`, `matches.ready` | 8 | core-worker |
+| `core.recompute` | команда пересчёта профиля | 4 | core-worker |
+| `core.match` | команды подбора под вакансию / кандидата | 4 | core-worker |
+| `core.jobs` | команды по расписанию | 2 | core-worker |
+| `core.analytics` | все события (`#`) | 20 | core-worker |
+| `ml.llm` | команды LLM, приоритет 0–10 | 1 | ml-worker-llm |
+| `ml.code` | анализ кода | 2 | ml-worker-code |
+| `fsp.sync` | синхронизация ФСП | 4 | fsp-connector-worker |
+| `bot.telegram` | `notify.telegram` | 10 | bot |
 
-| Очередь | Потребитель | Привязки / команды | prefetch | Особенности |
-|---|---|---|---|---|
-| `core.ingest` | core-worker | `fsp.results.imported`, `fsp.competitions.updated`, `fsp.linked`, `ml.#` | 8 | Внешние факты → узлы и рёбра графа |
-| `core.handlers` | core-worker | `evidence.changed`, `skills.profile.updated`, `vacancy.#`, `offer.#`, `candidate.#`, `taxonomy.updated`, `matches.ready` | 8 | Реакции на свои события: пересчёт, матчинг, уведомления |
-| `core.recompute` | core-worker | команда `core.recompute {candidate_id, requested_at}` | 4 | Слияние пересчётов по `recomputed_at ≥ requested_at` ([graph.md §4.4](graph.md#44-целостность-и-версии)) |
-| `core.match` | core-worker | команды `core.match.vacancy`, `core.match.candidate` | 4 | Пропуск устаревших версий |
-| `core.jobs` | core-worker | cron-команды и фоновые задачи (удаление, `recompute_all`) | 2 | — |
-| `core.analytics` | core-worker | все `events.#` | 20 | Доменные события → `analytics_events` ([metrics.md](metrics.md)) |
-| **`ml.llm`** | ml-worker-llm | `ml.resume.parse` (приоритет 9), `ml.interview.grade` (8), `ml.interview.generate` (7), `ml.interview_kit.generate` (5), `ml.skills.resolve` (3), `ml.matches.explain` (2), `ml.questions.generate` (1), `ml.families.generate` (0, E43-9 — заказ заданий из админки, фон) | **1** | `x-max-priority: 10`. Одна GPU: строго одна задача за раз, срочное первым |
-| `ml.code` | ml-worker-code | `ml.code.analyze` | 2 | CPU и сеть, GPU не нужен |
-| `fsp.sync` | fsp-connector | `fsp.sync {candidate_id, reason, since?}`, `fsp.sync_all` | 4 | Ретраи с паузой (внешний API) |
-| `bot.telegram` | bot | `notify.telegram {chat_id, template, data, buttons, edit_of?}` | 10 | Отправка с учётом лимитов Telegram |
-| `ui.<instance>` | core-api | `ui.user.*` | 50 | Эксклюзивная, удаляется при отключении. core-api раздаёт сообщения своим SSE-соединениям |
+**Повторы.** Ошибка обработчика → копия сообщения в `<очередь>.retry.5s`, затем `.30s`, `.2m` (TTL + dead-letter обратно), счётчик — заголовок `x-retry`. После трёх повторов — `<очередь>.dlq`.
 
-> **GPU-дисциплина.** У `llama-server` два слота. Слот 1 — синхронные вызовы ml-api (разбор запроса работодателя). Слот 2 — очередь `ml.llm` с `prefetch=1` и приоритетами: разбор резюме, которого человек ждёт, обгоняет фоновые обоснования. Решение встроено в брокер, костылей не нужно.
+**Одна GPU.** Очередь `ml.llm` с `prefetch=1` и приоритетами: разбор резюме (9) обгоняет фоновую генерацию заданий (0). Core в LLM напрямую не ходит.
 
-### 2.3. Надёжность
+## Outbox и inbox
 
-| Механизм | Как |
-|---|---|
-| **Outbox** (у сервисов с БД: core, fsp-connector) | Событие или команда пишется в таблицу `outbox` в той же транзакции, что и данные. Relay в core-worker (триггер `outbox_notify` → LISTEN + опрос раз в 500 мс, `FOR UPDATE SKIP LOCKED`) публикует его с **publisher confirms** и только после подтверждения ставит `published_at`. Маршрут по реестру: команда → `commands` (ключ = очередь, приоритет), иначе → `events` (ключ = `type`) |
-| **Inbox** (идемпотентность у core) | Перед обработкой `INSERT INTO inbox(event_id, handler) ON CONFLICT DO NOTHING`. Если строка уже была — сообщение пропускается. Повторная доставка не шлёт второй push и не дублирует факты |
-| **Ретраи** | При ошибке копия сообщения уходит в очередь задержки `<queue>.retry.<5s|30s|2m>` (TTL + dead-letter обратно в основную), счётчик в заголовке `x-retry`, оригинал подтверждается. Обработчик с эффектом в БД оборачивается в `idempotent()`: эффект и строка inbox в одной транзакции, при ошибке откатываются вместе |
-| **DLQ** | После 3 повторов (4-я неудача) или при битом конверте — `nack` → обменник `dlx` → `<queue>.dlq`. Видно в веб-интерфейсе RabbitMQ, можно переотправить руками |
-| **Устойчивость** | durable-обменники и очереди, persistent-сообщения, `quorum`-очереди не нужны (один узел) |
-| **Порядок** | Гарантии порядка не нужны: обработчики идемпотентны и сверяют версии (`profile_version`, `vacancy.version`) |
-
-### 2.4. Конверт сообщения
-
-```json
-{
-  "message_id": "0192f0c4-…",
-  "type": "offer.sent",
-  "schema_version": 1,
-  "occurred_at": "2026-10-05T12:00:00Z",
-  "correlation_id": "…",
-  "producer": "core",
-  "payload": { }
-}
-```
-`correlation_id` = `X-Request-ID` исходного HTTP-запроса: по нему цепочка ищется в логах всех сервисов.
-
-Команды идут в обменник `commands` с routing key = имя очереди (`ml.llm`, `fsp.sync`, `bot.telegram`, …), `type` = имя команды, приоритет AMQP — из реестра. Реестры `EVENTS` / `COMMANDS` / `UI_EVENTS` и сборка конвертов (`new_event`, `new_command`, `parse_payload`) — в `packages/contracts`. Топология (`QUEUES`, `declare_topology`), публикация (`publish_envelope`), подписчик с ретраями (`Consumer`) и `idempotent` — в `fsp_platform.messaging`; интеграционный тест — `make test-integration`. Общий каталог AsyncAPI 3.0 всех сообщений: `make asyncapi` → `asyncapi.json`.
-
-## 3. Цепочки (как это работает вместе)
-
-**Привязка ФСП → профиль обновился**
-```
-core-api ──cmd fsp.sync──► fsp-connector ──(HTTP к API ФСП)──► нормализация
-fsp-connector ──evt fsp.results.imported──► core.ingest: узлы-факты + рёбра evidence → cmd core.recompute
-core.recompute: пересчёт графа → evt skills.profile.updated
-core.handlers: cmd core.match.candidate · ui.user.<id> «точки загорелись» · cmd notify.telegram «🏆 навыки обновлены»
+```mermaid
+flowchart LR
+  T[Транзакция: данные + строка outbox] --> R[Relay: LISTEN/NOTIFY + опрос]
+  R -->|publish с подтверждением| MQ{{RabbitMQ}}
+  MQ --> H[Обработчик]
+  H --> I[inbox: message_id в той же транзакции]
 ```
 
-**Оффер → Telegram → принятие**
-```
-core-api: offer + outbox (одна транзакция) → evt offer.sent
-core.handlers: notifications + ui.user.<cand> + cmd notify.telegram (кнопки)
-bot: отправка → кандидат жмёт «Принять» → HTTP POST core /internal/tg/offers/{id}/accept
-core-api: accepted + contact_reveal + outbox → evt offer.accepted → ui.user.<hr> «принято, контакты открыты»
-```
+- Событие пишется в `outbox` в одной транзакции с изменением данных — потерять его при падении нельзя.
+- Relay публикует с publisher confirms и помечает отправленное.
+- Обработчик в своей транзакции вставляет `message_id` в `inbox`; повторная доставка отбрасывается.
+- Обработчики сверяют версии (`profile_version`, `vacancy.version`), а пересчёт профиля пропускается, если `recomputed_at ≥ requested_at`: пачка доказательств даёт 1–2 пересчёта.
 
-Реализовано (E8-3), модуль `core/notifications`, обработчики в `core.handlers` (inbox `notifications.offer`, `notifications.profile`): `offer.sent` → кандидату `offer_new` (+ `offer.created`, кнопки `o:a|d|v:<id>`, `edit_of=offer:<id>`); `offer.accepted` / `declined` / `expired` → всем участникам компании (`offer_updated`; при отказе в `payload` причина); `offer.withdrawn` / `expired` → кандидату; `offer.message` → противоположной стороне (текст сообщения в уведомление не кладётся); `offer.status_changed` от компании → кандидату; `offer.viewed` → только `offer.updated` в SSE; `skills.profile.updated` → `profile_updated` только при значимом diff. Каждое уведомление пишет `notifications` (`channels`: `web` всегда, `tg` — если чат привязан и есть согласие `telegram_notifications`), шлёт `notification.new` в `ui.user.<id>`, а команду `notify.telegram` кладёт в outbox в той же транзакции. SSE публикуется из обработчика, сбой публикации его не роняет. Работодателю до accept уходят только `offer_id`, статус и название вакансии, без данных кандидата. Замер «≤ 3 с от Отправить» на живом брокере не проводился.
+## Основные события
 
-**Резюме → разбор**
-```
-core-api: файл в MinIO → cmd ml.resume.parse (приоритет 9) → 202
-ml-worker-llm: прогресс → ui.user.<id> · результат → evt ml.resume.completed
-core.ingest: resumes.parsed → ui.user.<id> «вот что я понял»
-```
+| Событие | Кто пишет | Кто читает | Смысл |
+|---|---|---|---|
+| `candidate.registered`, `candidate.preferences.updated`, `candidate.deleted` | core/candidates | подбор, аналитика, сервисы | Жизненный цикл анкеты; удаление — сигнал всем стереть свои данные |
+| `assessment.attempt.finished` | core/assessment | уведомления, аналитика | Итог попытки: результат, θ, честность, приглашение на следующий грейд |
+| `candidate.category.changed` | core/assessment | подписки на категории, подбор | Полный набор действующих категорий кандидата |
+| `candidate.visibility.changed` | core/candidates | кеш выдачи | Изменились настройки видимости |
+| `evidence.changed` → `skills.profile.updated` | core/graph | подбор, uplift | Новые доказательства → пересчёт доверия |
+| `resume.parsed`, `resume.confirmed` | core/resumes | аналитика | Разбор резюме готов / подтверждён |
+| `vacancy.published|updated|closed` | core/vacancies | подбор | Пересчёт подборки под вакансию |
+| `offer.sent|viewed|accepted|declined|expired|withdrawn|message|status_changed` | core/offers | уведомления, бот, аналитика | Автомат статусов приглашения и отклика |
+| `offer.interest.*` | core/offers | уведомления | Интерес до приглашения |
+| `regular_task.published` | core/assessment | уведомления | Рассылка регулярного задания категории |
+| `fsp.linked`, `fsp.results.imported`, `fsp.competitions.updated` | fsp-connector | core/graph | Привязка и новые результаты ФСП |
+| `ml.resume.completed|failed`, `ml.families.started|generated` | ml | core | Результаты асинхронных LLM-задач |
+| `taxonomy.updated` | core/taxonomy | ml (снимок справочника) | Новая версия графа навыков |
 
-## 4. Расписание
+## Команды
 
-`core-scheduler` (APScheduler в отдельном маленьком процессе) публикует cron-команды в `core.jobs`:
+| Команда | Очередь | Назначение |
+|---|---|---|
+| `ml.resume.parse` | `ml.llm` (9) | Разобрать резюме |
+| `ml.families.generate` | `ml.llm` (0) | Сгенерировать черновики заданий по заказу администратора |
+| `fsp.sync`, `fsp.sync_all` | `fsp.sync` | Синхронизировать результаты кандидата или всех привязок |
+| `notify.telegram` | `bot.telegram` | Отправить или отредактировать сообщение в Telegram |
+| `core.recompute` | `core.recompute` | Пересчитать профиль кандидата |
+| `core.match.vacancy`, `core.match.candidate` | `core.match` | Пересчитать подбор |
+| `offers.expire`, `active_status.expire`, `market.refresh`, `company.rating`, `candidate_links.refresh`, `cleanup`, `taxonomy.professions.suggest` | `core.jobs` | Задачи по расписанию (`core-scheduler`) |
+
+## Расписание
 
 | Команда | Период |
 |---|---|
 | `offers.expire` | 5 мин |
-| `active_status.expire` | 1 ч |
-| `market.refresh` | 2 мин, если были изменения |
-| `fsp.sync_all` (в `fsp.sync`) | 1 ч, фолбэк для вебхуков + календарь соревнований |
-| `company.rating` | 1 ч |
-| `candidate_links.refresh` | 10 мин, если были импорты |
-| `cleanup` | сутки |
-| `taxonomy.professions.suggest` | неделя: предложения новых профессий (E41-17, [skills.md §5.1](skills.md#51-предложения-новых-профессий)) |
+| `market.refresh` | 2 мин |
+| `candidate_links.refresh` | 10 мин |
+| `active_status.expire`, `fsp.sync_all`, `company.rating` | 1 ч |
+| `cleanup` | 24 ч |
+| `taxonomy.professions.suggest` | 7 дней |
 
-## 5. Redis: что в нём осталось
+## Redis
 
-`maxmemory 1gb`, `allkeys-lru`. Всё в Redis — с TTL и может пропасть без потери данных.
+Кеш страниц выдачи (60 с, ключ включает версию каталога и согласий), кеш публичной статистики (5 мин), кеш uplift и эмбеддингов, лимиты запросов, одноразовые токены (magic-ссылки, deep link бота), состояние диалогов бота. Всё с TTL: потеря Redis не теряет данные.
 
-| Префикс | Назначение | TTL |
-|---|---|---|
-| `c:*` | Кеши (§6) | по таблице |
-| `rl:*` | Лимиты (§7) | окно лимита |
-| `s:magic:*`, `s:tglink:*`, `s:oauth:*`, `s:fspcode:*` | Одноразовые токены, OAuth state, коды ФСП | 5–10 мин |
-| `s:test:*` | Сессии адаптивных тестов | 30 мин |
-| `s:rec:*` | Подстройка рекомендаций в сессии работодателя | 24 ч |
-| `fsm:*` | Состояния aiogram | 24 ч |
-| `lock:*` | Блокировки: `lock:fsp_sync:{cid}`, `lock:code:{cid}`, `lock:market_refresh`, `lock:outbox_relay` | 10 с – 5 мин |
-| `idem:*` | Не используется: ключ `POST /offers` хранится в `offers.idempotency_key` (UNIQUE с компанией) — переживает рестарт Redis | — |
+## SSE
 
-## 6. Кеши
-
-| Что | Ключ | TTL | Инвалидация |
-|---|---|---|---|
-| Граф навыков в памяти core | версия `taxonomy_version` | — | событие `taxonomy.updated` |
-| Снимок справочника для ml | `c:tax:{version}` | 24 ч | версия в ключе |
-| Подсказки навыков и профессий | `c:tax:suggest:s:{tax_v}:{sha}` и `c:tax:suggest:p:{tax_v}:{sha}` | 10 мин | версия справочника; частоты меняются без версии — короткий TTL |
-| Разбор текстового запроса | `c:qparse:{tax_v}:{sha}` | 24 ч | версия справочника |
-| Эмбеддинг запроса | `c:emb:q:{model}:{sha}` | 7 д | модель в ключе |
-| Эмбеддинг профиля | `c:emb:p:{model}:{sha}` | 7 д | модель в ключе (E4-5; основной «кеш» — `candidates.profile_text_sha`) |
-| Страница выдачи | `c:search:{catalog_v}:{sha(filters)}:{cursor}` | 60 с | `catalog_version` растёт при пересчёте профилей |
-| Карточка / подграф кандидата | `c:card:{cid}:{profile_v}`, `c:graph:{cid}:{profile_v}:{view}` | 10 мин | версия в ключе |
-| Uplift и навигатор | `c:uplift:{cid}:{profile_v}:{хеш версий вакансий}:{дата}` | 10 мин | версии в ключе; дата — для окна соревнований |
-| Карта рынка | `c:market:{metric}:{sha}` | 2 мин | `market.refresh` |
-| Разбор резюме | `c:resume:{sha256}:{parser_v}` | 30 д | версия парсера |
-| GitHub API | `c:gh:etag:{url}`, `c:gh:body:{url}` | 6 ч | условные запросы |
-| Анализ репозитория | `c:gh:repo:{name}:{head_sha}:{analyzer_v}` | 7 д | новый коммит |
-| Ответы API ФСП (в fsp-connector) | `c:fsp:part:{id}`, `c:fsp:res:{id}` | 10 мин | вебхук |
-| Бейдж, счётчики лендинга | `c:badge:{slug}:{v}`, `c:stats` | 1 ч / 60 с | — |
-
-`make demo-warm` прогревает кеши героев демо: разбор их резюме, анализ GitHub, подготовленные запросы работодателя.
-
-## 7. Лимиты
-
-| Что | Лимит |
-|---|---|
-| Вход | 10/мин на IP, 5/мин на email |
-| Загрузка резюме | 10/сутки |
-| Анализ GitHub | 3/сутки |
-| Ручная синхронизация ФСП | 1 / 10 мин |
-| Попытки кода ФСП | 5 на код |
-| Поиск текстом (LLM) | 30/мин на пользователя |
-| Выдача кандидатов | 120/мин |
-| Открытие карточек | 300/сутки на компанию (антискрейпинг) |
-| Офферы | 20/сутки на компанию, 10 входящих в сутки на кандидата (скользящие 24 ч по БД; `offer_company_per_day`, `offer_candidate_per_day`) |
-| Тест по навыку | раз в 30 дней (в `DEMO_MODE` без ограничения) |
-| ИИ-интервью | 2/сутки |
-| Отправка в Telegram | 25/с всего, 1/с в один чат (в боте) |
-
-Числа — в `scoring_config.limits`, меняются без деплоя.
+`GET /events/stream` держит поток событий для пользователя: core подписывает свою очередь `ui.<instance>` на `ui.user.*` и раздаёт сообщения подключённым клиентам. Heartbeat каждые 20 с; при недоступном брокере REST работает, поток молчит.

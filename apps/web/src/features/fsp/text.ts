@@ -1,6 +1,6 @@
 import { ApiError } from "@/api/mutator";
 
-/** Коды ошибок привязки ФСП (api.md §2.2, fsp.md §4) человеческим языком. */
+/** Коды ошибок привязки ФСП человеческим языком. */
 const MESSAGES: Record<string, string> = {
   fsp_not_found: "Не нашли участника с такими данными в ФСП.",
   fsp_already_linked: "Этот участник ФСП уже привязан к другому профилю. Мы отметили конфликт, его разберёт админ ФСП.",
@@ -28,7 +28,7 @@ export function fspApiError(e: unknown): string {
   return fspErrorText(null);
 }
 
-/** Тексты привязки ФСП через реестр (E39-28). */
+/** Тексты привязки ФСП через реестр. */
 export const FSP = {
   checking: "Проверяем привязку ФСП…",
   linkBtn: "Привязать ФСП",

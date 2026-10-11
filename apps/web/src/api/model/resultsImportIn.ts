@@ -8,7 +8,7 @@ import type { FspDiscipline } from './fspDiscipline';
 import type { FspLevel } from './fspLevel';
 
 /**
- * E43-4: `commit=false` — превью (dry-run), `true` — запись; повтор идемпотентен.
+ * `commit=false` — превью (dry-run), `true` — запись; повтор идемпотентен.
  */
 export interface ResultsImportIn {
   /**

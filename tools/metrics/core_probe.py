@@ -3,7 +3,7 @@
 Запускается подпроцессом из `services/core` (`uv run python <путь>/core_probe.py --seeds N`),
 чтобы импортировать `app.*` в окружении core. Только чтение кода core, без побочных эффектов.
 
-- `coverage` — семейств на ячейку «профессия MVP × тип навыка × грейд» (metrics.md §9.1, ADR-025):
+- `coverage` — семейств на ячейку «профессия MVP × тип навыка × грейд»:
   навык семейства входит в профессию, уровень в окне грейда (`selection.level_ok`), тип с ненулевой
   долей в плане грейда (`plan_shares`).
 - `uniqueness` — доля различных вариантов (`stem`, `options`) на `seeds` сидов, по всему банку.
@@ -25,7 +25,7 @@ CORE = ROOT / "services" / "core"
 if str(CORE) not in sys.path:
     sys.path.insert(0, str(CORE))
 
-MVP_PROFESSIONS = ("backend", "frontend", "ml", "ai_engineer")  # ADR-025
+MVP_PROFESSIONS = ("backend", "frontend", "ml", "ai_engineer")  # профессии с полным банком заданий
 
 
 def coverage() -> dict[str, Any]:

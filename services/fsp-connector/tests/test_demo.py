@@ -1,4 +1,4 @@
-"""Тесты демо-операций ФСП (E13-3): создание результата и сброс."""
+"""Тесты демо-операций ФСП: создание результата и сброс."""
 
 import pytest
 from fsp_connector.service import demo_create_result, demo_reset

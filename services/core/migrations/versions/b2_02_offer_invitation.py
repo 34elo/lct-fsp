@@ -1,4 +1,4 @@
-"""offers: приглашение без вакансии (E20-2, ADR-022)
+"""offers: приглашение без вакансии
 
 `vacancy_id` необязателен; поля `title`, `description`, `contact_method`, `initiator`.
 

@@ -1,5 +1,5 @@
 # ruff: noqa: F811
-"""Задача в приглашении (E33-3): доставка, срок, идемпотентный ответ, видимость результата."""
+"""Задача в приглашении: доставка, срок, идемпотентный ответ, видимость результата."""
 
 import uuid
 
@@ -24,7 +24,7 @@ LONG = uuid.uuid4()
 
 
 class FakeBank:
-    """Порт банка блока 1: два семейства; ответ «42» верный."""
+    """Порт банка заданий: два семейства; ответ «42» верный."""
 
     def __init__(self):
         self.submits = []
@@ -169,7 +169,7 @@ def test_task_in_invitation_from_interest(world, bank):
 def test_bank_unavailable_does_not_break_offer_without_task(c, monkeypatch):
     from app.assessment import service as assessment
 
-    monkeypatch.delattr(assessment, "invite_task_describe")  # банк Б1 «ещё не отдал» функции
+    monkeypatch.delattr(assessment, "invite_task_describe")  # банк заданий недоступен
     e = _employer(c, "e@x.ru")
     vid = _vacancy(c, e)
     ch, pid, uid = _candidate(c, "c@x.ru", 1)

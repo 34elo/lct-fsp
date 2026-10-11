@@ -1,4 +1,4 @@
-"""Разбор резюме (E3-3): текст, правила, LLM по схеме, проверка цитат, нормализация, прогресс.
+"""Разбор резюме: текст, правила, LLM по схеме, проверка цитат, нормализация, прогресс.
 
 LLM — фейковый клиент с записанным ответом (`fixtures/llm_resume_backend.json`), сеть не нужна.
 """
@@ -403,7 +403,7 @@ async def test_real_resume_parse_publishes_progress_and_result():
     assert ui[-1]["data"]["pct"] == 100 and ui[-1]["data"]["job_id"] == str(p.resume_id)
 
 
-# --- заявленное в резюме (E20-5) ---
+# --- заявленное в резюме ---
 
 DECL_TEXT = (
     "Пётр Вымыслов\n"
@@ -507,7 +507,7 @@ def test_rules_mode_has_no_declared_fields():
     assert out.soft_skills == [] and out.declared_grade is None and out.roles == []
 
 
-# --- E43-8: запасной путь, когда LLM вернул мало навыков ---
+# --- запасной путь, когда LLM вернул мало навыков ---
 
 
 async def _parse_with(answer, text=TEXT):
@@ -553,3 +553,67 @@ def test_needs_rules_fallback_thresholds():
     assert f(2, 1001) and not f(2, 1000)
     assert not f(3, 5000)
     assert not f(0, 0)
+
+
+# --- цитата без названия навыка — ищем название рядом, а не теряем навык ---
+
+FRONT_TEXT = (FIX / "resume_frontend.txt").read_text()
+# (навык, цитата из резюме без его названия): так отвечает слабая модель
+FRONT_REAL = [
+    ("JavaScript", "Разрабатываю личный кабинет клиента для сервиса онлайн-записи."),
+    ("HTML", "Отвечал за адаптивную вёрстку под телефоны и планшеты."),
+    ("Redux", "Перевёл сложные формы на новую архитектуру."),
+    ("Vue3", "Настроил сборку проекта и проверку стиля кода в CI."),
+    ("TypeScript", "Работаю в связке с дизайнерами и бэкендерами, согласую контракты API."),
+    ("CSS", "Писал компоненты для таблиц, фильтров и графиков."),
+    ("React", "Поддерживал внутренний портал сотрудников и административную панель."),
+    ("Webpack", "Участвую в митапах по фронтенду, веду заметки о новых возможностях браузеров."),
+    ("Git", "Освоил основы работы с системой контроля версий и командной разработки."),
+    ("npm", "Покрываю компоненты тестами, пишу документацию к интерфейсным библиотекам команды."),
+    ("Sass", "Библиотека компонентов: кнопки, поля ввода, модальные окна, таблицы с сортировкой."),
+    ("Figma", "Верстал лендинги по макетам из Figma, подключал формы обратной связи."),
+]
+FRONT_FAKE = [
+    ("Angular", "Перевёл сложные формы на новую архитектуру."),
+    ("Java", "Пишу на JavaScript и TypeScript, строю одностраничные приложения на Vue3 и React."),
+    ("Kubernetes", "Разворачивал кластеры и настраивал автоскейлинг."),
+]
+
+
+def _front_assemble(pairs):
+    out = resume_parser.LlmResume(
+        skills=[resume_parser.LlmSkill(name=n, quote=q) for n, q in pairs]
+    )
+    return resume_parser.assemble(FRONT_TEXT, out, INDEX, version="t", today=TODAY)
+
+
+def test_recover_quote_real_skills_not_lost():
+    p = _front_assemble(FRONT_REAL + FRONT_FAKE)
+    got = {s.slug for s in p.skills}
+    want = {"javascript", "html", "redux", "vue", "typescript", "css", "react", "git", "npm"}
+    assert want <= got
+    lost = [n for n, _ in FRONT_REAL if f"skill_not_in_quote:{n}" in p.warnings]
+    assert len(lost) / len(FRONT_REAL) < 0.10, lost
+    text_norm = resume_parser.norm_text(FRONT_TEXT)
+    aliases = resume_parser._aliases_by_slug(INDEX)
+    for s in p.skills:  # цитата — из текста, и в ней читается навык (название или синоним)
+        assert resume_parser.quote_in_text(s.quote, text_norm)
+        norm_quote = resume_parser.norm_text(s.quote)
+        assert resume_parser.mention_in_quote(s.raw, norm_quote, aliases[s.slug])
+    by = {s.slug: s for s in p.skills}
+    assert "JavaScript" in by["javascript"].quote  # цитата со строкой, где есть название
+
+
+def test_recover_quote_keeps_dropping_skills_without_name():
+    p = _front_assemble(FRONT_FAKE)
+    assert p.skills == []
+    assert "skill_not_in_quote:Angular" in p.warnings
+    assert "skill_not_in_quote:Java" in p.warnings  # Java ≠ JavaScript даже при поиске по тексту
+    assert "quote_not_found:Kubernetes" in p.warnings
+
+
+def test_recover_quote_word_boundaries():
+    text = "Пишу на C# и JavaScript.\nСтек: C, Go.\nДругая строка."
+    assert resume_parser.recover_quote(text, "Другая строка.", "C", []) == "Стек: C, Go."
+    assert resume_parser.recover_quote(text, "Другая строка.", "Java", []) is None
+    assert resume_parser.recover_quote("Пишу на C# и Go.", "Пишу на Go.", "C", []) is None

@@ -103,7 +103,7 @@ function Skeletons() {
   );
 }
 
-/** Кандидаты категории: ранг, «заявлено vs подтверждено», шорт-лист, приглашение (макет N2). */
+/** Кандидаты категории: ранг, «заявлено vs подтверждено», шорт-лист, приглашение. */
 export default function CategoryCandidates() {
   const { profession = "", grade = "" } = useParams();
   const [params] = useSearchParams();
@@ -169,7 +169,7 @@ export default function CategoryCandidates() {
     void load(null);
   }, [load]);
 
-  // Реакции уходят в POST /recs/feedback; ответ несёт чипсы «Учли: …» (matching.md §7). Сбой не мешает работе.
+  // Реакции уходят в POST /recs/feedback; ответ несёт чипсы «Учли: …». Сбой не мешает работе.
   const react = (id: string, event: "open" | "shortlist" | "dismiss") => {
     if (!session.current) return;
     feedback.mutate(

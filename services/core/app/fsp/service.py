@@ -1,4 +1,4 @@
-"""Привязка ФСП со стороны core: PKCE/state в Redis, статус привязки, достижения (fsp.md §4)."""
+"""Привязка ФСП со стороны core: PKCE/state в Redis, статус привязки, достижения."""
 
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.fsp.client import ConnectorClient
 from app.graph.fsp_models import FspParticipant, FspTeamMember, FspTeamRow
 
-STATE_TTL = 600  # s:oauth:* — 10 мин (messaging.md §6)
+STATE_TTL = 600  # s:oauth:* — 10 мин
 SYNC_COOLDOWN = 600  # ручное обновление не чаще раза в 10 минут
 
 
@@ -89,6 +89,6 @@ async def demo_reset(session: AsyncSession, connector: ConnectorClient) -> None:
 
 
 async def pending_requests_count(connector: ConnectorClient) -> int:
-    """Число заявок на привязку ФСП, ждущих решения админа (E39-29)."""
+    """Число заявок на привязку ФСП, ждущих решения админа."""
     data = await connector.registry("GET", "/requests", params={"status": "pending"})
     return len(data or [])

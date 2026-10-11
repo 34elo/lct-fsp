@@ -16,7 +16,7 @@ import { useAuth } from "@/shared/lib/auth";
 import { gradeSpan } from "./Jobs";
 import { applyErrorText, isUnverified, JOBS_TEXT as T } from "./text";
 
-/** Состояния кнопки отклика (макет J1): не вошёл, не кандидат, email не подтверждён, отправлено. */
+/** Состояния кнопки отклика: не вошёл, не кандидат, email не подтверждён, отправлено. */
 function ApplyBox({ vacancyId }: { vacancyId: string }) {
   const { status, role } = useAuth();
   const loc = useLocation();
@@ -73,7 +73,7 @@ function ApplyBox({ vacancyId }: { vacancyId: string }) {
   );
 }
 
-/** Встречный сигнал кандидата (E33-6): «интересна компания». Только для кандидата; снимается. */
+/** Встречный сигнал кандидата: «интересна компания». Только для кандидата; снимается. */
 function CompanyInterest({ companyId }: { companyId: string }) {
   const { status, role } = useAuth();
   const [marked, setMarked] = useState(false);

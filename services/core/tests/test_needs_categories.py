@@ -1,4 +1,4 @@
-"""Потребности → категории → кандидаты (assessment.md §9, E23-4)."""
+"""Потребности → категории → кандидаты."""
 
 import json
 import sqlite3
@@ -220,7 +220,7 @@ def test_category_page_returns_session_and_feedback_works(c, market):
 
 
 def test_matched_skills_by_contribution():
-    """«Почему эта категория» (E39-21): навыки запроса, которые есть у профессии, по вкладу."""
+    """«Почему эта категория»: навыки запроса, которые есть у профессии, по вкладу."""
     need = {"python": 1.0, "fastapi": 1.0, "cobol": 1.0}
     assert n.matched_skills(need, ROLES["backend"]) == ["python", "fastapi"]
     assert n.matched_skills(need, ROLES["frontend"]) == ["python"]
@@ -238,7 +238,7 @@ def test_categories_explain_why(c, market):
 
 
 def test_professions_filter_restricts_categories_and_listing(c, market):
-    """Фильтр `professions` (E39-21): категории только этих профессий, без навыков тоже можно."""
+    """Фильтр `professions`: категории только этих профессий, без навыков тоже можно."""
     r = _create(c, market, filters={"skills_must": [{"slug": "python"}], "professions": ["ml"]})
     cats = _cats(r)
     assert {p for p, _ in cats} == {"ml"} and cats[("ml", "middle")]["named"] is True

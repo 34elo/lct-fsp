@@ -1,4 +1,4 @@
-"""Обработчики core-worker для графа: recompute, taxonomy.updated, fsp.* (messaging.md §4)."""
+"""Обработчики core-worker для графа: recompute, taxonomy.updated, fsp.*."""
 
 from __future__ import annotations
 
@@ -66,7 +66,7 @@ def register(
         for cid in ids:
             await service.request_recompute(session, cid, now)
 
-    # ФСП (fsp.md §6): факты и доказательства из событий fsp-connector
+    # ФСП: факты и доказательства из событий fsp-connector
     @consumers["core.ingest"].on("fsp.linked")
     @idempotent(session_factory, "graph.fsp_linked")
     async def on_fsp_linked(envelope: Envelope, session: AsyncSession) -> None:

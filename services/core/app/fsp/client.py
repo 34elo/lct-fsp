@@ -1,4 +1,4 @@
-"""HTTP-клиент core → fsp-connector (api.md §2.9, `Authorization: Service <SERVICE_TOKEN_CORE>`).
+"""HTTP-клиент core → fsp-connector (`Authorization: Service <SERVICE_TOKEN_CORE>`).
 
 Ошибки connector (Problem Details) пробрасываются как есть: статус и машинный `code` сохраняются.
 Тела запросов с ПДн (email, коды) не логируются.
@@ -88,7 +88,7 @@ class ConnectorClient:
             "POST", "/internal/links/verify", json={"candidate_id": str(candidate_id), "code": code}
         )
 
-    # ------------------------------------------------------------ реестр ФСП (E39-28)
+    # ------------------------------------------------------------ реестр ФСП
     async def registry(self, method: str, path: str, **kw: Any) -> Any:
         """`/internal/registry/*`: тела с ПДн (контакты, ФИО) не логируются."""
         return await self._call(method, f"/internal/registry{path}", **kw)

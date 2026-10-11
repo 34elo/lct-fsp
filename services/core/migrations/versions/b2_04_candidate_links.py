@@ -1,4 +1,4 @@
-"""candidate_links: связи людей по командам ФСП (E16-9, graph.md §7)
+"""candidate_links: связи людей по командам ФСП
 
 Revision ID: b2_04
 Revises: b2_03

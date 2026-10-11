@@ -1,4 +1,4 @@
-"""Слагаемое F силы профиля по результативности (ADR-025 п. 3, E32-2)."""
+"""Слагаемое F силы профиля по результативности."""
 
 from datetime import date
 
@@ -55,7 +55,7 @@ def test_recency_is_soft_and_unverified_halves():
     )
 
 
-# --- релевантность дисциплины профессии (ADR-027 п. 2, E36-3) -------------------------------
+# --- релевантность дисциплины профессии -------------------------------
 
 from dataclasses import replace  # noqa: E402
 from pathlib import Path  # noqa: E402

@@ -81,7 +81,7 @@ function SuggestionCard({ s, onDone }: { s: ProfessionSuggestionOut; onDone: (ms
   );
 }
 
-/** «Новая профессия?» (E41-17): предложения системы, создание одной кнопкой или отказ. */
+/** «Новая профессия?»: предложения системы, создание одной кнопкой или отказ. */
 export function ProfessionSuggestions({ onDone }: { onDone: (msg: string) => void }) {
   const q = useListProfessionSuggestionsAdminProfessionSuggestionsGet({ query: { retry: false } });
   const items = q.data?.status === 200 ? q.data.data : null;

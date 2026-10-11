@@ -1,4 +1,4 @@
-# Параметры демо-витрины (evaluation.md §4). Все люди и компании вымышленные.
+# Параметры демо-витрины. Все люди и компании вымышленные.
 # Пароли ниже — тестовые значения для демо-аккаунтов, не реальные.
 
 seed: 20261003            # SEED по умолчанию; переопределяется --seed или env SEED
@@ -26,7 +26,7 @@ demo:
   employer_email: "hr{n:02d}@demo.fsp.test"
   participant_email: "participant{n:04d}@example.test"
   admin_email: "admin@demo.fsp.test"
-  jury_candidate_email: "jury-candidate@demo.fsp.test"   # вход жюри (E32-4b): без грейда, проходит экспресс-тест
+  jury_candidate_email: "jury-candidate@demo.fsp.test"   # вход жюри: без грейда, проходит экспресс-тест
   jury_employer_email: "jury-hr@demo.fsp.test"            # вход жюри: работодатель с проверенной компанией
 
 cities: [Москва, Санкт-Петербург, Новосибирск, Екатеринбург, Казань, Нижний Новгород, Самара, Краснодар, Томск, Воронеж]
@@ -99,7 +99,7 @@ grade_titles:
   senior: Senior
   lead: Lead
 
-# Распределение результатов офферов в истории (evaluation.md §4)
+# Распределение результатов офферов в истории
 offer_outcomes:
   accepted: 0.22
   declined: 0.28

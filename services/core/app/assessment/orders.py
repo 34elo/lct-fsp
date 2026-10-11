@@ -1,4 +1,4 @@
-"""Заказ LLM-заданий из админки (E43-9, assessment.md §7): форма → очередь `ml.llm` → `draft`.
+"""Заказ LLM-заданий из админки: форма → очередь `ml.llm` → `draft`.
 
 `POST /admin/assessment/generate` пишет строку `family_orders` (`queued`) и команду
 `ml.families.generate` в outbox одной транзакцией. Команда идёт в `ml.llm` с низшим приоритетом

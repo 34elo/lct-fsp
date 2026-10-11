@@ -1,4 +1,4 @@
-"""Internal API бота: резюме файлом и краткий профиль (api.md §2.10)."""
+"""Internal API бота: резюме файлом и краткий профиль."""
 
 import asyncio
 import io

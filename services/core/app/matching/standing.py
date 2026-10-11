@@ -1,4 +1,4 @@
-"""Сила профиля и место в категории для самого кандидата (E35-12a, assessment.md §9).
+"""Сила профиля и место в категории для самого кандидата.
 
 Категория — профессия × грейд кандидата (основная профессия, иначе старший грейд). Сила
 каждого участника считается той же формулой, что у работодателя (`strength.py`, без запроса:
@@ -87,9 +87,7 @@ async def compute(
     fsp_cfg: FspStrengthConfig,
     today: datetime | None = None,
 ) -> CandidateStanding:
-    """Сила и место кандидата в его категории той же формулой, что у работодателя (assessment.md §9,
-    E35-12a).
-    """
+    """Сила и место кандидата в его категории той же формулой, что у работодателя."""
     now = today or datetime.now(UTC)
     grades = await assessment.get_grades(session, cand.user_id)
     cur = navigator.pick_current(grades, cand.primary_role)

@@ -1,4 +1,4 @@
-"""Настройка весов подбора (E36-6): сетка, согласие с `make eval`, правило принятия, отчёт."""
+"""Настройка весов подбора: сетка, согласие с `make eval`, правило принятия, отчёт."""
 
 import importlib.util
 import json
@@ -31,7 +31,7 @@ def test_grid_sums_and_floor():
 
 
 def test_before_weights_reproduce_make_eval(market):
-    """Веса «до» в режиме match дают ровно числа `ours` из стенда E27-2."""
+    """Веса «до» в режиме match дают ровно числа `ours` из стенда оценки."""
     needs = tune.collect(market, required_mult=tune.BEFORE.required_mult, max_needs=10)
     ours = mt.run_matching(market, max_needs=10)["table"]["ours"]
     got = tune.evaluate(needs, tune.BEFORE.match)

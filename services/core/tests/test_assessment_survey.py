@@ -1,4 +1,4 @@
-"""E22-7: опрос — сохранение, история, предзаполнение из резюме, права (assessment.md §10)."""
+"""Опрос — сохранение, история, предзаполнение из резюме, права."""
 
 import uuid
 from pathlib import Path
@@ -49,7 +49,7 @@ def test_survey_save_history_and_dedup(api, taxonomy_loaded):
 
 
 def test_survey_it_direction_without_industry(api, taxonomy_loaded):
-    """ADR-025 п.4: первый шаг — IT-направление (профессия), отрасль не обязательна."""
+    """Первый шаг — IT-направление (профессия), отрасль не обязательна."""
     h = register(api)
     body = {k: v for k, v in BODY.items() if k != "industry"}
     r = api.put("/assessment/survey", json=body, headers=h)
@@ -102,7 +102,7 @@ async def test_prefill_from_resume_and_claimed(api, factory, taxonomy_loaded):
     async with session_scope(factory) as s:
         (r,) = await svc.claimed_vs_confirmed(s, uid)
     assert (r.declared_grade, r.status) == ("senior", "overclaimed")
-    # то же самое видит владелец в профиле (E23-3)
+    # то же самое видит владелец в профиле
     async with session_scope(factory) as s:
         (await s.get(Candidate, uid)).formats = ["remote"]  # профиль не принимает «bogus»
     cvc = api.get("/candidates/me/profile", headers=h).json()["claimed_vs_confirmed"]
@@ -114,7 +114,7 @@ async def test_prefill_from_resume_and_claimed(api, factory, taxonomy_loaded):
 
 
 async def test_survey_analytics_event_once_without_pii(api, factory, taxonomy_loaded):
-    """E31-2a: `survey_saved` пишется один раз на изменение, без стека и вилки."""
+    """`survey_saved` пишется один раз на изменение, без стека и вилки."""
     from app.analytics.models import AnalyticsEventRow
     from sqlalchemy import select
 

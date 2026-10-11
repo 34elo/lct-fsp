@@ -1,4 +1,4 @@
-"""Потребности и категории работодателя (assessment.md §9–10, api.md): `POST /needs`,
+"""Потребности и категории работодателя: `POST /needs`,
 `GET /needs/{id}/categories`, `GET /categories/{profession}/{grade}/candidates`."""
 
 from __future__ import annotations
@@ -57,14 +57,14 @@ class NeedOut(BaseModel):
     filters: SearchFilters
     skills: dict[str, float]  # slug навыка → вес потребности
     grades: list[str]
-    shortlist: list[str] = []  # pseudo_id кандидатов в шорт-листе (E23-5)
+    shortlist: list[str] = []  # pseudo_id кандидатов в шорт-листе
     created_at: datetime
     categories: list[NeedCategory]
 
 
 class NeedCategories(BaseModel):
     need_id: uuid.UUID
-    shortlist: list[str] = []  # pseudo_id кандидатов в шорт-листе (E23-5)
+    shortlist: list[str] = []  # pseudo_id кандидатов в шорт-листе
     categories: list[NeedCategory]
 
 
@@ -81,7 +81,7 @@ class CategoryPage(BaseModel):
     items: list[search.CandidateCard]
     next_cursor: str | None
     total: int
-    session_id: uuid.UUID  # сессия показов: с ней фронт шлёт POST /recs/feedback (E17-5)
+    session_id: uuid.UUID  # сессия показов: с ней фронт шлёт POST /recs/feedback
 
 
 @router.post(
@@ -195,12 +195,12 @@ async def category_candidates(
         category=category, strength_cfg=_STRENGTH,
     )  # fmt: skip
 
-    # Mark shortlisted candidates (E23-5)
+    # Mark shortlisted candidates
     shortlist = set(need.shortlist) if need else set()
     for item in page["items"]:
         item["is_shortlisted"] = item["pseudo_id"] in shortlist
 
-    # Показы для обратной связи (E17-5): сессия продолжается со следующих страниц
+    # Показы для обратной связи: сессия продолжается со следующих страниц
     sid = session_id or uuid.uuid4()
     context_id = f"{profession}/{grade}"
     for position, item in enumerate(page["items"], 1):
@@ -235,7 +235,7 @@ async def shortlist_all(
     user: User = Depends(_employer),
     session: AsyncSession = Depends(get_session),
 ) -> Any:
-    """Общий шорт-лист компании (E39-23): отмеченные во всех её потребностях, без повторов.
+    """Общий шорт-лист компании: отмеченные во всех её потребностях, без повторов.
 
     Сначала отмеченные в свежих потребностях; запоминать последний запрос в браузере не нужно.
     """
@@ -276,7 +276,7 @@ async def shortlist_add(
     user: User = Depends(_employer),
     session: AsyncSession = Depends(get_session),
 ) -> None:
-    """Добавить кандидата в шорт-лист потребности (E23-5). Фильтр не сбрасывает отмеченных."""
+    """Добавить кандидата в шорт-лист потребности. Фильтр не сбрасывает отмеченных."""
     company, _ = await companies.require_company(session, user.id)
     need = await needs_service.get_owned(session, company.id, need_id)
     # Проверить, что кандидат существует
@@ -309,7 +309,7 @@ async def shortlist_remove(
     user: User = Depends(_employer),
     session: AsyncSession = Depends(get_session),
 ) -> None:
-    """Удалить кандидата из шорт-листа потребности (E23-5)."""
+    """Удалить кандидата из шорт-листа потребности."""
     company, _ = await companies.require_company(session, user.id)
     need = await needs_service.get_owned(session, company.id, need_id)
     # Удалить из шорт-листа, если там есть

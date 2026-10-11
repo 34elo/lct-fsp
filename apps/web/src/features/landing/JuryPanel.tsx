@@ -4,7 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 import { juryEnabled } from "./jury";
 import { PANEL, T } from "./text";
 
-/** Панель «что попробовать» (E34-2): 5 шагов сценария, видна в кабинетах только при `VITE_JURY_MODE=true`. */
+/** Панель «что попробовать»: 5 шагов сценария, видна в кабинетах только при `VITE_JURY_MODE=true`. */
 export function JuryPanel() {
   const { pathname } = useLocation();
   const [open, setOpen] = useState(true);

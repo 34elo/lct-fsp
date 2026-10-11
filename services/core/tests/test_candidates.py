@@ -56,7 +56,7 @@ def test_profile_lazy_create_stable(c):
     p2 = c.get("/candidates/me/profile", headers=h).json()
     assert p1["pseudonym"] == p2["pseudonym"] and p1["pseudonym"].startswith("Candidate #")
     assert p1["search_status"] == "open" and p1["preferences"]["formats"] == []
-    assert p1["visibility"] == {  # ADR-027: ФИО скрыто, опыт/компании/ФСП/регион видны
+    assert p1["visibility"] == {  # ФИО скрыто, опыт/компании/ФСП/регион видны
         "full_name": False,
         "companies": True,
         "fsp": True,
@@ -145,7 +145,7 @@ def _events(c, type_):
 
 
 def test_visibility_privacy_switches_saved_and_evented(c):
-    """E36-4: ФИО/ФСП/регион/компании сохраняются, событие только об изменившемся."""
+    """ФИО/ФСП/регион/компании сохраняются, событие только об изменившемся."""
     h = _user(c, "a@x.io")
     j = c.patch(
         "/candidates/me/visibility", json={"full_name": True, "region": False}, headers=h
@@ -415,7 +415,7 @@ def test_category_dispute_validation_and_access(c):
 
 
 async def test_pseudonym_exhausted_uses_unique_fallback(tmp_path, monkeypatch):
-    """E42-3: 20 коллизий подряд не роняют создание: псевдоним берётся от pseudo_id."""
+    """20 коллизий подряд не роняют создание: псевдоним берётся от pseudo_id."""
     from app.identity.models import User
     from fsp_platform.db import make_engine, make_session_factory, session_scope
 

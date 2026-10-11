@@ -1,4 +1,4 @@
-"""Снапшот и сброс демо-привязок ФСП (E40-1): `python -m fsp_connector.demo snapshot|reset`.
+"""Снапшот и сброс демо-привязок ФСП: `python -m fsp_connector.demo snapshot|reset`.
 
 id демо-кандидатов приходят на stdin строками `DEMO_ID <uuid>` (их печатает `python -m app.demo`
 в core: в БД core коннектор не ходит). Демо-строки — привязки, конфликты и заявки этих

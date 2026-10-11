@@ -23,7 +23,6 @@ import { EmployerOfferDetail, EmployerOffers } from "@/features/offers/EmployerO
 import { CandidateOfferDetail, CandidateOffers } from "@/features/offers/CandidateOffers";
 import NotFound from "@/pages/NotFound";
 import Register from "@/pages/Register";
-// >>> block1 imports
 import Survey from "@/features/assessment/Survey";
 import Attempt from "@/features/assessment/Attempt";
 import Result from "@/features/assessment/Result";
@@ -43,8 +42,6 @@ import AdminTaxonomy from "@/features/admin-taxonomy/AdminTaxonomy";
 import DemoLlmExam from "@/features/demo/LlmExam";
 import DemoNewProfession from "@/features/demo/NewProfession";
 import DemoTwoWorlds from "@/features/demo/TwoWorlds";
-// <<< block1 imports
-// >>> block2 imports
 import PasswordSetup from "@/features/auth/PasswordSetup";
 import Landing from "@/features/landing/Landing";
 import Legal from "@/features/landing/Legal";
@@ -65,9 +62,8 @@ import Subscriptions from "@/features/needs/Subscriptions";
 import { CandidateInterests } from "@/features/offers/CandidateInterests";
 import EmployerMatch from "@/features/employer/Match";
 import InviteAccept from "@/features/employer/InviteAccept";
-// <<< block2 imports
 
-// Разделы по ролям грузятся лениво (frontend.md: «ленивые разделы»).
+// Разделы по ролям грузятся лениво («ленивые разделы»).
 const PublicLayout = lazy(() => import("@/app/layouts/PublicLayout"));
 const JobsLayout = lazy(() => import("@/app/layouts/JobsLayout"));
 const CandidateLayout = lazy(() => import("@/app/layouts/CandidateLayout"));
@@ -76,7 +72,7 @@ const AdminLayout = lazy(() => import("@/app/layouts/AdminLayout"));
 const AccountLayout = lazy(() => import("@/app/layouts/AccountLayout"));
 const RunPage = lazy(() => import("@/features/runs/RunPage"));
 
-// Старые адреса без своего экрана ведут на рабочий экран (E35-1: заглушек нет).
+// Старые адреса без своего экрана ведут на рабочий экран (заглушек нет).
 const redirects = (section: string) =>
   ROUTES.filter((r) => r.section === section && r.redirect).map((r) => (
     <Route key={r.path} path={r.path} element={<Navigate to={r.redirect!} replace />} />
@@ -94,7 +90,6 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
             <Route path="/me/skills/:slug" element={<SkillEvidence />} />
             <Route path="/me/offers" element={<CandidateOffers />} />
             <Route path="/me/offers/:id" element={<CandidateOfferDetail />} />
-            {/* >>> block1 (candidate) */}
             <Route path="/me/assessment" element={<Survey />} />
             <Route path="/me/assessment/history" element={<History />} />
             <Route path="/me/assessment/attempts/:id" element={<Attempt />} />
@@ -104,12 +99,9 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
             <Route path="/me/profile/edit" element={<ProfileEdit />} />
             <Route path="/me/stats" element={<Stats />} />
             <Route path="/me/tasks" element={<CandidateTasks />} />
-            {/* <<< block1 (candidate) */}
-            {/* >>> block2 (candidate) */}
             <Route path="/me/navigator" element={<Navigator />} />
             <Route path="/me/responses" element={<CandidateResponses />} />
             <Route path="/me/interests" element={<CandidateInterests />} />
-            {/* <<< block2 (candidate) */}
           </>
         )}
         {section === "employer" && (
@@ -125,38 +117,30 @@ function guarded(section: "candidate" | "employer" | "admin", Layout: ComponentT
             <Route path="/employer/offers/:id" element={<EmployerOfferDetail />} />
             <Route path="/employer/vacancies/:id/shortlist" element={<Shortlist />} />
             <Route path="/employer/shortlist" element={<ShortlistPage />} />
-            {/* >>> block1 (employer) */}
             <Route path="/employer/tasks" element={<EmployerTasks />} />
             <Route path="/employer/families/new" element={<Constructor />} />
             <Route path="/employer/families/guide" element={<Guide />} />
-            {/* <<< block1 (employer) */}
-            {/* >>> block2 (employer) */}
             <Route path="/employer" element={<EmployerMatch />} />
             <Route path="/employer/responses" element={<EmployerResponses />} />
             <Route path="/employer/needs/new" element={<NeedNew />} />
             <Route path="/employer/needs/:id" element={<NeedCategories />} />
             <Route path="/employer/categories/:profession/:grade" element={<CategoryCandidates />} />
             <Route path="/employer/subscriptions" element={<Subscriptions />} />
-            {/* <<< block2 (employer) */}
           </>
         )}
         {section === "admin" && (
           <>
-            {/* >>> block1 (admin) */}
             <Route path="/admin/families" element={<AdmissionQueue />} />
             <Route path="/admin/professions" element={<AdminTaxonomy />} />
             <Route path="/admin/skills" element={<AdminSkills />} />
             <Route path="/admin/demo/two-worlds" element={<DemoTwoWorlds />} />
             <Route path="/admin/demo/llm-exam" element={<DemoLlmExam />} />
             <Route path="/admin/demo/new-profession" element={<DemoNewProfession />} />
-            {/* <<< block1 (admin) */}
-            {/* >>> block2 (admin) */}
             <Route path="/federation" element={<AdminHome />} />
             <Route path="/federation/funnel" element={<FederationDashboard />} />
             <Route path="/federation/moderation" element={<FederationModeration />} />
             <Route path="/federation/registry" element={<FspRegistry />} />
             <Route path="/federation/analytics" element={<AdminAnalytics />} />
-            {/* <<< block2 (admin) */}
           </>
         )}
       </Route>
@@ -174,21 +158,13 @@ export function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/auth/magic" element={<MagicLogin />} />
           <Route path="/consents" element={<Consents />} />
-          {/* >>> block1 (auth) */}
           <Route path="/verify-email" element={<VerifyEmail />} />
-          {/* <<< block1 (auth) */}
-          {/* >>> block2 (auth) */}
           <Route path="/password/new" element={<PasswordSetup />} />
-          {/* <<< block2 (auth) */}
-          {/* >>> block1 (public) */}
-          {/* <<< block1 (public) */}
-          {/* >>> block2 (public) */}
           <Route path="/" element={<Landing />} />
           <Route path="/run/:token" element={<RunPage />} />
           <Route path="/terms" element={<Legal />} />
           <Route path="/privacy" element={<Legal />} />
           <Route path="/invite/company/:token" element={<InviteAccept />} />
-          {/* <<< block2 (public) */}
         </Route>
         <Route element={<JobsLayout />}>
           <Route path="/jobs" element={<Jobs />} />

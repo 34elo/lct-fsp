@@ -489,7 +489,7 @@ export function OfferCardV2({
         {head}
       </article>
     );
-  // Без действий и срока (лента «Вами интересуются» на Главной) — три колонки, как в макете v2_me__after.
+  // Без действий и срока (лента «Вами интересуются» на Главной) — три колонки.
   const side = Boolean(actions || o.deadline);
   return (
     <article

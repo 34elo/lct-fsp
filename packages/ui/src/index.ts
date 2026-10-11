@@ -45,19 +45,19 @@ export {
 } from "./brand/match";
 export { CandidateCard, OfferCard, type CandidateCardData, type OfferCardData } from "./brand/cards";
 export * from "./icons";
-// v2 (docs/design/v2, E38-0): примитивы макетов, новые компоненты, каркас.
+// v2: примитивы, компоненты, каркас страниц.
 export * from "./v2/primitives";
 export * from "./v2/charts";
 export * from "./v2/cards";
 export * from "./v2/assessment";
 export * from "./v2/shell";
-// v3 (E39-1): свои контролы вместо голых HTML-элементов, Markdown, InfoTip, скелетоны-пресеты.
+// v3: свои контролы вместо голых HTML-элементов, Markdown, InfoTip, скелетоны-пресеты.
 export * from "./v3/combobox";
 export * from "./v3/inputs";
 export * from "./v3/content";
 export * from "./v3/diagram";
 export * from "./v3/skeletons";
 export * from "./v3/roadmap";
-// E39-14: интерактивный граф доказательств.
+// интерактивный граф доказательств.
 export * from "./v3/graph-model";
 export * from "./v3/graph";

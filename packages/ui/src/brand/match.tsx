@@ -4,7 +4,7 @@ import { cn } from "../lib/cn";
 import { formatRubRange } from "../lib/format";
 import { SectionLabel } from "./protocol";
 
-/* Фирменные: обоснование совпадения, вилка, статусы оффера, вероятность принятия, рост, лог, схема этапов. Эталон — DS2, A, M2, E5. */
+/* Фирменные: обоснование совпадения, вилка, статусы оффера, вероятность принятия, рост, лог, схема этапов. */
 
 export type WhyKind = "ok" | "warn" | "no";
 export interface WhyItem {
@@ -220,7 +220,7 @@ export interface LogLine {
 
 const MARK: Record<LogLine["state"], string> = { done: "✓", active: "◌", fail: "✕" };
 
-/** Терминальный лог этапов долгой задачи (frontend.md §6). Строки приходят снаружи, компонент только рисует. */
+/** Терминальный лог этапов долгой задачи. Строки приходят снаружи, компонент только рисует. */
 export function BuildLog({ title, lines, className }: { title: string; lines: LogLine[]; className?: string }) {
   return (
     <div className={cn("rounded-xl border border-hairline bg-tint-50 p-3 font-mono text-13 leading-6", className)}>

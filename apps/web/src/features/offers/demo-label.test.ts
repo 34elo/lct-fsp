@@ -11,7 +11,7 @@ const offer = (demo: boolean) =>
     company: { id: "c1", name: "Северный код", responsibility_score: 4.6, verified: true, demo },
   }) as unknown as CandidateOffer;
 
-describe("E40-1: пометка демо-компании", () => {
+describe("пометка демо-компании", () => {
   it("реальный кандидат видит «демо» рядом с названием демо-компании", () => {
     expect(offerCardData(offer(true)).company).toBe("Северный код · демо");
   });

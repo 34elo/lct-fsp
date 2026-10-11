@@ -1,4 +1,4 @@
-"""E22-5: план теста из профессии или вакансии, `POST /assessment/plan/preview` (§6)."""
+"""План теста из профессии или вакансии, `POST /assessment/plan/preview`."""
 
 from pathlib import Path
 
@@ -44,7 +44,7 @@ def test_preview_sums_to_one_and_grade_shifts_shares():
         assert sum(s["share"] for s in out["sections"]) == pytest.approx(1.0, abs=1e-5)
         shares[g] = {s["skill"]: s["share"] for s in out["sections"]}
         assert out["type_shares"].keys() == {"hard", "fundamental", "thinking"}
-    # мышление весит больше у senior, чем у junior (§6)
+    # мышление весит больше у senior, чем у junior
     assert shares[TestGrade.senior]["system_design"] > shares[TestGrade.junior]["system_design"]
     assert sel.type_shares(TestGrade.junior, CFG)["hard"] == pytest.approx(0.40)
 

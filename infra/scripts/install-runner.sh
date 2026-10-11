@@ -1,5 +1,5 @@
 #!/bin/sh
-# Ставит self-hosted раннер GitHub Actions для деплоя стенда (docs/deploy.md «CI/CD») как службу systemd.
+# Ставит self-hosted раннер GitHub Actions для деплоя стенда как службу systemd.
 # Запускать на сервере стенда под пользователем, который состоит в группе docker.
 # Токен регистрации: GitHub → репозиторий → Settings → Actions → Runners → New self-hosted runner (живёт 1 час).
 #   sh infra/scripts/install-runner.sh      — спросит токен (ввод скрыт)

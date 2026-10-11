@@ -1,5 +1,5 @@
 #!/bin/sh
-# Демо-витрина (evaluation.md §4, E40-1). Вызывается из Makefile:
+# Демо-витрина. Вызывается из Makefile:
 #   COMPOSE="docker compose ..." GATEWAY_PORT=28080 sh infra/scripts/demo.sh snapshot|reset|warm
 # Сбрасываются только демо-данные (is_demo): реальные регистрации и их данные не трогаются.
 # snapshot: демо-строки core и fsp_connector -> таблицы demo_snap__* тех же БД (python -m app.demo,

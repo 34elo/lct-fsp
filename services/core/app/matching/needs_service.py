@@ -1,4 +1,4 @@
-"""Потребности работодателя и рекомендованные категории (assessment.md §9, E23-4)."""
+"""Потребности работодателя и рекомендованные категории."""
 
 from __future__ import annotations
 
@@ -31,7 +31,7 @@ class NeedCategory(BaseModel):
     candidates: int
     median_salary: int | None = None  # ₽/мес; мало данных — None
     fsp_share: float | None = None  # доля участников с ФСП; пустая категория — None
-    # «Почему эта категория» (E39-21): навыки запроса, которые есть у профессии (по вкладу в
+    # «Почему эта категория»: навыки запроса, которые есть у профессии (по вкладу в
     # affinity, до 5 названий), и названа ли профессия в запросе или фильтре явно.
     matched_skills: list[str] = []
     named: bool = False
@@ -71,7 +71,7 @@ async def create(
 
 
 async def skill_sets(session: AsyncSession) -> list[set[str]]:
-    """Наборы навыков всех потребностей (slug'и весов) — для предложений профессий (E41-17).
+    """Наборы навыков всех потребностей (slug'и весов) — для предложений профессий.
     Без текста запроса и компании: только slug'и."""
     return [set(w) for w in await session.scalars(select(Need.weights)) if w]
 
@@ -108,7 +108,7 @@ async def categories(
 ) -> list[NeedCategory]:
     """Профессии с affinity ≥ порога × грейды потребности, со счётчиками видимых работодателю.
 
-    Фильтр `professions` (E39-21) задаёт профессии явно: категории — только они. Счётчики
+    Фильтр `professions` задаёт профессии явно: категории — только они. Счётчики
     учитывают те же фильтры, что и выдача категории (`search.extra_ok`)."""
     f = filters_of(need)
     profs = {p.slug: p for p in await taxonomy.list_professions(session)}

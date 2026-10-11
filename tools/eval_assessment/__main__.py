@@ -51,7 +51,7 @@ MARK = {"ok": "✅", "fail": "❌", "n/a": "—"}
 def render_md(rep: dict[str, Any]) -> str:
     m, st = rep["metrics"], rep["status"]
     lines = [
-        "# Валидация теста на синтетике (E27-1)",
+        "# Валидация теста на синтетике",
         "",
         f"`make eval-assessment` · seed {rep['seed']} · семейств {rep['bank']['families']} "
         f"(якорей {rep['bank']['anchors']}) · попыток {rep['counts']['attempts_total']}",
@@ -76,7 +76,7 @@ def render_md(rep: dict[str, Any]) -> str:
         "",
         "LLM симулирована: верный ответ с вероятностью `ai_solvable` семейства, "
         "время ≈ 0.1 медианы. "
-        "Прогон настоящей модели — E26-4.",
+        "Прогон настоящей модели — make assessment-llm-bank.",
         "",
         "## Параметры",
         "",

@@ -23,7 +23,7 @@ export interface TagQueryProps {
   className?: string;
 }
 
-/** Подсказки системы: профессии и навыки (E39-3) плюс «разобрать фразу». Многословная фраза — первым пунктом. */
+/** Подсказки системы: профессии и навыки плюс «разобрать фразу». Многословная фраза — первым пунктом. */
 async function load(q: string, signal: AbortSignal, profession: string | null, chosen: Set<string>): Promise<ComboOption[]> {
   const t = q.trim();
   if (!t) return [];

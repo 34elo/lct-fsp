@@ -1,4 +1,4 @@
-"""Каркас тестов (E29-1): фабрики, make_grade через seed_grade, хелперы 404 и повтора."""
+"""Каркас тестов: фабрики, make_grade через seed_grade, хелперы 404 и повтора."""
 
 from app.assessment import service as assessment
 from app.offers.models import Offer

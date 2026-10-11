@@ -1,4 +1,4 @@
-"""HTTP `/admin/families*` — очередь допуска и решения админа (assessment.md §7, §10; E22-9)."""
+"""HTTP `/admin/families*` — очередь допуска и решения админа."""
 
 from __future__ import annotations
 
@@ -76,7 +76,7 @@ class AdminFamilyOut(BaseModel):
     updated_at: datetime | None = None
     company_id: uuid.UUID | None = None  # задание компании (конструктор)
     spec: dict[str, Any] | None = None  # конструктор: form, author, key_draft, autocheck
-    skill: str | None = None  # slug навыка (E39-31)
+    skill: str | None = None  # slug навыка
     grade: Literal["junior", "middle", "senior"] = "middle"  # ячейка «грейд» по уровню
     professions: list[FamilyProfessionOut] = Field(default_factory=list)  # для кого задание
     example: FamilyExampleOut | None = None  # пример варианта с ответом решателя
@@ -195,7 +195,7 @@ async def retire(
 
 
 class KeyApproveIn(BaseModel):
-    """Какой ключ утвердить: автора, черновик LLM или свою правку спецификации (E30-1)."""
+    """Какой ключ утвердить: автора, черновик LLM или свою правку спецификации."""
 
     source: Literal["author", "llm", "custom"]
     spec: FamilySpec | None = None  # для `custom`
@@ -236,5 +236,5 @@ async def to_pilot(
     user: User = Depends(_admin),
     session: AsyncSession = Depends(get_session),
 ):
-    """Задание компании → общий банк: `draft → pilot` (E30-1)."""
+    """Задание компании → общий банк: `draft → pilot`."""
     return await _decide(constructor.to_bank, family_id, request, user, session)

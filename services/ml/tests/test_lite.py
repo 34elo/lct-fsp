@@ -1,4 +1,4 @@
-"""Профиль lite (E20-8): LLM_ENABLED=false — резюме разбирается правилами, воркер не требует LLM."""
+"""Профиль lite: LLM_ENABLED=false — резюме разбирается правилами, воркер не требует LLM."""
 
 import pytest
 from fsp_ml import resume_parser

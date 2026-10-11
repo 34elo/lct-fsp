@@ -1,4 +1,4 @@
-"""Онлайн-метрики v2 (E31-4, metrics.md §9.2–9.3): воронки, приглашения, отклики.
+"""Онлайн-метрики v2: воронки, приглашения, отклики.
 
 Считаем по `analytics_events` на лету, как дашборд ФСП (без материализованных представлений:
 так одинаково работает в SQLite тестов и в PostgreSQL). Только агрегаты по псевдонимам;
@@ -33,7 +33,7 @@ _TEST_FINISHED = (
 )
 
 # Воронка кандидата. Шаги без единого события в окне помечаются `available=False`
-# и в цепочку конверсий не входят (событий Б1 `survey_*`/`assessment_*` может ещё не быть).
+# и в цепочку конверсий не входят (событий `survey_*`/`assessment_*` может ещё не быть).
 CANDIDATE_STAGES: list[tuple[str, str, Pred]] = [
     ("registered", "Регистрация", lambda e, p: e == "signup_completed"),
     ("email", "Подтвердили email", lambda e, p: e == "email_verified"),
@@ -49,7 +49,7 @@ EMPLOYER_STAGES: list[tuple[str, str, Pred]] = [
     ("shortlist", "Добавили в шорт-лист", lambda e, p: e == "shortlist_added"),
     ("invite", "Отправили приглашение", lambda e, p: e in ("invite_sent", "offer_sent")),
 ]
-# Воронка интереса (встречный оффер E33): интерес → открыл → приглашение → принял
+# Воронка интереса (встречный оффер): интерес → открыл → приглашение → принял
 INTEREST_STAGES: list[tuple[str, str, Pred]] = [
     ("shown", "Показали интерес", lambda e, p: e == "interest_shown"),
     (
@@ -269,7 +269,7 @@ def responses(rows: list[Row]) -> ResponseMetrics:
 
 
 def interests(rows: list[Row]) -> InterestMetrics:
-    """Метрики встречного оффера: интерес → открыл → приглашение → принял (E33-8)."""
+    """Метрики встречного оффера: интерес → открыл → приглашение → принял."""
     shown = [r for r in rows if r[0] == "interest_shown"]
     opened = [r for r in rows if r[0] == "interest_answered" and r[2].get("decision") == "opened"]
     invited = [r for r in rows if r[0] == "interest_to_invite"]
@@ -331,7 +331,7 @@ def interests(rows: list[Row]) -> InterestMetrics:
 async def build(
     session: AsyncSession, days: int = DEFAULT_DAYS, *, exclude_actors: Collection[str] = ()
 ) -> MetricsOut:
-    """Метрики за `days` дней; `exclude_actors` — псевдонимы демо-аккаунтов (E40-1)."""
+    """Метрики за `days` дней; `exclude_actors` — псевдонимы демо-аккаунтов."""
     days = max(1, min(days, MAX_DAYS))
     since = datetime.now(UTC) - timedelta(days=days)
     raw = (

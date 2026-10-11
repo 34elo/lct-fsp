@@ -2,7 +2,7 @@ import type { HTMLAttributes } from "react";
 
 import { cn } from "./cn";
 
-/** Область с принудительной темой: `<ThemeScope dark>` — тёмная (экран B, G1, hero), `light` — светлая внутри тёмной (класс `.light`, как `.dark .lt` в макетах v2). */
+/** Область с принудительной темой: `<ThemeScope dark>` — тёмная (G1, hero), `light` — светлая внутри тёмной (класс `.light`, как `.dark .lt` в макетах v2). */
 export function ThemeScope({
   dark,
   light,

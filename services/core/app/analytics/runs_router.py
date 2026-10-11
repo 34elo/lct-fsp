@@ -1,4 +1,4 @@
-"""Живые прогоны (E18-4, metrics.md §3).
+"""Живые прогоны.
 
 Админ: `POST|GET /admin/live-runs`, `GET /admin/live-runs/{id}`.
 Испытатель (по секретному токену из ссылки): `GET /run/{token}`, `POST /run/{token}/start`,

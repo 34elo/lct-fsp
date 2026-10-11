@@ -1,4 +1,4 @@
-"""Уведомления: offer.*, skills.profile.updated, fsp.results.imported, regular_task (E8-3, E9-6)."""
+"""Уведомления: offer.*, skills.profile.updated, fsp.results.imported, regular_task."""
 
 import asyncio
 import json
@@ -263,7 +263,7 @@ def test_profile_updated_only_on_significant_diff(world):
 
 
 def test_invite_without_vacancy_notifies_with_title_once(world):
-    """E20-2: приглашение без вакансии; повтор `offer.sent` не дублирует уведомление."""
+    """Приглашение без вакансии; повтор `offer.sent` не дублирует уведомление."""
     c, e, e_uid, vid, ch, ch_uid = world
     _link_tg(c, ch, ch_uid)
     body = {"candidate_pseudo_id": "pid0001", "salary_from": 250000, "salary_to": 320000,
@@ -281,7 +281,7 @@ def test_invite_without_vacancy_notifies_with_title_once(world):
 
 
 def test_fsp_results_imported_notifies_candidate(world):
-    """E9-6: импорт результатов ФСП отправляет уведомление кандидату."""
+    """Импорт результатов ФСП отправляет уведомление кандидату."""
     from datetime import date
 
     c, e, e_uid, vid, ch, ch_uid = world
@@ -306,7 +306,7 @@ def test_fsp_results_imported_notifies_candidate(world):
 
 
 def test_fsp_imported_redelivery_is_idempotent(world):
-    """E9-6: повторная доставка события импорта не дублирует уведомление."""
+    """Повторная доставка события импорта не дублирует уведомление."""
     from datetime import date
 
     c, e, e_uid, vid, ch, ch_uid = world
@@ -328,7 +328,7 @@ def test_fsp_imported_redelivery_is_idempotent(world):
 
 
 def test_fsp_imported_without_results_is_silent(world):
-    """E9-6/E37-2: импорт без новых результатов (смена команды) не шлёт уведомление."""
+    """Импорт без новых результатов (смена команды) не шлёт уведомление."""
     c, e, e_uid, vid, ch, ch_uid = world
     _link_tg(c, ch, ch_uid)
     consumers = {"core.handlers": Consumer(QUEUES["core.handlers"])}
@@ -342,7 +342,7 @@ def test_fsp_imported_without_results_is_silent(world):
 
 
 def test_regular_task_published_notifies_candidates(world):
-    """E9-6: публикация регулярного задания отправляет уведомления кандидатам."""
+    """Публикация регулярного задания отправляет уведомления кандидатам."""
     c, e, e_uid, vid, ch, ch_uid = world
     _link_tg(c, ch, ch_uid)
     uid = uuid.UUID(ch_uid)
@@ -364,7 +364,7 @@ def test_regular_task_published_notifies_candidates(world):
 
 
 def test_regular_task_published_multiple_candidates(world):
-    """E9-6: задание может быть отправлено нескольким кандидатам."""
+    """Задание может быть отправлено нескольким кандидатам."""
     c, e, e_uid, vid, ch, ch_uid = world
     _link_tg(c, ch, ch_uid)
     # Создаём второго кандидата
@@ -394,7 +394,7 @@ def test_regular_task_published_multiple_candidates(world):
 
 
 def test_regular_task_redelivery_is_idempotent(world):
-    """E9-6: повторная доставка события задания не дублирует уведомления."""
+    """Повторная доставка события задания не дублирует уведомления."""
     c, e, e_uid, vid, ch, ch_uid = world
     _link_tg(c, ch, ch_uid)
     uid = uuid.UUID(ch_uid)

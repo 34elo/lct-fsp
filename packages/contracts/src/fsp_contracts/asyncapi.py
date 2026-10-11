@@ -132,7 +132,7 @@ def build_asyncapi(version: str = "1") -> dict[str, Any]:
         "info": {
             "title": "ФСП Карьера: события и команды",
             "version": version,
-            "description": "Сгенерировано из packages/contracts (messaging.md).",
+            "description": "Сгенерировано из packages/contracts.",
         },
         "defaultContentType": "application/json",
         "channels": channels,

@@ -16,7 +16,7 @@ import { setAccessToken } from "@/shared/lib/token";
 
 export type Role = "candidate" | "employer" | "fsp_admin";
 
-/** Ключ песочницы жюри (E40-1): тот же браузер возвращается в свою пару «кандидат + работодатель». */
+/** Ключ песочницы жюри: тот же браузер возвращается в свою пару «кандидат + работодатель». */
 const JURY_PAIR_KEY = "fsp.jury.pair";
 
 function readJuryPair(): string | null {
@@ -45,11 +45,11 @@ interface AuthApi {
   me: MeOut | null;
   role: Role | null;
   login(email: string, password: string): Promise<void>;
-  /** `consents` — обязательные согласия, отмеченные в форме регистрации (E39-6): выдаются сразу. */
+  /** `consents` — обязательные согласия, отмеченные в форме регистрации: выдаются сразу. */
   register(email: string, password: string, role: "candidate" | "employer", consents?: ConsentType[]): Promise<void>;
   /** Вход по одноразовому токену из ссылки бота. */
   loginWithMagic(token: string): Promise<void>;
-  /** Вход «Демо для жюри» в свою песочницу (E40-1): без пароля, только на демо-стенде. */
+  /** Вход «Демо для жюри» в свою песочницу: без пароля, только на демо-стенде. */
   loginAsJury(role: "candidate" | "employer"): Promise<void>;
   /** Перечитать `/me` (например, после выдачи согласий). */
   reloadMe(): Promise<void>;
@@ -70,7 +70,7 @@ export function needsConsent(me: MeOut): boolean {
   return me.role !== "fsp_admin" && !me.consents.includes("pd_processing");
 }
 
-/** Вход временным паролем HR (E41-16): до смены пароля другие экраны закрыты. */
+/** Вход временным паролем HR: до смены пароля другие экраны закрыты. */
 export const PASSWORD_SETUP_PATH = "/password/new";
 
 /** Куда вести вошедшего: сменить временный пароль, на согласия, туда, откуда пришёл, или домой. */
@@ -135,7 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         await signIn(auth);
       } catch {
-        // Аккаунт уже создан: одно повторное чтение профиля, а не ложная ошибка входа (E35-7a).
+        // Аккаунт уже создан: одно повторное чтение профиля, а не ложная ошибка входа.
         await signIn(auth);
       }
     },

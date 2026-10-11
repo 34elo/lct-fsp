@@ -15,7 +15,7 @@ const tokens = new Map<Hero, string>();
 
 /**
  * Вход через API: access-токен для прямых запросов (в приложении он живёт только в памяти).
- * Токен кешируется на процесс: лимит входа на сервере — 5 в минуту на email (security.md), а спеков много.
+ * Токен кешируется на процесс: лимит входа на сервере — 5 в минуту на email, а спеков много.
  */
 export async function apiLogin(request: APIRequestContext, hero: Hero): Promise<string> {
   const cached = tokens.get(hero);
@@ -34,7 +34,7 @@ export async function apiLogin(request: APIRequestContext, hero: Hero): Promise<
 export const bearer = (token: string) => ({ Authorization: `Bearer ${token}` });
 
 /**
- * Вход через форму /login. Лимит входа на сервере — 5 в минуту на email и 10 на IP (security.md): полный прогон
+ * Вход через форму /login. Лимит входа на сервере — 5 в минуту на email и 10 на IP: полный прогон
  * может его упереть, поэтому при отказе ждём окно и пробуем снова (до 4 раз).
  */
 export async function loginAs(page: Page, hero: Hero): Promise<void> {

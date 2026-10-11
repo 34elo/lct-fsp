@@ -1,4 +1,4 @@
-"""Офферы: создание, вилка, лимиты, идемпотентность, автомат статусов, права (E8-1)."""
+"""Офферы: создание, вилка, лимиты, идемпотентность, автомат статусов, права."""
 
 import asyncio
 import itertools
@@ -105,7 +105,7 @@ def _candidate(c, email, n, **kw):
         uid,
         "backend",
         "middle",
-    )  # грейд из теста: без него карточки нет (E23-1)
+    )  # грейд из теста: без него карточки нет
     return h, f"pid{n:04d}", uid
 
 
@@ -266,7 +266,7 @@ def test_limits_loaded_from_scoring_yaml():
 
 
 def test_transition_table_is_exhaustive():
-    """Разрешены ровно переходы из flows.md F8; всё остальное запрещено."""
+    """Разрешены ровно переходы автомата статусов; всё остальное запрещено."""
     expected = {
         ("sent", "viewed"), ("sent", "accepted"), ("viewed", "accepted"), ("sent", "declined"),
         ("viewed", "declined"), ("sent", "expired"), ("viewed", "expired"), ("sent", "withdrawn"),
@@ -328,7 +328,7 @@ def test_decline(c):
         f"/offers/{oid}/decline", json={"reason": "low_salary", "comment": "мало"}, headers=ch
     )
     assert r.status_code == 200 and r.json()["status"] == "declined"
-    assert r.json()["decline"] == {"reason": "low_salary", "comment": None}  # E41-4: без текста
+    assert r.json()["decline"] == {"reason": "low_salary", "comment": None}  # без текста
     assert _events(c)[-1] == "offer.declined"
     payload = json.loads(_db(c, "select payload from outbox where type='offer.declined'")[0][0])
     assert payload["payload"]["decline_reason"] == "low_salary"
@@ -479,7 +479,7 @@ def test_lists_and_card_offers_from_you(world):
     assert c.get(f"/candidates/{pid}/card", headers=other).json()["offers_from_you"] == []
 
 
-# --- E8-2: контакты, переписка, жалобы -------------------------------------------------
+# --- контакты, переписка, жалобы -------------------------------------------------
 
 
 def test_contacts_revealed_only_after_accept(world):
@@ -523,7 +523,7 @@ def test_contacts_permissions(world):
 
 
 def test_messages_flow_and_privacy(world):
-    """E41-4: кандидат не пишет текст; сообщение компании — одно."""
+    """Кандидат не пишет текст; сообщение компании — одно."""
     c, e, vid, ch, pid, uid = world
     oid = _offer(c, e, vid, pid, message=None).json()["id"]
     r = c.post(f"/offers/{oid}/messages", json={"text": "Вопрос по стеку"}, headers=ch)
@@ -671,7 +671,7 @@ def test_offer_events_timeline(world):
     assert c.get(f"/offers/{oid}/events", headers=other).status_code == 404
 
 
-# --- E20-2: приглашение без вакансии (ADR-022) ---------------------------------------------
+# --- приглашение без вакансии ---------------------------------------------
 
 
 def _invite(c, h, pid, key=None, **over):
@@ -775,7 +775,7 @@ def test_invite_requires_verified_email_when_enabled(world, monkeypatch):
     assert _invite(c, e, pid).status_code == 201
 
 
-# --- отклики кандидатов (E20-3, ADR-022) --------------------------------------------------
+# --- отклики кандидатов --------------------------------------------------
 
 
 def _set_status(c, h, oid, status):
@@ -796,7 +796,7 @@ def test_public_vacancies_list(world):
 
 
 def test_public_vacancies_unknown_role_does_not_500(world):
-    """E39-17: роль вне `RoleSlug` (профессия справочника) не роняет список и карточку."""
+    """Роль вне `RoleSlug` (профессия справочника) не роняет список и карточку."""
     c, e, vid, ch, pid, uid = world
     _db(
         c,
@@ -944,7 +944,7 @@ def test_application_notifies_company_not_candidate(world):
 
 
 def test_salary_basis_default_inherit_and_override(world):
-    """E32-5a: вилка «до НДФЛ» по умолчанию, берётся из вакансии, можно задать в приглашении."""
+    """Вилка «до НДФЛ» по умолчанию, берётся из вакансии, можно задать в приглашении."""
     c, e, vid, ch, pid, uid = world
     assert c.get(f"/vacancies/{vid}", headers=e).json()["salary_basis"] == "gross"
     v2 = c.post("/vacancies", headers=e, json={
@@ -966,7 +966,7 @@ def test_salary_basis_default_inherit_and_override(world):
 
 
 def test_revoke_contacts(world):
-    """E32-5a: отзыв скрывает контакты у компании; чужой оффер и роль — проверки прав."""
+    """Отзыв скрывает контакты у компании; чужой оффер и роль — проверки прав."""
     c, e, vid, ch, pid, uid = world
     oid = _offer(c, e, vid, pid).json()["id"]
     r = c.post(f"/offers/{oid}/contacts/revoke", headers=ch)
@@ -986,7 +986,7 @@ def test_revoke_contacts(world):
 
 
 def test_verified_badge_is_voluntary(world):
-    """E32-5a: компания сама решает, показывать ли метку «проверена» кандидатам."""
+    """Компания сама решает, показывать ли метку «проверена» кандидатам."""
     c, e, vid, ch, pid, uid = world
     oid = _offer(c, e, vid, pid).json()["id"]
     assert c.get(f"/offers/{oid}", headers=ch).json()["company"]["verified"] is True
@@ -998,7 +998,7 @@ def test_verified_badge_is_voluntary(world):
 
 
 def test_salary_hint_forecast_suggests_raise(world):
-    """E33-5: подсказка «поднимите верх до X → Y»; меняется вместе с вилкой."""
+    """Подсказка «поднимите верх до X → Y»; меняется вместе с вилкой."""
     c, e, vid, ch, pid, uid = world
     body = {"vacancy_id": vid, "candidate_pseudo_id": pid, "salary_from": 250000}
     low = c.post("/offers/salary-hint", json=body | {"salary_to": 300000}, headers=e).json()

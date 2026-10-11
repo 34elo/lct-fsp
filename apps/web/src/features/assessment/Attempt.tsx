@@ -17,7 +17,7 @@ import { ErrorLine, LoadError, retryServerOnly } from "./ui";
 
 type Telemetry = { away_ms: number[]; pastes: number };
 
-/** Уход со вкладки и вставки (assessment.md §8): считаем, не наказываем. */
+/** Уход со вкладки и вставки: считаем, не наказываем. */
 function useTelemetry() {
   const away = useRef<number[]>([]);
   const hiddenAt = useRef<number | null>(null);
@@ -208,7 +208,7 @@ function ItemRunner({
   );
 }
 
-/** S2: тест по одному заданию. Правильность не показываем; цепочка идёт пошагово. */
+/** Тест по одному заданию. Правильность не показываем; цепочка идёт пошагово. */
 export default function Attempt() {
   const { id = "" } = useParams();
   const nav = useNavigate();

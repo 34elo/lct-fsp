@@ -1,7 +1,17 @@
-.PHONY: up-lite demo-snapshot demo-reset demo-warm demo-env logs ps seed seed-plan seed-fsp-mock synth eval eval-quick load taxonomy-load up down dev-core compose-config sync lint fmt test test-py test-web test-integration new-service web-install asyncapi api-gen
+.PHONY: sync lint docs-links deadcode fmt test test-py test-web test-integration e2e web-install \
+	asyncapi openapi api-gen libraries demo-env up up-lite down logs ps dev-core compose-config \
+	taxonomy-load seed seed-fsp-mock seed-plan demo-snapshot demo-reset demo-warm \
+	synth eval eval-quick eval-assessment metrics load families-check cards-check \
+	assessment-mutations-mine assessment-mutations-check assessment-mutations-import \
+	assessment-fsp-check assessment-fsp-import assessment-llm-bank
+
+# --- разработка ---------------------------------------------------------------------------------
 
 sync:
 	uv sync --all-packages
+
+web-install:
+	pnpm install
 
 lint: docs-links
 	uv run ruff check .
@@ -9,15 +19,14 @@ lint: docs-links
 	uv run lint-imports
 	pnpm -r lint && pnpm -r typecheck
 
-# Относительные ссылки и якоря в Markdown (E39-37), без сети; docs/archive не проверяется
-.PHONY: docs-links deadcode
+# Относительные ссылки и якоря в Markdown, без сети
 docs-links:
 	PYTHONUTF8=1 uv run python tools/check_links.py
 
-# Мёртвый код (E39-37): knip по фронту (белый список — knip.json), vulture по Python (уверенность ≥ 80 %)
+# Мёртвый код: knip по фронту (белый список — knip.json), vulture по Python
 deadcode:
 	npx -y knip@5
-	uvx vulture services packages/platform packages/contracts tools --min-confidence 80 --exclude "*/tests/*,*/test_*,*/.venv/*,*/node_modules/*,*/service-template/*"
+	uvx vulture services packages/platform packages/contracts tools --min-confidence 80 --exclude "*/tests/*,*/test_*,*/.venv/*,*/node_modules/*"
 
 fmt:
 	uv run ruff check --fix .
@@ -28,6 +37,9 @@ test: test-py test-web
 test-py:
 	uv run pytest -q -n auto
 
+test-web:
+	pnpm -r test
+
 # Интеграция outbox → RabbitMQ → inbox на временных контейнерах (project fsp-test, порты 285xx)
 TEST_COMPOSE = docker compose -f infra/test/docker-compose.yml
 test-integration:
@@ -37,43 +49,49 @@ test-integration:
 	uv run pytest -q packages/platform/tests/test_messaging_integration.py services/core/tests/test_events_stream_integration.py; \
 	rc=$$?; $(TEST_COMPOSE) down -v; exit $$rc
 
-test-web:
-	pnpm -r test
-
-# e2e Playwright на стенде с сидом (make up && make seed); нужен Node >= 20
+# e2e Playwright на стенде с демо-данными (make up && make seed); нужен Node >= 20
 e2e:
 	cd apps/web && pnpm e2e
 
-web-install:
-	pnpm install
+# --- контракты и документация ---------------------------------------------------------------------
 
-# make new-service NAME=core
-new-service:
-	uv run python tools/new_service.py $(NAME)
-
-# Каталог AsyncAPI всех событий и команд из packages/contracts
+# AsyncAPI всех событий и команд из packages/contracts
 asyncapi:
 	mkdir -p docs
 	PYTHONUTF8=1 uv run python -m fsp_contracts.asyncapi > docs/asyncapi.json
 
-# OpenAPI схема REST API
+# OpenAPI REST API core (CI сверяет файл с кодом)
 openapi:
 	mkdir -p docs
 	cd services/core && PYTHONUTF8=1 uv run python export_openapi.py > ../../docs/openapi.json
 
-# --- compose ---
-# Окружение: .env, если в нём задан JWT_SECRET (то есть он полный); иначе .env.demo (создаётся infra/scripts/gen-demo-env.sh со случайными секретами)
+# Клиент фронта (orval) из apps/web/openapi.json
+api-gen:
+	pnpm --filter fsp-web api:gen
+
+# Список библиотек с версиями и лицензиями из lock-файлов
+libraries:
+	PYTHONUTF8=1 uv run python tools/libraries.py --out docs/libraries.md
+
+# --- стек в Docker -------------------------------------------------------------------------------
+
+# Окружение: .env, если в нём задан JWT_SECRET; иначе .env.demo со случайными секретами
 ENV_FILE := $(if $(shell grep -s -E '^JWT_SECRET=.+' .env),.env,.env.demo)
-# Профиль bot включается только если в env-файле задан TG_BOT_TOKEN
+# Профиль bot включается только при заданном TG_BOT_TOKEN
 BOT_PROFILE = $(if $(shell grep -s -E '^TG_BOT_TOKEN=.+' $(ENV_FILE)),--profile bot)
 COMPOSE = docker compose --env-file $(ENV_FILE) --profile core --profile ml --profile llm $(BOT_PROFILE)
+# Профиль lite: ядро и ML без LLM, малая модель эмбеддингов на CPU
+LITE_ENV = LLM_ENABLED=false ML_FAKE=false EMBEDDING_MODEL=$${EMBEDDING_MODEL:-multilingual-e5-small}
 
 demo-env:
 	sh infra/scripts/gen-demo-env.sh
 
-# Весь стек одной командой: сборка образов, миграции, запуск; gateway на :28080
+# Весь стек: сборка образов, миграции, запуск; gateway на :28080
 up: demo-env
 	$(COMPOSE) up -d --build --wait
+
+up-lite: demo-env
+	$(LITE_ENV) docker compose --env-file $(ENV_FILE) --profile core --profile ml $(BOT_PROFILE) up -d --build --wait
 
 down:
 	$(COMPOSE) down
@@ -84,72 +102,38 @@ logs:
 ps:
 	$(COMPOSE) ps
 
-# Только core-профиль, ML заглушкой
+# Только профиль core, ML на заглушках
 dev-core:
 	ML_FAKE=true docker compose --env-file $(ENV_FILE) --profile core up -d --build
 
 compose-config:
 	docker compose --env-file $(ENV_FILE) --profile core --profile ml --profile bot --profile llm --profile dev --profile obs config -q
 
-api-gen:
-	pnpm --filter fsp-web api:gen
+# --- данные --------------------------------------------------------------------------------------
 
-# Загрузить data/taxonomy/*.yaml и data/fsp/discipline_rules.yaml в БД core (идемпотентно, версия растёт при изменениях)
+# Справочник навыков и правила дисциплин ФСП в БД core (идемпотентно)
 taxonomy-load:
 	cd services/core && uv run python -m app.taxonomy
 
-# Синтетический рынок (evaluation.md §3): make synth SPLIT=test → reports/synth/test
-SPLIT ?= dev
-synth:
-	uv run python tools/synth/synth.py --split $(SPLIT) --out reports/synth/$(SPLIT)
-
-# Стенд оценки (evaluation.md §5): подбор против BM25 на синтетическом рынке и полнота разбора резюме hh.ru (E39-19) → reports/eval/eval.{md,json}
-eval:
-	uv run python tools/eval/run.py --split $(SPLIT) --out reports/eval
-
-eval-quick:
-	uv run python tools/eval/run.py --quick --out reports/eval-quick
-
-# Все офлайн-метрики одним отчётом (E31-3, metrics.md §9.1): eval-assessment (обычный и экспресс), eval, families-check,
-# покрытие банка и справедливость (tools/metrics/core_probe.py), load (если был прогон) → reports/metrics/report.{md,json}
-# со светофором. make metrics [SEED=42] [ARGS="--skip load"]. Недоступное без стенда — «не измерено». Около 2,5 минут.
-.PHONY: metrics
-metrics:
-	uv run python -m tools.metrics --seed $(or $(SEED),42) --out reports/metrics $(ARGS)
-
-# Нагрузка (E29-2, metrics.md): 50 пользователей против живого стека после make seed.
-# make load [LOAD_USERS=50 LOAD_TIME=3m LOAD_HOST=http://127.0.0.1:28080]. Код выхода 1, если p95 search/matches > 1 с.
-LOAD_USERS ?= 50
-LOAD_TIME ?= 3m
-LOAD_HOST ?= http://127.0.0.1:$(or $(GATEWAY_PORT),28080)
-load:
-	uv run --group load locust -f tools/load/locustfile.py --headless -u $(LOAD_USERS) -r 5 -t $(LOAD_TIME) 		--host $(LOAD_HOST) --csv reports/load/load --only-summary
-	uv run python tools/load/report.py reports/load/load_stats.csv --out reports/load/load.md
-
-# Демо-витрина (evaluation.md §4): make seed [SEED=42]. Пишет данные fsp-mock в reports/seed/fsp-mock.json
-# (compose монтирует каталог в fsp-mock, сервис пересоздаётся), наполняет БД core сервисными слоями
-# (секреты и порт Postgres берёт из $(ENV_FILE)), печатает демо-аккаунты. Повторный запуск безопасен.
-# Нужны поднятый стек (make up) и справочник навыков (его грузит core-migrate).
+# Демо-данные: make seed [SEED=42]. Нужен поднятый стек. Повторный запуск безопасен.
+# Данные мока ФСП пишутся в reports/seed/fsp-mock.json (каталог смонтирован в fsp-mock).
 seed:
 	mkdir -p reports/seed
 	SEED=$(SEED) uv run python -m tools.seed all --env-file $(ENV_FILE)
-# >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
 	SEED=$(SEED) uv run python -m tools.seed grades --env-file $(ENV_FILE)
 	SEED=$(SEED) uv run python -m tools.seed families --env-file $(ENV_FILE)
-# <<< block1
-# >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
 	SEED=$(SEED) uv run python -m tools.seed demo2 --env-file $(ENV_FILE)
 	SEED=$(SEED) uv run python -m tools.seed fsp-registry --env-file $(ENV_FILE)
-# <<< block2
 	$(COMPOSE) up -d --build --no-deps --force-recreate fsp-mock
+
 seed-fsp-mock:
 	mkdir -p reports/seed
 	SEED=$(SEED) uv run python -m tools.seed fsp-mock
+
 seed-plan:
 	SEED=$(SEED) uv run python -m tools.seed plan
 
-# Снапшот витрины (evaluation.md §4, E40-1): make demo-snapshot (после make seed) -> make demo-reset (только демо, ≤ 1 мин) -> make demo-warm
-# Снапшот демо — таблицы demo_snap__* в БД core и fsp_connector; infra/snapshots/fsp-mock.json (в git не идёт)
+# Снапшот демо после make seed → сброс демо-данных к снапшоту (≤ 1 мин) → прогрев кешей
 demo-snapshot:
 	COMPOSE="$(COMPOSE)" sh infra/scripts/demo.sh snapshot
 demo-reset:
@@ -157,68 +141,62 @@ demo-reset:
 demo-warm:
 	GATEWAY_PORT=$$(sed -n 's/^GATEWAY_PORT=//p' $(ENV_FILE)) COMPOSE="$(COMPOSE)" sh infra/scripts/demo.sh warm
 
-# >>> block1 (lite)
-# Профиль lite (ADR-023): ядро и ML без LLM (LLM_ENABLED=false, ML_FAKE=false), малая модель эмбеддингов, ≤ 1.5 ГБ на сервисы приложения
-LITE_ENV = LLM_ENABLED=false ML_FAKE=false EMBEDDING_MODEL=$${EMBEDDING_MODEL:-multilingual-e5-small}
-up-lite: demo-env
-	$(LITE_ENV) docker compose --env-file $(ENV_FILE) --profile core --profile ml $(BOT_PROFILE) up -d --build --wait
-# Автопроверка кодовых семейств заданий (assessment.md §4): ключи, исполнение, ручки, детерминизм
-.PHONY: families-check
+# --- оценка качества -----------------------------------------------------------------------------
+
+# Синтетический рынок: make synth SPLIT=test → reports/synth/test
+SPLIT ?= dev
+synth:
+	uv run python tools/synth/synth.py --split $(SPLIT) --out reports/synth/$(SPLIT)
+
+# Подбор против BM25 на синтетическом рынке и полнота разбора резюме → reports/eval
+eval:
+	uv run python tools/eval/run.py --split $(SPLIT) --out reports/eval
+
+eval-quick:
+	uv run python tools/eval/run.py --quick --out reports/eval-quick
+
+# Валидация теста на синтетических кандидатах с известным θ → reports/eval-assessment
+eval-assessment:
+	uv run python -m tools.eval_assessment --seed $(or $(SEED),42) --out reports/eval-assessment
+
+# Все офлайн-метрики одним отчётом со светофором → reports/metrics. make metrics [SEED=42] [ARGS="--skip load"]
+metrics:
+	uv run python -m tools.metrics --seed $(or $(SEED),42) --out reports/metrics $(ARGS)
+
+# Нагрузка против живого стека после make seed. Код выхода 1, если p95 поиска > 1 с.
+LOAD_USERS ?= 50
+LOAD_TIME ?= 9m
+LOAD_HOST ?= http://127.0.0.1:$(or $(GATEWAY_PORT),28080)
+load:
+	uv run --group load locust -f tools/load/locustfile.py --headless -u $(LOAD_USERS) -r 0.15 -t $(LOAD_TIME) --host $(LOAD_HOST) --csv reports/load/load --only-summary
+	uv run python tools/load/report.py reports/load/load_stats.csv --out reports/load/load.md
+
+# --- банк заданий --------------------------------------------------------------------------------
+
+# Автопроверка кодовых семейств: ключи, исполнение, ручки сложности, детерминизм, покрытие профессий
 families-check:
 	uv run python -m app.assessment.families.check --seeds 1000
-# Майнинг мутаций открытого кода → семейства find_bug (E30-3, assessment.md §4). Код проектов только
-# читается (AST + песочница), не импортируется и не запускается. SRC — имя из
-# data/questions/mutations/sources.yaml; DIR — локальная копия (без неё нужен MUTMINE_GITHUB=1)
-.PHONY: assessment-mutations-mine assessment-mutations-check assessment-mutations-import
+
+# Схема карточек навыков data/skills/cards
+cards-check:
+	cd services/core && uv run python -m app.taxonomy.cards
+
+# Мутации открытого кода → семейства find_bug. Код проектов только читается (AST + песочница).
+# SRC — имя из data/questions/mutations/sources.yaml; DIR — локальная копия (без неё нужен MUTMINE_GITHUB=1)
 assessment-mutations-mine:
 	cd services/core && uv run python -m app.assessment.mining mine --source $(SRC) $(if $(DIR),--dir $(abspath $(DIR)))
 assessment-mutations-check:
 	cd services/core && uv run python -m app.assessment.mining check ../../data/questions/mutations/*.json
-# Банк → families (draft); PILOT=1 — сразу в pilot (в active — только админ по статистике пилота)
+# PILOT=1 — сразу в pilot (в active переводит только админ по статистике пилота)
 assessment-mutations-import:
 	cd services/core && uv run python -m app.assessment.mining import ../../data/questions/mutations/*.json $(if $(PILOT),--pilot)
-# Задачи соревнований ФСП в банке (E32-6, assessment.md §4): проверка и импорт data/questions/fsp/*.yaml
-.PHONY: assessment-fsp-check assessment-fsp-import
+
+# Задачи соревнований ФСП: проверка и импорт data/questions/fsp/*.yaml
 assessment-fsp-check:
 	cd services/core && uv run python -m app.assessment.fsp_bank check
 assessment-fsp-import:
 	cd services/core && uv run python -m app.assessment.fsp_bank import $(if $(PILOT),--pilot)
-# Схема карточек навыков data/skills/cards (assessment.md §2)
-.PHONY: cards-check
-cards-check:
-	cd services/core && uv run python -m app.taxonomy.cards
-# Валидация теста на синтетике (E27-1, metrics.md §9.1): make eval-assessment [SEED=42] → reports/eval-assessment/report.{md,json}
-.PHONY: eval-assessment
-eval-assessment:
-	uv run python -m tools.eval_assessment --seed $(or $(SEED),42) --out reports/eval-assessment
-# Офлайн-конвейер LLM-заданий (E26-4): генератор → автопроверки → draft в очереди допуска; LLM как
-# кандидат → families.ai_solvable. Только через ml-api (ML_API_URL), LLM_ENABLED=false — ничего не делает.
-# ARGS — флаги CLI (--skills, --kinds, --levels, --n, --k, --skip-propose, --skip-solve)
-.PHONY: assessment-llm-bank
+
+# Офлайн-генерация заданий LLM → черновики в очереди допуска. Нужен ml-api (ML_API_URL) и LLM_ENABLED=true.
 assessment-llm-bank:
 	cd services/core && uv run python -m app.assessment.llm_bank --out ../../reports/llm-bank $(ARGS)
-# Замер LLM-кандидатов (E32-3, ml.md «Выбор LLM»): сервер поднимает человек, модели не качаются.
-# make eval-llm [LLM_MODEL=…] [ARGS="--repeats 5 --server-pid <pid> --vram-file …"] → reports/llm/<модель>.{md,json}
-.PHONY: eval-llm
-eval-llm:
-	uv run python -m tools.eval_llm --env-file $(ENV_FILE) $(ARGS)
-# Документ сдачи (E27-4, AU-4): список библиотек из lock-файлов → docs/libraries.md; сверка 8 пунктов ТЗ;
-# PDF (WeasyPrint из зависимостей core) и DOCX (python-docx из зависимостей ml) из docs/submission.md →
-# reports/submission/ (reports/ не коммитим). `make submission-pdf` собирает оба файла.
-.PHONY: submission-libs submission-check submission-pdf submission-docx
-submission-libs:
-	python3 tools/submission/libs.py --out docs/libraries.md
-submission-check:
-	uv run python tools/submission/check_tz.py
-submission-docx:
-	uv run python tools/submission/build_docx.py --src docs/submission.md --out reports/submission/submission.docx
-submission-pdf: submission-check submission-docx
-	uv run python tools/submission/build_pdf.py --src docs/submission.md --out reports/submission/submission.pdf
-# <<< block1
-# >>> block2 (цели)
-# PNG макетов v2 (E38-0): docs/design/v2/screens/*.html → docs/design/v2/png/ через Playwright
-# (Chromium Playwright или системный Edge/Chrome). ONLY=<подстрока> — часть экранов.
-.PHONY: design-shots
-design-shots:
-	pnpm --filter @fsp/ui design-shots $(if $(ONLY),--only $(ONLY))
-# <<< block2

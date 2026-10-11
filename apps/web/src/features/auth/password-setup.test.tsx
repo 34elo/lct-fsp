@@ -12,7 +12,7 @@ class FakeES {
   close() {}
 }
 
-/** HR вошёл временным паролем от владельца (E41-16): до своего пароля другие экраны закрыты. */
+/** HR вошёл временным паролем от владельца: до своего пароля другие экраны закрыты. */
 function install(opts: { initialCode?: string } = {}) {
   const calls: { method: string; url: string; body?: unknown }[] = [];
   let pending = true;

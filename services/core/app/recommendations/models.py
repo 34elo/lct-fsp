@@ -1,4 +1,4 @@
-"""Модели для логирования показов и реакций (E17-1)."""
+"""Модели для логирования показов и реакций."""
 
 from fsp_platform.db import Base
 from sqlalchemy import (

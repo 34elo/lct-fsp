@@ -1,4 +1,4 @@
-"""`POST /track` и `/internal/track` (E18-2): права, дедупликация, схемы, ПДн."""
+"""`POST /track` и `/internal/track`: права, дедупликация, схемы, ПДн."""
 
 import sqlite3
 import uuid

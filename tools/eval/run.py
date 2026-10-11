@@ -1,6 +1,6 @@
-"""`make eval`: раннеры стенда оценки → отчёт (evaluation.md §5).
+"""`make eval`: раннеры стенда оценки → отчёт.
 
-Раннеры: подбор (E27-2) и разбор резюме hh.ru (E39-19).
+Раннеры: подбор и разбор резюме hh.ru.
 
     uv run python tools/eval/run.py --split test --out reports/eval
     uv run python tools/eval/run.py --quick          # 200 кандидатов, 30 потребностей

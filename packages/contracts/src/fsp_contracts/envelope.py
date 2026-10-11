@@ -1,4 +1,4 @@
-"""Конверт сообщения (messaging.md §2.4)."""
+"""Конверт сообщения."""
 
 from __future__ import annotations
 

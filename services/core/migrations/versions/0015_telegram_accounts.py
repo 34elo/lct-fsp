@@ -1,4 +1,4 @@
-"""telegram_accounts (data-model.md §3.1)
+"""telegram_accounts
 
 Revision ID: 0015
 Revises: 0014

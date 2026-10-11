@@ -1,4 +1,4 @@
-"""E30-1: конструктор заданий — вычислитель, интерпретаторы `spec`, автопроверка, API, ключ LLM."""
+"""Конструктор заданий — вычислитель, интерпретаторы `spec`, автопроверка, API, ключ LLM."""
 
 import sqlite3
 import uuid
@@ -385,7 +385,7 @@ async def test_llm_key_is_draft_until_admin_approves(api, factory, taxonomy_load
 
 
 async def test_admission_card_fields(api, taxonomy_loaded):
-    """E39-31: в очереди допуска — грейд, профессии и пример варианта с ответом решателя."""
+    """В очереди допуска — грейд, профессии и пример варианта с ответом решателя."""
     adm = _admin(api)
     fam = api.post("/families", json=SPECS["exact"], headers=adm).json()
     items = api.get("/admin/families", params={"status": "pilot"}, headers=adm).json()
@@ -418,7 +418,7 @@ def test_admission_helpers():
     assert admission.answer_text(Item(kind=Kind.exact, stem="q", key=42)) == "42"
 
 
-# --- E41-14: «Готово» без допуска админа, задание в приглашении ------------------------------
+# --- «Готово» без допуска админа, задание в приглашении ------------------------------
 
 
 async def test_company_family_ready_without_admin(api, factory, taxonomy_loaded):

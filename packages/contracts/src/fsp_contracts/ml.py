@@ -1,4 +1,4 @@
-"""DTO ML: ml-api (api.md §2.10, §3) и результаты задач ml-worker (ml.md §2, §7, §9, §10)."""
+"""DTO ML: ml-api и результаты задач ml-worker."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ from fsp_contracts.enums import (
     WorkFormat,
 )
 
-# --- Резюме (ml.md §2, api.md §3 ParsedResume) ---
+# --- Резюме (ParsedResume) ---
 
 
 class ResumePerson(BaseModel):
@@ -52,25 +52,25 @@ class ResumeSkill(BaseModel):
     quote: str  # дословная цитата из текста; без неё навык отбрасывается
     method: str  # alias | fuzzy | new | …
     confidence: float = Field(ge=0, le=1)
-    source: Literal["llm", "rules"] = "llm"  # E43-8: rules — запасной правиловый путь
+    source: Literal["llm", "rules"] = "llm"  # rules — запасной правиловый путь
 
 
 class ResumeSoftSkill(BaseModel):
-    """Софт-навык, «заявлено в резюме» (E20-5): без доверия, на категорию и подбор не влияет."""
+    """Софт-навык, «заявлено в резюме»: без доверия, на категорию и подбор не влияет."""
 
     name: str
     quote: str  # дословная цитата из текста
 
 
 class ResumeDeclaredGrade(BaseModel):
-    """Грейд, который кандидат назвал сам (E20-5). Только «заявлено»: категорию даёт тест."""
+    """Грейд, который кандидат назвал сам. Только «заявлено»: категорию даёт тест."""
 
     grade: Grade
     quote: str
 
 
 class ResumeDeclaredRole(BaseModel):
-    """Роль, которую кандидат назвал сам (E20-5). Только «заявлено»: категорию даёт тест."""
+    """Роль, которую кандидат назвал сам. Только «заявлено»: категорию даёт тест."""
 
     role: RoleSlug
     quote: str
@@ -86,13 +86,13 @@ class ParsedResume(BaseModel):
     unknown_skills: list[str] = Field(default_factory=list)
     total_experience_months: int = Field(default=0, ge=0)
     warnings: list[str] = Field(default_factory=list)
-    # E20-5: заявленное в резюме, каждое поле с цитатой; в расчёты не входит
+    # заявленное в резюме, каждое поле с цитатой; в расчёты не входит
     soft_skills: list[ResumeSoftSkill] = Field(default_factory=list)
     declared_grade: ResumeDeclaredGrade | None = None
     declared_roles: list[ResumeDeclaredRole] = Field(default_factory=list)
 
 
-# --- Поиск текстом (ml.md §7, api.md §3 SearchFilters/ParsedQuery) ---
+# --- Поиск текстом (SearchFilters/ParsedQuery) ---
 
 
 class SkillRequirement(BaseModel):
@@ -116,7 +116,7 @@ class SearchFilters(BaseModel):
     fsp_disciplines: list[str] | None = None
     active_only: bool | None = None
     semantic_text: str | None = None
-    # E39-21 (поиск сотрудников): профессии системы (slug справочника, не только RoleSlug) —
+    # Поиск сотрудников: профессии системы (slug справочника, не только RoleSlug) —
     # сужают категории и выдачу до кандидатов с действующим грейдом этих профессий;
     # грейд без «нужно подтвердить» и низкой уверенности; ожидания кандидата не ниже.
     professions: list[str] | None = None
@@ -159,7 +159,7 @@ class EmbeddingsResponse(BaseModel):
     vectors: list[list[float]]
 
 
-# --- Сопоставление навыков (skills.md §3) ---
+# --- Сопоставление навыков ---
 
 
 class SkillMention(BaseModel):
@@ -189,7 +189,7 @@ class SkillResolveItem(BaseModel):
 
 
 class SkillCardDraftRequest(BaseModel):
-    """`POST /v1/skills/card-draft`: черновик карточки для нового (provisional) навыка (E16-4)."""
+    """`POST /v1/skills/card-draft`: черновик карточки для нового (provisional) навыка."""
 
     slug: str = Field(min_length=1, max_length=64)
     name: str = Field(min_length=1, max_length=120)
@@ -235,7 +235,7 @@ class MlHealth(BaseModel):
     queue_depth: int
 
 
-# --- Обоснования матчинга (ml.md §6.3, api.md §3 ExplanationItem) ---
+# --- Обоснования подбора (ExplanationItem) ---
 
 ExplanationCode = Literal[
     "skill_confirmed",
@@ -278,7 +278,7 @@ class MatchRationale(BaseModel):
     rationale: str
 
 
-# --- ДНК кода (ml.md §9, data-model.md §3.6) ---
+# --- ДНК кода ---
 
 CodeFlag = Literal[
     "fork_no_changes", "giant_commit", "overnight", "author_mismatch", "template_like"
@@ -325,7 +325,7 @@ class CodeAnalysisResult(BaseModel):
     summary: str | None = None  # 🚀 характеристика от LLM
 
 
-# --- ИИ-интервью по коду (ml.md §10) ---
+# --- ИИ-интервью по коду ---
 
 
 class InterviewQuestion(BaseModel):
@@ -354,7 +354,7 @@ class InterviewGrade(BaseModel):
     rationale: str
 
 
-# --- Вопросы для структурированного интервью (ml.md §10.1) ---
+# --- Вопросы для структурированного интервью ---
 
 
 class KitSkill(BaseModel):
@@ -380,7 +380,7 @@ class KitQuestion(BaseModel):
     follow_ups: list[str] = Field(min_length=1, max_length=2)
 
 
-# --- Черновики вопросов теста (ml.md §8) ---
+# --- Черновики вопросов теста ---
 
 
 class QuestionOption(BaseModel):
@@ -397,7 +397,7 @@ class QuestionDraft(BaseModel):
     explanation: str | None = None
 
 
-# --- Черновик ключа задания конструктора (assessment.md §4, §7; E30-1) ---
+# --- Черновик ключа задания конструктора ---
 
 FamilyKind = Literal["exact", "estimate", "choice", "find_bug", "order", "sjt", "open"]
 
@@ -415,7 +415,7 @@ class FamilyKeyDraftRequest(BaseModel):
 
 
 class FamilyKeyDraft(BaseModel):
-    """Черновик ключа: в оценке не используется, пока его не утвердит админ (ADR-024)."""
+    """Черновик ключа: в оценке не используется, пока его не утвердит админ."""
 
     correct: int | None = None  # choice: индекс в `options`
     bug_lines: list[int] | None = None  # find_bug: номера строк с 1
@@ -426,7 +426,7 @@ class FamilyKeyDraft(BaseModel):
     model: str = ""
 
 
-# --- «Объясни ответ» (E24-2) ---
+# --- «Объясни ответ» ---
 
 
 class AnswerExplainRequest(BaseModel):
@@ -450,7 +450,7 @@ class AnswerExplain(BaseModel):
     model: str = ""
 
 
-# --- Офлайн-конвейер LLM-заданий (E26-4, ADR-024, assessment.md §7) ---
+# --- Офлайн-конвейер LLM-заданий ---
 
 
 class FamilyGenerateRequest(BaseModel):

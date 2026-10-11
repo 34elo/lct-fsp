@@ -13,7 +13,7 @@ from app.identity.models import utcnow
 
 
 class Company(Base):
-    """Компания (data-model.md §3.7). Статусы модерации: `CompanyStatus`."""
+    """Компания. Статусы модерации: `CompanyStatus`."""
 
     __tablename__ = "companies"
 
@@ -25,11 +25,11 @@ class Company(Base):
     logo_key: Mapped[str | None] = mapped_column(Text, default=None)
     contacts: Mapped[dict[str, Any] | None] = mapped_column(sa.JSON, default=None)
     direction: Mapped[str | None] = mapped_column(Text, default=None)
-    # E32-5a: добровольная метка «компания проверена» (видна кандидатам, если компания verified)
+    # добровольная метка «компания проверена» (видна кандидатам, если компания verified)
     show_verified_badge: Mapped[bool] = mapped_column(default=True, server_default=sa.true())
     status: Mapped[str] = mapped_column(Text, default="pending", server_default="pending")
     responsibility_score: Mapped[float | None] = mapped_column(sa.Float, default=None)
-    # E40-1: демо-данные (seed, жюри): не в статистике, сбрасываются `demo-reset`
+    # демо-данные (seed, жюри): не в статистике, сбрасываются `demo-reset`
     is_demo: Mapped[bool] = mapped_column(default=False, server_default=sa.false())
     created_at: Mapped[datetime] = mapped_column(
         sa.DateTime(timezone=True), default=utcnow, server_default=sa.func.now()
@@ -51,7 +51,7 @@ class CompanyMember(Base):
 
 
 class CompanyInvite(Base):
-    """Приглашение в компанию по email (E39-24): токен ссылки хранится sha256, одноразовый."""
+    """Приглашение в компанию по email: токен ссылки хранится sha256, одноразовый."""
 
     __tablename__ = "company_invites"
 
@@ -77,7 +77,7 @@ class CompanyInvite(Base):
 
 
 class CompanyAccessLog(Base):
-    """Журнал доступа HR (E41-16): кто (`actor_id`), кого (`target_*`), что и когда.
+    """Журнал доступа HR: кто (`actor_id`), кого (`target_*`), что и когда.
 
     `action`: `created` — владелец создал аккаунт HR, `password_reset` — выдал новый временный
     пароль, `revoked` — отозвал доступ. Пароли в журнал не пишутся.

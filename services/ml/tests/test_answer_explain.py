@@ -1,4 +1,4 @@
-"""E24-2: `POST /v1/assessment/explain` — текст объяснения ошибки (ML_FAKE, LLM_ENABLED, LLM)."""
+"""`POST /v1/assessment/explain` — текст объяснения ошибки (ML_FAKE, LLM_ENABLED, LLM)."""
 
 from fastapi.testclient import TestClient
 from fsp_ml import answer_explain

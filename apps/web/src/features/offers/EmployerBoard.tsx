@@ -110,7 +110,7 @@ function OffersTable({ offers }: { offers: OfferForCompany[] }) {
   );
 }
 
-/** Активное приглашение (E41-4): переписки нет, ответ кандидата — только статус и контакты после принятия. */
+/** Активное приглашение: переписки нет, ответ кандидата — только статус и контакты после принятия. */
 function Latest({ offer }: { offer: OfferForCompany }) {
   const answered = ["accepted", "interview", "hired", "not_hired"].includes(offer.status);
   return (
@@ -159,7 +159,7 @@ function Loading() {
   );
 }
 
-/** Приглашения работодателя `/employer/offers` (E38-13, бриф §6.13): воронка, таблица предложений, последняя переписка, отклики. */
+/** Приглашения работодателя `/employer/offers`: воронка, таблица предложений, последняя переписка, отклики. */
 export function EmployerOffers() {
   const show = useShow(["offers", "responses"] as const);
   const filter = <ShowFilter options={T.filter} label={T.filterLabel} />;

@@ -1,4 +1,4 @@
-"""Подстройка в сессии через API (E17-4): `/recs/feedback`, `/recs/sessions/{id}`, выдача."""
+"""Подстройка в сессии через API: `/recs/feedback`, `/recs/sessions/{id}`, выдача."""
 
 import json
 import sqlite3
@@ -74,7 +74,7 @@ def _cand(c, n):
             " valid_until, next_change_at, updated_at)"
             " values (?,?,?,0.5,0.5,'{}',1.0,0,0,'seed',?,'2999-01-01 00:00:00',?,?)",
             (uid, "backend", "middle", NOW, NOW, NOW),
-        )  # грейд из теста: без него кандидат не виден (E23-1)
+        )  # грейд из теста: без него кандидат не виден
     return uid
 
 

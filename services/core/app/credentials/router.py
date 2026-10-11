@@ -1,4 +1,4 @@
-"""Open Badge 3.0 (api.md §2.4 `/me/credentials`, §2.7 публичные, E18-9)."""
+"""Open Badge 3.0: выпуск и отзыв `/me/credentials`, публичная проверка."""
 
 from __future__ import annotations
 

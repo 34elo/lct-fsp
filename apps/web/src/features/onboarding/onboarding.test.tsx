@@ -198,7 +198,7 @@ test("один шаг на экран: схемная линия отмечае�
   expect(screen.queryByTestId("onboarding-step-resume")).not.toBeInTheDocument();
 });
 
-describe("failureText (E41-3)", () => {
+describe("failureText", () => {
   it("llm_unavailable: понятное сообщение без фикстуры", () => {
     expect(failureText("llm_unavailable")).toBe("Разбор резюме сейчас недоступен, заполните данные вручную.");
   });

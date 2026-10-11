@@ -1,6 +1,6 @@
-"""Навигатор кандидата: путь к следующему грейду (matching.md §6, api.md `Navigator`).
+"""Навигатор кандидата: путь к следующему грейду.
 
-Грейды берём из `assessment.service` (blocks.md §4.3), профессии и веса — из `taxonomy.service`.
+Грейды берём из `assessment.service`, профессии и веса — из `taxonomy.service`.
 Пробелы по навыкам профессии, соревнования ФСП и uplift — детерминированно, без LLM.
 """
 
@@ -20,7 +20,7 @@ from app.taxonomy import service as taxonomy
 
 GAPS_MAX = 8  # сколько навыков профессии показываем как «поднять»
 COMPETITIONS_MAX = 5
-UPLIFT_TOP = 3  # api.md: топ-3 uplift в навигаторе
+UPLIFT_TOP = 3  # топ-3 uplift в навигаторе
 
 
 def pick_current(grades: list[CandidateGrade], primary_role: str | None) -> CandidateGrade | None:
@@ -55,7 +55,7 @@ def pick_gaps(
 
 
 def assessment_path(profession: str, grade: str) -> str:
-    """Ссылка на тест в блок 1 (blocks.md §4.8)."""
+    """Ссылка на тест нужного грейда."""
     return f"/me/assessment?profession={profession}&grade={grade}"
 
 
@@ -67,7 +67,7 @@ async def compute(
     today: date | None = None,
 ) -> dict[str, Any]:
     """Навигатор кандидата: текущий грейд, пробелы по навыкам профессии до следующего, соревнования
-    ФСП и uplift (matching.md §6).
+    ФСП и uplift.
     """
     day = today or datetime.now(UTC).date()
     grades = await assessment.get_grades(session, cand.user_id)
@@ -93,7 +93,7 @@ async def compute(
         "competitions": [],
         "uplift": uplift_items[:UPLIFT_TOP],
     }
-    if cand.grade_next:  # v1: баллы и подсказки из graph/grade.py (ml.md §5)
+    if cand.grade_next:  # v1: баллы и подсказки из graph/grade.py
         out["next_grade"] = {
             "points_needed": cand.grade_next.get("points_needed", 0),
             "hints": [
@@ -103,7 +103,7 @@ async def compute(
         }
     if not profession or not nxt:
         return out
-    # тест предлагаем только по активной профессии (ADR-027 п.1): скрытой нет в опросе
+    # тест предлагаем только по активной профессии: скрытой нет в опросе
     info = next((p for p in await taxonomy.list_professions(session) if p.slug == profession), None)
     if info is None:
         return out

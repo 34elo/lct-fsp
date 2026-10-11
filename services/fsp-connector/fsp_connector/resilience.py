@@ -1,4 +1,4 @@
-"""Ретраи с экспоненциальной паузой и circuit breaker (fsp.md §2)."""
+"""Ретраи с экспоненциальной паузой и circuit breaker."""
 
 from __future__ import annotations
 

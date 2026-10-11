@@ -32,7 +32,7 @@ function Stem({ part }: { part: ReviewPartOut }) {
   );
 }
 
-/** Ответ кандидата; верных ответов и вариантов разбор не показывает (E41-5); у `find_bug` подпись «строки». */
+/** Ответ кандидата; верных ответов и вариантов разбор не показывает; у `find_bug` подпись «строки». */
 function Answers({ part, testId }: { part: ReviewPartOut; testId: string }) {
   const unit = part.kind === "find_bug" ? `${R.lines}: ` : "";
   return (
@@ -138,7 +138,7 @@ function Brush({ items }: { items: ReviewItemOut[] }) {
   );
 }
 
-/** Разбор теста (E39-10): задания по типам навыков, переключатель «Скрыть объяснения» с запоминанием. */
+/** Разбор теста: задания по типам навыков, переключатель «Скрыть объяснения» с запоминанием. */
 export default function Review() {
   const { id = "" } = useParams();
   const q = useReviewAttemptAssessmentAttemptsAttemptIdReviewGet(id, { query: { retry: retryServerOnly } });

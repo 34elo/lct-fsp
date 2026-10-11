@@ -1,4 +1,4 @@
-/** Разбор CSV для импорта в реестр ФСП (E41-15): разделитель «,» или «;», кавычки, заголовок необязателен. */
+/** Разбор CSV для импорта в реестр ФСП: разделитель «,» или «;», кавычки, заголовок необязателен. */
 export function parseCsv(text: string): string[][] {
   const src = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
   const first = src.split(/\r?\n/, 1)[0] ?? "";

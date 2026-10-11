@@ -29,9 +29,9 @@ const CITIES = ["Москва", "Санкт-Петербург", "Новосиб
   label: c,
 }));
 
-/** Блок фильтров: по умолчанию свёрнут (E41-11); содержимое монтируется при раскрытии. */
+/** Блок фильтров: по умолчанию свёрнут; содержимое монтируется при раскрытии. */
 function Group({ title, tip, count, children }: { title: string; tip?: ReactNode; count?: number; children: ReactNode }) {
-  // Заполненный блок раскрыт сам: видно, что уже задано (E43-2).
+  // Заполненный блок раскрыт сам: видно, что уже задано.
   const [open, setOpen] = useState(!!count);
   useEffect(() => {
     if (count) setOpen(true);
@@ -79,7 +79,7 @@ function Check({ checked, onChange, children, testId }: { checked: boolean; onCh
 const toggle = (xs: string[], x: string, on: boolean) => (on ? (xs.includes(x) ? xs : [...xs, x]) : xs.filter((y) => y !== x));
 
 /**
- * Панель фильтров поиска сотрудников (E39-21): профессия (все профессии системы), грейд, доверие, «только
+ * Панель фильтров поиска сотрудников: профессия (все профессии системы), грейд, доверие, «только
  * подтверждённые», ФСП, регион и переезд, ожидания, формат. На < 1024 px тот же блок — в Sheet.
  */
 export function MatchFilters({

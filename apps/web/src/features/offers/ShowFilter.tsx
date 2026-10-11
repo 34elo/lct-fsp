@@ -9,7 +9,7 @@ export function useShow<K extends string>(keys: readonly K[]): K {
 }
 
 /**
- * Фильтр «Приглашения · Интересы · Отклики» внутри страницы (E39-25): вместо второй строки вкладок под шапкой.
+ * Фильтр «Приглашения · Интересы · Отклики» внутри страницы: вместо второй строки вкладок под шапкой.
  * Первый вариант — без параметра в адресе.
  */
 export function ShowFilter<K extends string>({ options, label }: { options: Record<K, string>; label: string }) {

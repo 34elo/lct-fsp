@@ -1,4 +1,4 @@
-"""Контракты блока 2 (подбор, отклики): события v2. Владелец — блок 2 (blocks.md §5.3)."""
+"""Контракты подбора и откликов: события офферов и интереса."""
 
 from __future__ import annotations
 
@@ -11,14 +11,14 @@ from pydantic import BaseModel, Field
 
 from fsp_contracts.enums import DeclineReason, OfferStatus
 
-# `offer.*` с полями ADR-022 (`initiator`, необязательная вакансия) — schema_version 2
+# `offer.*` с полями `initiator` и необязательной вакансией — schema_version 2
 OFFER_SCHEMA_VERSION = 2
-# `offer.interest.*` (ADR-026, E33-1): статусы `interest`, `interest_opened` — schema_version 3
+# `offer.interest.*`: статусы `interest`, `interest_opened` — schema_version 3
 INTEREST_SCHEMA_VERSION = 3
 
 
 class OfferInitiator(StrEnum):
-    """Кто начал взаимодействие (ADR-022): приглашение работодателя или отклик кандидата."""
+    """Кто начал взаимодействие: приглашение работодателя или отклик кандидата."""
 
     employer = "employer"
     candidate = "candidate"
@@ -34,14 +34,14 @@ class ContactMethod(StrEnum):
 
 
 class SalaryBasis(StrEnum):
-    """Вилка до НДФЛ (`gross`, по умолчанию) или на руки (`net`) — E32-5a."""
+    """Вилка до НДФЛ (`gross`, по умолчанию) или на руки (`net`)."""
 
     gross = "gross"
     net = "net"
 
 
 class OfferInterestEvent(BaseModel):
-    """Все `offer.interest.*` (ADR-026): интерес работодателя до приглашения.
+    """Все `offer.interest.*`: интерес работодателя до приглашения.
 
     Строка та же, что у оффера (`offer_id`); после `interest_opened → sent` дальше идут обычные
     `offer.*`. Без ПДн: только id, статусы, причина отказа и вилка (числа).
@@ -60,7 +60,7 @@ class OfferInterestEvent(BaseModel):
 
 
 class ActivityKind(StrEnum):
-    """Тип события ленты активности работодателя (`GET /employer/activity`, E35-12b)."""
+    """Тип события ленты активности работодателя (`GET /employer/activity`)."""
 
     subscription_hit = "subscription_hit"  # новый кандидат по подписке на категорию
     interest_opened = "interest_opened"  # кандидат открыл интерес

@@ -1,4 +1,4 @@
-"""E24-1: индекс честности и таймер p95 (assessment.md §8) — формулы на числах документа."""
+"""Индекс честности и таймер p95 — формулы на числах документа."""
 
 import math
 import uuid
@@ -37,7 +37,7 @@ def _plain(n: int = 6, b: float = 0.0, score: float = 1.0) -> list[ItemSignal]:
 
 
 def test_config_matches_document():
-    assert IC == IntegrityConfig()  # scoring.yaml = значения §8 по умолчанию
+    assert IC == IntegrityConfig()  # scoring.yaml = значения по умолчанию
     assert (IC.fast_margin, IC.fast_ratio, IC.fast_penalty) == (0.5, 0.3, 0.15)
     assert (IC.away_min_ms, IC.away_penalty, IC.away_max) == (10_000, 0.15, 0.45)
     assert (IC.lz_threshold, IC.lz_penalty, IC.copy_penalty) == (-2.0, 0.2, 0.3)

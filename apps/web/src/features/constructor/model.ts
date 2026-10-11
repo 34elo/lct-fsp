@@ -72,7 +72,7 @@ function parseList(s: string): (number | string)[] {
     .map((x) => (Number.isFinite(Number(x.replace(",", "."))) ? Number(x) : x));
 }
 
-/** Форма → `FamilySpec` (assessment.md §7, E30-1). Пустой ключ не отправляем: core попросит черновик у LLM. */
+/** Форма → `FamilySpec`. Пустой ключ не отправляем: core попросит черновик у LLM. */
 export function buildSpec(f: FormState): FamilySpec {
   const params: Record<string, Param> = {};
   const derived: Record<string, string> = {};

@@ -6,7 +6,7 @@
  */
 
 /**
- * Вилка до НДФЛ (`gross`, по умолчанию) или на руки (`net`) — E32-5a.
+ * Вилка до НДФЛ (`gross`, по умолчанию) или на руки (`net`).
  */
 export type SalaryBasis = typeof SalaryBasis[keyof typeof SalaryBasis];
 

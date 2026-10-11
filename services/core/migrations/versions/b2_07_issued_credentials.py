@@ -1,4 +1,4 @@
-"""credentials: таблица issued_credentials для Open Badge 3.0 (E18-9)
+"""credentials: таблица issued_credentials для Open Badge 3.0
 
 Revision ID: b2_07
 Revises: b2_06

@@ -36,7 +36,7 @@ function QueueTile({ q }: { q: QueueCount }) {
   );
 }
 
-/** `/federation` — главная админки (E39-29): «Что требует вас» и что работает само. */
+/** `/federation` — главная админки: «Что требует вас» и что работает само. */
 export default function Home() {
   const q = useGetSummaryAdminSummaryGet({ query: { retry: false } });
   const d = q.data?.status === 200 ? q.data.data : null;

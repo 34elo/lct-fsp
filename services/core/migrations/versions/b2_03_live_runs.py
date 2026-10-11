@@ -1,4 +1,4 @@
-"""live_runs: живые прогоны (E18-4, metrics.md §3)
+"""live_runs: живые прогоны
 
 Revision ID: b2_03
 Revises: b2_02

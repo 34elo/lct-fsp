@@ -1,4 +1,4 @@
-"""E25-1: регулярные задания — рассылка по категории и согласию, ответы, рубрика, права."""
+"""Регулярные задания — рассылка по категории и согласию, ответы, рубрика, права."""
 
 import sqlite3
 import uuid
@@ -131,7 +131,7 @@ async def test_publish_goes_to_category_with_consent_only(api, factory, taxonomy
 
 
 async def test_minor_without_parent_consent_gets_no_tasks(api, factory, taxonomy_loaded):
-    """E32-5b: профиль 15–17 лет без согласия родителя не получает рассылку и не видит задания."""
+    """Профиль 15–17 лет без согласия родителя не получает рассылку и не видит задания."""
     emp, minor = _employer(api), register(api)
     uid = await _grade(factory, minor, api=api)
     async with session_scope(factory) as s:

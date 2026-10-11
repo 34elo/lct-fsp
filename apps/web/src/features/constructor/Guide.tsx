@@ -56,7 +56,7 @@ function CandidateView({ f }: { f: FormState }) {
   );
 }
 
-/** Мастер «Как сделать задание» (E39-27): 5 шагов, 3 шаблона, примеры, предпросмотр. */
+/** Мастер «Как сделать задание»: 5 шагов, 3 шаблона, примеры, предпросмотр. */
 export default function Guide() {
   const nav = useNavigate();
   const [step, setStep] = useState(1);

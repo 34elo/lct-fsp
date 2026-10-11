@@ -1,4 +1,4 @@
-"""Шифрование ПДн анкеты (contacts_enc): Fernet, ключ `PII_KEY` (security.md §3)."""
+"""Шифрование ПДн анкеты (contacts_enc): Fernet, ключ `PII_KEY`."""
 
 from __future__ import annotations
 

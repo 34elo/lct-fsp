@@ -1,4 +1,4 @@
-"""candidates: grade_*, experience_months, team_signals (data-model.md §3.2, ml.md §5)
+"""candidates: grade_*, experience_months, team_signals
 
 Revision ID: 0011
 Revises: 0010

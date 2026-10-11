@@ -1,4 +1,4 @@
-"""Демо-кнопки ФСП (E13-3): только fsp_admin и только при DEMO_MODE."""
+"""Демо-кнопки ФСП: только fsp_admin и только при DEMO_MODE."""
 
 import sqlite3
 

@@ -1,4 +1,4 @@
-/** Чистые функции Главной кандидата (E38-1): следующий шаг, созвездие, строки навыков, форматы. */
+/** Чистые функции Главной кандидата: следующий шаг, созвездие, строки навыков, форматы. */
 import type { OfferForCandidate } from "@/api/model";
 import type { CircuitStep, ConstellationNode } from "@fsp/ui";
 
@@ -24,7 +24,7 @@ export interface NextStep {
 }
 
 /**
- * «Следующий шаг» (бриф §6.1): тест → ФСП → ответ на интерес → тест на следующий грейд.
+ * «Следующий шаг»: тест → ФСП → ответ на интерес → тест на следующий грейд.
  * Шаг «интерес» есть, только пока есть интересы без ответа; «тест на грейд» — пока навигатор его предлагает.
  * Текущий — первый не пройденный, дальше — будущие.
  */
@@ -112,7 +112,7 @@ export function dayMonth(iso: string | null | undefined): string {
   return Number.isNaN(d.getTime()) ? "" : d.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit", timeZone: "UTC" });
 }
 
-/** Последние приглашения и интересы одним списком (E39-13): статус, вилка, ссылка на карточку. */
+/** Последние приглашения и интересы одним списком: статус, вилка, ссылка на карточку. */
 export function latestInvites(interests: OfferForCandidate[], offers: OfferForCandidate[], n = 3): OfferForCandidate[] {
   const byId = new Map<string, OfferForCandidate>();
   for (const o of [...interests, ...offers]) if (o.initiator !== "candidate") byId.set(o.id, o);

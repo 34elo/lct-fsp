@@ -652,7 +652,7 @@ export const getAuthTelegramAuthTelegramPostUrl = () => {
 }
 
 /**
- * Telegram Login Widget → вход или регистрация кандидата (security.md §1).
+ * Telegram Login Widget → вход или регистрация кандидата.
  * @summary Auth Telegram
  */
 export const authTelegramAuthTelegramPost = async (authTelegramAuthTelegramPostBody: AuthTelegramAuthTelegramPostBody, options?: Parameters<typeof apiFetch>[1]): Promise<authTelegramAuthTelegramPostResponse> => {
@@ -1277,7 +1277,7 @@ export const getPasswordInitialAuthPasswordInitialPostUrl = () => {
 }
 
 /**
- * Первая смена временного пароля HR (E41-16): без текущего пароля, вход уже выполнен им.
+ * Первая смена временного пароля HR: без текущего пароля, вход уже выполнен им.
  *
  * Не требуется — 409 `password_change_not_required`; срок вышел — 403 `temp_password_expired`;
  * совпадает с временным — 422 `same_password`; 5 в час (429).
@@ -1392,7 +1392,7 @@ export const getMeMeGetUrl = () => {
 }
 
 /**
- * consents — действующие типы; company — E6-1; candidate — E3-1.
+ * consents — действующие типы; company и candidate — краткие сводки роли.
  * @summary Me
  */
 export const meMeGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<meMeGetResponse> => {

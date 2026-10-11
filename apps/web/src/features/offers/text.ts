@@ -55,7 +55,7 @@ export function dateOnly(iso: string): string {
   return new Date(iso).toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
 }
 
-/** Понятный текст по машинному `code` Problem Details (api.md, приглашения). */
+/** Понятный текст по машинному `code` Problem Details (приглашения). */
 export function offerErrorText(err: unknown, fallback = "Не удалось выполнить действие. Попробуйте ещё раз."): string {
   if (!(err instanceof ApiError)) return fallback;
   switch (err.code) {
@@ -110,7 +110,7 @@ export function offerErrorText(err: unknown, fallback = "Не удалось в�
   return fallback;
 }
 
-/** Тексты экрана E5 (мои приглашения, канбан). */
+/** Тексты экрана «Мои приглашения» работодателя. */
 export const BOARD_TEXT = {
   title: "Приглашения",
   filterLabel: "Что показать",
@@ -145,7 +145,7 @@ export const BOARD_TEXT = {
 /** Тексты экрана M2 (приглашения кандидата). */
 export const CAND_TEXT = {
   title: "Приглашения",
-  /** E40-1: компания демо-витрины — реальный кандидат видит пометку рядом с названием. */
+  /** Компания демо-витрины — реальный кандидат видит пометку рядом с названием. */
   demo: "демо",
   filterLabel: "Что показать",
   filter: { offers: "Приглашения", interests: "Интересы", responses: "Мои отклики" },
@@ -166,7 +166,7 @@ export const CAND_TEXT = {
   salaryLabel: "Вилка в месяц",
   fromCompany: "Сообщение компании",
   description: "О приглашении",
-  // E39-24: подпись HR и описание компании (Markdown)
+  // подпись HR и описание компании (Markdown)
   sentBy: "Приглашение отправил(а)",
   aboutCompany: "О компании",
   contactVia: (m: string) => `Связь: ${m}`,
@@ -197,7 +197,7 @@ export const CAND_TEXT = {
   replyBy: (d: string, n: number) => `${d} · осталось ${n} дн.`,
 };
 
-/** Тексты «Вами интересуются» (кандидат) и интереса/приглашения (работодатель), ADR-026. */
+/** Тексты «Вами интересуются» (кандидат) и интереса/приглашения (работодатель). */
 export const CONTACTS_REVOKED_TEXT = "Кандидат отозвал доступ к контактам. Связаться можно, только если они остались у вас с приглашения.";
 
 export const INT_TEXT = {

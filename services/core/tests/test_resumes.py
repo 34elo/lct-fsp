@@ -129,7 +129,7 @@ async def _cid(s, resume_id):
     return (await s.get(Resume, resume_id)).candidate_id
 
 
-# --- формулы (ml.md §2.6–2.7) ---------------------------------------------------
+# --- формулы ---------------------------------------------------
 def test_skill_strength_levels():
     exp = [
         ResumeExperience(start="2022-03", end=None, skills=["python"]),

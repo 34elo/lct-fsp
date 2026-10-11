@@ -1,4 +1,4 @@
-"""Состояния FSM (telegram.md §3). Хранилище — RedisStorage (`fsm:*`), TTL 30 минут."""
+"""Состояния FSM. Хранилище — RedisStorage (`fsm:*`), TTL 30 минут."""
 
 from aiogram.fsm.state import State, StatesGroup
 

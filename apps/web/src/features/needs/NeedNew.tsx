@@ -8,7 +8,7 @@ import { useCreateNeedNeedsPost } from "@/api/endpoints/needs/needs";
 import { ApiError } from "@/api/mutator";
 import { NEED_TEXT as T } from "./text";
 
-/** Потребность текстом (макет N1, состояние «ввод» и «ошибка разбора»). */
+/** Потребность текстом (состояние «ввод» и «ошибка разбора»). */
 export default function NeedNew() {
   const navigate = useNavigate();
   const id = useId();

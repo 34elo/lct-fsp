@@ -29,7 +29,7 @@ import { GRADE_LABEL, roleLabel } from "@/features/profile/text";
 import { EMPTY_FORM, gradeRange, toCardData, toFilters } from "./search-model";
 import { FORMAT_LABEL, SHORTLIST_TEXT as T } from "./text";
 
-/** Сколько первых строк подборки открыты с обоснованием (макет E4). */
+/** Сколько первых строк подборки открыты с обоснованием. */
 export const OPEN_TOP = 5;
 
 const LEVELS: AcceptanceLevel[] = ["low", "medium", "high"];
@@ -119,7 +119,7 @@ function Row({ c, rank, open, onToggle, onOffer, onOpen }: RowProps) {
   );
 }
 
-/** Подборка по вакансии (экран E4): ранжированный список, обоснование открыто у первых пяти. */
+/** Подборка по вакансии: ранжированный список, обоснование открыто у первых пяти. */
 export default function Shortlist() {
   const { id = "" } = useParams();
   const navigate = useNavigate();

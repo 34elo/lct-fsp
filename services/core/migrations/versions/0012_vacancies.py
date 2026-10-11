@@ -1,4 +1,4 @@
-"""vacancies, vacancy_skills (data-model.md §3.7)
+"""vacancies, vacancy_skills
 
 Revision ID: 0012
 Revises: 0011

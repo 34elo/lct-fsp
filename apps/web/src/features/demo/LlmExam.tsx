@@ -10,7 +10,7 @@ const L = T.llmExam;
 const grantedText = (g: Record<string, number>) =>
   Object.entries(g).map(([k, n]) => `${k === "none" ? L.none : k}: ${n}`).join(" · ");
 
-/** `/admin/demo/llm-exam`: LLM как кандидат — отчёт E27-1 и `ai_solvable` банка (E26-4). */
+/** `/admin/demo/llm-exam`: LLM как кандидат — отчёт валидации теста и `ai_solvable` банка. */
 export default function LlmExam() {
   const q = useLlmExamAdminDemoLlmExamGet({ query: { retry: false } });
   const d = q.data?.status === 200 ? q.data.data : null;

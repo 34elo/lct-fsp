@@ -1,4 +1,4 @@
-"""Доменные события: обменник `events` (topic), routing key = `Envelope.type` (messaging.md §2.1).
+"""Доменные события: обменник `events` (topic), routing key = `Envelope.type`.
 
 Событие — «что-то случилось», подписаться может кто угодно. Payload без ПДн.
 """
@@ -130,7 +130,7 @@ class OfferEvent(BaseModel):
     """Все `offer.*`.
 
     Для `offer.message` заполнен `message_id`, для `offer.declined` — `decline_reason`.
-    С schema_version 2 (ADR-022): `vacancy_id` пуст у приглашения без вакансии,
+    С schema_version 2: `vacancy_id` пуст у приглашения без вакансии,
     `initiator` — кто начал (`employer` — приглашение, `candidate` — отклик).
     """
 
@@ -153,7 +153,7 @@ class FspLinked(BaseModel):
     candidate_id: UUID
     participant_id: str
     verified: bool
-    method: Literal["oauth", "code", "manual", "registry"]  # registry — реестр ФСП (ADR-052)
+    method: Literal["oauth", "code", "manual", "registry"]  # registry — реестр ФСП
 
 
 class FspResultsImported(BaseModel):

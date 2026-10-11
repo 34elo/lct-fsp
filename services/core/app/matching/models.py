@@ -10,7 +10,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 
 class Match(Base):
-    """Подборка «вакансия — кандидат» (data-model.md §3.7); пишет только модуль matching."""
+    """Подборка «вакансия — кандидат»; пишет только модуль matching."""
 
     __tablename__ = "matches"
     __table_args__ = (sa.Index("ix_matches_vacancy_score", "vacancy_id", sa.text("score DESC")),)
@@ -24,14 +24,14 @@ class Match(Base):
     score: Mapped[float] = mapped_column(sa.Float)
     breakdown: Mapped[dict] = mapped_column(sa.JSON)
     explanation: Mapped[list] = mapped_column(sa.JSON)
-    rationale: Mapped[str | None] = mapped_column(Text, default=None)  # LLM для топ-5 (E7-9)
+    rationale: Mapped[str | None] = mapped_column(Text, default=None)  # LLM для топ-5
     candidate_version: Mapped[int]
     vacancy_version: Mapped[int]
     computed_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True))
 
 
 class Need(Base):
-    """Потребность работодателя (assessment.md §9, E23-4): текст, фильтры и веса навыков."""
+    """Потребность работодателя: текст, фильтры и веса навыков."""
 
     __tablename__ = "needs"
     __table_args__ = (sa.Index("ix_needs_company", "company_id", "created_at"),)
@@ -42,7 +42,7 @@ class Need(Base):
     filters: Mapped[dict] = mapped_column(sa.JSON)  # SearchFilters
     weights: Mapped[dict] = mapped_column(sa.JSON)  # slug навыка → вес потребности
     grades: Mapped[list] = mapped_column(sa.JSON)  # грейды теста из потребности
-    # pseudo_id кандидатов в шорт-листе (E23-5)
+    # pseudo_id кандидатов в шорт-листе
     shortlist: Mapped[list[str]] = mapped_column(sa.JSON, default=list)
     created_at: Mapped[datetime] = mapped_column(
         sa.DateTime(timezone=True), default=lambda: datetime.now(UTC), server_default=sa.func.now()
@@ -50,7 +50,7 @@ class Need(Base):
 
 
 class CategorySubscription(Base):
-    """Подписка компании на категорию (E33-4): новый подходящий кандидат → уведомление."""
+    """Подписка компании на категорию: новый подходящий кандидат → уведомление."""
 
     __tablename__ = "category_subscriptions"
     __table_args__ = (sa.Index("ix_category_subs_profession", "profession"),)
@@ -91,7 +91,7 @@ class CategorySubscriptionHit(Base):
 
 
 class CandidateInterest(Base):
-    """Встречный сигнал: кандидат показал интерес к компании (E33-6).
+    """Встречный сигнал: кандидат показал интерес к компании.
 
     PK — дедупликация: один сигнал на пару (candidate_id, company_id).
     """

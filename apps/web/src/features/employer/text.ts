@@ -19,7 +19,7 @@ export const FSP_LEVEL_LABEL: Record<string, string> = {
   international: "международный этап",
 };
 
-/** Тексты экрана A (поиск) и E2 («текст → чипсы»). */
+/** Тексты поиска кандидатов («текст → чипсы»). */
 export const SEARCH_TEXT = {
   title: "Поиск кандидатов",
   shortlistTitle: (t: string) => `Подборка: ${t}`,
@@ -149,7 +149,7 @@ export function vacancyErrorText(err: unknown, fallback = "Не удалось �
   }
 }
 
-/** Тексты экрана E4 (подборка по вакансии). */
+/** Тексты подборки по вакансии. */
 export const SHORTLIST_TEXT = {
   kicker: "Подборка по вакансии",
   title: "Подборка",
@@ -177,7 +177,7 @@ export const SHORTLIST_TEXT = {
   toVacancies: "К вакансиям",
 };
 
-/** Подбор `/employer` (E38-8, макеты `v2_employer__first_*`, `v2_employer__results_*`). Работодателю — «вы». */
+/** Подбор `/employer`. Работодателю — «вы». */
 export const MATCH_TEXT = {
   title: "Подбор",
   queryLabel: "Кого вы ищете",
@@ -240,7 +240,7 @@ export const MATCH_TEXT = {
   noGrade: "без грейда",
 } as const;
 
-/** Поиск сотрудников на «Подборе» (E39-21): строка с тегами, фильтры, категории с объяснением, компактная подборка. */
+/** Поиск сотрудников на «Подборе»: строка с тегами, фильтры, категории с объяснением, компактная подборка. */
 export const FIND_TEXT = {
   queryLabel: "Кого вы ищете",
   queryPlaceholder: "Навык или профессия: Python, Backend… или фраза целиком",
@@ -325,7 +325,7 @@ export const FEED_TEXT: Record<string, (detail: string | null) => string> = {
   task_answered: (d) => (d ? `ответил на задание «${d}»` : "ответил на задание"),
 };
 
-/** Общий шорт-лист работодателя `/employer/shortlist` (E38-12, бриф §6.12). */
+/** Общий шорт-лист работодателя `/employer/shortlist`. */
 export const SHORTLIST_PAGE_TEXT = {
   title: "Шорт-лист",
   list: "Отмеченные кандидаты",
@@ -372,7 +372,7 @@ export const SHORTLIST_PAGE_TEXT = {
   fspMore: (n: number) => `и ещё ${n}`,
 } as const;
 
-/** Онбординг новой компании (E39-7): данные компании → первый запрос → как устроен подбор. */
+/** Онбординг новой компании: данные компании → первый запрос → как устроен подбор. */
 export const ONBOARDING_TEXT = {
   title: "Добро пожаловать в ФСП Карьеру",
   stepsLabel: "Шаги настройки",
@@ -413,7 +413,7 @@ export const ONBOARDING_TEXT = {
   },
 } as const;
 
-/** Страница компании и команда (E39-24): владелец правит, HR видит. */
+/** Страница компании и команда: владелец правит, HR видит. */
 export const COMPANY = {
   title: "Компания",
   loadError: "Не удалось загрузить компанию.",
@@ -499,7 +499,7 @@ export const COMPANY = {
   profileLink: "Ваше имя, должность и фото — в настройках профиля",
 } as const;
 
-/** Приглашение в команду по ссылке `/invite/company/:token` (E39-24). */
+/** Приглашение в команду по ссылке `/invite/company/:token`. */
 export const INVITE = {
   title: "Приглашение в команду",
   lead: (company: string, who: string | null) => (who ? `${who} приглашает вас в команду компании «${company}».` : `Вас приглашают в команду компании «${company}».`),

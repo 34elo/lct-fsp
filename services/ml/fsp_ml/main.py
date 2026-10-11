@@ -1,6 +1,8 @@
-"""ml-api: синхронный HTTP для core (api.md §2.10). Сейчас — заглушки `ML_FAKE=true`."""
+"""ml-api: синхронный HTTP для core. Сейчас — заглушки `ML_FAKE=true`."""
 
 from __future__ import annotations
+
+from functools import partial
 
 from fastapi import FastAPI
 from fastapi.concurrency import run_in_threadpool
@@ -18,7 +20,15 @@ from fsp_platform.logging import configure_logging
 
 from fsp_ml import answer_explain, fake, family_bank, family_key, query_parse, skill_card
 from fsp_ml.config import Settings
-from fsp_ml.embedder import Embedder, embed, load_embedder
+from fsp_ml.embedder import (
+    Embedder,
+    LazyEmbedder,
+    configure_hf_cache,
+    embed,
+    is_ready,
+    load_embedder,
+    resolve_source,
+)
 from fsp_ml.llm import LlmClient, OpenAiLlm
 from fsp_ml.skill_pipeline import SkillPipeline
 from fsp_ml.taxonomy import TaxonomyProvider
@@ -33,9 +43,27 @@ def build_app(
     settings = settings or Settings()
     configure_logging(settings.service_name, settings.log_level)
     app = create_app(settings.service_name)
-    real = embedder or load_embedder(
-        settings.embedding_model_path, settings.embedding_model, settings.embedding_dim
-    )
+    real = embedder
+    if real is None and resolve_source(
+        settings.embedding_model_path,
+        settings.embedding_model,
+        settings.embedding_hf_id,
+        settings.embedding_autoload,
+    ):
+        # модель грузится в фоне (первый старт скачивает её в кеш тома); пока не готова — fallback
+        configure_hf_cache(settings.embedding_cache_dir)
+        real = LazyEmbedder(
+            settings.embedding_model,
+            partial(
+                load_embedder,
+                settings.embedding_model_path,
+                settings.embedding_model,
+                settings.embedding_dim,
+                settings.embedding_hf_id,
+                settings.embedding_autoload,
+                settings.embedding_cache_dir,
+            ),
+        )
     taxonomy = taxonomy or TaxonomyProvider(settings.core_url, settings.service_token_ml)
     # LLM нужен только при ML_FAKE=false и LLM_ENABLED=true; иначе конвейер навыков идёт по правилам
     if llm is None and not settings.ml_fake and settings.llm_enabled and settings.llm_base_url:
@@ -47,15 +75,11 @@ def build_app(
             max_tokens=settings.llm_max_tokens,
         )
     pipeline = SkillPipeline(llm=llm, embedder=real, llm_model=settings.llm_model)
-    # >>> block1 (assessment, taxonomy, identity, candidates, graph, resumes)
-    app.include_router(family_key.build_router(settings))  # E30-1: черновик ключа задания
-    app.include_router(family_bank.build_router(settings))  # E26-4: генератор и решатель
-    app.include_router(answer_explain.build_router(settings))  # E24-2: «Объясни ответ»
-    # <<< block1
-    # >>> block2 (matching, offers, vacancies, companies, consents, fsp, telegram, analytics)
-    app.include_router(query_parse.build_router(settings, llm))  # AU-2: разбор запроса без 503
-    # <<< block2
-    # у ml-api свой формат /healthz (api.md §2.10), вместо базового {"status": "ok"}
+    app.include_router(family_key.build_router(settings))  # черновик ключа задания
+    app.include_router(family_bank.build_router(settings))  # генератор и решатель
+    app.include_router(answer_explain.build_router(settings))  # «Объясни ответ»
+    app.include_router(query_parse.build_router(settings, llm))  # разбор запроса без 503
+    # у ml-api свой формат /healthz, вместо базового {"status": "ok"}
     app.router.routes[:] = [r for r in app.router.routes if getattr(r, "path", "") != "/healthz"]
 
     def require_fake() -> None:
@@ -86,9 +110,12 @@ def build_app(
     @app.get("/healthz")
     async def healthz() -> MlHealth:
         up = "up" if settings.ml_fake and settings.llm_enabled else "down"
-        emb = "up" if real is not None else "fallback"
+        ok = is_ready(real)
         return MlHealth(
-            llm=up, embedder=emb, model=real.model if real else fake.FAKE_MODEL, queue_depth=0
+            llm=up,
+            embedder="up" if ok else "fallback",
+            model=real.model if ok and real else fake.FAKE_MODEL,
+            queue_depth=0,
         )
 
     return app

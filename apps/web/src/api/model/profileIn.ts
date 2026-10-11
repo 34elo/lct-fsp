@@ -9,7 +9,7 @@ import type { ProfileInAgeGroup } from './profileInAgeGroup';
 import type { StackItem } from './stackItem';
 
 /**
- * `PATCH /candidates/me/profile`: частичное обновление ручной формы (E20-4).
+ * `PATCH /candidates/me/profile`: частичное обновление ручной формы.
  */
 export interface ProfileIn {
   contacts?: ContactsIO | null;

@@ -25,7 +25,7 @@ async def main() -> None:
     engine = make_engine(settings.database_url)
     factory = make_session_factory(engine)
     redis = Redis.from_url(settings.redis_url)
-    adapter = RegistryAdapter(build_adapter(settings, redis), factory)  # реестр ФСП (ADR-052)
+    adapter = RegistryAdapter(build_adapter(settings, redis), factory)  # реестр ФСП
     consumers = {"fsp.sync": Consumer(QUEUES["fsp.sync"])}
     handlers.register(consumers, factory, SyncService(adapter, factory), redis)
     for consumer in consumers.values():

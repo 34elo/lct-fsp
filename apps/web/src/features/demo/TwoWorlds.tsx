@@ -9,7 +9,7 @@ import { AdminPageHeader } from "@/features/admin/PageHeader";
 
 const TW = T.twoWorlds;
 
-/** `/admin/demo/two-worlds`: одно семейство в двух мирах (E26-1, `domain_for_vacancy`). */
+/** `/admin/demo/two-worlds`: одно семейство в двух мирах (`domain_for_vacancy`). */
 export default function TwoWorlds() {
   const [family, setFamily] = useState("arch_blast_radius");
   const [seed, setSeed] = useState(7);

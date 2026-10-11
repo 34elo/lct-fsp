@@ -135,7 +135,7 @@ test("убрать кандидата из шорт-листа", async () => {
   await waitFor(() => expect(screen.getAllByTestId("shortlist-row")).toHaveLength(1));
 });
 
-test("работодатель без компании: пустое состояние, запрос шорт-листа не уходит (E39-36)", async () => {
+test("работодатель без компании: пустое состояние, запрос шорт-листа не уходит", async () => {
   const seen: string[] = [];
   const base = globalThis.fetch;
   vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {

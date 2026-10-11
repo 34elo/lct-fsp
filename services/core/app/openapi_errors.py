@@ -1,4 +1,4 @@
-"""Problem Details в OpenAPI (blocks.md §4.10): `responses=problem_responses(401, 404)`."""
+"""Problem Details в OpenAPI: `responses=problem_responses(401, 404)`."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ _TITLES = {
 
 
 class ProblemOut(BaseModel):
-    """RFC 9457 + машинный `code` (api.md §1)."""
+    """RFC 9457 + машинный `code`."""
 
     type: str
     title: str

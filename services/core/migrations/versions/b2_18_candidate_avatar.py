@@ -1,4 +1,4 @@
-"""Аватар кандидата: `candidates.avatar_key` — ключ файла в MinIO (E41-12)
+"""Аватар кандидата: `candidates.avatar_key` — ключ файла в MinIO
 
 Revision ID: b2_18
 Revises: b2_17

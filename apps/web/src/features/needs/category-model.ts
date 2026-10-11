@@ -6,7 +6,7 @@ import { FORMAT_LABEL } from "@/features/employer/text";
 import { claimedVsConfirmed } from "./need-model";
 import { CAT_TEXT as T } from "./text";
 
-/* Модель страницы категории (E38-9): карточка API → строка v2, неподтверждённые отдельно. */
+/* Модель страницы категории: карточка API → строка v2, неподтверждённые отдельно. */
 
 /** Подтверждён ли грейд тестом по профессии категории. */
 export const isConfirmed = (c: CandidateCard, profession: string): boolean => claimedVsConfirmed(c, profession).confirmed !== null;

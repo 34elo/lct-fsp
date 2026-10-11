@@ -353,9 +353,9 @@ export const getGetProfessionsTaxonomyProfessionsGetUrl = () => {
 }
 
 /**
- * Профессии теста, веса и типы навыков, грейды с порогами θ (assessment.md §10).
+ * Профессии теста, веса и типы навыков, грейды с порогами θ.
  *
- * `beta` — тонкий банк семейств (E39-6): профессия открыта, в опросе помечена «бета».
+ * `beta` — тонкий банк семейств: профессия открыта, в опросе помечена «бета».
  * @summary Get Professions
  */
 export const getProfessionsTaxonomyProfessionsGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getProfessionsTaxonomyProfessionsGetResponse> => {
@@ -499,7 +499,7 @@ export const getSuggestSkillsTaxonomySkillsSuggestGetUrl = (params?: SuggestSkil
 /**
  * Подсказки навыков: синонимы, префикс, опечатки; частые выше, `provisional` помечен.
  *
- * `kind=soft` — только софт-навыки (поле «Личные качества», E41-6).
+ * `kind=soft` — только софт-навыки (поле «Личные качества»).
  * @summary Suggest Skills
  */
 export const suggestSkillsTaxonomySkillsSuggestGet = async (params?: SuggestSkillsTaxonomySkillsSuggestGetParams, options?: Parameters<typeof apiFetch>[1]): Promise<suggestSkillsTaxonomySkillsSuggestGetResponse> => {
@@ -641,7 +641,7 @@ export const getSuggestProfessionsTaxonomyProfessionsSuggestGetUrl = (params?: S
 }
 
 /**
- * Подсказки профессий: все видимые роли системы, включая добавленные админом (E39-3).
+ * Подсказки профессий: все видимые роли системы, включая добавленные админом.
  * @summary Suggest Professions
  */
 export const suggestProfessionsTaxonomyProfessionsSuggestGet = async (params?: SuggestProfessionsTaxonomyProfessionsSuggestGetParams, options?: Parameters<typeof apiFetch>[1]): Promise<suggestProfessionsTaxonomyProfessionsSuggestGetResponse> => {

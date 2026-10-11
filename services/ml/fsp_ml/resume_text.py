@@ -1,6 +1,6 @@
-"""Текст из файла резюме (ml.md §2, шаг 1): PDF — PyMuPDF, DOCX — python-docx.
+"""Текст из файла резюме (шаг 1): PDF — PyMuPDF, DOCX — python-docx.
 
-Тип проверяем по сигнатуре, а не по заявленному `mime` (AGENTS.md п. 6).
+Тип проверяем по сигнатуре, а не по заявленному `mime`.
 """
 
 from __future__ import annotations
@@ -102,6 +102,6 @@ def extract_text(data: bytes) -> str:
         raise ResumeFileError("bad_file") from e
     text = clean(text)
     if len(text) < MIN_TEXT_CHARS:
-        # скан: OCR через vision-модель (ml.md §1.2) ещё не подключён
+        # скан: OCR через vision-модель ещё не подключён
         raise ResumeFileError("scanned_pdf" if mime == PDF_MIME else "bad_file")
     return text

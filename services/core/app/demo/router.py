@@ -1,4 +1,4 @@
-"""`POST /auth/jury` — вход «Демо для жюри» в свою песочницу (E40-1). Только при `DEMO_MODE`."""
+"""`POST /auth/jury` — вход «Демо для жюри» в свою песочницу. Только при `DEMO_MODE`."""
 
 from __future__ import annotations
 

@@ -158,7 +158,7 @@ function FamilyCard({ f }: { f: FamilyOut }) {
   );
 }
 
-/** Задания конструктора: вкладки «Готовые» и «Черновики» (E41-14). */
+/** Задания конструктора: вкладки «Готовые» и «Черновики». */
 function Families() {
   const q = useListFamiliesFamiliesGet({ query: { retry: false } });
   const fams = (q.data?.status === 200 ? q.data.data : []) as FamilyOut[];

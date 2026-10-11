@@ -1,4 +1,4 @@
-"""E20-1: поток кода подтверждения email."""
+"""Поток кода подтверждения email."""
 
 import re
 from datetime import UTC, datetime, timedelta

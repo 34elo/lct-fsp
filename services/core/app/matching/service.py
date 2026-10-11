@@ -1,8 +1,8 @@
-"""Подбор кандидатов под вакансию (matching.md §2–4, ml.md §6): отбор SQL → скоринг → объяснения.
+"""Подбор кандидатов под вакансию: отбор SQL → скоринг → объяснения.
 
 Модуль не лезет в чужие модели: данные берёт через `service.py` модулей vacancies, taxonomy,
 graph и candidates. Формулы — в `scoring.py`. Запись в `matches` — `match_vacancy` /
-`match_candidate`; выдача — E7-3.
+`match_candidate`; выдача.
 """
 
 from __future__ import annotations
@@ -47,7 +47,7 @@ if TYPE_CHECKING:
 
 
 async def visible_ids(session: AsyncSession, ids: Iterable[uuid.UUID]) -> set[uuid.UUID]:
-    """Видимые работодателю (blocks.md §4.5, ADR-018): действующий грейд из теста
+    """Видимые работодателю: действующий грейд из теста
     (`assessment.get_grades_many`) и согласие `profile_publication`. Статус поиска и стоп-лист
     проверяет отбор анкет (`candidates.search_pool` / `eligible`)."""
     ids = list(dict.fromkeys(ids))
@@ -111,7 +111,7 @@ async def select_candidates(
     adj: dict[uuid.UUID, list[tuple[uuid.UUID, float]]],
     cfg: MatchConfig,
 ) -> tuple[list[Candidate], set[uuid.UUID]]:
-    """Отбор (matching.md §3): A — по графу с жёсткими фильтрами, B — по смыслу (если есть вектор).
+    """Отбор: A — по графу с жёсткими фильтрами, B — по смыслу (если есть вектор).
 
     Возвращает анкеты и множество id, найденных только по смыслу.
     """
@@ -261,7 +261,7 @@ async def match_vacancy_candidates(
     return sorted(out, key=lambda r: (-r.score, str(r.candidate_id)))
 
 
-# --- таблица matches (E7-2) ---------------------------------------------------------------
+# --- таблица matches ---------------------------------------------------------------
 
 
 def _fill(m: Match, r: MatchResult, vacancy_version: int, now: datetime) -> None:
@@ -282,7 +282,7 @@ async def _upsert_new(
     vacancy_version: int,
     now: datetime,
 ) -> None:
-    """Вставить строку без падения на гонке (E42-5): конфликт по PK — обновляем уже созданную."""
+    """Вставить строку без падения на гонке: конфликт по PK — обновляем уже созданную."""
     insert = pg_insert if session.get_bind().dialect.name == "postgresql" else sqlite_insert
     await session.execute(
         insert(Match)
@@ -418,7 +418,7 @@ async def snapshot(
 async def set_candidate_interest(
     session: AsyncSession, candidate_id: uuid.UUID, company_id: uuid.UUID
 ) -> datetime:
-    """Кандидат отметил интерес к компании (E33-6); повтор идемпотентен. Возвращает `created_at`."""
+    """Кандидат отметил интерес к компании; повтор идемпотентен. Возвращает `created_at`."""
     interest = await session.get(CandidateInterest, (candidate_id, company_id))
     if interest is None:
         interest = CandidateInterest(candidate_id=candidate_id, company_id=company_id)

@@ -1,4 +1,4 @@
-"""Выбор адаптера по `FSP_ADAPTER` (fsp.md §2)."""
+"""Выбор адаптера по `FSP_ADAPTER`."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ def build_adapter(
     settings: Settings, redis: Redis | None = None
 ) -> CachedFspAdapter | HttpFspAdapter:
     if settings.fsp_adapter != "mock":
-        # адаптер под API организаторов — E5-8, маппинг добавляется в mappings/
+        # адаптер под API организаторов — новый маппинг добавляется в mappings/
         raise NotImplementedError(f"FSP_ADAPTER={settings.fsp_adapter}: адаптер не реализован")
     http = HttpFspAdapter(
         settings.fsp_base_url,

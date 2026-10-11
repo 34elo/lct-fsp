@@ -1,4 +1,4 @@
-"""Смоук ML после деплоя (E42-6): smoke-ml.sh с подменой docker через PATH-заглушку."""
+"""Смоук ML после деплоя: smoke-ml.sh с подменой docker через PATH-заглушку."""
 
 import os
 import shutil

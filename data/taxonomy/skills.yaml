@@ -1,4 +1,4 @@
-# Ядро графа навыков ФСП Карьера (E2-1). Формат — services/core/app/taxonomy/loader.py.
+# Ядро графа навыков ФСП Карьера. Формат — services/core/app/taxonomy/loader.py.
 # Источники: теги Stack Overflow (с их синонимами), русские названия и сленг, правила ФСП.
 # Синоним уникален на весь справочник (проверяет загрузчик). Версии («python 3», «postgres 15») снимает нормализация ml.
 skills:
@@ -68,7 +68,7 @@ skills:
   - {slug: frontend, name: Frontend-разработка, kind: domain, group: frontend, aliases: [фронтенд, фронт, фронтэнд, front-end, frontend development, клиентская разработка, веб-разработка, web development, верстка]}
   - {slug: react, name: React, kind: hard, group: frontend, testable: true, aliases: [реакт, reactjs, react.js, react js, react hooks]}
   - {slug: nextjs, name: Next.js, kind: hard, group: frontend, aliases: [next js, nextjs, некст]}
-  - {slug: vue, name: Vue.js, kind: hard, group: frontend, aliases: [vue, vuejs, vue js, вью, vue 3, vue.js]}
+  - {slug: vue, name: Vue.js, kind: hard, group: frontend, aliases: [vue, vue3, vuejs, vue js, вью, vue 3, vue.js]}
   - {slug: nuxt, name: Nuxt, kind: hard, group: frontend, aliases: [nuxtjs, nuxt.js, нукст]}
   - {slug: angular, name: Angular, kind: hard, group: frontend, aliases: [ангуляр, angularjs, angular 2]}
   - {slug: svelte, name: Svelte, kind: hard, group: frontend, aliases: [свелт, sveltekit]}

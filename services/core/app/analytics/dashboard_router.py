@@ -1,4 +1,4 @@
-"""`GET /admin/dashboard` — воронка ФСП (E18-3), `GET /admin/summary` — «Что требует вас» (E39-29).
+"""`GET /admin/dashboard` — воронка ФСП, `GET /admin/summary` — «Что требует вас».
 
 Только роль `fsp_admin`, только агрегаты.
 """

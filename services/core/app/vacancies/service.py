@@ -1,7 +1,7 @@
 """Вакансии: CRUD, публикация, закрытие. Доступ только участникам компании-владельца
 (чужая вакансия → 404). Публиковать может лишь `verified` компания.
 
-Версия `version` растёт при каждом изменении содержимого; события `vacancy.*` (messaging.md)
+Версия `version` растёт при каждом изменении содержимого; события `vacancy.*`
 уходят в outbox в той же транзакции — для опубликованной вакансии.
 """
 
@@ -40,7 +40,7 @@ class VacancyStatus(StrEnum):
 class VacancyConfig:
     """Конфигурация вакансий из scoring.yaml."""
 
-    salary_range_too_wide_ratio: float = 1.6  # ml.md §7: salary_to / salary_from (EU directive)
+    salary_range_too_wide_ratio: float = 1.6  # salary_to / salary_from (EU directive)
 
     @classmethod
     def load(cls, path: Path | str | None = None) -> VacancyConfig:
@@ -121,7 +121,7 @@ async def list_published(session: AsyncSession) -> list[Vacancy]:
 
 
 async def companies_searching(session: AsyncSession, role: str, grade: str) -> int:
-    """Компаний с опубликованной вакансией на `role` с `grade` в вилке (E39-16)."""
+    """Компаний с опубликованной вакансией на `role` с `grade` в вилке."""
     from app.candidates.service import GRADE_ORDER
 
     if grade not in GRADE_ORDER:
@@ -163,9 +163,9 @@ async def list_public(
     salary_min: int | None = None, salary_max: int | None = None,
     work_format: str | None = None,
 ) -> list[Vacancy]:  # fmt: skip
-    """Опубликованные вакансии для кандидатов и лендинга (E20-3), свежие первыми.
+    """Опубликованные вакансии для кандидатов и лендинга, свежие первыми.
 
-    Фильтры (E39-17): `grade` — грейд входит в вилку вакансии; `skills` — вакансия требует все
+    Фильтры: `grade` — грейд входит в вилку вакансии; `skills` — вакансия требует все
     перечисленные; `salary_min`/`salary_max` — вилка вакансии пересекает указанную.
     """
     stmt = select(Vacancy).where(Vacancy.status == VacancyStatus.published.value)
@@ -246,7 +246,7 @@ async def create(
 
 async def list_owned(session: AsyncSession, user: User, status: str | None = None) -> list[Vacancy]:
     found = await companies.my_company(session, user.id)
-    if found is None:  # новая компания: вакансий ещё нет (E39-7)
+    if found is None:  # новая компания: вакансий ещё нет
         return []
     q = select(Vacancy).where(Vacancy.company_id == found[0].id)
     if status is not None:

@@ -8,7 +8,6 @@ infra/llm/models/
 infra/snapshots/
 data/gold/private/
 reports/
-!docs/reports/
 
 # Python
 __pycache__/
@@ -48,3 +47,4 @@ asyncapi.json
 
 apps/web/playwright-report/
 apps/web/test-results/
+submission/

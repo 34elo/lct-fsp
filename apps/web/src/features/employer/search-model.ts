@@ -5,7 +5,7 @@ import type { CandidateCard, FilterChip, SearchFilters, SearchRequestSort } from
 import { dots, GRADE_LABEL } from "@/features/profile/text";
 import { FORMAT_LABEL, FSP_LEVEL_LABEL, percent } from "./text";
 
-/* Модель экрана A: форма фильтров, разбор запроса (E2) и перевод карточки API в CandidateCard из @fsp/ui. */
+/* Модель экрана A: форма фильтров, разбор запроса и перевод карточки API в CandidateCard из @fsp/ui. */
 
 /** Грейды по порядку: диапазон `grade_min..grade_max` ↔ отмеченные галочки. */
 export const GRADES = Object.keys(GRADE_LABEL);
@@ -178,7 +178,7 @@ export function chipApprox(c: FilterChip): boolean {
   return c.key === "semantic_text" || c.source === "llm" || c.confidence < 0.7;
 }
 
-/** Короткая подпись чипса: «Навык: Python» → «Python», как в макете A. */
+/** Короткая подпись чипса: «Навык: Python» → «Python». */
 export function chipText(c: FilterChip): string {
   const i = c.label.indexOf(": ");
   return i >= 0 ? c.label.slice(i + 2) : c.label;

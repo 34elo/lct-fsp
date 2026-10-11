@@ -1,4 +1,4 @@
-"""OpenAI-совместимый клиент LLM (ml.md §1.3): llama-server, ответ строго по JSON-схеме.
+"""OpenAI-совместимый клиент LLM: llama-server, ответ строго по JSON-схеме.
 
 `response_format: json_schema` llama-server превращает в грамматику, поэтому JSON синтаксически
 валиден. Pydantic-валидацию и бизнес-проверки делает вызывающий код. В тестах вместо
@@ -72,7 +72,7 @@ class OpenAiLlm:
                 "type": "json_schema",
                 "json_schema": {"name": schema_name, "schema": schema, "strict": True},
             },
-            # Qwen3: без режима размышлений, иначе латентность растёт в разы (ml.md §1.3)
+            # Qwen3: без режима размышлений, иначе латентность растёт в разы
             "chat_template_kwargs": {"enable_thinking": False},
         }
         try:

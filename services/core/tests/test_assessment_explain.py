@@ -1,4 +1,4 @@
-"""E24-2: «Объясни ответ» — причины по правилам, шаблон без LLM, доступ после завершения."""
+"""«Объясни ответ» — причины по правилам, шаблон без LLM, доступ после завершения."""
 
 import uuid
 from pathlib import Path
@@ -175,7 +175,7 @@ async def test_review_hidden_while_active_and_own_only(api, factory, taxonomy_lo
     assert [i["response_id"] for i in body["items"]] == ids
     first = body["items"][0]
     assert first["why"]
-    # E41-5: ни верных ответов, ни вариантов — ни в ответе, ни в шагах цепочки
+    # ни верных ответов, ни вариантов — ни в ответе, ни в шагах цепочки
     for it in body["items"]:
         assert "correct" not in it and "options" not in it
         for st in it["steps"] or []:

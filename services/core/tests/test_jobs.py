@@ -1,4 +1,4 @@
-"""Тесты для cron-команд (E8-5): истечение офферов, сброс поиска, рейтинг компаний."""
+"""Тесты для cron-команд: истечение офферов, сброс поиска, рейтинг компаний."""
 
 from datetime import UTC, datetime, timedelta
 
@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 @pytest.mark.asyncio
 async def test_expire_offers(session: AsyncSession) -> None:
-    """Офферы с истёкшим сроком переходят в статус `expired` (messaging.md §4)."""
+    """Офферы с истёкшим сроком переходят в статус `expired`."""
     company, owner = await make_company(session, name="Test Company")
     vacancy = await make_vacancy(session, company)
     candidate1 = await make_candidate(session)
@@ -123,7 +123,7 @@ def _jobs_consumer(factory):
 @pytest.mark.asyncio
 @pytest.mark.parametrize("command", ["offers.expire", "active_status.expire", "company.rating"])
 async def test_cron_command_dispatch_gives_handler_a_session(factory, command) -> None:
-    """E42-4: обработчик вызывается Consumer'ом с одним аргументом (конверт); сессию даёт
+    """Обработчик вызывается Consumer'ом с одним аргументом (конверт); сессию даёт
     `idempotent`. Без неё — `TypeError: missing 'session'`, сообщение уходило в dead-letter."""
     from fsp_contracts.commands import COMMANDS
     from fsp_contracts.registry import new_command

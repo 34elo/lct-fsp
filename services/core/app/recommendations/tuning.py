@@ -1,4 +1,4 @@
-"""Подстройка выдачи под работодателя в сессии (matching.md §7, E17-4).
+"""Подстройка выдачи под работодателя в сессии.
 
 Чистые детерминированные функции, параметры — `data/scoring.yaml` `session_tuning` и
 `matching_weights`. Сигналы сессии (открытие, шорт-лист, «не подходит», оффер) дают:
@@ -323,7 +323,7 @@ def tuned_base(
 
 
 def ndcg_at(ranked: Sequence[str], rel: Mapping[str, float], k: int = 10) -> float:
-    """nDCG@k (для оценки подстройки на симуляции, matching.md §10)."""
+    """nDCG@k (для оценки подстройки на симуляции)."""
 
     def dcg(gains: Sequence[float]) -> float:
         return sum(g / math.log2(i + 2) for i, g in enumerate(gains[:k]))

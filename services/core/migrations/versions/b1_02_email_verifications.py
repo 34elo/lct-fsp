@@ -1,4 +1,4 @@
-"""email_verifications: код подтверждения email (E20-1).
+"""email_verifications: код подтверждения email.
 
 Revision ID: b1_02
 Revises: b1_01

@@ -1,4 +1,4 @@
-"""Резюме: загрузка, приём результата разбора, подтверждение → evidence (ml.md §2, api.md §2.3).
+"""Резюме: загрузка, приём результата разбора, подтверждение → evidence.
 
 Файл кладётся в MinIO, в outbox уходит команда `ml.resume.parse`. Результат приходит событием
 `ml.resume.completed|failed` (обработчик в `handlers.py`). Подтверждение превращает навыки со
@@ -36,10 +36,10 @@ from app.taxonomy.service import get_version
 
 log = structlog.get_logger()
 
-MAX_BYTES = 10 * 1024 * 1024  # security.md §3
+MAX_BYTES = 10 * 1024 * 1024
 PDF = "application/pdf"
 DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-UPLOAD_LIMIT = 10  # в сутки (messaging.md §7)
+UPLOAD_LIMIT = 10  # в сутки
 UPLOAD_WINDOW = 24 * 3600
 
 STRENGTH_LISTED = 0.25  # навык из блока «Навыки» без привязки к опыту
@@ -51,7 +51,7 @@ LONG_MONTHS = 12
 
 # ---------------------------------------------------------------------------- файл
 def detect_mime(data: bytes) -> str | None:
-    """Тип по сигнатуре, а не по расширению (security.md §3). Содержимое не исполняется."""
+    """Тип по сигнатуре, а не по расширению. Содержимое не исполняется."""
     if data.startswith(b"%PDF-"):
         return PDF
     if data.startswith(b"PK\x03\x04"):
@@ -152,7 +152,7 @@ async def apply_result(
 
 # ------------------------------------------------------------------------ подтверждение
 class ParsedResumeEdits(BaseModel):
-    """Правки кандидата при подтверждении (api.md §3)."""
+    """Правки кандидата при подтверждении."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -177,7 +177,7 @@ def _months(start: date, end: date) -> int:
 
 
 def experience_months(items: list[ResumeExperience], today: date) -> int:
-    """Сумма непересекающихся интервалов коммерческого опыта (ml.md §2.6)."""
+    """Сумма непересекающихся интервалов коммерческого опыта."""
     spans: list[tuple[date, date]] = []
     for e in items:
         start = parse_month(e.start)
@@ -201,7 +201,7 @@ def experience_months(items: list[ResumeExperience], today: date) -> int:
 
 
 def skill_strength(slug: str, experience: list[ResumeExperience], today: date) -> float:
-    """Сила доказательства из резюме (ml.md §2.7): 0.25 / 0.30 / 0.40."""
+    """Сила доказательства из резюме: 0.25 / 0.30 / 0.40."""
     best = STRENGTH_LISTED
     for e in experience:
         if slug not in e.skills:
@@ -265,7 +265,7 @@ async def confirm(
         sk = by_slug.get(slug)
         if sk is None:  # slug из резюме, которого нет в графе: пропускаем
             return
-        if sk.kind == "soft":  # софт-навыки заявлены, но не доказаны (skills.md §8)
+        if sk.kind == "soft":  # софт-навыки заявлены, но не доказаны
             if sk.name not in soft:
                 soft.append(sk.name)
             return
@@ -383,7 +383,7 @@ async def experience_for_profile(session: AsyncSession, candidate_id: uuid.UUID)
 
 
 async def education_for_profile(session: AsyncSession, candidate_id: uuid.UUID) -> list[dict]:
-    """Образование для `CandidateProfile.education` (E39-15): свежие первыми."""
+    """Образование для `CandidateProfile.education`: свежие первыми."""
     rows = await session.scalars(
         select(Education)
         .where(Education.candidate_id == candidate_id)
@@ -399,7 +399,7 @@ DRAFT_STATUSES = ("queued", "parsing", "parsed")
 
 
 async def draft_id_for_profile(session: AsyncSession, candidate_id: uuid.UUID) -> uuid.UUID | None:
-    """Черновик для вкладки «Данные» (E39-15): последнее загруженное резюме, если оно ещё не
+    """Черновик для вкладки «Данные»: последнее загруженное резюме, если оно ещё не
     подтверждено и не упало. Подтверждённое или неудачное последним — черновика нет."""
     last = (
         await session.execute(
@@ -415,7 +415,7 @@ async def draft_id_for_profile(session: AsyncSession, candidate_id: uuid.UUID) -
 async def erase_candidate(
     session: AsyncSession, storage: ObjectStorage, candidate_id: uuid.UUID
 ) -> None:
-    """Удаление профиля (F13): файлы резюме в хранилище и записи резюме, опыта, образования.
+    """Удаление профиля: файлы резюме в хранилище и записи резюме, опыта, образования.
 
     Сбой хранилища не прерывает удаление записей: ключи пишем в лог (без ПДн), файл добьёт очистка.
     """

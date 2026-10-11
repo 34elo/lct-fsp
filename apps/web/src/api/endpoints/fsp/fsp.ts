@@ -957,7 +957,7 @@ export const getAdminDemoCreateFspResultAdminDemoFspResultPostUrl = () => {
 }
 
 /**
- * Админ: демо-кнопка создания результата ФСП для случайного кандидата (E13-3).
+ * Админ: демо-кнопка создания результата ФСП для случайного кандидата.
  * Создаёт результат в мок-ФСП и отправляет вебхук для синхронизации.
  * Доступно только при DEMO_MODE=true.
  * @summary Admin Demo Create Fsp Result
@@ -1077,7 +1077,7 @@ export const getAdminDemoResetFspAdminDemoResetPostUrl = () => {
 }
 
 /**
- * Админ: демо-кнопка сброса всех результатов ФСП к снапшоту (E13-3).
+ * Админ: демо-кнопка сброса всех результатов ФСП к снапшоту.
  * Доступно только при DEMO_MODE=true.
  * @summary Admin Demo Reset Fsp
  */

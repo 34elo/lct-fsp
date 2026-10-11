@@ -86,7 +86,7 @@ function useMedia(query: string): boolean {
 
 export type OfferCandidate = { pseudoId: string; pseudonym: string; salaryMin: number | null };
 
-/** offer — приглашение с вакансией; interest — первый шаг (E33-1); invite — приглашение по открытому интересу. */
+/** offer — приглашение с вакансией; interest — первый шаг; invite — приглашение по открытому интересу. */
 export type DialogMode = "offer" | "interest" | "invite";
 
 function OfferForm({ candidate, vacancyId: initialVacancy, alreadyOffered, onClose, mode, interest, stay }: { candidate: OfferCandidate; vacancyId: string; alreadyOffered: boolean; onClose: () => void; mode: DialogMode; interest?: OfferForCompany; stay: boolean }) {
@@ -96,7 +96,7 @@ function OfferForm({ candidate, vacancyId: initialVacancy, alreadyOffered, onClo
   const published = useMemo(() => (vq.data?.status === 200 ? vq.data.data : []).filter((v) => v.status === "published"), [vq.data]);
   const invite = mode === "invite";
   const isInterest = mode === "interest";
-  // Задания конструктора со статусом «Готово» (E41-14): допуск админа не нужен.
+  // Задания конструктора со статусом «Готово»: допуск админа не нужен.
   const tq = useListFamiliesFamiliesGet({ query: { enabled: !isInterest, retry: false } });
   const tasks = useMemo(() => (tq.data?.status === 200 ? tq.data.data : []).filter((f) => f.ready), [tq.data]);
   const [vacancyId, setVacancyId] = useState(invite ? (interest?.vacancy?.id ?? "") : initialVacancy);
@@ -380,7 +380,7 @@ function OfferForm({ candidate, vacancyId: initialVacancy, alreadyOffered, onClo
 }
 
 /**
- * Экран C (v2, E38-11): интерес или приглашение в модалке (≥ 1024 px — Dialog, на телефоне — полноэкранный Sheet).
+ * Экран C (v2): интерес или приглашение в модалке (≥ 1024 px — Dialog, на телефоне — полноэкранный Sheet).
  * Форма монтируется только при открытии: ключ идемпотентности и черновик свежие на каждое открытие.
  * `stay` — после отправки остаться на месте (экран категории): подтверждение в модалке вместо перехода к приглашению.
  */

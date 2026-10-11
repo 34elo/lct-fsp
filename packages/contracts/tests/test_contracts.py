@@ -27,7 +27,7 @@ def test_enums_match_data_model():
     assert Grade.middle.order > Grade.junior_plus.order
     assert EvidenceSource.self_ == "self"
     assert [int(t) for t in TrustLevel] == [0, 1, 2, 3, 4]
-    assert len(OfferStatus) == 11  # + interest, interest_opened (ADR-026)
+    assert len(OfferStatus) == 11  # + interest, interest_opened
 
 
 def test_event_roundtrip_typed():
@@ -92,7 +92,7 @@ def test_command_spec_and_llm_priorities():
     env, spec = new_command("ml.resume.parse", "core", cmd)
     assert spec.queue == "ml.llm" and spec.priority == 9
     assert parse_payload(env) == cmd
-    # messaging.md §2.2: порядок приоритетов в ml.llm
+    # порядок приоритетов в ml.llm
     llm = {t: s.priority for t, s in COMMANDS.items() if s.queue == "ml.llm"}
     assert llm == {
         "ml.resume.parse": 9,
@@ -229,7 +229,7 @@ def test_analytics_events_validate_and_reject_pii():
 
 
 def test_skill_card_draft_roundtrip():
-    """E16-4: черновик карточки от ml совпадает по форме с карточкой core (`SkillCard`)."""
+    """Черновик карточки от ml совпадает по форме с карточкой core (`SkillCard`)."""
     from fsp_contracts.ml import SkillCardDraft, SkillCardDraftRequest
 
     assert SkillCardDraftRequest(slug="helm", name="Helm").kind == "hard"
@@ -251,7 +251,7 @@ def test_skill_card_draft_roundtrip():
 
 
 def test_offer_event_v2_without_vacancy():
-    """ADR-022 (E20-2): `vacancy_id` пуст, `initiator`; старый payload без поля — `employer`."""
+    """`vacancy_id` пуст, `initiator`; старый payload без поля — `employer`."""
     from fsp_contracts import new_envelope
     from fsp_contracts.hiring import OFFER_SCHEMA_VERSION, OfferInitiator
 

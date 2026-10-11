@@ -1,6 +1,6 @@
-"""E22-4: грейды, кулдауны, история, доказательства `test`, события (§5, §11).
+"""Грейды, кулдауны, история, доказательства `test`, события.
 
-ADR-025: приглашение бонусного этапа (п.2), экспресс-режим E32-4a (п.7).
+Приглашение бонусного этапа и экспресс-режим.
 """
 
 import uuid
@@ -132,7 +132,7 @@ async def test_pass_writes_grade_evidence_and_events(api, factory, taxonomy_load
 
 
 async def test_bonus_invites_instead_of_upgrade(api, factory, taxonomy_loaded, fake_bank):
-    """ADR-025 п.2: бонус не меняет грейд, а приглашает на отдельный тест следующего грейда."""
+    """Бонус не меняет грейд, а приглашает на отдельный тест следующего грейда."""
     h = register(api)
     uid = _uid(api, h)
     aid = _start(api, h).json()["id"]
@@ -171,7 +171,7 @@ async def test_bonus_invites_instead_of_upgrade(api, factory, taxonomy_loaded, f
 
 
 async def test_invited_failure_keeps_grade_and_retry_open(api, factory, taxonomy_loaded, fake_bank):
-    """Провал приглашённого теста не меняет грейд и не закрывает повтор (ADR-025 п.2)."""
+    """Провал приглашённого теста не меняет грейд и не закрывает повтор."""
     h = register(api)
     uid = _uid(api, h)
     aid = _start(api, h).json()["id"]
@@ -334,7 +334,7 @@ async def test_low_integrity_caps_evidence_and_flags_grade(
     now = datetime.now(UTC)
     async with session_scope(factory) as s:
         att = await s.get(Attempt, uuid.UUID(aid))
-        # честность I < 0.6 (считает E22-5); здесь — как если бы попытка уже завершилась с ней
+        # честность I < 0.6 (считает `integrity`); здесь — как если бы попытка уже завершилась с ней
         att.integrity = 0.5
     _run(api, h, aid)
     async with session_scope(factory) as s:
@@ -361,7 +361,7 @@ def test_band_position_matches_service():
             assert grading.band_position(g, th, CFG) == pytest.approx(svc._band_position(g, th))
 
 
-# --- E32-4a: экспресс-режим (ADR-025 п.7) -----------------------------------------------------
+# --- экспресс-режим -----------------------------------------------------
 
 
 def _start_express(api, h, grade="middle"):
@@ -454,7 +454,7 @@ async def test_express_disabled_is_422():
 async def test_demo_mode_skips_cooldown_for_demo_accounts_only(
     api, factory, taxonomy_loaded, fake_bank
 ):
-    """E35-8: в DEMO_MODE кулдаун не блокирует `*@demo.fsp.test`, обычного кандидата — блокирует."""
+    """В DEMO_MODE кулдаун не блокирует `*@demo.fsp.test`, обычного кандидата — блокирует."""
     api.app.state.settings.demo_mode = True
     demo = register(api, email=f"boris-{uuid.uuid4().hex[:6]}@demo.fsp.test")
     plain = register(api)

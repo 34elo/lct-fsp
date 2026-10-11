@@ -1,8 +1,12 @@
-"""Нагрузочные сценарии (E29-2): работодатели ищут и смотрят подборки, кандидаты — профиль и тест.
+"""Нагрузочные сценарии: работодатели ищут и смотрят подборки, кандидаты — профиль и тест.
 
 Запуск: `make load` (стек поднят, `make seed` выполнен). Аккаунты — демо-витрина
-(`tools/seed/config.yaml`): hr{NN}@demo.fsp.test и cand{NNNN}@demo.fsp.test, пароль демо.
-Имена запросов `search` и `matches` проверяются порогами в `tools/load/report.py`.
+(`tools/seed/config.yaml`): hr02…hr25@demo.fsp.test и cand{NNNN}@demo.fsp.test, пароль демо.
+Имена запросов `search` и `matches` (подбор под вакансию) проверяются порогами в
+`tools/load/report.py`.
+
+Вход ограничен 10 запросами в минуту с одного IP, поэтому пользователей нужно поднимать не быстрее
+~9 в минуту: `--spawn-rate 0.15` (50 пользователей за ~5.5 минут), общая длительность от 8 минут.
 """
 
 from __future__ import annotations
@@ -14,7 +18,7 @@ import random
 from locust import HttpUser, between, task
 
 PASSWORD = os.environ.get("DEMO_PASSWORD", "demo-pass-1234")
-EMPLOYERS = int(os.environ.get("LOAD_EMPLOYERS", "20"))  # hr01..hrNN
+EMPLOYERS = int(os.environ.get("LOAD_EMPLOYERS", "20"))  # hr02..hr(N+1); hr01 — герой olga
 CANDIDATES = int(os.environ.get("LOAD_CANDIDATES", "100"))  # cand0001..cand<N>
 _counter = itertools.count()
 
@@ -51,7 +55,7 @@ class Employer(_Base):
     weight = 3
 
     def on_start(self) -> None:
-        n = next(_counter) % EMPLOYERS + 1
+        n = next(_counter) % EMPLOYERS + 2
         self.email = f"hr{n:02d}@demo.fsp.test"
         self.vacancy_ids: list[str] = []
         super().on_start()
@@ -74,7 +78,11 @@ class Employer(_Base):
     def matches(self) -> None:
         if self.vacancy_ids:
             vid = random.choice(self.vacancy_ids)
-            self.client.get(f"/api/v1/vacancies/{vid}/matches", name="matches")
+            self.client.post(
+                "/api/v1/search/candidates",
+                json={"filters": {}, "sort": "match", "vacancy_id": vid},
+                name="matches",
+            )
 
 
 class Candidate(_Base):

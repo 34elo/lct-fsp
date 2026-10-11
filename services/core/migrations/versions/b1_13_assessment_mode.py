@@ -1,4 +1,4 @@
-"""attempts, grades: режим теста `mode` — standard | express (ADR-025 п.7, E32-4a).
+"""attempts, grades: режим теста `mode` — standard | express.
 
 Revision ID: b1_13
 Revises: b1_12

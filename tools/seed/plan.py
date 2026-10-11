@@ -1,4 +1,4 @@
-"""План демо-витрины (evaluation.md §4): чистая детерминированная функция от SEED.
+"""План демо-витрины: чистая детерминированная функция от SEED.
 
 Здесь нет ни БД, ни сети: `build_plan()` возвращает JSON-совместимый словарь, из которого
 `fspdata.py` собирает данные fsp-mock, а `loader.py` наполняет core через его сервисные слои.
@@ -843,7 +843,7 @@ def _analytics_plan(
     candidates: list[dict[str, Any]],
     companies: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
-    """Бэкфилл событий за N дней (metrics.md §2): регистрации, резюме, привязки ФСП."""
+    """Бэкфилл событий за N дней: регистрации, резюме, привязки ФСП."""
     days = int(cfg["counts"]["analytics_days"])
     out = []
     pool = [c for c in candidates if not c["hero"]]

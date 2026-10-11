@@ -91,7 +91,7 @@ const mkOffer = (id: string, status: string, extra: Record<string, unknown> = {}
   candidate: { ...card, pseudonym: `Backend #${id}` }, ...extra,
 });
 
-test("E38-13: воронка, таблица предложений, последняя переписка и отклики", async () => {
+test("воронка, таблица предложений, последняя переписка и отклики", async () => {
   const list = [
     mkOffer("1", "interest", { interest_at: "2026-10-02T10:00:00Z" }),
     mkOffer("2", "interest_opened", { interest_at: "2026-10-02T10:00:00Z", interest_opened_at: "2026-10-03T10:00:00Z" }),
@@ -117,7 +117,7 @@ test("E38-13: воронка, таблица предложений, после�
   expect(within(resp).getByRole("link", { name: "Все отклики" })).toHaveAttribute("href", "/employer/offers?show=responses");
 });
 
-test("E38-13: пустой список и ошибка загрузки", async () => {
+test("пустой список и ошибка загрузки", async () => {
   const f = globalThis.fetch as unknown as ReturnType<typeof vi.fn>;
   const base = f.getMockImplementation()!;
   f.mockImplementation(async (url: string, init?: RequestInit) => (url.endsWith("/offers") && init?.method !== "POST" ? res(200, []) : base(url, init)));
@@ -155,7 +155,7 @@ function stubCandidate(list: unknown[]) {
   });
 }
 
-test("M2: приглашение без вакансии показывается по названию, плашка «ниже ожиданий», сводка прошлых", async () => {
+test("приглашение без вакансии показывается по названию, плашка «ниже ожиданий», сводка прошлых", async () => {
   stubCandidate([
     candOffer("o1", "sent", { below_candidate_min: true }),
     candOffer("o2", "sent", { vacancy: null, title: "Рекрутинг ML-команды", initiator: "employer" }),
@@ -168,7 +168,7 @@ test("M2: приглашение без вакансии показываетс�
   expect(screen.getByText(/принято 0 · отклонено 1 · истёк 1/)).toBeInTheDocument();
 });
 
-test("M2: отказ одним тапом по причине в нижнем листе", async () => {
+test("отказ одним тапом по причине в нижнем листе", async () => {
   stubCandidate([candOffer("o1", "sent")]);
   mount("/me/offers/o1");
   fireEvent.click(await screen.findByRole("button", { name: "Не подходит" }));
@@ -177,7 +177,7 @@ test("M2: отказ одним тапом по причине в нижнем �
   expect(calls[0].body).toEqual({ reason: "wrong_stack", comment: null });
 });
 
-test("M2: детали приглашения без вакансии открываются", async () => {
+test("детали приглашения без вакансии открываются", async () => {
   stubCandidate([candOffer("o2", "accepted", { vacancy: null, title: "Рекрутинг ML-команды", description: "Нужен тимлид" })]);
   mount("/me/offers/o2");
   expect(await screen.findByRole("heading", { name: "Приглашение принят" })).toBeInTheDocument();
@@ -185,7 +185,7 @@ test("M2: детали приглашения без вакансии откры
   expect(screen.getByText(/Рекрутинг ML-команды/)).toBeInTheDocument();
 });
 
-test("E32-7: кандидат отзывает доступ к контактам через подтверждение", async () => {
+test("кандидат отзывает доступ к контактам через подтверждение", async () => {
   stubCandidate([candOffer("o2", "accepted")]);
   const f = globalThis.fetch as unknown as ReturnType<typeof vi.fn>;
   const base = f.getMockImplementation()!;
@@ -203,7 +203,7 @@ test("E32-7: кандидат отзывает доступ к контакта�
   expect(calls[0].url).toMatch(/\/offers\/o2\/contacts\/revoke$/);
 });
 
-test("E32-7: после отзыва кнопки нет, показана пометка; чата нет (E39-26)", async () => {
+test("после отзыва кнопки нет, показана пометка; чата нет", async () => {
   stubCandidate([candOffer("o2", "accepted", { contacts_revoked_at: "2026-10-05T10:00:00Z" })]);
   mount("/me/offers/o2");
   expect(await screen.findByText(/Вы отозвали доступ к контактам/)).toBeInTheDocument();
@@ -212,7 +212,7 @@ test("E32-7: после отзыва кнопки нет, показана по�
   expect(screen.queryByRole("region", { name: "Переписка" })).toBeNull();
 });
 
-test("E38-14: список приглашений — карточки v2, «Принять» из списка, прошлые со статусом, отклики не показываются", async () => {
+test("список приглашений — карточки v2, «Принять» из списка, прошлые со статусом, отклики не показываются", async () => {
   stubCandidate([
     candOffer("o1", "sent", { why_you: { factors: [{ code: "skills", text: "Python подтверждён тестом", weight: 1 }], unconfirmed: [] } }),
     candOffer("o2", "expired"),
@@ -238,7 +238,7 @@ test("E38-14: список приглашений — карточки v2, «П�
   expect(calls[0].url).toMatch(/\/offers\/o1\/accept$/);
 });
 
-test("E38-14: «Отклонить» в списке — причина одним тапом", async () => {
+test("«Отклонить» в списке — причина одним тапом", async () => {
   stubCandidate([candOffer("o1", "sent")]);
   mount("/me/offers");
   fireEvent.click(await screen.findByRole("button", { name: "Отклонить" }));
@@ -247,7 +247,7 @@ test("E38-14: «Отклонить» в списке — причина одни
   expect(calls[0].body).toEqual({ reason: "low_salary", comment: null });
 });
 
-test("E38-14: пустой список и ошибка загрузки приглашений", async () => {
+test("пустой список и ошибка загрузки приглашений", async () => {
   stubCandidate([]);
   const first = mount("/me/offers");
   expect(await screen.findByText("Пока никто не пригласил")).toBeInTheDocument();
@@ -261,7 +261,7 @@ test("E38-14: пустой список и ошибка загрузки при�
   expect(screen.getByRole("button", { name: "Повторить" })).toBeInTheDocument();
 });
 
-test("E39-24: приглашение подписано HR (имя, должность, аватар), «О компании» в Markdown", async () => {
+test("приглашение подписано HR (имя, должность, аватар), «О компании» в Markdown", async () => {
   stubCandidate([
     candOffer("o1", "sent", {
       initiator: "employer",
@@ -278,14 +278,14 @@ test("E39-24: приглашение подписано HR (имя, должно
   expect(within(about).getByText("платформы").tagName).toBe("STRONG");
 });
 
-test("E39-24: без подписи блока отправителя нет", async () => {
+test("без подписи блока отправителя нет", async () => {
   stubCandidate([candOffer("o1", "sent", { initiator: "employer", sender: null })]);
   mount("/me/offers/o1");
   expect(await screen.findByText("Северный код", { exact: false })).toBeInTheDocument();
   expect(screen.queryByTestId("offer-sender")).toBeNull();
 });
 
-test("E41-4: «Принять» уходит без текста; поля ответа и кнопок переписки нет", async () => {
+test("«Принять» уходит без текста; поля ответа и кнопок переписки нет", async () => {
   stubCandidate([candOffer("o1", "sent", { message: "Рады пригласить", task: { title: "Мини-кейс", minutes: 15, deadline_at: "2026-10-12T10:00:00Z" } })]);
   const f = globalThis.fetch as unknown as ReturnType<typeof vi.fn>;
   const base = f.getMockImplementation()!;
@@ -306,7 +306,7 @@ test("E41-4: «Принять» уходит без текста; поля от�
   expect(calls[0].body).toBeNull();
 });
 
-test("E39-26: после принятия кандидат видит контакты компании и кнопку «Написать в Telegram»", async () => {
+test("после принятия кандидат видит контакты компании и кнопку «Написать в Telegram»", async () => {
   stubCandidate([candOffer("o1", "accepted", { company_contacts: { name: "Северный код", email: "hr@north.example", phone: "+7 900 000-00-00", telegram: "@north_hr" } })]);
   mount("/me/offers/o1");
   const box = await screen.findByTestId("company-contacts");
@@ -315,7 +315,7 @@ test("E39-26: после принятия кандидат видит конта
   expect(within(box).getByRole("link", { name: "Написать в Telegram" })).toHaveAttribute("href", "https://t.me/north_hr");
 });
 
-test("E41-4: работодатель видит контакты кандидата после принятия, ответа кандидата нет", async () => {
+test("работодатель видит контакты кандидата после принятия, ответа кандидата нет", async () => {
   const f = globalThis.fetch as unknown as ReturnType<typeof vi.fn>;
   const base = f.getMockImplementation()!;
   const offer = {

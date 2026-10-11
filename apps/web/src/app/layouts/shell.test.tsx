@@ -52,7 +52,7 @@ test("шапка: вкладки не раздувают страницу на 8
   expect(within(tabs).getAllByRole("link")[0].className).toContain("shrink-0");
 });
 
-test("Page: три ширины сетки и общий ритм полей (E39-4)", async () => {
+test("Page: три ширины сетки и общий ритм полей", async () => {
   const { Page } = await import("./PageContainer");
   const { PAGE } = await import("@/shared/lib/page");
   render(
@@ -68,7 +68,7 @@ test("Page: три ширины сетки и общий ритм полей (E3
   for (const w of Object.values(PAGE)) expect(w).toContain("px-4 py-4 md:px-6 md:py-6");
 });
 
-test("второй строки вкладок нет ни у одной роли: пункты меню плоские (E39-25)", () => {
+test("второй строки вкладок нет ни у одной роли: пункты меню плоские", () => {
   for (const nav of Object.values(NAV)) for (const n of nav) expect(n, n.label).not.toHaveProperty("tabs");
 });
 

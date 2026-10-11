@@ -156,9 +156,6 @@ importers:
       jsdom:
         specifier: ^25.0.0
         version: 25.0.1
-      playwright:
-        specifier: ^1.48.0
-        version: 1.63.0
       react:
         specifier: ^19.0.0
         version: 19.3.0

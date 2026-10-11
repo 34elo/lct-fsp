@@ -1,4 +1,4 @@
-/** Access-токен живёт только в памяти (frontend.md §3). */
+/** Access-токен живёт только в памяти. */
 let accessToken: string | null = null;
 const listeners = new Set<() => void>();
 

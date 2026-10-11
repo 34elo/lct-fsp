@@ -15,7 +15,7 @@ import { ApiError } from "@/api/mutator";
 import { KINDS } from "./model";
 import { T } from "./text";
 
-/** E43-9: заказ LLM-заданий из «Допуска заданий» — кнопка с формой и список последних заказов. */
+/** Заказ LLM-заданий из «Допуска заданий» — кнопка с формой и список последних заказов. */
 
 const sel = (s: string) => `gen-${s}`;
 const ACTIVE = new Set(["queued", "running"]);

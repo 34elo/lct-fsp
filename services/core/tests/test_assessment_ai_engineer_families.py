@@ -1,4 +1,4 @@
-"""Семейства для AI Engineer (ADR-025 п.5, витрина): LLM, RAG, промпты, ИИ в продукте (§4)."""
+"""Семейства для AI Engineer (витрина): LLM, RAG, промпты, ИИ в продукте."""
 
 import uuid
 from pathlib import Path

@@ -6,7 +6,7 @@
  */
 
 /**
- * Подсказка профессии `GET /taxonomy/professions/suggest` (E39-3).
+ * Подсказка профессии `GET /taxonomy/professions/suggest`.
  */
 export interface ProfessionSuggestion {
   slug: string;

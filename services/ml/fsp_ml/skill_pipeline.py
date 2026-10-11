@@ -1,8 +1,8 @@
-"""Конвейер сопоставления навыков (skills.md §3): модерация → «навык ли это» → кандидаты → судья.
+"""Конвейер сопоставления навыков: модерация → «навык ли это» → кандидаты → судья.
 
 Быстрый путь (синонимы, нечёткий поиск) — `TaxonomyIndex.resolve`. Сюда попадает то, что он не
 нашёл. Ничего не создаёт: возвращает решение (`SkillResolveItem`), вершины и синонимы применяет
-core (E16-5).
+core.
 
 Без LLM (`ML_FAKE=true` или `LLM_ENABLED=false`) работают правила: серая зона классификатора
 остаётся на правилах, а судья — `rule_judge`. Правиловый судья уверенность выше 0.85 не ставит,
@@ -42,7 +42,7 @@ PROMPTS_DIR = Path(__file__).resolve().parents[1] / "prompts"
 JUDGE_PROMPT_VERSION = "v1"
 KIND_PROMPT_VERSION = "v1"
 
-# Пороги skills.md §3.2–3.3. Числа вынесены сюда как значения по умолчанию.
+# Пороги конвейера навыков. Числа вынесены сюда как значения по умолчанию.
 CANDIDATES_TOP = 10
 RERANK_GATE = 0.3  # ниже — судью не зовём
 AUTO_SYNONYM_CONF = 0.9
@@ -337,7 +337,7 @@ class SkillPipeline:
             texts = self._texts(s, index)
             lex = self.reranker.score(norm, texts)
             sims[s] = (lex, lex)
-        if self.embedder is not None and sims:
+        if self.embedder is not None and getattr(self.embedder, "ready", True) and sims:
             order = sorted(sims)
             docs = [" ".join(self._texts(s, index)) for s in order]
             vecs = await self._embed([norm, *docs], index)
@@ -440,7 +440,7 @@ def _decide(
     new_slug: str,
     found: list[tuple[Candidate, Judgement]],
 ) -> SkillResolveItem:
-    """Таблица решений skills.md §3.3."""
+    """Таблица решений судьи по типу связи."""
     base: dict[str, Any] = {"raw": raw, "norm": norm, "kind": kind}
 
     def new(rel: SkillRelationGuess | None = None, reason: str | None = None) -> SkillResolveItem:

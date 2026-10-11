@@ -30,7 +30,7 @@ export function ThemeToggle() {
 
 const THEME_HINT: Record<ThemeMode, string> = { light: "светлая", dark: "тёмная" };
 
-/** Меню аватара v2 (`.menu`): тема и выход. «Настройки» — у всех ролей (`/settings`, E39-8). */
+/** Меню аватара v2 (`.menu`): тема и выход. «Настройки» — у всех ролей (`/settings`). */
 function UserMenu() {
   const { me, status, logout } = useAuth();
   const { mode, setMode } = useTheme();
@@ -58,7 +58,7 @@ const link = ({ href, className, current, children }: ShellLinkProps) => (
   </Link>
 );
 
-/** Шапка v2 (`.hd`, docs/design/v2): знак ФСП, 4 пункта со счётчиками, справа аватар с меню. */
+/** Шапка: знак ФСП, 4 пункта со счётчиками, справа аватар с меню. */
 export function AppHeader({
   nav,
   counts = {},

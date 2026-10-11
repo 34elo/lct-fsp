@@ -1,4 +1,4 @@
-"""Командные сигналы L/T/R/G и K_soft: примеры из skills.md §8."""
+"""Командные сигналы L/T/R/G и K_soft: примеры расчёта."""
 
 import uuid
 from datetime import UTC, date, datetime

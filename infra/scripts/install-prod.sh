@@ -1,6 +1,6 @@
 #!/bin/sh
 # Таймер продового стенда (systemd --user): fsp-backup — бэкап каждую ночь в 03:30. Мониторинг и алерты —
-# бот hostwatch (docs/deploy.md «Мониторинг»). Идемпотентно: deploy.sh вызывает при каждом деплое прода.
+# бот hostwatch. Идемпотентно: deploy.sh вызывает при каждом деплое прода.
 #   sh infra/scripts/install-prod.sh   (из каталога стенда)
 set -eu
 STAND="$(pwd)"

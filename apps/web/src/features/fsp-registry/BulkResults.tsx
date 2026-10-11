@@ -26,7 +26,7 @@ function downloadTemplate() {
   URL.revokeObjectURL(url);
 }
 
-/** «Добавить списком» (E43-4): CSV или вставка → превью с построчной проверкой → запись. */
+/** «Добавить списком»: CSV или вставка → превью с построчной проверкой → запись. */
 export function BulkResults({ onImported }: { onImported: () => Promise<unknown> | void }) {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");

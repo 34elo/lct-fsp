@@ -1,4 +1,4 @@
-"""Параметры теста из `data/scoring.yaml`, раздел `assessment` (assessment.md §5–7)."""
+"""Параметры теста из `data/scoring.yaml`, раздел `assessment`."""
 
 from __future__ import annotations
 
@@ -17,31 +17,31 @@ class AssessmentConfig:
     b_by_level: dict[int, float]
     min_items: int
     max_items: int
-    # EAP (§5): сетка θ и априорное N(prior_mean, prior_sd²)
+    # EAP: сетка θ и априорное N(prior_mean, prior_sd²)
     grid_min: float = -4.0
     grid_max: float = 4.0
     grid_step: float = 0.1
     prior_mean: float = 0.0
     prior_sd: float = 1.0
-    # Калибровка (§7): K = max(k_min, k0/√(1 + n))
+    # Калибровка: K = max(k_min, k0/√(1 + n))
     k0: float = 0.5
     k_min: float = 0.05
-    # SPRT (§5): θ₀/θ₁ = cut ∓ sprt_delta, ошибки α и β
+    # SPRT: θ₀/θ₁ = cut ∓ sprt_delta, ошибки α и β
     sprt_delta: float = 0.7
     sprt_alpha: float = 0.1
     sprt_beta: float = 0.1
-    # Бонусный этап (§5)
+    # Бонусный этап
     bonus_max_main_items: int = 10
     bonus_margin: float = 0.0
     bonus_max_items: int = 10
     bonus_enabled: bool = True
-    # Экспресс-режим для жюри (ADR-025 п.7, E32-4a): короче, грубее, без бонуса и пилотов
+    # Экспресс-режим для жюри: короче, грубее, без бонуса и пилотов
     express_enabled: bool = True
     express_min_items: int = 6
     express_max_items: int = 8
     express_alpha: float = 0.15
     express_beta: float = 0.15
-    # Выбор задания (§6): доли типов навыков по грейду
+    # Выбор задания: доли типов навыков по грейду
     plan_shares: dict[str, dict[str, float]] = field(default_factory=dict)
     top_k: int = 3
     ai_penalty: float = 0.3
@@ -50,18 +50,18 @@ class AssessmentConfig:
     exposure_days: int = 7
     exposure_max: float = 0.3
     exposure_min_tests: int = 20
-    # Пилотные слоты (§6)
+    # Пилотные слоты
     pilot_slots: int = 2
     pilot_after: int = 3
-    # Грейды (§5) и честность (§8)
+    # Грейды и честность
     validity_days: int = 365
     change_cooldown_days: int = 90
     retry_days: int = 30
-    invite_days: int = 30  # приглашение бонусного этапа на тест следующего грейда (ADR-025 п.2)
+    invite_days: int = 30  # приглашение бонусного этапа на тест следующего грейда
     integrity_threshold: float = 0.6
     unconfirmed_cap: float = 0.59
     evidence_max_strength: float = 0.75
-    # Жизненный цикл семейства (§7): пороги допуска pilot → active и тревоги → quarantine
+    # Жизненный цикл семейства: пороги допуска pilot → active и тревоги → quarantine
     admit_min_n: int = 30
     admit_min_rpb: float = 0.2
     admit_max_abs_b: float = 3.0

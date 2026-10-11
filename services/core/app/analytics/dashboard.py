@@ -1,4 +1,4 @@
-"""Дашборд ФСП (E18-3, metrics.md §2.5 и §7): воронка и конверсия навигатор → соревнование.
+"""Дашборд ФСП: воронка и конверсия навигатор → соревнование.
 
 Считаем по `analytics_events` на лету (десятки тысяч строк; без материализованных представлений,
 так одинаково работает и в SQLite тестов). Только агрегаты по псевдонимам: ячейки меньше
@@ -44,7 +44,7 @@ _EVENTS = {
     "uplift_shown", "competition_clicked", "interest_shown",
 }  # fmt: skip
 
-# Счётчики «Аналитики» (E41-15): id, подпись, предикат. Считаем события, а не людей.
+# Счётчики «Аналитики»: id, подпись, предикат. Считаем события, а не людей.
 COUNTERS: list[tuple[str, str, Pred]] = [
     ("registrations", "Регистрации", lambda e, p: e == "signup_completed"),
     ("tests", "Пройденные тесты", lambda e, p: e == "test_completed"),
@@ -99,7 +99,7 @@ class DashboardOut(BaseModel):
     funnel: list[Stage]
     fsp_share: Ratio  # доля зарегистрированных с привязанным ФСП
     navigator_to_competition: Ratio  # кликнувшие на соревнование / увидевшие подсказку
-    counters: list[Counter] = []  # итоги окна по событиям (E41-15)
+    counters: list[Counter] = []  # итоги окна по событиям
     daily: list[DayPoint] = []  # те же счётчики по дням, от старого к новому
 
 
@@ -120,7 +120,7 @@ def _ratio(n: int, d: int) -> Ratio:
 async def build(
     session: AsyncSession, days: int = DEFAULT_DAYS, *, exclude_actors: Collection[str] = ()
 ) -> DashboardOut:
-    """Воронка за `days` дней; `exclude_actors` — псевдонимы демо-аккаунтов (E40-1)."""
+    """Воронка за `days` дней; `exclude_actors` — псевдонимы демо-аккаунтов."""
     days = max(1, min(days, MAX_DAYS))
     since = datetime.now(UTC) - timedelta(days=days)
     rows = (

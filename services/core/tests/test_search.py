@@ -1,4 +1,4 @@
-"""Поиск кандидатов: фильтры, анонимность DTO, курсор, кеш, права (api.md §2.5, E7-3)."""
+"""Поиск кандидатов: фильтры, анонимность DTO, курсор, кеш, права."""
 
 import json
 import sqlite3
@@ -28,7 +28,7 @@ TEST_GRADE = {"junior": "junior", "middle": "middle", "senior": "senior", "lead"
 
 
 def _grade(con, uid, profession, grade, *, valid_until="2999-01-01 00:00:00"):
-    """Действующий грейд из теста (таблица `grades`, blocks.md §4.2) — без него кандидат скрыт."""
+    """Действующий грейд из теста (таблица `grades`) — без него кандидат скрыт."""
     con.execute(
         "insert into grades (candidate_id, profession, grade, theta, band_position, theta_by_type,"
         " integrity, needs_confirmation, low_confidence, source, confirmed_at, valid_until,"
@@ -199,7 +199,7 @@ def test_stoplist_hides_candidate_from_that_company(c, market):
 
 
 def test_candidate_without_profile_publication_is_hidden_and_revoke_hides(c, market):
-    """E20-11: без согласия `profile_publication` кандидата нет в выдаче; отзыв скрывает."""
+    """Без согласия `profile_publication` кандидата нет в выдаче; отзыв скрывает."""
     uid = _cand(c, 25, [("python", 0.5, 2, ["github"])])
     assert "pid0025" in _pids(_search(c, market, limit=100))
     with sqlite3.connect(c.db) as con:
@@ -214,7 +214,7 @@ def test_candidate_without_profile_publication_is_hidden_and_revoke_hides(c, mar
 
 
 def test_candidate_without_test_grade_is_hidden(c, market):
-    """E23-1 (ADR-018): резюме без теста не даёт категории — в выдаче и карточке кандидата нет;
+    """Резюме без теста не даёт категории — в выдаче и карточке кандидата нет;
     истёкший грейд тоже скрывает."""
     _cand(c, 26, [("python", 0.9, 4, ["resume"])], tested=False)
     assert "pid0026" not in _pids(_search(c, market, limit=100))
@@ -231,7 +231,7 @@ def test_candidate_without_test_grade_is_hidden(c, market):
 
 
 def test_category_filter_and_card_fields(c, market):
-    """E23-1: фильтр по категории (профессия × грейд из теста), поля `categories` и
+    """Фильтр по категории (профессия × грейд из теста), поля `categories` и
     `claimed_vs_confirmed` в карточке."""
     uid = _cand(c, 40, [("python", 0.6, 3, ["test"])], grade="middle")
     with sqlite3.connect(c.db) as con:
@@ -372,11 +372,11 @@ def test_speed_on_500_candidates(c, market):
     t = time.perf_counter()
     r = _search(c, market, sort="trust", filters={"skills_must": [{"slug": "python"}]})
     assert r.status_code == 200 and r.json()["total"] >= 500
-    # бюджет — p95 поиска ≤ 1 с (metrics.md); 0.3 с падало на общих раннерах CI (0.34 с)
+    # бюджет — p95 поиска ≤ 1 с; 0.3 с падало на общих раннерах CI (0.34 с)
     assert time.perf_counter() - t < 1.0
 
 
-# --- E7-4: карточка и журнал просмотров -------------------------------------------------
+# --- карточка и журнал просмотров -------------------------------------------------
 
 
 def _card(c, h, pid, **q):
@@ -435,7 +435,7 @@ def test_card_shows_company_only_when_allowed(c, market):
 
 
 def test_card_applies_candidate_privacy_settings(c, market):
-    """E36-4: умолчания (компании, регион видны) и переключатели region/companies/fsp."""
+    """Умолчания (компании, регион видны) и переключатели region/companies/fsp."""
     uid = _cand(c, 42, [("python", 0.8, 3, ["github"])], city="Казань")
     with sqlite3.connect(c.db) as con:
         con.execute(
@@ -563,7 +563,7 @@ def test_similarity_formula():
 
 
 def test_strength_and_rank_in_category(c, market):
-    """E23-2: в категории порядок по rank, у карточки сила и топ-3 слагаемых; без ФСП — F = 0."""
+    """В категории порядок по rank, у карточки сила и топ-3 слагаемых; без ФСП — F = 0."""
     a = _cand(c, 50, [("python", 0.8, 3, ["test"])], grade="middle")
     b = _cand(c, 51, [("python", 0.8, 3, ["test", "fsp"])], grade="middle")
     d = _cand(c, 52, [("python", 0.8, 3, ["test"])], grade="middle")
@@ -587,7 +587,7 @@ def test_strength_and_rank_in_category(c, market):
 
 
 def test_candidate_interest_boost_only_for_marked_company(c):
-    """E33-6: отметка кандидата поднимает его только в выдаче этой компании."""
+    """Отметка кандидата поднимает его только в выдаче этой компании."""
     a = _employer(c, "a@x.ru", name="Acme Labs")
     b = _employer(c, "b@x.ru", name="Beta Labs")
     sk = [("python", 0.8, 3, ["github"])]
@@ -614,7 +614,7 @@ def test_candidate_interest_boost_only_for_marked_company(c):
 
 
 def test_grade_filter_narrows_by_test_grade_of_category(c, market):
-    """E43-2: грейд в фильтре тестовый и относится к категориям, а не к грейду анкеты."""
+    """Грейд в фильтре тестовый и относится к категориям, а не к грейду анкеты."""
     uid = _cand(c, 40, [("python", 0.6, 3, ["test"])], grade="intern", tested=False)
     with sqlite3.connect(c.db) as con:
         _grade(con, uid, "ml", "senior")
@@ -631,7 +631,7 @@ def test_grade_filter_narrows_by_test_grade_of_category(c, market):
 
 
 def test_two_directions_candidate_found_by_each_profession(c, market):
-    """E43-6: два завершённых теста — кандидат в выдаче по каждой профессии, одна карточка."""
+    """Два завершённых теста — кандидат в выдаче по каждой профессии, одна карточка."""
     uid = _cand(c, 50, [("python", 0.7, 3, ["test"])], primary_role="qa", grade="junior")
     with sqlite3.connect(c.db) as con:
         _grade(con, uid, "ml", "middle")

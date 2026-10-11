@@ -9,7 +9,7 @@ import { AdminPageHeader } from "@/features/admin/PageHeader";
 
 type Tab = "professions" | "cards";
 
-/** Админ: профессии теста и карточки навыков (E13-4a). */
+/** Админ: профессии теста и карточки навыков. */
 export default function AdminTaxonomy() {
   const [tab, setTab] = useState<Tab>("professions");
   return (

@@ -59,7 +59,7 @@ export interface ChoiceOption<V extends string> {
 }
 
 /**
- * Крупные карточки выбора (E39-6): радио-группа, выделение плавно «перетекает» к выбранной карточке
+ * Крупные карточки выбора: радио-группа, выделение плавно «перетекает» к выбранной карточке
  * (одна подложка двигается `transform`, без анимации при `prefers-reduced-motion`). Стрелки — как у радио.
  * `lockedValue` — выбранное значение в кулдауне: подложка контуром.
  */
@@ -137,7 +137,7 @@ export function ChoiceCards<V extends string>({
   );
 }
 
-/** Шаги потока «направление и навыки → грейд и ожидания → тест» (E39-6). */
+/** Шаги потока «направление и навыки → грейд и ожидания → тест». */
 export function FlowSteps({ current, steps, label }: { current: number; steps: readonly string[]; label: string }) {
   return (
     <ol aria-label={label} className="grid grid-cols-3 gap-2" data-testid="flow-steps">

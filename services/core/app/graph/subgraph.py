@@ -1,4 +1,4 @@
-"""Подграф доказательств кандидата (graph.md §6): `GET /candidates/me/graph` и анонимный вариант.
+"""Подграф доказательств кандидата: `GET /candidates/me/graph` и анонимный вариант.
 
 Собирается из проекций (`candidate_skills`, `evidence`, `skill_relations`, `fsp_competitions`),
 граф не обходится глубже одного шага. Анонимная версия: нет URL репозиториев, названий компаний
@@ -54,7 +54,7 @@ class Node(BaseModel):
     verified: bool | None = None
     derived_from: str | None = None
     ghost: bool | None = None
-    # тип навыка (assessment.md §2: fundamental | hard | thinking | business | soft | experience)
+    # тип навыка (fundamental | hard | thinking | business | soft | experience)
     skill_type: str | None = None
 
 

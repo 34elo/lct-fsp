@@ -1,4 +1,4 @@
-"""Обработчики core.ingest: результат разбора резюме от ml (messaging.md §3)."""
+"""Обработчики core.ingest: результат разбора резюме от ml."""
 
 from __future__ import annotations
 
@@ -37,7 +37,7 @@ def register(
         )
         if resume is None or ui_publish is None:
             return
-        # UI: «вот что я понял» или причина отказа (api.md §4)
+        # UI: «вот что я понял» или причина отказа
         event = "resume.failed" if failed else "resume.parsed"
         msg = new_ui_message(
             res.candidate_id, event, ResumeStatus(resume_id=res.resume_id, reason=res.error)

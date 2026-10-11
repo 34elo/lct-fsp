@@ -1,4 +1,4 @@
-"""Применение решений графа навыков (skills.md §3.3, §6): E16-5.
+"""Применение решений графа навыков.
 
 - `apply_decisions` — решения конвейера ml (`SkillResolveItem`): новые вершины `provisional`,
   синонимы, связи, стоп-лист; журнал `skill_mentions` пишется тут же;
@@ -44,7 +44,7 @@ from app.taxonomy.models import (
 )
 from app.taxonomy.service import KEY, build_snapshot, record_mention, snapshot_hash
 
-PARENT_WEIGHT = 0.6  # ребро «часть» по умолчанию (skills.md §3.3)
+PARENT_WEIGHT = 0.6  # ребро «часть» по умолчанию
 RELATED_FACTOR = 0.8  # вес «смежен» = оценка судьи × 0.8
 _LIVE = ("active", "provisional")
 _SKILL_TYPE = {"hard": "hard", "soft": "soft", "domain": "business"}
@@ -417,7 +417,7 @@ class _Repoint:
     resolve: Resolve | None = None  # при дубле: что обновить у существующей строки
 
 
-# Что переносится при слиянии. Дубль по ключу схлопывается: остаётся сильнейшее (skills.md §6).
+# Что переносится при слиянии. Дубль по ключу схлопывается: остаётся сильнейшее.
 _REPOINT: tuple[_Repoint, ...] = (
     _Repoint("skill_relations", ("skill_a", "skill_b"), ("kind",), _max_weight),
     _Repoint("role_skills", ("skill_id",), ("role",), _max_weight),
@@ -556,7 +556,7 @@ async def _forbidden_by_distinct(session: AsyncSession, frm: Skill, into: Skill)
 async def merge(
     session: AsyncSession, from_slug: str, into_slug: str, *, actor: str = "pipeline"
 ) -> SkillMerge:
-    """`from` → `into` (skills.md §6). Запрещено для пары «точно разные» (и через слитые)."""
+    """`from` → `into`. Запрещено для пары «точно разные» (и через слитые)."""
     frm, into = await _by_slug(session, from_slug), await _by_slug(session, into_slug)
     if frm.id == into.id:
         raise ProblemError(422, "merge_same_skill", "Нельзя слить навык с самим собой")
