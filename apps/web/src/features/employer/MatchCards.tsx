@@ -76,15 +76,15 @@ export function CandidateTile({ card, profession, shortlist }: { card: Candidate
             <GradeTag claimed={!d.confirmed}>{d.grade}</GradeTag>
           </span>
         </div>
-        {d.salary && <span className="num shrink-0 text-15 font-semibold whitespace-nowrap">{d.salary}</span>}
       </div>
       {d.skills.length > 0 && (
-        <Chips>
+        <Chips className="min-w-0 [&>*]:max-w-full [&>*]:truncate">
           {d.skills.map((s) => (
             <SkillTag key={s.name} name={s.name} level={s.level} state={s.claimed ? "claimed" : "confirmed"} />
           ))}
         </Chips>
       )}
+      {d.salary && <span className="num text-15 font-semibold">{d.salary}</span>}
       {shortlist.enabled && (
         <Button
           variant={on ? "default" : "outline"}
@@ -105,7 +105,7 @@ export function CandidateTile({ card, profession, shortlist }: { card: Candidate
 /** Сетка карточек. */
 export function CandidateGrid({ items, profession, shortlist, label }: { items: CandidateCard[]; profession: (c: CandidateCard) => string; shortlist: ShortlistApi; label: string }) {
   return (
-    <ul aria-label={label} className="m-0 grid list-none gap-3 p-0 sm:grid-cols-2 2xl:grid-cols-3" data-testid="match-top">
+    <ul aria-label={label} className="m-0 grid list-none gap-3 p-0 grid-cols-[repeat(auto-fill,minmax(260px,1fr))]" data-testid="match-top">
       {items.map((c) => (
         <li key={c.pseudo_id} className="flex min-w-0">
           <CandidateTile card={c} profession={profession(c)} shortlist={shortlist} />
