@@ -217,6 +217,45 @@ def mention_in_quote(raw: str, quote_norm: str, aliases: list[str]) -> bool:
     return False
 
 
+_SENTENCE_END = re.compile(r"(?<=[.!?;])\s+")
+RECOVER_WINDOW = 2  # сегментов вокруг цитаты, где ищем название навыка в первую очередь
+
+
+def _segments(text: str) -> list[str]:
+    """Строки и предложения резюме (как в тексте): единицы для подстановки цитаты."""
+    out: list[str] = []
+    for line in text.splitlines():
+        out.extend(p.strip() for p in _SENTENCE_END.split(line) if p.strip())
+    return out
+
+
+def recover_quote(text: str, quote: str, raw: str, aliases: list[str]) -> str | None:
+    """Цитата есть в тексте, но без названия навыка: ищем название (и синонимы) рядом.
+
+    Сначала окно ±`RECOVER_WINDOW` сегментов вокруг цитаты, затем весь текст (ближайшие первыми).
+    Сравнение целыми словами (`mention_in_quote`), поэтому Java ≠ JavaScript, C ≠ C#. Возвращает
+    подстроку резюме со строкой-цитатой или None: навык без названия в тексте отбрасывается.
+    """
+    segs = _segments(text)
+    if not segs:
+        return None
+    segs_norm = [norm_text(s) for s in segs]
+    q = norm_text(quote)
+    centre = max(range(len(segs)), key=lambda i: fuzz.partial_ratio(q, segs_norm[i]))
+    order = sorted(range(len(segs)), key=lambda i: abs(i - centre))
+    near = [i for i in order if abs(i - centre) <= RECOVER_WINDOW]
+    far = [i for i in order if abs(i - centre) > RECOVER_WINDOW]
+    for i in (*near, *far):
+        if mention_in_quote(raw, segs_norm[i], aliases):
+            seg = segs[i]
+            if len(seg) > 400:  # длинная строка-перечень: окно вокруг названия
+                pos = max(seg.lower().find(raw.lower()), 0)
+                start = max(0, min(pos - 150, len(seg) - 400))
+                seg = seg[start : start + 400].strip()
+            return seg
+    return None
+
+
 def _aliases_by_slug(index: TaxonomyIndex | None) -> dict[str, list[str]]:
     out: dict[str, list[str]] = {}
     if index is not None:
@@ -335,9 +374,15 @@ def assemble(
             continue
         hit = index.resolve(SkillMention(raw=raw, context=s.quote)) if index else None
         slug = hit.skill_slug if hit else None
-        if not mention_in_quote(raw, norm_text(s.quote), aliases.get(slug or "", [])):
-            warnings.append(f"skill_not_in_quote:{raw}")
-            continue
+        quote = s.quote.strip()
+        slug_aliases = aliases.get(slug or "", [])
+        if not mention_in_quote(raw, norm_text(quote), slug_aliases):
+            # E44-2: название ищем рядом с цитатой, затем во всём тексте
+            found = recover_quote(text, quote, raw, slug_aliases)
+            if found is None or not quote_in_text(found, text_norm):
+                warnings.append(f"skill_not_in_quote:{raw}")
+                continue
+            quote = found
         if hit is None or slug is None:
             key = normalize(raw)
             if key not in seen_unknown:
@@ -351,7 +396,7 @@ def assemble(
             ResumeSkill(
                 raw=raw,
                 slug=slug,
-                quote=s.quote.strip(),
+                quote=quote,
                 method=hit.decision,
                 confidence=CONFIDENCE.get(hit.decision, 0.7),
             )
