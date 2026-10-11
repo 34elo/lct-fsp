@@ -19,7 +19,7 @@ import type { TeamSignal } from './teamSignal';
 import type { Visibility } from './visibility';
 
 /**
- * `CandidateProfile` (api.md §3). Пока без `code`, `completeness`.
+ * `CandidateProfile`. Пока без `code`, `completeness`.
  */
 export interface CandidateProfile {
   pseudonym: string;

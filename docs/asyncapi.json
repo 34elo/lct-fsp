@@ -3,7 +3,7 @@
   "info": {
     "title": "ФСП Карьера: события и команды",
     "version": "1",
-    "description": "Сгенерировано из packages/contracts (messaging.md)."
+    "description": "Сгенерировано из packages/contracts."
   },
   "defaultContentType": "application/json",
   "channels": {
@@ -4262,7 +4262,7 @@
         "type": "object"
       },
       "CoreJob": {
-        "description": "Cron-команды и фоновые задачи `core.jobs` (messaging.md §4).",
+        "description": "Cron-команды и фоновые задачи `core.jobs`.",
         "properties": {
           "candidate_id": {
             "anyOf": [
@@ -4492,7 +4492,7 @@
         "type": "object"
       },
       "FamilyOrderGenerated": {
-        "description": "`ml.families.generated` (E43-9): ответ генератора на заказ `ml.families.generate`.\n\n`specs` — черновики форм конструктора (`FamilySpec`), их проверяет core (схема, навык,\nавтопроверка, дубли) и кладёт в `families` со `status = draft`, `source = llm`. `error` —\nмашинный код отказа (`llm_disabled`, `llm_unavailable`, `llm_invalid`, …), тогда `specs` пуст.",
+        "description": "`ml.families.generated`: ответ генератора на заказ `ml.families.generate`.\n\n`specs` — черновики форм конструктора (`FamilySpec`), их проверяет core (схема, навык,\nавтопроверка, дубли) и кладёт в `families` со `status = draft`, `source = llm`. `error` —\nмашинный код отказа (`llm_disabled`, `llm_unavailable`, `llm_invalid`, …), тогда `specs` пуст.",
         "properties": {
           "order_id": {
             "format": "uuid",
@@ -4533,7 +4533,7 @@
         "type": "object"
       },
       "FamilyOrderStarted": {
-        "description": "`ml.families.started` (E43-9): ml-worker-llm взял заказ админа на задания в работу.",
+        "description": "`ml.families.started`: ml-worker-llm взял заказ админа на задания в работу.",
         "properties": {
           "order_id": {
             "format": "uuid",
@@ -4548,7 +4548,7 @@
         "type": "object"
       },
       "FamilyStatusChanged": {
-        "description": "`assessment.family.status_changed` (внутреннее для блока 1).",
+        "description": "`assessment.family.status_changed` (внутреннее событие модуля теста).",
         "properties": {
           "family_id": {
             "format": "uuid",
@@ -5694,7 +5694,7 @@
         "type": "object"
       },
       "MlFamiliesGenerate": {
-        "description": "E43-9: заказ админа на LLM-задания (навык × `kind` × уровень, до 10 штук).\n\nНизший приоритет `ml.llm`: не мешает разбору резюме и остальным задачам GPU. Ответ —\n`ml.families.started`, затем `ml.families.generated` (assessment.md §7).",
+        "description": "Заказ админа на LLM-задания (навык × `kind` × уровень, до 10 штук).\n\nНизший приоритет `ml.llm`: не мешает разбору резюме и остальным задачам GPU. Ответ —\n`ml.families.started`, затем `ml.families.generated`.",
         "properties": {
           "order_id": {
             "format": "uuid",
@@ -5930,7 +5930,7 @@
         "type": "object"
       },
       "MlInterviewKitGenerate": {
-        "description": "Вход без ПДн (ml.md §10.1).",
+        "description": "Вход без ПДн.",
         "properties": {
           "kit_id": {
             "format": "uuid",
@@ -6396,7 +6396,7 @@
         "type": "object"
       },
       "OfferEvent": {
-        "description": "Все `offer.*`.\n\nДля `offer.message` заполнен `message_id`, для `offer.declined` — `decline_reason`.\nС schema_version 2 (ADR-022): `vacancy_id` пуст у приглашения без вакансии,\n`initiator` — кто начал (`employer` — приглашение, `candidate` — отклик).",
+        "description": "Все `offer.*`.\n\nДля `offer.message` заполнен `message_id`, для `offer.declined` — `decline_reason`.\nС schema_version 2: `vacancy_id` пуст у приглашения без вакансии,\n`initiator` — кто начал (`employer` — приглашение, `candidate` — отклик).",
         "properties": {
           "offer_id": {
             "format": "uuid",
@@ -6489,7 +6489,7 @@
         "type": "object"
       },
       "OfferInitiator": {
-        "description": "Кто начал взаимодействие (ADR-022): приглашение работодателя или отклик кандидата.",
+        "description": "Кто начал взаимодействие: приглашение работодателя или отклик кандидата.",
         "enum": [
           "employer",
           "candidate"
@@ -6498,7 +6498,7 @@
         "type": "string"
       },
       "OfferInterestEvent": {
-        "description": "Все `offer.interest.*` (ADR-026): интерес работодателя до приглашения.\n\nСтрока та же, что у оффера (`offer_id`); после `interest_opened → sent` дальше идут обычные\n`offer.*`. Без ПДн: только id, статусы, причина отказа и вилка (числа).",
+        "description": "Все `offer.interest.*`: интерес работодателя до приглашения.\n\nСтрока та же, что у оффера (`offer_id`); после `interest_opened → sent` дальше идут обычные\n`offer.*`. Без ПДн: только id, статусы, причина отказа и вилка (числа).",
         "properties": {
           "offer_id": {
             "format": "uuid",
@@ -6886,7 +6886,7 @@
         "type": "object"
       },
       "RegularTaskPublished": {
-        "description": "`regular_task.published`: рассылка регулярного задания (E25-1). Без ПДн: только id.\n\n`recipients` — кандидаты с действующим грейдом ровно `profession × grade` и согласием\n`profile_publication`. `round` растёт с каждой новой рассылкой; повтор публикации в\nпределах периода события не создаёт.",
+        "description": "`regular_task.published`: рассылка регулярного задания. Без ПДн: только id.\n\n`recipients` — кандидаты с действующим грейдом ровно `profession × grade` и согласием\n`profile_publication`. `round` растёт с каждой новой рассылкой; повтор публикации в\nпределах периода события не создаёт.",
         "properties": {
           "task_id": {
             "format": "uuid",
@@ -6963,7 +6963,7 @@
         "type": "object"
       },
       "ResumeDeclaredGrade": {
-        "description": "Грейд, который кандидат назвал сам (E20-5). Только «заявлено»: категорию даёт тест.",
+        "description": "Грейд, который кандидат назвал сам. Только «заявлено»: категорию даёт тест.",
         "properties": {
           "grade": {
             "$ref": "#/components/schemas/Grade"
@@ -6981,7 +6981,7 @@
         "type": "object"
       },
       "ResumeDeclaredRole": {
-        "description": "Роль, которую кандидат назвал сам (E20-5). Только «заявлено»: категорию даёт тест.",
+        "description": "Роль, которую кандидат назвал сам. Только «заявлено»: категорию даёт тест.",
         "properties": {
           "role": {
             "$ref": "#/components/schemas/RoleSlug"
@@ -7277,7 +7277,7 @@
         "type": "object"
       },
       "ResumeSoftSkill": {
-        "description": "Софт-навык, «заявлено в резюме» (E20-5): без доверия, на категорию и подбор не влияет.",
+        "description": "Софт-навык, «заявлено в резюме»: без доверия, на категорию и подбор не влияет.",
         "properties": {
           "name": {
             "title": "Name",
@@ -7714,7 +7714,7 @@
         "type": "object"
       },
       "VisibilityChanged": {
-        "description": "`candidate.visibility.changed` (E36-4, ADR-027): кандидат изменил, что видно работодателю.\n\nТолько ключи и булевы значения, без ПДн. `changed` — изменившиеся ключи,\n`visibility` — полный текущий набор.",
+        "description": "`candidate.visibility.changed`: кандидат изменил, что видно работодателю.\n\nТолько ключи и булевы значения, без ПДн. `changed` — изменившиеся ключи,\n`visibility` — полный текущий набор.",
         "properties": {
           "candidate_id": {
             "format": "uuid",

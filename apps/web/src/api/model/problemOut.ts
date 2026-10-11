@@ -7,7 +7,7 @@
 import type { ProblemOutErrors } from './problemOutErrors';
 
 /**
- * RFC 9457 + машинный `code` (api.md §1).
+ * RFC 9457 + машинный `code`.
  */
 export interface ProblemOut {
   type: string;

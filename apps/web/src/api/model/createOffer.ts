@@ -9,7 +9,7 @@ import type { SalaryBasis } from './salaryBasis';
 import type { TaskAttach } from './taskAttach';
 
 /**
- * Приглашение работодателя. Без `vacancy_id` (ADR-022) обязателен `title`.
+ * Приглашение работодателя. Без `vacancy_id` обязателен `title`.
  */
 export interface CreateOffer {
   vacancy_id?: string | null;

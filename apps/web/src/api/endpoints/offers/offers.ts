@@ -434,7 +434,7 @@ export const getListOffersOffersGetUrl = (params?: ListOffersOffersGetParams,) =
 }
 
 /**
- * Офферы компании; `initiator=candidate` - её отклики. Без компании - пусто (E39-7).
+ * Офферы компании; `initiator=candidate` - её отклики. Без компании - пусто.
  * @summary List Offers
  */
 export const listOffersOffersGet = async (params?: ListOffersOffersGetParams, options?: Parameters<typeof apiFetch>[1]): Promise<listOffersOffersGetResponse> => {
@@ -1316,7 +1316,7 @@ export const getListFspTeamsTeamsGetUrl = (params?: ListFspTeamsTeamsGetParams,)
 }
 
 /**
- * Команды ФСП, где есть минимум два видимых кандидата платформы (анонимно, E15-2).
+ * Команды ФСП, где есть минимум два видимых кандидата платформы (анонимно).
  * @summary List Fsp Teams
  */
 export const listFspTeamsTeamsGet = async (params?: ListFspTeamsTeamsGetParams, options?: Parameters<typeof apiFetch>[1]): Promise<listFspTeamsTeamsGetResponse> => {
@@ -2513,7 +2513,7 @@ export const getAcceptOfferOffersOfferIdAcceptPostUrl = (offerId: string,) => {
 }
 
 /**
- * Принять без текста (E41-4): после принятия стороны видят контакты друг друга.
+ * Принять без текста: после принятия стороны видят контакты друг друга.
  * @summary Accept Offer
  */
 export const acceptOfferOffersOfferIdAcceptPost = async (offerId: string, options?: Parameters<typeof apiFetch>[1]): Promise<acceptOfferOffersOfferIdAcceptPostResponse> => {
@@ -3201,7 +3201,7 @@ export const getRevokeContactsOffersOfferIdContactsRevokePostUrl = (offerId: str
 }
 
 /**
- * Отзыв доступа к контактам: компания перестаёт их видеть (E32-5a). Повтор — no-op.
+ * Отзыв доступа к контактам: компания перестаёт их видеть. Повтор — no-op.
  * @summary Revoke Contacts
  */
 export const revokeContactsOffersOfferIdContactsRevokePost = async (offerId: string, options?: Parameters<typeof apiFetch>[1]): Promise<revokeContactsOffersOfferIdContactsRevokePostResponse> => {

@@ -10,7 +10,7 @@ import type { DisputeOut } from './disputeOut';
 import type { GradeInfo } from './gradeInfo';
 
 /**
- * `CategoryExplanation` (api.md §3): почему такая категория и как подняться.
+ * `CategoryExplanation`: почему такая категория и как подняться.
  */
 export interface CategoryExplanation {
   primary_role: string | null;

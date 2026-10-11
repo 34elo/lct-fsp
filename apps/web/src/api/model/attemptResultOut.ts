@@ -10,7 +10,7 @@ import type { AttemptResultOutThetaByType } from './attemptResultOutThetaByType'
 import type { TestGrade } from './testGrade';
 
 /**
- * Итог завершённой попытки (assessment.md §10): грейд, θ по типам, честность, разбор.
+ * Итог завершённой попытки: грейд, θ по типам, честность, разбор.
  */
 export interface AttemptResultOut {
   grade?: TestGrade | null;

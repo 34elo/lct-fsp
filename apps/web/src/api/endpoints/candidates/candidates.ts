@@ -412,7 +412,7 @@ export const getPutAvatarCandidatesMeAvatarPutUrl = () => {
 }
 
 /**
- * Аватар кандидата (E41-12): PNG, JPEG или WebP по сигнатуре, до 2 МБ. Работодатель видит
+ * Аватар кандидата: PNG, JPEG или WebP по сигнатуре, до 2 МБ. Работодатель видит
  * его только после приглашения, как ФИО; в анонимную карточку он не попадает.
  * @summary Put Avatar
  */
@@ -630,7 +630,7 @@ export const getProfilePdfCandidatesMeProfilePdfGetUrl = () => {
 }
 
 /**
- * PDF-профиль владельца (E20-6): категория, грейд, навыки с доверием, ФСП, тесты.
+ * PDF-профиль владельца: категория, грейд, навыки с доверием, ФСП, тесты.
  * @summary Profile Pdf
  */
 export const profilePdfCandidatesMeProfilePdfGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<profilePdfCandidatesMeProfilePdfGetResponse> => {
@@ -1308,7 +1308,7 @@ export const getMyViewsCandidatesMeViewsGetUrl = () => {
 }
 
 /**
- * «Вас смотрели N компаний» — только агрегаты, без названий (security.md §3). Шкала 30 дней
+ * «Вас смотрели N компаний» — только агрегаты, без названий. Шкала 30 дней
  * полная; `visible` — видна ли карточка работодателям (тест + согласие на публикацию).
  * @summary My Views
  */

@@ -117,7 +117,7 @@ export const getSearchParseSearchParsePostUrl = () => {
 }
 
 /**
- * Разбор текста в чипсы-фильтры: правила (E7-5) + LLM-уточнение и слияние (E7-6).
+ * Разбор текста в чипсы-фильтры: правила + LLM-уточнение и слияние.
  *
  * LLM недоступна или ответила невалидно — отдаём правиловый результат (`refining=false`).
  * @summary Search Parse
@@ -569,7 +569,7 @@ export const getCandidateSimilarCandidatesPseudoIdSimilarGetUrl = (pseudoId: str
 }
 
 /**
- * Похожие на открытого кандидата (matching.md §1); скрытый или несуществующий → 404.
+ * Похожие на открытого кандидата; скрытый или несуществующий → 404.
  * @summary Candidate Similar
  */
 export const candidateSimilarCandidatesPseudoIdSimilarGet = async (pseudoId: string,
@@ -846,7 +846,7 @@ export const getMyStandingCandidatesMeStandingGetUrl = () => {
 }
 
 /**
- * Сила профиля и место в категории «профессия × грейд» (E35-12a). Без теста — пусто.
+ * Сила профиля и место в категории «профессия × грейд». Без теста — пусто.
  * @summary My Standing
  */
 export const myStandingCandidatesMeStandingGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<myStandingCandidatesMeStandingGetResponse> => {
@@ -981,7 +981,7 @@ export const getMyUpliftCandidatesMeUpliftGetUrl = () => {
 }
 
 /**
- * Какой навык подтвердить, чтобы подойти под больше вакансий (matching.md §6).
+ * Какой навык подтвердить, чтобы подойти под больше вакансий.
  * @summary My Uplift
  */
 export const myUpliftCandidatesMeUpliftGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<myUpliftCandidatesMeUpliftGetResponse> => {
@@ -1131,7 +1131,7 @@ export const getMarkCandidateInterestCompaniesCompanyIdInterestPostUrl = (compan
 }
 
 /**
- * Кандидат показывает интерес к компании (E33-6).
+ * Кандидат показывает интерес к компании.
  * @summary Mark Candidate Interest
  */
 export const markCandidateInterestCompaniesCompanyIdInterestPost = async (companyId: string, options?: Parameters<typeof apiFetch>[1]): Promise<markCandidateInterestCompaniesCompanyIdInterestPostResponse> => {
@@ -1254,7 +1254,7 @@ export const getRemoveCandidateInterestCompaniesCompanyIdInterestDeleteUrl = (co
 }
 
 /**
- * Кандидат снимает интерес к компании (E33-6).
+ * Кандидат снимает интерес к компании.
  * @summary Remove Candidate Interest
  */
 export const removeCandidateInterestCompaniesCompanyIdInterestDelete = async (companyId: string, options?: Parameters<typeof apiFetch>[1]): Promise<removeCandidateInterestCompaniesCompanyIdInterestDeleteResponse> => {

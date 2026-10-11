@@ -9,7 +9,7 @@ import type { Hint } from './hint';
 import type { WeightOut } from './weightOut';
 
 /**
- * Учтённая подстройка сессии (matching.md §7): чипсы «Учли: …» и подсказки фильтров.
+ * Учтённая подстройка сессии: чипсы «Учли: …» и подсказки фильтров.
  */
 export interface SessionTuning {
   session_id: string;

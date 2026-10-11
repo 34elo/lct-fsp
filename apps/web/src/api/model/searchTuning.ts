@@ -8,7 +8,7 @@ import type { TuningChip } from './tuningChip';
 import type { TuningHint } from './tuningHint';
 
 /**
- * Подстройка выдачи в сессии (matching.md §7): включается после ≥ 3 реакций.
+ * Подстройка выдачи в сессии: включается после ≥ 3 реакций.
  */
 export interface SearchTuning {
   active: boolean;

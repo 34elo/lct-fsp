@@ -553,7 +553,7 @@ export const getPutCompanyLogoCompaniesMeLogoPutUrl = () => {
 }
 
 /**
- * Логотип компании (E41-12): PNG, JPEG или WebP по сигнатуре, до 2 МБ; только владелец.
+ * Логотип компании: PNG, JPEG или WebP по сигнатуре, до 2 МБ; только владелец.
  * @summary Put Company Logo
  */
 export const putCompanyLogoCompaniesMeLogoPut = async (bodyPutCompanyLogoCompaniesMeLogoPut: BodyPutCompanyLogoCompaniesMeLogoPut, options?: Parameters<typeof apiFetch>[1]): Promise<putCompanyLogoCompaniesMeLogoPutResponse> => {

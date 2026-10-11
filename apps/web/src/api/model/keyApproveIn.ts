@@ -8,7 +8,7 @@ import type { FamilySpec } from './familySpec';
 import type { KeyApproveInSource } from './keyApproveInSource';
 
 /**
- * Какой ключ утвердить: автора, черновик LLM или свою правку спецификации (E30-1).
+ * Какой ключ утвердить: автора, черновик LLM или свою правку спецификации.
  */
 export interface KeyApproveIn {
   source: KeyApproveInSource;

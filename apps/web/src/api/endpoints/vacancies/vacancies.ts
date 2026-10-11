@@ -691,7 +691,7 @@ export const getApplyToVacancyVacanciesVacancyIdApplyPostUrl = (vacancyId: strin
 }
 
 /**
- * Отклик кандидата (ADR-022): оффер с `initiator = candidate`, контакты сразу у компании.
+ * Отклик кандидата: оффер с `initiator = candidate`, контакты сразу у компании.
  * @summary Apply To Vacancy
  */
 export const applyToVacancyVacanciesVacancyIdApplyPost = async (vacancyId: string,

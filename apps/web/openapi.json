@@ -347,7 +347,7 @@
           "auth"
         ],
         "summary": "Auth Telegram",
-        "description": "Telegram Login Widget → вход или регистрация кандидата (security.md §1).",
+        "description": "Telegram Login Widget → вход или регистрация кандидата.",
         "operationId": "auth_telegram_auth_telegram_post",
         "requestBody": {
           "content": {
@@ -673,7 +673,7 @@
           "auth"
         ],
         "summary": "Password Initial",
-        "description": "Первая смена временного пароля HR (E41-16): без текущего пароля, вход уже выполнен им.\n\nНе требуется — 409 `password_change_not_required`; срок вышел — 403 `temp_password_expired`;\nсовпадает с временным — 422 `same_password`; 5 в час (429).",
+        "description": "Первая смена временного пароля HR: без текущего пароля, вход уже выполнен им.\n\nНе требуется — 409 `password_change_not_required`; срок вышел — 403 `temp_password_expired`;\nсовпадает с временным — 422 `same_password`; 5 в час (429).",
         "operationId": "password_initial_auth_password_initial_post",
         "requestBody": {
           "content": {
@@ -773,7 +773,7 @@
           "auth"
         ],
         "summary": "Me",
-        "description": "consents — действующие типы; company — E6-1; candidate — E3-1.",
+        "description": "consents — действующие типы; company и candidate — краткие сводки роли.",
         "operationId": "me_me_get",
         "responses": {
           "200": {
@@ -1134,7 +1134,7 @@
           "internal"
         ],
         "summary": "Tg Linked",
-        "description": "Привязан ли Telegram к аккаунту сайта. Ничего не создаёт (E43-7: бот не регистрирует).",
+        "description": "Привязан ли Telegram к аккаунту сайта. Ничего не создаёт (бот не регистрирует).",
         "operationId": "tg_linked_internal_tg_linked_get",
         "parameters": [
           {
@@ -1252,7 +1252,7 @@
           "internal"
         ],
         "summary": "Tg User Token",
-        "description": "Короткий access-токен кандидата: бот ходит с ним в `/assessment/*` блока 1 (E25-3).\n\nТот же JWT, что и после входа, но живёт `BOT_USER_TOKEN_TTL` (5 минут), refresh не выдаётся.",
+        "description": "Короткий access-токен кандидата: бот ходит с ним в `/assessment/*`.\n\nТот же JWT, что и после входа, но живёт `BOT_USER_TOKEN_TTL` (5 минут), refresh не выдаётся.",
         "operationId": "tg_user_token_internal_tg_token_post",
         "parameters": [
           {
@@ -1801,7 +1801,7 @@
           "internal"
         ],
         "summary": "Tg Category",
-        "description": "Подтверждённые категории (грейды теста) и «заявлено vs подтверждено»; публичное API Б1.",
+        "description": "Подтверждённые категории (грейды теста) и «заявлено vs подтверждено».",
         "operationId": "tg_category_internal_tg_category_get",
         "parameters": [
           {
@@ -2432,7 +2432,7 @@
           "candidates"
         ],
         "summary": "Put Avatar",
-        "description": "Аватар кандидата (E41-12): PNG, JPEG или WebP по сигнатуре, до 2 МБ. Работодатель видит\nего только после приглашения, как ФИО; в анонимную карточку он не попадает.",
+        "description": "Аватар кандидата: PNG, JPEG или WebP по сигнатуре, до 2 МБ. Работодатель видит\nего только после приглашения, как ФИО; в анонимную карточку он не попадает.",
         "operationId": "put_avatar_candidates_me_avatar_put",
         "requestBody": {
           "content": {
@@ -2603,7 +2603,7 @@
           "candidates"
         ],
         "summary": "Profile Pdf",
-        "description": "PDF-профиль владельца (E20-6): категория, грейд, навыки с доверием, ФСП, тесты.",
+        "description": "PDF-профиль владельца: категория, грейд, навыки с доверием, ФСП, тесты.",
         "operationId": "profile_pdf_candidates_me_profile_pdf_get",
         "responses": {
           "200": {
@@ -2971,7 +2971,7 @@
           "candidates"
         ],
         "summary": "My Views",
-        "description": "«Вас смотрели N компаний» — только агрегаты, без названий (security.md §3). Шкала 30 дней\nполная; `visible` — видна ли карточка работодателям (тест + согласие на публикацию).",
+        "description": "«Вас смотрели N компаний» — только агрегаты, без названий. Шкала 30 дней\nполная; `visible` — видна ли карточка работодателям (тест + согласие на публикацию).",
         "operationId": "my_views_candidates_me_views_get",
         "responses": {
           "200": {
@@ -3821,7 +3821,7 @@
           "fsp"
         ],
         "summary": "Admin Demo Create Fsp Result",
-        "description": "Админ: демо-кнопка создания результата ФСП для случайного кандидата (E13-3).\nСоздаёт результат в мок-ФСП и отправляет вебхук для синхронизации.\nДоступно только при DEMO_MODE=true.",
+        "description": "Админ: демо-кнопка создания результата ФСП для случайного кандидата.\nСоздаёт результат в мок-ФСП и отправляет вебхук для синхронизации.\nДоступно только при DEMO_MODE=true.",
         "operationId": "admin_demo_create_fsp_result_admin_demo_fsp_result_post",
         "responses": {
           "202": {
@@ -3886,7 +3886,7 @@
           "fsp"
         ],
         "summary": "Admin Demo Reset Fsp",
-        "description": "Админ: демо-кнопка сброса всех результатов ФСП к снапшоту (E13-3).\nДоступно только при DEMO_MODE=true.",
+        "description": "Админ: демо-кнопка сброса всех результатов ФСП к снапшоту.\nДоступно только при DEMO_MODE=true.",
         "operationId": "admin_demo_reset_fsp_admin_demo_reset_post",
         "responses": {
           "202": {
@@ -4389,7 +4389,7 @@
           "taxonomy"
         ],
         "summary": "Get Professions",
-        "description": "Профессии теста, веса и типы навыков, грейды с порогами θ (assessment.md §10).\n\n`beta` — тонкий банк семейств (E39-6): профессия открыта, в опросе помечена «бета».",
+        "description": "Профессии теста, веса и типы навыков, грейды с порогами θ.\n\n`beta` — тонкий банк семейств: профессия открыта, в опросе помечена «бета».",
         "operationId": "get_professions_taxonomy_professions_get",
         "responses": {
           "200": {
@@ -4426,7 +4426,7 @@
           "taxonomy"
         ],
         "summary": "Suggest Skills",
-        "description": "Подсказки навыков: синонимы, префикс, опечатки; частые выше, `provisional` помечен.\n\n`kind=soft` — только софт-навыки (поле «Личные качества», E41-6).",
+        "description": "Подсказки навыков: синонимы, префикс, опечатки; частые выше, `provisional` помечен.\n\n`kind=soft` — только софт-навыки (поле «Личные качества»).",
         "operationId": "suggest_skills_taxonomy_skills_suggest_get",
         "parameters": [
           {
@@ -4542,7 +4542,7 @@
           "taxonomy"
         ],
         "summary": "Suggest Professions",
-        "description": "Подсказки профессий: все видимые роли системы, включая добавленные админом (E39-3).",
+        "description": "Подсказки профессий: все видимые роли системы, включая добавленные админом.",
         "operationId": "suggest_professions_taxonomy_professions_suggest_get",
         "parameters": [
           {
@@ -4824,7 +4824,7 @@
           "companies"
         ],
         "summary": "Put Company Logo",
-        "description": "Логотип компании (E41-12): PNG, JPEG или WebP по сигнатуре, до 2 МБ; только владелец.",
+        "description": "Логотип компании: PNG, JPEG или WebP по сигнатуре, до 2 МБ; только владелец.",
         "operationId": "put_company_logo_companies_me_logo_put",
         "requestBody": {
           "content": {
@@ -6519,7 +6519,7 @@
           "vacancies"
         ],
         "summary": "Apply To Vacancy",
-        "description": "Отклик кандидата (ADR-022): оффер с `initiator = candidate`, контакты сразу у компании.",
+        "description": "Отклик кандидата: оффер с `initiator = candidate`, контакты сразу у компании.",
         "operationId": "apply_to_vacancy_vacancies__vacancy_id__apply_post",
         "parameters": [
           {
@@ -7099,7 +7099,7 @@
           "search"
         ],
         "summary": "Search Parse",
-        "description": "Разбор текста в чипсы-фильтры: правила (E7-5) + LLM-уточнение и слияние (E7-6).\n\nLLM недоступна или ответила невалидно — отдаём правиловый результат (`refining=false`).",
+        "description": "Разбор текста в чипсы-фильтры: правила + LLM-уточнение и слияние.\n\nLLM недоступна или ответила невалидно — отдаём правиловый результат (`refining=false`).",
         "operationId": "search_parse_search_parse_post",
         "requestBody": {
           "content": {
@@ -7387,7 +7387,7 @@
           "search"
         ],
         "summary": "Candidate Similar",
-        "description": "Похожие на открытого кандидата (matching.md §1); скрытый или несуществующий → 404.",
+        "description": "Похожие на открытого кандидата; скрытый или несуществующий → 404.",
         "operationId": "candidate_similar_candidates__pseudo_id__similar_get",
         "parameters": [
           {
@@ -7539,7 +7539,7 @@
           "search"
         ],
         "summary": "My Standing",
-        "description": "Сила профиля и место в категории «профессия × грейд» (E35-12a). Без теста — пусто.",
+        "description": "Сила профиля и место в категории «профессия × грейд». Без теста — пусто.",
         "operationId": "my_standing_candidates_me_standing_get",
         "responses": {
           "200": {
@@ -7591,7 +7591,7 @@
           "search"
         ],
         "summary": "My Uplift",
-        "description": "Какой навык подтвердить, чтобы подойти под больше вакансий (matching.md §6).",
+        "description": "Какой навык подтвердить, чтобы подойти под больше вакансий.",
         "operationId": "my_uplift_candidates_me_uplift_get",
         "responses": {
           "200": {
@@ -7643,7 +7643,7 @@
           "search"
         ],
         "summary": "Mark Candidate Interest",
-        "description": "Кандидат показывает интерес к компании (E33-6).",
+        "description": "Кандидат показывает интерес к компании.",
         "operationId": "mark_candidate_interest_companies__company_id__interest_post",
         "parameters": [
           {
@@ -7732,7 +7732,7 @@
           "search"
         ],
         "summary": "Remove Candidate Interest",
-        "description": "Кандидат снимает интерес к компании (E33-6).",
+        "description": "Кандидат снимает интерес к компании.",
         "operationId": "remove_candidate_interest_companies__company_id__interest_delete",
         "parameters": [
           {
@@ -8312,7 +8312,7 @@
           "offers"
         ],
         "summary": "List Offers",
-        "description": "Офферы компании; `initiator=candidate` - её отклики. Без компании - пусто (E39-7).",
+        "description": "Офферы компании; `initiator=candidate` - её отклики. Без компании - пусто.",
         "operationId": "list_offers_offers_get",
         "parameters": [
           {
@@ -8951,7 +8951,7 @@
           "offers"
         ],
         "summary": "List Fsp Teams",
-        "description": "Команды ФСП, где есть минимум два видимых кандидата платформы (анонимно, E15-2).",
+        "description": "Команды ФСП, где есть минимум два видимых кандидата платформы (анонимно).",
         "operationId": "list_fsp_teams_teams_get",
         "parameters": [
           {
@@ -9770,7 +9770,7 @@
           "offers"
         ],
         "summary": "Accept Offer",
-        "description": "Принять без текста (E41-4): после принятия стороны видят контакты друг друга.",
+        "description": "Принять без текста: после принятия стороны видят контакты друг друга.",
         "operationId": "accept_offer_offers__offer_id__accept_post",
         "parameters": [
           {
@@ -10241,7 +10241,7 @@
           "offers"
         ],
         "summary": "Revoke Contacts",
-        "description": "Отзыв доступа к контактам: компания перестаёт их видеть (E32-5a). Повтор — no-op.",
+        "description": "Отзыв доступа к контактам: компания перестаёт их видеть. Повтор — no-op.",
         "operationId": "revoke_contacts_offers__offer_id__contacts_revoke_post",
         "parameters": [
           {
@@ -11356,7 +11356,7 @@
           "assessment"
         ],
         "summary": "Upgrade",
-        "description": "Начать тест следующего грейда по приглашению бонусного этапа (ADR-025 п.2).\n\nВозвращает новую попытку; без кулдаунов; повтор возвращает уже начатую. Грейд не меняется,\nпока не пройден сам приглашённый тест. `409 no_invite`, `invite_expired`, `invite_stale`.",
+        "description": "Начать тест следующего грейда по приглашению бонусного этапа.\n\nВозвращает новую попытку; без кулдаунов; повтор возвращает уже начатую. Грейд не меняется,\nпока не пройден сам приглашённый тест. `409 no_invite`, `invite_expired`, `invite_stale`.",
         "operationId": "upgrade_assessment_attempts__attempt_id__upgrade_post",
         "parameters": [
           {
@@ -11626,7 +11626,7 @@
           "assessment"
         ],
         "summary": "Review Attempt",
-        "description": "Разбор теста (E41-5): только «что подтянуть», без верных ответов и вариантов.",
+        "description": "Разбор теста: только «что подтянуть», без верных ответов и вариантов.",
         "operationId": "review_attempt_assessment_attempts__attempt_id__review_get",
         "parameters": [
           {
@@ -12512,7 +12512,7 @@
           "admin"
         ],
         "summary": "To Pilot",
-        "description": "Задание компании → общий банк: `draft → pilot` (E30-1).",
+        "description": "Задание компании → общий банк: `draft → pilot`.",
         "operationId": "to_pilot_admin_families__family_id__pilot_post",
         "parameters": [
           {
@@ -15503,7 +15503,7 @@
           "assessment"
         ],
         "summary": "Set Ready",
-        "description": "«Готово» (задание доступно для приглашений компании) или возврат в черновик (E41-14).",
+        "description": "«Готово» (задание доступно для приглашений компании) или возврат в черновик.",
         "operationId": "set_ready_families__family_id__ready_put",
         "parameters": [
           {
@@ -18036,7 +18036,7 @@
           "admin"
         ],
         "summary": "Registry Import Results",
-        "description": "Результаты списком (E43-4): CSV `участник;мероприятие;дата;результат`, до 1000 строк.\n\nБез `commit` — превью с построчной проверкой. С `commit` — запись и пересчёт профилей\nзатронутых кандидатов (outbox). Новые мероприятия создаются только по `create_events`.",
+        "description": "Результаты списком: CSV `участник;мероприятие;дата;результат`, до 1000 строк.\n\nБез `commit` — превью с построчной проверкой. С `commit` — запись и пересчёт профилей\nзатронутых кандидатов (outbox). Новые мероприятия создаются только по `create_events`.",
         "operationId": "registry_import_results_admin_fsp_registry_import_post",
         "requestBody": {
           "content": {
@@ -19728,7 +19728,7 @@
           "needs"
         ],
         "summary": "Shortlist All",
-        "description": "Общий шорт-лист компании (E39-23): отмеченные во всех её потребностях, без повторов.\n\nСначала отмеченные в свежих потребностях; запоминать последний запрос в браузере не нужно.",
+        "description": "Общий шорт-лист компании: отмеченные во всех её потребностях, без повторов.\n\nСначала отмеченные в свежих потребностях; запоминать последний запрос в браузере не нужно.",
         "operationId": "shortlist_all_shortlist_get",
         "responses": {
           "200": {
@@ -19795,7 +19795,7 @@
           "needs"
         ],
         "summary": "Shortlist Add",
-        "description": "Добавить кандидата в шорт-лист потребности (E23-5). Фильтр не сбрасывает отмеченных.",
+        "description": "Добавить кандидата в шорт-лист потребности. Фильтр не сбрасывает отмеченных.",
         "operationId": "shortlist_add_needs__need_id__shortlist__pseudo_id__post",
         "parameters": [
           {
@@ -19884,7 +19884,7 @@
           "needs"
         ],
         "summary": "Shortlist Remove",
-        "description": "Удалить кандидата из шорт-листа потребности (E23-5).",
+        "description": "Удалить кандидата из шорт-листа потребности.",
         "operationId": "shortlist_remove_needs__need_id__shortlist__pseudo_id__delete",
         "parameters": [
           {
@@ -21482,7 +21482,7 @@
           "task_answered"
         ],
         "title": "ActivityKind",
-        "description": "Тип события ленты активности работодателя (`GET /employer/activity`, E35-12b)."
+        "description": "Тип события ленты активности работодателя (`GET /employer/activity`)."
       },
       "AdminComplaintOut": {
         "properties": {
@@ -22172,7 +22172,7 @@
         },
         "type": "object",
         "title": "AttemptResultOut",
-        "description": "Итог завершённой попытки (assessment.md §10): грейд, θ по типам, честность, разбор."
+        "description": "Итог завершённой попытки: грейд, θ по типам, честность, разбор."
       },
       "AuthOut": {
         "properties": {
@@ -23042,7 +23042,7 @@
           "grade"
         ],
         "title": "CandidateProfile",
-        "description": "`CandidateProfile` (api.md §3). Пока без `code`, `completeness`."
+        "description": "`CandidateProfile`. Пока без `code`, `completeness`."
       },
       "CandidateStanding": {
         "properties": {
@@ -23140,7 +23140,7 @@
         },
         "type": "object",
         "title": "CandidateStanding",
-        "description": "`GET /candidates/me/standing` (E35-12a). Без действующего грейда все поля пустые."
+        "description": "`GET /candidates/me/standing`. Без действующего грейда все поля пустые."
       },
       "CandidateTaskDetail": {
         "properties": {
@@ -23574,7 +23574,7 @@
           "grade"
         ],
         "title": "CategoryExplanation",
-        "description": "`CategoryExplanation` (api.md §3): почему такая категория и как подняться."
+        "description": "`CategoryExplanation`: почему такая категория и как подняться."
       },
       "CategoryPage": {
         "properties": {
@@ -24890,7 +24890,7 @@
           "candidate_pseudo_id"
         ],
         "title": "CreateOffer",
-        "description": "Приглашение работодателя. Без `vacancy_id` (ADR-022) обязателен `title`."
+        "description": "Приглашение работодателя. Без `vacancy_id` обязателен `title`."
       },
       "CreateTeamOffer": {
         "properties": {
@@ -26534,7 +26534,7 @@
           "stem"
         ],
         "title": "FamilySpec",
-        "description": "Форма конструктора. Поля ключа необязательны: без них нужен черновик LLM (E30-1)."
+        "description": "Форма конструктора. Поля ключа необязательны: без них нужен черновик LLM."
       },
       "FamilyStatsOut": {
         "properties": {
@@ -28066,7 +28066,7 @@
           "source"
         ],
         "title": "KeyApproveIn",
-        "description": "Какой ключ утвердить: автора, черновик LLM или свою правку спецификации (E30-1)."
+        "description": "Какой ключ утвердить: автора, черновик LLM или свою правку спецификации."
       },
       "Kind": {
         "type": "string",
@@ -29976,7 +29976,7 @@
           "candidate"
         ],
         "title": "OfferInitiator",
-        "description": "Кто начал взаимодействие (ADR-022): приглашение работодателя или отклик кандидата."
+        "description": "Кто начал взаимодействие: приглашение работодателя или отклик кандидата."
       },
       "OfferSender": {
         "properties": {
@@ -30012,7 +30012,7 @@
           "full_name"
         ],
         "title": "OfferSender",
-        "description": "Подпись приглашения (E39-24): сотрудник компании, без email и телефона."
+        "description": "Подпись приглашения: сотрудник компании, без email и телефона."
       },
       "OfferStatus": {
         "type": "string",
@@ -30313,7 +30313,7 @@
         "additionalProperties": false,
         "type": "object",
         "title": "ParsedResumeEdits",
-        "description": "Правки кандидата при подтверждении (api.md §3)."
+        "description": "Правки кандидата при подтверждении."
       },
       "PasswordChangeIn": {
         "properties": {
@@ -30760,7 +30760,7 @@
           "code"
         ],
         "title": "ProblemOut",
-        "description": "RFC 9457 + машинный `code` (api.md §1)."
+        "description": "RFC 9457 + машинный `code`."
       },
       "ProfessionCandidate": {
         "properties": {
@@ -30975,7 +30975,7 @@
           "score"
         ],
         "title": "ProfessionSuggestion",
-        "description": "Подсказка профессии `GET /taxonomy/professions/suggest` (E39-3)."
+        "description": "Подсказка профессии `GET /taxonomy/professions/suggest`."
       },
       "ProfessionSuggestionOut": {
         "properties": {
@@ -31239,7 +31239,7 @@
         "additionalProperties": false,
         "type": "object",
         "title": "ProfileIn",
-        "description": "`PATCH /candidates/me/profile`: частичное обновление ручной формы (E20-4)."
+        "description": "`PATCH /candidates/me/profile`: частичное обновление ручной формы."
       },
       "ProfileViewDay": {
         "properties": {
@@ -31291,7 +31291,7 @@
         },
         "type": "object",
         "title": "ProfileViewsStats",
-        "description": "`GET /candidates/me/views` (E43-5): просмотры карточки за 30 дней, без названий компаний.\n\n`by_day` — полная шкала: ровно `window_days` дней по возрастанию, последний — сегодня (UTC),\nдни без просмотров с нулём. `visible` — карточка вообще попадает работодателям (действующий\nгрейд из теста и согласие `profile_publication`); при `false` нули объясняются этим."
+        "description": "`GET /candidates/me/views`: просмотры карточки за 30 дней, без названий компаний.\n\n`by_day` — полная шкала: ровно `window_days` дней по возрастанию, последний — сегодня (UTC),\nдни без просмотров с нулём. `visible` — карточка вообще попадает работодателям (действующий\nгрейд из теста и согласие `profile_publication`); при `false` нули объясняются этим."
       },
       "ProvisionalOut": {
         "properties": {
@@ -32256,7 +32256,7 @@
           "csv"
         ],
         "title": "ResultsImportIn",
-        "description": "E43-4: `commit=false` — превью (dry-run), `true` — запись; повтор идемпотентен."
+        "description": "`commit=false` — превью (dry-run), `true` — запись; повтор идемпотентен."
       },
       "ResultsImportLine": {
         "properties": {
@@ -32537,7 +32537,7 @@
           "quote"
         ],
         "title": "ResumeDeclaredGrade",
-        "description": "Грейд, который кандидат назвал сам (E20-5). Только «заявлено»: категорию даёт тест."
+        "description": "Грейд, который кандидат назвал сам. Только «заявлено»: категорию даёт тест."
       },
       "ResumeDeclaredRole": {
         "properties": {
@@ -32555,7 +32555,7 @@
           "quote"
         ],
         "title": "ResumeDeclaredRole",
-        "description": "Роль, которую кандидат назвал сам (E20-5). Только «заявлено»: категорию даёт тест."
+        "description": "Роль, которую кандидат назвал сам. Только «заявлено»: категорию даёт тест."
       },
       "ResumeEducation": {
         "properties": {
@@ -32857,7 +32857,7 @@
           "quote"
         ],
         "title": "ResumeSoftSkill",
-        "description": "Софт-навык, «заявлено в резюме» (E20-5): без доверия, на категорию и подбор не влияет."
+        "description": "Софт-навык, «заявлено в резюме»: без доверия, на категорию и подбор не влияет."
       },
       "RetiredOut": {
         "properties": {
@@ -33486,7 +33486,7 @@
           "net"
         ],
         "title": "SalaryBasis",
-        "description": "Вилка до НДФЛ (`gross`, по умолчанию) или на руки (`net`) — E32-5a."
+        "description": "Вилка до НДФЛ (`gross`, по умолчанию) или на руки (`net`)."
       },
       "SalaryHint": {
         "properties": {
@@ -34071,7 +34071,7 @@
           "hints"
         ],
         "title": "SearchTuning",
-        "description": "Подстройка выдачи в сессии (matching.md §7): включается после ≥ 3 реакций."
+        "description": "Подстройка выдачи в сессии: включается после ≥ 3 реакций."
       },
       "SessionTuning": {
         "properties": {
@@ -34124,7 +34124,7 @@
           "hints"
         ],
         "title": "SessionTuning",
-        "description": "Учтённая подстройка сессии (matching.md §7): чипсы «Учли: …» и подсказки фильтров."
+        "description": "Учтённая подстройка сессии: чипсы «Учли: …» и подсказки фильтров."
       },
       "ShortlistItem": {
         "properties": {
@@ -34777,7 +34777,7 @@
           "score"
         ],
         "title": "SkillSuggestion",
-        "description": "Подсказка навыка `GET /taxonomy/skills/suggest` (E39-3)."
+        "description": "Подсказка навыка `GET /taxonomy/skills/suggest`."
       },
       "SkillType": {
         "type": "string",
@@ -34921,7 +34921,7 @@
         },
         "type": "object",
         "title": "StandingCategoryStats",
-        "description": "Общие числа категории «профессия × грейд» для «Статистики» (E39-16). Без идентификаторов."
+        "description": "Общие числа категории «профессия × грейд» для «Статистики». Без идентификаторов."
       },
       "StandingGap": {
         "properties": {
@@ -35818,7 +35818,7 @@
           "family_id"
         ],
         "title": "TaskAttach",
-        "description": "Задача в приглашении (E33-3): семейство из конструктора компании или банка, ≤ 15 минут."
+        "description": "Задача в приглашении: семейство из конструктора компании или банка, ≤ 15 минут."
       },
       "TaskBrief": {
         "properties": {

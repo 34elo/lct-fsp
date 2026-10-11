@@ -8,7 +8,7 @@ import type { ResumeEducation } from './resumeEducation';
 import type { ResumeExperience } from './resumeExperience';
 
 /**
- * Правки кандидата при подтверждении (api.md §3).
+ * Правки кандидата при подтверждении.
  */
 export interface ParsedResumeEdits {
   /** @maxItems 200 */

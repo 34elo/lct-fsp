@@ -12,7 +12,7 @@ import type { StandingStrength } from './standingStrength';
 import type { TestGrade } from './testGrade';
 
 /**
- * `GET /candidates/me/standing` (E35-12a). Без действующего грейда все поля пустые.
+ * `GET /candidates/me/standing`. Без действующего грейда все поля пустые.
  */
 export interface CandidateStanding {
   profession?: string | null;
