@@ -58,7 +58,7 @@
 | OpenAPI с ошибками | ✅ | [openapi.json](../openapi.json), Swagger на `/api/docs`; ошибки — Problem Details с машинным `code` |
 | 152-ФЗ, согласия, роли, пароли и токены | ✅ | [security.md](../architecture/security.md) |
 | Совместимость с Keycloak | 🟡 | Мок ФСП реализует OAuth 2.0 + PKCE и OIDC discovery; на демо привязка идёт через реестр ФСП |
-| Десятки пользователей | ✅ | Нагрузочный сценарий Locust на 50 пользователей ([validation.md](../quality/validation.md#5-нагрузка)) |
+| Десятки пользователей | ✅ | Нагрузочный сценарий Locust на 50 пользователей ([validation.md](../quality/validation.md#5-нагрузка-и-ресурсы)) |
 | Мобильная версия | ✅ | Каждый экран проверяется на 375 px и в тёмной теме |
 
 ## Сверх MVP
