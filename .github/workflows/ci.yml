@@ -2,11 +2,10 @@ name: ci
 # PR — проверки; push в main — через cd.yml (вызывает этот файл перед деплоем)
 on:
   pull_request:
-    # коммиты только с документами и планом проверки не запускают (агенты часто пушат журнал плана)
+    # изменения только в документации проверки не запускают
     paths-ignore:
       - "docs/**"
       - "**/*.md"
-      - "reports/**"
   workflow_call:
 # Новый пуш в тот же PR отменяет незаконченный прогон: проверяем только последний коммит, минуты не тратим зря.
 # Вызов из cd.yml (push в main) не отменяется: у него своя группа по SHA.
@@ -24,13 +23,13 @@ jobs:
       - run: uv sync --all-packages --frozen
       - run: uv run ruff check . && uv run ruff format --check .
       - run: uv run lint-imports
-      # E39-37: относительные ссылки и якоря в docs и AGENTS.md (скрипт без сети)
+      # относительные ссылки и якоря в Markdown (без сети)
       - run: PYTHONUTF8=1 uv run python tools/check_links.py
       - run: cd services/core && uv run python export_openapi.py > /tmp/openapi.json && diff -q /tmp/openapi.json ../../docs/openapi.json
       # параллельно по ядрам раннера (pytest-xdist); тесты на SQLite во временных каталогах, общих ресурсов нет
       - run: uv run pytest -q -n auto
   pdf-smoke:
-    # E39-20: образ core с системными библиотеками WeasyPrint отдаёт PDF-профиль
+    # образ core с системными библиотеками WeasyPrint отдаёт PDF-профиль
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

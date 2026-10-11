@@ -1,4 +1,4 @@
-# CD продового стенда (docs/deploy.md «Прод»): push в main → проверки ci.yml → деплой на сервер.
+# CD продового стенда (docs/operations/infrastructure.md): push в main → проверки ci.yml → деплой на сервер.
 # Задачи на сервере выполняет self-hosted раннер с меткой fsp-stand (infra/scripts/install-runner.sh).
 # Токен бота платформы — секрет окружения GitHub `prod`; остальные секреты живут только на сервере.
 name: cd
@@ -63,7 +63,7 @@ jobs:
       - uses: actions/checkout@v4
       - run: sh infra/scripts/deploy.sh "${{ inputs.action }}"
 
-  # E40-1: e2e демо-сценария против прода по кнопке (только демо-аккаунты: песочницы жюри, герои).
+  # e2e демо-сценария против прода по кнопке (только демо-аккаунты: песочницы жюри, герои).
   # Адрес — переменная репозитория E2E_PROD_URL; на сервере ничего не выполняется.
   demo-e2e:
     if: github.event_name == 'workflow_dispatch' && inputs.action == 'demo-e2e'

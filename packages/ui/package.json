@@ -12,10 +12,8 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src playground scripts",
-    "test": "vitest run",
-    "shot": "node scripts/shot.mjs",
-    "design-shots": "node scripts/design-shots.mjs"
+    "lint": "eslint src playground",
+    "test": "vitest run"
   },
   "peerDependencies": {
     "react": "^19.0.0",
@@ -46,7 +44,6 @@
     "eslint": "^9.0.0",
     "eslint-plugin-react-hooks": "^5.0.0",
     "jsdom": "^25.0.0",
-    "playwright": "^1.48.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwindcss": "^4.3.3",
