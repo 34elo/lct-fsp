@@ -1,6 +1,6 @@
 # Лендинг v3
 
-Макет из Claude Design (этап 3, промпт — [prompt-landing.md](../../../archive/claude-design/prompt-landing.md)). Реализует задача **E39-35**.
+Макет из Claude Design (этап 3, промпт — [prompt-landing.md](../../claude-design/prompt-landing.md)). Реализует задача **E39-35**.
 
 Холст: https://claude.ai/artifact/J2k6kkprKsA2ruwY74YJES (артборды `land_*`). Всё ниже открывается в браузере напрямую.
 

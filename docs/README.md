@@ -1,6 +1,6 @@
 # Документация ФСП Карьера
 
-Единая точка входа: каждый действующий документ — одной строкой ниже. Устаревшее лежит в [archive/](archive/) с пометкой и не правится. Правила работы с репозиторием — [AGENTS.md](../AGENTS.md).
+Единая точка входа: каждый действующий документ — одной строкой ниже. Устаревшее удалено (история git). Правила работы с репозиторием — [AGENTS.md](../AGENTS.md).
 
 **Читать с нуля:** [case.md](case.md) → [solution.md](solution.md) → [architecture/system.md](architecture/system.md) → [deploy.md](deploy.md).
 
@@ -86,10 +86,6 @@
 | [reports/review-b2.md](reports/review-b2.md) | Ревью задач блока 2 |
 | [../reports/e39-check.md](../reports/e39-check.md) | Прогон глазами жюри после E39 (E39-36) |
 | [../reports/admin-audit.md](../reports/admin-audit.md) | Автоаудит админки (E39-30) |
-
-## Архив
-
-[archive/](archive/) — пакет дизайна v1 (`design-pack/`), промпты Claude Design, продуктовый анализ до ТЗ (`product-v1.md`), обзор архитектуры v0.2, план v1, чек-лист старта, аудит 2026-10-07. Ссылки внутри архива не поддерживаются.
 
 ## Правила
 

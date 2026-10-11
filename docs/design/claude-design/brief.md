@@ -1,6 +1,6 @@
 # Бриф: ФСП Карьера, UX v2
 
-> Прикладывается к промптам [prompt-1.md](../../archive/claude-design/prompt-1.md) и [prompt-2.md](../../archive/claude-design/prompt-2.md). Решения по UX — [docs/ux/ux-spec.md](../../ux/ux-spec.md). Поля данных взяты из реального API (`docs/openapi.json`); то, чего в API пока нет, помечено **«нет в API»**.
+> Прикладывается к промптам [prompt-1.md](prompt-1.md) и [prompt-2.md](prompt-2.md). Решения по UX — [docs/ux/ux-spec.md](../../ux/ux-spec.md). Поля данных взяты из реального API (`docs/openapi.json`); то, чего в API пока нет, помечено **«нет в API»**.
 
 ## 1. Продукт
 
@@ -294,16 +294,16 @@
    - иначе прикладываем PNG токенов и каталога (H1, H2, DS1, DS2) и `docs/design/brand.md`.
 3. **Что приложить к первому сообщению:**
    - этот бриф;
-   - `docs/design/brand.md`, `docs/archive/design-pack/docs/DESIGN_RULES.md`;
+   - `docs/design/brand.md`;
    - PNG `35_H1_Tokens`, `36_H2_Catalog`, `01_Main`, `02_DS2`;
    - эталоны `15_M3_Growth`, `05_B_Candidate`, `04_A_Search`;
-   - логотипы из `docs/archive/design-pack/assets/`.
+   - логотипы из `packages/ui` / `apps/web/public`.
 4. **Этапы:**
-   1. [prompt-1.md](../../archive/claude-design/prompt-1.md) — 3 ключевых экрана, по 2–3 варианта.
+   1. [prompt-1.md](prompt-1.md) — 3 ключевых экрана, по 2–3 варианта.
    2. Выбираем варианты.
-   3. [prompt-2.md](../../archive/claude-design/prompt-2.md) — остальные экраны.
+   3. [prompt-2.md](prompt-2.md) — остальные экраны.
 5. **Передача в репозиторий:**
-   - просим экспорт **«пакетом для разработчиков»** в той же структуре, что текущий пакет: `screens/png`, `screens/html`, `tokens`, `docs/SCREENS.md`;
-   - кладём в `docs/archive/design-pack/` с префиксом `v2_` у экранов, новые компоненты и токены — отдельным списком в `docs/archive/design-pack/docs/CHANGES_v2.md`;
+   - просим экспорт **«пакетом для разработчиков»** в структуре `screens/png`, `screens/html`, `tokens`, `docs/SCREENS.md`;
+   - кладём в `docs/design/v2/` с префиксом `v2_` у экранов, новые компоненты и токены — отдельным списком в `docs/design/v2/README.md`;
    - коммит `docs(design): макеты UX v2`, затем снимаем паузу `⏸ 🎨` с задач E35-0, E35-2b, E35-3, E35-4, E35-5, E35-9 в `docs/process/plan.md`.
 6. **Если экспорт пакетом недоступен:** скачиваем PNG и HTML каждого экрана вручную и именуем по маршруту (`v2_me.png`, `v2_employer.png`…).
