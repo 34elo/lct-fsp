@@ -177,7 +177,7 @@ export const SHORTLIST_TEXT = {
   toVacancies: "К вакансиям",
 };
 
-/** Подбор `/employer` (макеты `v2_employer__first_*`, `v2_employer__results_*`). Работодателю — «вы». */
+/** Подбор `/employer`. Работодателю — «вы». */
 export const MATCH_TEXT = {
   title: "Подбор",
   queryLabel: "Кого вы ищете",

@@ -85,7 +85,7 @@ function ResultSkeleton() {
 }
 
 /**
- * S3: результат теста по макетам v2 (`v2_me-assessment-result__confirmed|not-confirmed`).
+ * Результат теста: подтверждён или нет.
  * Красный для «не прошёл» не используется; ключи ответов не показываем.
  */
 export default function Result() {

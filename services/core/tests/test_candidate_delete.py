@@ -1,4 +1,4 @@
-"""F13: DELETE /candidates/me — удаление профиля по 152-ФЗ."""
+"""DELETE /candidates/me — удаление профиля по 152-ФЗ."""
 
 import uuid
 

@@ -47,7 +47,7 @@
   --shadow-xs: var(--shadow-xs);
   --shadow-card: var(--shadow-card);
   --shadow-sheet: var(--shadow-sheet);
-  /* v2 (docs/design/v2/fsp2.css) */
+  /* короткие алиасы v2 */
   --color-chip-fg: var(--chip-fg);
   --color-err-border: var(--err-border);
   --color-code-bg: var(--code-bg);

@@ -178,7 +178,7 @@ export function chipApprox(c: FilterChip): boolean {
   return c.key === "semantic_text" || c.source === "llm" || c.confidence < 0.7;
 }
 
-/** Короткая подпись чипса: «Навык: Python» → «Python», как в макете A. */
+/** Короткая подпись чипса: «Навык: Python» → «Python». */
 export function chipText(c: FilterChip): string {
   const i = c.label.indexOf(": ");
   return i >= 0 ? c.label.slice(i + 2) : c.label;

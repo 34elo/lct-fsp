@@ -415,7 +415,7 @@ async def draft_id_for_profile(session: AsyncSession, candidate_id: uuid.UUID) -
 async def erase_candidate(
     session: AsyncSession, storage: ObjectStorage, candidate_id: uuid.UUID
 ) -> None:
-    """Удаление профиля (F13): файлы резюме в хранилище и записи резюме, опыта, образования.
+    """Удаление профиля: файлы резюме в хранилище и записи резюме, опыта, образования.
 
     Сбой хранилища не прерывает удаление записей: ключи пишем в лог (без ПДн), файл добьёт очистка.
     """

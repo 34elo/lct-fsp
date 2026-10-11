@@ -103,7 +103,7 @@ function Skeletons() {
   );
 }
 
-/** Кандидаты категории: ранг, «заявлено vs подтверждено», шорт-лист, приглашение (макет N2). */
+/** Кандидаты категории: ранг, «заявлено vs подтверждено», шорт-лист, приглашение. */
 export default function CategoryCandidates() {
   const { profession = "", grade = "" } = useParams();
   const [params] = useSearchParams();

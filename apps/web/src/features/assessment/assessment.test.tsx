@@ -94,7 +94,7 @@ function mount(path: string, handler: Handler) {
 
 const tid = (id: string) => screen.findByTestId(id);
 
-describe("поток до теста (S1)", () => {
+describe("поток до теста", () => {
   it("предзаполняет шаги 1–2, сохраняет и начинает тест", async () => {
     const calls = mount("/me/assessment", (url, init) => {
       if (url.endsWith("/assessment/survey") && (init?.method ?? "GET") === "GET") return res(200, survey);
@@ -175,7 +175,7 @@ describe("поток до теста (S1)", () => {
   });
 });
 
-describe("поток до теста (S1) · состояния", () => {
+describe("поток до теста · состояния", () => {
   const surveyGet = (url: string, init?: RequestInit) => (url.endsWith("/assessment/survey") && (init?.method ?? "GET") === "GET" ? res(200, survey) : undefined);
 
   it("кулдаун: плашка с датой, грейд в контуре, старт предлагает грейд ниже", async () => {
@@ -270,7 +270,7 @@ function attemptRoutes(items: unknown[], answers: { body: unknown }[] = []): Han
   };
 }
 
-describe("тест (S2)", () => {
+describe("тест", () => {
   it("exact: ответ уходит с response_id, rt_ms и телеметрией; после последнего — результат", async () => {
     const answers: { body: unknown }[] = [];
     mount(
@@ -388,7 +388,7 @@ describe("тест (S2)", () => {
   });
 });
 
-describe("тест (S2) · макет v2", () => {
+describe("прохождение теста", () => {
   it("шапка: номер из цели, таймер тикает; «?» открывает правила; «Не знаю» вторичное", async () => {
     mount("/me/assessment/attempts/a1", attemptRoutes([{ done: false, response_id: "r1", seq: 7, kind: "choice", stem: "Что?", options: ["A", "B"], time_limit_s: 60 }]));
     const timer = await screen.findByRole("timer");
@@ -453,7 +453,7 @@ describe("тест (S2) · макет v2", () => {
   });
 });
 
-describe("результат (S3)", () => {
+describe("результат", () => {
   const routes = (calls: { n: number }): Handler => (url, init) => {
     if (url.endsWith("/attempts/a1/upgrade")) {
       calls.n += 1;
@@ -484,7 +484,7 @@ describe("результат (S3)", () => {
     expect(await tid("assessment-item")).toBeInTheDocument();
   });
 
-  it("макет v2: шкала 0–100 с порогом следующего грейда, разбивка по типам, «?»", async () => {
+  it("результат: шкала 0–100 с порогом следующего грейда, разбивка по типам, «?»", async () => {
     mount("/me/assessment/attempts/a1/result", (url) => {
       if (url.endsWith("/attempts/a1")) return res(200, { ...finished, invited_grade: null });
       if (url.endsWith("/candidates/me/interests")) return res(200, { companies: 3, salary_from_min: 140000, salary_to_max: 220000, items: [] });
@@ -579,7 +579,7 @@ describe("результат (S3)", () => {
   });
 });
 
-describe("история (S4)", () => {
+describe("история", () => {
   it("кулдауны и пересдачи, попытки и опросы", async () => {
     mount("/me/assessment/history", (url) => {
       if (url.endsWith("/assessment/history"))

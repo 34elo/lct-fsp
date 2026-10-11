@@ -39,7 +39,7 @@ import {
 } from "../src";
 import { V2_CANDIDATE, V2_CATEGORY, V2_CONSTELLATION, V2_FEED, V2_HEATMAP, V2_OFFER, V2_SCATTER, V2_TYPES } from "./data";
 
-/* Доска v2 — повторяет docs/design/v2/screens/v2_components.html. */
+/* Доска компонентов v2 в обеих темах. */
 
 function Cell({ title, span, fromPackage, children }: { title: string; span: 3 | 4 | 5 | 6 | 12; fromPackage?: boolean; children: ReactNode }) {
   const col = { 3: "lg:col-span-3", 4: "lg:col-span-4", 5: "lg:col-span-5", 6: "lg:col-span-6", 12: "lg:col-span-12" }[span];

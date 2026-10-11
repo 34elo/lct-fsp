@@ -11,7 +11,7 @@ import { AdminPageHeader } from "@/features/admin/PageHeader";
 const TABS = ["graph", "queue", "merges", "distinct", "blocklist", "provisional", "hints"] as const;
 type Tab = (typeof TABS)[number];
 
-/** `/admin/skills` (G3): очередь слияний, «точно разные», стоп-лист, новые навыки, рост графа. */
+/** `/admin/skills`: очередь слияний, «точно разные», стоп-лист, новые навыки, рост графа. */
 export default function AdminSkills() {
   const [tab, setTab] = useState<Tab>("graph");
   return (

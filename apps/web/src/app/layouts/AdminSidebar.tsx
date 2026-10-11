@@ -34,7 +34,7 @@ const itemClass = (on: boolean) =>
     on ? "bg-tint-100 text-brand-deep dark:text-brand-mid" : "text-muted hover:bg-tint-50 hover:text-ink",
   );
 
-/** Боковая панель админки ФСП (макет F1): меню по группам, закреплено при прокрутке. На телефоне — `AdminMobileNav`. */
+/** Боковая панель админки ФСП: меню по группам, закреплено при прокрутке. На телефоне — `AdminMobileNav`. */
 export function AdminSidebar({ nav }: { nav: NavItem[] }) {
   const current = activeNav(nav, useLocation().pathname);
   return (

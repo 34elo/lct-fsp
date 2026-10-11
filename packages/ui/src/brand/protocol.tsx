@@ -3,7 +3,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 
 import { cn } from "../lib/cn";
 
-/* Фирменные компоненты: грейд, протокол ФСП, командные сигналы. Эталон — Main.html пакета макетов v1, блок 07. */
+/* Фирменные компоненты: грейд, протокол ФСП, командные сигналы. */
 
 const ROLE_NAMES: Record<string, string> = {
   backend: "Backend",

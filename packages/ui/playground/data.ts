@@ -33,7 +33,7 @@ export const TOKEN_GROUPS: { title: string; tokens: string[] }[] = [
   },
 
   {
-    title: "v2 — имена макетов (алиасы, docs/design/v2/fsp2.css)",
+    title: "v2 — короткие алиасы токенов",
     tokens: ["deep", "mid", "t50", "t100", "t200", "hair", "ok", "ok-bg", "warn", "warn-bg", "warn-bd", "warn-fg", "err", "err-bg", "err-border", "code-bg", "chip-fg"],
   },
 ];
@@ -42,7 +42,7 @@ export const TEXT_SIZES = [11, 12, 13, 14, 16, 20, 24, 32, 48] as const;
 
 export const RADII = ["sm", "md", "lg", "xl", "2xl"] as const;
 
-/* Доска v2 (docs/design/v2/screens/v2_components.html). */
+/* Доска компонентов v2. */
 export const V2_CONSTELLATION: ConstellationNode[] = [
   { name: "Python", level: 3 },
   { name: "SQL", level: 2 },

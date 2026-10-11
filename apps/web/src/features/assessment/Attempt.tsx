@@ -208,7 +208,7 @@ function ItemRunner({
   );
 }
 
-/** S2: тест по одному заданию. Правильность не показываем; цепочка идёт пошагово. */
+/** Тест по одному заданию. Правильность не показываем; цепочка идёт пошагово. */
 export default function Attempt() {
   const { id = "" } = useParams();
   const nav = useNavigate();

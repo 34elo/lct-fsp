@@ -87,7 +87,7 @@ export const RANK_LABEL: Record<string, string> = {
 
 export const TEAM_ROLE_LABEL: Record<string, string> = { captain: "капитан", member: "участник" };
 
-/** Тексты экрана профиля (макет D). */
+/** Тексты экрана профиля. */
 export const T = {
   title: "Мой профиль",
   loading: "Загрузка профиля…",
@@ -171,7 +171,7 @@ export const editText = {
   invalidExp: "Стаж: целое число от 0 до 600 месяцев",
 } as const;
 
-/** Главная кандидата `/me` (макеты v2_me__before / v2_me__after). */
+/** Главная кандидата `/me`. */
 export const HOME = {
   title: "Главная",
   loading: "Загрузка главной…",
@@ -227,7 +227,7 @@ export const SOURCE_TAG: Record<string, string> = { test: "тест", fsp: "ФС
 /** Формат работы в карточке профиля: «Удалёнка или гибрид». */
 export const FORMAT_WORD: Record<string, string> = { remote: "удалёнка", hybrid: "гибрид", office: "офис" };
 
-/** Статистика кандидата `/me/stats` (макеты v2_me-stats__*). */
+/** Статистика кандидата `/me/stats`. */
 export const STATS = {
   title: "Статистика",
   link: "Статистика",
@@ -280,7 +280,7 @@ export function plural(n: number, one: string, few: string, many: string): strin
   return many;
 }
 
-/** Профиль кандидата `/me/profile` (макеты v2_me-profile__*). */
+/** Профиль кандидата `/me/profile`. */
 export const PROFILE = {
   title: "Профиль",
   addEvidence: "Добавить доказательство",
@@ -424,7 +424,7 @@ export const privacyText = {
   ],
 } as const;
 
-/** Настройки кандидата `/settings` (макеты v2_me-settings__*). */
+/** Настройки кандидата `/settings`. */
 export const SETTINGS = {
   title: "Настройки",
   loading: "Загрузка настроек…",

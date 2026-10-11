@@ -379,7 +379,7 @@ async def set_initial_password(session: AsyncSession, user: User, new: str) -> N
 
 
 async def erase_user(session: AsyncSession, user: User) -> None:
-    """Удаление профиля (F13): обезличить учётную запись, закрыть сессии и коды."""
+    """Удаление профиля: обезличить учётную запись, закрыть сессии и коды."""
     await session.execute(delete(RefreshToken).where(RefreshToken.user_id == user.id))
     await session.execute(delete(EmailVerification).where(EmailVerification.user_id == user.id))
     user.email = None

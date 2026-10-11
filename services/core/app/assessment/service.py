@@ -398,7 +398,7 @@ def _band_position(grade: TestGrade, theta: float) -> float:
 
 
 async def erase_candidate(session: AsyncSession, candidate_id: uuid.UUID) -> None:
-    """Удаление профиля (F13): попытки, ответы, грейды, опросы и ответы на регулярные задания."""
+    """Удаление профиля: попытки, ответы, грейды, опросы и ответы на регулярные задания."""
     from sqlalchemy import delete
 
     from app.assessment.models import Attempt, Response

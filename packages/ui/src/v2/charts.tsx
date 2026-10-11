@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { Lbl, MeterBar, clamp, dotsText } from "./primitives";
 
-/* Графики v2 (доска docs/design/v2/screens/v2_components.html). SVG без библиотек, цвета — var(--токен). */
+/* Графики. SVG без библиотек, цвета — var(--токен). */
 
 const MONO = "\"JetBrains Mono Variable\", \"JetBrains Mono\", ui-monospace, monospace";
 

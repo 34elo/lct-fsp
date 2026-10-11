@@ -58,7 +58,7 @@ const link = ({ href, className, current, children }: ShellLinkProps) => (
   </Link>
 );
 
-/** Шапка v2 (`.hd`, docs/design/v2): знак ФСП, 4 пункта со счётчиками, справа аватар с меню. */
+/** Шапка: знак ФСП, 4 пункта со счётчиками, справа аватар с меню. */
 export function AppHeader({
   nav,
   counts = {},

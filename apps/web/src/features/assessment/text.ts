@@ -35,7 +35,7 @@ export function plural(n: number, one: string, few: string, many: string): strin
 }
 
 export const T = {
-  // поток «направление и навыки → грейд и ожидания → тест» (S1)
+  // поток «направление и навыки → грейд и ожидания → тест»
   surveyTitle: "Тест и грейд",
   flow: ["Направление и навыки", "Грейд и ожидания", "Тест"] as const,
   flowLabel: "Шаги до теста",
@@ -101,7 +101,7 @@ export const T = {
   needProfession: "Выберите IT-направление.",
   needGrade: "Выберите грейд, чтобы начать тест.",
   loading: "Загружаем…",
-  // тест (S2)
+  // тест
   testTitle: "Тест",
   noActiveTitle: "Активного теста нет",
   takeTest: "Пройти тест",
@@ -139,7 +139,7 @@ export const T = {
   chainNext: "Дальше по цепочке",
   chainLead: "Инцидент разворачивается по шагам. Вернуться к предыдущему шагу нельзя.",
   finishing: "Считаем результат…",
-  // результат (S3)
+  // результат
   resultTitle: "Результат теста",
   confirmed: "подтверждён",
   notConfirmed: "не подтверждён",
@@ -200,7 +200,7 @@ export const T = {
   retryAt: (g: string, d: string) => `Повтор ${g} — с ${d}`,
   cooldownRules: "Смена грейда — не чаще раза в 90 дней. Повтор того же грейда после неудачи — через 30 дней. Грейд принудительно не понижается.",
   openProfile: "На главную",
-  // результат v2: макеты v2_me-assessment-result__*
+  // результат теста
   confirmedTitle: (cat: string) => `${cat} — подтверждён`,
   notConfirmedTitle: (g: string) => `${g} не подтверждён`,
   howItWorks: "Как устроен тест",
@@ -263,7 +263,7 @@ export const T = {
   inProgress: "Тест ещё идёт",
   inProgressText: "Результат появится, когда тест завершится.",
   continueTest: "Продолжить тест",
-  // история (S4)
+  // история
   historyTitle: "История попыток",
   newAttempt: "Новая попытка",
   attemptsTab: "Попытки",

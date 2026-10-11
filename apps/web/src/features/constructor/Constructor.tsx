@@ -216,7 +216,7 @@ export function ReadyAction({ family, onChange }: { family: FamilyOut; onChange:
   );
 }
 
-/** K1: конструктор задания. Работодатель — задание компании, админ ФСП — задание банка. */
+/** Конструктор задания. Работодатель — задание компании, админ ФСП — задание банка. */
 export default function Constructor() {
   const nav = useNavigate();
   const { role } = useAuth();

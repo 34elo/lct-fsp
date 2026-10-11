@@ -153,7 +153,7 @@ def render(py: dict[str, Lib], members: list[str], npm: dict[str, Lib]) -> str:
     out = [
         "# Библиотеки и версии",
         "",
-        "> Сгенерировано `make submission-libs` (`tools/submission/libs.py`) из `uv.lock` и "
+        "> Сгенерировано `make libraries` (`tools/libraries.py`) из `uv.lock` и "
         "`pnpm-lock.yaml`. Руками не правим.",
         "> Лицензии взяты из метаданных установленных пакетов; «проверить» — метаданных нет "
         "(окружение не установлено или лицензия не указана).",
@@ -186,6 +186,9 @@ def build(root: Path) -> str:
     py, members = parse_uv_lock((root / "uv.lock").read_text(encoding="utf-8"))
     npm = parse_pnpm_lock((root / "pnpm-lock.yaml").read_text(encoding="utf-8"))
     sites = list((root / ".venv" / "lib").glob("python*/site-packages"))
+    win = root / ".venv" / "Lib" / "site-packages"  # раскладка venv на Windows
+    if not sites and win.is_dir():
+        sites = [win]
     if sites:
         for lib in py.values():
             lib.license = python_license(sites[0], lib)

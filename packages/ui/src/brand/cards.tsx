@@ -7,7 +7,7 @@ import { ConstellationAvatar, MatchRing, SkillChip, type TrustKind, type TrustLe
 import { AcceptanceMeter, MatchWhy, SalaryRange, StatusBadge, type AcceptanceLevel, type OfferStatus, type WhyItem } from "./match";
 import { FspProtocol, GradeBadge, SectionLabel, VerifiedMark, pseudonymLabel, type FspResult } from "./protocol";
 
-/* Карточки: кандидат (экран A) и оффер (M2). Только данные и колбэки: сеть и маршруты снаружи. */
+/* Карточки: кандидат и оффер. Только данные и колбэки: сеть и маршруты снаружи. */
 
 export interface CandidateCardData {
   /** Номер псевдонима: «Backend #4821» собирается из роли и номера. */
@@ -135,7 +135,7 @@ export interface OfferCardData {
   acceptance?: AcceptanceLevel;
 }
 
-/** Оффер кандидату (M2) и в списке работодателя: вилка крупно, статус, срок, действие. */
+/** Оффер кандидату и в списке работодателя: вилка крупно, статус, срок, действие. */
 export function OfferCard({
   o,
   actionLabel = "Открыть оффер",

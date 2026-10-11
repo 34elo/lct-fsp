@@ -71,7 +71,7 @@ api-gen:
 
 # Список библиотек с версиями и лицензиями из lock-файлов
 libraries:
-	python3 tools/libraries.py --out docs/libraries.md
+	PYTHONUTF8=1 uv run python tools/libraries.py --out docs/libraries.md
 
 # --- стек в Docker -------------------------------------------------------------------------------
 

@@ -7,7 +7,7 @@ import { chipApprox, chipText } from "./search-model";
 import { SEARCH_TEXT as T } from "./text";
 
 /**
- * Строка запроса (A) и «текст → чипсы». Текст разбирает `POST /search/parse`, чипсы появляются
+ * Строка запроса и «текст → чипсы». Текст разбирает `POST /search/parse`, чипсы появляются
  * по одному слева направо (`fsp-chip-in`, шаг 80 мс); при prefers-reduced-motion — сразу, без перехода.
  * Распознанное объявляется скринридеру одной строкой.
  */

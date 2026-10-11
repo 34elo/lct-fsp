@@ -1,7 +1,7 @@
-"""Т2: тест через API → грейд → событие → выдача категории работодателю.
+"""Сквозной путь: тест через API → грейд → событие → выдача категории работодателю.
 
-Совместный тест блоков: Б1 — `/assessment/*`, `grades`, `candidate.category.changed`;
-Б2 — `GET /categories/{profession}/{grade}/candidates`, видимость, аналитика.
+Тест: `/assessment/*`, `grades`, `candidate.category.changed`;
+подбор: `GET /categories/{profession}/{grade}/candidates`, видимость, аналитика.
 События из outbox доставляются обработчикам воркера core (`Worker.consumers`) без RabbitMQ.
 """
 
@@ -136,7 +136,7 @@ def _page(api, emp, **params):
     return {i["pseudo_id"]: i for i in r.json()["items"]}
 
 
-async def test_t2_test_to_grade_to_category(api, factory, worker, taxonomy_loaded):
+async def test_attempt_to_grade_to_category(api, factory, worker, taxonomy_loaded):
     emp, company_id = _employer(api)
     await _verify_company(factory, company_id)
 
@@ -146,7 +146,7 @@ async def test_t2_test_to_grade_to_category(api, factory, worker, taxonomy_loade
     aid = await _pass_test(api, factory, h)
     uid, pid = await _candidate_id(api, h, factory)
 
-    # грейд записан тестом (Б1), событие в outbox
+    # грейд записан тестом, событие в outbox
     async with session_scope(factory) as s:
         g = await assessment.get_grade(s, uid, PROFESSION)
         changed = list(
@@ -171,7 +171,7 @@ async def test_t2_test_to_grade_to_category(api, factory, worker, taxonomy_loade
         )
     assert [(r.props["profession"], r.props["grade"]) for r in rows] == [(PROFESSION, GRADE)]
 
-    # Б2: кандидат виден в категории, T в силе профиля — из теста
+    # кандидат виден в категории, T в силе профиля — из теста
     items = _page(api, emp)
     assert pid in items, f"кандидат после теста не виден в {URL}: {list(items)}"
     card = items[pid]
@@ -194,7 +194,7 @@ async def test_t2_test_to_grade_to_category(api, factory, worker, taxonomy_loade
     assert _page(api, emp)[pid]["strength"] == card["strength"]
 
 
-async def test_t2_visibility_rules(api, factory, worker, taxonomy_loaded):
+async def test_category_visibility_rules(api, factory, worker, taxonomy_loaded):
     emp, company_id = _employer(api)
     await _verify_company(factory, company_id)
 
@@ -229,7 +229,7 @@ async def test_t2_visibility_rules(api, factory, worker, taxonomy_loaded):
     assert hidden_pid not in _page(api, emp)
 
 
-async def test_t2_foreign_resources_are_404(api, factory, taxonomy_loaded):
+async def test_foreign_resources_are_404(api, factory, taxonomy_loaded):
     owner = register(api)
     _consents(api, owner, pd_processing=True, profile_publication=True)
     aid = await _pass_test(api, factory, owner)

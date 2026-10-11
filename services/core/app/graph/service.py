@@ -370,7 +370,7 @@ async def upcoming_competitions(
 
 
 async def erase_candidate(session: AsyncSession, candidate_id: uuid.UUID) -> None:
-    """Удаление профиля (F13): доказательства и агрегат навыков кандидата. Без событий."""
+    """Удаление профиля: доказательства и агрегат навыков кандидата. Без событий."""
     await session.execute(sa.delete(Evidence).where(Evidence.candidate_id == candidate_id))
     await session.execute(
         sa.delete(CandidateSkill).where(CandidateSkill.candidate_id == candidate_id)

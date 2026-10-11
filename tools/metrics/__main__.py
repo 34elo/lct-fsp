@@ -159,12 +159,7 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--out", type=Path, default=ROOT / "reports" / "metrics")
-    ap.add_argument(
-        "--web",
-        type=Path,
-        default=ROOT / "apps" / "web" / "src" / "features" / "quality" / "metrics.generated.json",
-        help="куда положить копию report.json для веб-страницы качества",
-    )
+    ap.add_argument("--web", type=Path, default=None, help="куда положить копию report.json")
     ap.add_argument("--skip", action="append", default=[], choices=sorted(COLLECTORS))
     a = ap.parse_args(argv)
     if hasattr(sys.stdout, "reconfigure"):
@@ -173,7 +168,7 @@ def main(argv: list[str] | None = None) -> int:
     a.out.mkdir(parents=True, exist_ok=True)
     dump = json.dumps(rep, ensure_ascii=False, indent=1, sort_keys=True) + "\n"
     (a.out / "report.json").write_text(dump, encoding="utf-8")
-    if a.web is not None:  # копия для страницы качества: reports/ в git не входит
+    if a.web is not None:
         a.web.parent.mkdir(parents=True, exist_ok=True)
         a.web.write_text(dump, encoding="utf-8")
     md = render_md(rep)

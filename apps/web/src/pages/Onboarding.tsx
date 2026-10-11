@@ -10,7 +10,7 @@ import { ONBOARDING, STEPS, skillsStatus, type StepId } from "@/features/onboard
 type Outcome = "done" | "skipped";
 
 /**
- * Онбординг кандидата (макет M1): вертикальная схемная линия и один шаг на экран, любой шаг можно пропустить.
+ * Онбординг кандидата: вертикальная схемная линия и один шаг на экран, любой шаг можно пропустить.
  * Согласие `pd_processing` уже выдано: без него `RequireRole` не пускает в кабинет.
  */
 export default function Onboarding() {

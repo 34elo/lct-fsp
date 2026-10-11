@@ -155,7 +155,7 @@ function Complaints() {
   );
 }
 
-/** `/federation/moderation` — модерация компаний и жалоб (F3); `?tab=complaints` — сразу жалобы (с главной админки). */
+/** `/federation/moderation` — модерация компаний и жалоб; `?tab=complaints` — сразу жалобы (с главной админки). */
 export default function Moderation() {
   const [params] = useSearchParams();
   const [tab, setTab] = useState<Tab>(params.get("tab") === "complaints" ? "complaints" : "companies");

@@ -452,7 +452,7 @@ function Body({ c, vacancyId, needId }: { c: CandidateCardFull; vacancyId: strin
   );
 }
 
-/** Карточка кандидата для работодателя (тёмная, макет v2): анонимный DTO, пишет просмотр. */
+/** Карточка кандидата для работодателя (тёмная): анонимный DTO, пишет просмотр. */
 export default function CandidateView() {
   const { id = "" } = useParams();
   const [params] = useSearchParams();

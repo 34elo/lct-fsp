@@ -46,7 +46,7 @@ export function offerCount(res?: { status: number; data: unknown }): number | un
 export function Shell({ nav, variant, banner }: { nav: NavItem[]; variant: "top" | "side"; banner?: ReactNode }) {
   const { role } = useAuth();
   const counts = useOfferCounts(variant);
-  // Нижняя панель на телефоне — у кандидата и работодателя (макеты v2: `.tb` на 4 пункта).
+  // Нижняя панель на телефоне — у кандидата и работодателя (`.tb` на 4 пункта).
   const bottom = variant === "top" && (role === "candidate" || role === "employer");
   return (
     <div className={cn("min-h-dvh overflow-x-clip bg-page text-ink", variant === "side" && "md:grid md:grid-cols-[220px_1fr]")}>

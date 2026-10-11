@@ -155,7 +155,7 @@ function stubCandidate(list: unknown[]) {
   });
 }
 
-test("M2: приглашение без вакансии показывается по названию, плашка «ниже ожиданий», сводка прошлых", async () => {
+test("приглашение без вакансии показывается по названию, плашка «ниже ожиданий», сводка прошлых", async () => {
   stubCandidate([
     candOffer("o1", "sent", { below_candidate_min: true }),
     candOffer("o2", "sent", { vacancy: null, title: "Рекрутинг ML-команды", initiator: "employer" }),
@@ -168,7 +168,7 @@ test("M2: приглашение без вакансии показываетс�
   expect(screen.getByText(/принято 0 · отклонено 1 · истёк 1/)).toBeInTheDocument();
 });
 
-test("M2: отказ одним тапом по причине в нижнем листе", async () => {
+test("отказ одним тапом по причине в нижнем листе", async () => {
   stubCandidate([candOffer("o1", "sent")]);
   mount("/me/offers/o1");
   fireEvent.click(await screen.findByRole("button", { name: "Не подходит" }));
@@ -177,7 +177,7 @@ test("M2: отказ одним тапом по причине в нижнем �
   expect(calls[0].body).toEqual({ reason: "wrong_stack", comment: null });
 });
 
-test("M2: детали приглашения без вакансии открываются", async () => {
+test("детали приглашения без вакансии открываются", async () => {
   stubCandidate([candOffer("o2", "accepted", { vacancy: null, title: "Рекрутинг ML-команды", description: "Нужен тимлид" })]);
   mount("/me/offers/o2");
   expect(await screen.findByRole("heading", { name: "Приглашение принят" })).toBeInTheDocument();

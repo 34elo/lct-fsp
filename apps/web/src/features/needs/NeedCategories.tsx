@@ -57,7 +57,7 @@ function CategoryCard({ c, needId, best }: { c: NeedCategory; needId: string; be
   );
 }
 
-/** Рекомендованные категории по потребности (макет N1). */
+/** Рекомендованные категории по потребности. */
 export default function NeedCategories() {
   const { id = "" } = useParams();
   const need = (useLocation().state as { need?: NeedOut } | null)?.need;

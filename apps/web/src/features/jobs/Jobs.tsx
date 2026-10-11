@@ -179,7 +179,7 @@ function FilterFields({ f, set }: { f: Filters; set: (patch: Partial<Filters>) =
 
 type Params = ListPublicVacanciesVacanciesPublicGetParams;
 
-/** Публичные вакансии (J1): поиск сверху, фильтры сбоку (на телефоне — шторка), состояние в URL. */
+/** Публичные вакансии: поиск сверху, фильтры сбоку (на телефоне — шторка), состояние в URL. */
 export default function Jobs() {
   const { status, role } = useAuth();
   // В кабинете кандидата шапка закреплена (56 px) — поиск и фильтры прижимаются под ней.
