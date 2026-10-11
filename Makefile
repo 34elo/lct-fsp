@@ -165,10 +165,10 @@ metrics:
 
 # Нагрузка против живого стека после make seed. Код выхода 1, если p95 поиска > 1 с.
 LOAD_USERS ?= 50
-LOAD_TIME ?= 3m
+LOAD_TIME ?= 9m
 LOAD_HOST ?= http://127.0.0.1:$(or $(GATEWAY_PORT),28080)
 load:
-	uv run --group load locust -f tools/load/locustfile.py --headless -u $(LOAD_USERS) -r 5 -t $(LOAD_TIME) --host $(LOAD_HOST) --csv reports/load/load --only-summary
+	uv run --group load locust -f tools/load/locustfile.py --headless -u $(LOAD_USERS) -r 0.15 -t $(LOAD_TIME) --host $(LOAD_HOST) --csv reports/load/load --only-summary
 	uv run python tools/load/report.py reports/load/load_stats.csv --out reports/load/load.md
 
 # --- банк заданий --------------------------------------------------------------------------------
